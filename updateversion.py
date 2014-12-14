@@ -39,6 +39,8 @@ def update_version():
     os.system(cmdtag)
     cmdtag = "git commit -m 'version number update' ./flopy/version.py"
     os.system(cmdtag)
+    cmdtag = "git push"
+    os.system(cmdtag)
     cmdtag = "git push --tags"
     os.system(cmdtag)
  
