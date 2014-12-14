@@ -64,7 +64,7 @@ Tutorials
 
 A few simple *FloPy* tutorials are available at:
 
-[https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html](https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html)
++ [https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html](https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html)
 
 
 MODFLOW Resources
