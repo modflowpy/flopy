@@ -10,7 +10,8 @@ def update_version():
     version_type = ('3', '0', '{0}'.format(int(v)+1)) 
     version = '.'.join(version_type)
 
-    build = subprocess.Popen(("git", "describe", "--match", "build"), stdout = subprocess.PIPE).communicate()[0]
+    b = subprocess.Popen(("git", "describe", "--match", "build"), stdout = subprocess.PIPE).communicate()[0]
+    build = b.strip().split('-')[1]
     
     print 'Updating version:'
     print '  ', __version__, '->', version
