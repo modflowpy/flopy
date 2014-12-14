@@ -17,7 +17,7 @@ def update_version():
     if v is not unknown:
         v = v.strip().split('-')[1]
         print v
-    version_type = ('3', '0', '{0}'.format(v)) 
+    version_type = ('3', '0', '{0}'.format(int(v)+1)) 
     version = '.'.join(version_type)
     try:
         from flopy import __version__
@@ -25,8 +25,6 @@ def update_version():
         __version__ = unknown
     
     if __version__ != version:
-        version_type = ('3', '0', '{0}'.format(int(v)+1)) 
-        version = '.'.join(version_type)
         print 'Need to update version:'
         print '  ', __version__, '->', version
         f = open(os.path.normpath('flopy/version.py'), 'w')
@@ -39,8 +37,12 @@ def update_version():
         
     cmdtag = "git tag -a {0} -m 'Version {0}'".format(version)
     os.system(cmdtag)
-    #cmdtag = "git push --tags"
-    #os.system(cmdtag)
+    cmdtag = "git commit -m 'version number update' ./flopy/version.py"
+    os.system(cmdtag)
+    cmdtag = "git push"
+    os.system(cmdtag)
+    cmdtag = "git push --tags"
+    os.system(cmdtag)
  
  
 if __name__ == "__main__":
