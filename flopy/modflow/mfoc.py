@@ -12,7 +12,7 @@ from flopy.mbase import Package
 
 class ModflowOc(Package):
     """
-    MODFLOW Recharge Package Class.
+    MODFLOW Output Control Package Class.
 
     Parameters
     ----------
@@ -370,6 +370,11 @@ class ModflowOc(Package):
             lnlst = line.strip().split()
             if line[0] is '#':
                 continue
+            
+            # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
+            if lnlst == []:
+                continue
+            # end add
 
             #dataset 1 values
             elif ('HEAD' in lnlst[0].upper() and
