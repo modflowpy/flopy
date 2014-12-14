@@ -6,7 +6,7 @@ import datetime
 def update_version():
     
     from flopy import __version__
-    v = v.strip().split('.')[-1]
+    v = __version__.strip().split('.')[-1]
     version_type = ('3', '0', '{0}'.format(int(v)+1)) 
     version = '.'.join(version_type)
 
