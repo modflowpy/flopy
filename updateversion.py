@@ -35,11 +35,11 @@ def update_version():
     else:
         print 'version file with __version__={0} is current.'.format(__version__)
         
-    cmdtag = "git tag -a {0} -m 'Version {0}'".format(version)
-    os.system(cmdtag)
     cmdtag = "git commit -m 'version number update' ./flopy/version.py"
     os.system(cmdtag)
     cmdtag = "git push"
+    os.system(cmdtag)
+    cmdtag = "git tag -a {0} -m 'Version {0}'".format(version)
     os.system(cmdtag)
     cmdtag = "git push --tags"
     os.system(cmdtag)
