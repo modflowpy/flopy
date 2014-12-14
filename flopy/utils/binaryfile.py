@@ -158,7 +158,7 @@ def join_struct_arrays(arrays):
 class BinaryLayerFile(object):
     '''
     The BinaryLayerFile class is the super class from which specific derived
-    classes are formed.  This class should not be instaniated directly    
+    classes are formed.  This class should not be instantiated directly
     '''
     def __init__(self, filename, precision, verbose):        
         self.filename = filename
@@ -170,6 +170,8 @@ class BinaryLayerFile(object):
         self.nlay = 0
         self.times = []
         self.kstpkper = []
+        self.recordarray = []
+        self.iposarray = []
 
         if precision is 'single':
             self.realtype = np.float32
@@ -182,14 +184,14 @@ class BinaryLayerFile(object):
         self._build_index()
         
         #allocate the value array
-        self.value = np.empty( (self.nlay, self.nrow, self.ncol), 
-                         dtype=self.realtype)
+        self.value = np.empty((self.nlay, self.nrow, self.ncol),
+                              dtype=self.realtype)
         return
    
 
     def _build_index(self):
         '''
-        Build the ordered dictionary, which maps the header information
+        Build the recordarray and iposarray, which maps the header information
         to the position in the binary file.
         '''        
         header = self.get_header()
@@ -199,68 +201,74 @@ class BinaryLayerFile(object):
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)        
         self.databytes = header['ncol'] * header['nrow'] * self.realtype(1).nbytes
-        self.recorddict = OrderedDict()
         ipos = 0
         while ipos < self.totalbytes:           
             header = self.get_header()
-            self.nlay=max(self.nlay, header['ilay'])
-            if header['totim'] not in self.times:
+            self.recordarray.append(header)
+            if self.text.upper() not in header['text']:
+                continue
+            if ipos == 0:
                 self.times.append(header['totim'])
-            kstpkper = (header['kstp'], header['kper'])
-            if kstpkper not in self.kstpkper:
-                self.kstpkper.append( kstpkper )
+                kstpkper = (header['kstp'], header['kper'])
+                self.kstpkper.append(kstpkper)
+            else:
+                totim = header['totim']
+                if totim != self.times[-1]:
+                    self.times.append(totim)
+                    kstpkper = (header['kstp'], header['kper'])
+                    self.kstpkper.append(kstpkper)
             #key = (kstp, kper, pertim, totim, text, nrow, ncol, ilay)
             ipos = self.file.tell()
-            self.recorddict[tuple(header)] = ipos
-#            self.recorddict[header] = ipos
+            self.iposarray.append(ipos)
             self.file.seek(self.databytes, 1)
             ipos = self.file.tell()
+
+        #self.recordarray contains a recordarray of all the headers.
+        self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
+        self.iposarray = np.array(self.iposarray)
+        self.nlay = np.max(self.recordarray['ilay'])
         return
 
     def get_header(self):
         '''
         Read the file header
         '''        
-        header = binaryread(self.file,self.header_dtype,(1,))
+        header = binaryread(self.file, self.header_dtype, (1,))
         return header[0]
 
     def list_records(self):
         '''
         Print a list of all of the records in the file
+        obj.list_records()
         '''
-        for key in self.recorddict.keys():
-            print key
+        for header in self.recordarray:
+            print header
         return
 
-    def _fill_value_array(self, kstp=0, kper=0, totim=-1):
+    def _fill_value_array(self, kstp=0, kper=0, totim=0):
         '''
         Fill the three dimensional value array, self.value, for the
         specified kstp and kper value or totim value.
         '''
-        
-        recordlist = []
-        for key in self.recorddict.keys():
-            if self.text.upper() not in key[4]: continue
-            if kstp > 0 and kper > 0:
-                if key[0] == kstp and key[1] == kper:
-                    recordlist.append(key)
-            elif totim >= 0.:
-                if totim == key[3]:
-                    recordlist.append(key)
-            else:
-                raise Exception('Data not found...')
-        
-        if self.verbose:
-            print recordlist
-        
+
+        if totim > 0.:
+            keyindices = np.where(
+                (self.recordarray['totim'] == totim))[0]
+        elif kstp > 0 and kper > 0:
+            keyindices = np.where(
+                (self.recordarray['kstp'] == kstp) &
+                (self.recordarray['kper'] == kper))[0]
+        else:
+            raise Exception('Data not found...')
+
         #initialize head with nan and then fill it
         self.value[:, :, :] = np.nan
-        for key in recordlist:
-            ipos = self.recorddict[key]
+        for idx in keyindices:
+            ipos = self.iposarray[idx]
+            ilay = self.recordarray['ilay'][idx]
             if self.verbose:
                 print 'Byte position in file: {0}'.format(ipos)
             self.file.seek(ipos, 0)
-            ilay = key[7]
             self.value[ilay - 1, :, :] = binaryread(self.file, self.realtype, 
                 shape=(self.nrow, self.ncol))
         return
@@ -277,56 +285,38 @@ class BinaryLayerFile(object):
         '''
         return self.kstpkper
 
-    def get_data(self, kstp=0, kper=0, idx=None, totim=-1, ilay=0):
+    def get_data(self, kstp=0, kper=0, idx=None, totim=0, mflay=None):
         '''
         Return a three dimensional value array for the specified kstp, kper
         pair or totim value, or return a two dimensional head array
-        if the ilay argument is specified.
+        if the mflay argument is specified, where mflay is the MODFLOW layer
+        number (starting at 1).
         '''
         if idx is not None:
-            totim = self.recorddict.keys()[idx][self.header_dtype.names.index('totim')]
+            totim = self.recordarray['totim'][idx]
         self._fill_value_array(kstp, kper, totim)
-        if ilay == 0:
+        if mflay is None:
             return self.value
         else:
-            return self.value[ilay-1, :, :]
+            return self.value[mflay-1, :, :]
         return
 
-    def get_alldata(self, ilay=0):
+    def get_alldata(self, mflay=None, nodata = -9999):
         '''
-        Return a list with a three dimensional value array for every time saved in the 
-        binary file , or return a list with a two dimensional head array for every time
-        in the binary file if the ilay argument is specified.
+        Return a four-dimensional array (ntimes,nlay,nrow,ncol) if mflay = None
+        Return a three-dimensional arrayn (ntimes,nrow,ncol) if mflay is
+        specified.  mflay is the MODFLOW layer number (i.e., it starts at 1)
         '''
-        if ilay == 0:
-            a = np.zeros((self.nlay,self.nrow,self.ncol),dtype=np.float)
+        if mflay is None:
+            h = np.zeros((self.nlay,self.nrow,self.ncol),dtype=np.float)
         else:
-            a = np.zeros((self.nrow,self.ncol),dtype=np.float)
-        v = []
+            h = np.zeros((self.nrow,self.ncol),dtype=np.float)
+        rv = []
         for totim in self.times:
-            self.get_data(totim=totim)
-            if ilay == 0:
-                a = self.value[:, :, :]
-            else:
-                a = self.value[ilay-1, :, :]
-            v.append(a.copy())
-        return v
-        
-    def get_alldata_array(self):
-        '''
-        Returns an array (Ndata,1,nrow,ncol).
-        Only works for 1 layer
-        '''
-        Ndata = len(self.recorddict) / self.nlay
-        if Ndata == 0:
-            print 'No heads saved: '
-            return
-        rv = np.empty((Ndata,self.nlay,self.nrow,self.ncol))
-        for i,key in enumerate(self.recorddict.keys()):
-            ipos = self.recorddict[key]
-            self.file.seek(ipos, 0)
-            rv[i,0,:,:] = binaryread(self.file, self.realtype, 
-                shape=(self.nrow, self.ncol))
+            h[:] = self.get_data(totim=totim, mflay=mflay)
+            rv.append(h)
+        rv = np.array(rv)
+        rv[ rv == nodata ] = np.nan
         return rv
 
     def get_ts(self, k=0, i=0, j=0):
@@ -356,16 +346,14 @@ class BinaryLayerFile(object):
         for k, i, j in kijlist:
             recordlist = []
             ioffset = ((i - 1) * self.ncol + j - 1) * self.realtype(1).nbytes
-            for key in self.recorddict.keys():
-                if self.text.upper() not in key[4]: continue
-                ilay = key[7]
-                if k == ilay:
-                    recordlist.append(key)
-            for key in recordlist:
-                ipos = self.recorddict[key]
+            for irec, header in enumerate(self.recordarray):
+                ilay = header['ilay']
+                if ilay != k:
+                    continue
+                ipos = self.iposarray[irec]
                 self.file.seek(ipos + np.long(ioffset), 0)
-                itim = np.where(result[:, 0] == key[3])[0]
-                result[itim, istat] = binaryread(self.file, np.float32)
+                itim = np.where(result[:, 0] == header['totim'])[0]
+                result[itim, istat] = binaryread(self.file, self.realtype)
             istat += 1
         return result
         
@@ -382,8 +370,8 @@ class HeadFile(BinaryLayerFile):
     This class can also be used for a binary drawdown file as
     ddnobj = HeadFile(filename, precision='single', text='drawdown')
     
-    The BinaryLayerFile class is built on an ordered dictionary consisting of 
-    keys, which are tuples of the modflow header information
+    The BinaryLayerFile class is built on a record array consisting of
+    headers, which are record arrays of the modflow header information
     (kstp, kper, pertim, totim, text, nrow, ncol, ilay)
     and long integers, which are pointers to first bytes of data for
     the corresponding data array.
@@ -404,8 +392,8 @@ class UcnFile(BinaryLayerFile):
     A UcnFile object is created as
     ucnobj = UcnFile(filename, precision='single')
     
-    The BinaryLayerFile class is built on an ordered dictionary consisting of 
-    keys, which are tuples of the modflow header information
+    The BinaryLayerFile class is built on a record array consisting of
+    headers, which are record arrays of the modflow header information
     (kstp, kper, pertim, totim, text, nrow, ncol, ilay)
     and long integers, which are pointers to first bytes of data for
     the corresponding data array.
@@ -488,10 +476,8 @@ class CellBudgetFile(object):
                              'imeth', 'delt', 'pertim', 'totim']:
                     print itxt + ': ' + str(header[itxt])
                 print 'file position: ', ipos
-                if int(header['imeth']) != 5:
-                    print '\n'
-#            self.recorddict[header] = ipos    #store the position right after header2
-            self.recorddict[tuple(header)] = ipos    #store the position right after header2
+                print '\n'
+            self.recorddict[header] = ipos    #store the position right after header2
             self.skip_record(header)
             #self.file.seek(self.databytes, 1) #skip ahead to the beginning of the next header
             ipos = self.file.tell()
@@ -552,6 +538,7 @@ class CellBudgetFile(object):
     def list_records(self):
         '''
         Print a list of all of the records in the file
+        obj.list_records()
         '''
         for key in self.recorddict.keys():
             print key
@@ -589,24 +576,23 @@ class CellBudgetFile(object):
             header = self.recorddict.keys()[idx]
         else:
             for header in self.recorddict.keys():
-                if text.upper() not in header[self.header_dtype.names.index('text')]: continue
+                if text.upper() not in header['text']: continue
                 if kstp > 0 and kper > 0:
-                    if header[self.header_dtype.names.index('kstp')] == kstp and \
-                       header[self.header_dtype.names.index('kper')] == kper:
+                    if header['kstp'] == kstp and header['kper'] == kper:
                         break
                 elif totim >= 0.:
-                    if totim == header[len(self.header_dtype)+self.header2_dtype.names.index('totim')]:
+                    if totim == header['totim']:
                         break
                 else:
                     raise Exception('Data not found...')
 
         ipos = self.recorddict[header]
         self.file.seek(ipos, 0)
-        imeth = header[len(self.header_dtype)+self.header2_dtype.names.index('imeth')]
-        s = 'Returning ' + header[self.header_dtype.names.index('text')].strip() + ' as '
-        nlay = abs(header[self.header_dtype.names.index('nlay')])
-        nrow = header[self.header_dtype.names.index('nrow')]
-        ncol = header[self.header_dtype.names.index('ncol')]
+        imeth = header['imeth']
+        s = 'Returning ' + header['text'].strip() + ' as '
+        nlay = abs(header['nlay'])
+        nrow = header['nrow']
+        ncol = header['ncol']
         if imeth == 0:
             if verbose:
                 s += 'an array of shape ' + str( (nlay, nrow, ncol) )
@@ -698,5 +684,3 @@ class CellBudgetFile(object):
             idx = node - 1
             out[idx] += q
         return np.reshape(out, (nlay, nrow, ncol))
-
-
