@@ -12,7 +12,7 @@ from flopy.mbase import Package
 
 class ModflowOc(Package):
     """
-    MODFLOW Recharge Package Class.
+    MODFLOW Output Control Package Class.
 
     Parameters
     ----------
