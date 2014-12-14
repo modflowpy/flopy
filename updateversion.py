@@ -7,26 +7,26 @@ def update_version():
     unknown = 'unknown'
     
     try:
-        v = subprocess.Popen(("svnversion", "-q"), stdout = subprocess.PIPE).communicate()[0]
+        v = subprocess.Popen(("git", "describe", "--match", "build"), stdout = subprocess.PIPE).communicate()[0]
+        #v = os.system("git describe")
+        print v
         err = None
     except Exception, e:
         v = unknown
         err = e
-    if ':' in v:
-        v = v.strip().split(':')[-1]
-    if 'M' in v:
-        v = int(v.replace('M', '')) + 1
-    elif 'S' in v:
-        v = v.replace('S', '')
-    version_type = ('2', '2', '{0}'.format(v)) 
+    if v is not unknown:
+        v = v.strip().split('-')[1]
+        print v
+    version_type = ('3', '0', '{0}'.format(v)) 
     version = '.'.join(version_type)
-    
     try:
         from flopy import __version__
     except:
         __version__ = unknown
     
     if __version__ != version:
+        version_type = ('3', '0', '{0}'.format(int(v)+1)) 
+        version = '.'.join(version_type)
         print 'Need to update version:'
         print '  ', __version__, '->', version
         f = open(os.path.normpath('flopy/version.py'), 'w')
@@ -36,6 +36,11 @@ def update_version():
         f.close()
     else:
         print 'version file with __version__={0} is current.'.format(__version__)
+        
+    cmdtag = "git tag -a {0} -m 'Version {0}'".format(version)
+    os.system(cmdtag)
+    #cmdtag = "git push --tags"
+    #os.system(cmdtag)
  
  
 if __name__ == "__main__":
