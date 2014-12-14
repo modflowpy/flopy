@@ -92,7 +92,8 @@ class ModflowWel(Package):
     """
     def __init__(self, model, iwelcb=0, layer_row_column_data=None,
                  layer_row_column_Q=None,
-                 extension ='wel', unitnumber=20, options=None, naux=0, zerobase=True):
+                 extension ='wel', unitnumber=20, options=None, naux=0, zerobase=True,
+                 specify={use:False, value=1.e-6, unit=model.lst.unit_number[0]}):
         """
         Package constructor.
 
@@ -237,7 +238,7 @@ class ModflowWel(Package):
                     bnd = []
                     for jdx in xrange(nitems):
                         if jdx < 3:
-                            bnd.append(int(t[jdx]))
+                            bnd.append(int(t[jdx])-1) #convert to zero-based.
                         else:
                             bnd.append(float(t[jdx]))
                     current.append(bnd)
