@@ -58,6 +58,9 @@ class ModflowWel(Package):
         Filename extension (default is 'wel')
     unitnumber : int
         File unit number (default is 11).
+    zerobase : boolean (default is True)
+        True when zero-based indices are used: layers, rows, columns start at 0
+        False when one-based indices are used: layers, rows, columns start at 1 (deprecated)
 
 
     Attributes
@@ -89,7 +92,7 @@ class ModflowWel(Package):
     """
     def __init__(self, model, iwelcb=0, layer_row_column_data=None,
                  layer_row_column_Q=None,
-                 extension ='wel', unitnumber=20, options=None, naux=0):
+                 extension ='wel', unitnumber=20, options=None, naux=0, zerobase=True):
         """
         Package constructor.
 
@@ -109,7 +112,7 @@ class ModflowWel(Package):
 
         self.mxactw = 0
         self.mxactw, self.layer_row_column_data = \
-            self.assign_layer_row_column_data(layer_row_column_data, 4+naux)
+            self.assign_layer_row_column_data(layer_row_column_data, 4+naux, zerobase=zerobase)
 
         self.np = 0
         if options is None:
