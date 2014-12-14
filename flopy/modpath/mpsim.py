@@ -50,9 +50,11 @@ class ModpathSim(Package):
                  option_flags = [1, 2, 1, 1, 1, 2, 2, 1, 2, 1, 1, 1],
                  endpoint_file = 'mp.end', pathline_file = 'mp.pth', time_ser_file = 'mp.tim_ser',
                  advobs_file = 'mp.advobs', ref_time = 0, ref_time_per_stp = [0, 1, 1.0], stop_time = None, group_ct = 1,
-                 group_name = ['group_1'], group_placement = [[1, 1, 1, 0, 1, 1]], release_times = [[1, 1]], group_region = [[1, 1, 1, 1, 1, 1]], mask_nlay = [1],
+                 group_name = ['group_1'], group_placement = [[1, 1, 1, 0, 1, 1]], release_times = [[1, 1]],
+                 group_region = [[1, 1, 1, 1, 1, 1]], mask_nlay = [1],
                  mask_layer = [1], mask_1lay = [1], face_ct = [1], ifaces = [[6, 1, 1]], part_ct = [[1, 1, 1]],
                  strt_file = 'starting.locations', time_ct = 1, release_time_incr = 1, time_pts = [1],
+                 particle_cell_cnt = [[2, 2, 2]], 
                  cell_bd_ct = 1, bud_loc = [[1, 1, 1]], trace_file = 'trace_file.txt', trace_id = 1, stop_zone = 1, zone = 1,
                  retard_fac = 1.0, retard_fcCB = 1.0, extension='mpsim'):
         
@@ -92,7 +94,8 @@ class ModpathSim(Package):
         self.strt_file = strt_file 
         self.time_ct = time_ct  
         self.release_time_incr = release_time_incr	
-        self.time_pts = time_pts 
+        self.time_pts = time_pts
+        self.particle_cell_cnt = particle_cell_cnt
         self.cell_bd_ct = cell_bd_ct 
         self.bud_loc = bud_loc  
         self.trace_file = trace_file 
@@ -102,21 +105,21 @@ class ModpathSim(Package):
         self.retard_fac = retard_fac 
         self.retard_fcCB = retard_fcCB
         
-        self.mask_nlay = util_3d(model,(nlay,nrow,ncol),np.int,\
-                              mask_nlay,name='mask_nlay',locat=self.unit_number[0])
-        self.mask_1lay = util_3d(model,(nlay,nrow,ncol),np.int,\
-                              mask_1lay,name='mask_1lay',locat=self.unit_number[0])
-        self.stop_zone = util_3d(model,(nlay,nrow,ncol),np.int,\
-                              stop_zone,name='stop_zone',locat=self.unit_number[0])
-        self.retard_fac = util_3d(model,(nlay,nrow,ncol),np.float32,\
-                              retard_fac,name='retard_fac',locat=self.unit_number[0])
-        self.retard_fcCB = util_3d(model,(nlay,nrow,ncol),np.float32,\
-                              retard_fcCB,name='retard_fcCB',locat=self.unit_number[0])
+        #self.mask_nlay = util_3d(model,(nlay,nrow,ncol),np.int,\
+                              #mask_nlay,name='mask_nlay',locat=self.unit_number[0])
+        #self.mask_1lay = util_3d(model,(nlay,nrow,ncol),np.int,\
+                              #mask_1lay,name='mask_1lay',locat=self.unit_number[0])
+        #self.stop_zone = util_3d(model,(nlay,nrow,ncol),np.int,\
+                              #stop_zone,name='stop_zone',locat=self.unit_number[0])
+        #self.retard_fac = util_3d(model,(nlay,nrow,ncol),np.float32,\
+                              #retard_fac,name='retard_fac',locat=self.unit_number[0])
+        #self.retard_fcCB = util_3d(model,(nlay,nrow,ncol),np.float32,\
+                              #retard_fcCB,name='retard_fcCB',locat=self.unit_number[0])
 
         self.parent.add_package(self)
 
     def write_file(self):
-        # item numbers and camelcase variable names correspond to Modpath 6 documentation
+        # item numbers and CamelCase variable names correspond to Modpath 6 documentation
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         
         f_sim = open(self.fn_path, 'w')
@@ -149,7 +152,7 @@ class ModpathSim(Package):
         # item 9
         if self.options_dict['ReferenceTimeOption'] == 2:
             Period, Step, TimeFraction = self.ref_time_per_stp
-            f_sim.write('{0:d} {0:d} {0:f}\n'.format(Period, Step, TimeFraction))
+            f_sim.write('{0:d} {1:d} {2:f}\n'.format(Period, Step, TimeFraction))
 
         # item 10
         if self.options_dict['StopOption'] == 3:
@@ -163,34 +166,34 @@ class ModpathSim(Package):
                 f_sim.write('{0:s}\n'.format(self.group_name[i]))
                 # item 13
                 Grid, GridCellRegionOption, PlacementOption, ReleaseStartTime, ReleaseOption, CHeadOption = self.group_placement[i]
-                f_sim.write('{0:d} {0:d} {0:d} {0:f} {0:d} {0:d}\n'.format(Grid, GridCellRegionOption, PlacementOption, ReleaseStartTime, ReleaseOption, CHeadOption))
+                f_sim.write('{0:d} {1:d} {2:d} {3:f} {4:d} {5:d}\n'.format(Grid, GridCellRegionOption, PlacementOption, ReleaseStartTime, ReleaseOption, CHeadOption))
                 # item 14
-                if self.options_dict['ReleaseOption'] == 2:
+                if ReleaseOption == 2:
                     ReleasePeriodLength, ReleaseEventCount = self.release_times[i]
-                    f_sim.write('{0:f} {0:d}\n'.format(ReleasePeriodLength, ReleaseEventCount))
+                    f_sim.write('{0:f} {1:d}\n'.format(ReleasePeriodLength, ReleaseEventCount))
                 # item 15
-                if self.options_dict['GridCellRegionOption'] == 1:
+                if GridCellRegionOption == 1:
                     MinLayer, MinRow, MinColumn, MaxLayer, MaxRow, MaxColumn = self.group_region[i]
-                    f_sim.write('{0:d} {0:d} {0:d} {0:d} {0:d} {0:d}\n'.format(MinLayer, MinRow, MinColumn, MaxLayer, MaxRow, MaxColumn))
+                    f_sim.write('{0:d} {1:d} {2:d} {3:d} {4:d} {5:d}\n'.format(MinLayer, MinRow, MinColumn, MaxLayer, MaxRow, MaxColumn))
                 # item 16
-                if self.options_dict['GridCellRegionOption'] == 2:
+                if GridCellRegionOption == 2:
                     f_sim.write(self.mask_nlay[i].get_file_entry())                        
                 # item 17
-                if self.options_dict['GridCellRegionOption'] == 3:
+                if GridCellRegionOption == 3:
                     f_sim.write('{0:s}\n'.format(self.mask_layer[i]))            
                 # item 18
                     f_sim.write(self.mask_1lay[i].get_file_entry())
                 # item 19
-                if self.options_dict['PlacementOption'] == 1:
+                if PlacementOption == 1:
                     f_sim.write('{0:d}\n'.format(self.face_ct[i]))
                     # item 20
                     for j in range(self.face_ct[i]):
                         IFace, ParticleRowCount, ParticleColumnCount = self.ifaces[i][j]
-                        f_sim.write('{0:d} {0:d} {0:d} \n'.format(IFace, ParticleRowCount, ParticleColumnCount))
+                        f_sim.write('{0:d} {1:d} {2:d} \n'.format(IFace, ParticleRowCount, ParticleColumnCount))
                 # item 21
-                if self.options_dict['PlacementOption'] == 2:
-                    ParticleLayerCount, ParticleRowCount, ParticleColumnCount = self.placement[i]
-                    f_sim.write('{0:d} {0:d} {0:d} \n'.format(ParticleLayerCount, ParticleRowCount, ParticleColumnCount))            
+                if PlacementOption == 2:
+                    ParticleLayerCount, ParticleRowCount, ParticleColumnCount = self.particle_cell_cnt[i]
+                    f_sim.write('{0:d} {1:d} {2:d} \n'.format(ParticleLayerCount, ParticleRowCount, ParticleColumnCount))            
 
         # item 22
         if self.options_dict['ParticleGenerationOption'] == 2:
@@ -215,7 +218,7 @@ class ModpathSim(Package):
                 # item 27
                 for k in range(self.cell_bd_ct):
                     Grid, Layer, Row, Column = self.bud_loc[k]
-                    f_sim.write('{0:d} {0:d} {0:d} {0:d} \n'.format(Grid, Layer, Row, Column))
+                    f_sim.write('{0:d} {1:d} {2:d} {3:d} \n'.format(Grid, Layer, Row, Column))
             if self.options_dict['BudgetOutputOption']== 4:
                 # item 28
                 f_sim.write('{0:s}\n'.format(self.trace_file))
