@@ -328,7 +328,7 @@ class Package(object):
                     new_layer_row_column_data.append(a)
                 else:
                     print 'Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing'
-                    a[:3,0] -= 1  # one-base input data, subtract 1 from layers, rows, columns
+                    a[:,:3] -= 1  # one-base input data, subtract 1 from layers, rows, columns
                     new_layer_row_column_data.append(a)
             return mxact, new_layer_row_column_data
         return
