@@ -32,6 +32,11 @@ Documentation for *FloPy* is a work in progress. *FloPy* code documentation is a
 
 + [https://flopy.googlecode.com/svn/sphinx/_build/html/index.html](https://flopy.googlecode.com/svn/sphinx/_build/html/index.html)
 
++ [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
+
+
+http://modflowpy.github.io/flopydoc/
+
 
 Examples
 -----------------------------------------------
