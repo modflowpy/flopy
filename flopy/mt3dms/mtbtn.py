@@ -42,7 +42,7 @@ class Mt3dBtn(Package):
         # Starting concentrations
         #--some defense
         if np.isscalar(sconc) and ncomp is None:
-            #print 'setting ncomp == 1 and tiling scalar-valued sconc to nlay'
+            print 'setting ncomp == 1 and tiling scalar-valued sconc to nlay'
             sconc = [sconc] 
             ncomp = 1
         elif ncomp != len(sconc):
@@ -170,7 +170,98 @@ class Mt3dBtn(Package):
             f_btn.write('{0:10.4g}{1:10d}{2:10f}\n'\
                 .format(ModflowDis.perlen[t],ModflowDis.nstp[t],\
                 ModflowDis.tsmult[t]))            
-            f_btn.write('{0:10.4g}{1:10d}{2:10f}{3:10f}\n'\
+            f_btn.write('{0:10f}{1:10d}{2:10f}{3:10f}\n'\
                 .format(self.dt0[t],self.mxstrn[t],\
                 self.ttsmult[t],self.ttsmax[t]))
         f_btn.close() 
+
+    @staticmethod
+    def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None):
+        if type(f) is not file:
+            filename = f
+            f = open(filename, 'r')
+        #A1 and A2 
+        while True:
+            line = f.readline()
+            if line[0] != '#':
+                break
+        
+        a3 = line.strip().split()
+        nlay,nrow,ncol,nper,ncomp,mcomp = int(a3[0]),int(a3[1]),int(a3[2]),int(a3[3]),int(a3[4]),int(a3[5])
+        
+        a4 = f.readline().strip().split()
+        tunit,lunit,munit = a4
+        
+        a5 = f.readline().strip().split()
+
+        a6 = f.readline().strip().split()
+
+
+        delr = util_2d.load(f, model, (ncol,1), np.float32, 'delr',
+                              ext_unit_dict)
+        delc = util_2d.load(f, model, (nrow,1), np.float32, 'delc',
+                              ext_unit_dict)
+        htop = util_2d.load(f, model, (nrow,ncol), np.float32, 'htop',
+                              ext_unit_dict)
+        dz = util_3d.load(f,model,(nlay,nrow,ncol),np.float32, 'dz',
+                          ext_unit_dict)
+        prsity = util_3d.load(f,model,(nlay,nrow,ncol),np.float32, 'prsity',
+                          ext_unit_dict)
+        icbund = util_3d.load(f,model,(nlay,nrow,ncol),np.int, 'icbund',
+                          ext_unit_dict)
+        sconc = util_3d.load(f,model,(nlay,nrow,ncol),np.float32, 'sconc',
+                          ext_unit_dict)
+
+        a14 = f.readline().strip().split()
+        cinact,thkmin = float(a14[0]),float(a14[1])
+
+        a15 = f.readline().strip().split()
+        ifmtcn,ifmtnp,ifmtrf,ifmtdp = int(a15[0]),int(a15[1]),int(a15[2]),int(a15[3])
+        savucn = False
+        if (a15[4].lower() == 't'): savucn = True
+
+        a16 = f.readline().strip().split()
+        nprs = int(a16[0])
+        timprs = []
+        while len(timprs) < nprs:
+            line = f.readline().strip().split()
+            [timprs.append(float(l)) for l in line]
+
+        a18 = f.readline().strip().split()
+        nobs,nprobs = int(a18[0]),int(a18[1])
+        obs = []
+        while len(obs) < nobs:
+            line = np.array(f.readline().strip().split(),dtype=np.int)
+            obs.append(line)
+        obs = np.array(obs)
+
+        a20 = f.readline().strip().split()
+        chkmas = False
+        if (a20[0].lower() == 't'): chkmas = True
+        nprmas = int(a20[1])
+        dt0,mxstrn,ttsmult,ttsmax = [],[],[],[]
+        for kper in xrange(nper):
+            line = f.readline().strip().split()
+            tsm = float(line[2])
+            if tsm <= 0:
+                raise Exception("tsmult <= 0 not supported")
+            line = f.readline().strip().split()
+
+            dt0.append(float(line[0]))
+            mxstrn.append(int(line[1]))
+            ttsmult.append(float(line[2]))
+            ttsmax.append(float(line[3]))
+
+        f.close()
+        btn = Mt3dBtn(model,ncomp=ncomp,mcomp=mcomp,tunit=tunit,lunit=lunit,\
+                      munit=munit,prsity=prsity,icbund=icbund,sconc=[sconc],\
+                      cinact=cinact,thkmin=thkmin,ifmtcn=ifmtcn,ifmtnp=ifmtnp,\
+                      ifmtrf=ifmtrf,ifmtdp=ifmtdp,savucn=savucn,nprs=nprs,\
+                      timprs=timprs,obs=obs,nprobs=nprobs,chkmas=chkmas,\
+                      nprmas=nprmas,dt0=dt0,mxstrn=mxstrn,ttsmult=ttsmult,\
+                      ttsmax=ttsmax)
+        return btn
+
+
+
+
