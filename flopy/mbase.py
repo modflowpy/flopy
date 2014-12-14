@@ -354,10 +354,11 @@ class Package(object):
                 f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
                 for b in a:
                     #f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
-                    f.write(' {0:9d} {1:9d} {2:9d}\n'.format(b[0]+1,b[1],b[2]))  # write out layer+1
+                    print (b[0],b[1],b[2])
+                    f.write(' {0:9.0f} {1:9.0f} {2:9.0f}\n'.format(b[0]+1,b[1]+1,b[2]+1))  # write out layer+1, row+1, col+1
                     for c in b[3:]:
                         #f.write(' %13.6e' % c)
-                        f.write(' {12.6}'.format(c))
+                        f.write(' {:12.6g}'.format(c))
                     f.write('\n')
             else:
                 itmp = -1
