@@ -27,7 +27,8 @@ class BaseModel(object):
             try:
                 os.makedirs(model_ws)
             except:
-                print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
+                #print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
+                print '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd())
                 model_ws = os.getcwd()
         self.model_ws= model_ws
         self.cl_params = ''
@@ -102,7 +103,9 @@ class BaseModel(object):
         s = ''        
         for p in self.packagelist:
             for i in range(len(p.name)):
-                s = s + ('%s %3i %s %s\n' % (p.name[i], p.unit_number[i],
+                #s = s + ('%s %3i %s %s\n' % (p.name[i], p.unit_number[i],
+                #                             p.file_name[i],p.extra[i]))
+                s = s + ('{0:s} {1:3d} {2:s} {3:s}\n'.format(p.name[i], p.unit_number[i],
                                              p.file_name[i],p.extra[i]))
         return s
                 
@@ -125,7 +128,8 @@ class BaseModel(object):
             try:
                 os.makedirs(new_pth)
             except:
-                print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
+                #print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
+                print '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd())
                 new_pth = os.getcwd()
         #--reset the model workspace
         self.model_ws = new_pth
@@ -147,7 +151,8 @@ class BaseModel(object):
             Name of file to store stdout. (default is None).
         """
         batch_file_name = os.path.join(self.model_ws, 'run.bat')
-        error_message = ('Model executable %s not found!' % self.exe_name)
+        #error_message = ('Model executable %s not found!' % self.exe_name)
+        error_message = 'Model executable {0:s} not found!'.format(self.exe_name)
         assert os.path.exists(self.exe_name), error_message
 
         error_message = ('Name file %s not found!' % self.namefile)
@@ -156,8 +161,10 @@ class BaseModel(object):
 
         # Create a batch file to call code so that window remains open in case of error messages
         f = open(batch_file_name, 'w')
-        f.write('@ECHO Calling %s with %s\n' % (self.exe_name, self.namefile))
-        f.write('%s %s %s\n' % (self.exe_name, self.namefile, self.cl_params))
+        #f.write('@ECHO Calling %s with %s\n' % (self.exe_name, self.namefile))
+        f.write('@ECHO Calling {0:s} with {1:s}\n'.format(self.exe_name, self.namefile))
+        #f.write('%s %s %s\n' % (self.exe_name, self.namefile, self.cl_params))
+        f.write('{0:s} {1:s} {2:s}\n'.format(self.exe_name, self.namefile, self.cl_params))
         if (pause):
            f.write('@PAUSE\n')
         f.close()
@@ -295,13 +302,17 @@ class Package(object):
             if not (attr in exclude_attributes):
                 if (isinstance(value, list)):
                     if (len(value) == 1):
-                        s = s + ' %s = %s (list)\n' % (attr, str(value[0]))
+                        #s = s + ' %s = %s (list)\n' % (attr, str(value[0]))
+                        s = s + ' {0:s} = {1:s}\n'.format(attr,str(value[0]))
                     else:
-                        s = s + ' %s (list, items = %d)\n' % (attr, len(value))
+                        #s = s + ' %s (list, items = %d)\n' % (attr, len(value))
+                        s = s + ' {0:s} (list, items = {1:d}\n'.format(attr,len(value))
                 elif (isinstance(value, np.ndarray)):
-                    s = s + ' %s (array, shape = %s)\n' % (attr, value.shape.__str__()[1:-1] )
+                    #s = s + ' %s (array, shape = %s)\n' % (attr, value.shape.__str__()[1:-1] )
+                    s = s + ' {0:s} (array, shape = {1:s}\n'.fomrat(attr,value.shape__str__()[1:-1])
                 else:
-                    s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
+                    #s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
+                    s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr,str(value),str(type(value))[7:-2])
         return s
 
     def assign_layer_row_column_data(self, layer_row_column_data, ncols):
@@ -334,15 +345,19 @@ class Package(object):
             if (n < len(layer_row_column_data)):
                 a = layer_row_column_data[n]
                 itmp = a.shape[0]
-                f.write('%10i%10i\n' % (itmp, self.np))
+                #f.write('%10i%10i\n' % (itmp, self.np))
+                f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
                 for b in a:
-                    f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
+                    #f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
+                    f.write(' {0:9d} {1:9d} {2:9d}\n'.format(b[0],b[1],b[2]))
                     for c in b[3:]:
-                        f.write(' %13.6e' % c)
+                        #f.write(' %13.6e' % c)
+                        f.write(' {12.6}'.format(c))
                     f.write('\n')
             else:
                 itmp = -1
-                f.write('%10i%10i\n' % (itmp, self.np))
+                #f.write('%10i%10i\n' % (itmp, self.np))
+                f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
     def load(self):
         """
         The load method has not been implemented for this package.
