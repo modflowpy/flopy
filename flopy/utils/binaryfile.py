@@ -2,10 +2,10 @@ import numpy as np
 from collections import OrderedDict
 
 class binaryheader():
-    '''
+    """
     The binary_header class is a class to create headers for MODFLOW
     binary files    
-    '''
+    """
     def __init__(self, bintype=None, precision='single'):
         floattype = 'f4'
         if precision is 'double':
