@@ -315,8 +315,8 @@ class Package(object):
                     s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr,str(value),str(type(value))[7:-2])
         return s
 
-    def assign_layer_row_column_data(self, layer_row_column_data, ncols):
-        if (layer_row_column_data != None):
+    def assign_layer_row_column_data(self, layer_row_column_data, ncols, zerobase=True):
+        if (layer_row_column_data is not None):
             new_layer_row_column_data = []
             mxact = 0
             for a in layer_row_column_data:
@@ -324,7 +324,12 @@ class Package(object):
                 nr, nc = a.shape                
                 assert nc == ncols, 'layer_row_column_Q must have {0:1d} columns'.format(ncols)+'\nentry: '+str(a.shape)                
                 mxact = max(mxact, nr)
-                new_layer_row_column_data.append(a)
+                if zerobase:
+                    new_layer_row_column_data.append(a)
+                else:
+                    print 'Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing'
+                    a[:3,0] -= 1  # one-base input data, subtract 1 from layers, rows, columns
+                    new_layer_row_column_data.append(a)
             return mxact, new_layer_row_column_data
         return
 
