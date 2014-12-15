@@ -29,6 +29,7 @@ from mfnwt import ModflowNwt
 from mfmnw1 import ModflowMnw1
 from mfmnw2 import ModflowMnw2
 from mfmnwi import ModflowMnwi
+from mfzon import ModflowZon
 from mfgmg import ModflowGmg
 from mfsms import ModflowSms
 from mfbct import ModflowBct

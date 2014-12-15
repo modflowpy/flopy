@@ -128,7 +128,8 @@ class Modflow(BaseModel):
             "pcg": flopy.modflow.ModflowPcg,
             "oc" : flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,
-            "upw": flopy.modflow.ModflowUpw
+            "upw": flopy.modflow.ModflowUpw,
+            "zone":flopy.modflow.ModflowZon
                                 }
         return
 
