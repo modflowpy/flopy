@@ -1,16 +1,152 @@
+"""
+mtbtn module. Contains the Mt3dBtn class. Note that the user can access
+the Mt3dBtn class as `flopy.mt3d.Mt3dBtn`.
+
+Additional information for this MT3DMS package can be found in the MT3DMS
+User's Manual.
+
+"""
+
 import numpy as np
-from numpy import empty,array
+#from numpy import empty,array
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
 
 class Mt3dBtn(Package):
+    """
+    Basic Transport Package Class.
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.mt3dms.mt.Mt3dms`) to which
+        this package will be added.
+    ncomp : int
+        The total number of chemical species in the simulation. (default is
+        None, will be changed to 1 if sconc is single value)
+    mcomp : int
+        The total number of “mobile” species (default is 1). mcomp must be
+        equal or less than ncomp.
+    tunit : str
+        The name of unit for time (default is 'D', for 'days'). Used for
+        identification purposes only.
+    lunit : str
+        The name of unit for length (default is 'M', for 'meters'). Used for
+        identification purposes only.
+    munit : str
+        The name of unit for mass (default is 'KG', for 'kilograms'). Used for
+        identification purposes only.
+    prsity : float or array of floats (nlay, nrow, ncol)
+        The effective porosity of the porous medium in a single porosity
+        system, or the mobile porosity in a dual-porosity medium (the immobile
+        porosity is defined through the Chemical Reaction Package. (default is
+        0.25).
+    icbund : int or array of ints (nlay, nrow, ncol)
+        The icbund array specifies the boundary condition type for solute
+        species (shared by all species). If icbund = 0, the cell is an inactive
+        concentration cell; If icbund < 0, the cell is a constant-concentration
+        cell; If icbund > 0, the cell is an active concentration cell where the
+        concentration value will be calculated. (default is 1).
+    sconc : float, array of (nlay, nrow, ncol), or filename, or a list (length
+            ncomp) of these for multi-species simulations
+        The starting concentration for the solute transport simulation.
+    cinact : float
+        The value for indicating an inactive concentration cell. (default is
+        1e30).
+    thkmin : float
+        The minimum saturated thickness in a cell, expressed as the decimal
+        fraction of its thickness, below which the cell is considered inactive.
+        (default is 0.01).
+    ifmtcn : int
+        A flag/format code indicating how the calculated concentration should
+        be printed to the standard output text file. Format codes for printing
+        are listed in Table 3 of the MT3DMS manual. If ifmtcn > 0 printing is
+        in wrap form; ifmtcn < 0 printing is in strip form; if ifmtcn = 0
+        concentrations are not printed. (default is 0).
+    ifmtnp : int
+        A flag/format code indicating how the number of particles should
+        be printed to the standard output text file. The convention is
+        the same as for ifmtcn. (default is 0).
+    ifmtrf : int
+        A flag/format code indicating how the calculated retardation factor
+        should be printed to the standard output text file. The convention is
+        the same as for ifmtcn. (default is 0).
+    ifmtdp : int
+        A flag/format code indicating how the distance-weighted dispersion
+        coefficient should be printed to the standard output text file. The
+        convention is the same as for ifmtcn. (default is 0).
+    savucn : bool
+        A logical flag indicating whether the concentration solution should be
+        saved in an unformatted file. (default is True).
+    nprs : int
+        A flag indicating (i) the frequency of the output and
+        (ii) whether the output frequency is specified in terms
+        of total elapsed simulation time or the transport step number. If
+        nprs > 0 results will be saved at the times as specified in timprs;
+        if nprs = 0, results will not be saved except at the end of simulation;
+        if NPRS < 0, simulation results will be saved whenever the number of
+        transport steps is an even multiple of nprs. (default is 0).
+    timprs : list of floats
+        The total elapsed time at which the simulation results are saved. The
+        number of entries in timprs must equal nprs. (default is None).
+    obs: array of int
+        An array with the cell indices (layer, row, column) for which the
+        concentration is to be printed at every transport step. (default is
+        None).
+    nprobs: int
+        An integer indicating how frequently the concentration at the specified
+        observation points should be saved. (default is 1).
+    chkmas: bool
+        A logical flag indicating whether a one-line summary of mass balance
+        information should be printed. (default is True).
+    nprmas: int
+        An integer indicating how frequently the mass budget information
+        should be saved. (default is 1).
+    dt0: float
+        The user-specified initial transport step size within each time-step 
+        of the flow solution. (default is 0).
+    mxstrn: int
+        The maximum number of transport steps allowed within one time step
+        of the flow solution. (default is 50000).
+    ttsmult: float
+        The multiplier for successive transport steps within a flow time-step
+        if the GCG solver is used and the solution option for the advection
+        term is the standard finite-difference method. (default is 1.0).
+    ttsmax: float
+        The maximum transport step size allowed when transport step size
+        multiplier TTSMULT > 1.0. (default is 0).
+    species_names: list of str
+        A list of names for every species in the simulation.
+    extension : string
+        Filename extension (default is 'btn')
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> mt = flopy.mt3dms.Mt3dms()
+    >>> btn = flopy.mt3dms.Mt3dBtn(mt)
+
+    """
     'Basic transport package class\n'
     #--changed default ncomp to None and raise error if len(sconc) != ncomp - relieves sconc assignement problems
     def __init__(self, model, ncomp=None, mcomp=1, tunit='D', lunit='M',
                  munit='KG', prsity=0.30, icbund=1, sconc=0.0,
                  cinact=1e30, thkmin=0.01, ifmtcn=0, ifmtnp=0, 
                  ifmtrf=0, ifmtdp=0, savucn=True, nprs=0, timprs=None,
-                 obs=None,nprobs=1, chkmas=True, nprmas=1, dt0=0, 
+                 obs=None,nprobs=1, chkmas=True, nprmas=1, dt0=0,
                  mxstrn=50000, ttsmult=1.0, ttsmax=0, 
                  species_names = [], extension='btn'):
         Package.__init__(self, model, extension, 'BTN', 31) 
@@ -261,7 +397,3 @@ class Mt3dBtn(Package):
                       nprmas=nprmas,dt0=dt0,mxstrn=mxstrn,ttsmult=ttsmult,\
                       ttsmax=ttsmax)
         return btn
-
-
-
-
