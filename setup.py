@@ -88,6 +88,6 @@ setup(name=__name__,
       url='https://code.google.com/p/flopy/',
       license='New BSD',
       platforms='Windows, Mac OS-X',
-      packages=['flopy','flopy.modflow','flopy.modpath','flopy.mt3dms','flopy.seawat','flopy.utils'],
+      packages=['flopy','flopy.modflow','flopy.modpath','flopy.mt3d','flopy.seawat','flopy.utils'],
       # use this version ID if .svn data cannot be found
       version=__version__ )
