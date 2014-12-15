@@ -3,6 +3,8 @@ import warnings
 import numpy as np
 import flopy
 
+
+
 class mflist(object):
 
     def __init__(self,model,dtype,data=None):
@@ -63,9 +65,9 @@ class mflist(object):
             #print "mflist warning: casting list to array at kper {0:d}".format(kper)
             warnings.warn("mflist casting list to array")
             try:
-                d = np.array(d)
+                data = np.array(data)
             except Exception as e:
-                raise Exception("mflist error: casting list to ndarray")
+                raise Exception("mflist error: casting list to ndarray: "+str(e))
 
         if isinstance(data,dict):
             for kper,d in data.iteritems():
@@ -148,7 +150,7 @@ class mflist(object):
                                                        str(len(self.dtype))
             warnings.warn("mflist: ndarray dtype does not match self dtype, trying to cast")
         try:
-            self.__data[kper] = np.core.records.fromarrays(d.transpose(),dtype=dtype)
+            self.__data[kper] = np.core.records.fromarrays(d.transpose(),dtype=self.dtype)
         except Exception as e:
             raise Exception("mflist error: casting ndarray to recarray: "+str(e))
         self.__vtype[kper] = np.recarray
@@ -185,7 +187,7 @@ class mflist(object):
 
 
     def get_empty(self,nrow=0):
-        d = np.zeros((nrow,len(dtype)),dtype=dtype)
+        d = np.zeros((nrow,len(self.dtype)),dtype=self.dtype)
         d[:,:] = -1.0E+10
         return d
 
@@ -216,7 +218,9 @@ class mflist(object):
                     itmp = kper_data
             else:
                 itmp = -1
+                kper_vtype = int
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n".format(itmp,0,kper))
             if kper_vtype == np.recarray:
-                fstr = self.fmt_string
-                np.savetxt(f,kper_data,fmt=fstr,delimiter='')
+                if True:
+                    self.check_ijk()
+                np.savetxt(f,kper_data,fmt=self.fmt_string,delimiter='')

@@ -7,8 +7,9 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?riv.htm>`_.
 
 """
-
+import numpy as np
 from flopy.mbase import Package
+from flopy.utils.util_list import mflist
 
 class ModflowRiv(Package):
     """
@@ -105,6 +106,11 @@ class ModflowRiv(Package):
         self.options = options
         self.parent.add_package(self)
 
+        self.dtype = np.dtype([("layer",np.int),("row",np.int),\
+                               ("column",np.int),("stage",np.float32),\
+                               ("cond",np.float32),("rbot",np.float32)])
+        self.list_data = mflist(model,self.dtype,layer_row_column_data)
+
     def __repr__( self ):
         return 'River class'
 
@@ -118,15 +124,26 @@ class ModflowRiv(Package):
         Write the file.
 
         """
+        # f_riv = open(self.fn_path, 'w')
+        # f_riv.write('{0}\n'.format(self.heading))
+        # line = '{0:10d}{1:10d}'.format(self.mxactr, self.irivcb)
+        # for opt in self.options:
+        #     line += ' ' + str(opt)
+        # line += '\n'
+        # f_riv.write(line)
+        # self.write_layer_row_column_data(f_riv, self.layer_row_column_data)
+        # f_riv.close()
+
         f_riv = open(self.fn_path, 'w')
         f_riv.write('{0}\n'.format(self.heading))
-        line = '{0:10d}{1:10d}'.format(self.mxactr, self.irivcb)
+        line = '{0:10d}{1:10d}'.format(self.list_data.mxact, self.irivcb)
         for opt in self.options:
             line += ' ' + str(opt)
         line += '\n'
         f_riv.write(line)
-        self.write_layer_row_column_data(f_riv, self.layer_row_column_data)
+        self.list_data.write_transient(f_riv)
         f_riv.close()
+
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
