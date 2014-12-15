@@ -763,7 +763,7 @@ class util_2d():
                     curr_unit = cunit
                     break
 
-        cr_dict = util_2d.parse_control_record(f_handle.readline(), curr_unit)
+        cr_dict = util_2d.parse_control_record(f_handle.readline(), current_unit=curr_unit, dtype=dtype)
         
         if cr_dict['type'] == 'constant':
             u2d = util_2d(model,shape,dtype,cr_dict['cnstnt'],name=name,\
@@ -794,7 +794,7 @@ class util_2d():
             
 
     @staticmethod
-    def parse_control_record(line,current_unit = None):
+    def parse_control_record(line, current_unit=None, dtype=np.float32):
         '''parses a control record when reading an existing file
         rectifies fixed to free format
         current_unit (optional) indicates the unit number of the file being parsed
@@ -802,32 +802,47 @@ class util_2d():
         free_fmt = ['open/close','internal','external','constant']
         raw = line.lower().strip().split()
         freefmt,cnstnt,fmtin,iprn,nunit = None,None,None,-1,None
-        fname = None        
+        fname = None 
+        isFloat = False
+        if dtype == np.float or dtype==np.float32:
+            isFloat = True       
         #--if free format keywords
         if raw[0] in free_fmt:
             freefmt = raw[0]
-            if raw[0] == 'constant':                
-                cnstnt = np.float(raw[1].lower().replace('d', 'e'))                    
+            if raw[0] == 'constant':
+                if isFloat:                
+                    cnstnt = np.float(raw[1].lower().replace('d', 'e'))
+                else:
+                    cnstnt = np.int(raw[1].lower())                   
             if raw[0] == 'internal':
                 fmtin = raw[2].strip()
                 iprn = int(raw[3])
             elif raw[0] == 'external':
                 nunit = int(raw[1])
-                cnstnt = np.float(raw[2].lower().replace('d', 'e'))
+                if isFloat:                
+                    cnstnt = np.float(raw[2].lower().replace('d', 'e'))
+                else:
+                    cnstnt = np.int(raw[2].lower())                   
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
             elif raw[0] == 'open/close':
                 fname = raw[1].strip()
-                cnstnt = np.float(raw[2].lower().replace('d', 'e'))
+                if isFloat:                
+                    cnstnt = np.float(raw[2].lower().replace('d', 'e'))
+                else:
+                    cnstnt = np.int(raw[2].lower())                   
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
                 npl,fmt,width,decimal = None,None,None,None
         else:
-            locat = int(line[0:10].strip())
-            cnstnt = float(line[10:20].strip())
+            locat = np.int(line[0:10].strip())
+            if isFloat:                
+                cnstnt = np.float(line[10:20].strip().lower().replace('d', 'e'))
+            else:
+                cnstnt = np.int(line[10:20].strip())
             if locat != 0:
                 fmtin = line[20:40].strip()
-                iprn = int(line[40:50].strip())
+                iprn = np.int(line[40:50].strip())
             #locat = int(raw[0])        
             #cnstnt = float(raw[1])
             #fmtin = raw[2].strip()
@@ -837,7 +852,7 @@ class util_2d():
                 freefmt = 'constant'
             elif locat < 0:
                 freefmt = 'external'
-                nunit = int(locat) * -1    
+                nunit = np.int(locat) * -1    
                 fmtin = '(binary)'
             elif locat > 0:
                 # if the unit number matches the current file, it's internal
@@ -845,7 +860,7 @@ class util_2d():
                     freefmt = 'internal'
                 else:
                     freefmt = 'external'
-                nunit = int(locat)                                                    
+                nunit = np.int(locat)                                                    
         cr_dict = {}                                                 
         cr_dict['type'] = freefmt
         cr_dict['cnstnt'] = cnstnt
