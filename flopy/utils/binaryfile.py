@@ -476,7 +476,9 @@ class CellBudgetFile(object):
                              'imeth', 'delt', 'pertim', 'totim']:
                     print itxt + ': ' + str(header[itxt])
                 print 'file position: ', ipos
-                print '\n'
+                if int(header['imeth']) != 5:
+                    print '\n'
+#            self.recorddict[header] = ipos    #store the position right after header2
             self.recorddict[tuple(header)] = ipos    #store the position right after header2
             self.skip_record(header)
             #self.file.seek(self.databytes, 1) #skip ahead to the beginning of the next header
@@ -538,7 +540,6 @@ class CellBudgetFile(object):
     def list_records(self):
         '''
         Print a list of all of the records in the file
-        obj.list_records()
         '''
         for key in self.recorddict.keys():
             print key
@@ -576,23 +577,24 @@ class CellBudgetFile(object):
             header = self.recorddict.keys()[idx]
         else:
             for header in self.recorddict.keys():
-                if text.upper() not in header['text']: continue
+                if text.upper() not in header[self.header_dtype.names.index('text')]: continue
                 if kstp > 0 and kper > 0:
-                    if header['kstp'] == kstp and header['kper'] == kper:
+                    if header[self.header_dtype.names.index('kstp')] == kstp and \
+                       header[self.header_dtype.names.index('kper')] == kper:
                         break
                 elif totim >= 0.:
-                    if totim == header['totim']:
+                    if totim == header[len(self.header_dtype)+self.header2_dtype.names.index('totim')]:
                         break
                 else:
                     raise Exception('Data not found...')
 
         ipos = self.recorddict[header]
         self.file.seek(ipos, 0)
-        imeth = header['imeth']
-        s = 'Returning ' + header['text'].strip() + ' as '
-        nlay = abs(header['nlay'])
-        nrow = header['nrow']
-        ncol = header['ncol']
+        imeth = header[len(self.header_dtype)+self.header2_dtype.names.index('imeth')]
+        s = 'Returning ' + header[self.header_dtype.names.index('text')].strip() + ' as '
+        nlay = abs(header[self.header_dtype.names.index('nlay')])
+        nrow = header[self.header_dtype.names.index('nrow')]
+        ncol = header[self.header_dtype.names.index('ncol')]
         if imeth == 0:
             if verbose:
                 s += 'an array of shape ' + str( (nlay, nrow, ncol) )
