@@ -221,6 +221,4 @@ class mflist(object):
                 kper_vtype = int
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n".format(itmp,0,kper))
             if kper_vtype == np.recarray:
-                if True:
-                    self.check_ijk()
                 np.savetxt(f,kper_data,fmt=self.fmt_string,delimiter='')
