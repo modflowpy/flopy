@@ -477,7 +477,7 @@ class CellBudgetFile(object):
                     print itxt + ': ' + str(header[itxt])
                 print 'file position: ', ipos
                 print '\n'
-            self.recorddict[header] = ipos    #store the position right after header2
+            self.recorddict[tuple(header)] = ipos    #store the position right after header2
             self.skip_record(header)
             #self.file.seek(self.databytes, 1) #skip ahead to the beginning of the next header
             ipos = self.file.tell()
