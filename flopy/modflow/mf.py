@@ -118,6 +118,7 @@ class Modflow(BaseModel):
         #This is used for loading models.
         self.mfnam_packages = {
             "zone":flopy.modflow.ModflowZon,
+            "mult":flopy.modflow.ModflowMlt,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
             "lpf": flopy.modflow.ModflowLpf,
