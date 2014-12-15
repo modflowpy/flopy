@@ -346,18 +346,19 @@ class Package(object):
         print 'IMPLEMENTATION ERROR: write_file must be overloaded'
 
     def write_layer_row_column_data(self, f, layer_row_column_data):
-        for n in range(self.parent.get_package('DIS').nper):
-            if (n < len(layer_row_column_data)):
+        for n in xrange(self.parent.get_package('DIS').nper):
+            if n < len(layer_row_column_data):
                 a = layer_row_column_data[n]
                 itmp = a.shape[0]
                 #f.write('%10i%10i\n' % (itmp, self.np))
-                f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
+                f.write(' {0:9d} {1:9d}       STRESS PERIOD {2:6d}\n'.format(itmp, self.np, n+1))
                 for b in a:
                     #f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
-                    f.write(' {0:9d} {1:9d} {2:9d}\n'.format(b[0]+1,b[1],b[2]))  # write out layer+1
+                    print (b[0],b[1],b[2])
+                    f.write(' {0:9.0f} {1:9.0f} {2:9.0f}'.format(b[0]+1, b[1]+1, b[2]+1))  # write out layer+1, row+1, col+1
                     for c in b[3:]:
                         #f.write(' %13.6e' % c)
-                        f.write(' {12.6}'.format(c))
+                        f.write(' {:12.6g}'.format(c))
                     f.write('\n')
             else:
                 itmp = -1

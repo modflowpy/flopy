@@ -54,6 +54,9 @@ class ModflowRiv(Package):
         Filename extension (default is 'riv')
     unitnumber : int
         File unit number (default is 18).
+    zerobase : boolean (default is True)
+        True when zero-based indices are used: layers, rows, columns start at 0
+        False when one-based indices are used: layers, rows, columns start at 1 (deprecated)
 
     Attributes
     ----------
@@ -83,7 +86,7 @@ class ModflowRiv(Package):
 
     """
     def __init__(self, model, irivcb=0, layer_row_column_data=None,
-                 extension ='riv', unitnumber=18, options=None, naux=0):
+                 extension ='riv', unitnumber=18, options=None, naux=0, zerobase=True):
         """
         Package constructor.
 
@@ -95,7 +98,7 @@ class ModflowRiv(Package):
         self.irivcb = irivcb
         self.mxactr = 0
         self.mxactr, self.layer_row_column_data = \
-            self.assign_layer_row_column_data(layer_row_column_data, 6+naux)
+            self.assign_layer_row_column_data(layer_row_column_data, 6+naux, zerobase=zerobase)
         self.np = 0
         if options is None:
             options = []

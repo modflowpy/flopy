@@ -78,7 +78,7 @@ class Modflow(BaseModel):
 
     """
 
-    def __init__(self, modelname = 'modflowtest', namefile_ext = 'nam',
+    def __init__(self, modelname = 'modflowtest', namefile_ext='nam',
                  version='mf2005', exe_name='mf2005.exe',
                  listunit=2, model_ws=None,external_path=None,
                  verbose=False, load=True, silent = 0):
@@ -171,7 +171,7 @@ class Modflow(BaseModel):
         """
         Write the model files.
         """
-        fn_path = os.path.join(self.model_ws,self.namefile)
+        fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('%s\n' % (self.heading) )
         if self.version == 'mf2k':
