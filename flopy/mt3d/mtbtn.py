@@ -25,7 +25,7 @@ class Mt3dBtn(Package):
         The total number of chemical species in the simulation. (default is
         None, will be changed to 1 if sconc is single value)
     mcomp : int
-        The total number of “mobile” species (default is 1). mcomp must be
+        The total number of 'mobile' species (default is 1). mcomp must be
         equal or less than ncomp.
     tunit : str
         The name of unit for time (default is 'D', for 'days'). Used for
