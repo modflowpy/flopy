@@ -459,6 +459,7 @@ class CellBudgetFile(object):
         ipos = 0
         while ipos < self.totalbytes:           
             header = self.get_header()
+            header = tuple(header)
             if self.verbose:
                 print header
             self.nrecords += 1
