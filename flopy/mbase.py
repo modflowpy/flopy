@@ -3,6 +3,7 @@ import sys
 import os
 import subprocess as sp
 import webbrowser as wb
+import warnings
 
 # Global variables
 iconst = 1 # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
@@ -327,7 +328,8 @@ class Package(object):
                 if zerobase:
                     new_layer_row_column_data.append(a)
                 else:
-                    print 'Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing'
+                    warnings.warn('Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing')
+                    #print 'Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing'
                     a[:,:3] -= 1  # one-base input data, subtract 1 from layers, rows, columns
                     new_layer_row_column_data.append(a)
             return mxact, new_layer_row_column_data
@@ -354,7 +356,6 @@ class Package(object):
                 f.write(' {0:9d} {1:9d}       STRESS PERIOD {2:6d}\n'.format(itmp, self.np, n+1))
                 for b in a:
                     #f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
-                    print (b[0],b[1],b[2])
                     f.write(' {0:9.0f} {1:9.0f} {2:9.0f}'.format(b[0]+1, b[1]+1, b[2]+1))  # write out layer+1, row+1, col+1
                     for c in b[3:]:
                         #f.write(' %13.6e' % c)
