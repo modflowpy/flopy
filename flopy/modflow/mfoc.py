@@ -220,7 +220,7 @@ class ModflowOc(Package):
         #--numeric codes                                       
         else:
             self.words = None
-            dummy, self.item2 = self.assign_layer_row_column_data(item2, 4)
+            dummy, self.item2 = self.assign_layer_row_column_data(item2, 4, zerobase=False)  # misuse of this function - zerobase needs to be False
             if (item2 != None):
                 error_message = 'item2 must have 4 columns'
                 if (not isinstance(item2, list)):

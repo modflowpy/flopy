@@ -47,9 +47,9 @@ class Mt3dTob(Package):
                         self.iOutFlux))
             for FluxGroup in self.FluxGroups:
                 nFluxTimeObs, FluxTimeObs = (
-                    self.assign_layer_row_column_data(FluxGroup[0], 5) )
+                    self.assign_layer_row_column_data(FluxGroup[0], 5, zerobase=False) ) # misuse of function - zerobase set to False
                 nCells, Cells = self.assign_layer_row_column_data(FluxGroup[1],
-                                                                  4)
+                                                                  4, zerobase=False) # misuse of function - zerobase set to False
                 nCells = 4
                 iSSType = FluxGroup[2]
                 f_tob.write('%10d%10d%10d\n' % (nFluxTimeObs, nCells, iSSType))
