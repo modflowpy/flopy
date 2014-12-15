@@ -4,8 +4,8 @@ __author__='Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy White,
 from version import __version__, __build__
 #--modflow
 import modflow
-#--mt3dms
-import mt3dms
+#--mt3d
+import mt3d
 #--seawat
 import seawat
 #--modpath
