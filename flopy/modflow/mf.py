@@ -117,8 +117,6 @@ class Modflow(BaseModel):
         #Create a dictionary to map package with package object.
         #This is used for loading models.
         self.mfnam_packages = {
-            "zone":flopy.modflow.ModflowZon,
-            "mult":flopy.modflow.ModflowMlt,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
             "lpf": flopy.modflow.ModflowLpf,
@@ -130,7 +128,8 @@ class Modflow(BaseModel):
             "pcg": flopy.modflow.ModflowPcg,
             "oc" : flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,
-            "upw": flopy.modflow.ModflowUpw
+            "upw": flopy.modflow.ModflowUpw,
+            "zone":flopy.modflow.ModflowZon
                                 }
         return
 

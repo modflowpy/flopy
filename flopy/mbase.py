@@ -296,6 +296,9 @@ class Package(object):
             self.extra = extra
         self.url = 'index.html'
         self.allowDuplicates = allowDuplicates
+
+        self.acceptable_dtypes = [int,np.float32,str]
+
     def __repr__( self ):
         s = self.__doc__
         exclude_attributes = ['extension', 'heading', 'name', 'parent', 'url']
@@ -315,6 +318,18 @@ class Package(object):
                     #s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
                     s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr,str(value),str(type(value))[7:-2])
         return s
+
+    def add_field_to_dtype(self,field_name,field_type):
+        assert field_type in self.acceptable_dtypes,"mbase.package.add_field_to_dtype() field_type "+\
+                                                    str(type(field_type))+" not a supported type:" +\
+                                                    str(self.acceptable_dtypes)
+        newdtype = [self.dtype.descr]
+        tempdtype = np.dtype([(field_name,field_type)])
+        newdtype.append((field_name,field_type))
+        newdtypetemp = sum((dtype.descr for dtype in [self.dtype,tempdtype]), [])
+        self.dtype = np.dtype(newdtypetemp)
+        raise NotImplementedError("this function needs to check where any data has been set because it probably doesn't conform")
+
 
     def assign_layer_row_column_data(self, layer_row_column_data, ncols, zerobase=True):
         if (layer_row_column_data is not None):

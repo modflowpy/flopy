@@ -32,15 +32,28 @@ class mflist(object):
     def dtype(self):
         return self.__dtype
 
+    def get_itmp(self,kper):
+        if kper not in self.__data.keys():
+            return None
+        if self.__vtype[kper] == str:
+            return self.__fromfile(self.__data[kper]).shape[0]
+        if self.__vtype[kper] == np.recarray:
+            return self.__data[kper].shape[0]
+        #must be int
+        print self.__vtype[kper],self.__vtype[kper]==np.recarray
+        return self.__data[kper]
+
+
     @property
     def mxact(self):
-        mxact = -1.0E+10
+        mxact = 0
         for kper,data in self.__data.iteritems():
-            if self.vtype[kper] == str:
-                self.__data[kper] = self.__fromfile(data)
-                self.__vtype[kper] = np.recarray
-            if self.vtype[kper] == np.recarray:
-                mxact = max(mxact,self.data[kper].shape[0])
+            # if self.vtype[kper] == str:
+            #     self.__data[kper] = self.__fromfile(data)
+            #     self.__vtype[kper] = np.recarray
+            # if self.vtype[kper] == np.recarray:
+            #     mxact = max(mxact,self.data[kper].shape[0])
+            mxact = max(mxact,self.get_itmp(kper))
         return mxact
 
 
@@ -193,9 +206,11 @@ class mflist(object):
 
 
     def __fromfile(self,f,count=-1):
-        d = np.fromfile(f,dtype=self.dtype,count=count)
-        if d.shape[0] == 0 or d.shape[1] != len(self.dtype):
-            raise Exception("mflist.__fromfile() error: reading list from file: ")
+        #d = np.fromfile(f,dtype=self.dtype,count=count)
+        try:
+            d = np.genfromtxt(f,dtype=self.dtype)
+        except Exception as e:
+            raise Exception("mflist.__fromfile() error reading recarray from file "+str(e))
         return d
 
     def write_transient(self,f):
@@ -209,12 +224,14 @@ class mflist(object):
             if kper in kpers:
                 kper_data = self.__data[kper]
                 kper_vtype = self.__vtype[kper]
-                if self.vtype == str:
-                    kper_data = self.__fromfile(kper_data)
-                    kper_vtype = np.recarray
+                if kper_vtype == str:
+                    if not self.model.free_format:
+                        kper_data = self.__fromfile(kper_data)
+                        kper_vtype = np.recarray
+                    itmp = self.get_itmp(kper)
                 if kper_vtype == np.recarray:
                     itmp = kper_data.shape[0]
-                else:
+                elif kper_vtype == int or kper_vtype is None:
                     itmp = kper_data
             else:
                 itmp = -1
@@ -222,3 +239,5 @@ class mflist(object):
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n".format(itmp,0,kper))
             if kper_vtype == np.recarray:
                 np.savetxt(f,kper_data,fmt=self.fmt_string,delimiter='')
+            elif kper_vtype == str:
+                f.write("          open/close "+kper_data+'\n')

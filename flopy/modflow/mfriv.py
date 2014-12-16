@@ -86,7 +86,7 @@ class ModflowRiv(Package):
     >>> riv = flopy.modflow.ModflowRiv(m, layer_row_column_data=lrcd)
 
     """
-    def __init__(self, model, irivcb=0, layer_row_column_data=None,
+    def __init__(self, model, irivcb=0, layer_row_column_data=None,dtype=None,
                  extension ='riv', unitnumber=18, options=None, naux=0, zerobase=True):
         """
         Package constructor.
@@ -98,15 +98,18 @@ class ModflowRiv(Package):
         self.url = 'riv.htm'
         self.irivcb = irivcb
         self.mxactr = 0
-        self.mxactr, self.layer_row_column_data = \
-            self.assign_layer_row_column_data(layer_row_column_data, 6+naux, zerobase=zerobase)
+        #self.mxactr, self.layer_row_column_data = \
+        #    self.assign_layer_row_column_data(layer_row_column_data, 6+naux, zerobase=zerobase)
         self.np = 0
         if options is None:
             options = []
         self.options = options
         self.parent.add_package(self)
 
-        self.dtype = np.dtype([("layer",np.int),("row",np.int),\
+        if dtype is not None:
+            self.dtype = dtype
+        else:
+            self.dtype = np.dtype([("layer",np.int),("row",np.int),\
                                ("column",np.int),("stage",np.float32),\
                                ("cond",np.float32),("rbot",np.float32)])
         self.list_data = mflist(model,self.dtype,layer_row_column_data)
@@ -144,6 +147,11 @@ class ModflowRiv(Package):
         self.list_data.write_transient(f_riv)
         f_riv.close()
 
+    def add_record(self,kper,index,values):
+        try:
+            self.list_data.add_record(kper,index,values)
+        except Exception as e:
+            raise Exception("mfriv error adding record to list: "+str(e))
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):

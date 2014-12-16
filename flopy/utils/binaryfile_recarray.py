@@ -2,14 +2,11 @@ import numpy as np
 from collections import OrderedDict
 
 class binaryheader():
-    """
+    '''
     The binary_header class is a class to create headers for MODFLOW
     binary files    
-    """
-    def __init__(self, bintype=None, precision='single'):
-        floattype = 'f4'
-        if precision is 'double':
-            floattype = 'f8'
+    '''
+    def __init__(self, bintype=None):
         self.header_types = ['head','ucn']
         if bintype is None:
             self.header_type = None
@@ -18,12 +15,12 @@ class binaryheader():
         if self.header_type in self.header_types:
             if self.header_type == 'head':
                 self.dtype = np.dtype([('kstp','i4'),('kper','i4'),\
-                                       ('pertim',floattype),('totim',floattype),\
+                                       ('pertim','f4'),('totim','f4'),\
                                        ('text','a16'),\
                                        ('ncol','i4'),('nrow','i4'),('ilay','i4')])
             elif self.header_type == 'ucn':
                 self.dtype = np.dtype([('ntrans','i4'),('kstp','i4'),('kper','i4'),\
-                                       ('totim',floattype),('text','a16'),\
+                                       ('totim','f4'),('text','a16'),\
                                        ('ncol','i4'),('nrow','i4'),('ilay','i4')])
             self.header = np.ones(1, self.dtype)
         else:
@@ -76,8 +73,8 @@ class binaryheader():
             return self.header[0]
 
     @staticmethod
-    def set_dtype(bintype=None, precision='single'):
-        header = binaryheader(bintype=bintype, precision=precision)
+    def set_dtype(bintype=None):
+        header = binaryheader(bintype=bintype)
         return header.dtype
 
     @staticmethod
@@ -378,9 +375,8 @@ class HeadFile(BinaryLayerFile):
     '''
     def __init__(self, filename, text='head',precision='single', verbose=False):
         self.text = text
-        self.header_dtype = binaryheader.set_dtype(bintype='Head',
-                                                   precision=precision)
-        super(HeadFile,self).__init__(filename, precision, verbose)
+        self.header_dtype = binaryheader.set_dtype(bintype='Head')
+        super(HeadFile,self).__init__(filename,precision,verbose)             
 
 
 class UcnFile(BinaryLayerFile):
@@ -400,9 +396,8 @@ class UcnFile(BinaryLayerFile):
     '''
     def __init__(self, filename, text='concentration',precision='single', verbose=False):
         self.text = text
-        self.header_dtype = binaryheader.set_dtype(bintype='Ucn',
-                                                   precision=precision)
-        super(UcnFile,self).__init__(filename, precision, verbose)
+        self.header_dtype = binaryheader.set_dtype(bintype='Ucn')
+        super(UcnFile,self).__init__(filename,precision,verbose)
 
 
 class CellBudgetFile(object):
@@ -424,15 +419,13 @@ class CellBudgetFile(object):
         self.header_dtype = np.dtype([('kstp','i4'),('kper','i4'),
                                       ('text','a16'),('ncol','i4'),
                                       ('nrow','i4'),('nlay','i4')])
-
+        self.header2_dtype = np.dtype([('imeth','i4'),('delt','f4'),
+                                      ('pertim','f4'),('totim','f4')])
+                                      
         if precision is 'single':
             self.realtype = np.float32
-            self.header2_dtype = np.dtype([('imeth','i4'),('delt','f4'),
-                                      ('pertim','f4'),('totim','f4')])
         elif precision is 'double':
             self.realtype = np.float64
-            self.header2_dtype = np.dtype([('imeth','i4'),('delt','f8'),
-                                      ('pertim','f8'),('totim','f8')])
         else:
             raise Exception('Unknown precision specified: ' + precision)
         
@@ -477,7 +470,7 @@ class CellBudgetFile(object):
                     print itxt + ': ' + str(header[itxt])
                 print 'file position: ', ipos
                 print '\n'
-            self.recorddict[tuple(header)] = ipos    #store the position right after header2
+            self.recorddict[header] = ipos    #store the position right after header2
             self.skip_record(header)
             #self.file.seek(self.databytes, 1) #skip ahead to the beginning of the next header
             ipos = self.file.tell()
@@ -509,9 +502,7 @@ class CellBudgetFile(object):
             for i in xrange(naux):
                 temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
-            if self.verbose: 
-                print 'nlist: ', nlist
-                print '\n'
+            if self.verbose: print 'nlist: ', nlist
             nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes + 
                               naux * self.realtype(1).nbytes)
         else:
@@ -544,12 +535,6 @@ class CellBudgetFile(object):
             print key
         return
 
-    def unique_record_names(self):
-        '''
-        Returns all unique record names
-        '''
-        return self.textlist
-
     def get_kstpkper(self):
         '''
         Return a list of unique stress periods and time steps in the file
@@ -557,7 +542,7 @@ class CellBudgetFile(object):
         return self.kstpkper
 
     def get_data(self, kstp=0, kper=0, idx=None, totim=-1, ilay=0, text='',
-                 verbose=False, full3D=False):
+                 full3D=False):
         '''
         Return a three dimensional value array for the specified kstp, kper
         pair or totim value, or return a two dimensional head array
@@ -594,23 +579,20 @@ class CellBudgetFile(object):
         nrow = header['nrow']
         ncol = header['ncol']
         if imeth == 0:
-            if verbose:
-                s += 'an array of shape ' + str( (nlay, nrow, ncol) )
-                print s           
+            s += 'an array of shape ' + str( (nlay, nrow, ncol) )
+            print s           
             return binaryread(self.file, self.realtype(1), shape=
                               (nlay, nrow, ncol))
         elif imeth == 1:
-            if verbose:
-                s += 'an array of shape ' + str( (nlay, nrow, ncol) )
-                print s           
+            s += 'an array of shape ' + str( (nlay, nrow, ncol) )
+            print s           
             return binaryread(self.file, self.realtype(1), shape=
                               (nlay, nrow, ncol))
         elif imeth == 2:
             nlist = binaryread(self.file, np.int32)
             dtype = np.dtype([('node', np.int32), ('q', self.realtype)])
-            if verbose:
-                s += 'a list array of shape ' + str( nlist ) 
-                print s  
+            s += 'a list array of shape ' + str( nlist ) 
+            print s  
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 return self.create3D(data, nlay, nrow, ncol)
@@ -621,18 +603,16 @@ class CellBudgetFile(object):
                               (nrow, ncol))
             data = binaryread(self.file, self.realtype(1), shape=
                               (nrow, ncol))
-            if verbose:
-                s += 'a list of two 2D arrays.  '
-                s += 'The first is an integer layer array of shape  ' + str( 
-                                                        (nrow, ncol) )
-                s += 'The second is real data array of shape  ' + str( 
-                                                        (nrow, ncol) )
-                print s
+            s += 'a list of two 2D arrays.  '
+            s += 'The first is an integer layer array of shape  ' + str( 
+                                                       (nrow, ncol) )
+            s += 'The second is real data array of shape  ' + str( 
+                                                       (nrow, ncol) )
+            print s
             return [ilayer, data]
         elif imeth == 4:
-            if verbose:
-                s += 'a 2d array of shape ' + str( (nrow, ncol) )
-                print s
+            s += 'a 2d array of shape ' + str( (nrow, ncol) )
+            print s
             return binaryread(self.file, self.realtype(1), shape=
                               (nrow, ncol))
         elif imeth == 5:
@@ -644,39 +624,14 @@ class CellBudgetFile(object):
                 l.append( (auxname, self.realtype) )
             dtype = np.dtype(l)                
             nlist = binaryread(self.file, np.int32)
-            if verbose:
-                s += 'a list array of shape ' + str( nlist ) 
-                print s
+            s += 'a list array of shape ' + str( nlist ) 
+            print s
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 return self.create3D(data, nlay, nrow, ncol)
             else:
                 return dict(zip(data['node'],data['q']))
         return
-    def get_data_by_text(self,text):
-        '''Returns one array of size (Ndata,nlay,nrow,ncol) of all
-        records with text. Trailing spaces can be ignored'''
-        idxlist = []
-        keys = self.recorddict.keys()
-        for i,h in enumerate(keys):
-            # Remove any spaces. That avoids any problems with too many, etc.
-            if h[2].replace(' ','') == text.replace(' ',''):
-                idxlist.append(i)
-        Ndata = len(idxlist)
-        if Ndata == 0:
-            print 'No such string: ',text
-            return
-        h = keys[idxlist[0]]
-        nlay = abs(h[5])
-        nrow = h[4]
-        ncol = h[3]
-        rv = np.empty((Ndata,nlay,nrow,ncol))
-        for i,idx in enumerate(idxlist):
-            header = self.recorddict.keys()[idx]
-            ipos = self.recorddict[header]
-            self.file.seek(ipos, 0)
-            rv[i] = binaryread(self.file, self.realtype(1), shape = (nlay, nrow, ncol))
-        return rv
 
     def create3D(self, data, nlay, nrow, ncol):
         out = np.zeros((nlay*nrow*ncol), dtype=np.float32)
