@@ -270,7 +270,7 @@ class BinaryLayerFile(object):
                 print 'Byte position in file: {0}'.format(ipos)
             self.file.seek(ipos, 0)
             self.value[ilay - 1, :, :] = binaryread(self.file, self.realtype, 
-                shape=(self.nrow, self.ncol))
+                                                shape=(self.nrow, self.ncol))
         return
     
     def get_times(self):
@@ -419,29 +419,35 @@ class CellBudgetFile(object):
         self.nlay = 0
         self.times = []
         self.kstpkper = []
+        self.recordarray = []
+        self.iposarray = []
         self.textlist = []
         self.nrecords = 0
-        self.header_dtype = np.dtype([('kstp','i4'),('kper','i4'),
-                                      ('text','a16'),('ncol','i4'),
-                                      ('nrow','i4'),('nlay','i4')])
+        h1dt = [('kstp', 'i4'), ('kper', 'i4'), ('text', 'a16'),
+                ('ncol', 'i4'), ('nrow', 'i4'), ('nlay', 'i4')]
 
         if precision is 'single':
             self.realtype = np.float32
-            self.header2_dtype = np.dtype([('imeth','i4'),('delt','f4'),
-                                      ('pertim','f4'),('totim','f4')])
+            h2dt = [('imeth', 'i4'), ('delt', 'f4'), ('pertim', 'f4'),
+                    ('totim', 'f4')]
         elif precision is 'double':
             self.realtype = np.float64
-            self.header2_dtype = np.dtype([('imeth','i4'),('delt','f8'),
-                                      ('pertim','f8'),('totim','f8')])
+            h2dt = [('imeth', 'i4'),('delt', 'f8'), ('pertim', 'f8'),
+                    ('totim', 'f8')]
         else:
             raise Exception('Unknown precision specified: ' + precision)
-        
+
+        self.header1_dtype = np.dtype(h1dt)
+        self.header2_dtype = np.dtype(h2dt)
+        hdt = h1dt + h2dt
+        self.header_dtype = np.dtype(hdt)
+
         #read through the file and build the pointer index
         self._build_index()
         
         #allocate the value array
-        self.value = np.empty( (self.nlay, self.nrow, self.ncol), 
-                         dtype=self.realtype)
+        self.value = np.empty((self.nlay, self.nrow, self.ncol),
+                              dtype=self.realtype)
         return
    
     def _build_index(self):
@@ -471,6 +477,7 @@ class CellBudgetFile(object):
             if header['text'] not in self.textlist:
                 self.textlist.append(header['text'])
             ipos = self.file.tell()
+
             if self.verbose:
                 for itxt in ['kstp', 'kper', 'text', 'ncol', 'nrow', 'nlay',
                              'imeth', 'delt', 'pertim', 'totim']:
@@ -478,11 +485,20 @@ class CellBudgetFile(object):
                 print 'file position: ', ipos
                 if int(header['imeth']) != 5:
                     print '\n'
-#            self.recorddict[header] = ipos    #store the position right after header2
+
+            #store record and byte position mapping
             self.recorddict[tuple(header)] = ipos    #store the position right after header2
+            self.recordarray.append(header)
+            self.iposarray.append(ipos)  #store the position right after header2
+
+            #skip over the data to the next record and set ipos
             self.skip_record(header)
-            #self.file.seek(self.databytes, 1) #skip ahead to the beginning of the next header
             ipos = self.file.tell()
+
+        #convert to numpy arrays
+        self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
+        self.iposarray = np.array(self.iposarray, dtype=np.int64)
+
         return
 
     def skip_record(self, header):
@@ -525,16 +541,14 @@ class CellBudgetFile(object):
     def get_header(self):
         '''
         Read the file header
-        '''        
-        #header = binaryread(self.file,self.header_dtype,(1,))
-        header = binaryread(self.file,self.header_dtype,(1,))
-        nlay = header['nlay']
-        #header['nlay'] = abs(nlay)
+        '''
+        header1 = binaryread(self.file, self.header1_dtype, (1,))
+        nlay = header1['nlay']
         if  nlay < 0:
-            header2 = binaryread(self.file,self.header2_dtype,(1,))
+            header2 = binaryread(self.file, self.header2_dtype, (1,))
         else:
-            header2 = np.array( [(0, 0., 0., 0.)], dtype=self.header2_dtype)
-        fullheader = join_struct_arrays([header, header2])
+            header2 = np.array([(0, 0., 0., 0.)], dtype=self.header2_dtype)
+        fullheader = join_struct_arrays([header1, header2])
         return fullheader[0]
 
     def list_records(self):
@@ -543,6 +557,9 @@ class CellBudgetFile(object):
         '''
         for key in self.recorddict.keys():
             print key
+
+        for rec in self.recordarray:
+            print rec
         return
 
     def unique_record_names(self):
