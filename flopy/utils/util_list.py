@@ -1,14 +1,14 @@
 import os
 import warnings
 import numpy as np
-import flopy
+#import flopy
 
 
 
 class mflist(object):
 
     def __init__(self,model,dtype,data=None):
-        assert isinstance(model,flopy.mbase.BaseModel),"mflist error: model type incorrect:"+str(type(model))
+        #assert isinstance(model,flopy.mbase.BaseModel),"mflist error: model type incorrect:"+str(type(model))
         self.model = model
         assert isinstance(dtype,np.dtype)
         self.__dtype = dtype
@@ -241,3 +241,25 @@ class mflist(object):
                 np.savetxt(f,kper_data,fmt=self.fmt_string,delimiter='')
             elif kper_vtype == str:
                 f.write("          open/close "+kper_data+'\n')
+
+    def check_kij(self):
+        names = self.dtype.names
+        if 'k' not in names or 'i' not in names or 'j' not in names:
+            warnings.warn("mflist.check_kij(): index fieldnames \'k,i,j\' not found in self.dtype names: "+str(names))
+            return
+        nl,nr,nc,nper = self.model.get_nrow_ncol_nlay_nper()
+        if nl == 0:
+            warnings.warn("mflist.check_kij(): unable to get dis info from model")
+            return
+        for kper,data in self.data.iteritems():
+            if self.vtype[kper] == np.recarray:
+                k = data['k']
+                k_out_idx = np.where(np.logical_or(k<0,k>=nl))
+                #if len(k_out_idx) > 0:
+
+
+
+
+
+
+

@@ -109,13 +109,18 @@ class ModflowRiv(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = np.dtype([("layer",np.int),("row",np.int),\
-                               ("column",np.int),("stage",np.float32),\
-                               ("cond",np.float32),("rbot",np.float32)])
+            self.dtype = self.get_default_dtype()
         self.list_data = mflist(model,self.dtype,layer_row_column_data)
 
     def __repr__( self ):
         return 'River class'
+
+    @staticmethod
+    def get_default_dtype():
+        dtype = np.dtype([("k",np.int),("i",np.int),\
+                         ("j",np.int),("stage",np.float32),\
+                        ("cond",np.float32),("rbot",np.float32)])
+        return dtype
 
     def ncells( self):
         # Returns the  maximum number of cells that have river (developed for MT3DMS SSM package)
