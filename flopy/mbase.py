@@ -400,9 +400,73 @@ class Package(object):
                 itmp = -1
                 #f.write('%10i%10i\n' % (itmp, self.np))
                 f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
-    def load(self):
+
+    @staticmethod
+    def load(model,pack_type,f,nper=None):
         """
         The load method has not been implemented for this package.
 
         """
-        print 'This package needs a load method()'
+        if type(f) is not file:
+            filename = f
+            f = open(filename, 'r')
+        #dataset 0 -- header
+        while True:
+            line = f.readline()
+            if line[0] != '#':
+                break
+        #--check for parameters
+        if "parameter" in line.lower():
+            raw = line.strip().split()
+            assert int(raw[1]) == 0,"Parameters are not supported"
+            line = f.readline()
+        #dataset 2a
+        t = line.strip().split()
+        ipakcb = 0
+        try:
+            if int(t[1]) != 0:
+                ipakcb = 53
+        except:
+            pass
+        options = []
+        aux_names = []
+        if len(t) > 2:
+            it = 2
+            while it < len(t):
+                toption = t[it]
+                print it,t[it]
+                if toption.lower() is 'noprint':
+                    options.append(toption)
+                elif 'aux' in toption.lower():
+                    options.append(' '.join(t[it:it+2]))
+                    aux_names.append(t[it+1].lower())
+                    it += 1
+                it += 1
+        if nper is None:
+            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        #read data for every stress period
+        stress_period_data = {}
+        for iper in xrange(nper):
+            print "   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1)
+            line = f.readline()
+            if line == '':
+                break
+            t = line.strip().split()
+            itmp = int(t[0])
+            if itmp == 0 or itmp == -1:
+                stress_period_data[iper] = itmp
+            elif itmp > 0:
+                current = pack_type.get_empty(itmp,aux_names=aux_names)
+                for ibnd in xrange(itmp):
+                    line = f.readline()
+                    if "open/close" in line.lower():
+                        raise NotImplementedError("load() method does not support \'open/close\'")
+                    t = line.strip().split()
+                    current[ibnd] = tuple(t[:len(current.dtype.names)])
+                stress_period_data[iper] = current
+        pak = pack_type(model, ipakcb=ipakcb,
+                         stress_period_data=stress_period_data,\
+                         dtype=pack_type.get_empty(0,aux_names=aux_names).dtype,\
+                         options=options)
+        return pak
+
