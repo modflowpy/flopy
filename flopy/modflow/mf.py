@@ -119,6 +119,7 @@ class Modflow(BaseModel):
         self.mfnam_packages = {
             "zone":flopy.modflow.ModflowZon,
             "mult":flopy.modflow.ModflowMlt,
+            "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
             "lpf": flopy.modflow.ModflowLpf,
@@ -231,6 +232,8 @@ class Modflow(BaseModel):
         if verbose:
             print ext_unit_dict
         for key, item in ext_unit_dict.iteritems():
+            print key
+            print 'hi'
             if item.package is not None:
                 pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
                 pass
