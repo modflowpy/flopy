@@ -179,7 +179,7 @@ class ModflowParBc():
                                 bnd.append(float(t[jdx]))
                         wellinst.append(bnd)
                     pinst[instnam] = wellinst
-                bc_parms[parnam] = [partyp, parval, nlst, timeVarying, pinst]
+                bc_parms[parnam] = [{'partyp':partyp, 'parval':parval, 'nlst':nlst, 'timevarying':timeVarying}, pinst]
         
         print bc_parms
         bcpar = ModflowParBc(bc_parms)
