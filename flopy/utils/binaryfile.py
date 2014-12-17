@@ -355,7 +355,14 @@ class BinaryLayerFile(object):
                 result[itim, istat] = binaryread(self.file, self.realtype)
             istat += 1
         return result
-        
+
+    def close(self):
+        """
+        close the file handle
+        """
+        self.file.close()
+        return
+
 
 class HeadFile(BinaryLayerFile):
     '''
@@ -650,9 +657,13 @@ class CellBudgetFile(object):
             else:
                 select_indices = [idx]
 
+        #case where only text is entered
+        elif text is not None:
+            select_indices = np.where((self.recordarray['text'] == text16))
+
         #build and return the record list
         recordlist = []
-        for idx in select_indices:
+        for idx in select_indices[0]:
             rec = self.get_record(idx, full3D=full3D, verbose=verbose)
             recordlist.append(rec)
 
@@ -664,6 +675,11 @@ class CellBudgetFile(object):
         idx is the record number to get.
 
         """
+
+        #idx must be an ndarray
+        if np.isscalar(idx):
+            idx = np.array([idx])
+
         header = self.recordarray[idx]
         ipos = self.iposarray[idx]
         self.file.seek(ipos, 0)
@@ -784,3 +800,16 @@ class CellBudgetFile(object):
         Return a list of unique times in the file
         '''
         return self.times
+
+    def get_nrecords(self):
+        """
+        Return the number of records in the file
+        """
+        return self.recordarray.shape[0]
+
+    def close(self):
+        """
+        close the file handle
+        """
+        self.file.close()
+        return
