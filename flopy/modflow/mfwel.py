@@ -266,6 +266,7 @@ class ModflowWel(Package):
         nitems = 4 + naux
 
         #--read parameter data
+        iparpos = 4
         if npwel > 0:
             well_parms = mfparbc.load(f, npwel, nitems)
         
@@ -275,6 +276,7 @@ class ModflowWel(Package):
         #read data for every stress period
         stress_period_data = {}
         current = []
+        currentp = []
         for iper in xrange(nper):
             print "   loading wells for kper {0:5d}".format(iper+1)
             line = f.readline()
@@ -300,6 +302,7 @@ class ModflowWel(Package):
                             bnd.append(float(t[jdx]))
                     current.append(bnd)
             #--parameters
+            currentp = []
             for iparm in xrange(itmpnp):
                 line = f.readline()
                 t = line.strip().split()
@@ -316,8 +319,28 @@ class ModflowWel(Package):
                 print par_dict
                 print data_dict
                 
-            #layer_row_column_data.append(current)
-            stress_period_data[iper] = np.array(current)
+                #--
+                parval = np.float(par_dict['parval'])
+                for d in data_dict:
+                    bnd = []
+                    for jdx in xrange(len(d)):
+                        if jdx < 3:
+                            bnd.append(int(d[jdx])-1) #convert to zero-based.
+                        elif jdx == (iparpos-1):
+                            bnd.append(parval * float(d[jdx]))
+                        else:
+                            bnd.append(float(d[jdx]))
+                    currentp.append(bnd)
+                         
+            current_out = []
+            if len(current)> 0:
+                current_out = list(current)
+            if len(currentp) > 0:
+                current_out = current_out + list(currentp)
+            if len(current_out) > 0:
+                print np.array(current_out).shape
+                print np.array(current_out)
+                stress_period_data[iper] = np.array(current_out)
         if specify:
             wel = ModflowWel(model, iwelcb, stress_period_data=stress_period_data, 
                              options=options, 
