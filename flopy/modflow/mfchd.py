@@ -124,4 +124,5 @@ class ModflowChd(Package):
         dtype = np.dtype([("k",np.int),("i",np.int),\
                          ("j",np.int),("shead",np.float32),\
                         ("ehead",np.float32)])
+        return dtype
 

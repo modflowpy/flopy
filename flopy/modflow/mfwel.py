@@ -153,6 +153,7 @@ class ModflowWel(Package):
     def get_default_dtype():
         dtype = np.dtype([("k",np.int),("i",np.int),\
                          ("j",np.int),("flux",np.float32)])
+        return dtype
 
 
     @staticmethod

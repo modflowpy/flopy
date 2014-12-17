@@ -138,6 +138,7 @@ class ModflowGhb(Package):
         dtype = np.dtype([("k",np.int),("i",np.int),\
                          ("j",np.int),("bhead",np.float32),\
                         ("cond",np.float32)])
+        return dtype
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
