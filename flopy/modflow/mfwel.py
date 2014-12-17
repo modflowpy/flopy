@@ -157,10 +157,13 @@ class ModflowWel(Package):
 
 
     @staticmethod
-    def get_empty(ncells=0):
+    def get_empty(ncells=0,aux_names=None):
         #get an empty recaray that correponds to dtype
         dtype = ModflowWel.get_default_dtype()
+        if aux_names is not None:
+            dtype = Package.add_to_dtype(dtype,aux_names,np.float32)
         d = np.zeros((ncells,len(dtype)),dtype=dtype)
+
         d[:,:] = -1.0E+10
         return np.core.records.fromarrays(d.transpose(),dtype=dtype)
 

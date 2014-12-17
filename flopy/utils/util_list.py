@@ -52,6 +52,7 @@ class mflist(object):
             mxact = max(mxact,self.get_itmp(kper))
         return mxact
 
+
     #get the numpy savetxt-style fmt string that corresponds to the dtype
     @property
     def fmt_string(self):
