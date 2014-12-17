@@ -157,6 +157,14 @@ class ModflowWel(Package):
 
 
     @staticmethod
+    def get_empty(ncells=0):
+        #get an empty recaray that correponds to dtype
+        dtype = ModflowWel.get_default_dtype()
+        d = np.zeros((ncells,len(dtype)),dtype=dtype)
+        d[:,:] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+
+    @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.

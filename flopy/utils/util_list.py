@@ -195,12 +195,6 @@ class mflist(object):
             raise Exception("mflist.add_record() error: adding record to recarray: "+str(e))
 
 
-    def get_empty(self,nrow=0):
-        #get an empty recaray that correponds to dtype
-        d = np.zeros((nrow,len(self.dtype)),dtype=self.dtype)
-        d[:,:] = -1.0E+10
-        return d
-
     def __getitem__(self,kper):
         #get the recarray for a given kper
         #if the data entry for kper is a string, return the corresponding recarray,

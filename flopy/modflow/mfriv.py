@@ -113,6 +113,15 @@ class ModflowRiv(Package):
         return 'River class'
 
     @staticmethod
+    def get_empty(ncells=0):
+        #get an empty recarray that correponds to dtype
+        dtype = ModflowRiv.get_default_dtype()
+        d = np.zeros((ncells,len(dtype)),dtype=dtype)
+        d[:,:] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+
+
+    @staticmethod
     def get_default_dtype():
         dtype = np.dtype([("k",np.int),("i",np.int),\
                          ("j",np.int),("stage",np.float32),\

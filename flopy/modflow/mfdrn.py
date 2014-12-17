@@ -143,6 +143,14 @@ class ModflowDrn(Package):
 
 
     @staticmethod
+    def get_empty(ncells=0):
+        #get an empty recaray that correponds to dtype
+        dtype = ModflowDrn.get_default_dtype()
+        d = np.zeros((ncells,len(dtype)),dtype=dtype)
+        d[:,:] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+
+    @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
         '''
         f is either a filename or a file handle.  if the arrays in the file

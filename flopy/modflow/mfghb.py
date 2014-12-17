@@ -134,6 +134,14 @@ class ModflowGhb(Package):
             raise Exception("mfghb error adding record to list: "+str(e))
 
     @staticmethod
+    def get_empty(ncells=0):
+        #get an empty recaray that correponds to dtype
+        dtype = ModflowGhb.get_default_dtype()
+        d = np.zeros((ncells,len(dtype)),dtype=dtype)
+        d[:,:] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+
+    @staticmethod
     def get_default_dtype():
         dtype = np.dtype([("k",np.int),("i",np.int),\
                          ("j",np.int),("bhead",np.float32),\
