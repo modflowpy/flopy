@@ -1,5 +1,6 @@
 import os
 import warnings
+import inspect
 import numpy as np
 
 
@@ -69,6 +70,7 @@ class mflist(object):
             else:
                 raise Exception("mflist.fmt_string error: unknown vtype in dtype:"+vtype)
         return fmt_string
+
 
     #private method to cast the data argument - should only be called by the constructor
     def __cast_data(self,data):
@@ -276,20 +278,39 @@ class mflist(object):
         np.savetxt(f,data,fmt=self.fmt_string,delimiter='')
 
 
-    # def check_kij(self):
-    #     names = self.dtype.names
-    #     if 'k' not in names or 'i' not in names or 'j' not in names:
-    #         warnings.warn("mflist.check_kij(): index fieldnames \'k,i,j\' not found in self.dtype names: "+str(names))
-    #         return
-    #     nl,nr,nc,nper = self.model.get_nrow_ncol_nlay_nper()
-    #     if nl == 0:
-    #         warnings.warn("mflist.check_kij(): unable to get dis info from model")
-    #         return
-    #     for kper,data in self.data.iteritems():
-    #         if self.vtype[kper] == np.recarray:
-    #             k = data['k']
-    #             k_out_idx = np.where(np.logical_or(k<0,k>=nl))
-    #             #if len(k_out_idx) > 0:
+    def check_kij(self):
+        names = self.dtype.names
+        if 'k' not in names or 'i' not in names or 'j' not in names:
+            warnings.warn("mflist.check_kij(): index fieldnames \'k,i,j\' not found in self.dtype names: "+str(names))
+            return
+        nl,nr,nc,nper = self.model.get_nrow_ncol_nlay_nper()
+        if nl == 0:
+            warnings.warn("mflist.check_kij(): unable to get dis info from model")
+            return
+        for kper in self.data.keys():
+            out_idx = []
+            data = self[kper]
+            if data is not None:
+                k = data['k']
+                k_idx = np.where(np.logical_or(k<0,k>=nl))
+                if k_idx[0].shape[0] > 0:
+                    out_idx.extend(list(k_idx[0]))
+                i = data['i']
+                i_idx = np.where(np.logical_or(i<0,i>=nr))
+                if i_idx[0].shape[0] > 0:
+                    out_idx.extend(list(i_idx[0]))
+                j = data['j']
+                j_idx = np.where(np.logical_or(j<0,j>=nc))
+                if j_idx[0].shape[0]:
+                    out_idx.extend(list(j_idx[0]))
+
+                if len(out_idx) > 0:
+                    warn_str = "mflist.check_kij(): warning the following indices are out of bounds in kper "+str(kper)+':\n'
+                    for idx in out_idx:
+                        d = data[idx]
+                        warn_str += " {0:9d} {1:9d} {2:9d}\n".format(d['k']+1,d['i']+1,d['j']+1)
+                    warnings.warn(warn_str)
+
 
 
 
