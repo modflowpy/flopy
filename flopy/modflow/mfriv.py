@@ -98,8 +98,6 @@ class ModflowRiv(Package):
         self.url = 'riv.htm'
         self.ipakcb = ipakcb
         self.mxactr = 0
-        #self.mxactr, self.layer_row_column_data = \
-        #    self.assign_layer_row_column_data(layer_row_column_data, 6+naux, zerobase=zerobase)
         self.np = 0
         if options is None:
             options = []
@@ -131,16 +129,6 @@ class ModflowRiv(Package):
         Write the file.
 
         """
-        # f_riv = open(self.fn_path, 'w')
-        # f_riv.write('{0}\n'.format(self.heading))
-        # line = '{0:10d}{1:10d}'.format(self.mxactr, self.irivcb)
-        # for opt in self.options:
-        #     line += ' ' + str(opt)
-        # line += '\n'
-        # f_riv.write(line)
-        # self.write_layer_row_column_data(f_riv, self.layer_row_column_data)
-        # f_riv.close()
-
         f_riv = open(self.fn_path, 'w')
         f_riv.write('{0}\n'.format(self.heading))
         line = '{0:10d}{1:10d}'.format(self.list_data.mxact, self.irivcb)
