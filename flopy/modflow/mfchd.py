@@ -120,6 +120,14 @@ class ModflowChd(Package):
 
 
     @staticmethod
+    def get_empty(ncells=0):
+        #get an empty recaray that correponds to dtype
+        dtype = ModflowChd.get_default_dtype()
+        d = np.zeros((ncells,len(dtype)),dtype=dtype)
+        d[:,:] = -1.0E+10
+        return d
+
+    @staticmethod
     def get_default_dtype():
         dtype = np.dtype([("k",np.int),("i",np.int),\
                          ("j",np.int),("shead",np.float32),\
