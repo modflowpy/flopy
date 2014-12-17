@@ -320,21 +320,15 @@ class Package(object):
         return s
 
     def __getitem__(self, item):
-        if not isinstance(item,list) and not isinstance(item,tuple) or len(item) != 2:
-            raise Exception("package.__getitem__(): item must be a list or tuple of lenght 2 (kper,name")
+        if not isinstance(item,list) and not isinstance(item,tuple):
+            assert item in self.list_data.data.keys(),"package.__getitem__() kper "+str(item)+" not in data.keys()"
+            return self.list_data[item]
+
         if item[1] not in self.dtype.names:
             raise Exception ("package.__getitem(): item \'"+item+"\' not in dtype names "+str(self.dtype.names))
-        assert item[0] in self.list_data.data.keys(),"package.__getitem__() kper "+str(item[0])+" not in datak.keys()"
+        assert item[0] in self.list_data.data.keys(),"package.__getitem__() kper "+str(item[0])+" not in data.keys()"
         if self.list_data.vtype[item[0]] == np.recarray:
-            return self.list_data.data[item[0]][item[1]]
-        if self.list_data.vtype[item[0]] == int:
-            if self.list_data.data[item[0]] == 0:
-                return None
-            else:
-                raise NotImplementedError("package.__getitem__() not implemented for data == -1")
-                #return self.list_data.find_last(item[0])[item[1]]
-        if self.list_data.vtype[item[0]] == str:
-            raise NotImplementedError("package.__getitem__() not implemented for vtype str")
+            return self.list_data[item[0]][item[1]]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("package.__setitem__() not implemented")
