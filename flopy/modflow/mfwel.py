@@ -243,9 +243,9 @@ class ModflowWel(Package):
                     naux += 1
                     options.append(toption)
         
-        #--
-        readNext = False
+        #--read phiramp for modflow-nwt
         specify = False
+        ipos = f.tell()
         line = f.readline()
         #--test for specify keyword if a NWT well file - This is a temporary hack
         if 'specify' in line.lower():
@@ -258,13 +258,16 @@ class ModflowWel(Package):
                 phiramp_unit = np.int32(t[2])
             except:
                 phiramp_unit = 2
+        else:
+            f.seek(ipos)
+                
         
         #--number of columns to read
         nitems = 4 + naux
 
         #--read parameter data
         if npwel > 0:
-            well_parms = mfparbc.load(f, npwel)
+            well_parms = mfparbc.load(f, npwel, nitems)
         
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -275,16 +278,6 @@ class ModflowWel(Package):
         for iper in xrange(nper):
             print "   loading wells for kper {0:5d}".format(iper+1)
             line = f.readline()
-            #--test for specify keyword if a NWT well file - This is a temporary hack
-            if 'specify' in line.lower():
-                specify = True
-                line = f.readline() #ditch line -- possibly save for NWT output
-                t = line.strip().split()
-                phiramp = np.float32(t[1])
-                try:
-                    phiramp_unit = np.int32(t[2])
-                except:
-                    phiramp_unit = 2
             t = line.strip().split()
             itmp = int(t[0])
             itmpnp = 0
@@ -310,7 +303,7 @@ class ModflowWel(Package):
             for iparm in xrange(itmpnp):
                 line = f.readline()
                 t = line.strip().split()
-                pname = t[0]
+                pname = t[0].lower()
                 iname = 'static'
                 try:
                     tn = t[1]
@@ -318,7 +311,7 @@ class ModflowWel(Package):
                 except:
                     pass
                 print pname, iname
-                current_dict = well_parms[pname]
+                current_dict = well_parms.get(pname)
                 data_dict = current_dict[4][iname]
                 print current_dict[0:4]
                 print data_dict
@@ -326,11 +319,11 @@ class ModflowWel(Package):
             #layer_row_column_data.append(current)
             stress_period_data[iper] = np.array(current)
         if specify:
-            wel = ModflowWel(model, iwelcb, layer_row_column_data=layer_row_column_data, 
-                             options=options, naux=naux, 
+            wel = ModflowWel(model, iwelcb, stress_period_data=stress_period_data, 
+                             options=options, 
                              specify=specify, phiramp=phiramp, phiramp_unit=phiramp_unit)
         else:
-            wel = ModflowWel(model, iwelcb, layer_row_column_data=layer_row_column_data, 
-                             options=options, naux=naux)
+            wel = ModflowWel(model, iwelcb, stress_period_data=stress_period_data, 
+                             options=options)
         return wel
 
