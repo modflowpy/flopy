@@ -86,8 +86,8 @@ class ModflowRiv(Package):
     >>> riv = flopy.modflow.ModflowRiv(m, layer_row_column_data=lrcd)
 
     """
-    def __init__(self, model, ipakcb=0, layer_row_column_data=None,dtype=None,
-                 extension ='riv', unitnumber=18, options=None, naux=0, zerobase=True):
+    def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
+                 extension ='riv', unitnumber=18, options=None):
         """
         Package constructor.
 
@@ -103,12 +103,11 @@ class ModflowRiv(Package):
             options = []
         self.options = options
         self.parent.add_package(self)
-
         if dtype is not None:
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype()
-        self.list_data = mflist(model,self.dtype,layer_row_column_data)
+        self.stress_period_data = mflist(model,self.dtype,stress_period_data)
 
     def __repr__( self ):
         return 'River class'
@@ -122,7 +121,7 @@ class ModflowRiv(Package):
 
     def ncells( self):
         # Returns the  maximum number of cells that have river (developed for MT3DMS SSM package)
-        return self.mxactr
+        return self.stress_period_data.mxact
 
     def write_file(self):
         """
@@ -131,17 +130,17 @@ class ModflowRiv(Package):
         """
         f_riv = open(self.fn_path, 'w')
         f_riv.write('{0}\n'.format(self.heading))
-        line = '{0:10d}{1:10d}'.format(self.list_data.mxact, self.irivcb)
+        line = '{0:10d}{1:10d}'.format(self.stress_period_data.mxact, self.ipakcb)
         for opt in self.options:
             line += ' ' + str(opt)
         line += '\n'
         f_riv.write(line)
-        self.list_data.write_transient(f_riv)
+        self.stress_period_data.write_transient(f_riv)
         f_riv.close()
 
     def add_record(self,kper,index,values):
         try:
-            self.list_data.add_record(kper,index,values)
+            self.stress_period_data.add_record(kper,index,values)
         except Exception as e:
             raise Exception("mfriv error adding record to list: "+str(e))
 

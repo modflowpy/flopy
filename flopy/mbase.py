@@ -321,14 +321,14 @@ class Package(object):
 
     def __getitem__(self, item):
         if not isinstance(item,list) and not isinstance(item,tuple):
-            assert item in self.list_data.data.keys(),"package.__getitem__() kper "+str(item)+" not in data.keys()"
-            return self.list_data[item]
+            assert item in self.stress_period_data.data.keys(),"package.__getitem__() kper "+str(item)+" not in data.keys()"
+            return self.stress_period_data[item]
 
         if item[1] not in self.dtype.names:
             raise Exception ("package.__getitem(): item \'"+item+"\' not in dtype names "+str(self.dtype.names))
-        assert item[0] in self.list_data.data.keys(),"package.__getitem__() kper "+str(item[0])+" not in data.keys()"
-        if self.list_data.vtype[item[0]] == np.recarray:
-            return self.list_data[item[0]][item[1]]
+        assert item[0] in self.stress_period_data.data.keys(),"package.__getitem__() kper "+str(item[0])+" not in data.keys()"
+        if self.stress_period_data.vtype[item[0]] == np.recarray:
+            return self.stress_period_data[item[0]][item[1]]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("package.__setitem__() not implemented")
