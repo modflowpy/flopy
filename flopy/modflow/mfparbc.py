@@ -93,15 +93,22 @@ class ModflowParBc():
         Package constructor.
 
         """
-        self.bc_params = bc_params
+        self.bc_parms = bc_parms
 
 
     def __repr__( self ):
         return 'Boundary Condition Package Parameter Class'
+        
+        
+    def get(self, fkey):
+        for key, value in self.bc_parms.iteritems():
+            if fkey == key:
+                return self.bc_parms[key]
+        return None
 
 
     @staticmethod
-    def load(f, npar):
+    def load(f, npar, nitems):
         """
         Load an existing package.
 
@@ -141,8 +148,8 @@ class ModflowParBc():
             for idx in xrange(npar):
                 line = f.readline()
                 t = line.strip().split()
-                parnam = t[0]
-                partyp = t[1]
+                parnam = t[0].lower()
+                partyp = t[1].lower()
                 parval = t[2]
                 nlst = np.int(t[3])
                 numinst = 1
@@ -157,7 +164,7 @@ class ModflowParBc():
                     if timeVarying:
                         line = f.readline()
                         t = line.strip().split()
-                        instnam = t[0]
+                        instnam = t[0].lower()
                     else:
                         instnam = 'static'
                     wellinst = []
