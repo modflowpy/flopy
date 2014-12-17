@@ -61,13 +61,13 @@ class mflist(object):
     def fmt_string(self):
         fmt_string = ''
         for field in self.dtype.descr:
-            vtype = field[1][1]
+            vtype = field[1][1].lower()
             if vtype == 'i':
                 fmt_string += ' %9d'
             elif vtype == 'f':
                 fmt_string += ' %9f'
-            elif vtype == 's':
-                fmt_string += '%s'
+            elif vtype == 's' or vtype == 'o':
+                fmt_string += ' %s'
             else:
                 raise Exception("mflist.fmt_string error: unknown vtype in dtype:"+vtype)
         return fmt_string
