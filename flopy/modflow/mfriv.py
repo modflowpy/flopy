@@ -205,49 +205,50 @@ class ModflowRiv(Package):
             line = f.readline()
         #dataset 2a
         t = line.strip().split()
-        mxactr = int(t[0])
         ipakcb = 0
         try:
             if int(t[1]) != 0:
                 ipakcb = 53
         except:
             pass
-
         options = []
-        naux = 0
+        aux_names = []
         if len(t) > 2:
-            for toption in t[3:-1]:
+            it = 2
+            while it < len(t):
+                toption = t[it]
+                print it,t[it]
                 if toption.lower() is 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
-                    naux += 1
-                    options.append(toption)
+                    options.append(' '.join(t[it:it+2]))
+                    aux_names.append(t[it+1].lower())
+                    it += 1
+                it += 1
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         #read data for every stress period
-        layer_row_column_data = []
-        current = []
-        nitems = 6 + naux
+        stress_period_data = {}
         for iper in xrange(nper):
             print "   loading rivers for kper {0:5d}".format(iper+1)
             line = f.readline()
+            if line == '':
+                break
             t = line.strip().split()
             itmp = int(t[0])
-            if itmp == 0:
-                current = []
+            if itmp == 0 or itmp == -1:
+                stress_period_data[iper] = itmp
             elif itmp > 0:
+                current = ModflowRiv.get_empty(itmp,aux_names=aux_names)
                 for ibnd in xrange(itmp):
                     line = f.readline()
+                    if "open/close" in line.lower():
+                        raise NotImplementedError("load() method does not support \'open/close\'")
                     t = line.strip().split()
-                    bnd = []
-                    for jdx in xrange(nitems):
-                        if jdx < 3:
-                            bnd.append(int(t[jdx]))
-                        else:
-                            bnd.append(float(t[jdx]))
-                    current.append(bnd)
-            layer_row_column_data.append(current)
+                    current[ibnd] = tuple(t[:len(current.dtype.names)])
+                stress_period_data[iper] = current
         riv = ModflowRiv(model, ipakcb=ipakcb,
-                         layer_row_column_data=layer_row_column_data,
-                         options=options, naux=naux)
+                         stress_period_data=stress_period_data,\
+                         dtype=ModflowRiv.get_empty(0,aux_names=aux_names).dtype,\
+                         options=options)
         return riv
