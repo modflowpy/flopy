@@ -42,7 +42,7 @@ data[9] = "some_list.dat"
 
 model = flopy.modflow.Modflow()
 dis = flopy.modflow.ModflowDis(model,nlay=1,nrow=1,ncol=1,nper=3)
-riv = flopy.modflow.ModflowRiv(model,layer_row_column_data=data,dtype=dtype)
+riv = flopy.modflow.ModflowRiv(model,stress_period_data=data,dtype=dtype)
 
 #get the recarray from sp 10
 sp10_rec = riv[9]
