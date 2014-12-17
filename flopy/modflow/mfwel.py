@@ -199,12 +199,8 @@ class ModflowWel(Package):
                 break
         #--check for parameters
         if "parameter" in line.lower():
-            t = line.strip().split()
-            #assert int(t[1]) == 0,"Parameters are not supported"
-            npwel = np.int(t[1])
-            mxl = 0
-            if npwel > 0:
-                mxl = np.int(t[2])
+            raw = line.strip().split()
+            assert int(raw[1]) == 0,"Parameters are not supported"
             line = f.readline()
         #dataset 2a
         t = line.strip().split()
@@ -226,88 +222,27 @@ class ModflowWel(Package):
                 elif 'aux' in toption.lower():
                     naux += 1
                     options.append(toption)
-        
-        #--
-        readNext = False
-        specify = False
-        line = f.readline()
-        #--test for specify keyword if a NWT well file - This is a temporary hack
-        if 'specify' in line.lower():
-            readNext = False
-            specify = True
-            line = f.readline() #ditch line -- possibly save for NWT output
-            t = line.strip().split()
-            phiramp = np.float32(t[1])
-            try:
-                phiramp_unit = np.int32(t[2])
-            except:
-                phiramp_unit = 2
-        
-        #--number of columns to read
-        nitems = 4 + naux
-        
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-            
-        #--read parameter data
-        if npwel > 0:
-            well_parms = {}
-            for idx in xrange(npwel):
-                if readNext:
-                    line = f.readline()
-                readNext = True
-                t = line.strip().split()
-                parnam = t[0]
-                partyp = t[1]
-                parval = t[2]
-                nlst = np.int(t[3])
-                numinst = 1
-                timeVarying = False
-                if len(t) > 4:
-                    if 'instances' in t[4].lower():
-                        numinst = np.int(t[5])
-                        timeVarying = True
-                pinst = {}
-                for inst in xrange(numinst):
-                    #--read instance name
-                    if timeVarying:
-                        line = f.readline()
-                        t = line.strip().split()
-                        instnam = t[0]
-                    else:
-                        instnam = 'static'
-                    wellinst = []
-                    for nw in xrange(nlst):
-                        line = f.readline()
-                        t = line.strip().split()
-                        bnd = []
-                        for jdx in xrange(nitems):
-                            if jdx < 3:
-                                bnd.append(int(t[jdx])-1) #convert to zero-based.
-                            else:
-                                bnd.append(float(t[jdx]))
-                        wellinst.append(bnd)
-                    pinst[instnam] = wellinst
-                well_parms[parnam] = [partyp, parval, nlst, timeVarying, pinst]
-        
-        print well_parms
-        
         #read data for every stress period
         layer_row_column_data = []
         current = []
-        #nitems = 4 + naux
+        nitems = 4 + naux
         for iper in xrange(nper):
             print "   loading wells for kper {0:5d}".format(iper+1)
-            if readNext:
-                line = f.readline()
-            readNext = True
+            line = f.readline()
+            #--test for specify keyword if a NWT well file - This is a temporary hack
+            if 'specify' in line.lower():
+                specify = True
+                line = f.readline() #ditch line -- possibly save for NWT output
+                t = line.strip().split()
+                phiramp = np.float32(t[1])
+                try:
+                    phiramp_unit = np.int32(t[2])
+                except:
+                    phiramp_unit = 2
             t = line.strip().split()
             itmp = int(t[0])
-            itmpnp = 0
-            try:
-                itmpnp = int(t[1])
-            except:
-                pass
             if itmp == 0:
                 current = []
             elif itmp > 0:
@@ -322,18 +257,6 @@ class ModflowWel(Package):
                             bnd.append(float(t[jdx]))
                     current.append(bnd)
                 #current = np.fromfile(f,dtype=dtype,count=itmp,sep=" ")
-            for iparm in xrange(itmpnp):
-                line = f.readline()
-                t = line.strip().split()
-                pname = t[0]
-                iname = 'static'
-                try:
-                    tn = t[1]
-                    iname = tn
-                except:
-                    pass
-                print pname, iname
-            #--add non-parameter and parameter data
             layer_row_column_data.append(current)
         if specify:
             wel = ModflowWel(model, iwelcb, layer_row_column_data=layer_row_column_data, 

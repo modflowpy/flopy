@@ -1,5 +1,5 @@
-flopy
-=====
+FloPy3 -- Zero is the New One
+=============================
 
 A set of scripts for reading and writing datasets for MODFLOW-based programs.
 
