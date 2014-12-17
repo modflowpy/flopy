@@ -31,6 +31,7 @@ from mfmnw2 import ModflowMnw2
 from mfmnwi import ModflowMnwi
 from mfzon import ModflowZon
 from mfmlt import ModflowMlt
+from mfparbc import ModflowParBc
 from mfgmg import ModflowGmg
 from mfsms import ModflowSms
 from mfbct import ModflowBct
