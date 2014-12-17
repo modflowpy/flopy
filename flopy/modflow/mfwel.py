@@ -311,9 +311,9 @@ class ModflowWel(Package):
                 except:
                     pass
                 print pname, iname
-                current_dict = well_parms.get(pname)
-                data_dict = current_dict[4][iname]
-                print current_dict[0:4]
+                par_dict, current_dict = well_parms.get(pname)
+                data_dict = current_dict[iname]
+                print par_dict
                 print data_dict
                 
             #layer_row_column_data.append(current)
