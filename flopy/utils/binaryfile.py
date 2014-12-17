@@ -252,12 +252,11 @@ class BinaryLayerFile(object):
         '''
 
         if totim > 0.:
-            keyindices = np.where(
-                (self.recordarray['totim'] == totim))[0]
+            keyindices = np.where((self.recordarray['totim'] == totim))[0]
         elif kstp > 0 and kper > 0:
             keyindices = np.where(
-                (self.recordarray['kstp'] == kstp) &
-                (self.recordarray['kper'] == kper))[0]
+                                  (self.recordarray['kstp'] == kstp) &
+                                  (self.recordarray['kper'] == kper))[0]
         else:
             raise Exception('Data not found...')
 
@@ -270,7 +269,7 @@ class BinaryLayerFile(object):
                 print 'Byte position in file: {0}'.format(ipos)
             self.file.seek(ipos, 0)
             self.value[ilay - 1, :, :] = binaryread(self.file, self.realtype, 
-                shape=(self.nrow, self.ncol))
+                                                shape=(self.nrow, self.ncol))
         return
     
     def get_times(self):
@@ -356,7 +355,14 @@ class BinaryLayerFile(object):
                 result[itim, istat] = binaryread(self.file, self.realtype)
             istat += 1
         return result
-        
+
+    def close(self):
+        """
+        close the file handle
+        """
+        self.file.close()
+        return
+
 
 class HeadFile(BinaryLayerFile):
     '''
@@ -406,9 +412,40 @@ class UcnFile(BinaryLayerFile):
 
 
 class CellBudgetFile(object):
-    '''
-    The CellBudgetFile ...    
-    '''
+    """
+    CellBudgetFile Class.
+
+    Parameters
+    ----------
+    filename : string
+        Name of the cell budget file
+    precision : string
+        'single' or 'double'.  Default is 'single'.
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy.utils.binaryfile as bf
+    >>> cbb = bf.CellBudgetFile('mymodel.cbb')
+    >>> cbb.list_records()
+    >>> rec = cbb.get_data(kstpkper=(1,1), text='RIVER LEAKAGE')
+
+    """
+
     def __init__(self, filename, precision='single', verbose=False):        
         self.filename = filename
         self.precision = precision
@@ -419,29 +456,35 @@ class CellBudgetFile(object):
         self.nlay = 0
         self.times = []
         self.kstpkper = []
+        self.recordarray = []
+        self.iposarray = []
         self.textlist = []
         self.nrecords = 0
-        self.header_dtype = np.dtype([('kstp','i4'),('kper','i4'),
-                                      ('text','a16'),('ncol','i4'),
-                                      ('nrow','i4'),('nlay','i4')])
+        h1dt = [('kstp', 'i4'), ('kper', 'i4'), ('text', 'a16'),
+                ('ncol', 'i4'), ('nrow', 'i4'), ('nlay', 'i4')]
 
         if precision is 'single':
             self.realtype = np.float32
-            self.header2_dtype = np.dtype([('imeth','i4'),('delt','f4'),
-                                      ('pertim','f4'),('totim','f4')])
+            h2dt = [('imeth', 'i4'), ('delt', 'f4'), ('pertim', 'f4'),
+                    ('totim', 'f4')]
         elif precision is 'double':
             self.realtype = np.float64
-            self.header2_dtype = np.dtype([('imeth','i4'),('delt','f8'),
-                                      ('pertim','f8'),('totim','f8')])
+            h2dt = [('imeth', 'i4'),('delt', 'f8'), ('pertim', 'f8'),
+                    ('totim', 'f8')]
         else:
             raise Exception('Unknown precision specified: ' + precision)
-        
+
+        self.header1_dtype = np.dtype(h1dt)
+        self.header2_dtype = np.dtype(h2dt)
+        hdt = h1dt + h2dt
+        self.header_dtype = np.dtype(hdt)
+
         #read through the file and build the pointer index
         self._build_index()
         
         #allocate the value array
-        self.value = np.empty( (self.nlay, self.nrow, self.ncol), 
-                         dtype=self.realtype)
+        self.value = np.empty((self.nlay, self.nrow, self.ncol),
+                              dtype=self.realtype)
         return
    
     def _build_index(self):
@@ -471,16 +514,28 @@ class CellBudgetFile(object):
             if header['text'] not in self.textlist:
                 self.textlist.append(header['text'])
             ipos = self.file.tell()
+
             if self.verbose:
                 for itxt in ['kstp', 'kper', 'text', 'ncol', 'nrow', 'nlay',
                              'imeth', 'delt', 'pertim', 'totim']:
                     print itxt + ': ' + str(header[itxt])
                 print 'file position: ', ipos
-                print '\n'
+                if int(header['imeth']) != 5:
+                    print '\n'
+
+            #store record and byte position mapping
             self.recorddict[tuple(header)] = ipos    #store the position right after header2
+            self.recordarray.append(header)
+            self.iposarray.append(ipos)  #store the position right after header2
+
+            #skip over the data to the next record and set ipos
             self.skip_record(header)
-            #self.file.seek(self.databytes, 1) #skip ahead to the beginning of the next header
             ipos = self.file.tell()
+
+        #convert to numpy arrays
+        self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
+        self.iposarray = np.array(self.iposarray, dtype=np.int64)
+
         return
 
     def skip_record(self, header):
@@ -523,88 +578,167 @@ class CellBudgetFile(object):
     def get_header(self):
         '''
         Read the file header
-        '''        
-        #header = binaryread(self.file,self.header_dtype,(1,))
-        header = binaryread(self.file,self.header_dtype,(1,))
-        nlay = header['nlay']
-        #header['nlay'] = abs(nlay)
+        '''
+        header1 = binaryread(self.file, self.header1_dtype, (1,))
+        nlay = header1['nlay']
         if  nlay < 0:
-            header2 = binaryread(self.file,self.header2_dtype,(1,))
+            header2 = binaryread(self.file, self.header2_dtype, (1,))
         else:
-            header2 = np.array( [(0, 0., 0., 0.)], dtype=self.header2_dtype)
-        fullheader = join_struct_arrays([header, header2])
+            header2 = np.array([(0, 0., 0., 0.)], dtype=self.header2_dtype)
+        fullheader = join_struct_arrays([header1, header2])
         return fullheader[0]
 
     def list_records(self):
         '''
         Print a list of all of the records in the file
-        obj.list_records()
         '''
-        for key in self.recorddict.keys():
-            print key
+        for rec in self.recordarray:
+            print rec
         return
 
     def unique_record_names(self):
-        '''
+        """
         Returns all unique record names
-        '''
+        """
         return self.textlist
 
     def get_kstpkper(self):
-        '''
+        """
         Return a list of unique stress periods and time steps in the file
-        '''
+        """
         return self.kstpkper
 
-    def get_data(self, kstp=0, kper=0, idx=None, totim=-1, ilay=0, text='',
+    def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
                  verbose=False, full3D=False):
-        '''
-        Return a three dimensional value array for the specified kstp, kper
-        pair or totim value, or return a two dimensional head array
-        if the ilay argument is specified.
-        '''
-        if totim != -1:
+        """
+        get data from the budget file.
+
+        Parameters
+        ----------
+        idx : int
+            The zero-based record number.  The first record is record 0.
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper)
+        totim : float
+            The simulation time.
+
+        Returns
+        ----------
+        A list of budget objects.  The structure of the returned object
+        depends on the structure of the data in the cbb file.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        """
+
+        #trap for totim error
+        if totim is not None:
             if len(self.times) == 0:
-                print '''This is an older style cell by cell flow file that 
+                errmsg = '''This is an older style budget file that
                          does not have times in it.  Use the MODFLOW 
                          compact budget format if you want to work with 
-                         times.'''
-                return
+                         times.  Or you may access this file using the
+                         kstp and kper arguments or the idx argument.'''
+                raise Exception(errmsg)
 
-        #find the key corresponding to the desired record
-        if idx is not None:
-            header = self.recorddict.keys()[idx]
-        else:
-            for header in self.recorddict.keys():
-                if text.upper() not in header['text']: continue
-                if kstp > 0 and kper > 0:
-                    if header['kstp'] == kstp and header['kper'] == kper:
-                        break
-                elif totim >= 0.:
-                    if totim == header['totim']:
-                        break
-                else:
-                    raise Exception('Data not found...')
+        #check and make sure that text is in file
+        if text is not None:
+            text16 = None
+            for t in self.unique_record_names():
+                if text.upper() in t:
+                    text16 = t
+                    break
+            if text16 is None:
+                errmsg = 'The specified text string is not in the budget file.'
+                raise Exception(errmsg)
 
-        ipos = self.recorddict[header]
+        if kstpkper is not None:
+            kstp = kstpkper[0]
+            kper = kstpkper[1]
+            if text is None:
+                select_indices = np.where(
+                    (self.recordarray['kstp'] == kstp) &
+                    (self.recordarray['kper'] == kper))
+            else:
+                select_indices = np.where(
+                    (self.recordarray['kstp'] == kstp) &
+                    (self.recordarray['kper'] == kper) &
+                    (self.recordarray['text'] == text16))
+
+        elif totim is not None:
+            if text is None:
+                select_indices = np.where(
+                    (self.recordarray['totim'] == totim))
+            else:
+                select_indices = np.where(
+                    (self.recordarray['totim'] == totim) &
+                    (self.recordarray['text'] == text16))
+
+        #allow for idx to be a list or a scalar
+        elif idx is not None:
+            if isinstance(idx, list):
+                select_indices = idx
+            else:
+                select_indices = [idx]
+
+        #case where only text is entered
+        elif text is not None:
+            select_indices = np.where((self.recordarray['text'] == text16))
+
+        #build and return the record list
+        recordlist = []
+        for idx in select_indices[0]:
+            rec = self.get_record(idx, full3D=full3D, verbose=verbose)
+            recordlist.append(rec)
+
+        return recordlist
+
+    def get_record(self, idx, full3D=False, verbose=False):
+        """
+        Get one record from the cell by cell flow file.
+        idx is the record number to get.
+
+        """
+
+        #idx must be an ndarray
+        if np.isscalar(idx):
+            idx = np.array([idx])
+
+        header = self.recordarray[idx]
+        ipos = self.iposarray[idx]
         self.file.seek(ipos, 0)
-        imeth = header['imeth']
-        s = 'Returning ' + header['text'].strip() + ' as '
-        nlay = abs(header['nlay'])
-        nrow = header['nrow']
-        ncol = header['ncol']
+        imeth = header['imeth'][0]
+
+        t = header['text'][0]
+        s = 'Returning ' + t.strip() + ' as '
+
+        nlay = abs(header['nlay'][0])
+        nrow = header['nrow'][0]
+        ncol = header['ncol'][0]
+
+        #default method
         if imeth == 0:
             if verbose:
-                s += 'an array of shape ' + str( (nlay, nrow, ncol) )
-                print s           
-            return binaryread(self.file, self.realtype(1), shape=
-                              (nlay, nrow, ncol))
+                s += 'an array of shape ' + str((nlay, nrow, ncol))
+                print s
+            return binaryread(self.file, self.realtype(1),
+                              shape=(nlay, nrow, ncol))
+        #imeth 1
         elif imeth == 1:
             if verbose:
                 s += 'an array of shape ' + str( (nlay, nrow, ncol) )
                 print s           
-            return binaryread(self.file, self.realtype(1), shape=
-                              (nlay, nrow, ncol))
+            return binaryread(self.file, self.realtype(1),
+                              shape=(nlay, nrow, ncol))
+
+        #imeth 2
         elif imeth == 2:
             nlist = binaryread(self.file, np.int32)
             dtype = np.dtype([('node', np.int32), ('q', self.realtype)])
@@ -616,11 +750,11 @@ class CellBudgetFile(object):
                 return self.create3D(data, nlay, nrow, ncol)
             else:
                 return dict(zip(data['node'],data['q']))
+
+        #imeth 3
         elif imeth == 3:
-            ilayer = binaryread(self.file, np.int32, shape=
-                              (nrow, ncol))
-            data = binaryread(self.file, self.realtype(1), shape=
-                              (nrow, ncol))
+            ilayer = binaryread(self.file, np.int32, shape=(nrow, ncol))
+            data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if verbose:
                 s += 'a list of two 2D arrays.  '
                 s += 'The first is an integer layer array of shape  ' + str( 
@@ -629,31 +763,37 @@ class CellBudgetFile(object):
                                                         (nrow, ncol) )
                 print s
             return [ilayer, data]
+
+        #imeth 4
         elif imeth == 4:
             if verbose:
                 s += 'a 2d array of shape ' + str( (nrow, ncol) )
                 print s
-            return binaryread(self.file, self.realtype(1), shape=
-                              (nrow, ncol))
+            return binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
+
+        #imeth 5
         elif imeth == 5:
             nauxp1 = binaryread(self.file, np.int32)
             naux = nauxp1 - 1
             l = [('node', np.int32), ('q', self.realtype)]
             for i in xrange(naux):
                 auxname = binaryread(self.file, str, charlen=16)
-                l.append( (auxname, self.realtype) )
+                l.append( (auxname, self.realtype))
             dtype = np.dtype(l)                
             nlist = binaryread(self.file, np.int32)
             if verbose:
-                s += 'a list array of shape ' + str( nlist ) 
+                s += 'a list array of shape ' + str(nlist)
                 print s
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 return self.create3D(data, nlay, nrow, ncol)
             else:
-                return dict(zip(data['node'],data['q']))
+                return dict(zip(data['node'], data['q']))
+
+        #should not reach this point
         return
-    def get_data_by_text(self,text):
+
+    def get_data_by_text(self, text):
         '''Returns one array of size (Ndata,nlay,nrow,ncol) of all
         records with text. Trailing spaces can be ignored'''
         idxlist = []
@@ -664,7 +804,7 @@ class CellBudgetFile(object):
                 idxlist.append(i)
         Ndata = len(idxlist)
         if Ndata == 0:
-            print 'No such string: ',text
+            print 'No such string: ', text
             return
         h = keys[idxlist[0]]
         nlay = abs(h[5])
@@ -675,12 +815,32 @@ class CellBudgetFile(object):
             header = self.recorddict.keys()[idx]
             ipos = self.recorddict[header]
             self.file.seek(ipos, 0)
-            rv[i] = binaryread(self.file, self.realtype(1), shape = (nlay, nrow, ncol))
+            rv[i] = binaryread(self.file, self.realtype(1),
+                               shape=(nlay, nrow, ncol))
         return rv
 
     def create3D(self, data, nlay, nrow, ncol):
         out = np.zeros((nlay*nrow*ncol), dtype=np.float32)
-        for [node, q] in zip(data['node'] ,data['q']):
+        for [node, q] in zip(data['node'], data['q']):
             idx = node - 1
             out[idx] += q
         return np.reshape(out, (nlay, nrow, ncol))
+
+    def get_times(self):
+        '''
+        Return a list of unique times in the file
+        '''
+        return self.times
+
+    def get_nrecords(self):
+        """
+        Return the number of records in the file
+        """
+        return self.recordarray.shape[0]
+
+    def close(self):
+        """
+        close the file handle
+        """
+        self.file.close()
+        return
