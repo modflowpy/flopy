@@ -333,17 +333,22 @@ class Package(object):
     def __setitem__(self, key, value):
         raise NotImplementedError("package.__setitem__() not implemented")
 
-    def add_field_to_dtype(self,field_name,field_type):
-        assert field_type in self.acceptable_dtypes,"mbase.package.add_field_to_dtype() field_type "+\
-                                                    str(type(field_type))+" not a supported type:" +\
-                                                    str(self.acceptable_dtypes)
-        newdtype = [self.dtype.descr]
-        tempdtype = np.dtype([(field_name,field_type)])
-        newdtype.append((field_name,field_type))
-        newdtypetemp = sum((dtype.descr for dtype in [self.dtype,tempdtype]), [])
-        self.dtype = np.dtype(newdtypetemp)
-        raise NotImplementedError("this function needs to check where any data has been set because it probably doesn't conform")
-
+    @staticmethod
+    def add_to_dtype(dtype,field_names,field_types):
+        #assert field_type in self.acceptable_dtypes,"mbase.package.add_field_to_dtype() field_type "+\
+        #                                            str(type(field_type))+" not a supported type:" +\
+        #                                            str(self.acceptable_dtypes)
+        if not isinstance(field_names,list):
+            field_names = [field_names]
+        if not isinstance(field_types,list):
+            field_types = [field_types] * len(field_names)
+        newdtypes = [dtype]
+        for field_name,field_type in zip(field_names,field_types):
+            tempdtype = np.dtype([(field_name,field_type)])
+            newdtypes.append(tempdtype)
+        newdtype = sum((dtype.descr for dtype in newdtypes), [])
+        newdtype = np.dtype(newdtype)
+        return newdtype
 
     def assign_layer_row_column_data(self, layer_row_column_data, ncols, zerobase=True):
         if (layer_row_column_data is not None):

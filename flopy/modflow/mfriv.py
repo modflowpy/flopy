@@ -113,12 +113,14 @@ class ModflowRiv(Package):
         return 'River class'
 
     @staticmethod
-    def get_empty(ncells=0):
-        #get an empty recaray that correponds to dtype
+    def get_empty(ncells=0,aux_names=None):
+        #get an empty recarray that correponds to dtype
         dtype = ModflowRiv.get_default_dtype()
+        if aux_names is not None:
+            dtype = Package.add_to_dtype(dtype,aux_names,np.float32)
         d = np.zeros((ncells,len(dtype)),dtype=dtype)
         d[:,:] = -1.0E+10
-        return d
+        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
 
 
     @staticmethod

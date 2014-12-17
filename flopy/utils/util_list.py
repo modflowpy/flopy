@@ -52,6 +52,7 @@ class mflist(object):
             mxact = max(mxact,self.get_itmp(kper))
         return mxact
 
+
     #get the numpy savetxt-style fmt string that corresponds to the dtype
     @property
     def fmt_string(self):
@@ -194,13 +195,6 @@ class mflist(object):
         except Exception as e:
             raise Exception("mflist.add_record() error: adding record to recarray: "+str(e))
 
-
-
-    @staticmethod
-    def get_empty(ncell=0):
-        d = np.zeros((nrow,len(self.dtype)),dtype=self.get_default_dtype())
-        d[:,:] = -1.0E+10
-        return d
 
     def __getitem__(self,kper):
         #get the recarray for a given kper
