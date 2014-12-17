@@ -43,22 +43,16 @@ Documentation for *FloPy* is a work in progress. *FloPy* code documentation is a
 
 The following IPython Notebooks contain example FloPy scripts for a variety of models and FloPy features
 
-+ The lake example, a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
+#### Basic examples
+
++ The [lake example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
++ An overview of the options to enter *layer,row,column,data* values for packages such as the wel and ghb packages is given in the [mflist Notebook](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/flopy3boundaries.ipynb)
+
+#### SWI2 examples
+
 + [Example 1](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/swi_examples/swiex1.ipynb) of the SWI2 manual, simulating a rotating interface.
-+ [mflist Notebook](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/mflist/flopy3boundaries.ipynb) gives an overview of the options to enter *layer,row,column,data* values for packages such as the wel and ghb packages.
 
-### MODFLOW Example
-
-A *FloPy* script to create a simple MODFLOW example (**Lake Example**) with a square domain and constant heads in the center of the domain, which represent a lake, is available at:
-
-+ [https://code.google.com/p/flopy/source/browse/examples/lake_example.html](https://code.google.com/p/flopy/source/browse/examples/lake_example.html)
-
-A iPython Notebook for the **Lake Example** problem is also available at:
-
-+ [http://nbviewer.ipython.org/url/flopy.googlecode.com/svn/example_notebooks/lake_example.ipynb>](http://nbviewer.ipython.org/url/flopy.googlecode.com/svn/example_notebooks/lake_example.ipynb)
-
-
-### SWI2 Test Problems
+### SWI2 Test Problems for FloPy2
 
 A zip file containing *FloPy* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) is available at:
 
