@@ -570,75 +570,117 @@ class CellBudgetFile(object):
         """
         return self.kstpkper
 
-    def get_data(self, kstp=0, kper=0, idx=None, totim=-1, ilay=0, text='',
+    def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
                  verbose=False, full3D=False):
         """
-        Return a cbb data object.
+        get data from the budget file.
+
+        Parameters
+        ----------
+        idx : int
+            The zero-based record number.  The first record is record 0.
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper)
+        totim : float
+            The simulation time.
+
+        Returns
+        ----------
+        A list of budget objects.  The structure of the returned object
+        depends on the structure of the data in the cbb file.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+
         """
 
-        if totim != -1:
+        #trap for totim error
+        if totim is not None:
             if len(self.times) == 0:
-                print '''This is an older style cell by cell flow file that 
+                errmsg = '''This is an older style budget file that
                          does not have times in it.  Use the MODFLOW 
                          compact budget format if you want to work with 
                          times.  Or you may access this file using the
                          kstp and kper arguments or the idx argument.'''
-                return
+                raise Exception(errmsg)
 
-        if totim > 0.:
-            recindices = np.where((self.recordarray['totim'] == totim))[0]
+        #check and make sure that text is in file
+        if text is not None:
+            text16 = None
+            for t in self.unique_record_names():
+                if text.upper() in t:
+                    text16 = t
+                    break
+            if text16 is None:
+                errmsg = 'The specified text string is not in the budget file.'
+                raise Exception(errmsg)
 
-        elif kstp > 0 and kper > 0:
-            recindices = np.where(
-                                  (self.recordarray['kstp'] == kstp) &
-                                  (self.recordarray['kper'] == kper))[0]
+        if kstpkper is not None:
+            kstp = kstpkper[0]
+            kper = kstpkper[1]
+            if text is None:
+                select_indices = np.where(
+                    (self.recordarray['kstp'] == kstp) &
+                    (self.recordarray['kper'] == kper))
+            else:
+                select_indices = np.where(
+                    (self.recordarray['kstp'] == kstp) &
+                    (self.recordarray['kper'] == kper) &
+                    (self.recordarray['text'] == text16))
 
-        else:
-            raise Exception('Data not found...')
+        elif totim is not None:
+            if text is None:
+                select_indices = np.where(
+                    (self.recordarray['totim'] == totim))
+            else:
+                select_indices = np.where(
+                    (self.recordarray['totim'] == totim) &
+                    (self.recordarray['text'] == text16))
 
+        #allow for idx to be a list or a scalar
+        elif idx is not None:
+            if isinstance(idx, list):
+                select_indices = idx
+            else:
+                select_indices = [idx]
+
+        #build and return the record list
         recordlist = []
-        for idx in recindices:
-            rec = self.get_single_record(idx, verbose=verbose)
+        for idx in select_indices:
+            rec = self.get_record(idx, full3D=full3D, verbose=verbose)
             recordlist.append(rec)
 
         return recordlist
 
-        # #find the key corresponding to the desired record
-        # if idx is not None:
-        #     header = self.recorddict.keys()[idx]
-        # else:
-        #     for header in self.recorddict.keys():
-        #         if text.upper() not in header[self.header_dtype.names.index('text')]:
-        #             continue
-        #         if kstp > 0 and kper > 0:
-        #             if header[self.header_dtype.names.index('kstp')] == kstp and \
-        #                header[self.header_dtype.names.index('kper')] == kper:
-        #                 break
-        #         elif totim >= 0.:
-        #             if totim == header[len(self.header_dtype)+self.header2_dtype.names.index('totim')]:
-        #                 break
-        #         else:
-        #             raise Exception('Data not found...')
-
-    def get_single_record(self, idx, verbose=False):
+    def get_record(self, idx, full3D=False, verbose=False):
         """
-        Get the idx record from the cell by cell flow file.
+        Get one record from the cell by cell flow file.
+        idx is the record number to get.
+
         """
         header = self.recordarray[idx]
         ipos = self.iposarray[idx]
         self.file.seek(ipos, 0)
-        imeth = header['imeth']
+        imeth = header['imeth'][0]
 
-        s = 'Returning ' + header['text'].strip() + ' as '
-        nlay = abs(header['nlay'])
-        nrow = header['nrow']
-        ncol = header['ncol']
+        t = header['text'][0]
+        s = 'Returning ' + t.strip() + ' as '
+
+        nlay = abs(header['nlay'][0])
+        nrow = header['nrow'][0]
+        ncol = header['ncol'][0]
 
         #default method
         if imeth == 0:
             if verbose:
-                s += 'an array of shape ' + str( (nlay, nrow, ncol) )
-                print s           
+                s += 'an array of shape ' + str((nlay, nrow, ncol))
+                print s
             return binaryread(self.file, self.realtype(1),
                               shape=(nlay, nrow, ncol))
         #imeth 1
@@ -736,3 +778,9 @@ class CellBudgetFile(object):
             idx = node - 1
             out[idx] += q
         return np.reshape(out, (nlay, nrow, ncol))
+
+    def get_times(self):
+        '''
+        Return a list of unique times in the file
+        '''
+        return self.times
