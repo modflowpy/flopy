@@ -13,7 +13,7 @@ A set of scripts for reading and writing datasets for MODFLOW-based programs.
 FloPy3 is significantly different from FloPy2 (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
 
 * FloPy3 is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
-* Input for packages that take *layer,row,column,data* input has changed and is much more flexible now. See the notebook mflist below
+* Input for packages that take *layer,row,column,data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [mflist](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/mflist/flopy3boundaries.ipynb)
 
 ## Installation
 
@@ -45,6 +45,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + The lake example, a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
 + [Example 1](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/swi_examples/swiex1.ipynb) of the SWI2 manual, simulating a rotating interface.
++ [mflist Notebook](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/mflist/flopy3boundaries.ipynb) gives an overview of the options to enter *layer,row,column,data* values for packages such as the wel and ghb packages.
 
 ### MODFLOW Example
 
