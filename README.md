@@ -47,7 +47,7 @@ http://modflowpy.github.io/flopydoc/
 The following IPython Notebooks contain example FloPy scripts for a variety of models and FloPy features
 
 + A very simple FloPy example of a square model with a fixed head cell in the middle. 
-+ Example 1 of the SWI2 manual
++ Example 1 of the SWI2 manual is [here](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/swi_examples/swiex1.ipynb)
 
 ##MODFLOW Example
 
