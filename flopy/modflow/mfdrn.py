@@ -201,7 +201,5 @@ class ModflowDrn(Package):
                     current.append(t[0:nitems])
             layer_row_column_data.append(current)
         drn = ModflowDrn(model,ipakcb=ipakcb,layer_row_column_data=layer_row_column_data,options=options,naux=naux)
-        model, ipakcb=ipakcb,
-                         layer_row_column_data=layer_row_column_data,
-                         options=options, naux=naux)
+
         return drn
