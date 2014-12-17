@@ -177,7 +177,7 @@ class mflist(object):
             #if filename, load into recarray
             if self.vtype[kper] == str:
                 d = self.__fromfile(self.data[kper])
-                d.resize(d.shape[0]+1,d.shape[1])
+                d.resize(d.shape[0],d.shape[1])
                 self.__data[kper] = d
                 self.__vtype[kper] = np.recarray
             #extend the recarray
@@ -319,7 +319,7 @@ class mflist(object):
         kpers.sort()
         last = kpers[0]
         for kper in kpers:
-            if kper == kper:
+            if kper >= last:
                 break
             if self.vtype[kper] != int or self.data[kper] != -1:
                 last = kper
