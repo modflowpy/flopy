@@ -128,6 +128,12 @@ class ModflowGhb(Package):
         f_ghb.close()
 
     @staticmethod
+    def get_default_dtype():
+        dtype = np.dtype([("k",np.int),("i",np.int),\
+                         ("j",np.int),("bhead",np.float32),\
+                        ("cond",np.float32)])
+
+    @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
