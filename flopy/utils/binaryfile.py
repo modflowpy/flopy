@@ -412,9 +412,40 @@ class UcnFile(BinaryLayerFile):
 
 
 class CellBudgetFile(object):
-    '''
-    The CellBudgetFile ...    
-    '''
+    """
+    CellBudgetFile Class.
+
+    Parameters
+    ----------
+    filename : string
+        Name of the cell budget file
+    precision : string
+        'single' or 'double'.  Default is 'single'.
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy.utils.binaryfile as bf
+    >>> cbb = bf.CellBudgetFile('mymodel.cbb')
+    >>> cbb.list_records()
+    >>> rec = cbb.get_data(kstpkper=(1,1), text='RIVER LEAKAGE')
+
+    """
+
     def __init__(self, filename, precision='single', verbose=False):        
         self.filename = filename
         self.precision = precision
