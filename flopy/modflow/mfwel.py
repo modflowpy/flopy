@@ -162,7 +162,7 @@ class ModflowWel(Package):
         dtype = ModflowWel.get_default_dtype()
         d = np.zeros((ncells,len(dtype)),dtype=dtype)
         d[:,:] = -1.0E+10
-        return d
+        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
