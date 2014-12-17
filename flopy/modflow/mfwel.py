@@ -11,6 +11,7 @@ MODFLOW Guide
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
+from mfparbc import ModflowParBc as mfparbc
 
 class ModflowWel(Package):
     """
@@ -211,8 +212,12 @@ class ModflowWel(Package):
                 break
         #--check for parameters
         if "parameter" in line.lower():
-            raw = line.strip().split()
-            assert int(raw[1]) == 0,"Parameters are not supported"
+            t = line.strip().split()
+            #assert int(t[1]) == 0,"Parameters are not supported"
+            npwel = np.int(t[1])
+            mxl = 0
+            if npwel > 0:
+                mxl = np.int(t[2])
             line = f.readline()
         #dataset 2a
         t = line.strip().split()
@@ -234,12 +239,36 @@ class ModflowWel(Package):
                 elif 'aux' in toption.lower():
                     naux += 1
                     options.append(toption)
+        
+        #--
+        readNext = False
+        specify = False
+        line = f.readline()
+        #--test for specify keyword if a NWT well file - This is a temporary hack
+        if 'specify' in line.lower():
+            readNext = False
+            specify = True
+            line = f.readline() #ditch line -- possibly save for NWT output
+            t = line.strip().split()
+            phiramp = np.float32(t[1])
+            try:
+                phiramp_unit = np.int32(t[2])
+            except:
+                phiramp_unit = 2
+        
+        #--number of columns to read
+        nitems = 4 + naux
+
+        #--read parameter data
+        if npwel > 0:
+            well_parms = mfparbc.load(f, npwel)
+        
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            
         #read data for every stress period
-        layer_row_column_data = []
+        stress_period_data = {}
         current = []
-        nitems = 4 + naux
         for iper in xrange(nper):
             print "   loading wells for kper {0:5d}".format(iper+1)
             line = f.readline()
@@ -255,6 +284,12 @@ class ModflowWel(Package):
                     phiramp_unit = 2
             t = line.strip().split()
             itmp = int(t[0])
+            itmpnp = 0
+            try:
+                itmpnp = int(t[1])
+            except:
+                pass
+
             if itmp == 0:
                 current = []
             elif itmp > 0:
@@ -268,8 +303,25 @@ class ModflowWel(Package):
                         else:
                             bnd.append(float(t[jdx]))
                     current.append(bnd)
-                #current = np.fromfile(f,dtype=dtype,count=itmp,sep=" ")
-            layer_row_column_data.append(current)
+            #--parameters
+            for iparm in xrange(itmpnp):
+                line = f.readline()
+                t = line.strip().split()
+                pname = t[0]
+                iname = 'static'
+                try:
+                    tn = t[1]
+                    iname = tn
+                except:
+                    pass
+                print pname, iname
+                current_dict = well_parms[pname]
+                data_dict = current_dict[4][iname]
+                print current_dict[0:4]
+                print data_dict
+                
+            #layer_row_column_data.append(current)
+            stress_period_data[iper] = np.array(current)
         if specify:
             wel = ModflowWel(model, iwelcb, layer_row_column_data=layer_row_column_data, 
                              options=options, naux=naux, 
