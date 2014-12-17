@@ -143,6 +143,12 @@ class ModflowWel(Package):
         self.stress_period_data.write_transient(f_wel)
         f_wel.close()
 
+    def add_record(self,kper,index,values):
+        try:
+            self.stress_period_data.add_record(kper,index,values)
+        except Exception as e:
+            raise Exception("mfwel error adding record to list: "+str(e))
+
     @staticmethod
     def get_default_dtype():
         dtype = np.dtype([("k",np.int),("i",np.int),\
