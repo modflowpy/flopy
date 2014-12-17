@@ -74,7 +74,8 @@ class ModflowPval(Package):
         '''
         overload __getitem__ to return a value from the pval_dict
         '''
-        if item in self.pval_dict.iteritems():
+        
+        if item in self.pval_dict.keys():
             return self.pval_dict[item]
         else:
             return None
@@ -115,7 +116,7 @@ class ModflowPval(Package):
             else:
                 pvalnam = t[0].lower()
 
-            pval_dict[pvalnam] = t[1]
+            pval_dict[pvalnam] = float(t[1])
 
         pval = ModflowPval(model, pval_dict=pval_dict)
         return pval
