@@ -107,6 +107,14 @@ class ModflowDrn(Package):
             options = []
         self.options = options
         self.parent.add_package(self)
+        if dtype is not None:
+            self.dtype = dtype
+        else:
+            self.dtype = self.get_default_dtype()
+        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
+
+    def __repr__( self ):
+        return 'Drain class'
 
     @staticmethod
     def get_default_dtype():
@@ -122,7 +130,7 @@ class ModflowDrn(Package):
 
     def write_file(self):
         f_drn = open(self.fn_path, 'w')
-        f_drn.write('%s\n' % self.heading)
+        f_drn.write('{0}\n'.format(self.heading))
         #f_drn.write('%10i%10i\n' % (self.mxactd, self.idrncb))
         line = '{0:10d}{1:10d}'.format(self.mxactd, self.idrncb)
         for opt in self.options:
@@ -131,6 +139,13 @@ class ModflowDrn(Package):
         f_drn.write(line)
         self.write_layer_row_column_data(f_drn, self.layer_row_column_data)
         f_drn.close()
+
+    def add_record(self,kper,index,values):
+        try:
+            self.stress_period_data.add_record(kper, index, values)
+        except Exception as e:
+            raise Exception("mfdrn error adding record to list: "+str(e))
+
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
