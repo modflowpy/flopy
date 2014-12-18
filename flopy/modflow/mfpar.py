@@ -9,8 +9,66 @@ MODFLOW Guide
 """
 
 import numpy as np
+from flopy.modflow.mfzon import ModflowZon
+from flopy.modflow.mfpval import ModflowPval
+from flopy.modflow.mfmlt import ModflowMlt
 
-class ModflowParBc():
+class ModflowPar(object):
+    """
+
+    """
+    def __init__(self):
+        """
+        Package constructor.
+
+        """
+        self.pval = None
+        self.mult = None
+        self.zone = None
+        return
+
+    def set_zone(self, model, ext_unit_dict):
+        zone = None
+        zone_key = None
+        for key, item in ext_unit_dict.iteritems():
+            if item.filetype.lower() == "zone":
+                zone = item
+                zone_key = key
+        if zone_key is not None:
+            self.zone = ModflowZon.load(zone.filename, model,
+                                        ext_unit_dict=ext_unit_dict)
+            ext_unit_dict.pop(zone_key)
+        return
+
+    def set_mult(self, model, ext_unit_dict):
+        mult = None
+        mult_key = None
+        for key, item in ext_unit_dict.iteritems():
+            if item.filetype.lower() == "mult":
+                mult = item
+                mult_key = key
+        if mult_key is not None:
+            self.mult = ModflowMlt.load(mult.filename, model,
+                                        ext_unit_dict=ext_unit_dict)
+            ext_unit_dict.pop(mult_key)
+        return
+
+    def set_pval(self, model, ext_unit_dict):
+        pval = None
+        pval_key = None
+        for key, item in ext_unit_dict.iteritems():
+            if item.filetype.lower() == "pval":
+                pval = item
+                pval_key = key
+        if pval_key is not None:
+            self.pval = ModflowPval.load(pval.filename, model,
+                                         ext_unit_dict=ext_unit_dict)
+            ext_unit_dict.pop(pval_key)
+        return
+
+
+
+class ModflowParBc(object):
     """
     MODFLOW Boundary Condition Package Parameter Class.
 
