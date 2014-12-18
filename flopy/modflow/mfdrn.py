@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drn.htm>`_.
 
 """
+import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
 
