@@ -1,26 +1,3 @@
-"""
-    the main entry point of the flopy library
-
-    Parameters
-    ----------
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-    """
-
 #--version number
 __name__='flopy'
 __author__='Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy White, Alain Frances, and Jeffrey Starn'

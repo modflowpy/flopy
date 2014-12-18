@@ -1,4 +1,3 @@
-#from flopy.mbase import BaseModel, Package
 from mf import Modflow
 from mfbas import ModflowBas
 from mfbcf import ModflowBcf
@@ -32,7 +31,7 @@ from mfmnw2 import ModflowMnw2
 from mfmnwi import ModflowMnwi
 from mfzon import ModflowZon
 from mfmlt import ModflowMlt
-from mfpar import ModflowParBc
+from mfparbc import ModflowParBc
 from mfgmg import ModflowGmg
 from mfsms import ModflowSms
 from mfbct import ModflowBct

@@ -5,7 +5,7 @@ import os
 import subprocess as sp
 import webbrowser as wb
 import warnings
-from modflow.mfpar import ModflowParBc as mfparbc
+from modflow.mfparbc import ModflowParBc as mfparbc
 
 
 # Global variables
