@@ -463,6 +463,9 @@ class Package(object):
                         raise NotImplementedError("load() method does not support \'open/close\'")
                     t = line.strip().split()
                     current[ibnd] = tuple(t[:len(current.dtype.names)])
+                current['k'] -= 1
+                current['i'] -= 1
+                current['j'] -= 1
                 stress_period_data[iper] = current
         pak = pack_type(model, ipakcb=ipakcb,
                          stress_period_data=stress_period_data,\

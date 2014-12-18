@@ -136,3 +136,7 @@ class ModflowChd(Package):
                         ("ehead",np.float32)])
         return dtype
 
+    @staticmethod
+    def load(f, model, nper=None, ext_unit_dict=None):
+
+        return Package.load(model,ModflowChd,f,nper)
