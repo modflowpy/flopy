@@ -26,6 +26,8 @@ class ModflowChd(Package):
                          dictionary of boundaries
     Each chd cell is defined through definition of
         layer (int), row (int), column (int), shead (float), ehead (float)
+        shead is the head at the start of the stress period, and ehead is the
+        head at the end of the stress period.
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
