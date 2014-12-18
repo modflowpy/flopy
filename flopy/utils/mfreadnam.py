@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import os
 
-class NamData:
+class NamData(object):
     """
     MODFLOW Namefile Class.
 
@@ -18,7 +18,17 @@ class NamData:
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-
+    pkgtype : string
+        String identifying the type of MODFLOW package. See the
+        mfnam_packages dictionary keys in the model object for a list
+        of supported packages. This dictionary is also passed in as packages.
+    packages : dictionary
+        Dictionary of package objects as defined in the mfnam_packages
+        attribute of the model object
+    name : string
+        Filename of the package file identified in the name file
+    handle : file handle
+        File handle refering to the file identified by "name" above
 
     Attributes
     ----------
@@ -26,6 +36,16 @@ class NamData:
         Maximum number of drains for a stress period.  This is calculated
         automatically by FloPy based on the information in
         layer_row_column_data.
+    filehandle : file handle
+        File handle to the package file. Read in from handle.
+    filename : string
+        Filename of the package file identified in the name file. Read from
+        the name parameter.
+    filetype : string
+        String identifying the type of MODFLOW package. Read from the
+        pkgtype parameter.
+    package : string
+        Package type. Only assigned if pkgtype is found in the keys of packages
 
     Methods
     -------
@@ -39,22 +59,11 @@ class NamData:
     Examples
     --------
 
-    >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 10., 100.]]]  #this drain will be applied to all
-    >>>                                  #stress periods
-    >>> drn = flopy.modflow.ModflowDrn(m, layer_row_column_data=lrcd)
-
     """
     def __init__(self, pkgtype, name, handle, packages):
         self.filehandle = handle
         self.filename = name
         self.filetype = pkgtype
-#         self.packages = {"bas6": flopy.modflow.ModflowBas, "dis": flopy.modflow.ModflowDis,
-#              "lpf": flopy.modflow.ModflowLpf, "wel": flopy.modflow.ModflowWel,
-#              "drn": flopy.modflow.ModflowDrn, "rch": flopy.modflow.ModflowRch,
-#              "riv": flopy.modflow.ModflowRiv, "pcg": flopy.modflow.ModflowPcg}
-
         self.package = None
         if self.filetype.lower() in packages.keys():
             self.package = packages[self.filetype.lower()]
@@ -69,7 +78,7 @@ def testint(cval):
     
 # function to parse the name file
 def parsenamefile(namfilename, packages):
-    '''
+    """
     Function to parse the nam file and return a dictionary with types,
     names, units and handles
 
@@ -83,8 +92,10 @@ def parsenamefile(namfilename, packages):
 
     Returns
     ----------
-
-    '''
+    ext_unit_dict : dictionary
+        For each file listed in the namefile, a NamData instance
+        is stored in the ext_unit_dict dictionary keyed by unit number
+    """
     # add the .nam extension to namfilename if missing
     if namfilename[-4:].lower() != '.nam':
         namfilename += '.nam'

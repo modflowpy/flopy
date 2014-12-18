@@ -85,6 +85,7 @@ class ModflowChd(Package):
     >>> chd = flopy.modflow.ModflowChd(m, layer_row_column_data=lrcd)
 
     """
+
     def __init__(self, model, stress_period_data=None, dtype=None,
                  extension='chd', unitnumber=24, **kwargs):
         # Call ancestor's init to set self.parent, extension, name and unit number
