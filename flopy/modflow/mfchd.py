@@ -112,7 +112,7 @@ class ModflowChd(Package):
 
     def add_record(self, kper, index, values):
         try:
-            self.stress_period_data.add_record(kper,index,values)
+            self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
             raise Exception("mfchd error adding record to list: "+str(e))
 

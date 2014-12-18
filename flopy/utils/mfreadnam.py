@@ -1,8 +1,51 @@
+"""
+mfreadnam module.  Contains the NamData class. Note that the user can access
+the NamData class as `flopy.modflow.NamData`.
+
+Additional information about the MODFLOW name file can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/name_file.htm>`_.
+
+"""
 import os
-import sys
-import flopy
 
 class NamData:
+    """
+    MODFLOW Namefile Class.
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+
+
+    Attributes
+    ----------
+    mxactd : int
+        Maximum number of drains for a stress period.  This is calculated
+        automatically by FloPy based on the information in
+        layer_row_column_data.
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> m = flopy.modflow.Modflow()
+    >>> lrcd = [[[2, 3, 4, 10., 100.]]]  #this drain will be applied to all
+    >>>                                  #stress periods
+    >>> drn = flopy.modflow.ModflowDrn(m, layer_row_column_data=lrcd)
+
+    """
      def __init__(self, pkgtype, name, handle, packages):
          self.filehandle = handle
          self.filename = name
@@ -27,13 +70,20 @@ def testint(cval):
 # function to parse the name file
 def parsenamefile(namfilename, packages):
     '''
-    function to parse the nam file and return a dictionary with types, names, units and handles
+    Function to parse the nam file and return a dictionary with types, names, units and handles
+
+    Parameters
+    ----------
+    namefilename : string
+        Name of the MODFLOW namefile to parse.
+    packages : dictionary
+        Dictionary of package objects as defined in the model object
     '''
     # add the .nam extension to namfilename if missing
     if namfilename[-4:].lower() != '.nam':
         namfilename += '.nam'
     
-    # inititate the ext_unit_dict dictionary
+    # initiate the ext_unit_dict dictionary
     ext_unit_dict = dict()
     
     print 'Parsing the namefile --> {0:s}'.format(namfilename)
@@ -53,13 +103,11 @@ def parsenamefile(namfilename, packages):
                 if tmp[0].upper() == 'DATA(BINARY)':
                     openmode = 'rb'
                 try:
-                    #filehandle = open(tmp[2], openmode)
                     filehandle = open(fname, openmode)
                 except:
                     print 'could not set filehandle for {0:s}'.format(tmp[2])
                     filehandle = None
                 # populate the dictionary
-                #ext_unit_dict[int(tmp[1])] = NamData(tmp[0], tmp[2], filehandle, packages)
                 ext_unit_dict[int(tmp[1])] = NamData(tmp[0], fname, filehandle, packages)
     return ext_unit_dict
 
