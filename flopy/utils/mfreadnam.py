@@ -24,29 +24,30 @@ class NamData(object):
         of supported packages. This dictionary is also passed in as packages.
     packages : dictionary
         Dictionary of package objects as defined in the
-        :attribute:`flopy.modflow.mf.Modflow.mfnam_packages`
-        attribute of the :class:`flopy.modflow.mf.Modflow` class.
+        `mfnam_packages` attribute of :class:`flopy.modflow.mf.Modflow`.
+
     name : string
         Filename of the package file identified in the name file
     handle : file handle
-        File handle referring to the file identified by "name" above
+        File handle referring to the file identified by `name`
 
     Attributes
     ----------
     mxactd : int
         Maximum number of drains for a stress period.  This is calculated
         automatically by FloPy based on the information in
-        layer_row_column_data.
+        `stress_period_data`.
     filehandle : file handle
-        File handle to the package file. Read in from handle.
+        File handle to the package file. Read from `handle`.
     filename : string
-        Filename of the package file identified in the name file. Read from
-        the name parameter.
+        Filename of the package file identified in the name file.
+        Read from `name`.
     filetype : string
-        String identifying the type of MODFLOW package. Read from the
-        pkgtype parameter.
+        String identifying the type of MODFLOW package. Read from
+        `pkgtype`.
     package : string
-        Package type. Only assigned if pkgtype is found in the keys of packages
+        Package type. Only assigned if `pkgtype` is found in the keys
+        of `packages`
 
     Methods
     -------
@@ -88,14 +89,14 @@ def parsenamefile(namfilename, packages):
     namefilename : string
         Name of the MODFLOW namefile to parse.
     packages : dictionary
-        Dictionary of package objects as defined in the mfnam_packages
-        attribute of the model object
+        Dictionary of package objects as defined in the `mfnam_packages`
+        attribute of :class:`flopy.modflow.mf.Modflow`.
 
     Returns
     ----------
     ext_unit_dict : dictionary
-        For each file listed in the namefile, a
-        :class;`flopy.utils.mfreadnam.NamData` instance
+        For each file listed in the name file, a
+        :class:`flopy.utils.mfreadnam.NamData` instance
         is stored in the ext_unit_dict dictionary keyed by unit number
     """
     # add the .nam extension to namfilename if missing

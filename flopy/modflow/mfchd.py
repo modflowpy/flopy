@@ -88,7 +88,7 @@ class ModflowChd(Package):
     >>> m = flopy.modflow.Modflow()
     >>> lrcd = [[[2, 3, 4, 10., 10.1]]]  #this chd will be applied to all
     >>>                                  #stress periods
-    >>> chd = flopy.modflow.ModflowChd(m, layer_row_column_data=lrcd)
+    >>> chd = flopy.modflow.ModflowChd(m, stress_period_data=lrcd)
 
     """
 
