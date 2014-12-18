@@ -51,8 +51,6 @@ class ModflowChd(Package):
         can be found in the flopy3 boundaries Notebook in the basic
         subdirectory of the examples directory
 
-
-
     extension : string
         Filename extension (default is 'chd')
     unitnumber : int

@@ -46,18 +46,18 @@ class NamData:
     >>> drn = flopy.modflow.ModflowDrn(m, layer_row_column_data=lrcd)
 
     """
-     def __init__(self, pkgtype, name, handle, packages):
-         self.filehandle = handle
-         self.filename = name
-         self.filetype = pkgtype
+    def __init__(self, pkgtype, name, handle, packages):
+        self.filehandle = handle
+        self.filename = name
+        self.filetype = pkgtype
 #         self.packages = {"bas6": flopy.modflow.ModflowBas, "dis": flopy.modflow.ModflowDis,
 #              "lpf": flopy.modflow.ModflowLpf, "wel": flopy.modflow.ModflowWel,
 #              "drn": flopy.modflow.ModflowDrn, "rch": flopy.modflow.ModflowRch,
 #              "riv": flopy.modflow.ModflowRiv, "pcg": flopy.modflow.ModflowPcg}
 
-         self.package = None
-         if self.filetype.lower() in packages.keys():
-             self.package = packages[self.filetype.lower()]
+        self.package = None
+        if self.filetype.lower() in packages.keys():
+            self.package = packages[self.filetype.lower()]
 
 # function to test if a string is an integer
 def testint(cval):
@@ -70,14 +70,20 @@ def testint(cval):
 # function to parse the name file
 def parsenamefile(namfilename, packages):
     '''
-    Function to parse the nam file and return a dictionary with types, names, units and handles
+    Function to parse the nam file and return a dictionary with types,
+    names, units and handles
 
     Parameters
     ----------
     namefilename : string
         Name of the MODFLOW namefile to parse.
     packages : dictionary
-        Dictionary of package objects as defined in the model object
+        Dictionary of package objects as defined in the mfnam_packages
+        attribute of the model object
+
+    Returns
+    ----------
+
     '''
     # add the .nam extension to namfilename if missing
     if namfilename[-4:].lower() != '.nam':
