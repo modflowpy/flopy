@@ -21,7 +21,7 @@ class ModflowChd(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    layer_row_column_data : list of records
+    stress_period_data : list of recarrays of the form specified in dtype
         In its most general form, this is a triple list of chd records  The
         innermost list is the layer, row, column, shead, and ehead for a single
         chd.  Then for a stress period, there can be a list of chds.  Then
@@ -44,12 +44,8 @@ class ModflowChd(Package):
                        [l3, r3, c3, shead3, ehead3],
                        ],
                     ]
-        Note that if there are not records in layer_row_column_data, then the
+        Note that if there are not records in stress_period_data, then the
         last group of chds will apply until the end of the simulation.
-    layer_row_column_shead_ehead : list of records
-        Deprecated - use stress_period_data instead.
-    options : list of strings
-        Package options. (default is None).
     extension : string
         Filename extension (default is 'chd')
     unitnumber : int
@@ -70,7 +66,8 @@ class ModflowChd(Package):
 
     Notes
     -----
-    Parameters are supported in Flopy only when reading in old models.
+    Parameters are supported in Flopy only when reading in existing models. Parameter values are converted to
+    native values in Flopy and the connection to "parameters" is thus broken.
 
     Examples
     --------
@@ -83,7 +80,7 @@ class ModflowChd(Package):
 
     """
     def __init__(self, model, stress_period_data=None, dtype=None,
-                 extension ='chd', unitnumber=24, **kwargs):
+                 extension='chd', unitnumber=24, **kwargs):
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, 'CHD', unitnumber)
         self.url = 'chd.htm'
@@ -97,11 +94,14 @@ class ModflowChd(Package):
 
         self.np = 0
         self.parent.add_package(self)
+
     def __repr__(self):
         return 'CHD package class'
+
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
+
     def write_file(self):
         f_chd = open(self.fn_path, 'w')
         f_chd.write('{0:s}\n'.format(self.heading))
