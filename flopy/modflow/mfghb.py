@@ -26,7 +26,7 @@ class ModflowGhb(Package):
                          recarray of boundaries or
                          dictionary of boundaries
         Each ghb cell is defined through definition of
-        layer (int), row (int), column (int), stage (float), conductance (float)
+        layer(int), row(int), column(int), stage(float), conductance(float)
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
@@ -49,10 +49,10 @@ class ModflowGhb(Package):
                 ]
             }
         Note that if no values are specified for a certain stress period, then
-        the list of boundaries for the previous stress period will apply untilhe end
-        simulation. Full details of all options to specify stress_period_data
-        can be found in the flopy3 boundaries Notebook in the basic
-        subdirectory of the examples directory
+        the list of boundaries for the previous stress period for which values
+        were defined is used. Full details of all options to specify
+        stress_period_data can be found in the flopy3 boundaries Notebook in
+        the basic subdirectory of the examples directory
     dtype : dtype definition
         if data type is different from default 
     options : list of strings
