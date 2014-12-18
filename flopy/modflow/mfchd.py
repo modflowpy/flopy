@@ -21,13 +21,14 @@ class ModflowChd(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    stress_period_data : list of recarrays of the form specified in dtype
-        In its most general form, this is a triple list of chd records  The
-        innermost list is the layer, row, column, shead, and ehead for a single
-        chd.  Then for a stress period, there can be a list of chds.  Then
-        for a simulation, there can be a separate list for each stress period.
-        This gives the form of
-            stress_period_data = [
+       stress_period_data : list of boundaries or
+                         recarray of boundaries or
+                         dictionary of boundaries
+    Each chd cell is defined through definition of
+        layer (int), row (int), column (int), shead (float), ehead (float)
+        The simplest form is a list of boundaries that each are itself a list.
+        One list is specified for each stress period. This gives the form of
+             stress_period_data = [
                      [  #stress period 1
                        [l1, r1, c1, shead1, ehead1],
                        [l2, r2, c2, shead2, ehead2],
@@ -44,8 +45,14 @@ class ModflowChd(Package):
                        [l3, r3, c3, shead3, ehead3],
                        ],
                     ]
-        Note that if there are not records in stress_period_data, then the
-        last group of chds will apply until the end of the simulation.
+        Note that if the number of lists is smaller than the number of stress
+        periods, then the last list of chds will apply until the end of the
+        simulation. Full details of all options to specify stress_period_data
+        can be found in the flopy3 boundaries Notebook in the basic
+        subdirectory of the examples directory
+
+
+
     extension : string
         Filename extension (default is 'chd')
     unitnumber : int
@@ -68,7 +75,7 @@ class ModflowChd(Package):
     -----
     Parameters are supported in Flopy only when reading in existing models.
     Parameter values are converted to native values in Flopy and the
-    connection to "parameters" is thus nonexistant.
+    connection to "parameters" is thus nonexistent.
 
     Examples
     --------
@@ -112,7 +119,7 @@ class ModflowChd(Package):
 
     def add_record(self, kper, index, values):
         try:
-            self.stress_period_data.add_record(kper,index,values)
+            self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
             raise Exception("mfchd error adding record to list: "+str(e))
 
