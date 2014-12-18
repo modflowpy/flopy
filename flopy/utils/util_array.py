@@ -125,6 +125,54 @@ class meta_interceptor(type):
         
 
 class util_3d():
+    """
+    util_3d class for handling 3-D model arrays
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    shape : lenght 3 tuple
+        shape of the 3-D array
+    dtype : [np.int,np.float32,np.bool]
+        the type of the data
+    value : variable
+        the data to be assigned to the 3-D array.
+        can be a scalar, list, or ndarray
+    name : string
+        name of the property
+    fmtin : string
+        modflow fmtin variable (optional).  (the default is None)
+    cnstnt : string
+        modflow cnstnt variable (optional) (the default is 1.0)
+    iprn : int
+        modflow iprn variable (optional) (the default is -1)
+    locat : int
+        modflow locat variable (optional) (the default is None)
+
+
+    Attributes
+    ----------
+    array : np.ndarray
+        the array representation of the 3-D object
+
+
+    Methods
+    -------
+    get_file_entry() : string
+        get the model input file string including the control record
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    """
     __metaclass__ = meta_interceptor
     def __init__(self,model,shape,dtype,value,name,\
         fmtin=None,cnstnt=1.0,iprn=-1,locat=None):
@@ -254,6 +302,54 @@ class util_3d():
 
 
 class util_2d():
+    """
+    util_2d class for handling 2-D model arrays
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    shape : lenght 3 tuple
+        shape of the 3-D array
+    dtype : [np.int,np.float32,np.bool]
+        the type of the data
+    value : variable
+        the data to be assigned to the 3-D array.
+        can be a scalar, list, or ndarray
+    name : string
+        name of the property (optional). (the default is None
+    fmtin : string
+        modflow fmtin variable (optional).  (the default is None)
+    cnstnt : string
+        modflow cnstnt variable (optional) (the default is 1.0)
+    iprn : int
+        modflow iprn variable (optional) (the default is -1)
+    locat : int
+        modflow locat variable (optional) (the default is None)
+
+
+    Attributes
+    ----------
+    array : np.ndarray
+        the array representation of the 2-D object
+
+
+    Methods
+    -------
+    get_file_entry() : string
+        get the model input file string including the control record
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    """
     __metaclass__ = meta_interceptor  
     def __init__(self,model,shape,dtype,value,name=None,fmtin=None,\
         cnstnt=1.0,iprn=-1,ext_filename=None,locat=None,bin=False):

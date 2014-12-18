@@ -74,7 +74,7 @@ class ModflowPval(Package):
         '''
         overload __getitem__ to return a value from the pval_dict
         '''
-        
+
         if item in self.pval_dict.keys():
             return self.pval_dict[item]
         else:
@@ -102,7 +102,6 @@ class ModflowPval(Package):
         #dataset 1
         t = line.strip().split()
         npval = int(t[0])
-
 
         sys.stdout.write('reading parameter values from "{:<10s}"\n'.format(filename))
 
