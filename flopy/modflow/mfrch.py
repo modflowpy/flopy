@@ -167,6 +167,7 @@ class ModflowRch(Package):
             line = f.readline()
             if line[0] != '#':
                 break
+        npar = 0
         if "parameter" in line.lower():
             raw = line.strip().split()
             npar = np.int(raw[1])
@@ -183,6 +184,12 @@ class ModflowRch(Package):
                 irchcb = 53
         except:
             pass
+
+        #dataset 3 and 4
+        for ipar in xrange(npar):
+            pass  #not done yet!
+
+
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         #read data for every stress period
