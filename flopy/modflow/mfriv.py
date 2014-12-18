@@ -87,7 +87,7 @@ class ModflowRiv(Package):
 
     """
     def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
-                 extension ='riv', unitnumber=18, options=None):
+                 extension ='riv', unitnumber=18, options=None,**kwargs):
         """
         Package constructor.
 

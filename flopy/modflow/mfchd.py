@@ -86,7 +86,7 @@ class ModflowChd(Package):
 
     """
     def __init__(self, model, stress_period_data=None,dtype=None,
-                 cosines=None, extension ='chd', unitnumber=24):
+                 cosines=None, extension ='chd', unitnumber=24,**kwargs):
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, 'CHD', unitnumber)
         self.url = 'chd.htm'

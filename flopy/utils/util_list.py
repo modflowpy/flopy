@@ -77,7 +77,7 @@ class mflist(object):
 
         #if data is a list, then all we can do is try to cast it to an ndarray, then cast again to a recarray
         if isinstance(data,list):
-            warnings.warn("mflist casting list to array")
+            #warnings.warn("mflist casting list to array")
             try:
                 data = np.array(data)
             except Exception as e:
@@ -89,7 +89,7 @@ class mflist(object):
                         "not integer: ".format(kper)+str(type(kper))
                 #same as before, just try...
                 if isinstance(d,list):
-                    warnings.warn("mflist: casting list to array at kper {0:d}".format(kper))
+                    #warnings.warn("mflist: casting list to array at kper {0:d}".format(kper))
                     try:
                         d = np.array(d)
                     except Exception as e:
@@ -156,7 +156,7 @@ class mflist(object):
             assert d.shape[1] == len(self.dtype),"mflist error: ndarray shape "+\
                                                        str(d.shape)+" doesn't match dtype len: "+\
                                                        str(len(self.dtype))
-            warnings.warn("mflist: ndarray dtype does not match self dtype, trying to cast")
+            #warnings.warn("mflist: ndarray dtype does not match self dtype, trying to cast")
         try:
             self.__data[kper] = np.core.records.fromarrays(d.transpose(),dtype=self.dtype)
         except Exception as e:

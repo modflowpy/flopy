@@ -169,7 +169,10 @@ class ModflowRch(Package):
                 break
         if "parameter" in line.lower():
             raw = line.strip().split()
-            assert int(raw[1]) == 0,"Parameters not supported"
+            npar = np.int(raw[1])
+            if npar > 0:
+                print 'Parameters detected. Number of parameters = ', npar
+            #assert int(raw[1]) == 0,"Parameters not supported"
             line = f.readline()
         #dataset 2
         t = line.strip().split()
