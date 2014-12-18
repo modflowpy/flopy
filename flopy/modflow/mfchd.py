@@ -68,7 +68,7 @@ class ModflowChd(Package):
     -----
     Parameters are supported in Flopy only when reading in existing models.
     Parameter values are converted to native values in Flopy and the
-    connection to "parameters" is thus nonexistant.
+    connection to "parameters" is thus nonexistent.
 
     Examples
     --------
