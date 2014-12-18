@@ -55,9 +55,6 @@ class ModflowRiv(Package):
         Filename extension (default is 'riv')
     unitnumber : int
         File unit number (default is 18).
-    zerobase : boolean (default is True)
-        True when zero-based indices are used: layers, rows, columns start at 0
-        False when one-based indices are used: layers, rows, columns start at 1 (deprecated)
 
     Attributes
     ----------
@@ -87,7 +84,7 @@ class ModflowRiv(Package):
 
     """
     def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
-                 extension ='riv', unitnumber=18, options=None):
+                 extension ='riv', unitnumber=18, options=None,**kwargs):
         """
         Package constructor.
 

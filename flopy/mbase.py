@@ -5,6 +5,7 @@ import subprocess as sp
 import webbrowser as wb
 import warnings
 
+
 # Global variables
 iconst = 1 # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
 iprn = -1 # Printout flag. If >= 0 then array values read are printed in listing file.
@@ -407,6 +408,9 @@ class Package(object):
         The load method has not been implemented for this package.
 
         """
+
+        bc_pack_types = []
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
