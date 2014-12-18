@@ -20,7 +20,7 @@ class ModflowGhb(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    ighbcb : int
+    ipakcb : int
         is a flag and a unit number. (the default is 0).
     stress_period_data : list of boundaries or
                          recarray of boudaries or
@@ -51,6 +51,7 @@ class ModflowGhb(Package):
         simulation. Full details of all options to specify stress_period_data
         can be found in the flopy3boundaries Notebook in the basic
         subdirectory of the examples directory
+    dtype : 
     options : list of strings
         Package options. (default is None).
     naux : int
@@ -87,7 +88,7 @@ class ModflowGhb(Package):
     >>> ghb = flopy.modflow.ModflowGhb(m, layer_row_column_data=lrcd)
 
     """
-    def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
+    def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
                  no_print=False, options=None, extension='ghb', unitnumber=23):
         Package.__init__(self, model, extension, 'GHB',
                          unitnumber)
