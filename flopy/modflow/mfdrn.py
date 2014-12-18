@@ -89,7 +89,7 @@ class ModflowDrn(Package):
     >>> drn = flopy.modflow.ModflowDrn(m, layer_row_column_data=lrcd)
     """
     def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
-                 extension ='drn', unitnumber=21, options=None):
+                 extension ='drn', unitnumber=21, options=None,**kwargs):
         """
         Package constructor
         """
