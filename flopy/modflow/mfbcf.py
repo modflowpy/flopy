@@ -3,46 +3,82 @@ from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
 
 class ModflowBcf(Package):
-    '''Block centered flow package class
-    intercellt: specifies how to compute intercell conductance
-    laycon: specifies the layer type
-    trpy: horizontal anisotropy factor for each layer
-    hdry: head in cells that are converted to dry during a simulation
-    iwdflg: flag that determines if the wetting capability is active
-    wetfct: factor that is included in the calculation of the head when a cell is converted from dry to wet
-    iwetit: iteration interval for attempting to wet cells
-    ihdwet: flag that determines which equation is used to define the initial head at cells that become wet
-    tran : transmissivity of each layer; tran is used when laycon = 0 or 2
-    hy : hydraulic conductivity of each layer; hy is used when laycon = 1 or >2
-    vcont : leakance between layers
-    sf1: 
-    sf2: 
-    wetdry: 
-    '''
+    """
+    MODFLOW Block Centered Flow Package Class.
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.Modflow`) to which
+        this package will be added.
+    ibcfcb : int
+        A flag and unit number. (default is 0)
+    intercellt : int
+        Intercell transmissivities, harmonic mean (0), arithmetic mean (1),
+        logarithmetic mean (2), combination (3). (default is 0)
+    laycon : int
+        Layer type, confined (0), unconfined (1), constant T, variable S (2),
+        variable T, variable S (default is 3)
+    trpy : float or array of floats (nlay)
+        horizontal anisotropy ratio (default is 1.0)
+    hdry : float
+        head assigned when cell is dry - used as indicator(default is -1E+30)
+    iwdflg : int
+        flag to indicate if wetting is inactive (0) or not (non zero)
+        (default is 0)
+    wetfct : float
+        factor used when cell is converted from dry to wet (default is 0.1)
+    iwetit : int
+        iteration interval in wetting/drying algorithm (default is 1)
+    ihdwet : int
+        flag to indicate how initial head is computd for cells that become
+        wet (default is 0)
+    tran : float or array of floats (nlay, nrow, ncol), optional
+        transmissivity (only read if laycon is 0 or 2) (default is 1.0)
+    hy : float or array of floats (nlay, nrow, ncol)
+        hydraulic conductivity (only read if laycon is 1 or 3)
+        (default is 1.0)
+    vcont : float or array of floats (nlay-1, nrow, ncol)
+        vertical leakance between layers (default is 1.0)
+    sf1 : float or array of floats (nlay, nrow, ncol)
+        specific storage (confined) or storage coefficient (unconfined),
+        read when there is at least one transient stress period.
+        (default is 1e-5)
+    sf2 : float or array of floats (nrow, ncol)
+        specific yield, only read when laycon is 2 or 3 and there is at least
+        one transient stress period (default is 0.15)
+    wetdry : float
+        a combination of the wetting threshold and a flag to indicate which
+        neighboring cells can cause a cell to become wet (default is -0.01)
+    extension : string
+        Filename extension (default is 'bcf')
+    unitnumber : int
+        File unit number (default is 15).
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> ml = flopy.modflow.Modflow()
+    >>> bcf = flopy.modflow.ModflowBcf(ml)
+
+    """
+
     def __init__(self, model, ibcfcb = 0, intercellt=0,laycon=3, trpy=1.0, hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0, \
                  tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01, extension='bcf', unitnumber=15):
         Package.__init__(self, model, extension, 'BCF6', unitnumber) # Call ancestor's init to set self.parent, extension, name and unit number
         self.url = 'bcf.htm'
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-#        # Set values of all parameters
-#        self.intercellt = self.assignarray((nlay,), np.int, intercellt, name='intercellt') # Specifies how to compute intercell conductance
-#        self.laycon = self.assignarray((nlay,), np.int, laycon, name='laycon') # Specifies the layer type (LAYCON)
-#        self.trpy = self.assignarray((nlay,), np.float, trpy, name='trpy') # Horizontal anisotropy factor for each layer
-#        self.ibcfcb = ibcfcb # Unit number for file with cell-by-cell flow terms
-#        self.hdry = hdry # Head in cells that are converted to dry during a simulation
-#        self.iwdflg = iwdflg # Flag that determines if the wetting capability is active
-#        self.wetfct = wetfct # Factor that is included in the calculation of the head when a cell is converted from dry to wet
-#        self.iwetit = iwetit # Iteration interval for attempting to wet cells
-#        self.ihdwet = ihdwet # Flag that determines which equation is used to define the initial head at cells that become wet     
-#        self.tran = self.assignarray((nlay,nrow,ncol), np.float, tran, name='tran', load=True)
-#        self.hy = self.assignarray((nlay,nrow,ncol), np.float, hy, name='hy', load=True)
-#        self.vcont = self.assignarray((nlay-1,nrow,ncol), np.float, vcont, name='vcont', load=True)
-#        self.sf1 = self.assignarray((nlay,nrow,ncol), np.float, sf1, name='sf1', load=True)
-#        self.sf2 = self.assignarray((nlay,nrow,ncol), np.float, sf2, name='sf2', load=True)
-#        self.wetdry = self.assignarray((nlay,nrow,ncol), np.float, wetdry, name='wetdry', load=True)
         # Set values of all parameters
-        #self.intercellt = self.assignarray((nlay,), np.int, intercellt, name='intercellt') # Specifies how to compute intercell conductance
-        #self.laycon = self.assignarray((nlay,), np.int, laycon, name='laycon') # Specifies the layer type (LAYCON)
         self.intercellt = util_2d(model,(nlay,),np.int,intercellt,name='laycon',locat=self.unit_number[0])
         self.laycon = util_2d(model,(nlay,),np.int,laycon,name='laycon',locat=self.unit_number[0])
         self.trpy = util_2d(model,(nlay,),np.int,trpy,name='Anisotropy factor',locat=self.unit_number[0])
@@ -57,8 +93,7 @@ class ModflowBcf(Package):
         self.vcont = util_3d(model,(nlay-1,nrow,ncol),np.float32,vcont,'Vertical Conductance',locat=self.unit_number[0])    
         self.sf1 = util_3d(model,(nlay,nrow,ncol),np.float32,sf1,'Primary Storage Coefficient',locat=self.unit_number[0])    
         self.sf2 = util_3d(model,(nlay,nrow,ncol),np.float32,sf2,'Secondary Storage Coefficient',locat=self.unit_number[0])    
-        self.wetdry = util_3d(model,(nlay,nrow,ncol),np.float32,wetdry,'WETDRY',locat=self.unit_number[0])
-        
+        self.wetdry = util_3d(model,(nlay,nrow,ncol),np.float32,wetdry,'WETDRY',locat=self.unit_number[0])       
         self.parent.add_package(self)
     def write_file(self):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -70,10 +105,6 @@ class ModflowBcf(Package):
         for k in range(nlay):            
             f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k],self.laycon[k]))
         f_bcf.write('\n')
-#        for k in range(nlay):
-#            f_bcf.write('%1i%1i ' %(self.intercellt[k],self.laycon[k]))
-#        f_bcf.write('\n')
-#        self.parent.write_vector(f_bcf, self.trpy, self.unit_number[0], True, 13, -5, 'TRPY(): Anisotropy factor of layers') # npln is negative as it needs to print all layers even if they are all the same
         f_bcf.write(self.trpy.get_file_entry())
         transient = not self.parent.get_package('DIS').steady.all()
         for k in range(nlay):
