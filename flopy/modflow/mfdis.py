@@ -19,7 +19,7 @@ class ModflowDis(Package):
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        The model object (of type :class:`flopy.modflow.Modflow`) to which
         this package will be added.
     nlay : int
         Number of model layers (the default is 1).
