@@ -4,6 +4,9 @@ import os
 import subprocess as sp
 import webbrowser as wb
 import warnings
+import flopy.modflow as fmf
+from mfpar import ModflowParBc as mfparbc
+
 
 # Global variables
 iconst = 1 # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
@@ -139,42 +142,7 @@ class BaseModel(object):
             pp.fn_path = os.path.join(self.model_ws,pp.file_name[0])
         return None
     
-    def run_model(self, pause=True, report=None):
-        """
-        Run the model.  This method will create and run a Windows batch file.
-
-        Parameters
-        ----------
-        pause : boolean, optional
-            Add a pause to the end of the batch file.
-            (the default is False)
-        report : string, optional
-            Name of file to store stdout. (default is None).
-        """
-        batch_file_name = os.path.join(self.model_ws, 'run.bat')
-        #error_message = ('Model executable %s not found!' % self.exe_name)
-        error_message = 'Model executable {0:s} not found!'.format(self.exe_name)
-        assert os.path.exists(self.exe_name), error_message
-
-        error_message = ('Name file %s not found!' % self.namefile)
-        fn_path = os.path.join(self.model_ws, self.namefile)
-        assert os.path.exists(fn_path), error_message
-
-        # Create a batch file to call code so that window remains open in case of error messages
-        f = open(batch_file_name, 'w')
-        #f.write('@ECHO Calling %s with %s\n' % (self.exe_name, self.namefile))
-        f.write('@ECHO Calling {0:s} with {1:s}\n'.format(self.exe_name, self.namefile))
-        #f.write('%s %s %s\n' % (self.exe_name, self.namefile, self.cl_params))
-        f.write('{0:s} {1:s} {2:s}\n'.format(self.exe_name, self.namefile, self.cl_params))
-        if (pause):
-           f.write('@PAUSE\n')
-        f.close()
-        os.path.abspath = self.model_ws
-        sp.call(batch_file_name, cwd=self.model_ws, stdout = report)
-        os.remove(batch_file_name)
-        return
-    
-    def run_model2(self, silent=True, pause=False, report=False):
+    def run_model(self, silent=False, pause=False, report=False):
         """
         This method will run the model using subprocess.Popen.
 
@@ -215,19 +183,6 @@ class BaseModel(object):
         if pause == True:
             raw_input('Press Enter to continue...')
         return ( [success,buff] )
-        
-    def run_model3(self):
-        """
-        Minimal form of run model.  No input parameters and no return
-        parameters.  Runs model using subprocess.Popen.
-        """
-        import subprocess
-        a = subprocess.Popen([self.exe_name,self.namefile], 
-                             stdout=subprocess.PIPE, cwd=self.model_ws)
-        b = a.communicate()
-        c = b[0].split('\r')
-        for cc in c:
-            print cc
         
     def write_input(self, SelPackList=False):
         if self.verbose:
@@ -350,24 +305,24 @@ class Package(object):
         newdtype = np.dtype(newdtype)
         return newdtype
 
-    def assign_layer_row_column_data(self, layer_row_column_data, ncols, zerobase=True):
-        if (layer_row_column_data is not None):
-            new_layer_row_column_data = []
-            mxact = 0
-            for a in layer_row_column_data:
-                a = np.atleast_2d(a)                
-                nr, nc = a.shape                
-                assert nc == ncols, 'layer_row_column_Q must have {0:1d} columns'.format(ncols)+'\nentry: '+str(a.shape)                
-                mxact = max(mxact, nr)
-                if zerobase:
-                    new_layer_row_column_data.append(a)
-                else:
-                    warnings.warn('Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing')
-                    #print 'Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing'
-                    a[:,:3] -= 1  # one-base input data, subtract 1 from layers, rows, columns
-                    new_layer_row_column_data.append(a)
-            return mxact, new_layer_row_column_data
-        return
+#    def assign_layer_row_column_data(self, layer_row_column_data, ncols, zerobase=True):
+#        if (layer_row_column_data is not None):
+#            new_layer_row_column_data = []
+#            mxact = 0
+#            for a in layer_row_column_data:
+#                a = np.atleast_2d(a)                
+#                nr, nc = a.shape                
+#                assert nc == ncols, 'layer_row_column_Q must have {0:1d} columns'.format(ncols)+'\nentry: '+str(a.shape)                
+#                mxact = max(mxact, nr)
+#                if zerobase:
+#                    new_layer_row_column_data.append(a)
+#                else:
+#                    warnings.warn('Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing')
+#                    #print 'Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing'
+#                    a[:,:3] -= 1  # one-base input data, subtract 1 from layers, rows, columns
+#                    new_layer_row_column_data.append(a)
+#            return mxact, new_layer_row_column_data
+#        return
 
     def webdoc(self):
         if self.parent.version == 'mf2k':
@@ -382,24 +337,24 @@ class Package(object):
         print 'IMPLEMENTATION ERROR: write_file must be overloaded'
 
 
-    def write_layer_row_column_data(self, f, layer_row_column_data):
-        for n in xrange(self.parent.get_package('DIS').nper):
-            if n < len(layer_row_column_data):
-                a = layer_row_column_data[n]
-                itmp = a.shape[0]
-                #f.write('%10i%10i\n' % (itmp, self.np))
-                f.write(' {0:9d} {1:9d}       STRESS PERIOD {2:6d}\n'.format(itmp, self.np, n+1))
-                for b in a:
-                    #f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
-                    f.write(' {0:9.0f} {1:9.0f} {2:9.0f}'.format(b[0]+1, b[1]+1, b[2]+1))  # write out layer+1, row+1, col+1
-                    for c in b[3:]:
-                        #f.write(' %13.6e' % c)
-                        f.write(' {:12.6g}'.format(c))
-                    f.write('\n')
-            else:
-                itmp = -1
-                #f.write('%10i%10i\n' % (itmp, self.np))
-                f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
+#    def write_layer_row_column_data(self, f, layer_row_column_data):
+#        for n in xrange(self.parent.get_package('DIS').nper):
+#            if n < len(layer_row_column_data):
+#                a = layer_row_column_data[n]
+#                itmp = a.shape[0]
+#                #f.write('%10i%10i\n' % (itmp, self.np))
+#                f.write(' {0:9d} {1:9d}       STRESS PERIOD {2:6d}\n'.format(itmp, self.np, n+1))
+#                for b in a:
+#                    #f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
+#                    f.write(' {0:9.0f} {1:9.0f} {2:9.0f}'.format(b[0]+1, b[1]+1, b[2]+1))  # write out layer+1, row+1, col+1
+#                    for c in b[3:]:
+#                        #f.write(' %13.6e' % c)
+#                        f.write(' {:12.6g}'.format(c))
+#                    f.write('\n')
+#            else:
+#                itmp = -1
+#                #f.write('%10i%10i\n' % (itmp, self.np))
+#                f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
 
     @staticmethod
     def load(model,pack_type,f,nper=None):
@@ -417,8 +372,12 @@ class Package(object):
                 break
         #--check for parameters
         if "parameter" in line.lower():
-            raw = line.strip().split()
-            assert int(raw[1]) == 0,"Parameters are not supported"
+            t = line.strip().split()
+            #assert int(t[1]) == 0,"Parameters are not supported"
+            nppak = np.int(t[1])
+            mxl = 0
+            if nppak > 0:
+                mxl = np.int(t[2])
             line = f.readline()
         #dataset 2a
         t = line.strip().split()
@@ -442,6 +401,29 @@ class Package(object):
                     aux_names.append(t[it+1].lower())
                     it += 1
                 it += 1
+        
+        #--read phiramp for modflow-nwt well package
+        kwargs = {}
+        if pak_type == fmf.ModflowWel:
+            specify = False
+            ipos = f.tell()
+            line = f.readline()
+            #--test for specify keyword if a NWT well file - This is a temporary hack
+            if 'specify' in line.lower():
+                specify = True
+                line = f.readline() #ditch line -- possibly save for NWT output
+                t = line.strip().split()
+                kwargs['phiramp'] = np.float32(t[1])
+                try:
+                    phiramp_unit = np.int32(t[2])
+                except:
+                    phiramp_unit = 2
+                kwargs['phiramp_unit'] = phiramp_unit
+            else:
+                f.seek(ipos)
+        
+        
+        
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         #read data for every stress period
@@ -470,6 +452,6 @@ class Package(object):
         pak = pack_type(model, ipakcb=ipakcb,
                          stress_period_data=stress_period_data,\
                          dtype=pack_type.get_empty(0,aux_names=aux_names).dtype,\
-                         options=options)
+                         options=options, kwargs)
         return pak
 
