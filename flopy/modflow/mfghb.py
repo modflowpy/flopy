@@ -52,7 +52,7 @@ class ModflowGhb(Package):
         Note that if no values are specified for a certain stress period, then
         the list of boundaries for the previous stress period for which values
         were defined is used. Full details of all options to specify
-        stress_period_data can be found in the flopy3 boundaries Notebook in
+        stress_period_data can be found in the flopy3boundaries Notebook in
         the basic subdirectory of the examples directory
     dtype : dtype definition
         if data type is different from default 
