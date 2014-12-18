@@ -57,9 +57,6 @@ class ModflowGhb(Package):
         Filename extension (default is 'ghb')
     unitnumber : int
         File unit number (default is 23).
-    zerobase : boolean (default is True)
-        True when zero-based indices are used: layers, rows, columns start at 0
-        False when one-based indices are used: layers, rows, columns start at 1 (deprecated)
 
     Attributes
     ----------
