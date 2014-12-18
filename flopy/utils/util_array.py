@@ -333,7 +333,7 @@ class util_2d():
     ----------
     array : np.ndarray
         the array representation of the 2-D object
-        
+
 
     Methods
     -------

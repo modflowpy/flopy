@@ -6,7 +6,42 @@ import numpy as np
 
 
 class mflist(object):
+    """
+    a generic object for handling transient boundary condition lists
 
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    dtype : np.dtype
+        a numpy dtype describing the columns of the list data
+    data : varies
+        the data of the transient list (optional). (the default is None)
+
+
+    Attributes
+    ----------
+    mxact : int
+        the max number of active bc for any stress period
+    Methods
+    -------
+    add_record(kper,index,value) : None
+        add a record to stress period kper at index location
+    write_transient(f) : None
+        write the transient sequence to the model input file f
+    check_kij() : None
+        checks for boundaries outside of model domain - issues warnings only
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    """
     def __init__(self,model,dtype,data=None):
         self.model = model
         assert isinstance(dtype,np.dtype)
