@@ -10,7 +10,7 @@ MODFLOW Guide
 from flopy.mbase import Package
 
 class ModflowLmt(Package):
-   """
+    """
     MODFLOW Link-MT3DMS Package Class.
 
     Parameters
