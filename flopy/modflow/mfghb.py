@@ -31,18 +31,19 @@ class ModflowGhb(Package):
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
         period. This gives the form of
-            {0: [  #stress period 0
+            stress_period_data =
+            {0: [
                 [lay, row, col, stage, cond],
                 [lay, row, col, stage, cond],
                 [lay, row, col, stage, cond],
                 ],
-            1:  [  #stress period 1
+            1:  [
                 [lay, row, col, stage, cond],
                 [lay, row, col, stage, cond],
                 [lay, row, col, stage, cond],
                 ], ...
             kper:
-                [  #stress period kper
+                [
                 [lay, row, col, stage, cond],
                 [lay, row, col, stage, cond],
                 [lay, row, col, stage, cond],
