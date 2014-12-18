@@ -23,7 +23,7 @@ class ModflowGhb(Package):
     ighbcb : int
         is a flag and a unit number. (the default is 0).
     stress_period_data : list of boundaries or
-                         recarray of boudaries or
+                         recarray of boundaries or
                          dictionary of boundaries
         Each ghb cell is defined through definition of
         layer (int), row (int), column (int), stage (float), conductance (float)
@@ -49,7 +49,7 @@ class ModflowGhb(Package):
         Note that if the number of lists is smaller than the number of stress
         periods, then the last list of ghbs will apply until the end of the
         simulation. Full details of all options to specify stress_period_data
-        can be found in the flopy3boundaries Notebook in the basic
+        can be found in the flopy3 boundaries Notebook in the basic
         subdirectory of the examples directory
     options : list of strings
         Package options. (default is None).
