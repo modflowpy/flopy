@@ -1,12 +1,11 @@
 import numpy as np
+from numpy.lib.recfunctions import stack_arrays
 import sys
 import os
 import subprocess as sp
 import webbrowser as wb
 import warnings
-import flopy.modflow as fmf
-from mfpar import ModflowParBc as mfparbc
-
+from modflow.mfpar import ModflowParBc as mfparbc
 
 
 # Global variables
@@ -406,9 +405,11 @@ class Package(object):
                     it += 1
                 it += 1
         
-        #--read phiramp for modflow-nwt well package
-        kwargs = {}
-        if pak_type == fmf.ModflowWel:
+        #--set partype
+        #  and read phiramp for modflow-nwt well package
+        partype = 'cond'
+        if 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
+            partype = 'flux'
             specify = False
             ipos = f.tell()
             line = f.readline()
@@ -417,20 +418,26 @@ class Package(object):
                 specify = True
                 line = f.readline() #ditch line -- possibly save for NWT output
                 t = line.strip().split()
-                kwargs['phiramp'] = np.float32(t[1])
+                phiramp = np.float32(t[1])
                 try:
                     phiramp_unit = np.int32(t[2])
                 except:
                     phiramp_unit = 2
-                kwargs['phiramp_unit'] = phiramp_unit
+                options.append('specify {} {} '.format(phiramp, phiramp_unit))
             else:
                 f.seek(ipos)
-        
-        
+                
+        #--read parameter data
+        if nppak > 0:
+            dt = pack_type.get_empty(1, aux_names=aux_names).dtype
+            pak_parms = mfparbc.load(f, nppak, len(dt.names))
         
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        
+        
         #read data for every stress period
+        bnd_output = None
         stress_period_data = {}
         for iper in xrange(nper):
             print "   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1)
@@ -439,10 +446,16 @@ class Package(object):
                 break
             t = line.strip().split()
             itmp = int(t[0])
-            if itmp == 0 or itmp == -1:
-                stress_period_data[iper] = itmp
+            itmpp = 0
+            try:
+                itmpp = int(t[1])
+            except:
+                pass
+            
+            if itmp == 0:
+                bnd_output = None
             elif itmp > 0:
-                current = pack_type.get_empty(itmp,aux_names=aux_names)
+                current = pack_type.get_empty(itmp, aux_names=aux_names)
                 for ibnd in xrange(itmp):
                     line = f.readline()
                     if "open/close" in line.lower():
@@ -452,10 +465,59 @@ class Package(object):
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1
-                stress_period_data[iper] = current
+                
+                bnd_output = np.copy(current)
+            else:
+                bnd_output = np.copy(current)
+
+            for iparm in xrange(itmpp):
+                line = f.readline()
+                t = line.strip().split()
+                pname = t[0].lower()
+                iname = 'static'
+                try:
+                    tn = t[1]
+                    iname = tn
+                except:
+                    pass
+                print pname, iname
+                par_dict, current_dict = pak_parms.get(pname)
+                data_dict = current_dict[iname]
+                #print par_dict
+                #print data_dict
+                
+                par_current = pack_type.get_empty(par_dict['nlst'],aux_names=aux_names)
+                
+                #--
+                parval = np.float(par_dict['parval'])
+                
+                #--fill current parameter data (par_current)
+                for ibnd, t in enumerate(data_dict):
+                    par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
+                    
+                par_current['k'] -= 1
+                par_current['i'] -= 1
+                par_current['j'] -= 1
+
+                par_current[partype] *= parval
+                 
+                if bnd_output is None:
+                    bnd_output = np.copy(par_current)
+                else:
+                    bnd_output = stack_arrays((bnd_output, par_current), 
+                                              asrecarray=True, usemask=False)
+                     
+            if bnd_output is None:
+                stress_period_data[iper] = itmp
+                #print 'crap'
+            else: 
+                stress_period_data[iper] = bnd_output
+                #print bnd_output.shape
+                #print bnd_output   
+                
         pak = pack_type(model, ipakcb=ipakcb,
-                         stress_period_data=stress_period_data,\
-                         dtype=pack_type.get_empty(0,aux_names=aux_names).dtype,\
-                         options=options, kwargs)
+                        stress_period_data=stress_period_data,\
+                        dtype=pack_type.get_empty(0,aux_names=aux_names).dtype,\
+                        options=options)
         return pak
 
