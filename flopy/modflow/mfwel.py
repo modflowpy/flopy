@@ -11,7 +11,7 @@ MODFLOW Guide
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
-from mfparbc import ModflowParBc as mfparbc
+from mfpar import ModflowParBc as mfparbc
 
 class ModflowWel(Package):
     """
