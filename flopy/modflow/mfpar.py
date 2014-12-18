@@ -56,10 +56,6 @@ class ModflowParBc():
         Filename extension (default is 'wel')
     unitnumber : int
         File unit number (default is 11).
-    zerobase : boolean (default is True)
-        True when zero-based indices are used: layers, rows, columns start at 0
-        False when one-based indices are used: layers, rows, columns start at 1 (deprecated)
-
 
     Attributes
     ----------
