@@ -2,7 +2,7 @@ import os
 import flopy
 from flopy.mbase import BaseModel, Package
 from flopy.utils import mfreadnam
-
+from flopy.modflow.mfpar import ModflowPar
 
 class ModflowGlobal(Package):
     'Global Package class'
@@ -113,6 +113,7 @@ class Modflow(BaseModel):
             self.external = True
         self.verbose = verbose
         self.silent = silent
+        self.mfpar = ModflowPar()
 
         #Create a dictionary to map package with package object.
         #This is used for loading models.
@@ -229,6 +230,12 @@ class Modflow(BaseModel):
                 dis_key = key
         pck = dis.package.load(dis.filename, ml, ext_unit_dict=ext_unit_dict)
         ext_unit_dict.pop(dis_key)
+
+        #zone, mult, pval
+        ml.mfpar.set_pval(ml, ext_unit_dict)
+        ml.mfpar.set_zone(ml, ext_unit_dict)
+        ml.mfpar.set_mult(ml, ext_unit_dict)
+
         if verbose:
             print ext_unit_dict
         for key, item in ext_unit_dict.iteritems():
