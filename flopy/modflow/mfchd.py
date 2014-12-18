@@ -26,25 +26,29 @@ class ModflowChd(Package):
                          dictionary of boundaries
     Each chd cell is defined through definition of
         layer (int), row (int), column (int), shead (float), ehead (float)
-        The simplest form is a list of boundaries that each are itself a list.
-        One list is specified for each stress period. This gives the form of
-             stress_period_data = [
-                     [  #stress period 1
-                       [l1, r1, c1, shead1, ehead1],
-                       [l2, r2, c2, shead2, ehead2],
-                       [l3, r3, c3, shead3, ehead3],
-                       ],
-                     [  #stress period 2
-                       [l1, r1, c1, shead1, ehead1],
-                       [l2, r2, c2, shead2, ehead2],
-                       [l3, r3, c3, shead3, ehead3],
-                       ], ...
-                     [  #stress period kper
-                       [l1, r1, c1, shead1, ehead1],
-                       [l2, r2, c2, shead2, ehead2],
-                       [l3, r3, c3, shead3, ehead3],
-                       ],
-                    ]
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. This gives the form of
+            stress_period_data =
+            {0: [
+                [lay, row, col, shead, ehead],
+                [lay, row, col, shead, ehead],
+                [lay, row, col, shead, ehead]
+                ],
+            1:  [
+                [lay, row, col, shead, ehead],
+                [lay, row, col, shead, ehead],
+                [lay, row, col, shead, ehead]
+                ], ...
+            kper:
+                [
+                [lay, row, col, shead, ehead],
+                [lay, row, col, shead, ehead],
+                [lay, row, col, shead, ehead]
+                ]
+            }
+
         Note that if the number of lists is smaller than the number of stress
         periods, then the last list of chds will apply until the end of the
         simulation. Full details of all options to specify stress_period_data
