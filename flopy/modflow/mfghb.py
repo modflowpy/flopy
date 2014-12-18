@@ -27,35 +27,36 @@ class ModflowGhb(Package):
                          dictionary of boundaries
         Each ghb cell is defined through definition of
         layer (int), row (int), column (int), stage (float), conductance (float)
-        The simplest form is a list of boundaries that each are itself a list.
-        One list is specified for each stress period. This gives the form of
-            [
-                [  #stress period 1
-                    [l1, r1, c1, stage1, cond1],
-                    [l2, r2, c2, stage2, cond2],
-                    [l3, r3, c3, stage3, cond3],
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. This gives the form of
+            {0: [  #stress period 0
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
                 ],
-                [  #stress period 2
-                    [l1, r1, c1, stage1, cond1],
-                    [l2, r2, c2, stage2, cond2],
-                    [l3, r3, c3, stage3, cond3],
+            1:  [  #stress period 1
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
                 ], ...
+            kper:
                 [  #stress period kper
-                    [l1, r1, c1, stage1, cond1],
-                    [l2, r2, c2, stage2, cond2],
-                    [l3, r3, c3, stage3, cond3],
-                ],
-            ]
-        Note that if the number of lists is smaller than the number of stress
-        periods, then the last list of ghbs will apply until the end of the
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                ]
+            }
+        Note that if no values are specified for a certain stress period, then
+        the list of boundaries for the previous stress period will apply untilhe end
         simulation. Full details of all options to specify stress_period_data
         can be found in the flopy3 boundaries Notebook in the basic
         subdirectory of the examples directory
-    dtype : 
+    dtype : dtype definition
+        if data type is different from default 
     options : list of strings
         Package options. (default is None).
-    naux : int
-        number of auxiliary variables
     extension : string
         Filename extension (default is 'ghb')
     unitnumber : int
@@ -82,8 +83,8 @@ class ModflowGhb(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 10., 100.]]]  #this well will be applied to all
+    >>> ml = flopy.modflow.Modflow()
+    >>> lrcd = [[2, 3, 4, 10., 100.]]  #this well will be applied to all
     >>>                                  #stress periods
     >>> ghb = flopy.modflow.ModflowGhb(m, layer_row_column_data=lrcd)
 
