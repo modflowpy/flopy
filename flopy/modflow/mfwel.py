@@ -134,7 +134,7 @@ class ModflowWel(Package):
         f_wel.write('%s\n' % self.heading)
         line = (' {0:9d} {1:9d}'.format(self.stress_period_data.mxact, self.ipakcb))
         
-        if self.specify and self.parent.version is 'mfnwt':
+        if self.specify and self.parent.version == 'mfnwt':
           f_wel.write('SPECIFY {0:10.5g} {1:10d}\n'.format(self.phiramp, self.phiramp_unit))
         
         for opt in self.options:
