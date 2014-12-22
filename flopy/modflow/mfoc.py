@@ -368,7 +368,7 @@ class ModflowOc(Package):
         #process each line
         for line in f:
             lnlst = line.strip().split()
-            if line[0] is '#':
+            if line[0] == '#':
                 continue
             
             # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file

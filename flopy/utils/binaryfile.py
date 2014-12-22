@@ -8,7 +8,7 @@ class binaryheader():
     """
     def __init__(self, bintype=None, precision='single'):
         floattype = 'f4'
-        if precision is 'double':
+        if precision == 'double':
             floattype = 'f8'
         self.header_types = ['head','ucn']
         if bintype is None:
@@ -173,9 +173,9 @@ class BinaryLayerFile(object):
         self.recordarray = []
         self.iposarray = []
 
-        if precision is 'single':
+        if precision == 'single':
             self.realtype = np.float32
-        elif precision is 'double':
+        elif precision == 'double':
             self.realtype = np.float64
         else:
             raise Exception('Unknown precision specified: ' + precision)
@@ -463,11 +463,11 @@ class CellBudgetFile(object):
         h1dt = [('kstp', 'i4'), ('kper', 'i4'), ('text', 'a16'),
                 ('ncol', 'i4'), ('nrow', 'i4'), ('nlay', 'i4')]
 
-        if precision is 'single':
+        if precision == 'single':
             self.realtype = np.float32
             h2dt = [('imeth', 'i4'), ('delt', 'f4'), ('pertim', 'f4'),
                     ('totim', 'f4')]
-        elif precision is 'double':
+        elif precision == 'double':
             self.realtype = np.float64
             h2dt = [('imeth', 'i4'),('delt', 'f8'), ('pertim', 'f8'),
                     ('totim', 'f8')]
