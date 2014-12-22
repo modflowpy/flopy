@@ -247,6 +247,10 @@ class Modflow(BaseModel):
             elif "data" not in item.filetype.lower():
                 if verbose:
                     print "skipping package", item.filetype, item.filename
+            elif "data" in item.filetype.lower():
+                ml.external_fnames.append(item.filename)
+                ml.external_units.append(key)
+                ml.external_binflag.append("binary" in item.filetype.lower())
         return ml
 
 
