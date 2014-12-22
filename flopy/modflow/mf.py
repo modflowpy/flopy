@@ -240,8 +240,10 @@ class Modflow(BaseModel):
             print ext_unit_dict
         for key, item in ext_unit_dict.iteritems():
             if item.package is not None:
-                pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
-                pass
+                try:
+                    pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
+                except BaseException as o:
+                    print "[WARNING] - Exception loading {!s} file: {!s}".format(item.filetype, o)
             elif "data" not in item.filetype.lower():
                 if verbose:
                     print "skipping package", item.filetype, item.filename
