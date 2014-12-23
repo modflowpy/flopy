@@ -762,7 +762,14 @@ class CellBudgetFile(object):
                 s += 'The second is real data array of shape  ' + str( 
                                                         (nrow, ncol) )
                 print s
-            return [ilayer, data]
+            if full3D:
+                out = np.ma.zeros((nlay, nrow, ncol), dtype=np.float32)
+                out.mask = True
+                vertical_layer = ilayer[0]  # This is always the top layer
+                out[vertical_layer, :, :] = data
+                return out
+            else:
+                return [ilayer, data]
 
         #imeth 4
         elif imeth == 4:
