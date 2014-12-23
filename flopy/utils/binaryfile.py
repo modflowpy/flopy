@@ -827,11 +827,17 @@ class CellBudgetFile(object):
         return rv
 
     def create3D(self, data, nlay, nrow, ncol):
-        out = np.zeros((nlay*nrow*ncol), dtype=np.float32)
+        out = np.ma.zeros((nlay*nrow*ncol), dtype=np.float32)
+        out.mask = True
         for [node, q] in zip(data['node'], data['q']):
             idx = node - 1
-            out[idx] += q
-        return np.reshape(out, (nlay, nrow, ncol))
+            if out.mask[idx] is True:
+                # First value in this cell
+                out[idx] = q
+            else:
+                # We have already had a value for this cell, so sum them
+                out[idx] += q
+        return np.ma.reshape(out, (nlay, nrow, ncol))
 
     def get_times(self):
         '''
