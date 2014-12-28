@@ -22,7 +22,7 @@ class ModflowGhb(Package):
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
     ipakcb : int
-        is a flag and a unit number. (the default is 0).
+        is a flag and a unit number. (default is 0).
     stress_period_data : list of boundaries or
                          recarray of boundaries or
                          dictionary of boundaries
@@ -66,10 +66,6 @@ class ModflowGhb(Package):
 
     Attributes
     ----------
-    mxactb : int
-        Maximum number of ghbs for a stress period.  This is calculated
-        automatically by FloPy based on the information in
-        layer_row_column_data.
 
     Methods
     -------
@@ -86,9 +82,9 @@ class ModflowGhb(Package):
 
     >>> import flopy
     >>> ml = flopy.modflow.Modflow()
-    >>> lrcd = [[2, 3, 4, 10., 100.]]  #this well will be applied to all
-    >>>                                  #stress periods
-    >>> ghb = flopy.modflow.ModflowGhb(m, layer_row_column_data=lrcd)
+    >>> lrcsc = {0:[2, 3, 4, 10., 100.]}  #this ghb will be applied to all
+    >>>                                   #stress periods
+    >>> ghb = flopy.modflow.ModflowGhb(ml, stress_period_data=lrcsc)
 
     """
     def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
