@@ -101,6 +101,7 @@ class ModflowWel(Package):
         self.np = 0
         if options is None:
             options = []
+        self.specify = False
         for idx, opt in enumerate(options):
             if 'specify' in opt:
                 t = opt.strip().split()
