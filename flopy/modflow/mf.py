@@ -213,7 +213,11 @@ class Modflow(BaseModel):
         >>> ml = flopy.modflow.Modflow.load(f)
 
         """
-        ml = Modflow(f.split('.')[0], version=version, exe_name=exe_name, 
+        modelname = os.path.basename(f).split('.')[0]
+        if model_ws is None:
+            model_ws = os.path.dirname(f)
+        print 'Creating new model with name: ', modelname
+        ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=False, model_ws=model_ws)
         try:
             namefile_path = os.path.join(ml.model_ws, ml.namefile)
