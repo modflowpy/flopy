@@ -35,4 +35,5 @@ from mfparbc import ModflowParBc
 from mfgmg import ModflowGmg
 from mfsms import ModflowSms
 from mfbct import ModflowBct
+from mfhfb import ModflowHfb
 from mfaddoutsidefile import mfaddoutsidefile
