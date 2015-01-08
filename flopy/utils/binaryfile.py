@@ -104,7 +104,7 @@ def binaryread_struct(file, vartype, shape=(1), charlen=16):
     typefmtd = {np.int32:'i', np.float32:'f', np.float64:'d'}
         
     #read a string variable of length charlen
-    if vartype is str:
+    if isinstance(vartype, str):
         result = file.read(charlen*1)
         
     #read other variable types
@@ -131,7 +131,7 @@ def binaryread(file, vartype, shape=(1), charlen=16):
     '''
     
     #read a string variable of length charlen
-    if vartype is str:
+    if isinstance(vartype, str):
         result = file.read(charlen*1)     
     else:
         #find the number of values
@@ -762,7 +762,14 @@ class CellBudgetFile(object):
                 s += 'The second is real data array of shape  ' + str( 
                                                         (nrow, ncol) )
                 print s
-            return [ilayer, data]
+            if full3D:
+                out = np.ma.zeros((nlay, nrow, ncol), dtype=np.float32)
+                out.mask = True
+                vertical_layer = ilayer[0] - 1  # This is always the top layer
+                out[vertical_layer, :, :] = data
+                return out
+            else:
+                return [ilayer, data]
 
         #imeth 4
         elif imeth == 4:
@@ -820,11 +827,17 @@ class CellBudgetFile(object):
         return rv
 
     def create3D(self, data, nlay, nrow, ncol):
-        out = np.zeros((nlay*nrow*ncol), dtype=np.float32)
+        out = np.ma.zeros((nlay*nrow*ncol), dtype=np.float32)
+        out.mask = True
         for [node, q] in zip(data['node'], data['q']):
             idx = node - 1
-            out[idx] += q
-        return np.reshape(out, (nlay, nrow, ncol))
+            if out.mask[idx] is True:
+                # First value in this cell
+                out[idx] = q
+            else:
+                # We have already had a value for this cell, so sum them
+                out[idx] += q
+        return np.ma.reshape(out, (nlay, nrow, ncol))
 
     def get_times(self):
         '''
