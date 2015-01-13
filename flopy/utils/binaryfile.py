@@ -104,7 +104,7 @@ def binaryread_struct(file, vartype, shape=(1), charlen=16):
     typefmtd = {np.int32:'i', np.float32:'f', np.float64:'d'}
         
     #read a string variable of length charlen
-    if isinstance(vartype, str):
+    if vartype == str:
         result = file.read(charlen*1)
         
     #read other variable types
@@ -131,7 +131,7 @@ def binaryread(file, vartype, shape=(1), charlen=16):
     '''
     
     #read a string variable of length charlen
-    if isinstance(vartype, str):
+    if vartype == str:
         result = file.read(charlen*1)     
     else:
         #find the number of values
