@@ -344,9 +344,9 @@ class BinaryLayerFile(object):
         istat = 1
         for k, i, j in kijlist:
             recordlist = []
-            ioffset = ((i - 1) * self.ncol + j - 1) * self.realtype(1).nbytes
+            ioffset = (i * self.ncol + j) * self.realtype(1).nbytes
             for irec, header in enumerate(self.recordarray):
-                ilay = header['ilay']
+                ilay = header['ilay'] - 1 #change to zero-based
                 if ilay != k:
                     continue
                 ipos = self.iposarray[irec]
