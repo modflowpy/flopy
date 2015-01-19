@@ -42,6 +42,7 @@ class Mt3dms(BaseModel):
         self.lst = Mt3dList(self, listunit=listunit)
         self.ftlfilename = ftlfilename
         self.__adv = None
+        self.__btn = None        
         self.__dsp = None
         self.__gcg = None
         self.__rct = None
@@ -81,6 +82,12 @@ class Mt3dms(BaseModel):
                 if isinstance(p, Mt3dAdv):
                     self.__adv = p
         return self.__adv
+    def getbtn(self):
+        if (self.__btn == None):
+            for p in (self.packagelist):
+                if isinstance(p, Mt3dBtn):
+                    self.__btn = p
+        return self.__btn
     def getdsp(self):
         if (self.__dsp == None):
             for p in (self.packagelist):
@@ -124,6 +131,7 @@ class Mt3dms(BaseModel):
     
     
     adv = property(getadv) # Property has no setter, so read-only
+    btn = property(getbtn) # Property has no setter, so read-only
     dsp = property(getdsp) # Property has no setter, so read-only
     gcg = property(getgcg) # Property has no setter, so read-only
     mf = property(getmf) # Property has no setter, so read-only
