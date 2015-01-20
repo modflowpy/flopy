@@ -181,6 +181,9 @@ class Mt3dBtn(Package):
             print 'setting ncomp == 1 and tiling scalar-valued sconc to nlay'
             sconc = [sconc] 
             ncomp = 1
+        elif ncomp is None:
+            raise Exception("BTN input error - ncomp must be passed "+
+                            "explicitly if sconc is not a scalar")
         elif ncomp != len(sconc):
             raise Exception('BTN input error - ncomp not equal to len(sconc)')
         self.ncomp = ncomp

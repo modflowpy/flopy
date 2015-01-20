@@ -76,7 +76,7 @@ class Mt3dDsp(Package):
                 #                        13, ncol, 'Effective dmcoef for comp '+
                 #                        str(i+1)+' and for Layer ', 
                 #                        ext_base='dmcoef')
-                f_dsp.write(self.dmcoef[c].get_file_entry())
+                f_dsp.write(self.dmcoef[i].get_file_entry())
         else:
             #self.parent.write_vector(f_dsp, self.dmcoef, self.unit_number[0], 
             #                         True, 13, nlay, ('Effective molecular '
