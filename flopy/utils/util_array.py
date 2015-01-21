@@ -124,7 +124,7 @@ class meta_interceptor(type):
         return type.__call__(cls,*args,**kwds)
         
 
-class util_3d():
+class util_3d(object):
     """
     util_3d class for handling 3-D model arrays
 
@@ -301,7 +301,104 @@ class util_3d():
 
 
 
-class util_2d():
+class transient_2d(object):
+    """class for time-dependent util_2d instances
+    """
+    __metaclass__ = meta_interceptor
+    def __init__(self,model,shape,dtype,value,name=None,fmtin=None,\
+        cnstnt=1.0,iprn=-1,ext_filename=None,locat=None,bin=False):
+        self.model = model
+        assert len(shape) == 2, "transient_2d error: shape arg must be " +\
+                                "length two (nrow, ncol), not " +\
+                                str(shape)
+        self.shape = shape
+        self.dtype = dtype
+        self.__value = value
+        self.name_base = name
+        self.fmtin = fmtin
+        self.cnstst = cnstnt
+        self.iprn = iprn
+        self.locat = locat
+        if model.external_path != None:
+            self.ext_filename_base = os.path.join(model.external_path,self.name_base.replace(' ','_'))
+        self.transient_2ds = self.build_transient_sequence()
+
+
+    def get_kper_entry(self,kper):
+        """get the file entry info for a given kper
+        returns (itmp,file entry string from util_2d)
+        """
+        if kper in self.transient_2ds.keys():
+            return ("{0:10d}".format(1),self.transient_2ds[kper].get_file_entry())
+        elif kper < min(self.transient_2ds.keys()):
+            return ("{0:10d}".format(0),'')
+        else:
+            return ("{0:10d}".format(-1),'')
+
+
+    def build_transient_sequence(self):
+        """parse self.__value into a dict{kper:util_2d}
+        """
+
+        # a dict keyed on kper (zero-based)
+        if isinstance(self.__value, dict):
+            tran_seq = {}
+            for key, val in self.__value.iteritems():
+                try:
+                    key = int(key)
+                except:
+                    raise Exception("transient_2d error: can't cast key: " +
+                                    str(key) + " to kper integer")
+                if key < 0:
+                    raise Exception("transient_2d error: key can't be " +
+                                    " negative: " + str(key))
+                try:
+                    u2d = self.__get_2d_instance(key, val)
+                except Exception as e:
+                    raise Exception("transient_2d error building util_2d " +
+                                    " instance from value at kper: " +
+                                    str(key) + "\n" + str(e))
+                tran_seq[key] = u2d
+            return tran_seq
+
+        # these are all for single entries - use the same util_2d for all kper
+        # an array of shape (nrow,ncol)
+        elif isinstance(self.__value,np.ndarray):
+            return {0: self.__get_2d_instance(0, self.__value)}
+
+        # a filename
+        elif isinstance(self.__value,str):
+            return {0: self.__get_2d_instance(0, self.__value)}
+
+        # a scalar
+        elif np.isscalar(self.__value):
+            return {0: self.__get_2d_instance(0, self.__value)}
+
+        # lists aren't allowed
+        elif isinstance(self.__value,list):
+            raise Exception("transient_2d error: value cannot be a list " +
+                            "anymore.  try a dict{kper,value}")
+        else:
+            raise Exception("transient_2d error: value type not " +
+                            " recognized: " + str(type(self.__value)))
+
+
+    def __get_2d_instance(self,kper,arg):
+        """parse an argument into a util_2d instance
+        """
+        ext_filename = None
+        name = self.name_base+str(kper)
+        if self.model.external_path != None:
+            ext_filename = self.ext_filename_base+str(kper)+'.ref'
+        u2d = util_2d(self.model, self.shape, self.dtype, arg,
+                      fmtin=self.fmtin, name=name,
+                      ext_filename=ext_filename,
+                      locat=self.locat)
+        return u2d
+
+
+
+class util_2d(object):
     """
     util_2d class for handling 2-D model arrays
 
