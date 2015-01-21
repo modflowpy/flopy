@@ -87,11 +87,33 @@ class Mt3dSsm(Package):
             self.dtype = self.get_default_dtype(ncomp)
         self.stress_period_data = mflist(self.parent.mf, self.dtype, 
                                          stress_period_data)
-
         #Add self to parent and return
         self.parent.add_package(self)
         return
-        
+
+
+    def from_package(self,package,ncomp_aux_names):
+        """read the point source and sink info from a package
+        ncomp_aux_names (list): the aux variable names in the package
+        that are the component concentrations
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def itype_dict():
+        itype = {}
+        itype["CHD"] = 1
+        itype["BAS6"] = 1
+        itype["PBC"] = 1
+        itype["WEL"] = 2
+        itype["DRN"] = 3
+        itype["RIV"] = 4
+        itype["GHB"] = 5
+        itype["MAS"] = 15
+        itype["CC"] = -1
+        return itype
+
+
     @staticmethod
     def get_default_dtype(ncomp=1):
         type_list = [("k", np.int), ("i", np.int), ("j", np.int),

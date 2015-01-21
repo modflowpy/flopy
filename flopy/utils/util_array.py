@@ -329,11 +329,11 @@ class transient_2d(object):
         returns (itmp,file entry string from util_2d)
         """
         if kper in self.transient_2ds.keys():
-            return ("{0:10d}".format(1),self.transient_2ds[kper].get_file_entry())
+            return (1,self.transient_2ds[kper].get_file_entry())
         elif kper < min(self.transient_2ds.keys()):
-            return ("{0:10d}".format(0),'')
+            return (0,'')
         else:
-            return ("{0:10d}".format(-1),'')
+            return (0,'')
 
 
     def build_transient_sequence(self):
@@ -897,14 +897,14 @@ class util_2d(object):
                 try:
                     value = int(value)
                 except:
-                    value = os.path.abspath(os.path.join(self.model.model_ws, value))
+                    #value = os.path.abspath(os.path.join(self.model.model_ws, value))
                     assert os.path.exists(value),'could not find file: '+str(value)
                     return value
             else:
                 try:
                     value = float(value)
                 except:
-                    value = os.path.abspath(os.path.join(self.model.model_ws, value))
+                    #value = os.path.abspath(os.path.join(self.model.model_ws, value))
                     assert os.path.exists(value),'could not find file: '+str(value)
                     return value
         if np.isscalar(value):
