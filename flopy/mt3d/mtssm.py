@@ -78,7 +78,13 @@ class Mt3dSsm(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype()
+            # ncomp > 1 support
+            btn = self.parent.get_package("BTN")
+            if btn is not None:
+                ncomp = btn.ncomp
+            if ncomp is None:
+                ncomp = 1
+            self.dtype = self.get_default_dtype(ncomp)
         self.stress_period_data = mflist(self.parent.mf, self.dtype, 
                                          stress_period_data)
 
@@ -87,10 +93,14 @@ class Mt3dSsm(Package):
         return
         
     @staticmethod
-    def get_default_dtype():
-        dtype = np.dtype([("k", np.int), ("i", np.int), \
-                          ("j", np.int), ("css", np.float32),\
-                          ("itype", np.int)])
+    def get_default_dtype(ncomp=1):
+        type_list = [("k", np.int), ("i", np.int), ("j", np.int),
+                     ("css", np.float32), ("itype", np.int)]
+        if ncomp > 1:
+            for comp in xrange(1,ncomp+1):
+                comp_name = "cssm({0:02d})".format(comp)
+                type_list.append((comp_name, np.float32))
+        dtype = np.dtype(type_list)
         return dtype
 
     def write_file(self):
