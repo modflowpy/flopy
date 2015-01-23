@@ -38,6 +38,8 @@ class Mt3dSsm(Package):
                               "'stress_period_data' instead.")
                 
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
+        # ncomp > 1 support
+        ncomp = self.parent.get_ncomp()
 
         self.__SsmPackages = []
         for i, label in enumerate(SsmLabels):
@@ -57,41 +59,61 @@ class Mt3dSsm(Package):
         # Note: list is used for multi-species, NOT for stress periods!        
         if (crch != None):
             self.crch = []
-            if (not isinstance(crch, list)):
-                crch = [crch]
-            for i, a in enumerate(crch):
-                t2d = transient_2d(model, (nrow, ncol), np.float32,
-                                   a, name = 'crch_' + str(i + 1),
-                                   locat=self.unit_number[0])
-                #r = util_2d(model, (nrow, ncol), np.float32, a, 
-                #            name = 'crch_' + str(i + 1))
-                self.crch.append(t2d)
+            t2d = transient_2d(model, (nrow, ncol), np.float32,
+                               crch, name='crch1',
+                               locat=self.unit_number[0])
+            self.crch.append(t2d)
+            if ncomp > 1:
+                for icomp in xrange(2, ncomp+1):
+                    val = 0.0
+                    name = "crch" + str(icomp)
+                    if name in kwargs.keys():
+                        val = kwargs[name]
+                        kwargs.pop(name)
+                    else:
+                        print "SSM: setting crch for component " +\
+                              str(icomp) + " to zero. kwarg name " +\
+                              name
+                    t2d = transient_2d(model, (nrow, ncol), np.float32,
+                                       val, name=name,
+                                       locat=self.unit_number[0])
+                    self.crch.append(t2d)
         else:
             self.crch = None
 
         if (cevt != None):
             self.cevt = []
-            if (not isinstance(cevt, list)):
-                cevt = [cevt]
-            for i, a in enumerate(cevt):
-                t2d = transient_2d(model, (nrow, ncol), np.float32, 
-                                   a, name = 'cevt_' + str(i + 1),
-                                   locat=self.unit_number[0])
-                #r = util_2d(model,(nrow, ncol), np.float32, a, 
-                #            name = 'cevt_' + str(i + 1))
-                self.cevt.append(t2d)
+            t2d = transient_2d(model, (nrow, ncol), np.float32,
+                               cevt, name='cevt1',
+                               locat=self.unit_number[0])
+            self.crch.append(t2d)
+            if ncomp > 1:
+                for icomp in xrange(2, ncomp+1):
+                    val = 0.0
+                    name = "cevt" + str(icomp)
+                    if name in kwargs.keys():
+                        val = kwargs[name]
+                        kwargs.pop(name)
+                    else:
+                        print "SSM: setting cevt for component " +\
+                              str(icomp) + " to zero, kwarg name " +\
+                              name
+                    t2d = transient_2d(model, (nrow, ncol), np.float32,
+                                       val, name=name,
+                                       locat=self.unit_number[0])
+                    self.cevt.append(t2d)
+
         else:
             self.cevt = None
+
+        if len(kwargs.keys()) > 0:
+            raise Exception("SSM error: unrecognized kwargs: " +
+                            ' '.join(kwargs.keys()))
 
         if dtype is not None:
             self.dtype = dtype
         else:
-            # ncomp > 1 support
-            btn = self.parent.get_package("BTN")
-            if btn is not None:
-                ncomp = btn.ncomp
-            if ncomp is None:
-                ncomp = 1
+
             self.dtype = self.get_default_dtype(ncomp)
   
         self.stress_period_data = mflist(self.parent.mf, self.dtype, 

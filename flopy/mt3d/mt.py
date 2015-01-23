@@ -69,7 +69,7 @@ class Mt3dms(BaseModel):
         if (btn):
             return btn.ncomp
         else:
-            return 0
+            return 1
     
     #--function to encapsulate next_ext_unit attribute
     def next_ext_unit(self):
