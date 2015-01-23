@@ -27,13 +27,16 @@ class Mt3dDsp(Package):
         self.multiDiff = multiDiff                                    
         #self.al = self.assignarray((nlay, nrow, ncol), np.float, al, 
         #                           name='al', load=model.load )
-        self.al = util_3d(model,(nlay,nrow,ncol),np.float32,al,name='al')
+        self.al = util_3d(model,(nlay,nrow,ncol),np.float32,al,name='al',
+                          locat=self.unit_number[0])
         #self.trpt = self.assignarray((nlay,), np.float, trpt, name='trpt', 
         #                             load=model.load)
-        self.trpt = util_2d(model,(nlay,),np.float32,trpt,name='trpt')
+        self.trpt = util_2d(model,(nlay,),np.float32,trpt,name='trpt',
+                            locat=self.unit_number[0])
         #self.trpv = self.assignarray((nlay,), np.float, trpv, name='trpv', 
         #                             load=model.load)
-        self.trpv = util_2d(model,(nlay,),np.float32,trpt,name='trpv')
+        self.trpv = util_2d(model,(nlay,),np.float32,trpt,name='trpv',
+                            locat=self.unit_number[0])
         if self.multiDiff:
             self.dmcoef = []
             for c in range(ncomp):                
@@ -41,12 +44,13 @@ class Mt3dDsp(Package):
                 #                   np.float, dmcoef[c], 
                 #                   name='dmcoef_sp_'+str(c), load=model.load))
                 a = util_3d(model,(nlay,nrow,ncol),np.float32,dmcoef[c],\
-                    name='dmcoef_sp_'+str(c))
+                    name='dmcoef_sp_'+str(c),locat=self.unit_number[0])
                 self.dmcoef.append(a)
         else:
             #self.dmcoef = self.assignarray((nlay,), np.float, dmcoef,
             #                               name='dmcoef', load=model.load)
-            self.dmcoef = util_2d(model,(nlay,),np.float32,dmcoef,name='dmcoef')
+            self.dmcoef = util_2d(model,(nlay,),np.float32,dmcoef,
+                                  name='dmcoef', locat=self.unit_number[0])
         self.parent.add_package(self)
         return
 

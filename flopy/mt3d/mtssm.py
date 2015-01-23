@@ -22,9 +22,9 @@ class Mt3dSsm(Package):
     '''
     Sink & Source Mixing package class\n
     '''
-    def __init__(self, model, crch = None, cevt = None, 
+    def __init__(self, model, crch = None, cevt = None,
                  stress_period_data = None, dtype = None,
-                 extension = 'ssm', 
+                 extension = 'ssm',
                  **kwargs):
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
@@ -38,7 +38,7 @@ class Mt3dSsm(Package):
                               "'stress_period_data' instead.")
                 
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
-        
+
         self.__SsmPackages = []
         for i, label in enumerate(SsmLabels):
             self.__SsmPackages.append(SsmPackage(label, 
@@ -60,8 +60,9 @@ class Mt3dSsm(Package):
             if (not isinstance(crch, list)):
                 crch = [crch]
             for i, a in enumerate(crch):
-                t2d = transient_2d(model, (nrow, ncol), np.float32, 
-                                   a, name = 'crch_' + str(i + 1))
+                t2d = transient_2d(model, (nrow, ncol), np.float32,
+                                   a, name = 'crch_' + str(i + 1),
+                                   locat=self.unit_number[0])
                 #r = util_2d(model, (nrow, ncol), np.float32, a, 
                 #            name = 'crch_' + str(i + 1))
                 self.crch.append(t2d)
@@ -74,7 +75,8 @@ class Mt3dSsm(Package):
                 cevt = [cevt]
             for i, a in enumerate(cevt):
                 t2d = transient_2d(model, (nrow, ncol), np.float32, 
-                                   a, name = 'cevt_' + str(i + 1))
+                                   a, name = 'cevt_' + str(i + 1),
+                                   locat=self.unit_number[0])
                 #r = util_2d(model,(nrow, ncol), np.float32, a, 
                 #            name = 'cevt_' + str(i + 1))
                 self.cevt.append(t2d)
