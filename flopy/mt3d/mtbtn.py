@@ -203,10 +203,6 @@ class Mt3dBtn(Package):
         if len(kwargs.keys()) > 0:
             raise Exception("BTN error: unrecognized kwargs: " +
                             ' '.join(kwargs.keys()))
-        for i in range(ncomp):
-            u3d = util_3d(model, (nlay, nrow, ncol), np.float32, sconc[i],
-                name='sconc' + str(i + 1), locat=self.unit_number[0])
-            self.sconc.append(u3d)                    
         self.dt0 = util_2d(model, (nper,), np.float32, dt0, name='dt0')
         self.mxstrn = util_2d(model, (nper,), np.int, mxstrn, name='mxstrn')
         self.ttsmult = util_2d(model, (nper,), np.float32, ttsmult,

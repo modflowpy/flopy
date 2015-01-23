@@ -86,7 +86,7 @@ class Mt3dSsm(Package):
             t2d = transient_2d(model, (nrow, ncol), np.float32,
                                cevt, name='cevt1',
                                locat=self.unit_number[0])
-            self.crch.append(t2d)
+            self.cevt.append(t2d)
             if ncomp > 1:
                 for icomp in xrange(2, ncomp+1):
                     val = 0.0
