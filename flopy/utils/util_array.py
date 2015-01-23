@@ -300,6 +300,29 @@ class util_3d(object):
         return u3d
 
 
+def cast2dict(value):
+    """ 
+    Converts scalar or list to dictionary keyed on kper that
+    can be used with the transient_2d class.
+    """
+    # If already a dictionary return
+    if (isinstance(value, dict)):
+        return value
+
+    # If value is a scalar or a single numpy array convert to a list    
+    if (np.isscalar(value) or isinstance(value, np.ndarray)):
+        value = [value]
+        
+    rv = {}
+    # Convert list to dictionary
+    if (isinstance(value, list)):
+        for kper, a in enumerate(value):
+            rv[kper] = a
+    else:
+        raise Exception("cast2dict error: value type not " +
+                        " recognized: " + str(type(value)))
+        
+    return rv
 
 class transient_2d(object):
     """class for time-dependent util_2d instances
@@ -324,7 +347,7 @@ class transient_2d(object):
         self.transient_2ds = self.build_transient_sequence()
 
     def get_zero_2d(self, kper):
-        name = self.name_base + str(kper) + "(filled zero)"
+        name = self.name_base + str(kper + 1) + "(filled zero)"
         return util_2d(self.model, self.shape,
                        self.dtype, 0.0, name=name).get_file_entry()
 
@@ -391,7 +414,7 @@ class transient_2d(object):
         """parse an argument into a util_2d instance
         """
         ext_filename = None
-        name = self.name_base+str(kper)
+        name = self.name_base+str(kper + 1)
         if self.model.external_path != None:
             ext_filename = self.ext_filename_base+str(kper)+'.ref'
         u2d = util_2d(self.model, self.shape, self.dtype, arg,

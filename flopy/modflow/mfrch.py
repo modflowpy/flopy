@@ -11,6 +11,7 @@ MODFLOW Guide
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d
+from flopy.utils.util_array import transient_2d
 
 class ModflowRch(Package):
     """
@@ -73,18 +74,10 @@ class ModflowRch(Package):
         self.url = 'rch.htm'
         self.nrchop = nrchop
         self.irchcb = irchcb
-        self.rech = []
-        self.irch = []
-        if (not isinstance(rech, list)):
-            rech = [rech]
-        for i,a in enumerate(rech):
-            r = util_2d(model,(nrow,ncol),np.float32,a,name='rech_'+str(i+1))
-            self.rech = self.rech + [r]
-        if (not isinstance(irch, list)):
-            irch = [irch]
-        for i,a in enumerate(irch):
-            ir = util_2d(model,(nrow,ncol),np.int,a,name='irech_'+str(i+1))
-            self.irch = self.irch + [ir]
+        self.rech = transient_2d(model, (nrow, ncol), np.float32,
+                                 rech, name = "rech_")        
+        self.irch = transient_2d(model, (nrow, ncol), np.int,
+                                 irch, name = "irch_")
         self.np = 0
         self.parent.add_package(self)
 
@@ -106,22 +99,15 @@ class ModflowRch(Package):
         f_rch = open(self.fn_path, 'w')
         f_rch.write('{0:s}\n'.format(self.heading))
         f_rch.write('{0:10d}{1:10d}\n'.format(self.nrchop,self.irchcb))
-        for n in range(nper):
-            if (n < len(self.rech)):
-                inrech = 1
-            else:
-                inrech = -1
-            if (n < len(self.irch)):
-                inirch = 1
-            else:
-                inirch = -1
-            comment = 'Recharge array for stress period ' + str(n + 1)
-            f_rch.write('{0:10d}{1:10d} #{2:s}\n'.format(inrech, inirch,
-                                                         comment))
-            if (n < len(self.rech)):
-                f_rch.write(self.rech[n].get_file_entry())
-            if ((n < len(self.irch)) and (self.nrchop == 2)):
-                f_rch.write(self.irch[n].get_file_entry())
+        for kper in range(nper):
+            inrech, file_entry_rech = self.rech.get_kper_entry(kper)
+            inirch, file_entry_irch = self.irch.get_kper_entry(kper)
+            f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech, 
+                        inirch, "Stress period " + str(kper + 1)))
+            if (inrech >= 0):
+                f_rch.write(file_entry_rech)
+            if ((inirch >= 0) and (self.nrchop == 2)):
+                f_rch.write(file_entry_irch)
         f_rch.close()
 
     @staticmethod

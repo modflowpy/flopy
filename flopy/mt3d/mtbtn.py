@@ -10,7 +10,7 @@ User's Manual.
 import numpy as np
 #from numpy import empty,array
 from flopy.mbase import Package
-from flopy.utils import util_2d,util_3d
+from flopy.utils import util_2d, util_3d
 
 class Mt3dBtn(Package):
     """
@@ -172,9 +172,10 @@ class Mt3dBtn(Package):
         self.nprmas = nprmas
         self.species_names = species_names        
         self.prsity = util_3d(model,(nlay,nrow,ncol),np.float32,\
-            prsity,name='prsity',locat=self.unit_number[0])        
-        self.icbund = util_3d(model,(nlay,nrow,ncol),np.int,\
-            icbund,name='icbund',locat=self.unit_number[0])
+            prsity,name='prsity',locat=self.unit_number[0])
+        self.__icbund = util_3d(model, (nlay, nrow, ncol), np.int,
+                                icbund, name =  'icbund',
+                                locat = self.unit_number[0])
         # Starting concentrations
         #--some defense
         if np.isscalar(sconc) and ncomp is None:
@@ -197,6 +198,30 @@ class Mt3dBtn(Package):
         self.ttsmult = util_2d(model,(nper,),np.float32,ttsmult,name='ttmult')        
         self.ttsmax = util_2d(model,(nper,),np.float32,ttsmax,name='ttsmax')
         self.parent.add_package(self)
+
+    def geticbund(self):
+        """
+        Return the icbund array.
+
+        Returns
+        -------
+        icbund : numpy.ndarray (nlay, nrow, ncol)
+            icbund object.
+        """
+        return self.__icbund.array
+
+    def seticbund(self, icbund):
+        """
+        Set the icbund array.
+        """
+        model = self.parent
+        nrow, ncol, nlay, nper = model.nrow_ncol_nlay_nper
+        self.__icbund = util_3d(model, (nlay, nrow, ncol), np.int, icbund,
+                                 name = 'icbund', locat = self.unit_number[0])
+        return
+
+    icbund = property(geticbund, seticbund)
+
     def write_file(self):
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         ModflowDis = self.parent.mf.get_package('DIS')
@@ -264,7 +289,7 @@ class Mt3dBtn(Package):
                 
         f_btn.write(self.prsity.get_file_entry())
         
-        f_btn.write(self.icbund.get_file_entry())
+        f_btn.write(self.__icbund.get_file_entry())
               
         # Starting concentrations
         for s in range(len(self.sconc)):            

@@ -5,6 +5,7 @@ import warnings
 from flopy.mbase import Package
 from flopy.utils import util_2d
 from flopy.utils.util_list import mflist
+from flopy.utils.util_array import transient_2d
 
 # Note: Order matters as first 6 need logical flag on line 1 of SSM file
 SsmLabels = ['WEL', 'DRN', 'RCH', 'EVT', 'RIV', 'GHB', 'BAS6', 'CHD', 'PBC']
@@ -42,25 +43,28 @@ class Mt3dSsm(Package):
         for i, label in enumerate(SsmLabels):
             self.__SsmPackages.append(SsmPackage(label, 
                                self.parent.mf.get_package(label),
-                               (i < 6)))
+                               (i < 6))) # First 6 need T/F flag in file line 1
 
         self.__maxssm = 0
-        #if (self.parent.btn.icbund != None):
-        #    self.maxssm = (self.parent.btn.icbund < 0).astype(int).sum()
+        if (self.parent.btn.icbund != None):
+            self.maxssm = (self.parent.btn.icbund < 0).sum()
         for p in self.__SsmPackages:
             if ((p.label == 'BAS6') and (p.instance != None)):
                 self.__maxssm += (p.instance.ibound < 0).sum()
             elif p.instance != None:
                 self.__maxssm += p.instance.ncells()
         
+        # Note: list is used for multi-species, NOT for stress periods!        
         if (crch != None):
             self.crch = []
             if (not isinstance(crch, list)):
                 crch = [crch]
             for i, a in enumerate(crch):
-                r = util_2d(model, (nrow, ncol), np.float32, a, 
-                            name = 'crch_' + str(i + 1))
-                self.crch.append(r)
+                t2d = transient_2d(model, (nrow, ncol), np.float32, 
+                                   a, name = 'crch_' + str(i + 1))
+                #r = util_2d(model, (nrow, ncol), np.float32, a, 
+                #            name = 'crch_' + str(i + 1))
+                self.crch.append(t2d)
         else:
             self.crch = None
 
@@ -69,9 +73,11 @@ class Mt3dSsm(Package):
             if (not isinstance(cevt, list)):
                 cevt = [cevt]
             for i, a in enumerate(cevt):
-                r = util_2d(model,(nrow, ncol), np.float32, a, 
-                            name = 'cevt_' + str(i + 1))
-                self.cevt.append(r)
+                t2d = transient_2d(model, (nrow, ncol), np.float32, 
+                                   a, name = 'cevt_' + str(i + 1))
+                #r = util_2d(model,(nrow, ncol), np.float32, a, 
+                #            name = 'cevt_' + str(i + 1))
+                self.cevt.append(t2d)
         else:
             self.cevt = None
 
@@ -85,12 +91,13 @@ class Mt3dSsm(Package):
             if ncomp is None:
                 ncomp = 1
             self.dtype = self.get_default_dtype(ncomp)
+  
         self.stress_period_data = mflist(self.parent.mf, self.dtype, 
                                          stress_period_data)
+        
         #Add self to parent and return
         self.parent.add_package(self)
         return
-
 
     def from_package(self,package,ncomp_aux_names):
         """read the point source and sink info from a package
@@ -141,16 +148,20 @@ class Mt3dSsm(Package):
 
             # Distributed sources and sinks (Recharge and Evapotranspiration)
             if (self.crch != None):
-                
-                if (kper < len(self.crch)):
-                    incrch = 1
-                else:
-                    incrch = -1
-                f_ssm.write('%10i\n' % (incrch))
-                if (kper < len(self.crch)):
-                    f_ssm.write(self.crch[kper].get_file_entry())
+                for c, t2d in enumerate(self.crch):
+                    incrch, file_entry = t2d.get_kper_entry(kper)
+                    if (c == 0):
+                        f_ssm.write('%10i\n' % (incrch))
+                    f_ssm.write(file_entry)
 
             if (self.cevt != None):
+                for c, t2d in enumerate(self.cevt):
+                    incevt, file_entry = t2d.get_kper_entry(kper)
+                    if (c == 0):
+                        f_ssm.write('%10i\n' % (incevt))
+                    f_ssm.write(file_entry)
+                
+                '''
                 if (kper < len(self.cevt)):
                     incevt = 1
                 else:
@@ -158,6 +169,7 @@ class Mt3dSsm(Package):
                 f_ssm.write('%10i\n' % (incevt))
                 if (kper < len(self.cevt)):
                     f_ssm.write(self.cevt[kper].get_file_entry())
+                '''
 
             self.stress_period_data.write_transient(f_ssm, single_per = kper)
 
