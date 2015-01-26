@@ -367,7 +367,9 @@ class Mt3dBtn(Package):
         nlay, nrow, ncol, nper, ncomp, mcomp = int(a3[0]), int(a3[1]), \
                                                int(a3[2]), int(a3[3]), \
                                                int(a3[4]), int(a3[5])
-        
+        if ncomp > 1:
+            raise NotImplementedError("BTN.load() doesn't support ncomp > 1")
+
         a4 = f.readline().strip().split()
         tunit, lunit, munit = a4
 
@@ -435,7 +437,7 @@ class Mt3dBtn(Package):
         f.close()
         btn = Mt3dBtn(model, ncomp=ncomp, mcomp=mcomp, tunit=tunit,
                       lunit=lunit, munit=munit, prsity=prsity, icbund=icbund,
-                      sconc=[sconc], cinact=cinact, thkmin=thkmin,
+                      sconc=sconc, cinact=cinact, thkmin=thkmin,
                       ifmtcn=ifmtcn, ifmtnp=ifmtnp, ifmtrf=ifmtrf,
                       ifmtdp=ifmtdp, savucn=savucn, nprs=nprs,\
                       timprs=timprs, obs=obs, nprobs=nprobs, chkmas=chkmas,\
