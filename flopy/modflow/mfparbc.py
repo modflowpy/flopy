@@ -170,7 +170,8 @@ class ModflowParBc(object):
                         bnd = []
                         for jdx in xrange(nitems):
                             if jdx < 3:
-                                bnd.append(int(t[jdx])-1) #convert to zero-based.
+                                #--conversion to zero-based occurs in package load method in mbase.
+                                bnd.append(int(t[jdx]))
                             else:
                                 bnd.append(float(t[jdx]))
                         wellinst.append(bnd)

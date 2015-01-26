@@ -125,7 +125,7 @@ class BaseModel(object):
             val.append(pp.name[0].upper())
         return val
     
-    def change_model_ws(self,new_pth=None):
+    def change_model_ws(self, new_pth=None):
         if new_pth is None: 
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
