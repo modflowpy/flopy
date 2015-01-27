@@ -11,7 +11,7 @@ MODFLOW Guide
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
-from flopy.modflow.mfparbc import ModflowParBc as mfparbc
+from flopy.modflow.mfpar import ModflowPar as mfpar
 
 class ModflowLpf(Package):
     """
@@ -284,7 +284,7 @@ class ModflowLpf(Package):
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         print '   loading IBCFCB, HDRY, NPLPF...'
         t = line.strip().split()
-        ilpfcb, hdry, nplpf = int(t[0]),float(t[1]),int(t[2])
+        ilpfcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         if ilpfcb != 0:
             ilpfcb = 53
         # options
@@ -338,35 +338,12 @@ class ModflowLpf(Package):
             line = f.readline()
             t = line.strip().split()
             wetfct, iwetit, ihdwet = float(t[0]), int(t[1]), int(t[2])
+
         #--parameters data
-        parm_dict = {}
-        par_types = []
-        for nprm in xrange(nplpf):
-            line = f.readline()
-            t = line.strip().split()
-            parnam = t[0].lower()
-            print 'loading parameter "{}"...'.format(parnam)
-            partyp = t[1].lower()
-            if partyp not in par_types:
-                par_types.append(partyp)
-            parval = np.float(t[2])
-            nclu = np.int(t[3])
-            clusters = []
-            for nc in xrange(nclu):
-                line = f.readline()
-                t = line.strip().split()
-                lay = np.int(t[0])
-                mltarr = t[1]
-                zonarr = t[2]
-                iarr = []
-                for iv in t[3:]:
-                    iarr.append(np.int(iv))
-                clusters.append([lay, mltarr, zonarr, iarr])
-            #--add parnam to parm_dict
-            #parm_dict[parnam] = [partyp, parval, nclu, clusters]
-            parm_dict[parnam] = {'partyp':partyp, 'parval':parval, 'nclu':nclu, 'clusters':clusters}
         if nplpf > 0:
-            print parm_dict
+            par_types, parm_dict = mfpar.load(f, nplpf)
+            #print parm_dict
+
         #--non-parameter data
         transient = not model.get_package('DIS').steady.all()
         hk = [0] * nlay
@@ -384,7 +361,7 @@ class ModflowLpf(Package):
 
             else:
                 line = f.readline()
-                t = mfparbc.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
+                t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
             hk[k] = t
             if chani[k] < 0:
                 print '   loading hani layer {0:3d}...'.format(k+1)
@@ -393,7 +370,7 @@ class ModflowLpf(Package):
                                      ext_unit_dict)
                 else:
                     line = f.readline()
-                    t = mfparbc.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
+                    t = mfpar.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
             print '   loading vka layer {0:3d}...'.format(k+1)
             if 'vka' not in par_types:
@@ -401,7 +378,7 @@ class ModflowLpf(Package):
                                  ext_unit_dict)
             else:
                 line = f.readline()
-                t = mfparbc.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
+                t = mfpar.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
             vka[k] = t
             if transient:
                 print '   loading ss layer {0:3d}...'.format(k+1)
@@ -410,7 +387,7 @@ class ModflowLpf(Package):
                                      ext_unit_dict)
                 else:
                     line = f.readline()
-                    t = mfparbc.parameter_fill(model, (nrow, ncol), 'ss', parm_dict, findlayer=k)
+                    t = mfpar.parameter_fill(model, (nrow, ncol), 'ss', parm_dict, findlayer=k)
                 ss[k] = t
                 if laytyp[k] != 0:
                     print '   loading sy layer {0:3d}...'.format(k+1)
@@ -419,7 +396,7 @@ class ModflowLpf(Package):
                                          ext_unit_dict)
                     else:
                         line = f.readline()
-                        t = mfparbc.parameter_fill(model, (nrow, ncol), 'sy', parm_dict, findlayer=k)
+                        t = mfpar.parameter_fill(model, (nrow, ncol), 'sy', parm_dict, findlayer=k)
                     sy[k] = t
             #if self.parent.get_package('DIS').laycbd[k] > 0:
             if model.get_package('DIS').laycbd[k] > 0:
@@ -429,7 +406,7 @@ class ModflowLpf(Package):
                                      ext_unit_dict)
                 else:
                     line = f.readline()
-                    t = mfparbc.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
+                    t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
                 vkcb[k] = t
             if (laywet[k] != 0 and laytyp[k] != 0):
                 print '   loading wetdry layer {0:3d}...'.format(k+1)

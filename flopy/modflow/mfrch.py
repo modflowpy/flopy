@@ -164,7 +164,6 @@ class ModflowRch(Package):
             npar = np.int(raw[1])
             if npar > 0:
                 print 'Parameters detected. Number of parameters = ', npar
-            #assert int(raw[1]) == 0,"Parameters not supported"
             line = f.readline()
         #dataset 2
         t = line.strip().split()

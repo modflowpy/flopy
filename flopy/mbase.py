@@ -380,6 +380,7 @@ class Package(object):
             mxl = 0
             if nppak > 0:
                 mxl = np.int(t[2])
+                print 'Parameters detected. Number of parameters = ', nppak
             line = f.readline()
         #dataset 2a
         t = line.strip().split()
@@ -479,7 +480,7 @@ class Package(object):
                     iname = tn
                 except:
                     pass
-                print pname, iname
+                #print pname, iname
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
                 #print par_dict
