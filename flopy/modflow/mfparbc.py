@@ -182,3 +182,90 @@ class ModflowParBc(object):
         bcpar = ModflowParBc(bc_parms)
         return bcpar
 
+    @staticmethod
+    def loadarray(f, npar):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        nper : int
+            The number of stress periods.  If nper is None, then nper will be
+            obtained from the model object. (default is None).
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        wel : ModflowWel object
+            ModflowWel object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> rch = flopy.modflow.ModflowRch.load('test.rch', m)
+
+        """
+        #--read parameter data
+        if npar > 0:
+            bc_parms = {}
+            for idx in xrange(npar):
+                line = f.readline()
+                t = line.strip().split()
+                parnam = t[0].lower()
+                partyp = t[1].lower()
+                parval = t[2]
+                nclu = np.int(t[3])
+                numinst = 1
+                timeVarying = False
+                if len(t) > 4:
+                    if 'instances' in t[4].lower():
+                        numinst = np.int(t[5])
+                        timeVarying = True
+                pinst = {}
+                for inst in xrange(numinst):
+                    #--read instance name
+                    if timeVarying:
+                        line = f.readline()
+                        t = line.strip().split()
+                        instnam = t[0].lower()
+                    else:
+                        instnam = 'static'
+                    bcinst = []
+
+                    for nc in xrange(nclu):
+                        line = f.readline()
+                        t = line.strip().split()
+                        bnd = [t[0], t[1]]
+                        if t[1].lower() == 'all':
+                            bnd.append([])
+                        else:
+                            iz = []
+                            for jdx in xrange(2, len(t)):
+                                try:
+                                    ival = int(t[jdx])
+                                    if ival > 0:
+                                        iz.append(ival)
+                                    else:
+                                        break
+                                except:
+                                    pass
+                            bnd.append(iz)
+                        bcinst.append(bnd)
+                    pinst[instnam] = bcinst
+                bc_parms[parnam] = [{'partyp':partyp, 'parval':parval, 'nclu':nclu, 'timevarying':timeVarying}, pinst]
+
+        print bc_parms
+        bcpar = ModflowParBc(bc_parms)
+        return bcpar

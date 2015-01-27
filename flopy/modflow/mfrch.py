@@ -12,6 +12,7 @@ import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d
 from flopy.utils.util_array import transient_2d
+from modflow.mfparbc import ModflowParBc as mfparbc
 
 class ModflowRch(Package):
     """
@@ -101,13 +102,17 @@ class ModflowRch(Package):
         f_rch.write('{0:10d}{1:10d}\n'.format(self.nrchop,self.irchcb))
         for kper in range(nper):
             inrech, file_entry_rech = self.rech.get_kper_entry(kper)
-            inirch, file_entry_irch = self.irch.get_kper_entry(kper)
+            if self.nrchop == 2:
+                inirch, file_entry_irch = self.irch.get_kper_entry(kper)
+            else:
+                inirch = -1
             f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech, 
                         inirch, "Stress period " + str(kper + 1)))
             if (inrech >= 0):
                 f_rch.write(file_entry_rech)
-            if ((inirch >= 0) and (self.nrchop == 2)):
-                f_rch.write(file_entry_irch)
+            if self.nrchop == 2:
+                if inirch >= 0:
+                    f_rch.write(file_entry_irch)
         f_rch.close()
 
     @staticmethod
@@ -171,16 +176,17 @@ class ModflowRch(Package):
         except:
             pass
 
-        #dataset 3 and 4
-        for ipar in xrange(npar):
-            pass  #not done yet!
+        #--dataset 3 and 4 - parameters data
+        if npar > 0:
+            pak_parms = mfparbc.loadarray(f, npar)
+
 
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         #read data for every stress period
-        rech = []
-        irch = []
+        rech = {}
+        irch = {}
         current_rech = []
         current_irch = []
         for iper in xrange(nper):
@@ -190,12 +196,25 @@ class ModflowRch(Package):
             if nrchop == 2:
                 inirch = int(t[1])
             if inrech >= 0:
-                print \
-                    '   loading rech stress period {0:3d}...'.format(iper+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'rech',
-                                 ext_unit_dict)
+                if npar == 0:
+                    print \
+                        '   loading rech stress period {0:3d}...'.format(iper+1)
+                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
+                else:
+                    parm_dict = {}
+                    for ipar in xrange(npar):
+                        line = f.readline()
+                        t = line.strip().split()
+                        pname = t[0].lower()
+                        try:
+                            iname = t[1].lower()
+                        except:
+                            iname = 'static'
+                        parm_dict[pname] = iname
+                    t = transient_2d.parameter_bcfill(model, (nrow, ncol), 'rech', parm_dict, pak_parms)
+
                 current_rech = t
-            rech.append(current_rech)
+            rech[iper] = current_rech
             if nrchop == 2:
                 if inirch >= 0:
                     print '   loading irch stress period {0:3d}...'.format(
@@ -203,7 +222,7 @@ class ModflowRch(Package):
                     t = util_2d.load(f, model, (nrow,ncol), np.int, 'irch',
                                      ext_unit_dict)
                     current_irch = t
-                irch.append(current_irch)
+                irch[iper] = current_irch
         rch = ModflowRch(model, nrchop=nrchop, irchcb=irchcb, rech=rech,
                          irch=irch)
         return rch

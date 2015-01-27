@@ -424,6 +424,50 @@ class transient_2d(object):
         return u2d
 
 
+    @staticmethod
+    def parameter_bcfill(model, shape, name, parm_dict, pak_parms):
+        dtype = np.float32
+        data = np.zeros(shape, dtype=dtype)
+        for key, value in parm_dict.iteritems():
+            #print key, value
+            pdict, idict = pak_parms.bc_parms[key]
+            inst_data = idict[value]
+            if model.mfpar.pval is None:
+                pv = np.float(pdict['parval'])
+            else:
+                try:
+                    pv = np.float(model.mfpar.pval.pval_dict[pdict['parval'].lower()])
+                except:
+                    pv = np.float(pdict['parval'])
+            for [mltarr, zonarr, izones] in inst_data:
+                print mltarr, zonarr, izones
+                if mltarr.lower() == 'none':
+                    mult = np.ones(shape, dtype=dtype)
+                else:
+                    mult = model.mfpar.mult.mult_dict[mltarr.lower()][:, :]
+                if zonarr.lower() == 'all':
+                    t = pv * mult
+                else:
+                    mult_save = np.copy(mult)
+                    za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
+                    #--build a multiplier for all of the izones
+                    for iz in izones:
+                        mult = np.zeros(shape, dtype=dtype)
+                        filtarr = za == iz
+                        mult[filtarr] += np.copy(mult_save[filtarr])
+                    #--calculate parameter value for this instance
+                    t = pv * mult
+                data += t
+
+
+        #u2d = util_2d(model, shape, dtype, data, name=name,
+        #              iprn=1, fmtin='(free)')
+
+        t2d = transient_2d(model, shape, dtype,
+                           data, name=name)
+
+        return t2d
+
 
 class util_2d(object):
     """
@@ -1089,3 +1133,43 @@ class util_2d(object):
         cr_dict['fmtin'] = fmtin
         cr_dict['fname'] = fname           
         return cr_dict
+
+    @staticmethod
+    def parameter_fill(model, shape, findkey, parm_dict, findlayer=None):
+        dtype = np.float32
+        data = np.zeros(shape, dtype=dtype)
+        for key, [partype, parval, nclusters, clusters] in parm_dict.iteritems():
+            print partype, parval, nclusters, clusters
+            if partype == findkey:
+                for [layer, mltarr, zonarr, izones] in clusters:
+                    print layer, mltarr, zonarr, izones
+                    foundlayer = False
+                    if findlayer == None:
+                        foundlayer = True
+                    else:
+                        if layer == (findlayer + 1):
+                            foundlayer = True
+                    if foundlayer:
+                        cluster_data = np.zeros(shape, dtype=dtype)
+                        if mltarr.lower() == 'none':
+                            mult = np.ones(shape, dtype=dtype)
+                        else:
+                            mult = model.mfpar.mult.mult_dict[mltarr.lower()][:, :]
+                        if zonarr.lower() == 'all':
+                            cluster_data = parval * mult
+                        else:
+                            mult_save = np.copy(mult)
+                            za = model.mfpar.zone.zone_dict[zonearr.lower()][:, :]
+                            #--build a multiplier for all of the izones
+                            for iz in izones:
+                                mult = np.zeros(shape, dtype=dtype)
+                                filtarr = za == iz
+                                mult[filtarr] += np.copy(mult_save[filtarr])
+                            #--calculate parameter value for this cluster
+                            cluster_data = parval * mult
+                        #--add data
+                        data += cluster_data
+
+        u2d = util_2d(model, shape, dtype, data, name=findkey,
+                      iprn=1, fmtin='(free)')
+        return u2d

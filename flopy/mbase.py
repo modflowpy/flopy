@@ -489,8 +489,15 @@ class Package(object):
                 par_current = pack_type.get_empty(par_dict['nlst'],aux_names=aux_names)
                 
                 #--
-                parval = np.float(par_dict['parval'])
-                
+                #parval = np.float(par_dict['parval'])
+                if model.mfpar.pval is None:
+                    parval = np.float(par_dict['parval'])
+                else:
+                    try:
+                        parval = np.float(model.mfpar.pval.pval_dict[par_dict['parval'].lower()])
+                    except:
+                        parval = np.float(par_dict['parval'])
+
                 #--fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])

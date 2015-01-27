@@ -379,27 +379,45 @@ class ModflowLpf(Package):
             if 'hk' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
                                  ext_unit_dict)
-                hk[k] = t
+
             else:
                 line = f.readline()
+                t = util_2d.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
+            hk[k] = t
             if chani[k] < 0:
                 print '   loading hani layer {0:3d}...'.format(k+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hani',
-                                 ext_unit_dict)
+                if 'hani' not in par_types:
+                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'hani',
+                                     ext_unit_dict)
+                else:
+                    line = f.readline()
+                    t = util_2d.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
             print '   loading vka layer {0:3d}...'.format(k+1)
-            t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
-                             ext_unit_dict)
+            if 'vka' not in par_types:
+                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
+                                 ext_unit_dict)
+            else:
+                line = f.readline()
+                t = util_2d.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
             vka[k] = t
             if transient:
                 print '   loading ss layer {0:3d}...'.format(k+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
-                                 ext_unit_dict)
+                if 'ss' not in par_types:
+                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
+                                     ext_unit_dict)
+                else:
+                    line = f.readline()
+                    t = util_2d.parameter_fill(model, (nrow, ncol), 'ss', parm_dict, findlayer=k)
                 ss[k] = t
                 if laytyp[k] != 0:
                     print '   loading sy layer {0:3d}...'.format(k+1)
-                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
-                                     ext_unit_dict)
+                    if 'sy' not in par_types:
+                        t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
+                                         ext_unit_dict)
+                    else:
+                        line = f.readline()
+                        t = util_2d.parameter_fill(model, (nrow, ncol), 'sy', parm_dict, findlayer=k)
                     sy[k] = t
             #if self.parent.get_package('DIS').laycbd[k] > 0:
             if model.get_package('DIS').laycbd[k] > 0:
@@ -407,9 +425,10 @@ class ModflowLpf(Package):
                 if 'vkcb' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vkcb',
                                      ext_unit_dict)
-                    vkcb[k] = t
                 else:
                     line = f.readline()
+                    t = util_2d.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
+                vkcb[k] = t
             if (laywet[k] != 0 and laytyp[k] != 0):
                 print '   loading wetdry layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'wetdry',
