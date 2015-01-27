@@ -159,6 +159,7 @@ class ModflowUpw(Package):
             raise Exception, 'LAYWET should be 0 for UPW'
 
         #--get parameters
+        par_types = []
         if npupw > 0:
             par_types, parm_dict = mfpar.load(f, nplpf)
 

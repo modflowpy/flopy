@@ -75,9 +75,12 @@ class ModflowRch(Package):
         self.nrchop = nrchop
         self.irchcb = irchcb
         self.rech = transient_2d(model, (nrow, ncol), np.float32,
-                                 rech, name = "rech_")        
-        self.irch = transient_2d(model, (nrow, ncol), np.int,
-                                 irch+1, name = "irch_")  # irch+1, as irch is zero based
+                                 rech, name = "rech_")
+        if self.nrchop == 2:
+            self.irch = transient_2d(model, (nrow, ncol), np.int,
+                                     irch+1, name = "irch_")  # irch+1, as irch is zero based
+        else:
+            self.irch = None
         self.np = 0
         self.parent.add_package(self)
 
@@ -184,7 +187,9 @@ class ModflowRch(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         #read data for every stress period
         rech = {}
-        irch = {}
+        irch = None
+        if nrchop == 2:
+            irch = {}
         current_rech = []
         current_irch = []
         for iper in xrange(nper):

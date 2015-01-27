@@ -340,6 +340,7 @@ class ModflowLpf(Package):
             wetfct, iwetit, ihdwet = float(t[0]), int(t[1]), int(t[2])
 
         #--parameters data
+        par_types = []
         if nplpf > 0:
             par_types, parm_dict = mfpar.load(f, nplpf)
             #print parm_dict

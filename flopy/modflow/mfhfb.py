@@ -120,6 +120,10 @@ class ModflowHfb(Package):
             options.append('NOPRINT')
         self.options = options
         self.parent.add_package(self)
+        if dtype is not None:
+            self.dtype = dtype
+        else:
+            self.dtype = self.get_default_dtype()
 
     def __repr__(self):
         return 'HFB package class'

@@ -472,9 +472,9 @@ class Package(object):
                 current['i'] -= 1
                 current['j'] -= 1
                 
-                bnd_output = np.copy(current)
+                bnd_output = np.recarray.copy(current)
             else:
-                bnd_output = np.copy(current)
+                bnd_output = np.recarray.copy(current)
 
             for iparm in xrange(itmpp):
                 line = f.readline()
@@ -516,7 +516,7 @@ class Package(object):
                     par_current[ptype] *= parval
                  
                 if bnd_output is None:
-                    bnd_output = np.copy(par_current)
+                    bnd_output = np.recarray.copy(par_current)
                 else:
                     bnd_output = stack_arrays((bnd_output, par_current), 
                                               asrecarray=True, usemask=False)

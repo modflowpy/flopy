@@ -116,7 +116,7 @@ class ModflowWel(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype()
-        self.stress_period_data = mflist(model,self.dtype,stress_period_data)
+        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
 
     def __repr__( self ):
         return 'Well package class'
@@ -163,11 +163,11 @@ class ModflowWel(Package):
         #get an empty recaray that correponds to dtype
         dtype = ModflowWel.get_default_dtype()
         if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype,aux_names,np.float32)
-        d = np.zeros((ncells,len(dtype)),dtype=dtype)
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        d = np.zeros((ncells, len(dtype)), dtype=dtype)
 
-        d[:,:] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+        d[:, :] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
