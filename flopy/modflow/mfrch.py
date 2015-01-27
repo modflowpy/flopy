@@ -211,7 +211,7 @@ class ModflowRch(Package):
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname
-                    t = transient_2d.parameter_bcfill(model, (nrow, ncol), 'rech', parm_dict, pak_parms)
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'rech', parm_dict, pak_parms)
 
                 current_rech = t
             rech[iper] = current_rech

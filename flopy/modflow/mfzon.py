@@ -104,17 +104,10 @@ class ModflowZon(Package):
         self.parent.add_package(self)
 
     def write_file(self):
-        f = open(self.fn_path, 'w')
-        f.write('%s\n' % self.heading)
-
-        line = '{0:10d}\n'.format(self.nzn)
-        f.write(line)
-        
-        if self.nzn > 0:
-            for key, value in self.zone_dict.iteritems():
-                f.write('{}\n'.format(key))
-                f.write(value.get_file_entry())
-        f.close()
+        '''
+        empty method - does nothing
+        '''
+        pass
 
     @staticmethod
     def load(f, model, nrow=None, ncol=None, ext_unit_dict=None):

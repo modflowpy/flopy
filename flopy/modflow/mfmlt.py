@@ -105,20 +105,10 @@ class ModflowMlt(Package):
         self.parent.add_package(self)
 
     def write_file(self):
-        f = open(self.fn_path, 'w')
-        f.write('%s\n' % self.heading)
-
-        line = '{0:10d}\n'.format(self.nml)
-        f.write(line)
-        
-        if self.nml > 0:
-            for key, value in self.mult_dict.iteritems():
-                f.write('{}'.format(key))
-                if isinstance(value,util_2d):
-                    f.write(value.get_file_entry())
-                else:
-                    f.write('{}\n{}\n'.format(value[0], value[1]))
-        f.close()
+        '''
+        empty method - does nothing
+        '''
+        pass
 
     @staticmethod
     def load(f, model, nrow=None, ncol=None, ext_unit_dict=None):

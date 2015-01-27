@@ -38,6 +38,7 @@ class ModflowPar(object):
             self.zone = ModflowZon.load(zone.filename, model,
                                         ext_unit_dict=ext_unit_dict)
             ext_unit_dict.pop(zone_key)
+            model.remove_package("ZONE")
         return
 
     def set_mult(self, model, ext_unit_dict):
@@ -51,6 +52,7 @@ class ModflowPar(object):
             self.mult = ModflowMlt.load(mult.filename, model,
                                         ext_unit_dict=ext_unit_dict)
             ext_unit_dict.pop(mult_key)
+            model.remove_package("MULT")
         return
 
     def set_pval(self, model, ext_unit_dict):
@@ -64,6 +66,7 @@ class ModflowPar(object):
             self.pval = ModflowPval.load(pval.filename, model,
                                          ext_unit_dict=ext_unit_dict)
             ext_unit_dict.pop(pval_key)
+            model.remove_package("PVAL")
         return
 
 
