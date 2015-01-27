@@ -241,7 +241,7 @@ class Modflow(BaseModel):
         ml.mfpar.set_mult(ml, ext_unit_dict)
 
         if verbose:
-            print ext_unit_dict
+            print '\n{}\nExternal unit dictionary:\n{}\n{}\n'.format(50*'-', ext_unit_dict, 50*'-')
         for key, item in ext_unit_dict.iteritems():
             if item.package is not None:
                 try:

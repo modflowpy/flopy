@@ -1,6 +1,7 @@
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
+from flopy.modflow.mfpar import ModflowPar as mfpar
 
 
 class ModflowUpw(Package):
@@ -117,7 +118,7 @@ class ModflowUpw(Package):
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         print '   loading IUPWCB, HDRY, NPUPW, IPHDRY...'
         t = line.strip().split()
-        iupwcb, hdry, npupw, iphdry = int(t[0]),float(t[1]),int(t[2]), int(t[3])
+        iupwcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
         if iupwcb != 0:
             iupwcb = 53
         # options
@@ -156,6 +157,12 @@ class ModflowUpw(Package):
         iwetdry = laywet.sum()
         if iwetdry > 0:
             raise Exception, 'LAYWET should be 0 for UPW'
+
+        #--get parameters
+        if npupw > 0:
+            par_types, parm_dict = mfpar.load(f, nplpf)
+
+        #--get arrays
         transient = not model.get_package('DIS').steady.all()
         hk = [0] * nlay
         hani = [0] * nlay
@@ -165,32 +172,56 @@ class ModflowUpw(Package):
         vkcb = [0] * nlay
         for k in range(nlay):
             print '   loading hk layer {0:3d}...'.format(k+1)
-            t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
-                             ext_unit_dict)
+            if 'hk' not in par_types:
+                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
+                                 ext_unit_dict)
+            else:
+                line = f.readline()
+                t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
             hk[k] = t
             if chani[k] < 1:
                 print '   loading hani layer {0:3d}...'.format(k+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hani',
-                                 ext_unit_dict)
+                if 'hani' not in par_types:
+                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hani',
+                                     ext_unit_dict)
+                else:
+                    line = f.readline()
+                    t = mfpar.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
             print '   loading vka layer {0:3d}...'.format(k+1)
-            t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
-                             ext_unit_dict)
+            if 'vka' not in par_types:
+                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
+                                 ext_unit_dict)
+            else:
+                line = f.readline()
+                t = mfpar.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
             vka[k] = t
             if transient:
                 print '   loading ss layer {0:3d}...'.format(k+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
-                                 ext_unit_dict)
+                if 'ss' not in par_types:
+                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
+                                     ext_unit_dict)
+                else:
+                    line = f.readline()
+                    t = mfpar.parameter_fill(model, (nrow, ncol), 'ss', parm_dict, findlayer=k)
                 ss[k] = t
                 if laytyp[k] != 0:
                     print '   loading sy layer {0:3d}...'.format(k+1)
-                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
-                                     ext_unit_dict)
+                    if 'sy' not in par_types:
+                        t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
+                                         ext_unit_dict)
+                    else:
+                        line = f.readline()
+                        t = mfpar.parameter_fill(model, (nrow, ncol), 'sy', parm_dict, findlayer=k)
                     sy[k] = t
             if model.get_package('DIS').laycbd[k] > 0:
                 print '   loading vkcb layer {0:3d}...'.format(k+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vkcb',
-                                 ext_unit_dict)
+                if 'vkcb' not in par_types:
+                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vkcb',
+                                     ext_unit_dict)
+                else:
+                    line = f.readline()
+                    t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
                 vkcb[k] = t
 
         #create upw object
@@ -201,9 +232,3 @@ class ModflowUpw(Package):
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb)
         return upw
 
-'''
-    def __init__(self, model, laytyp=0, layavg=0, chani=1.0, layvka=0, laywet=0, iupwcb = 53, hdry=-1E+30, iphdry = 0,\
-                 hk=1.0, hani=1.0, vka=1.0, ss=1e-5, sy=0.15, vkcb=0.0, wetdry=-0.01, noparcheck=False,        \
-                 extension='upw', unitnumber = 31):
-
-'''

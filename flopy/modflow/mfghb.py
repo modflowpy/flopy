@@ -146,9 +146,9 @@ class ModflowGhb(Package):
 
     @staticmethod
     def get_default_dtype():
-        dtype = np.dtype([("k",np.int),("i",np.int),\
-                         ("j",np.int),("bhead",np.float32),\
-                        ("cond",np.float32)])
+        dtype = np.dtype([("k", np.int),("i",np.int),\
+                         ("j", np.int),("bhead", np.float32),\
+                         ("cond", np.float32)])
         return dtype
 
     @staticmethod

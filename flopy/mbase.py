@@ -407,9 +407,9 @@ class Package(object):
         
         #--set partype
         #  and read phiramp for modflow-nwt well package
-        partype = 'cond'
+        partype = ['cond']
         if 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
-            partype = 'flux'
+            partype = ['flux']
             specify = False
             ipos = f.tell()
             line = f.readline()
@@ -426,7 +426,9 @@ class Package(object):
                 options.append('specify {} {} '.format(phiramp, phiramp_unit))
             else:
                 f.seek(ipos)
-                
+        elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(pack_type).lower():
+            partype = ['shead', 'ehead']
+
         #--read parameter data
         if nppak > 0:
             dt = pack_type.get_empty(1, aux_names=aux_names).dtype
@@ -506,7 +508,8 @@ class Package(object):
                 par_current['i'] -= 1
                 par_current['j'] -= 1
 
-                par_current[partype] *= parval
+                for ptype in partype:
+                    par_current[ptype] *= parval
                  
                 if bnd_output is None:
                     bnd_output = np.copy(par_current)

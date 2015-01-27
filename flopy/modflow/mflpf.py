@@ -329,9 +329,9 @@ class ModflowLpf(Package):
         print '   loading LAYWET...'
         line = f.readline()
         t = line.strip().split()
-        laywet = np.array((t[0:nlay]),dtype=np.int)
+        laywet = np.array((t[0:nlay]), dtype=np.int)
         # Item 7: WETFCT, IWETIT, IHDWET
-        wetfct,iwetit,ihdwet = None,None,None
+        wetfct,iwetit,ihdwet = None, None, None
         iwetdry = laywet.sum()
         if iwetdry > 0:
             print '   loading WETFCT, IWETIT, IHDWET...'
@@ -358,7 +358,6 @@ class ModflowLpf(Package):
             if 'hk' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
                                  ext_unit_dict)
-
             else:
                 line = f.readline()
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)

@@ -151,7 +151,7 @@ class ModflowParBc(object):
                         instnam = t[0].lower()
                     else:
                         instnam = 'static'
-                    wellinst = []
+                    bcinst = []
                     for nw in xrange(nlst):
                         line = f.readline()
                         t = line.strip().split()
@@ -162,8 +162,8 @@ class ModflowParBc(object):
                                 bnd.append(int(t[jdx]))
                             else:
                                 bnd.append(float(t[jdx]))
-                        wellinst.append(bnd)
-                    pinst[instnam] = wellinst
+                        bcinst.append(bnd)
+                    pinst[instnam] = bcinst
                 bc_parms[parnam] = [{'partyp':partyp, 'parval':parval, 'nlst':nlst, 'timevarying':timeVarying}, pinst]
         
         #print bc_parms

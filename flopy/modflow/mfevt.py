@@ -140,7 +140,9 @@ class ModflowEvt(Package):
                 break
         if "parameter" in line.lower():
             raw = line.strip().split()
-            assert int(raw[1]) == 0,"Parameters not supported"
+            npar = int(raw[1])
+            if npar > 0:
+                print 'Parameters detected. Number of parameters = ', npar
             line = f.readline()
         #dataset 2
         t = line.strip().split()
@@ -151,13 +153,19 @@ class ModflowEvt(Package):
                 ievtcb = 53
         except:
             pass
+
+        #--dataset 3 and 4 - parameters data
+        if npar > 0:
+            pak_parms = mfparbc.loadarray(f, npar)
+
+
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         #read data for every stress period
-        surf = []
-        evtr = []
-        exdp = []
-        ievt = []
+        surf = {}
+        evtr = {}
+        exdp = {}
+        ievt = {}
         current_surf = []
         current_evtr = []
         current_exdp = []
@@ -176,21 +184,36 @@ class ModflowEvt(Package):
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'surf',
                                  ext_unit_dict)
                 current_surf = t
-            surf.append(current_surf)
+            surf[iper] = current_surf
+
             if inevtr >= 0:
-                print \
-                    '   loading evtr stress period {0:3d}...'.format(iper+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'evtr',
-                                 ext_unit_dict)
+                if npar == 0:
+                    print \
+                        '   loading evtr stress period {0:3d}...'.format(iper+1)
+                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'evtr',
+                                     ext_unit_dict)
+                else:
+                    parm_dict = {}
+                    for ipar in xrange(npar):
+                        line = f.readline()
+                        t = line.strip().split()
+                        pname = t[0].lower()
+                        try:
+                            iname = t[1].lower()
+                        except:
+                            iname = 'static'
+                        parm_dict[pname] = iname
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'rech', parm_dict, pak_parms)
+
                 current_evtr = t
-            evtr.append(current_evtr)
+            evtr[iper] = current_evtr
             if inexdp >= 0:
                 print \
                     '   loading exdp stress period {0:3d}...'.format(iper+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'exdp',
                                  ext_unit_dict)
                 current_exdp = t
-            exdp.append(current_exdp)
+            exdp[iper] = current_exdp
             if nevtop == 2:
                 if inievt >= 0:
                     print '   loading ievt stress period {0:3d}...'.format(
@@ -198,7 +221,7 @@ class ModflowEvt(Package):
                     t = util_2d.load(f, model, (nrow,ncol), np.int32, 'ievt',
                                      ext_unit_dict)
                     current_ievt = t
-                ievt.append(current_ievt)
+                ievt[iper] = current_ievt
         #--create evt object
         evt = ModflowEvt(model, nevtop=nevtop, ievtcb=ievtcb, 
                          surf=surf, evtr=evtr, exdp=exdp, ievt=ievt)
