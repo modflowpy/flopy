@@ -26,16 +26,15 @@ class ModflowRch(Package):
     irchcb : int
         is a flag and a unit number. (the default is 0).
     nrchop : int
-        is the recharge option code. Recharge fluxes are defined in a layer
-        variable, RECH, with one value for each vertical column. Accordingly,
-        recharge is applied to one cell in each vertical column, and the
-        option code determines which cell in the column is selected for
-        recharge.
-    rech : float or array of float (nrow, ncol)
+        is the recharge option code. 
+        1: Recharge to top grid layer only
+        2: Recharge to layer defined in irch
+        3: Recharge to highest active cell (default is 3).
+    rech : float or array of floats (nrow, ncol)
         is the recharge flux. (default is 1.e-3).
-    irch : int or array of int
-        is the layer number variable that defines the layer in each vertical
-        column where recharge is applied. (default is 1).
+    irch : int or array of ints (nrow, ncol)
+        is the layer to which recharge is applied in each vertical
+        column (only used when nrchop=2). (default is 0).
     extension : string
         Filename extension (default is 'rch')
     unitnumber : int
@@ -62,7 +61,7 @@ class ModflowRch(Package):
     >>> rch = flopy.modflow.ModflowRch(m, nrchop=3, rech=1.2e-4)
 
     """
-    def __init__(self, model, nrchop=3, irchcb=0, rech=1e-3, irch=1,
+    def __init__(self, model, nrchop=3, irchcb=0, rech=1e-3, irch=0,
                  extension ='rch', unitnumber=19):
         """
         Package constructor.
@@ -78,7 +77,7 @@ class ModflowRch(Package):
         self.rech = transient_2d(model, (nrow, ncol), np.float32,
                                  rech, name = "rech_")        
         self.irch = transient_2d(model, (nrow, ncol), np.int,
-                                 irch, name = "irch_")
+                                 irch+1, name = "irch_")  # irch+1, as irch is zero based
         self.np = 0
         self.parent.add_package(self)
 
