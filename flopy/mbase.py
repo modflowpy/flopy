@@ -176,8 +176,7 @@ class BaseModel(object):
             if not silent:
                 print c
             if report == True:
-                if len(c) > 0:
-                    buff.append( c[0] )
+                buff.append(c)
           else:
             break
         if pause == True:
