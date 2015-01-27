@@ -104,7 +104,7 @@ class ModflowParBc(object):
 
 
     @staticmethod
-    def load(f, npar, nitems):
+    def load(f, npar, dt):
         """
         Load bc property parameters from an existing bc package
         that uses list data (e.g. WEL, RIV).
@@ -125,6 +125,7 @@ class ModflowParBc(object):
 
 
         """
+        nitems = len(dt.names)
         #--read parameter data
         if npar > 0:
             bc_parms = {}
@@ -157,7 +158,8 @@ class ModflowParBc(object):
                         t = line.strip().split()
                         bnd = []
                         for jdx in xrange(nitems):
-                            if jdx < 3:
+                            #if jdx < 3:
+                            if issubclass(dt[jdx].type, np.integer):
                                 #--conversion to zero-based occurs in package load method in mbase.
                                 bnd.append(int(t[jdx]))
                             else:

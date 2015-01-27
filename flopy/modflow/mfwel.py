@@ -350,5 +350,5 @@ class ModflowWel(Package):
 #            wel = ModflowWel(model, iwelcb, stress_period_data=stress_period_data, 
 #                             options=options)
 #        return wel
-        return Package.load(model,ModflowWel,f,nper)
+        return Package.load(model, ModflowWel, f, nper)
 

@@ -356,7 +356,7 @@ class Package(object):
 #                f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
 
     @staticmethod
-    def load(model,pack_type,f,nper=None):
+    def load(model, pack_type, f, nper=None):
         """
         The load method has not been implemented for this package.
 
@@ -373,6 +373,7 @@ class Package(object):
             if line[0] != '#':
                 break
         #--check for parameters
+        nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
             #assert int(t[1]) == 0,"Parameters are not supported"
@@ -432,8 +433,9 @@ class Package(object):
         #--read parameter data
         if nppak > 0:
             dt = pack_type.get_empty(1, aux_names=aux_names).dtype
-            pak_parms = mfparbc.load(f, nppak, len(dt.names))
-        
+            pak_parms = mfparbc.load(f, nppak, dt)
+            #pak_parms = mfparbc.load(f, nppak, len(dt.names))
+
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         
@@ -464,6 +466,8 @@ class Package(object):
                         raise NotImplementedError("load() method does not support \'open/close\'")
                     t = line.strip().split()
                     current[ibnd] = tuple(t[:len(current.dtype.names)])
+
+                #--convert indices to zero-based
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1

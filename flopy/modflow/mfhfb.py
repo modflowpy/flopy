@@ -9,6 +9,7 @@ MODFLOW Guide
 """
 from flopy.mbase import Package
 from numpy import atleast_2d
+from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 
 
 class ModflowHfb(Package):
@@ -143,7 +144,7 @@ class ModflowHfb(Package):
     @staticmethod
     def get_empty(ncells=0, aux_names=None):
         # get an empty recaray that correponds to dtype
-        dtype = ModflowGhb.get_default_dtype()
+        dtype = ModflowHfb.get_default_dtype()
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((ncells, len(dtype)), dtype=dtype)
@@ -155,7 +156,7 @@ class ModflowHfb(Package):
         dtype = np.dtype([("k", np.int),
                           ("irow1", np.int), ("icol1", np.int),
                           ("irow2", np.int), ("icol2", np.int),
-                          ("cond", np.float32)])
+                          ("hydchr", np.float32)])
         return dtype
 
 
@@ -279,18 +280,16 @@ class ModflowHfb(Package):
                     it += 1
                 it += 1
         #--data set 2
-        if nhfbnp > 0:
-            i = 12
+        if nphfb > 0:
+            dt = ModflowHfb.get_empty(1, aux_names=aux_names).dtype
+            pak_parms = mfparbc.load(f, nphfb, dt)
+
 
 
         #--set partype
         #  and read phiramp for modflow-nwt well package
-        partype = ['cond']
+        partype = ['hydchr']
 
-        #--read parameter data
-        if nppak > 0:
-            dt = pack_type.get_empty(1, aux_names=aux_names).dtype
-            pak_parms = mfparbc.load(f, nppak, len(dt.names))
 
         hfb = ModflowHfb(model, nphfb=nphfb, mxfb=mxfb, nhfbnp=nhfbnp,
                          layer_row_column_data=[],

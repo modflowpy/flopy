@@ -12,7 +12,9 @@ if flopypath not in sys.path:
 import flopy
 import flopy.utils as fputl
 
-mname = 'twrip.nam'
+#mname = 'twrip.nam'
+mname = 'Oahu_01.nam'
+
 model_ws = os.path.join('..', 'data', 'parameters')
 omodel_ws = os.path.join('..', 'basic', 'data')
 
@@ -27,7 +29,8 @@ ml = flopy.modflow.Modflow.load(mname, version=version, exe_name=exe_name,
 ml.change_model_ws(new_pth=omodel_ws)
 
 # -- add pcg package
-pcg = flopy.modflow.ModflowPcg(ml)
+if mname == 'twrip.nam':
+    pcg = flopy.modflow.ModflowPcg(ml)
 
 # -- save the model
 ml.write_input()
