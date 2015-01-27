@@ -174,15 +174,15 @@ class BaseModel(object):
             #c = line.split('\r')
             c = line.rstrip('\r\n')
             if not silent:
-                #print c[0]
                 print c
             if report == True:
-                buff.append( c[0] )
+                if len(c) > 0:
+                    buff.append( c[0] )
           else:
             break
         if pause == True:
             raw_input('Press Enter to continue...')
-        return ( [success,buff] )
+        return ([success,buff])
         
     def write_input(self, SelPackList=False):
         if self.verbose:

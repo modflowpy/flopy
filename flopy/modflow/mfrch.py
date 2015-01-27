@@ -12,7 +12,7 @@ import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d
 from flopy.utils.util_array import transient_2d
-from modflow.mfparbc import ModflowParBc as mfparbc
+from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 
 class ModflowRch(Package):
     """
