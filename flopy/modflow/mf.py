@@ -190,8 +190,8 @@ class Modflow(BaseModel):
         f_nam.close()
 
     @staticmethod
-    def load(f, version='mf2k', exe_name='mf2005.exe', 
-             verbose=False, model_ws=None):
+    def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
+             model_ws=None):
         """
         Load an existing model.
 
@@ -219,6 +219,8 @@ class Modflow(BaseModel):
         print 'Creating new model with name: ', modelname
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=False, model_ws=model_ws)
+        files_succesfully_loaded = []
+
         try:
             namefile_path = os.path.join(ml.model_ws, ml.namefile)
             ext_unit_dict = mfreadnam.parsenamefile(namefile_path, ml.mfnam_packages)
@@ -233,6 +235,7 @@ class Modflow(BaseModel):
                 dis = item
                 dis_key = key
         pck = dis.package.load(dis.filename, ml, ext_unit_dict=ext_unit_dict)
+        files_succesfully_loaded.append(dis.filename)
         ext_unit_dict.pop(dis_key)
 
         #zone, mult, pval
@@ -242,10 +245,13 @@ class Modflow(BaseModel):
 
         if verbose:
             print '\n{}\nExternal unit dictionary:\n{}\n{}\n'.format(50*'-', ext_unit_dict, 50*'-')
+
+
         for key, item in ext_unit_dict.iteritems():
             if item.package is not None:
                 try:
                     pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
+                    files_succesfully_loaded.append(item.filename)
                 except BaseException as o:
                     print "[WARNING] - Exception loading {!s} file: {!s}".format(item.filetype, o)
             elif "data" not in item.filetype.lower():
@@ -255,6 +261,14 @@ class Modflow(BaseModel):
                 ml.external_fnames.append(item.filename)
                 ml.external_units.append(key)
                 ml.external_binflag.append("binary" in item.filetype.lower())
+
+        if verbose:
+            print 2 * '\n'
+            s = 'The following {0} files were successfully loaded.'.format(
+                len(files_succesfully_loaded))
+            print s
+            for fname in files_succesfully_loaded:
+                print '   ' + fname
         return ml
 
 

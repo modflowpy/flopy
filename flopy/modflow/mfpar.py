@@ -150,7 +150,7 @@ class ModflowPar(object):
                             cluster_data = parval * mult
                         else:
                             mult_save = np.copy(mult)
-                            za = model.mfpar.zone.zone_dict[zonearr.lower()][:, :]
+                            za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
                             #--build a multiplier for all of the izones
                             for iz in izones:
                                 mult = np.zeros(shape, dtype=dtype)
