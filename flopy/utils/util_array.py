@@ -2,7 +2,7 @@ import os
 import shutil
 import copy
 import numpy as np
-from flopy.utils.binaryfile import binaryheader
+from flopy.utils.binaryfile import BinaryHeader
 VERBOSE = False
 
 
@@ -863,7 +863,7 @@ class util_2d(object):
         nrow,ncol = shape
         if bintype is not None:
             if dtype not in [np.int]:
-                header_dtype = binaryheader.set_dtype(bintype=bintype)
+                header_dtype = BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
         else:
             header_data = None
@@ -877,7 +877,7 @@ class util_2d(object):
         if dtype.kind != 'i':
             if bintype is not None:
                 if header_data is None:
-                    header_data = binaryheader.create(bintype=bintype)
+                    header_data = BinaryHeader.create(bintype=bintype)
             if header_data is not None:
                 header_data.tofile(file_out)
         data.tofile(file_out)

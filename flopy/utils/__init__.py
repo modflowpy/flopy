@@ -23,6 +23,6 @@
 from mfreadnam import parsenamefile
 from util_array import util_3d, util_2d, transient_2d
 from util_list import mflist
-from binaryfile import binaryheader, HeadFile, UcnFile, CellBudgetFile
+from binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
 from binaryswrfile import SwrObs, SwrFile
 from binaryhydmodfile import HydmodObs
