@@ -97,7 +97,7 @@ class ModflowBas(Package):
 
     def getibound(self):
         """
-        Return the ibound array.
+        Get ibound array.
 
         Returns
         -------

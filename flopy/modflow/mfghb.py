@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 import numpy as np
-from numpy import atleast_2d
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
 
