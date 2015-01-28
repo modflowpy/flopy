@@ -5,7 +5,7 @@ LPF  15 Oahu_01.lpf
 BAS6  13 Oahu_01.bas 
 GHB  23 Oahu_01.ghb 
 WEL  20 Oahu_01.wel 
-#HFB6  17 Oahu_01.hfb 
+HFB6  17 Oahu_01.hfb 
 SWI2  29 Oahu_01.swi2 
 PVAL  101 Oahu_01.pval
 DATA(BINARY)  55 Oahu_01.zta REPLACE

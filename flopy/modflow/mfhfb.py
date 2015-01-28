@@ -7,10 +7,11 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm>`_.
 
 """
+import numpy as np
 from flopy.mbase import Package
 from numpy import atleast_2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
-
+from numpy.lib.recfunctions import stack_arrays
 
 class ModflowHfb(Package):
     """
@@ -88,7 +89,7 @@ class ModflowHfb(Package):
     """
 
     def __init__(self, model, nphfb=0, mxfb=0, nhfbnp=0,
-                 layer_row_column_data=None, nacthfb=0, no_print=False,
+                 hfb_data=None, dtype=None, nacthfb=0, no_print=False,
                  options=None, extension='hfb', unitnumber=17):
         Package.__init__(self, model, extension, 'HFB6',
                          unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
@@ -97,18 +98,6 @@ class ModflowHfb(Package):
 
         self.nphfb = nphfb
         self.mxfb = mxfb
-
-        if layer_row_column_data is None:
-            raise Exception('Failed to specify layer_row_column_data.')
-
-        self.layer_row_column_data = layer_row_column_data
-
-        if (layer_row_column_data is not None):
-            for a in layer_row_column_data:
-                a = atleast_2d(a)
-                nr, nc = a.shape
-                assert nc == 6, 'layer_row_column_data must have 6 columns. \nEntry: ' + str(nc)
-                self.nhfbnp = len(layer_row_column_data)
 
         self.nacthfb = nacthfb
 
@@ -119,11 +108,23 @@ class ModflowHfb(Package):
         if self.no_print:
             options.append('NOPRINT')
         self.options = options
+
+        aux_names = []
+        it = 0
+        while it < len(options):
+            print it, options[it]
+            if 'aux' in options[it].lower():
+                aux_names.append(options[it + 1].lower())
+                it += 1
+            it += 1
+
+        if hfb_data is None:
+            raise Exception('Failed to specify hfb_data.')
+
+        self.hfb_data = hfb_data
+        self.nhfbnp = len(self.hfb_data)
+
         self.parent.add_package(self)
-        if dtype is not None:
-            self.dtype = dtype
-        else:
-            self.dtype = self.get_default_dtype()
 
     def __repr__(self):
         return 'HFB package class'
@@ -134,15 +135,14 @@ class ModflowHfb(Package):
 
     def write_file(self):
         f_hfb = open(self.fn_path, 'w')
-        f_hfb.write('%s\n' % self.heading)
-        f_hfb.write('%9i %9i %9i' % (self.nphfb, self.mxfb, self.nhfbnp))
+        f_hfb.write('{}\n'.format(self.heading))
+        f_hfb.write('{:10d}{:10d}{:10d}'.format(self.nphfb, self.mxfb, self.nhfbnp))
         for option in self.options:
             f_hfb.write('  {}'.format(option))
         f_hfb.write('\n')
-        for a in self.layer_row_column_data:
-            f_hfb.write('%9i %9i %9i %9i %9i %13.6e' % (a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]))
-            f_hfb.write('\n')
-        f_hfb.write('%9i' % (self.nacthfb))
+        for a in self.hfb_data:
+            f_hfb.write('{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n'.format(a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]))
+        f_hfb.write('{:10d}'.format(self.nacthfb))
         f_hfb.close()
 
     @staticmethod
@@ -253,23 +253,6 @@ class ModflowHfb(Package):
         nhfbnp = int(t[2])
         #--check for no-print suppressor
         options = []
-        naux = 0
-        if len(t) > 2:
-            for toption in t[3:-1]:
-                if toption.lower() is 'noprint':
-                    options.append(toption)
-                elif 'aux' in toption.lower():
-                    naux += 1
-                    options.append(toption)
-        #dataset 2a
-        t = line.strip().split()
-        ipakcb = 0
-        try:
-            if int(t[1]) != 0:
-                ipakcb = 53
-        except:
-            pass
-        options = []
         aux_names = []
         if len(t) > 2:
             it = 2
@@ -283,19 +266,78 @@ class ModflowHfb(Package):
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 it += 1
-        #--data set 2
+        #--data set 2 and 3
         if nphfb > 0:
             dt = ModflowHfb.get_empty(1, aux_names=aux_names).dtype
             pak_parms = mfparbc.load(f, nphfb, dt)
+        #--data set 4
+        bnd_output = None
+        if nhfbnp > 0:
+            specified = ModflowHfb.get_empty(nhfbnp, aux_names=aux_names)
+            for ibnd in xrange(nhfbnp):
+                line = f.readline()
+                if "open/close" in line.lower():
+                    raise NotImplementedError("load() method does not support \'open/close\'")
+                t = line.strip().split()
+                specified[ibnd] = tuple(t[:len(specified.dtype.names)])
+
+            #--convert indices to zero-based
+            specified['k'] -= 1
+            specified['irow1'] -= 1
+            specified['icol1'] -= 1
+            specified['irow2'] -= 1
+            specified['icol2'] -= 1
+
+            bnd_output = np.recarray.copy(specified)
+
+        if nphfb > 0:
+            partype = ['hydchr']
+            line = f.readline()
+            t = line.strip().split()
+            nacthfb = int(t[0])
+            for iparm in xrange(nacthfb):
+                line = f.readline()
+                t = line.strip().split()
+                pname = t[0].lower()
+                iname = 'static'
+                par_dict, current_dict = pak_parms.get(pname)
+                data_dict = current_dict[iname]
+                #print par_dict
+                #print data_dict
+
+                par_current = ModflowHfb.get_empty(par_dict['nlst'],aux_names=aux_names)
+
+                #--
+                if model.mfpar.pval is None:
+                    parval = np.float(par_dict['parval'])
+                else:
+                    try:
+                        parval = np.float(model.mfpar.pval.pval_dict[par_dict['parval'].lower()])
+                    except:
+                        parval = np.float(par_dict['parval'])
+
+                #--fill current parameter data (par_current)
+                for ibnd, t in enumerate(data_dict):
+                    par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
+
+                #--convert indices to zero-based
+                par_current['k'] -= 1
+                par_current['irow1'] -= 1
+                par_current['icol1'] -= 1
+                par_current['irow2'] -= 1
+                par_current['icol2'] -= 1
+
+                for ptype in partype:
+                    par_current[ptype] *= parval
+
+                if bnd_output is None:
+                    bnd_output = np.recarray.copy(par_current)
+                else:
+                    bnd_output = stack_arrays((bnd_output, par_current),
+                                              asrecarray=True, usemask=False)
 
 
-
-        #--set partype
-        #  and read phiramp for modflow-nwt well package
-        partype = ['hydchr']
-
-
-        hfb = ModflowHfb(model, nphfb=nphfb, mxfb=mxfb, nhfbnp=nhfbnp,
-                         layer_row_column_data=[],
-                         nacthfb=nacthfb, options=options)
+        hfb = ModflowHfb(model, nphfb=0, mxfb=0, nhfbnp=len(bnd_output),
+                         hfb_data=bnd_output, dtype=bnd_output.dtype,
+                         nacthfb=0, options=options)
         return hfb

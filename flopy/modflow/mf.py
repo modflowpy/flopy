@@ -124,6 +124,7 @@ class Modflow(BaseModel):
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
             "lpf": flopy.modflow.ModflowLpf,
+            "hfb6": flopy.modflow.ModflowHfb,
             "wel": flopy.modflow.ModflowWel,
             "drn": flopy.modflow.ModflowDrn,
             "rch": flopy.modflow.ModflowRch,
@@ -249,12 +250,12 @@ class Modflow(BaseModel):
 
         for key, item in ext_unit_dict.iteritems():
             if item.package is not None:
-                pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
-                # try:
-                #     pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
-                #     files_succesfully_loaded.append(item.filename)
-                # except BaseException as o:
-                #     print "[WARNING] - Exception loading {!s} file: {!s}".format(item.filetype, o)
+                #pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
+                 try:
+                     pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
+                     files_succesfully_loaded.append(item.filename)
+                 except BaseException as o:
+                     print "[WARNING] - Exception loading {!s} file: {!s}".format(item.filetype, o)
             elif "data" not in item.filetype.lower():
                 if verbose:
                     print "skipping package", item.filetype, item.filename
