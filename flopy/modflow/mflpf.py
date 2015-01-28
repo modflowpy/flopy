@@ -372,7 +372,7 @@ class ModflowLpf(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
             print '   loading vka layer {0:3d}...'.format(k+1)
-            if 'vka' not in par_types:
+            if 'vka' not in par_types and 'vani' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
                                  ext_unit_dict)
             else:
