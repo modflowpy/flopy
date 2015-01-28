@@ -1,7 +1,7 @@
 import numpy as np
 from collections import OrderedDict
 
-class binaryheader():
+class BinaryHeader():
     """
     The binary_header class is a class to create headers for MODFLOW
     binary files    
@@ -77,12 +77,12 @@ class binaryheader():
 
     @staticmethod
     def set_dtype(bintype=None, precision='single'):
-        header = binaryheader(bintype=bintype, precision=precision)
+        header = BinaryHeader(bintype=bintype, precision=precision)
         return header.dtype
 
     @staticmethod
     def create(bintype=None, **kwargs):
-        header = binaryheader(bintype=bintype)
+        header = BinaryHeader(bintype=bintype)
         if header.get_dtype() is not None:
             header.set_values(**kwargs)
         return header.get_values()
@@ -384,7 +384,7 @@ class HeadFile(BinaryLayerFile):
     '''
     def __init__(self, filename, text='head',precision='single', verbose=False):
         self.text = text
-        self.header_dtype = binaryheader.set_dtype(bintype='Head',
+        self.header_dtype = BinaryHeader.set_dtype(bintype='Head',
                                                    precision=precision)
         super(HeadFile,self).__init__(filename, precision, verbose)
 
@@ -406,7 +406,7 @@ class UcnFile(BinaryLayerFile):
     '''
     def __init__(self, filename, text='concentration',precision='single', verbose=False):
         self.text = text
-        self.header_dtype = binaryheader.set_dtype(bintype='Ucn',
+        self.header_dtype = BinaryHeader.set_dtype(bintype='Ucn',
                                                    precision=precision)
         super(UcnFile,self).__init__(filename, precision, verbose)
 

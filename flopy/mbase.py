@@ -1,3 +1,8 @@
+"""
+mbase module
+
+"""
+
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 import sys
@@ -12,13 +17,16 @@ from modflow.mfparbc import ModflowParBc as mfparbc
 iconst = 1 # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
 iprn = -1 # Printout flag. If >= 0 then array values read are printed in listing file.
 
+
 class BaseModel(object):
     """
     MODFLOW based models base class
     """
-
-    def __init__(self, modelname = 'modflowtest', namefile_ext = 'nam',
-                 exe_name = 'mf2k.exe', model_ws = None):
+    def __init__(self, modelname='modflowtest', namefile_ext='nam',
+                 exe_name='mf2k.exe', model_ws=None):
+        """
+        BaseModel init
+        """
         self.__name = modelname
         self.namefile_ext = namefile_ext
         self.namefile = self.__name + '.' + self.namefile_ext
@@ -36,7 +44,8 @@ class BaseModel(object):
                 model_ws = os.getcwd()
         self.model_ws= model_ws
         self.cl_params = ''
-    
+        return
+
     def set_exename(self, exe_name):
         self.exe_name = exe_name
         return
@@ -64,18 +73,22 @@ class BaseModel(object):
                 print 'removing Package: ',pp.name
                 self.packagelist.pop(i)
                 return
-        raise StopIteration , 'Package name '+pname+' not found in Package list'                
+        raise StopIteration , 'Package name '+pname+' not found in Package list'
             
     def build_array_name(self,num,prefix):
        return self.external_path+prefix+'_'+str(num)+'.'+self.external_extension
        
-    def assign_external(self,num,prefix):           
-        fname = self.build_array_name(num,prefix)
+    def assign_external(self, num, prefix):
+        """
+        Assign an external file
+
+        """
+        fname = self.build_array_name(num, prefix)
         unit = (self.next_ext_unit())
         self.external_fnames.append(fname)
         self.external_units.append(unit)       
         self.external_binflag.append(False)        
-        return fname,unit
+        return fname, unit
     
     def add_external(self, fname, unit, binflag=False):
         """
@@ -193,8 +206,6 @@ class BaseModel(object):
                 if self.verbose:
                     print p.__repr__()        
         else:
-#            for i,p in enumerate(self.packagelist):  
-#                for pon in SelPackList:
             for pon in SelPackList:
                 for i,p in enumerate(self.packagelist):  
                     if pon in p.name:               
@@ -207,7 +218,10 @@ class BaseModel(object):
         self.write_name_file()
     
     def write_name_file(self):
-        '''Every Package needs its own writenamefile function'''
+        """
+        Every Package needs its own writenamefile function
+
+        """
         raise Exception, 'IMPLEMENTATION ERROR: writenamefile must be overloaded'
 
     def get_name(self):
@@ -221,14 +235,18 @@ class BaseModel(object):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
     name = property(get_name, set_name)
 
+
 class Package(object):
-    '''
-    General Package class
-      allowDuplicates allows more than one package of the same class to be added.
-      This is needed for mfaddoutsidefile if used for more than one file.
-    '''
+    """
+    Base package class from which most other packages are derived.
+
+    """
     def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1, extra='', 
                  allowDuplicates=False):
+        """
+        Package init
+
+        """
         self.parent = parent # To be able to access the parent modflow object's attributes
         if (not isinstance(extension, list)):
             extension = [extension]
@@ -252,8 +270,9 @@ class Package(object):
         self.allowDuplicates = allowDuplicates
 
         self.acceptable_dtypes = [int,np.float32,str]
+        return
 
-    def __repr__( self ):
+    def __repr__(self):
         s = self.__doc__
         exclude_attributes = ['extension', 'heading', 'name', 'parent', 'url']
         for attr, value in sorted(self.__dict__.iteritems()):
@@ -289,9 +308,6 @@ class Package(object):
 
     @staticmethod
     def add_to_dtype(dtype,field_names,field_types):
-        #assert field_type in self.acceptable_dtypes,"mbase.package.add_field_to_dtype() field_type "+\
-        #                                            str(type(field_type))+" not a supported type:" +\
-        #                                            str(self.acceptable_dtypes)
         if not isinstance(field_names,list):
             field_names = [field_names]
         if not isinstance(field_types,list):
@@ -304,25 +320,6 @@ class Package(object):
         newdtype = np.dtype(newdtype)
         return newdtype
 
-#    def assign_layer_row_column_data(self, layer_row_column_data, ncols, zerobase=True):
-#        if (layer_row_column_data is not None):
-#            new_layer_row_column_data = []
-#            mxact = 0
-#            for a in layer_row_column_data:
-#                a = np.atleast_2d(a)                
-#                nr, nc = a.shape                
-#                assert nc == ncols, 'layer_row_column_Q must have {0:1d} columns'.format(ncols)+'\nentry: '+str(a.shape)                
-#                mxact = max(mxact, nr)
-#                if zerobase:
-#                    new_layer_row_column_data.append(a)
-#                else:
-#                    warnings.warn('Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing')
-#                    #print 'Deprecation Warning: One-based indexing will be deprecated in future FloPy versions. Use Zero-based indexing'
-#                    a[:,:3] -= 1  # one-base input data, subtract 1 from layers, rows, columns
-#                    new_layer_row_column_data.append(a)
-#            return mxact, new_layer_row_column_data
-#        return
-
     def webdoc(self):
         if self.parent.version == 'mf2k':
             wb.open('http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
@@ -332,28 +329,12 @@ class Package(object):
             wb.open('http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Guide/' + self.url)
 
     def write_file(self):
-        '''Every Package needs its own write_file function'''
+        """
+        Every Package needs its own write_file function
+
+        """
         print 'IMPLEMENTATION ERROR: write_file must be overloaded'
-
-
-#    def write_layer_row_column_data(self, f, layer_row_column_data):
-#        for n in xrange(self.parent.get_package('DIS').nper):
-#            if n < len(layer_row_column_data):
-#                a = layer_row_column_data[n]
-#                itmp = a.shape[0]
-#                #f.write('%10i%10i\n' % (itmp, self.np))
-#                f.write(' {0:9d} {1:9d}       STRESS PERIOD {2:6d}\n'.format(itmp, self.np, n+1))
-#                for b in a:
-#                    #f.write('%9i %9i %9i' % (b[0], b[1], b[2]) )
-#                    f.write(' {0:9.0f} {1:9.0f} {2:9.0f}'.format(b[0]+1, b[1]+1, b[2]+1))  # write out layer+1, row+1, col+1
-#                    for c in b[3:]:
-#                        #f.write(' %13.6e' % c)
-#                        f.write(' {:12.6g}'.format(c))
-#                    f.write('\n')
-#            else:
-#                itmp = -1
-#                #f.write('%10i%10i\n' % (itmp, self.np))
-#                f.write(' {0:9d} {1:9d}\n'.format(itmp,self.np))
+        return
 
     @staticmethod
     def load(model, pack_type, f, nper=None):
@@ -534,4 +515,3 @@ class Package(object):
                         dtype=pack_type.get_empty(0,aux_names=aux_names).dtype,\
                         options=options)
         return pak
-
