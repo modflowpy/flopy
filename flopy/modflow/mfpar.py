@@ -165,8 +165,8 @@ class ModflowPar(object):
                             mult_save = np.copy(mult)
                             za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
                             #--build a multiplier for all of the izones
+                            mult = np.zeros(shape, dtype=dtype)
                             for iz in izones:
-                                mult = np.zeros(shape, dtype=dtype)
                                 filtarr = za == iz
                                 mult[filtarr] += np.copy(mult_save[filtarr])
                             #--calculate parameter value for this cluster
