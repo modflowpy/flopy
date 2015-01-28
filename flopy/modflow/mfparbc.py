@@ -235,10 +235,8 @@ class ModflowParBc(object):
                                     ival = int(t[jdx])
                                     if ival > 0:
                                         iz.append(ival)
-                                    else:
-                                        break
                                 except:
-                                    pass
+                                    break
                             bnd.append(iz)
                         bcinst.append(bnd)
                     pinst[instnam] = bcinst

@@ -188,55 +188,6 @@ class ModflowHfb(Package):
         hfb = flopy.modflow.ModflowHfb.load('test.hfb', m)
 
         """
-        # if type(f) is not file:
-        # filename = f
-        #     f = open(filename, 'r')
-        # # dataset 0 -- header
-        # while True:
-        #     line = f.readline()
-        #     if line[0] != '#':
-        #         break
-        # # dataset 1
-        # t = line.strip().split()
-        # nphfb = int(t[0])
-        # mxfb = int(t[1])
-        # nhfbnp = int(t[2])
-        # # --check for no-print suppressor
-        # options = []
-        # naux = 0
-        # if len(t) > 2:
-        #     for toption in t[3:-1]:
-        #         if toption.lower() is 'noprint':
-        #             options.append(toption)
-        #         elif 'aux' in toption.lower():
-        #             naux += 1
-        #             options.append(toption)
-        # # dataset 4
-        # layer_row_column_data = []
-        # current = []
-        # nitems = 6
-        # for ihfb in xrange(nhfbnp):
-        #     line = f.readline()
-        #     t = line.strip().split()
-        #     bnd = []
-        #     for jdx in xrange(nitems):
-        #         if jdx < nitems-1:
-        #             bnd.append(int(t[jdx]))
-        #         else:
-        #             bnd.append(float(t[jdx]))
-        #     current.append(bnd)
-        #     layer_row_column_data.append(current)
-        # # dataset 5
-        # line = f.readline()
-        # t = line.strip().split()
-        # nacthfb = int(t[0])
-        #
-        # hfb = ModflowHfb(model, nphfb=nphfb, mxfb=mxfb, nhfbnp=nhfbnp,
-        #                 layer_row_column_data=layer_row_column_data,
-        #                 nacthfb=nacthfb, options=options)
-        # return hfb
-
-        bc_pack_types = []
 
         if type(f) is not file:
             filename = f
