@@ -312,7 +312,7 @@ class ModflowHfb(Package):
                     parval = np.float(par_dict['parval'])
                 else:
                     try:
-                        parval = np.float(model.mfpar.pval.pval_dict[par_dict['parval'].lower()])
+                        parval = np.float(model.mfpar.pval.pval_dict[pname])
                     except:
                         parval = np.float(par_dict['parval'])
 

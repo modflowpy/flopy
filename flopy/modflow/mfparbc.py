@@ -260,7 +260,7 @@ class ModflowParBc(object):
                 pv = np.float(pdict['parval'])
             else:
                 try:
-                    pv = np.float(model.mfpar.pval.pval_dict[pdict['parval'].lower()])
+                    pv = np.float(model.mfpar.pval.pval_dict[key.lower()])
                 except:
                     pv = np.float(pdict['parval'])
             for [mltarr, zonarr, izones] in inst_data:

@@ -12,8 +12,8 @@ if flopypath not in sys.path:
 import flopy
 import flopy.utils as fputl
 
-#mname = 'twrip.nam'
-mname = 'Oahu_01.nam'
+mname = 'twrip.nam'
+#mname = 'Oahu_01.nam'
 
 model_ws = os.path.join('..', 'data', 'parameters')
 omodel_ws = os.path.join('..', 'basic', 'data')

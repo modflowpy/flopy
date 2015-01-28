@@ -115,7 +115,14 @@ class ModflowPar(object):
                     zonarr = t[2]
                     iarr = []
                     for iv in t[3:]:
-                        iarr.append(np.int(iv))
+                        try:
+                            iz = int(np.int(iv))
+                            if iz > 0:
+                                iarr.append(iz)
+                                break
+                        except:
+                            break
+
                     clusters.append([lay, mltarr, zonarr, iarr])
                 #--add parnam to parm_dict
                 parm_dict[parnam] = {'partyp':partyp, 'parval':parval, 'nclu':nclu, 'clusters':clusters}
