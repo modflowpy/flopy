@@ -149,4 +149,5 @@ class ModflowChd(Package):
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
 
+        print 'loading chd package file...'
         return Package.load(model, ModflowChd, f, nper)

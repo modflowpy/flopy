@@ -136,12 +136,41 @@ class ModflowBcf(Package):
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
-        '''
-        f is either a filename or a file handle.  if the arrays in the file
-        are specified using interal, external, or older style array control
-        records, then f should be a file handle, and the ext_unit_dict
-        dictionary of unitnumber:open(filename, 'r') must be included.
-        '''
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        nper : int
+            The number of stress periods.  If nper is None, then nper will be
+            obtained from the model object. (default is None).
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        wel : ModflowBcf object
+            ModflowBcf object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> wel = flopy.modflow.mfbcf.load('test.bcf', m)
+
+        """
+
+        print 'loading bcf package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

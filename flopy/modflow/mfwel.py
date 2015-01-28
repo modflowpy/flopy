@@ -204,5 +204,7 @@ class ModflowWel(Package):
         >>> wel = flopy.modflow.mfwel.load('test.wel', m)
 
         """
+
+        print 'loading wel package file...'
         return Package.load(model, ModflowWel, f, nper)
 

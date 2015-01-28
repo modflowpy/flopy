@@ -111,6 +111,7 @@ class ModflowSwr1(Package):
 
         """
 
+        print 'loading swr1 process file...'
         #--todo: everything
         if type(f) is not file:
             filename = f

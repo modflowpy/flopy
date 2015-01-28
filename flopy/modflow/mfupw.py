@@ -105,6 +105,8 @@ class ModflowUpw(Package):
         >>> lpf = flopy.modflow.ModflowUpw.load('test.upw', m)
 
         """
+
+        print 'loading upw package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
