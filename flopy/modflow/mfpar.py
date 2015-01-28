@@ -1,10 +1,7 @@
 """
-mfwel module.  Contains the ModflowWel class. Note that the user can access
-the ModflowWel class as `flopy.modflow.ModflowWel`.
+mfpar module.  Contains the ModflowPar class. Note that the user can access
+the ModflowPar class as `flopy.modflow.Modflowpar`.
 
-Additional information for this MODFLOW package can be found at the `Online
-MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?wel.htm>`_.
 
 """
 
@@ -100,7 +97,7 @@ class ModflowPar(object):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
-                print 'loading parameter "{}"...'.format(parnam)
+                print '   loading parameter "{}"...'.format(parnam)
                 partyp = t[1].lower()
                 if partyp not in par_types:
                     par_types.append(partyp)

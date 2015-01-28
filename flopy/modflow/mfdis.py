@@ -402,6 +402,8 @@ class ModflowDis(Package):
         >>> dis = flopy.modflow.mfbas.load('test.dis', m)
 
         """
+
+        print 'loading dis package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

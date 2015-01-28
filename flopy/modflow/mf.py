@@ -138,6 +138,7 @@ class Modflow(BaseModel):
             "rch": flopy.modflow.ModflowRch,
             "ghb": flopy.modflow.ModflowGhb,
             "riv": flopy.modflow.ModflowRiv,
+            "swi2": flopy.modflow.ModflowSwi2,
             "pcg": flopy.modflow.ModflowPcg,
             "oc": flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,

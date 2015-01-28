@@ -133,7 +133,7 @@ class ModflowParBc(object):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
-                print 'loading parameter "{}"...'.format(parnam)
+                print '   loading parameter "{}"...'.format(parnam)
                 partyp = t[1].lower()
                 parval = t[2]
                 nlst = np.int(t[3])
@@ -201,7 +201,7 @@ class ModflowParBc(object):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
-                print 'loading parameter "{}"...'.format(parnam)
+                print '   loading parameter "{}"...'.format(parnam)
                 partyp = t[1].lower()
                 parval = t[2]
                 nclu = np.int(t[3])
