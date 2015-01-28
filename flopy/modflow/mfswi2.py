@@ -15,17 +15,163 @@ from flopy.utils import util_2d, util_3d
 
 
 class ModflowSwi2(Package):
-    'Salt Water Intrusion (SWI2) package class'
+    """
+    MODFLOW SWI2 Package Class.
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    nsrf : int
+        number of active surfaces (interfaces). This equals the number of zones
+        minus one. (default is 1).
+    istrat : int
+        flag indicating the density distribution. (default is 1).
+    nobs : int
+        number of observation locations. (default is 0).
+    iswizt : int
+        unit number for zeta output. (default is 55).
+    iswibd : int
+        unit number for SWI2 Package budget output. (default is 56).
+    iswiobs : int
+        flag and unit number SWI2 observation output. (default is 0).
+    adaptive : bool
+        boolean flag that determines if adaptive SWI2 time steps will be used.
+        (default is False).
+    nsolver : int
+        DE4 solver is used if nsolver=1. PCG solver is used if nsolver=2.
+        (default is 1).
+    iprsol : int
+        solver print out interval. (default is 0).
+    mutsol : int
+        If MUTSOL = 0, tables of maximum head change and residual will be printed each iteration.
+        If MUTSOL = 1, only the total number of iterations will be printed.
+        If MUTSOL = 2, no information will be printed.
+        If MUTSOL = 3, information will only be printed if convergence fails.
+        (default is 3).
+    solver2parameters : dict
+        only used if nsolver = 2
+        mxiter : int
+            maximum number of outer iterations. (default is 100)
+        iter1 : int
+            maximum number of inner iterations. (default is 20)
+        npcond : int
+            flag used to select the matrix conditioning method. (default is 1).
+            specify NPCOND = 1 for Modified Incomplete Cholesky.
+            specify NPCOND = 2 for Polynomial.
+        zclose : float
+            is the ZETA change criterion for convergence. (default is 1e-3).
+        rclose : float
+            is the residual criterion for convergence. (default is 1e-4)
+        relax : float
+            is the relaxation parameter used with NPCOND = 1. (default is 1.0)
+        nbpol : int
+            is only used when NPCOND = 2 to indicate whether the estimate of the
+            upper bound on the maximum eigenvalue is 2.0, or whether the estimate
+            will be calculated. NBPOL = 2 is used to specify the value is 2.0;
+            for any other value of NBPOL, the estimate is calculated. Convergence
+            is generally insensitive to this parameter. (default is 2).
+        damp : float
+            is the steady-state damping factor. (default is 1.)
+        dampt : float
+            is the transient damping factor. (default is 1.)
+    toeslope : float
+        Maximum slope of toe cells. (default is 0.05)
+    tipslope : float
+        Maximum slope of tip cells. (default is 0.05)
+    alpha : float
+        fraction of threshold used to move the tip and toe to adjacent empty cells
+        when the slope exceeds user-specified TOESLOPE and TIPSLOPE values. (default is None)
+    beta : float
+        Fraction of threshold used to move the toe to adjacent non-empty cells when the
+        surface is below a minimum value defined by the user-specified TOESLOPE value.
+        (default is 0.1).
+    napptmx : int
+        only used if adaptive is True. Maximum number of SWI2 time steps per MODFLOW
+        time step. (default is 1).
+    napptmn : int
+        only used if adaptive is True. Minimum number of SWI2 time steps per MODFLOW
+        time step. (default is 1).
+    adptfct : float
+        is the factor used to evaluate tip and toe thicknesses and control the number
+        of SWI2 time steps per MODFLOW time step. When the maximum tip or toe thickness
+        exceeds the product of TOESLOPE or TIPSLOPE the cell size and ADPTFCT, the number
+        of SWI2 time steps are increased to a value less than or equal to NADPT.
+        When the maximum tip or toe thickness is less than the product of TOESLOPE or
+        TIPSLOPE the cell size and ADPTFCT, the number of SWI2 time steps is decreased
+        in the next MODFLOW time step to a value greater than or equal to 1. ADPTFCT
+        must be greater than 0.0 and is reset to 1.0 if NADPTMX is equal to NADPTMN.
+        (default is 1.0).
+    nu : array of floats
+        if istart = 1, density of each zone (nsrf + 1 values). if istrat = 0, density along
+        top of layer, each surface, and bottom of layer (nsrf + 2 values). (default is 0.025)
+    zeta : list of floats or list of array of floats [(nlay, nrow, ncol), (nlay, nrow, ncol)]
+        initial elevations of the active surfaces. (default is 0.)
+    ssz : float or array of floats (nlay, nrow, ncol)
+        effective porosity. (default is 0.25)
+    isource : integer or array of integers (nlay, nrow, ncol)
+        Source type of any external sources or sinks, specified with any outside package
+        (i.e. WEL Package, RCH Package, GHB Package). (default is 0).
+            If ISOURCE > 0 sources and sinks have the same fluid density as the zone
+                ISOURCE. If such a zone is not present in the cell, sources and sinks
+                have the same fluid density as the active zone at the top of the aquifer.
+            If ISOURCE = 0 sources and sinks have the same fluid density as the active
+                zone at the top of the aquifer.
+            If ISOURCE < 0 sources have the same fluid density as the zone with a
+                number equal to the absolute value of ISOURCE. Sinks have the same
+                fluid density as the active zone at the top of the aquifer. This
+                option is useful for the modeling of the ocean bottom where infiltrating
+                water is salt, yet exfiltrating water is of the same type as the water
+                at the top of the aquifer.
+    obsnam : list of strings
+        names for nobs observations.
+    obslrc : list of lists
+        [layer, row, column] lists for nobs observations.
+    naux : int
+        number of auxiliary variables
+    extension : list string
+        Filename extension (default is ['swi2', 'zta', 'swb'])
+    unitnumber : int
+        File unit number (default is 29).
+    npln : int
+        Deprecated - use nsrf instead.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+    Parameters are not supported in FloPy.
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> m = flopy.modflow.Modflow()
+    >>> swi2 = flopy.modflow.ModflowSwi2(m,)
+
+    """
 
     def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=55, iswibd=56, iswiobs=0, fsssopt=False, adaptive=False,
                  nsolver=1, iprsol=0, mutsol=3, \
                  solver2params={'mxiter': 100, 'iter1': 20, 'npcond': 1, 'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
                                 'nbpol': 2, 'damp': 1.0, 'dampt': 1.0},
                  toeslope=0.05, tipslope=0.05, alpha=None, beta=0.1, nadptmx=1, nadptmn=1, adptfct=1.0,
-                 nu=0.025, zeta=[], ssz=[], isource=0,
+                 nu=0.025, zeta=0.0, ssz=0.25, isource=0,
                  obsnam=[], obslrc=[],
                  extension=['swi2', 'zta', 'swb'], unit_number=29,
                  npln=None):
+        """
+        Package constructor.
+
+        """
         name = ['SWI2', 'DATA(BINARY)', 'DATA(BINARY)']
         units = [unit_number, iswizt, iswibd]
         extra = ['', 'REPLACE', 'REPLACE']
