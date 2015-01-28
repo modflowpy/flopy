@@ -21,7 +21,7 @@ class ModflowChd(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-       stress_period_data : list of boundaries or
+    stress_period_data : list of boundaries or
                          recarray of boundaries or
                          dictionary of boundaries
     Each chd cell is defined through definition of

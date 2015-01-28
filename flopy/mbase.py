@@ -197,6 +197,7 @@ class BaseModel(object):
         return ([success,buff])
         
     def write_input(self, SelPackList=False):
+        print 'writing model files...{}'.format(self.name)
         if self.verbose:
             print self # Same as calling self.__repr__()
             print 'Writing packages:'

@@ -49,9 +49,9 @@ class ModflowPcg(Package):
             ihcofadd<>0, cell converts to dry only if HCOF has no head-dependent stresses or
                 storage terms
     extension : list string
-        Filename extension (default is ['swi2', 'zta', 'swb'])
+        Filename extension (default is 'pcg')
     unitnumber : int
-        File unit number (default is 29).
+        File unit number (default is 27).
 
     Attributes
     ----------
@@ -70,7 +70,7 @@ class ModflowPcg(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> pcg = flopy.modflow.ModflowPcg(m,)
+    >>> pcg = flopy.modflow.ModflowPcg(m)
 
     """
     def __init__(self, model, mxiter=50, iter1=30, npcond=1,
@@ -106,42 +106,42 @@ class ModflowPcg(Package):
         Write the package input file.
 
         """
-        f_pcg = open(self.fn_path, 'w')
-        f_pcg.write('%s\n' % self.heading)
+        f = open(self.fn_path, 'w')
+        f.write('%s\n' % self.heading)
         ifrfm = self.parent.get_ifrefm()
         if ifrfm:
-            f_pcg.write('{0} '.format(self.mxiter))
-            f_pcg.write('{0} '.format(self.iter1))
-            f_pcg.write('{0} '.format(self.npcond))
-            f_pcg.write('{0} '.format(self.ihcofadd))
-            f_pcg.write('\n')
-            f_pcg.write('{0} '.format(self.hclose))
-            f_pcg.write('{0} '.format(self.rclose))
-            f_pcg.write('{0} '.format(self.relax))
-            f_pcg.write('{0} '.format(self.nbpol))
-            f_pcg.write('{0} '.format(self.iprpcg))
-            f_pcg.write('{0} '.format(self.mutpcg))
-            f_pcg.write('{0} '.format(self.damp))
+            f.write('{0} '.format(self.mxiter))
+            f.write('{0} '.format(self.iter1))
+            f.write('{0} '.format(self.npcond))
+            f.write('{0} '.format(self.ihcofadd))
+            f.write('\n')
+            f.write('{0} '.format(self.hclose))
+            f.write('{0} '.format(self.rclose))
+            f.write('{0} '.format(self.relax))
+            f.write('{0} '.format(self.nbpol))
+            f.write('{0} '.format(self.iprpcg))
+            f.write('{0} '.format(self.mutpcg))
+            f.write('{0} '.format(self.damp))
             if self.damp < 0:
-                f_pcg.write('{0} '.format(self.dampt))
-            f_pcg.write('\n')
+                f.write('{0} '.format(self.dampt))
+            f.write('\n')
         else:
-            f_pcg.write('{0:10d}'.format(self.mxiter))
-            f_pcg.write('{0:10d}'.format(self.iter1))
-            f_pcg.write('{0:10d}'.format(self.npcond))
-            f_pcg.write('{0:10d}'.format(self.ihcofadd))
-            f_pcg.write('\n')
-            f_pcg.write('{0:9.4e} '.format(self.hclose))
-            f_pcg.write('{0:9.4e} '.format(self.rclose))
-            f_pcg.write('{0:9.4e} '.format(self.relax))
-            f_pcg.write('{0:10d}'.format(self.nbpol))
-            f_pcg.write('{0:10d}'.format(self.iprpcg))
-            f_pcg.write('{0:10d}'.format(self.mutpcg))
-            f_pcg.write('{0:9.4e} '.format(self.damp))
+            f.write('{0:10d}'.format(self.mxiter))
+            f.write('{0:10d}'.format(self.iter1))
+            f.write('{0:10d}'.format(self.npcond))
+            f.write('{0:10d}'.format(self.ihcofadd))
+            f.write('\n')
+            f.write('{0:9.4e} '.format(self.hclose))
+            f.write('{0:9.4e} '.format(self.rclose))
+            f.write('{0:9.4e} '.format(self.relax))
+            f.write('{0:10d}'.format(self.nbpol))
+            f.write('{0:10d}'.format(self.iprpcg))
+            f.write('{0:10d}'.format(self.mutpcg))
+            f.write('{0:9.4e} '.format(self.damp))
             if self.damp < 0:
-                f_pcg.write('{0:9.4e} '.format(self.dampt))
-            f_pcg.write('\n')
-        f_pcg.close()
+                f.write('{0:9.4e} '.format(self.dampt))
+            f.write('\n')
+        f.close()
 
 
     @staticmethod
@@ -172,7 +172,7 @@ class ModflowPcg(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> lpf = flopy.modflow.ModflowPcg.load('test.pcg', m)
+        >>> pcg = flopy.modflow.ModflowPcg.load('test.pcg', m)
 
         """
 
