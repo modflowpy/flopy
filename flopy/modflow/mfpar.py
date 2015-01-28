@@ -136,6 +136,13 @@ class ModflowPar(object):
         for key, tdict in parm_dict.iteritems():
             partyp, parval = tdict['partyp'], tdict['parval']
             nclu, clusters = tdict['nclu'], tdict['clusters']
+            if model.mfpar.pval is None:
+                pv = np.float(parval)
+            else:
+                try:
+                    pv = np.float(model.mfpar.pval.pval_dict[key.lower()])
+                except:
+                    pv = np.float(parval)
             #print partyp, parval, nclu, clusters
             if partyp == findkey:
                 for [layer, mltarr, zonarr, izones] in clusters:
@@ -153,7 +160,7 @@ class ModflowPar(object):
                         else:
                             mult = model.mfpar.mult.mult_dict[mltarr.lower()][:, :]
                         if zonarr.lower() == 'all':
-                            cluster_data = parval * mult
+                            cluster_data = pv * mult
                         else:
                             mult_save = np.copy(mult)
                             za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
@@ -163,7 +170,7 @@ class ModflowPar(object):
                                 filtarr = za == iz
                                 mult[filtarr] += np.copy(mult_save[filtarr])
                             #--calculate parameter value for this cluster
-                            cluster_data = parval * mult
+                            cluster_data = pv * mult
                         #--add data
                         data += cluster_data
 
