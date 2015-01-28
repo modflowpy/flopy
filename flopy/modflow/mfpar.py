@@ -119,7 +119,6 @@ class ModflowPar(object):
                             iz = int(np.int(iv))
                             if iz > 0:
                                 iarr.append(iz)
-                                break
                         except:
                             break
 
