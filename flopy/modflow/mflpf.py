@@ -202,7 +202,7 @@ class ModflowLpf(Package):
         # Item 0: text
         f_lpf.write('%s\n' % self.heading)
         # Item 1: IBCFCB, HDRY, NPLPF        
-        f_lpf.write('{0:10d}{1:10.3G}{2:10d},{3:s}\n'.format(self.ilpfcb,
+        f_lpf.write('{0:10d}{1:10.3G}{2:10d} {3:s}\n'.format(self.ilpfcb,
                                                              self.hdry,
                                                              self.nplpf,
                                                              self.options))
@@ -340,6 +340,7 @@ class ModflowLpf(Package):
             wetfct, iwetit, ihdwet = float(t[0]), int(t[1]), int(t[2])
 
         #--parameters data
+        par_types = []
         if nplpf > 0:
             par_types, parm_dict = mfpar.load(f, nplpf)
             #print parm_dict
