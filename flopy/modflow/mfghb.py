@@ -186,4 +186,6 @@ class ModflowGhb(Package):
         >>> ghb = flopy.modflow.ModflowGhb.load('test.ghb', m)
 
         """
-        return Package.load(model,ModflowGhb,f,nper)
+
+        print 'loading ghb package file...'
+        return Package.load(model, ModflowGhb, f, nper)

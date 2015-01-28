@@ -402,6 +402,8 @@ class ModflowDis(Package):
         >>> dis = flopy.modflow.mfbas.load('test.dis', m)
 
         """
+
+        print 'loading dis package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -420,7 +422,7 @@ class ModflowDis(Package):
         itmuni = int(itmuni)
         lenuni = int(lenuni)
         #dataset 2 -- laycbd
-        print 'Loading DIS file with {0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol, nper)
+        print '   DIS file has:\n      {0} layers, {1} rows, {2} columns, and {3} stress period(s)'.format(nlay, nrow, ncol, nper)
         print '   loading laycbd...'
         laycbd = np.empty( (nlay), dtype=np.int)
         d = 0
