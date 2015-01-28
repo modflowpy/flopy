@@ -148,7 +148,9 @@ class ModflowSwi2(Package):
 
     Notes
     -----
-    Parameters are not supported in FloPy.
+    Parameters are supported in Flopy only when reading in existing models.
+    Parameter values are converted to native values in Flopy and the
+    connection to "parameters" is thus nonexistent.
 
     Examples
     --------
