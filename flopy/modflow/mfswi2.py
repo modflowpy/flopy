@@ -1,3 +1,12 @@
+"""
+mfswi2 module.  Contains the ModflowSwi2 class. Note that the user can access
+the ModflowSwi2 class as `flopy.modflow.ModflowSwi2`.
+
+Additional information for this MODFLOW package can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swi2_seawater_intrusion_pack.htm>`_.
+
+"""
 import copy
 import numpy as np
 # from numpy import ones, zeros, empty
@@ -67,6 +76,10 @@ class ModflowSwi2(Package):
         return 'Salt Water Intrusion (SWI2) package class'
 
     def write_file(self):
+        """
+        Write the package input file.
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_swi = open(self.fn_path, 'w')
@@ -163,6 +176,8 @@ class ModflowSwi2(Package):
         >>> lpf = flopy.modflow.ModflowSwi2.load('test.swi2', m)
 
         """
+
+        print 'loading swi2 package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
