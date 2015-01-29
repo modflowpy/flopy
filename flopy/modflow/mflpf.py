@@ -271,6 +271,8 @@ class ModflowLpf(Package):
         >>> lpf = flopy.modflow.mflpf.load('test.lpf', m)
 
         """
+
+        print 'loading lpf package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

@@ -51,7 +51,9 @@ class ModflowRch(Package):
 
     Notes
     -----
-    Parameters are not supported in FloPy.
+    Parameters are supported in Flopy only when reading in existing models.
+    Parameter values are converted to native values in Flopy and the
+    connection to "parameters" is thus nonexistent.
 
     Examples
     --------
@@ -178,10 +180,9 @@ class ModflowRch(Package):
             pass
 
         #--dataset 3 and 4 - parameters data
+        pak_parms = None
         if npar > 0:
             pak_parms = mfparbc.loadarray(f, npar)
-
-
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -214,7 +215,7 @@ class ModflowRch(Package):
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'rech', parm_dict, pak_parms)
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), parm_dict, pak_parms)
 
                 current_rech = t
             rech[iper] = current_rech

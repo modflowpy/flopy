@@ -371,7 +371,7 @@ class ModflowDis(Package):
         f_dis.close()
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, verbose=True):
         """
         Load an existing package.
 
@@ -402,16 +402,17 @@ class ModflowDis(Package):
         >>> dis = flopy.modflow.mfbas.load('test.dis', m)
 
         """
+
+        print 'loading dis package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
-        #dataset 1
-        #t = line.strip().split()
+        # dataset 1
         nlay, nrow, ncol, nper, itmuni, lenuni = line.strip().split()[0:6]
         nlay = int(nlay)
         nrow = int(nrow)
@@ -419,14 +420,14 @@ class ModflowDis(Package):
         nper = int(nper)
         itmuni = int(itmuni)
         lenuni = int(lenuni)
-        #dataset 2 -- laycbd
-        print 'Loading DIS file with {0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol, nper)
-        print '   loading laycbd...'
+        # dataset 2 -- laycbd
+        if verbose:
+            print 'Loading DIS file with {0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol, nper)
+            print '   loading laycbd...'
         laycbd = np.empty( (nlay), dtype=np.int)
         d = 0
         while True:
             line = f.readline()
-            #print line
             raw = line.strip('\n').split()
             for val in raw:
                 laycbd[d] = np.int(val)
@@ -436,26 +437,31 @@ class ModflowDis(Package):
             if d == nlay:
                 break
         #dataset 3 -- delr
-        print '   loading delr...'
+        if verbose:
+            print '   loading delr...'
         delr = util_2d.load(f, model, (1, ncol), np.float32, 'delr',
                             ext_unit_dict)
         delr = delr.array.reshape( (ncol) )
         #dataset 4 -- delc
-        print '   loading delc...'
+        if verbose:
+            print '   loading delc...'
         delc = util_2d.load(f, model, (1, nrow), np.float32, 'delc',
                             ext_unit_dict)
         delc = delc.array.reshape( (nrow) )
         #dataset 5 -- top
-        print '   loading top...'
+        if verbose:
+            print '   loading top...'
         top = util_2d.load(f, model, (nrow,ncol), np.float32, 'top',
                            ext_unit_dict)
         #dataset 6 -- botm
-        print '   loading botm...'
+        if verbose:
+            print '   loading botm...'
         ncbd=laycbd.sum()
         botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
                             'botm', ext_unit_dict)
         #dataset 7 -- stress period info
-        print '   loading stress period data...'
+        if verbose:
+            print '   loading stress period data...'
         perlen = []
         nstp = []
         tsmult = []
@@ -474,7 +480,10 @@ class ModflowDis(Package):
             nstp.append(a2)
             tsmult.append(a3)
             steady.append(a4)
+
+        #--create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd, 
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
                          lenuni)
+        #--return dis object instance
         return dis

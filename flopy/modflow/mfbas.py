@@ -97,7 +97,7 @@ class ModflowBas(Package):
 
     def getibound(self):
         """
-        Return the ibound array.
+        Get ibound array.
 
         Returns
         -------
@@ -184,6 +184,8 @@ class ModflowBas(Package):
                                           ncol=10)
 
         """
+
+        print 'loading bas6 package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

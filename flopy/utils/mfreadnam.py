@@ -79,7 +79,7 @@ def testint(cval):
         return False
     
 # function to parse the name file
-def parsenamefile(namfilename, packages):
+def parsenamefile(namfilename, packages, verbose=True):
     """
     Function to parse the nam file and return a dictionary with types,
     names, units and handles
@@ -91,6 +91,8 @@ def parsenamefile(namfilename, packages):
     packages : dictionary
         Dictionary of package objects as defined in the `mfnam_packages`
         attribute of :class:`flopy.modflow.mf.Modflow`.
+    verbose : logical
+        Print messages to screen.  Default is True.
 
     Returns
     ----------
@@ -105,9 +107,11 @@ def parsenamefile(namfilename, packages):
     
     # initiate the ext_unit_dict dictionary
     ext_unit_dict = dict()
-    
-    print 'Parsing the namefile --> {0:s}'.format(namfilename)
-    print 'Setting filehandles:'
+
+    if verbose:
+        print 'Parsing the namefile --> {0:s}'.format(namfilename)
+        print 'Setting filehandles:'
+
     indata = open(namfilename, 'r').readlines()
     for line in indata:
         tmp = line.strip().split()
@@ -125,9 +129,11 @@ def parsenamefile(namfilename, packages):
                 try:
                     filehandle = open(fname, openmode)
                 except:
-                    print 'could not set filehandle for {0:s}'.format(tmp[2])
+                    if verbose:
+                        print 'could not set filehandle for {0:s}'.format(tmp[2])
                     filehandle = None
                 # populate the dictionary
-                ext_unit_dict[int(tmp[1])] = NamData(tmp[0], fname, filehandle, packages)
+                ext_unit_dict[int(tmp[1])] = NamData(tmp[0], fname, filehandle,
+                                                     packages)
     return ext_unit_dict
 

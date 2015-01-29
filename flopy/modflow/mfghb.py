@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 import numpy as np
-from numpy import atleast_2d
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
 
@@ -186,4 +185,6 @@ class ModflowGhb(Package):
         >>> ghb = flopy.modflow.ModflowGhb.load('test.ghb', m)
 
         """
-        return Package.load(model,ModflowGhb,f,nper)
+
+        print 'loading ghb package file...'
+        return Package.load(model, ModflowGhb, f, nper)
