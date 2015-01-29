@@ -353,7 +353,8 @@ class ModflowOc(Package):
 
         """
 
-        print "   loading output control..."
+        if model.verbose:
+            print 'loading oc package file...'
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -468,6 +469,7 @@ class ModflowOc(Package):
         if iddnun > 0:
             unitnumber[2] = iddnun
 
+        #--create instance of oc class
         oc = ModflowOc(model, ihedfm=ihedfm, iddnfm=iddnfm,
                  extension=['oc','hds','ddn','cbc'],
                  unitnumber=[14, 51, 52, 53], words=words, compact=compact,

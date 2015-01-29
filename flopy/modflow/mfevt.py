@@ -174,7 +174,7 @@ class ModflowEvt(Package):
             npar = int(raw[1])
             if npar > 0:
                 if model.verbose:
-                    print 'Parameters detected. Number of parameters = ', npar
+                    print '  Parameters detected. Number of parameters = ', npar
             line = f.readline()
         #dataset 2
         t = line.strip().split()

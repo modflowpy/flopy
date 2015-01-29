@@ -278,23 +278,28 @@ class ModflowUzf1(Package):
         >>> uzf = flopy.modflow.ModflowUZF1.load('test.uzf', m)
 
         """
+        if model.verbose:
+            print 'loading uzf package file...'
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
+
         #dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
-        #dataset 1
+        #--dataset 1
 
-        #add functionality
-        print 'ModflowUzf1.load() method not fully implemented'
-        print 'empty uzf object is created'
+        #--todo: everything
+        print '   Warning: load method not completed. default uzf object created.'
 
-        #close the file
+        #--close the file
         f.close()
 
-        #create uzf object and return
+        #--create uzf object
         uzf = ModflowUzf1(model)
+
+        #--return default uzf object
         return uzf

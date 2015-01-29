@@ -190,13 +190,14 @@ class ModflowPks(Package):
 
         """
 
-        print 'loading pks package file...'
+        if model.verbose:
+            print 'loading pks package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header
 
-        print '  ...load method not completed. default pks file created.'
+        print '   Warning: load method not completed. default pks object created.'
 
         #--close the open file
         f.close()

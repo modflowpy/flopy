@@ -12,8 +12,8 @@ if flopypath not in sys.path:
 import flopy
 import flopy.utils as fputl
 
-#mname = 'twrip.nam'
-mname = 'Oahu_01.nam'
+mname = 'twrip.nam'
+#mname = 'Oahu_01.nam'
 
 model_ws = os.path.join('..', 'data', 'parameters')
 omodel_ws = os.path.join('..', 'basic', 'data')
@@ -30,6 +30,7 @@ ml.change_model_ws(new_pth=omodel_ws)
 
 # -- add pcg package
 if mname == 'twrip.nam':
+    ml.remove_package('SIP')
     pcg = flopy.modflow.ModflowPcg(ml)
 
 # -- save the model

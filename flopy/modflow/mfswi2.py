@@ -325,7 +325,8 @@ class ModflowSwi2(Package):
 
         """
 
-        print 'loading swi2 package file...'
+        if model.verbose:
+            print 'loading swi2 package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -412,7 +413,8 @@ class ModflowSwi2(Package):
             adptfct = float(t[3])
 
         #--read dataset 4
-        print '   loading nu...'
+        if model.verbose:
+            print '   loading nu...'
         if istrat == 1:
             nnu = nsrf + 1
         else:
@@ -428,7 +430,8 @@ class ModflowSwi2(Package):
         nu = nu.array.reshape((nnu))
 
         #--read dataset 5
-        print '   loading initial zeta surfaces...'
+        if model.verbose:
+            print '   loading initial zeta surfaces...'
         while True:
             ipos = f.tell()
             line = f.readline()
@@ -443,7 +446,8 @@ class ModflowSwi2(Package):
             zeta.append(copy.deepcopy(z))
 
         #--read dataset 6
-        print '   loading initial ssz...'
+        if model.verbose:
+            print '   loading initial ssz...'
         while True:
             ipos = f.tell()
             line = f.readline()
@@ -454,7 +458,8 @@ class ModflowSwi2(Package):
                            'ssz', ext_unit_dict)
 
         #--read dataset 7
-        print '   loading initial isource...'
+        if model.verbose:
+            print '   loading initial isource...'
         while True:
             ipos = f.tell()
             line = f.readline()
@@ -468,7 +473,8 @@ class ModflowSwi2(Package):
         obsname = []
         obslrc = []
         if nobs > 0:
-            print '   loading observation locations...'
+            if model.verbose:
+                print '   loading observation locations...'
             while True:
                 line = f.readline()
                 if line[0] != '#':
@@ -491,5 +497,6 @@ class ModflowSwi2(Package):
                            nadptmx=nadptmx, nadptmn=nadptmn, adptfct=adptfct,
                            nu=nu, zeta=zeta, ssz=ssz, isource=isource,
                            obsnam=obsname, obslrc=obslrc)
+
         #--return swi2 instance
         return swi2

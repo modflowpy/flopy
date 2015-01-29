@@ -185,7 +185,8 @@ class ModflowPcg(Package):
 
         """
 
-        print 'loading pcg package file...'
+        if model.verbose:
+            print 'loading pcg package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -242,6 +243,7 @@ class ModflowPcg(Package):
         #--close the open file
         f.close()
 
+        #--create instance of pcg class
         pcg = ModflowPcg(model, mxiter=mxiter, iter1=iter1, npcond=npcond, ihcofadd=ihcofadd,\
                          hclose=hclose, rclose=rclose, relax=relax, nbpol=nbpol,\
                          iprpcg=iprpcg, mutpcg=mutpcg, damp=damp, dampt=dampt)

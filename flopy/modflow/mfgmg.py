@@ -25,8 +25,10 @@ class ModflowGmg(Package):
         self.ioutgmg = ioutgmg
         self.iunitmhc = 0
         self.parent.add_package(self)
+
     def __repr__( self ):
         return 'Geometric multigrid solver package class'
+
     def write_file(self):
         # Open file for writing
         f_gmg = open(self.fn_path, 'w')
@@ -44,3 +46,50 @@ class ModflowGmg(Package):
         f_gmg.write('{0:10.3e}\n'.format(self.relax))
         f_gmg.close()
 
+
+    @staticmethod
+    def load(f, model, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        gmg : ModflowGmg object
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> gmg = flopy.modflow.ModflowGmg.load('test.gmg', m)
+
+        """
+
+        if model.verbose:
+            print 'loading gmg package file...'
+        if type(f) is not file:
+            filename = f
+            f = open(filename, 'r')
+        #dataset 0 -- header
+
+        print '   Warning: load method not completed. default gmg object created.'
+
+        #--close the open file
+        f.close()
+
+        gmg = ModflowGmg(model)
+        return gmg

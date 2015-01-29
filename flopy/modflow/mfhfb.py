@@ -216,7 +216,8 @@ class ModflowHfb(Package):
 
         """
 
-        print 'loading hfb6 package file...'
+        if model.verbose:
+            print 'loading hfb6 package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

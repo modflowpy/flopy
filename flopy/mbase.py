@@ -62,15 +62,18 @@ class BaseModel(object):
                 print 'replacing existing Package...'                
                 pp = p
                 return        
-        self.packagelist.append( p )       
+        if self.verbose:
+            print 'adding Package: ', p.name
+        self.packagelist.append( p )
     
     def remove_package(self, pname):
         """
         Remove a package from this model.
         """
         for i,pp in enumerate(self.packagelist):  
-            if pname in pp.name:               
-                print 'removing Package: ',pp.name
+            if pname in pp.name:
+                if self.verbose:
+                    print 'removing Package: ', pp.name
                 self.packagelist.pop(i)
                 return
         raise StopIteration , 'Package name '+pname+' not found in Package list'
@@ -200,22 +203,22 @@ class BaseModel(object):
     def write_input(self, SelPackList=False):
         print 'writing model files...{}'.format(self.name)
         if self.verbose:
-            print self # Same as calling self.__repr__()
-            print 'Writing packages:'
+            print '\nWriting packages:'
         if SelPackList == False:
             for p in self.packagelist:            
-                p.write_file()
                 if self.verbose:
-                    print p.__repr__()        
+                    print '   Package: ', p.name[0]
+                p.write_file()
         else:
             for pon in SelPackList:
                 for i,p in enumerate(self.packagelist):  
-                    if pon in p.name:               
-                        print 'writing Package: ',p.name
-                        p.write_file()
+                    if pon in p.name:
                         if self.verbose:
-                            print p.__repr__()        
+                            print '   Package: ', p.name[0]
+                        p.write_file()
                         break
+        if self.verbose:
+            print ' '
         #--write name file
         self.write_name_file()
     
@@ -326,9 +329,9 @@ class Package(object):
         if self.parent.version == 'mf2k':
             wb.open('http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
         elif self.parent.version == 'mf2005':
-            wb.open('http://water.usgs.gov/nrp/gwsoftware/modflow2005/Guide/' + self.url)
+            wb.open('http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + self.url)
         elif self.parent.version == 'ModflowNwt':
-            wb.open('http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Guide/' + self.url)
+            wb.open('http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + self.url)
 
     def write_file(self):
         """
@@ -364,7 +367,8 @@ class Package(object):
             mxl = 0
             if nppak > 0:
                 mxl = np.int(t[2])
-                print 'Parameters detected. Number of parameters = ', nppak
+                if model.verbose:
+                    print '   Parameters detected. Number of parameters = ', nppak
             line = f.readline()
         #dataset 2a
         t = line.strip().split()
@@ -380,7 +384,6 @@ class Package(object):
             it = 2
             while it < len(t):
                 toption = t[it]
-                print it,t[it]
                 if toption.lower() is 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
@@ -427,7 +430,8 @@ class Package(object):
         bnd_output = None
         stress_period_data = {}
         for iper in xrange(nper):
-            print "   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1)
+            if model.verbose:
+                print "   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1)
             line = f.readline()
             if line == '':
                 break
