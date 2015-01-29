@@ -213,7 +213,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
-             model_ws=None):
+             model_ws=None, namefile_path='.'):
         """
         Load an existing model.
 
@@ -236,18 +236,23 @@ class Modflow(BaseModel):
 
         """
         modelname = os.path.basename(f).split('.')[0]
-        if model_ws is None:
-            model_ws = os.path.dirname(f)
+
+        #if model_ws is None:
+        #    model_ws = os.path.dirname(f)
         print 'Creating new model with name: ', modelname
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
+        # hack alert - undocumented attribute
+        ml.namefile_path = namefile_path
+
         files_succesfully_loaded = []
         files_not_loaded = []
 
         # read name file
         try:
-            namefile_path = os.path.join(ml.model_ws, ml.namefile)
-            ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
+            #namefile_path = os.path.join(ml.model_ws, ml.namefile)
+            namefile = os.path.join(namefile_path, f)
+            ext_unit_dict = mfreadnam.parsenamefile(namefile,
                                                     ml.mfnam_packages,
                                                     verbose=verbose)
         except Exception as e:
@@ -282,6 +287,7 @@ class Modflow(BaseModel):
                     files_succesfully_loaded.append(item.filename)
                 except BaseException as o:
                     print "[WARNING] - Exception loading {!s} file: {!s}".format(item.filetype, o)
+                    files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 if ml.verbose:
                     print "skipping package", item.filetype, item.filename
@@ -298,13 +304,13 @@ class Modflow(BaseModel):
         print s
         for fname in files_succesfully_loaded:
             print '   ' + os.path.basename(fname)
-
-        s = 'The following {0} packages were not loaded.'.format(
-            len(files_not_loaded))
-        print s
-        for fname in files_not_loaded:
-            print '   ' + os.path.basename(fname)
-        print '\n'
+        if len(files_not_loaded) > 0:
+            s = 'WARNING: The following {0} packages were not loaded.'.format(
+                len(files_not_loaded))
+            print s
+            for fname in files_not_loaded:
+                print '   ' + os.path.basename(fname)
+            print '\n'
 
         #--return model object
         return ml

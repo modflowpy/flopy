@@ -914,9 +914,7 @@ class util_2d(object):
             else:
                 #--need to check if ext_filename exists, if not, need to 
                 #-- write constant as array to file or array to file               
-                cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f}  ' +\
-                     '#{4:<30s}\n'\
-                     .format(self.ext_filename, self.cnstnt,
+                cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(self.ext_filename, self.cnstnt,
                      self.fmtin.strip(), self.iprn, self.name)
         else:                       
             #--if value is a scalar and we don't want external array
@@ -1067,9 +1065,14 @@ class util_2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
-            u2d = util_2d(model, shape, dtype, fname, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-                          ext_filename=fname)
+            # u2d = util_2d(model, shape, dtype, fname, name=name,
+            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+            #               ext_filename=fname)
+            f_oc = open(os.path.join(model.namefile_path, fname))
+            data = util_2d.load_txt(shape, f_oc, dtype, cr_dict['fmtin'])
+            f_oc.close()
+            u2d = util_2d(model, shape, dtype, data, name=name,
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = util_2d(model, shape, dtype, data, name=name,
