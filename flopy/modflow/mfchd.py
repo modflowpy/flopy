@@ -182,5 +182,6 @@ class ModflowChd(Package):
 
         """
 
-        print 'loading chd package file...'
+        if model.verbose:
+            print 'loading chd package file...'
         return Package.load(model, ModflowChd, f, nper)

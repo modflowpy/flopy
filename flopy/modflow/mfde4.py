@@ -199,7 +199,8 @@ class ModflowDe4(Package):
 
         """
 
-        print 'loading de4 package file...'
+        if model.verbose:
+            print 'loading de4 package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

@@ -170,7 +170,8 @@ class ModflowBcf(Package):
 
         """
 
-        print 'loading bcf package file...'
+        if model.verbose:
+            print 'loading bcf package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -182,13 +183,15 @@ class ModflowBcf(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
-        print '   loading IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...'
+        if model.verbose:
+            print '   loading IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...'
         t = line.strip().split()
         ibcfcb,hdry,iwdflg,wetfct,iwetit,ihdwet = int(t[0]),float(t[1]),int(t[2]),float(t[3]),int(t[4]),int(t[5])
         if ibcfcb != 0:
             ibcfcb = 53
         # LAYCON array
-        print '   loading LAYCON...'
+        if model.verbose:
+            print '   loading LAYCON...'
         line = f.readline()
         t = line.strip().split()
         intercellt = np.zeros(nlay, dtype=np.int)
@@ -201,7 +204,8 @@ class ModflowBcf(Package):
             else:
                 laycon[k] = ival
         # TRPY array
-        print '   loading TRPY...'
+        if model.verbose:
+            print '   loading TRPY...'
         trpy = util_2d.load(f, model, (1, nlay), np.float32, 'trpy', ext_unit_dict)
         trpy = trpy.array.reshape( (nlay) )
         # property data for each layer based on options
@@ -217,27 +221,33 @@ class ModflowBcf(Package):
         wetdry = np.empty((nlay,nrow,ncol), dtype=np.float)
         for k in xrange(nlay):
             if transient == True:
-                print '   loading sf1 layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading sf1 layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sf1', ext_unit_dict)
                 sf1[k,:,:] = t.array
             if ((laycon[k] == 0) or (laycon[k] == 2)):
-                print '   loading tran layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading tran layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'tran', ext_unit_dict)
                 tran[k,:,:] = t.array
             else:
-                print '   loading hy layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading hy layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hy', ext_unit_dict)
                 hy[k,:,:] = t.array
             if k < (nlay - 1):
-                print '   loading vcont layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading vcont layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vcont', ext_unit_dict)
                 vcont[k,:,:] = t.array
             if ((transient == True) and ((laycon[k] == 2) or (laycon[k] == 3))):
-                print '   loading sf2 layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading sf2 layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sf2', ext_unit_dict)
                 sf2[k,:,:] = t.array
             if ((iwdflg <> 0) and ((laycon[k] == 1) or (laycon[k] == 3))):
-                print '   loading sf2 layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading sf2 layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'wetdry', ext_unit_dict)
                 wetdry[k,:,:] = t.array
 

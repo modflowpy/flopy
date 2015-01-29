@@ -185,7 +185,8 @@ class ModflowBas(Package):
 
         """
 
-        print 'loading bas6 package file...'
+        if model.verbose:
+            print 'loading bas6 package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

@@ -209,6 +209,7 @@ class ModflowWel(Package):
 
         """
 
-        print 'loading wel package file...'
+        if model.verbose:
+            print 'loading wel package file...'
         return Package.load(model, ModflowWel, f, nper)
 

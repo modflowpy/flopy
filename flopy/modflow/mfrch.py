@@ -154,6 +154,8 @@ class ModflowRch(Package):
         >>> rch = flopy.modflow.mfrch.load('test.rch', m)
 
         """
+        if model.verbose:
+            print 'loading rch package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -167,15 +169,16 @@ class ModflowRch(Package):
             raw = line.strip().split()
             npar = np.int(raw[1])
             if npar > 0:
-                print 'Parameters detected. Number of parameters = ', npar
+                if model.verbose:
+                    print 'Parameters detected. Number of parameters = ', npar
             line = f.readline()
         #dataset 2
         t = line.strip().split()
         nrchop = int(t[0])
-        irchcb = 0
+        ipakcb = 0
         try:
             if int(t[1]) != 0:
-                irchcb = 53
+                ipakcb = 53
         except:
             pass
 
@@ -201,8 +204,9 @@ class ModflowRch(Package):
                 inirch = int(t[1])
             if inrech >= 0:
                 if npar == 0:
-                    print \
-                        '   loading rech stress period {0:3d}...'.format(iper+1)
+                    if model.verbose:
+                        print \
+                            '   loading rech stress period {0:3d}...'.format(iper+1)
                     t = util_2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
                 else:
                     parm_dict = {}
@@ -221,13 +225,14 @@ class ModflowRch(Package):
             rech[iper] = current_rech
             if nrchop == 2:
                 if inirch >= 0:
-                    print '   loading irch stress period {0:3d}...'.format(
-                        iper+1)
+                    if model.verbose:
+                        print '   loading irch stress period {0:3d}...'.format(
+                            iper+1)
                     t = util_2d.load(f, model, (nrow,ncol), np.int, 'irch',
                                      ext_unit_dict)
                     current_irch = t
                 irch[iper] = current_irch
-        rch = ModflowRch(model, nrchop=nrchop, irchcb=irchcb, rech=rech,
+        rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb, rech=rech,
                          irch=irch)
         return rch
 
