@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
+from flopy.utils.util_array import transient_2d, util_2d
 
 class ModflowEvt(Package):
     """
@@ -18,15 +18,15 @@ class ModflowEvt(Package):
     Parameters
     ----------
     model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        The model object (of type :class:`flopy.modflow.mf.ModflowEvt`) to which
         this package will be added.
     ipakcb : int
         is a flag and a unit number. (the default is 0).
     nevtop : int
         is the recharge option code.
-        1: Recharge to top grid layer only
-        2: Recharge to layer defined in irch
-        3: Recharge to highest active cell (default is 3).
+        1: ET is calculated only for cells in the top grid layer
+        2: ET to layer defined in ievt
+        3: ET to highest active cell (default is 3).
     surf : float or filename or ndarray or dict keyed on kper (zero-based)
         is the ET surface elevation. (default is 0.0, which is used for all
         stress periods).
@@ -74,82 +74,54 @@ class ModflowEvt(Package):
         self.url = 'evt.htm'
         self.nevtop = nevtop
         self.ievtcb = ievtcb
-        self.surf = []
-        self.evtr = []
-        self.exdp = []
-        self.ievt = []        
         self.external = external
         if self.external is False:
             load = True
         else:
             load = model.load            
-        if (not isinstance(surf, list)):
-            surf = [surf]
-        for i,a in enumerate(surf):
-            s = util_2d(model,(nrow,ncol),np.float32,a,name='surf_'+str(i+1))
-            self.surf = self.surf + [s]
-        if (not isinstance(evtr, list)):
-            evtr = [evtr]
-        for i,a in enumerate(evtr):
-            e = util_2d(model,(nrow,ncol),np.float32,a,name='etvr_'+str(i+1))
-            self.evtr = self.evtr + [e]
-        if (not isinstance(exdp, list)):
-            exdp = [exdp]
-        for i,a in enumerate(exdp):
-            e = util_2d(model,(nrow,ncol),np.float32,a,name='exdp_'+str(i+1))
-            self.exdp = self.exdp + [e]
-        if (not isinstance(ievt, list)):
-            ievt = [ievt]
-        for i,a in enumerate(ievt):
-            iv = util_2d(model,(nrow,ncol),np.int,a,name='ievt_'+str(i+1))
-            self.ievt = self.ievt + [iv]
+
+        self.surf = transient_2d(model, (nrow, ncol), np.float32,
+                                 surf, name='surf')
+        self.evtr = transient_2d(model, (nrow, ncol), np.float32,
+                                 evtr, name='etvr')
+        self.exdp = transient_2d(model, (nrow, ncol), np.float32,
+                                 exdp, name='exdp')
+        self.ievt = transient_2d(model, (nrow, ncol), np.int,
+                                 ievt, name='ievt')
         self.np = 0
         self.parent.add_package(self)
-    def __repr__( self ):
+
+    def __repr__(self):
         return 'Evapotranspiration class'
-    def ncells( self):
+
+    def ncells(self):
         # Returns the  maximum number of cells that have 
         # evapotranspiration (developped for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
+
     def write_file(self):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         f_evt = open(self.fn_path, 'w')        
         f_evt.write('{0:s}\n'.format(self.heading))        
         f_evt.write('{0:10d}{1:10d}\n'.format(self.nevtop,self.ievtcb))
         for n in range(nper):
-            #comment = 'Evapotranspiration array for stress period ' + str(n + 1)
-            if (n < len(self.surf)):
-                insurf = 1
-            else:
-                insurf = -1
-            if (n < len(self.evtr)):
-                inevtr = 1
-            else:
-                inevtr = -1
-            if (n < len(self.exdp)):
-                inexdp = 1
-            else:
-                inexdp = -1
-            if (n < len(self.ievt)):
-                inievt = 1
-            else:
-                inievt = -1
-            comment = 'Evapotranspiration surface array for stress period ' + str(n + 1)
-            f_evt.write('{0:10d}{1:10d}{2:10d}{3:10d} # {4:s}\n'\
-                .format(insurf,inevtr,inexdp,inievt,comment))
-            
-            if (n < len(self.surf)):
-                f_evt.write(self.surf[n].get_file_entry())
-            comment = 'Evapotranspiration rate array for stress period ' + str(n + 1)
-            if (n < len(self.evtr)):
-                f_evt.write(self.evtr[n].get_file_entry())
-            comment = 'Evapotranspiration extinction depth array for stress period ' + str(n + 1)
-            if (n < len(self.exdp)):
-                f_evt.write(self.exdp[n].get_file_entry())
-            comment = 'Evapotranspiration layers for stress period ' + str(n + 1)
-            if ((n < len(self.ievt)) and (self.nevtop == 2)):
-                f_evt.write(self.ievt[n].get_file_entry())
+            insurf,surf = self.surf.get_kper_entry(n)
+            inevtr,evtr = self.evtr.get_kper_entry(n)
+            inexdp,exdp = self.exdp.get_kper_entry(n)
+            inievt,ievt = self.ievt.get_kper_entry(n)
+            comment = 'Evapotranspiration  dataset 5 for stress period ' +\
+                      str(n + 1)
+            f_evt.write('{0:10d}{1:10d}{2:10d}{3:10d} # {4:s}\n'
+                        .format(insurf, inevtr, inexdp, inievt, comment))
+            if (insurf >= 0):
+                f_evt.write(surf)
+            if (inevtr >= 0):
+                f_evt.write(evtr)
+            if (inexdp >= 0):
+                f_evt.write(exdp)
+            if self.nevtop == 2 and inievt >= 0:
+                f_evt.write(ievt)
         f_evt.close()
 
     @staticmethod
@@ -260,14 +232,15 @@ class ModflowEvt(Package):
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'rech', parm_dict, pak_parms)
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'rech',
+                                                 parm_dict, pak_parms)
 
                 current_evtr = t
             evtr[iper] = current_evtr
             if inexdp >= 0:
                 print \
                     '   loading exdp stress period {0:3d}...'.format(iper+1)
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'exdp',
+                t = util_2d.load(f, model, (nrow, ncol), np.float32, 'exdp',
                                  ext_unit_dict)
                 current_exdp = t
             exdp[iper] = current_exdp
@@ -275,7 +248,7 @@ class ModflowEvt(Package):
                 if inievt >= 0:
                     print '   loading ievt stress period {0:3d}...'.format(
                         iper+1)
-                    t = util_2d.load(f, model, (nrow,ncol), np.int32, 'ievt',
+                    t = util_2d.load(f, model, (nrow, ncol), np.int32, 'ievt',
                                      ext_unit_dict)
                     current_ievt = t
                 ievt[iper] = current_ievt
