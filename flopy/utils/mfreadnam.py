@@ -130,7 +130,8 @@ def parsenamefile(namfilename, packages, verbose=True):
                     filehandle = open(fname, openmode)
                 except:
                     if verbose:
-                        print 'could not set filehandle for {0:s}'.format(tmp[2])
+                        print 'could not set filehandle for {0:s}'\
+                            .format(tmp[2])
                     filehandle = None
                 # populate the dictionary
                 ext_unit_dict[int(tmp[1])] = NamData(tmp[0], fname, filehandle,
