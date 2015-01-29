@@ -4,7 +4,7 @@ the ModflowChd class as `flopy.modflow.ModflowChd`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?chd.htm>`_.
+<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/chd.htm>`_.
 
 """
 
@@ -21,7 +21,7 @@ class ModflowChd(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-       stress_period_data : list of boundaries or
+    stress_period_data : list of boundaries or
                          recarray of boundaries or
                          dictionary of boundaries
     Each chd cell is defined through definition of
@@ -182,5 +182,6 @@ class ModflowChd(Package):
 
         """
 
-        print 'loading chd package file...'
+        if model.verbose:
+            print 'loading chd package file...'
         return Package.load(model, ModflowChd, f, nper)

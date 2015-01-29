@@ -371,7 +371,7 @@ class ModflowDis(Package):
         f_dis.close()
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None, verbose=True):
+    def load(f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -403,7 +403,8 @@ class ModflowDis(Package):
 
         """
 
-        print 'loading dis package file...'
+        if model.verbose:
+            print 'loading dis package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -421,8 +422,9 @@ class ModflowDis(Package):
         itmuni = int(itmuni)
         lenuni = int(lenuni)
         # dataset 2 -- laycbd
-        if verbose:
-            print 'Loading DIS file with {0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol, nper)
+        if model.verbose:
+            print '   Loading dis package with:\n      ' + \
+                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol,nper)
             print '   loading laycbd...'
         laycbd = np.empty( (nlay), dtype=np.int)
         d = 0
@@ -437,30 +439,30 @@ class ModflowDis(Package):
             if d == nlay:
                 break
         #dataset 3 -- delr
-        if verbose:
+        if model.verbose:
             print '   loading delr...'
         delr = util_2d.load(f, model, (1, ncol), np.float32, 'delr',
                             ext_unit_dict)
         delr = delr.array.reshape( (ncol) )
         #dataset 4 -- delc
-        if verbose:
+        if model.verbose:
             print '   loading delc...'
         delc = util_2d.load(f, model, (1, nrow), np.float32, 'delc',
                             ext_unit_dict)
         delc = delc.array.reshape( (nrow) )
         #dataset 5 -- top
-        if verbose:
+        if model.verbose:
             print '   loading top...'
         top = util_2d.load(f, model, (nrow,ncol), np.float32, 'top',
                            ext_unit_dict)
         #dataset 6 -- botm
-        if verbose:
+        if model.verbose:
             print '   loading botm...'
         ncbd=laycbd.sum()
         botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
                             'botm', ext_unit_dict)
         #dataset 7 -- stress period info
-        if verbose:
+        if model.verbose:
             print '   loading stress period data...'
         perlen = []
         nstp = []

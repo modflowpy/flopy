@@ -152,4 +152,6 @@ class ModflowDrn(Package):
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
 
+        if model.verbose:
+            print 'loading drn package file...'
         return Package.load(model,ModflowDrn,f,nper)

@@ -121,7 +121,8 @@ class ModflowZon(Package):
 
         """
 
-        print 'loading zone package file...'
+        if model.verbose:
+            print 'loading zone package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -147,7 +148,8 @@ class ModflowZon(Package):
                 zonnam = t[0][0:10].lower()
             else:
                 zonnam = t[0].lower()
-            sys.stdout.write('reading data for "{:<10s}" zone\n'.format(zonnam))
+            if model.verbose:
+                sys.stdout.write('   reading data for "{:<10s}" zone\n'.format(zonnam))
             #--load data
             t = util_2d.load(f, model, (nrow, ncol), np.int, zonnam,
                              ext_unit_dict)

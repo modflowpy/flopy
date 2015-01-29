@@ -22,39 +22,43 @@ class ModflowWel(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    iwelcb : int
+    ipakcb : int
         is a flag and a unit number. (the default is 0).
-    layer_row_column_data : list of records
-        In its most general form, this is a triple list of well records  The
-        innermost list is the layer, row, column, and flux rate for a single
-        well.  Then for a stress period, there can be a list of wells.  Then
-        for a simulation, there can be a separate list for each stress period.
-        This gives the form of
-            lrcq = [
-                     [  #stress period 1
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ],
-                     [  #stress period 2
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ], ...
-                     [  #stress period kper
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ],
-                    ]
-        Note that if there are not records in layer_row_column_data, then the
-        last group of wells will apply until the end of the simulation.
-    layer_row_column_Q : list of records
-        Deprecated - use layer_row_column_data instead.
+    stress_period_data : list of boundaries or
+                         recarray of boundaries or
+                         dictionary of boundaries
+        Each well is defined through definition of
+        layer (int), row (int), column (int), flux (float).
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. This gives the form of
+            stress_period_data =
+            {0: [
+                [lay, row, col, flux],
+                [lay, row, col, flux],
+                [lay, row, col, flux]
+                ],
+            1:  [
+                [lay, row, col, flux],
+                [lay, row, col, flux],
+                [lay, row, col, flux]
+                ], ...
+            kper:
+                [
+                [lay, row, col, flux],
+                [lay, row, col, flux],
+                [lay, row, col, flux]
+                ]
+            }
+
+        Note that if the number of lists is smaller than the number of stress
+        periods, then the last list of wells will apply until the end of the
+        simulation. Full details of all options to specify stress_period_data
+        can be found in the flopy3 boundaries Notebook in the basic
+        subdirectory of the examples directory
     options : list of strings
         Package options. (default is None).
-    naux : int
-        number of auxiliary variables
     extension : string
         Filename extension (default is 'wel')
     unitnumber : int
@@ -82,12 +86,12 @@ class ModflowWel(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcq = [[[2, 3, 4, -100.]]]  #this well will be applied to all stress
+    >>> lrcq = {0:[[2, 3, 4, -100.]], 1:[[2, 3, 4, -100.]]}
     >>>                              #periods
-    >>> wel = flopy.modflow.ModflowWel(m, layer_row_column_data=lrcq)
+    >>> wel = flopy.modflow.ModflowWel(m, stress_period_data=lrcq)
 
     """
-    def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
+    def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
                  extension='wel', unitnumber=20, options=None):
         """
         Package constructor.
@@ -201,10 +205,11 @@ class ModflowWel(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> wel = flopy.modflow.mfwel.load('test.wel', m)
+        >>> wel = flopy.modflow.ModflowWel.load('test.wel', m)
 
         """
 
-        print 'loading wel package file...'
+        if model.verbose:
+            print 'loading wel package file...'
         return Package.load(model, ModflowWel, f, nper)
 

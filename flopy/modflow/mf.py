@@ -137,9 +137,15 @@ class Modflow(BaseModel):
             "drn": flopy.modflow.ModflowDrn,
             "rch": flopy.modflow.ModflowRch,
             "ghb": flopy.modflow.ModflowGhb,
+            "gmg": flopy.modflow.ModflowGmg,
             "riv": flopy.modflow.ModflowRiv,
             "swi2": flopy.modflow.ModflowSwi2,
             "pcg": flopy.modflow.ModflowPcg,
+            "pcgn": flopy.modflow.ModflowPcgn,
+            "nwt": flopy.modflow.ModflowNwt,
+            "pks": flopy.modflow.ModflowPks,
+            "sip": flopy.modflow.ModflowSip,
+            "sor": flopy.modflow.ModflowSor,
             "oc": flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,
             "upw": flopy.modflow.ModflowUpw
@@ -234,8 +240,9 @@ class Modflow(BaseModel):
             model_ws = os.path.dirname(f)
         print 'Creating new model with name: ', modelname
         ml = Modflow(modelname, version=version, exe_name=exe_name,
-                     verbose=False, model_ws=model_ws)
+                     verbose=verbose, model_ws=model_ws)
         files_succesfully_loaded = []
+        files_not_loaded = []
 
         # read name file
         try:
@@ -248,6 +255,9 @@ class Modflow(BaseModel):
             print str(e)
             return None
 
+        if ml.verbose:
+            print '\n{}\nExternal unit dictionary:\n{}\n{}\n'.format(50*'-', ext_unit_dict, 50*'-')
+
         # load dis
         dis = None
         dis_key = None
@@ -255,8 +265,7 @@ class Modflow(BaseModel):
             if item.filetype.lower() == "dis":
                 dis = item
                 dis_key = key
-        pck = dis.package.load(dis.filename, ml, ext_unit_dict=ext_unit_dict,
-                               verbose=verbose)
+        pck = dis.package.load(dis.filename, ml, ext_unit_dict=ext_unit_dict)
         files_succesfully_loaded.append(dis.filename)
         ext_unit_dict.pop(dis_key)
 
@@ -264,9 +273,6 @@ class Modflow(BaseModel):
         ml.mfpar.set_pval(ml, ext_unit_dict)
         ml.mfpar.set_zone(ml, ext_unit_dict)
         ml.mfpar.set_mult(ml, ext_unit_dict)
-
-        if verbose:
-            print '\n{}\nExternal unit dictionary:\n{}\n{}\n'.format(50*'-', ext_unit_dict, 50*'-')
 
         # try loading packages in ext_unit_dict
         for key, item in ext_unit_dict.iteritems():
@@ -277,19 +283,28 @@ class Modflow(BaseModel):
                 except BaseException as o:
                     print "[WARNING] - Exception loading {!s} file: {!s}".format(item.filetype, o)
             elif "data" not in item.filetype.lower():
-                if verbose:
+                if ml.verbose:
                     print "skipping package", item.filetype, item.filename
+                    files_not_loaded.append(item.filename)
             elif "data" in item.filetype.lower():
                 ml.external_fnames.append(item.filename)
                 ml.external_units.append(key)
                 ml.external_binflag.append("binary" in item.filetype.lower())
 
-        # write message indicating packages that were successfully loaded
-        if verbose:
-            print 2 * '\n'
-            s = 'The following {0} files were successfully loaded.'.format(
-                len(files_succesfully_loaded))
-            print s
-            for fname in files_succesfully_loaded:
-                print '   ' + fname
+        #--write message indicating packages that were successfully loaded
+        print 2 * '\n'
+        s = 'The following {0} packages were successfully loaded.'.format(
+            len(files_succesfully_loaded))
+        print s
+        for fname in files_succesfully_loaded:
+            print '   ' + os.path.basename(fname)
+
+        s = 'The following {0} packages were not loaded.'.format(
+            len(files_not_loaded))
+        print s
+        for fname in files_not_loaded:
+            print '   ' + os.path.basename(fname)
+        print '\n'
+
+        #--return model object
         return ml

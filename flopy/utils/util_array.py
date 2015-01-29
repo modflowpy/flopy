@@ -1,3 +1,10 @@
+"""
+util_array module.  Contains the util_2d, util_3d and transient_2d classes.
+ These classes encapsulate modflow-style array inputs away
+ from the individual packages.  The end-user should not need to
+ instantiate these classes directly.
+
+"""
 import os
 import shutil
 import copy

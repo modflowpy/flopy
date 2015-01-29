@@ -106,7 +106,8 @@ class ModflowUpw(Package):
 
         """
 
-        print 'loading upw package file...'
+        if model.verbose:
+            print 'loading upw package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -118,7 +119,8 @@ class ModflowUpw(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
-        print '   loading IUPWCB, HDRY, NPUPW, IPHDRY...'
+        if model.verbose:
+            print '   loading IUPWCB, HDRY, NPUPW, IPHDRY...'
         t = line.strip().split()
         iupwcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
         if iupwcb != 0:
@@ -130,27 +132,32 @@ class ModflowUpw(Package):
                 if 'NOPARCHECK' in t[k].upper():
                     noparcheck = True
         # LAYTYP array
-        print '   loading LAYTYP...'
+        if model.verbose:
+            print '   loading LAYTYP...'
         line = f.readline()
         t = line.strip().split()
         laytyp = np.array((t[0:nlay]),dtype=np.int)
         # LAYAVG array
-        print '   loading LAYAVG...'
+        if model.verbose:
+            print '   loading LAYAVG...'
         line = f.readline()
         t = line.strip().split()
         layavg = np.array((t[0:nlay]),dtype=np.int)
         # CHANI array
-        print '   loading CHANI...'
+        if model.verbose:
+            print '   loading CHANI...'
         line = f.readline()
         t = line.strip().split()
         chani = np.array((t[0:nlay]),dtype=np.float32)
         # LAYVKA array
-        print '   loading LAYVKA...'
+        if model.verbose:
+            print '   loading LAYVKA...'
         line = f.readline()
         t = line.strip().split()
         layvka = np.array((t[0:nlay]),dtype=np.int)
         # LAYWET array
-        print '   loading LAYWET...'
+        if model.verbose:
+            print '   loading LAYWET...'
         line = f.readline()
         t = line.strip().split()
         laywet = np.array((t[0:nlay]),dtype=np.int)
@@ -174,7 +181,8 @@ class ModflowUpw(Package):
         sy = [0] * nlay
         vkcb = [0] * nlay
         for k in range(nlay):
-            print '   loading hk layer {0:3d}...'.format(k+1)
+            if model.verbose:
+                print '   loading hk layer {0:3d}...'.format(k+1)
             if 'hk' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
                                  ext_unit_dict)
@@ -183,7 +191,8 @@ class ModflowUpw(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
             hk[k] = t
             if chani[k] < 1:
-                print '   loading hani layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading hani layer {0:3d}...'.format(k+1)
                 if 'hani' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hani',
                                      ext_unit_dict)
@@ -191,7 +200,8 @@ class ModflowUpw(Package):
                     line = f.readline()
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
-            print '   loading vka layer {0:3d}...'.format(k+1)
+            if model.verbose:
+                print '   loading vka layer {0:3d}...'.format(k+1)
             if 'vka' not in par_types and 'vani' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
                                  ext_unit_dict)
@@ -200,7 +210,8 @@ class ModflowUpw(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
             vka[k] = t
             if transient:
-                print '   loading ss layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading ss layer {0:3d}...'.format(k+1)
                 if 'ss' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
                                      ext_unit_dict)
@@ -209,7 +220,8 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'ss', parm_dict, findlayer=k)
                 ss[k] = t
                 if laytyp[k] != 0:
-                    print '   loading sy layer {0:3d}...'.format(k+1)
+                    if model.verbose:
+                        print '   loading sy layer {0:3d}...'.format(k+1)
                     if 'sy' not in par_types:
                         t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
                                          ext_unit_dict)
@@ -218,7 +230,8 @@ class ModflowUpw(Package):
                         t = mfpar.parameter_fill(model, (nrow, ncol), 'sy', parm_dict, findlayer=k)
                     sy[k] = t
             if model.get_package('DIS').laycbd[k] > 0:
-                print '   loading vkcb layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading vkcb layer {0:3d}...'.format(k+1)
                 if 'vkcb' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vkcb',
                                      ext_unit_dict)
@@ -227,11 +240,13 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
                 vkcb[k] = t
 
-        #create upw object
+        #--create upw object
         upw = ModflowUpw(model, iupwcb=iupwcb, iphdry=iphdry, hdry=hdry,
                          noparcheck=noparcheck,
                          laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet,
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb)
+
+        #--return upw object
         return upw
 

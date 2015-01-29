@@ -7,6 +7,10 @@ class ModflowSwi(Package):
     'Salt Water Intrusion (SWI) package class'
     def __init__(self, model, npln=1, istrat=1, iswizt=53, nprn=1, toeslope=0.05, tipslope=0.05, \
                  zetamin=0.005, delzeta=0.05, nu=0.025, zeta=[], ssz=[], isource=0, extension='swi', fname_output='swi.zta'):
+        """
+        Package constructor.
+
+        """
         Package.__init__(self, model) # Call ancestor's init to set self.parent
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.unit_number = [29,53]
@@ -46,9 +50,17 @@ class ModflowSwi(Package):
         self.ssz = util_3d(model,(nlay,nrow,ncol),np.float32,ssz,name='ssz')        
         self.isource = util_3d(model,(nlay,nrow,ncol),np.int,isource,name='isource')
         self.parent.add_package(self)
+
+
     def __repr__( self ):
         return 'Salt Water Intrusion package class'
+
+
     def write_file(self):
+        """
+        Write the package input file.
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_swi = open(self.fn_path, 'w')

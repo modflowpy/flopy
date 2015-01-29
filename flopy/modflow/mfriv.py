@@ -188,4 +188,7 @@ class ModflowRiv(Package):
 
         """
 
+        if model.verbose:
+            print 'loading riv package file...'
+
         return Package.load(model,ModflowRiv,f,nper)

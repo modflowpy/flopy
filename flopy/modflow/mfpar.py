@@ -1,6 +1,6 @@
 """
 mfpar module.  Contains the ModflowPar class. Note that the user can access
-the ModflowPar class as `flopy.modflow.Modflowpar`.
+the ModflowPar class as `flopy.modflow.ModflowPar`.
 
 
 """
@@ -12,6 +12,17 @@ from flopy.modflow.mfmlt import ModflowMlt
 
 class ModflowPar(object):
     """
+    Class for loading mult, zone, pval, and parameter data for MODFLOW packages
+    that use array data (LPF, UPW, RCH, EVT). Class also includes methods to
+    create data arrays using mult, zone, pval, and parameter data (not used
+    for boundary conditions).
+
+    Notes
+    -----
+    Parameters are supported in Flopy only when reading in existing models.
+    Parameter values are converted to native values in Flopy and the
+    connection to "parameters" is thus nonexistent.
+
 
     """
     def __init__(self):
@@ -25,6 +36,31 @@ class ModflowPar(object):
         return
 
     def set_zone(self, model, ext_unit_dict):
+        """
+        Load an existing zone package and set zone data for a model.
+
+        Parameters
+        ----------
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+
+
+        Examples
+        --------
+
+        >>> ml.mfpar.set_zone(ml, ext_unit_dict)
+
+        """
         zone = None
         zone_key = None
         for key, item in ext_unit_dict.iteritems():
@@ -39,6 +75,31 @@ class ModflowPar(object):
         return
 
     def set_mult(self, model, ext_unit_dict):
+        """
+        Load an existing mult package and set mult data for a model.
+
+        Parameters
+        ----------
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+
+
+        Examples
+        --------
+
+        >>> ml.mfpar.set_mult(ml, ext_unit_dict)
+
+        """
         mult = None
         mult_key = None
         for key, item in ext_unit_dict.iteritems():
@@ -53,6 +114,31 @@ class ModflowPar(object):
         return
 
     def set_pval(self, model, ext_unit_dict):
+        """
+        Load an existing pval package and set pval data for a model.
+
+        Parameters
+        ----------
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+
+
+        Examples
+        --------
+
+        >>> ml.mfpar.set_pval(ml, ext_unit_dict)
+
+        """
         pval = None
         pval_key = None
         for key, item in ext_unit_dict.iteritems():
@@ -86,6 +172,8 @@ class ModflowPar(object):
 
         Examples
         --------
+
+        >>>par_types, parm_dict = flopy.modflow.mfpar.ModflowPar.load(f, np)
 
 
         """
@@ -128,6 +216,43 @@ class ModflowPar(object):
 
     @staticmethod
     def parameter_fill(model, shape, findkey, parm_dict, findlayer=None):
+        """
+        Fill an array with parameters using zone, mult, and pval data.
+
+        Parameters
+        ----------
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+
+        shape : tuple
+            The shape of the returned data array. Typically shape is (nrow, ncol)
+
+        findkey : string
+            the parameter array to be constructed,
+
+        parm_dict : dict
+            dictionary that includes all of the parameter data for a package
+
+        findlayer : int
+            Layer that will be filled. Not required for array boundary condition data.
+
+        Returns
+        -------
+        data : numpy array
+            Filled array resulting from applications of zone, mult, pval, and
+            parameter data.
+
+        Examples
+        --------
+
+        for lpf and upw:
+
+        >>> data = flopy.modflow.mfpar.ModflowPar.parameter_fill(m, (nrow, ncol), 'vkcb',
+        >>> .....................................................parm_dict, findlayer=1)
+
+
+        """
         dtype = np.float32
         data = np.zeros(shape, dtype=dtype)
         for key, tdict in parm_dict.iteritems():

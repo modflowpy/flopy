@@ -1,3 +1,10 @@
+"""
+util_list module.  Contains the mflist class.
+ This classes encapsulates modflow-style list inputs away
+ from the individual packages.  The end-user should not need to
+ instantiate this class directly.
+
+"""
 import os
 import warnings
 import numpy as np

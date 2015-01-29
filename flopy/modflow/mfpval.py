@@ -80,9 +80,10 @@ class ModflowPval(Package):
 
 
     def __getitem__(self, item):
-        '''
+        """
         overload __getitem__ to return a value from the pval_dict
-        '''
+
+        """
 
         if item in self.pval_dict.keys():
             return self.pval_dict[item]
@@ -121,7 +122,8 @@ class ModflowPval(Package):
 
         """
 
-        print 'loading pval package file...'
+        if model.verbose:
+            print 'loading pval package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -137,7 +139,7 @@ class ModflowPval(Package):
         t = line.strip().split()
         npval = int(t[0])
 
-        sys.stdout.write('reading parameter values from "{:<10s}"\n'.format(filename))
+        sys.stdout.write('   reading parameter values from "{:<10s}"\n'.format(filename))
 
         #read PVAL data
         pval_dict = dict()

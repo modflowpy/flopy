@@ -118,7 +118,8 @@ class ModflowMlt(Package):
 
         """
 
-        print 'loading mult package file...'
+        if model.verbose:
+            print 'loading mult package file...'
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -144,7 +145,8 @@ class ModflowMlt(Package):
                 mltnam = t[0][0:10].lower()
             else:
                 mltnam = t[0].lower()
-            sys.stdout.write('reading data for "{:<10s}" mult\n'.format(mltnam))
+            if model.verbose:
+                sys.stdout.write('   reading data for "{:<10s}" mult\n'.format(mltnam))
             readArray = True
             kwrd = None
             if len(t) > 1:
@@ -159,5 +161,8 @@ class ModflowMlt(Package):
                 line = f.readline()
                 t = [kwrd, line]
             mult_dict[mltnam] = t
+
+        #--create mlt dictionary
         mlt = ModflowMlt(model, mult_dict=mult_dict)
+
         return mlt
