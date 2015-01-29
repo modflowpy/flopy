@@ -1,3 +1,4 @@
+import sys
 from flopy.mbase import Package
 
 class ModflowSor(Package):
@@ -62,7 +63,8 @@ class ModflowSor(Package):
         """
 
         if model.verbose:
-            print 'loading sor package file...'
+            sys.stdout.write('loading sor package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -73,5 +75,8 @@ class ModflowSor(Package):
         #--close the open file
         f.close()
 
+        #--create sor object
         sor = ModflowSor(model)
+
+        #--return sor object
         return sor

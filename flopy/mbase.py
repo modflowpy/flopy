@@ -62,8 +62,6 @@ class BaseModel(object):
                 print 'replacing existing Package...'                
                 pp = p
                 return        
-        if self.verbose:
-            print 'adding Package: ', p.name
         self.packagelist.append( p )
     
     def remove_package(self, pname):
@@ -419,7 +417,7 @@ class Package(object):
         #--read parameter data
         if nppak > 0:
             dt = pack_type.get_empty(1, aux_names=aux_names).dtype
-            pak_parms = mfparbc.load(f, nppak, dt)
+            pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
             #pak_parms = mfparbc.load(f, nppak, len(dt.names))
 
         if nper is None:

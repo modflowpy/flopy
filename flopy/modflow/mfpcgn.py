@@ -1,3 +1,4 @@
+import sys
 from flopy.mbase import Package
 
 class ModflowPcgn(Package):
@@ -102,7 +103,8 @@ class ModflowPcgn(Package):
         """
 
         if model.verbose:
-            print 'loading pcgn package file...'
+            sys.stdout.write('loading pcgn package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

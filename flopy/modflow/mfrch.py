@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d
@@ -155,7 +156,8 @@ class ModflowRch(Package):
 
         """
         if model.verbose:
-            print 'loading rch package file...'
+            sys.stdout.write('loading rch package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -185,7 +187,7 @@ class ModflowRch(Package):
         #--dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
-            pak_parms = mfparbc.loadarray(f, npar)
+            pak_parms = mfparbc.loadarray(f, npar, model.verbose)
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()

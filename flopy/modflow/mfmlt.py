@@ -119,7 +119,8 @@ class ModflowMlt(Package):
         """
 
         if model.verbose:
-            print 'loading mult package file...'
+            sys.stdout.write('loading mult package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

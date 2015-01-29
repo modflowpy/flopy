@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 from flopy.mbase import Package
 
 class ModflowOc(Package):
@@ -354,7 +355,7 @@ class ModflowOc(Package):
         """
 
         if model.verbose:
-            print 'loading oc package file...'
+            sys.stdout.write('loading oc package file...\n')
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()

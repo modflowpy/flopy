@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm>`_.
 
 """
+import sys
 import numpy as np
 from flopy.mbase import Package
 from numpy import atleast_2d
@@ -217,7 +218,8 @@ class ModflowHfb(Package):
         """
 
         if model.verbose:
-            print 'loading hfb6 package file...'
+            sys.stdout.write('loading hfb6 package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -249,7 +251,7 @@ class ModflowHfb(Package):
         #--data set 2 and 3
         if nphfb > 0:
             dt = ModflowHfb.get_empty(1).dtype
-            pak_parms = mfparbc.load(f, nphfb, dt)
+            pak_parms = mfparbc.load(f, nphfb, dt, model.verbose)
         #--data set 4
         bnd_output = None
         if nhfbnp > 0:

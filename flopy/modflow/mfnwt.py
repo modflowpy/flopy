@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 from flopy.mbase import Package
 
 class ModflowNwt(Package):
@@ -315,7 +316,8 @@ class ModflowNwt(Package):
         """
 
         if model.verbose:
-            print 'loading nwt package file...'
+            sys.stdout.write('loading nwt package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

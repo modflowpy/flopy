@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
@@ -210,6 +211,7 @@ class ModflowWel(Package):
         """
 
         if model.verbose:
-            print 'loading wel package file...'
+            sys.stdout.write('loading wel package file...\n')
+
         return Package.load(model, ModflowWel, f, nper)
 

@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swi2_seawater_intrusion_pack.htm>`_.
 
 """
+import sys
 import copy
 import numpy as np
 # from numpy import ones, zeros, empty
@@ -326,7 +327,8 @@ class ModflowSwi2(Package):
         """
 
         if model.verbose:
-            print 'loading swi2 package file...'
+            sys.stdout.write('loading swi2 package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

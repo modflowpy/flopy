@@ -1,4 +1,5 @@
-﻿import numpy as np
+﻿import sys
+import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d
 
@@ -279,7 +280,7 @@ class ModflowUzf1(Package):
 
         """
         if model.verbose:
-            print 'loading uzf package file...'
+            sys.stdout.write('loading uzf package file...\n')
 
         if type(f) is not file:
             filename = f

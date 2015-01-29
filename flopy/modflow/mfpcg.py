@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/pcg.htm>`_.
 
 """
+import sys
 from flopy.mbase import Package
 
 class ModflowPcg(Package):
@@ -186,7 +187,8 @@ class ModflowPcg(Package):
         """
 
         if model.verbose:
-            print 'loading pcg package file...'
+            sys.stdout.write('loading pcg package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

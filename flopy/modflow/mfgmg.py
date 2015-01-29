@@ -1,3 +1,4 @@
+import sys
 from flopy.mbase import Package
 
 class ModflowGmg(Package):
@@ -80,7 +81,8 @@ class ModflowGmg(Package):
         """
 
         if model.verbose:
-            print 'loading gmg package file...'
+            sys.stdout.write('loading gmg package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm>`_.
 
 """
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_array import transient_2d, util_2d
@@ -160,7 +161,8 @@ class ModflowEvt(Package):
 
         """
         if model.verbose:
-            print 'loading evt package file...'
+            sys.stdout.write('loading evt package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -189,7 +191,7 @@ class ModflowEvt(Package):
         #--dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
-            pak_parms = mfparbc.loadarray(f, npar)
+            pak_parms = mfparbc.loadarray(f, npar, model.verbose)
 
 
         if nper is None:
@@ -261,7 +263,10 @@ class ModflowEvt(Package):
                                      ext_unit_dict)
                     current_ievt = t
                 ievt[iper] = current_ievt
+
         #--create evt object
         evt = ModflowEvt(model, nevtop=nevtop, ipakcb=ipakcb, 
                          surf=surf, evtr=evtr, exdp=exdp, ievt=ievt)
+
+        #--return evt object
         return evt

@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
@@ -171,7 +172,8 @@ class ModflowBcf(Package):
         """
 
         if model.verbose:
-            print 'loading bcf package file...'
+            sys.stdout.write('loading bcf package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -251,6 +253,9 @@ class ModflowBcf(Package):
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'wetdry', ext_unit_dict)
                 wetdry[k,:,:] = t.array
 
+        #--create instance of bcf object
         bcf = ModflowBcf(model,ibcfcb=ibcfcb,intercellt=intercellt,laycon=laycon,trpy=trpy,hdry=hdry,iwdflg=iwdflg,wetfct=wetfct,iwetit=iwetit,ihdwet=ihdwet,
                          tran=tran,hy=hy,vcont=vcont,sf1=sf1,sf2=sf2,wetdry=wetdry)
+
+        #--return bcf object
         return bcf

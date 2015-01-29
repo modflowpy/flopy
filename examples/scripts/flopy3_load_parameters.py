@@ -23,7 +23,7 @@ version = 'mf2005'
 
 # -- load the model
 ml = flopy.modflow.Modflow.load(mname, version=version, exe_name=exe_name, 
-                                verbose=True, model_ws=model_ws)
+                                verbose=False, model_ws=model_ws)
 
 # -- change model workspace
 ml.change_model_ws(new_pth=omodel_ws)

@@ -122,7 +122,8 @@ class ModflowZon(Package):
         """
 
         if model.verbose:
-            print 'loading zone package file...'
+            sys.stdout.write('loading zone package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

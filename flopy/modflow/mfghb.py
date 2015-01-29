@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?ghb.htm>`_.
 
 """
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
@@ -195,5 +196,6 @@ class ModflowGhb(Package):
         """
 
         if model.verbose:
-            print 'loading gmg package file...'
+            sys.stdout.write('loading gmg package file...\n')
+
         return Package.load(model, ModflowGhb, f, nper)

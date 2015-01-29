@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_3d
@@ -186,7 +187,8 @@ class ModflowBas(Package):
         """
 
         if model.verbose:
-            print 'loading bas6 package file...'
+            sys.stdout.write('loading bas6 package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

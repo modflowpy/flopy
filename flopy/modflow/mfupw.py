@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
@@ -107,7 +108,8 @@ class ModflowUpw(Package):
         """
 
         if model.verbose:
-            print 'loading upw package file...'
+            sys.stdout.write('loading upw package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -170,7 +172,7 @@ class ModflowUpw(Package):
         #--get parameters
         par_types = []
         if npupw > 0:
-            par_types, parm_dict = mfpar.load(f, nplpf)
+            par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
 
         #--get arrays
         transient = not model.get_package('DIS').steady.all()

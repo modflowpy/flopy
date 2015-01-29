@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swr.htm>`_.
 
 """
+import sys
 from flopy.mbase import Package
 
 
@@ -116,7 +117,7 @@ class ModflowSwr1(Package):
         """
 
         if model.verbose:
-            print 'loading swr1 process file...'
+            sys.stdout.write('loading swr1 process file...\n')
 
         #--todo: everything
         if type(f) is not file:
@@ -128,6 +129,8 @@ class ModflowSwr1(Package):
         #--close open file
         f.close()
 
-        #--create swr1 instance
+        #--create swr1 object instance
         swr1 = ModflowSwr1(model)
+
+        #--return swr object
         return swr1

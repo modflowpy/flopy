@@ -5,6 +5,7 @@ the ModflowPar class as `flopy.modflow.ModflowPar`.
 
 """
 
+import sys
 import numpy as np
 from flopy.modflow.mfzon import ModflowZon
 from flopy.modflow.mfpval import ModflowPval
@@ -68,10 +69,14 @@ class ModflowPar(object):
                 zone = item
                 zone_key = key
         if zone_key is not None:
-            self.zone = ModflowZon.load(zone.filename, model,
-                                        ext_unit_dict=ext_unit_dict)
-            ext_unit_dict.pop(zone_key)
-            model.remove_package("ZONE")
+            try:
+                self.zone = ModflowZon.load(zone.filename, model,
+                                            ext_unit_dict=ext_unit_dict)
+                sys.stdout.write('   {} package load...success\n'.format(self.zone.name[0]))
+                ext_unit_dict.pop(zone_key)
+                model.remove_package("ZONE")
+            except BaseException as o:
+                sys.stdout.write('   {} package load...failed\n      {!s}'.format('ZONE', o))
         return
 
     def set_mult(self, model, ext_unit_dict):
@@ -107,10 +112,16 @@ class ModflowPar(object):
                 mult = item
                 mult_key = key
         if mult_key is not None:
-            self.mult = ModflowMlt.load(mult.filename, model,
-                                        ext_unit_dict=ext_unit_dict)
-            ext_unit_dict.pop(mult_key)
-            model.remove_package("MULT")
+            try:
+                self.mult = ModflowMlt.load(mult.filename, model,
+                                            ext_unit_dict=ext_unit_dict)
+                sys.stdout.write('   {} package load...success\n'.format(self.mult.name[0]))
+                ext_unit_dict.pop(mult_key)
+                model.remove_package("MULT")
+            except BaseException as o:
+                sys.stdout.write('   {} package load...failed\n      {!s}'.format('MULT', o))
+
+
         return
 
     def set_pval(self, model, ext_unit_dict):
@@ -146,15 +157,20 @@ class ModflowPar(object):
                 pval = item
                 pval_key = key
         if pval_key is not None:
-            self.pval = ModflowPval.load(pval.filename, model,
-                                         ext_unit_dict=ext_unit_dict)
-            ext_unit_dict.pop(pval_key)
-            model.remove_package("PVAL")
+            try:
+                self.pval = ModflowPval.load(pval.filename, model,
+                                             ext_unit_dict=ext_unit_dict)
+                sys.stdout.write('   {} package load...success\n'.format(self.pval.name[0]))
+                ext_unit_dict.pop(pval_key)
+                model.remove_package("PVAL")
+            except BaseException as o:
+                sys.stdout.write('   {} package load...failed\n      {!s}'.format('PVAL', o))
+
         return
 
 
     @staticmethod
-    def load(f, npar):
+    def load(f, npar, verbose=False):
         """
         Load property parameters from an existing package.
 
@@ -164,6 +180,9 @@ class ModflowPar(object):
 
         npar : int
             The number of parameters.
+
+        verbose : bool
+            Boolean flag to control output. (default is False)
 
         Returns
         -------
@@ -185,7 +204,8 @@ class ModflowPar(object):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
-                print '   loading parameter "{}"...'.format(parnam)
+                if verbose:
+                    print '   loading parameter "{}"...'.format(parnam)
                 partyp = t[1].lower()
                 if partyp not in par_types:
                     par_types.append(partyp)

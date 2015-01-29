@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/de4.htm>`_.
 
 """
+import sys
 from flopy.mbase import Package
 
 class ModflowDe4(Package):
@@ -195,12 +196,13 @@ class ModflowDe4(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> pcg = flopy.modflow.ModflowDe4.load('test.de4', m)
+        >>> de4 = flopy.modflow.ModflowDe4.load('test.de4', m)
 
         """
 
         if model.verbose:
-            print 'loading de4 package file...'
+            sys.stdout.write('loading de4 package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

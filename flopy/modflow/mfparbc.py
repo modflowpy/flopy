@@ -45,7 +45,7 @@ class ModflowParBc(object):
 
 
     @staticmethod
-    def load(f, npar, dt):
+    def load(f, npar, dt, verbose=False):
         """
         Load bc property parameters from an existing bc package
         that uses list data (e.g. WEL, RIV, etc.).
@@ -59,6 +59,9 @@ class ModflowParBc(object):
 
         dt : numpy.dtype
             numpy.dtype for the particular list boundary condition.
+
+        verbose : bool
+            Boolean flag to control output. (default is False)
 
         Returns
         -------
@@ -77,7 +80,8 @@ class ModflowParBc(object):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
-                print '   loading parameter "{}"...'.format(parnam)
+                if verbose:
+                    print '   loading parameter "{}"...'.format(parnam)
                 partyp = t[1].lower()
                 parval = t[2]
                 nlst = np.int(t[3])
@@ -117,7 +121,7 @@ class ModflowParBc(object):
         return bcpar
 
     @staticmethod
-    def loadarray(f, npar):
+    def loadarray(f, npar, verbose=False):
         """
         Load bc property parameters from an existing bc package
         that uses array data (e.g. RCH, EVT).
@@ -128,6 +132,9 @@ class ModflowParBc(object):
 
         npar : int
             The number of parameters.
+
+        verbose : bool
+            Boolean flag to control output. (default is False)
 
         Returns
         -------
@@ -145,7 +152,8 @@ class ModflowParBc(object):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
-                print '   loading parameter "{}"...'.format(parnam)
+                if verbose:
+                    print '   loading parameter "{}"...'.format(parnam)
                 partyp = t[1].lower()
                 parval = t[2]
                 nclu = np.int(t[3])

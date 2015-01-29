@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
@@ -273,7 +274,8 @@ class ModflowLpf(Package):
         """
 
         if model.verbose:
-            print 'loading lpf package file...'
+            sys.stdout.write('loading lpf package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -352,7 +354,7 @@ class ModflowLpf(Package):
         #--parameters data
         par_types = []
         if nplpf > 0:
-            par_types, parm_dict = mfpar.load(f, nplpf)
+            par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
             #print parm_dict
 
         #--non-parameter data

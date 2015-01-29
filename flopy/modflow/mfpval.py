@@ -123,7 +123,8 @@ class ModflowPval(Package):
         """
 
         if model.verbose:
-            print 'loading pval package file...'
+            sys.stdout.write('loading pval package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

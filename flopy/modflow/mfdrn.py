@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drn.htm>`_.
 
 """
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
@@ -153,5 +154,6 @@ class ModflowDrn(Package):
     def load(f, model, nper=None, ext_unit_dict=None):
 
         if model.verbose:
-            print 'loading drn package file...'
+            sys.stdout.write('loading drn package file...\n')
+
         return Package.load(model,ModflowDrn,f,nper)

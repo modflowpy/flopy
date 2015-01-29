@@ -5,6 +5,7 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 """
 
 import os
+import sys
 import flopy
 from flopy.mbase import BaseModel, Package
 from flopy.utils import mfreadnam
@@ -238,7 +239,8 @@ class Modflow(BaseModel):
         modelname = os.path.basename(f).split('.')[0]
         if model_ws is None:
             model_ws = os.path.dirname(f)
-        print 'Creating new model with name: ', modelname
+
+        sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.format(modelname, 50*'-'))
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
         files_succesfully_loaded = []
@@ -280,30 +282,32 @@ class Modflow(BaseModel):
                 try:
                     pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
                     files_succesfully_loaded.append(item.filename)
+                    sys.stdout.write('   {:4s} package load...success\n'.format(pck.name[0]))
                 except BaseException as o:
-                    print "[WARNING] - Exception loading {!s} file: {!s}".format(item.filetype, o)
+                    sys.stdout.write('   {:4s} package load...failed\n   {!s}'.format(item.filetype.name[0], o))
             elif "data" not in item.filetype.lower():
-                if ml.verbose:
-                    print "skipping package", item.filetype, item.filename
-                    files_not_loaded.append(item.filename)
+                files_not_loaded.append(item.filename)
+                sys.stdout.write('   {:4s} package load...skipped\n'.format(os.path.basename(item.filetype)))
             elif "data" in item.filetype.lower():
+                sys.stdout.write('   {} file load...skipped\n\n      {}'.format(os.path.basename(item.filetype,
+                                                                                                 item.filename)))
                 ml.external_fnames.append(item.filename)
                 ml.external_units.append(key)
                 ml.external_binflag.append("binary" in item.filetype.lower())
 
         #--write message indicating packages that were successfully loaded
-        print 2 * '\n'
-        s = 'The following {0} packages were successfully loaded.'.format(
+        print 1 * '\n'
+        s = '   The following {0} packages were successfully loaded.'.format(
             len(files_succesfully_loaded))
         print s
         for fname in files_succesfully_loaded:
-            print '   ' + os.path.basename(fname)
+            print '      ' + os.path.basename(fname)
 
-        s = 'The following {0} packages were not loaded.'.format(
+        s = '   The following {0} packages were not loaded.'.format(
             len(files_not_loaded))
         print s
         for fname in files_not_loaded:
-            print '   ' + os.path.basename(fname)
+            print '      ' + os.path.basename(fname)
         print '\n'
 
         #--return model object

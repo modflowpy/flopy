@@ -3,6 +3,7 @@ mfpks module.  Contains the ModflowPks class. Note that the user can access
 the ModflowPks class as `flopy.modflow.ModflowPks`.
 
 """
+import sys
 from flopy.mbase import Package
 
 class ModflowPks(Package):
@@ -191,7 +192,8 @@ class ModflowPks(Package):
         """
 
         if model.verbose:
-            print 'loading pks package file...'
+            sys.stdout.write('loading pks package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

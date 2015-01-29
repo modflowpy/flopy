@@ -1,3 +1,4 @@
+import sys
 from flopy.mbase import Package
 
 class ModflowSip(Package):
@@ -63,7 +64,8 @@ class ModflowSip(Package):
         """
 
         if model.verbose:
-            print 'loading sip package file...'
+            sys.stdout.write('loading sip package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
