@@ -1,5 +1,7 @@
 """
 mbase module
+  This module contains the base model and base package classes from which
+  all of the other models and packages inherit from.
 
 """
 
@@ -21,12 +23,28 @@ iprn = -1 # Printout flag. If >= 0 then array values read are printed in listing
 class BaseModel(object):
     """
     MODFLOW based models base class
+
+    Parameters
+    ----------
+
+    modelname : string
+        Name of the model.  Model files will be given this name. (default is
+        'modflowtest'
+
+    namefile_ext : string
+        name file extension (default is 'nam')
+
+    exe_name : string
+        name of the modflow executable
+
+    model_ws : string
+        Path to the model workspace.  Model files will be created in this
+        directory.  Default is None, in which case model_ws is assigned
+        to the current working directory.
+
     """
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
                  exe_name='mf2k.exe', model_ws=None):
-        """
-        BaseModel init
-        """
         self.__name = modelname
         self.namefile_ext = namefile_ext
         self.namefile = self.__name + '.' + self.namefile_ext
@@ -47,12 +65,25 @@ class BaseModel(object):
         return
 
     def set_exename(self, exe_name):
+        """
+        Set the name of the executable.
+
+        Parameters
+        ----------
+        exe_name : name of the executable
+
+        """
         self.exe_name = exe_name
         return
         
     def add_package(self, p):
         """
-        Add a flopy package object to this model.
+        Add a package.
+
+        Parameters
+        ----------
+        p : Package object
+
         """
         for pp in (self.packagelist):
             if pp.allowDuplicates:
@@ -62,25 +93,49 @@ class BaseModel(object):
                 print 'replacing existing Package...'                
                 pp = p
                 return        
-        self.packagelist.append( p )       
+        self.packagelist.append(p)
     
     def remove_package(self, pname):
         """
-        Remove a package from this model.
+        Remove a package from this model
+
+        Parameters
+        ----------
+        pname : string
+            Name of the package, such as 'RIV', 'BAS6', etc.
+
         """
-        for i,pp in enumerate(self.packagelist):  
+        for i, pp in enumerate(self.packagelist):
             if pname in pp.name:               
                 print 'removing Package: ',pp.name
                 self.packagelist.pop(i)
                 return
         raise StopIteration , 'Package name '+pname+' not found in Package list'
             
-    def build_array_name(self,num,prefix):
-       return self.external_path+prefix+'_'+str(num)+'.'+self.external_extension
+    def build_array_name(self, num, prefix):
+        """
+        Build array name
+
+        Parameters
+        ----------
+        num : int
+            array number
+        prefix : string
+            array prefix
+
+        """
+        return self.external_path + prefix + '_' + str(num) + '.' + self.external_extension
        
     def assign_external(self, num, prefix):
         """
-        Assign an external file
+        Assign external file
+
+        Parameters
+        ----------
+        num : int
+            array number
+        prefix : string
+            array prefix
 
         """
         fname = self.build_array_name(num, prefix)
@@ -92,14 +147,38 @@ class BaseModel(object):
     
     def add_external(self, fname, unit, binflag=False):
         """
-        Supports SWR usage and non-loaded existing external arrays
+        Assign an external array so that it will be listed as a DATA or
+        DATA(BINARY) entry in the name file.  This will allow an outside
+        file package to refer to it.
+
+        Parameters
+        ----------
+        fname : str
+            filename of external array
+        unit : int
+            unit number of external array
+        binflag : boolean
+            binary or not. (default is False)
+
         """
         self.external_fnames.append(fname)
         self.external_units.append(unit)        
         self.external_binflag.append(binflag)
         return
     
-    def remove_external(self,fname=None,unit=None):                    
+    def remove_external(self, fname=None, unit=None):
+        """
+        Remove an external file from the model by specifying either the
+        file name or the unit number.
+
+        Parameters
+        ----------
+        fname : str
+            filename of external array
+        unit : int
+            unit number of external array
+
+        """
         if fname is not None:
             for i,e in enumerate(self.external_fnames):
                 if fname in e:
@@ -117,29 +196,80 @@ class BaseModel(object):
         return            
 
     def get_name_file_entries(self):
-        s = ''        
+        """
+        Get a string representation of the name file.
+
+        Parameters
+        ----------
+
+        """
+        s = ''
         for p in self.packagelist:
             for i in range(len(p.name)):
-                #s = s + ('%s %3i %s %s\n' % (p.name[i], p.unit_number[i],
-                #                             p.file_name[i],p.extra[i]))
-                s = s + ('{0:s} {1:3d} {2:s} {3:s}\n'.format(p.name[i], p.unit_number[i],
-                                             p.file_name[i],p.extra[i]))
+                s = s + ('{0:s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
+                                                             p.unit_number[i],
+                                                             p.file_name[i],
+                                                             p.extra[i]))
         return s
                 
     def get_package(self, name):
+        """
+        Get a package.
+
+        Parameters
+        ----------
+        name : str
+            Name of the package, 'RIV', 'LPF', etc.
+
+        Returns
+        -------
+        pp : Package object
+            Package object of type :class:`flopy.mbase.Package`
+
+        """
         for pp in (self.packagelist):
             if (pp.name[0].upper() == name.upper()):
                 return pp
         return None
    
     def get_package_list(self):
+        """
+        Get a list of all the package names.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        val : list of strings
+            Can be used to see what packages are in the model, and can then
+            be used with get_package to pull out individual packages.
+
+        """
         val = []
         for pp in (self.packagelist):
             val.append(pp.name[0].upper())
         return val
     
     def change_model_ws(self, new_pth=None):
-        if new_pth is None: 
+        """
+        Change the model work space.
+
+        Parameters
+        ----------
+        new_pth : str
+            Location of new model workspace.  If this path does not exist,
+            it will be created. (default is None, which will be assigned to
+            the present working directory).
+
+        Returns
+        -------
+        val : list of strings
+            Can be used to see what packages are in the model, and can then
+            be used with get_package to pull out individual packages.
+
+        """
+        if new_pth is None:
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
@@ -197,6 +327,14 @@ class BaseModel(object):
         return ([success,buff])
         
     def write_input(self, SelPackList=False):
+        """
+        Write the input.
+
+        Parameters
+        ----------
+        SelPackList : False or list of packages
+
+        """
         if self.verbose:
             print self # Same as calling self.__repr__()
             print 'Writing packages:'
@@ -207,7 +345,7 @@ class BaseModel(object):
                     print p.__repr__()        
         else:
             for pon in SelPackList:
-                for i,p in enumerate(self.packagelist):  
+                for i, p in enumerate(self.packagelist):
                     if pon in p.name:               
                         print 'writing Package: ',p.name
                         p.write_file()
@@ -216,6 +354,7 @@ class BaseModel(object):
                         break
         #--write name file
         self.write_name_file()
+        return
     
     def write_name_file(self):
         """
@@ -225,9 +364,27 @@ class BaseModel(object):
         raise Exception, 'IMPLEMENTATION ERROR: writenamefile must be overloaded'
 
     def get_name(self):
+        """
+        Get model name
+
+        Returns
+        -------
+        name : str
+            name of model
+
+        """
         return self.__name
 
     def set_name(self, value):
+        """
+        Set model name
+
+        Parameters
+        ----------
+        value : str
+            Name to assign to model.
+
+        """
         self.__name = value
         self.namefile = self.__name + '.' + self.namefile_ext
         for p in self.packagelist:
