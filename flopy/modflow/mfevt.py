@@ -155,6 +155,7 @@ class ModflowEvt(Package):
             pass
 
         #--dataset 3 and 4 - parameters data
+        pak_parms = None
         if npar > 0:
             pak_parms = mfparbc.loadarray(f, npar)
 
@@ -203,7 +204,7 @@ class ModflowEvt(Package):
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'rech', parm_dict, pak_parms)
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), parm_dict, pak_parms)
 
                 current_evtr = t
             evtr[iper] = current_evtr

@@ -141,6 +141,7 @@ class Modflow(BaseModel):
             "swi2": flopy.modflow.ModflowSwi2,
             "pcg": flopy.modflow.ModflowPcg,
             "nwt": flopy.modflow.ModflowNwt,
+            "pks": flopy.modflow.ModflowPks,
             "oc": flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,
             "upw": flopy.modflow.ModflowUpw

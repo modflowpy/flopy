@@ -1,3 +1,12 @@
+"""
+mfpcg module.  Contains the ModflowPcg class. Note that the user can access
+the ModflowPcg class as `flopy.modflow.ModflowPcg`.
+
+Additional information for this MODFLOW package can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/pcg.htm>`_.
+
+"""
 from flopy.mbase import Package
 
 class ModflowPcg(Package):
@@ -229,6 +238,9 @@ class ModflowPcg(Package):
             damp = float(line[60:70].strip())
             if damp < 0.:
                 dampt = float(line[70:80].strip())
+
+        #--close the open file
+        f.close()
 
         pcg = ModflowPcg(model, mxiter=mxiter, iter1=iter1, npcond=npcond, ihcofadd=ihcofadd,\
                          hclose=hclose, rclose=rclose, relax=relax, nbpol=nbpol,\

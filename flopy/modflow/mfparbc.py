@@ -1,10 +1,6 @@
 """
-mfwel module.  Contains the ModflowWel class. Note that the user can access
-the ModflowWel class as `flopy.modflow.ModflowWel`.
-
-Additional information for this MODFLOW package can be found at the `Online
-MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?wel.htm>`_.
+mfparbc module.  Contains the ModflowParBc class. Note that the user can access
+the ModflowParBc class as `flopy.modflow.ModflowParBc`.
 
 """
 
@@ -12,76 +8,17 @@ import numpy as np
 
 class ModflowParBc(object):
     """
-    MODFLOW Boundary Condition Package Parameter Class.
-
-    Parameters
-    ----------
-    model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
-        this package will be added.
-    iwelcb : int
-        is a flag and a unit number. (the default is 0).
-    layer_row_column_data : list of records
-        In its most general form, this is a triple list of well records  The
-        innermost list is the layer, row, column, and flux rate for a single
-        well.  Then for a stress period, there can be a list of wells.  Then
-        for a simulation, there can be a separate list for each stress period.
-        This gives the form of
-            lrcq = [
-                     [  #stress period 1
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ],
-                     [  #stress period 2
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ], ...
-                     [  #stress period kper
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ],
-                    ]
-        Note that if there are not records in layer_row_column_data, then the
-        last group of wells will apply until the end of the simulation.
-    layer_row_column_Q : list of records
-        Deprecated - use layer_row_column_data instead.
-    options : list of strings
-        Package options. (default is None).
-    naux : int
-        number of auxiliary variables
-    extension : string
-        Filename extension (default is 'wel')
-    unitnumber : int
-        File unit number (default is 11).
-
-    Attributes
-    ----------
-    mxactw : int
-        Maximum number of wells for a stress period.  This is calculated
-        automatically by FloPy based on the information in
-        layer_row_column_data.
-
-    Methods
-    -------
-
-    See Also
-    --------
+    Class for loading boundary condition parameter data for MODFLOW packages
+    that use list data (WEL, GHB, DRN, etc.). This Class is also used to
+    create hfb6 data from hfb parameters. Class also includes methods to
+    create data arrays using pval and boundary condition parameter data.
 
     Notes
     -----
-    Parameters are not supported in FloPy.
+    Parameters are supported in Flopy only when reading in existing models.
+    Parameter values are converted to native values in Flopy and the
+    connection to "parameters" is thus nonexistent.
 
-    Examples
-    --------
-
-    >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> lrcq = [[[2, 3, 4, -100.]]]  #this well will be applied to all stress
-    >>>                              #periods
-    >>> wel = flopy.modflow.ModflowWel(m, layer_row_column_data=lrcq)
 
     """
     def __init__(self, bc_parms):
@@ -97,6 +34,10 @@ class ModflowParBc(object):
         
         
     def get(self, fkey):
+        """
+        overload get to return a value from the bc_parms dictionary
+
+        """
         for key, value in self.bc_parms.iteritems():
             if fkey == key:
                 return self.bc_parms[key]
@@ -107,7 +48,7 @@ class ModflowParBc(object):
     def load(f, npar, dt):
         """
         Load bc property parameters from an existing bc package
-        that uses list data (e.g. WEL, RIV).
+        that uses list data (e.g. WEL, RIV, etc.).
 
         Parameters
         ----------
@@ -115,6 +56,9 @@ class ModflowParBc(object):
 
         npar : int
             The number of parameters.
+
+        dt : numpy.dtype
+            numpy.dtype for the particular list boundary condition.
 
         Returns
         -------
@@ -247,7 +191,40 @@ class ModflowParBc(object):
         return bcpar
 
     @staticmethod
-    def parameter_bcfill(model, shape, name, parm_dict, pak_parms):
+    def parameter_bcfill(model, shape, parm_dict, pak_parms):
+        """
+        Fill an array with parameters using zone, mult, and pval data.
+
+        Parameters
+        ----------
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+
+        shape : tuple
+            The shape of the returned data array. Typically shape is (nrow, ncol)
+
+        parm_dict : list
+            dictionary of parameter instances
+
+        pak_parms : dict
+            dictionary that includes all of the parameter data for a package
+
+        Returns
+        -------
+        data : numpy array
+            Filled array resulting from applications of zone, mult, pval, and
+            parameter data.
+
+        Examples
+        --------
+
+        for rch and evt
+        >>> data = flopy.modflow.mfparbc.ModflowParBc.parameter_bcfill(m, (nrow, ncol),
+        >>> .......'rech', parm_dict, pak_parms)
+
+
+        """
         dtype = np.float32
         data = np.zeros(shape, dtype=dtype)
         for key, value in parm_dict.iteritems():
@@ -273,8 +250,8 @@ class ModflowParBc(object):
                     mult_save = np.copy(mult)
                     za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
                     #--build a multiplier for all of the izones
+                    mult = np.zeros(shape, dtype=dtype)
                     for iz in izones:
-                        mult = np.zeros(shape, dtype=dtype)
                         filtarr = za == iz
                         mult[filtarr] += np.copy(mult_save[filtarr])
                     #--calculate parameter value for this instance

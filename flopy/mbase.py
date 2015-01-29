@@ -93,6 +93,7 @@ class BaseModel(object):
     def add_external(self, fname, unit, binflag=False):
         """
         Supports SWR usage and non-loaded existing external arrays
+
         """
         self.external_fnames.append(fname)
         self.external_units.append(unit)        
@@ -482,7 +483,7 @@ class Package(object):
                     parval = np.float(par_dict['parval'])
                 else:
                     try:
-                        parval = np.float(model.mfpar.pval.pval_dict[par_dict['parval'].lower()])
+                        parval = np.float(model.mfpar.pval.pval_dict[pname])
                     except:
                         parval = np.float(par_dict['parval'])
 

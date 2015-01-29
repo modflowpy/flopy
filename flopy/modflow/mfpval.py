@@ -80,9 +80,10 @@ class ModflowPval(Package):
 
 
     def __getitem__(self, item):
-        '''
+        """
         overload __getitem__ to return a value from the pval_dict
-        '''
+
+        """
 
         if item in self.pval_dict.keys():
             return self.pval_dict[item]
