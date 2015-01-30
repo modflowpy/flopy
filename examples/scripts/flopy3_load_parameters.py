@@ -33,11 +33,11 @@ if mname == 'twrip.nam':
     ml.remove_package('SIP')
     pcg = flopy.modflow.ModflowPcg(ml)
 
-wel = ml.get_package('WEL')
-wd = wel.stress_period_data[0]
-wel.stress_period_data[0] = [[0, 8,  7, -5.],
-                             [0, 8,  9, -5.],
-                             [0, 8, 11, -5.]]
+# wel = ml.get_package('WEL')
+# wd = wel.stress_period_data[0]
+# wel.stress_period_data[0] = [[0, 8,  7, -5.],
+#                              [0, 8,  9, -5.],
+#                              [0, 8, 11, -5.]]
 
 # -- save the model
 ml.write_input()
