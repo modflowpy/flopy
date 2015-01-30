@@ -217,6 +217,10 @@ class mflist(object):
 
     def add_record(self, kper, index, values):
         # Add a record to possible already set list for a given kper
+        # index is a list of k,i,j or nodes.
+        # values is a list of floats.
+        # The length of index + values must be equal to the number of names
+        # in dtype
         assert len(index) + len(values) == len(self.dtype), \
             "mflist.add_record() error: length of index arg +" +\
             "length of value arg != length of self dtype"
