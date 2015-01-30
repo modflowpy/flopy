@@ -288,14 +288,14 @@ class Modflow(BaseModel):
                     files_succesfully_loaded.append(item.filename)
                     sys.stdout.write('   {:4s} package load...success\n'.format(pck.name[0]))
                 except BaseException as o:
-                    sys.stdout.write('   {:4s} package load...failed\n   {!s}'.format(item.filetype.name[0], o))
+                    sys.stdout.write('   {:4s} package load...failed\n      {!s}\n'.format(item.filetype.name[0], o))
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
-                sys.stdout.write('   {:4s} package load...skipped\n'.format(os.path.basename(item.filetype)))
+                sys.stdout.write('   {:4s} package load...skipped\n'.format(item.filetype))
             elif "data" in item.filetype.lower():
-                sys.stdout.write('   {} file load...skipped\n\n      {}'.format(os.path.basename(item.filetype,
-                                                                                                 item.filename)))
+                sys.stdout.write('   {} file load...skipped\n      {}\n'.format(item.filetype,
+                                                                                os.path.basename(item.filename)))
                 ml.external_fnames.append(item.filename)
                 ml.external_units.append(key)
                 ml.external_binflag.append("binary" in item.filetype.lower())

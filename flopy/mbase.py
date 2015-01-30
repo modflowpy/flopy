@@ -97,7 +97,7 @@ class BaseModel(object):
                 pp = p
                 return        
         if self.verbose:
-            print 'adding Package: ', p.name
+            print 'adding Package: ', p.name[0]
         self.packagelist.append(p)
     
     def remove_package(self, pname):
