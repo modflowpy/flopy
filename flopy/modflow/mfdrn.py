@@ -82,12 +82,12 @@ class ModflowDrn(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 10., 100.]]]  #this drain will be applied to all
+    >>> lrcd = {0:[[2, 3, 4, 10., 100.]]}  #this drain will be applied to all
     >>>                                  #stress periods
-    >>> drn = flopy.modflow.ModflowDrn(m, layer_row_column_data=lrcd)
+    >>> drn = flopy.modflow.ModflowDrn(m, stress_period_data=lrcd)
     """
     def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
-                 extension ='drn', unitnumber=21, options=None,**kwargs):
+                 extension ='drn', unitnumber=21, options=None, **kwargs):
         """
         Package constructor
         """
@@ -106,6 +106,7 @@ class ModflowDrn(Package):
             self.dtype = self.get_default_dtype()
         self.stress_period_data = mflist(model, self.dtype, stress_period_data)
         self.parent.add_package(self)
+
     def __repr__( self ):
         return 'Drain class'
 
@@ -122,6 +123,10 @@ class ModflowDrn(Package):
         return self.stress_period_data.mxact
 
     def write_file(self):
+        """
+        Write the file.
+
+        """
         f_drn = open(self.fn_path, 'w')
         f_drn.write('{0}\n'.format(self.heading))
         #f_drn.write('%10i%10i\n' % (self.mxactd, self.idrncb))
