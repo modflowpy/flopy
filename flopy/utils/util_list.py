@@ -364,8 +364,9 @@ class mflist(object):
         lnames = []
         [lnames.append(name.lower()) for name in names]
         for idx in ['k', 'i', 'j']:
-            if (idx in lnames):
-                data[idx] += 1
+            data[idx] += 1
+#            if (idx in lnames):
+#                data[idx] += 1
         np.savetxt(f, data, fmt = self.fmt_string, delimiter = '')
 
     def check_kij(self):
