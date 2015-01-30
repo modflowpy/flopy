@@ -342,6 +342,8 @@ class BaseModel(object):
         SelPackList : False or list of packages
 
         """
+        #org_dir = os.getcwd()
+        #os.chdir(self.model_ws)
         if self.verbose:
             print '\nWriting packages:'
         if SelPackList == False:
@@ -361,6 +363,7 @@ class BaseModel(object):
             print ' '
         #--write name file
         self.write_name_file()
+        #os.chdir(org_dir)
         return
     
     def write_name_file(self):

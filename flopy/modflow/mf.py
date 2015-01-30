@@ -98,7 +98,7 @@ class Modflow(BaseModel):
 
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
                  version='mf2005', exe_name='mf2005.exe',
-                 listunit=2, model_ws=None, external_path=None,
+                 listunit=2, model_ws='.', external_path=None,
                  verbose=False, load=True, silent=0):
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws)
         version_types = ('mf2k', 'mf2005', 'mfnwt', 'mfusg')
@@ -112,14 +112,23 @@ class Modflow(BaseModel):
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
-        self.external_path = external_path
         self.external = False
         self.load = load
         # the starting external data unit number
         self.__next_ext_unit = 1000
         if external_path is not None:
-            assert os.path.exists(external_path),'external_path does not exist'
+            assert model_ws == '.', "ERROR: external cannot be used " +\
+                "with model_ws"
+
+            #external_path = os.path.join(model_ws, external_path)
+            if os.path.exists(external_path):
+                print "Note: external_path " + str(external_path) +\
+                    " already exists"
+            #assert os.path.exists(external_path),'external_path does not exist'
+            else:
+                os.mkdir(external_path)
             self.external = True
+        self.external_path = external_path
         self.verbose = verbose
         self.silent = silent
         self.mfpar = ModflowPar()
@@ -214,7 +223,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
-             model_ws=None):
+             model_ws='.'):
         """
         Load an existing model.
 
@@ -240,7 +249,8 @@ class Modflow(BaseModel):
 
         #if model_ws is None:
         #    model_ws = os.path.dirname(f)
-        sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.format(modelname, 50*'-'))
+        sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
+                         format(modelname, 50*'-'))
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
 
@@ -259,7 +269,8 @@ class Modflow(BaseModel):
             return None
 
         if ml.verbose:
-            print '\n{}\nExternal unit dictionary:\n{}\n{}\n'.format(50*'-', ext_unit_dict, 50*'-')
+            print '\n{}\nExternal unit dictionary:\n{}\n{}\n'.\
+                format(50*'-', ext_unit_dict, 50*'-')
 
         # load dis
         dis = None
@@ -269,12 +280,15 @@ class Modflow(BaseModel):
                 dis = item
                 dis_key = key
         try:
-            pck = dis.package.load(dis.filename, ml, ext_unit_dict=ext_unit_dict)
+            pck = dis.package.load(dis.filename, ml,
+                                   ext_unit_dict=ext_unit_dict)
             files_succesfully_loaded.append(dis.filename)
-            sys.stdout.write('   {:4s} package load...success\n'.format(pck.name[0]))
+            sys.stdout.write('   {:4s} package load...success\n'
+                             .format(pck.name[0]))
             ext_unit_dict.pop(dis_key)
         except:
-            s = 'Could not read discretization package: {}. Stopping...'.format(os.path.basename(dis.filename))
+            s = 'Could not read discretization package: {}. Stopping...'\
+                .format(os.path.basename(dis.filename))
             raise Exception(s)
 
         # zone, mult, pval
@@ -286,18 +300,23 @@ class Modflow(BaseModel):
         for key, item in ext_unit_dict.iteritems():
             if item.package is not None:
                 try:
-                    pck = item.package.load(item.filename, ml, ext_unit_dict=ext_unit_dict)
+                    pck = item.package.load(item.filename, ml,
+                                            ext_unit_dict=ext_unit_dict)
                     files_succesfully_loaded.append(item.filename)
-                    sys.stdout.write('   {:4s} package load...success\n'.format(pck.name[0]))
+                    sys.stdout.write('   {:4s} package load...success\n'
+                                     .format(pck.name[0]))
                 except BaseException as o:
-                    sys.stdout.write('   {:4s} package load...failed\n      {!s}\n'.format(item.filetype.name[0], o))
+                    sys.stdout.write('   {:4s} package load...failed\n      {!s}\n'
+                                     .format(item.filetype, o))
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
-                sys.stdout.write('   {:4s} package load...skipped\n'.format(item.filetype))
+                sys.stdout.write('   {:4s} package load...skipped\n'
+                                 .format(item.filetype))
             elif "data" in item.filetype.lower():
-                sys.stdout.write('   {} file load...skipped\n      {}\n'.format(item.filetype,
-                                                                                os.path.basename(item.filename)))
+                sys.stdout.write('   {} file load...skipped\n      {}\n'
+                                 .format(item.filetype,
+                                         os.path.basename(item.filename)))
                 ml.external_fnames.append(item.filename)
                 ml.external_units.append(key)
                 ml.external_binflag.append("binary" in item.filetype.lower())

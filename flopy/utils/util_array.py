@@ -990,14 +990,16 @@ class util_2d(object):
                 try:
                     value = int(value)
                 except:
-                    assert os.path.exists(value), \
+                    assert os.path.exists(
+                        os.path.join(self.model.model_ws,value)), \
                         'could not find file: ' + str(value)
                     return value
             else:
                 try:
                     value = float(value)
                 except:
-                    assert os.path.exists(value), \
+                    assert os.path.exists(
+                        os.path.join(self.model.model_ws,value)), \
                         'could not find file: ' + str(value)
                     return value
         if np.isscalar(value):
@@ -1065,6 +1067,7 @@ class util_2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
+            fname = os.path.join(model.model_ws,fname)
             u2d = util_2d(model, shape, dtype, fname, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
                           ext_filename=fname)
