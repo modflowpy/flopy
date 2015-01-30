@@ -694,7 +694,7 @@ class CellBudgetFile(object):
 
         #build and return the record list
         recordlist = []
-        for idx in select_indices[0]:
+        for idx in select_indices:
             rec = self.get_record(idx, full3D=full3D, verbose=verbose)
             recordlist.append(rec)
 
@@ -788,13 +788,16 @@ class CellBudgetFile(object):
                 l.append( (auxname, self.realtype))
             dtype = np.dtype(l)                
             nlist = binaryread(self.file, np.int32)
-            if verbose:
-                s += 'a list array of shape ' + str(nlist)
-                print s
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
+                if verbose:
+                    s += 'a list array of shape ({}, {}, {})'.format(nlay, nrow, ncol)
+                    print s
                 return self.create3D(data, nlay, nrow, ncol)
             else:
+                if verbose:
+                    s += 'a list array of shape ' + str(nlist)
+                    print s
                 return dict(zip(data['node'], data['q']))
 
         #should not reach this point
@@ -831,13 +834,8 @@ class CellBudgetFile(object):
         out.mask = True
         for [node, q] in zip(data['node'], data['q']):
             idx = node - 1
-            if out.mask[idx] is True:
-                # First value in this cell
-                out[idx] = q
-                out.mask[idx] = False
-            else:
-                # We have already had a value for this cell, so sum them
-                out[idx] += q
+            out.data[idx] += q
+            out.mask[idx] = False
         return np.ma.reshape(out, (nlay, nrow, ncol))
 
     def get_times(self):
