@@ -214,7 +214,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
-             model_ws=None, namefile_path='.'):
+             model_ws=None):
         """
         Load an existing model.
 
@@ -243,8 +243,6 @@ class Modflow(BaseModel):
         sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.format(modelname, 50*'-'))
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
-        # hack alert - undocumented attribute
-        ml.namefile_path = namefile_path
 
         files_succesfully_loaded = []
         files_not_loaded = []
@@ -252,7 +250,6 @@ class Modflow(BaseModel):
         # read name file
         try:
             namefile_path = os.path.join(ml.model_ws, ml.namefile)
-            #namefile = os.path.join(namefile_path, f)
             ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
                                                     ml.mfnam_packages,
                                                     verbose=verbose)

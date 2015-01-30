@@ -1065,14 +1065,9 @@ class util_2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
-            # u2d = util_2d(model, shape, dtype, fname, name=name,
-            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-            #               ext_filename=fname)
-            f_oc = open(os.path.join(model.namefile_path, fname))
-            data = util_2d.load_txt(shape, f_oc, dtype, cr_dict['fmtin'])
-            f_oc.close()
-            u2d = util_2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+            u2d = util_2d(model, shape, dtype, fname, name=name,
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                          ext_filename=fname)
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = util_2d(model, shape, dtype, data, name=name,
