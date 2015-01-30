@@ -834,6 +834,7 @@ class CellBudgetFile(object):
             if out.mask[idx] is True:
                 # First value in this cell
                 out[idx] = q
+                out.mask[idx] = False
             else:
                 # We have already had a value for this cell, so sum them
                 out[idx] += q
