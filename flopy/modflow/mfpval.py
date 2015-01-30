@@ -140,7 +140,8 @@ class ModflowPval(Package):
         t = line.strip().split()
         npval = int(t[0])
 
-        sys.stdout.write('   reading parameter values from "{:<10s}"\n'.format(filename))
+        if model.verbose:
+            sys.stdout.write('   reading parameter values from "{:<10s}"\n'.format(filename))
 
         #read PVAL data
         pval_dict = dict()
