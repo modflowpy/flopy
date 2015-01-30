@@ -265,8 +265,35 @@ class mflist(object):
         if (self.vtype[kper] == np.recarray):
             return self.data[kper]
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError("mflist.__setitem__() not implemented")
+    def __setitem__(self, kper, data):
+        if (kper in self.__data.keys()):
+            print 'removing existing data for kper={}'.format(kper)
+            self.data.pop(kper)
+        # If data is a list, then all we can do is try to cast it to
+        # an ndarray, then cast again to a recarray
+        if isinstance(data, list):
+            #warnings.warn("mflist casting list to array")
+            try:
+                data = np.array(data)
+            except Exception as e:
+                raise Exception("mflist error: casting list to ndarray: " +\
+                                str(e))
+        # cast data
+        if isinstance(data, int):
+            self.__cast_int(kper, data)
+        elif isinstance(data, np.recarray):
+            self.__cast_recarray(kper, data)
+        # A single ndarray
+        elif isinstance(data, np.ndarray):
+            self.__cast_ndarray(kper, data)
+        # A single filename
+        elif isinstance(data, str):
+            self.__cast_str(kper, data)
+        else:
+            raise Exception("mflist error: unsupported data type: " +\
+                            str(type(data)))
+
+        #raise NotImplementedError("mflist.__setitem__() not implemented")
 
     def __fromfile(self, f):
         #d = np.fromfile(f,dtype=self.dtype,count=count)
