@@ -271,9 +271,14 @@ class Modflow(BaseModel):
             if item.filetype.lower() == "dis":
                 dis = item
                 dis_key = key
-        pck = dis.package.load(dis.filename, ml, ext_unit_dict=ext_unit_dict)
-        files_succesfully_loaded.append(dis.filename)
-        ext_unit_dict.pop(dis_key)
+        try:
+            pck = dis.package.load(dis.filename, ml, ext_unit_dict=ext_unit_dict)
+            files_succesfully_loaded.append(dis.filename)
+            sys.stdout.write('   {:4s} package load...success\n'.format(pck.name[0]))
+            ext_unit_dict.pop(dis_key)
+        except:
+            s = 'Could not read discretization package: {}. Stopping...'.format(os.path.basename(dis.filename))
+            raise Exception(s)
 
         # zone, mult, pval
         ml.mfpar.set_pval(ml, ext_unit_dict)
@@ -292,10 +297,10 @@ class Modflow(BaseModel):
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
-                sys.stdout.write('   {:4s} package load...skipped\n'.format(os.path.basename(item.filetype)))
+                sys.stdout.write('   {:4s} package load...skipped\n'.format(item.filetype))
             elif "data" in item.filetype.lower():
-                sys.stdout.write('   {} file load...skipped\n\n      {}'.format(os.path.basename(item.filetype,
-                                                                                                 item.filename)))
+                sys.stdout.write('   {} file load...skipped\n      {}\n'.format(item.filetype,
+                                                                                os.path.basename(item.filename)))
                 ml.external_fnames.append(item.filename)
                 ml.external_units.append(key)
                 ml.external_binflag.append("binary" in item.filetype.lower())
@@ -313,7 +318,7 @@ class Modflow(BaseModel):
             print s
             for fname in files_not_loaded:
                 print '      ' + os.path.basename(fname)
-                print '\n'
+            print '\n'
 
         #--return model object
         return ml
