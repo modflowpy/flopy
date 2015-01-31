@@ -363,11 +363,12 @@ class mflist(object):
         names = self.dtype.names
         lnames = []
         [lnames.append(name.lower()) for name in names]
+        #--make copy of data for multiple calls
+        d = np.recarray.copy(data)
         for idx in ['k', 'i', 'j']:
-            data[idx] += 1
-#            if (idx in lnames):
-#                data[idx] += 1
-        np.savetxt(f, data, fmt = self.fmt_string, delimiter = '')
+            if (idx in lnames):
+                d[idx] += 1
+        np.savetxt(f, d, fmt = self.fmt_string, delimiter = '')
 
     def check_kij(self):
         names = self.dtype.names
