@@ -193,7 +193,7 @@ class ModflowMnw2(Package):
                     f.write('{:10.4g} {:10.4g} {:10d} {:10d}\n'.format(self.ztop_zbotm_row_col[i][n, 0],
                                                                        self.ztop_zbotm_row_col[i][n, 1],
                                                                        self.ztop_zbotm_row_col[i][n, 2],
-                                                                       self.ztop_zbotm_row_col[i][n, 3])))
+                                                                       self.ztop_zbotm_row_col[i][n, 3]))
                     ##            #-Section 2e - {PUMPLAY PUMPROW PUMPCOL} {ZPUMP}
                     ##            if self.pumploc[i] > 0:
                     ##                 f.write( '{:10d}{:10d}{:10d}\n'.format( self.pumplay_pumprow_pumpcol[i,0],
