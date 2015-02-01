@@ -60,9 +60,7 @@ class ModflowMnw1(Package):
 
     >>> import flopy
     >>> ml = flopy.modflow.Modflow()
-    >>> lrcsc = {0:[2, 3, 4, 10., 100.]}  #this mnw1 will be applied to all
-    >>>                                   #stress periods
-    >>> mnw1 = flopy.modflow.ModflowGhb(ml, stress_period_data=lrcsc)
+    >>> mnw1 = flopy.modflow.ModflowMnw1(ml, ...)
 
     """
 

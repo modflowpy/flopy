@@ -4,16 +4,228 @@ from flopy.mbase import Package
 
 
 class ModflowMnw2(Package):
-    'Multi-node well 2 package class'
-    '''
-    NOTE: This implementation does not allow well loss parameters {Rw,Rskin,Kskin,B,C,P,CWC,PP} to vary along the length of a given well. It also
-    does not currently support data sections 2e, 2f, 2g, 2h, or 4b as defined in the data input instructions for the MNW2 package.    
-    '''
+    """
+    'Multi-Node Well 2 Package Class'
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:flopy.modflow.mf.Modflow) to which
+        this package will be added.
+    mnwmax :
+        maximum number of multi-node wells (MNW) to be simulated (default is 0)
+    iwl2cb :
+        is a flag and a unit number
+        if IWL2CB > 0, then it is the unit number to which MNW cell-by-cell flow terms will be
+        recorded whenever cell-by-cell budget data are written to a file (as determined by the
+        output control options of MODFLOW).
+        if IWL2CB = 0, then MNW cell-by-cell flow terms will not be printed or recorded.
+        if IWL2CB < 0, then well injection or withdrawal rates and water levels in the well and
+        its multiple cells will be printed in the main MODFLOW listing (output) file whenever
+        cell-by-cell budget data are written to a file (as determined by the output control options of MODFLOW).
+        (default is -1)
+    mnwprnt :
+        flag controlling the level of detail of information about multi-node wells to be written to the
+        main MODFLOW listing (output) file. If MNWPRNT = 0, then only basic well information will be
+        printed in the main MODFLOW output file; increasing the value of MNWPRNT yields more information,
+        up to a maximum level of detail corresponding with MNWPRNT = 2.
+        (default is 0)
+    aux : list
+        an optional list of character values in the style of “AUXILIARY abc” or “AUX abc” where
+        “abc” is the name of an auxiliary parameter to be read for each multi-node well as part
+        of dataset 4a. Up to five parameters can be specified, each of which must be preceded
+        by “AUXILIARY” or “AUX.” These parameters will not be used by the MNW2 Package, but
+        they will be available for use by other packages.
+        (default is None)
+    wellid : array of strings (shape = (MNWMAX))
+        the name of the well. This is a unique alphanumeric identification label for each well.
+        The text string is limited to 20 alphanumeric characters. If the name of the well includes
+        spaces, then enclose the name in quotes.
+        (default is None)
+    nnodes :
+        the number of cells (nodes) associated with this well. NNODES normally is > 0, but for the
+        case of a vertical borehole, setting NNODES < 0 will allow the user to specify the elevations
+        of the tops and bottoms of well screens or open intervals (rather than grid layer numbers),
+        and the absolute value of NNODES equals the number of open intervals (or well screens) to be
+        specified in dataset 2d. If this option is used, then the model will compute the layers in which
+        the open intervals occur, the lengths of the open intervals, and the relative vertical position
+        of the open interval within a model layer (for example, see figure 14 and related discussion)
+        (default is None)
+    losstype :
+        a character flag to determine the user-specified model for well loss. The following loss types are
+        currently supported.
+        NONE there are no well corrections and the head in the well is assumed to equal the head
+        in the cell. This option (hWELL = hn) is only valid for a single-node well (NNODES = 1).
+        (This is equivalent to using the original WEL Package of MODFLOW, but specifying the single-node
+        well within the MNW2 Package enables the use of constraints.)
+        THIEM this option allows for only the cell-to-well correction at the well based on the Thiem (1906)
+        equation; head in the well is determined from equation 2 as (hWELL = hn + AQn), and the model
+        computes A on the basis of the user-specified well radius (Rw) and previously defined values of
+        cell transmissivity and grid spacing. Coefficients B and C in equation 2 are automatically
+        set = 0.0. User must define Rw in dataset 2c or 2d.
+        SKIN this option allows for formation damage or skin corrections at the well:
+        hWELL = hn + AQn + BQn (from equation 2), where A is determined by the model from the value of
+        Rw, and B is determined by the model from Rskin and Kskin. User must define Rw, Rskin, and Kskin i
+        n dataset 2c or 2d.
+        GENERAL head loss is defined with coefficients A, B, and C and power exponent P
+        (hWELL = hn + AQn + BQn + CQnP). A is determined by the model from the value of Rw.
+        must define Rw, B, C, and P in dataset 2c or 2d. A value of P = 2.0 is suggested if no other
+        data are available (the model allows 1.0 ≤ P ≤ 3.5). Entering a value of C = 0 will result
+        in a “linear” model in which the value of B is entered directly (rather than entering properties
+        of the skin, as with the SKIN option).
+        SPECIFYcwc the user specifies an effective conductance value (equivalent to the combined
+        effects of the A, B, and C well-loss coefficients expressed in equation 15) between the well and
+        the cell representing the aquifer, CWC. User must define CWC in dataset 2c or 2d. If there are
+        multiple screens within the grid cell or if partial penetration corrections are to be made, then
+        the effective value of CWC for the node may be further adjusted automatically by MNW2.
+        (default is None)
+    pumploc :
+        an integer flag pertaining to the location along the borehole of the pump intake (if any).
+        If PUMPLOC = 0, then either there is no pump or the intake location (or discharge point for an
+        injection well) is assumed to occur above the first active node associated with the multi-node well
+        (that is, the node closest to the land surface or to the wellhead). If PUMPLOC > 0, then the cell in
+        which the intake (or outflow) is located will be specified in dataset 2e as a LAY-ROW-COL grid location.
+        For a vertical well only, specifying PUMPLOC < 0, will enable the option to define the vertical position of
+        the pump intake (or outflow) as an elevation in dataset 2e (for the given spatial grid location [ROW-COL]
+        defined for this well in 2d).
+        (default is 0)
+    qlimit :
+        an integer flag that indicates whether the water level (head) in the well will be used to constrain
+        the pumping rate. If Qlimit = 0, then there are no constraints for this well. If Qlimit > 0, then
+        pumpage will be limited (constrained) by the water level in the well, and relevant parameters are
+        constant in time and defined below in dataset 2f. If Qlimit < 0, then pumpage will be limited
+        (constrained) by the water level in the well, and relevant parameters can vary with time and are
+        defined for every stress period in dataset 4b.
+        (default is 0)
+    ppflag :
+        an integer flag that determines whether the calculated head in the well will be corrected for the
+        effect of partial penetration of the well screen in the cell. If PPFLAG = 0, then the head in the
+        well will not be adjusted for the effects of partial penetration. If PPFLAG > 0, then the head in
+        the well will be adjusted for the effects of partial penetration if the section of well containing
+        the well screen is vertical (as indicated by identical row-column locations in the grid). If
+        NNODES < 0 (that is, the open intervals of the well are defined by top and bottom elevations),
+        then the model will automatically calculate the fraction of penetration for each node and the
+        relative vertical position of the well screen. If NNODES > 0, then the fraction of penetration for
+        each node must be defined in dataset 2d (see below) and the well screen will be assumed to be
+        centered vertically within the thickness of the cell (except if the well is located in the uppermost
+        model layer that is under unconfined conditions, in which case the bottom of the well screen will be
+        assumed to be aligned with the bottom boundary of the cell and the assumed length of well screen will
+        be based on the initial head in that cell).
+        (default is 0)
+    pumpcap :
+        an integer flag and value that determines whether the discharge of a pumping (withdrawal) well (
+        Q < 0.0) will be adjusted for changes in the lift (or total dynamic head) with time. If PUMPCAP = 0,
+        then the discharge from the well will not be adjusted on the basis of changes in lift. If PUMPCAP > 0
+        for a withdrawal well, then the discharge from the well will be adjusted on the basis of the lift, as
+        calculated from the most recent water level in the well. In this case, data describing the head-capacity
+        relation for the pump must be listed in datasets 2g and 2h, and the use of that relation can be switched
+        on or off for each stress period using a flag in dataset 4a. The number of entries (lines) in dataset 2h
+        corresponds to the value of PUMPCAP. If PUMPCAP does not equal 0, it must be set to an integer value of
+        between 1 and 25, inclusive.
+        (default is 0)
+    lay_row_col : list of arrays (shape = (NNODES,3), length = MNWMAX)
+        layer, row, and column numbers of each model cell (node) for the current well. If NNODES > 0,
+        then a total of NNODES model cells (nodes) must be specified for each well (and dataset 2d must
+        contain NNODES records). In the list of nodes defining the multi-node well, the data list must be
+        constructed and ordered so that the first node listed represents the node closest to the wellhead,
+        the last node listed represents the node furthest from the wellhead, and all nodes are listed in
+        sequential order from the top to the bottom of the well (corresponding to the order of first to
+        last well nodes). A particular node in the grid can be associated with more than one multi-node well.
+        (default is None)
+    ztop_zbotm_row_col : list of arrays (shape = (abs(NNODES),2), length = MNWMAX)
+        the top and bottom elevations of the open intervals (or screened intervals) of a vertical well.
+        These values are only read if NNODES < 0 in dataset 2a. The absolute value of NNODES indicates
+        how many open intervals are to be defined, and so must correspond exactly to the number of records
+        in dataset 2d for this well. In the list of intervals defining the multi-node well, the data list
+        must be constructed and ordered so that the first interval listed represents the shallowest one,
+        the last interval listed represents the deepest one, and all intervals are listed in sequential
+        order from the top to the bottom of the well. If an interval partially or fully intersects a model
+        layer, then a node will be defined in that cell. If more than one open interval intersects a
+        particular layer, then a length-weighted average of the cell-to-well conductances will be used to
+        define the well-node characteristics; for purposes of calculating effects of partial penetration,
+        the cumulative length of well screens will be assumed to be centered vertically within the thickness
+        of the cell. If the well is a single-node well by definition of LOSSTYPE = NONE and the defined open
+        interval straddles more than one model layer, then the well will be associated with the cell where
+        the center of the open interval exists.
+        (default is None)
+
+        if losstype != None
+            rw :
+                (default is 0)
+            rskin :
+                (default is 0)
+            kskin :
+                (default is 0)
+            b :
+                (default is 0)
+            c :
+                (default is 0)
+            p :
+                (default is 0)
+            cwc :
+                (default is 0)
+    pp :
+        the fraction of partial penetration for this cell
+        (see PPFLAG in dataset 2b). Only specify if PPFLAG > 0 and NNODES > 0.
+        (default is 1)
+    itmp :
+        is an integer value for reusing or reading multi-node well data; it can change each stress period.
+        ITMP must be ≥ 0 for the first stress period of a simulation.
+        if ITMP > 0, then ITMP is the total number of active multi-node wells simulated during the stress period,
+        and only wells listed in dataset 4a will be active during the stress period. Characteristics of each
+        well are defined in datasets 2 and 4.
+        if ITMP = 0, then no multi-node wells are active for the stress period and the following dataset is
+        skipped.
+        if ITMP < 0, then the same number of wells and well information will be reused from the previous stress
+        period and dataset 4 is skipped.
+        (default is 0)
+    wellid_qdes : list of arrays
+    (shape = (NPER,MNWMAX,2))
+        the actual (or maximum desired, if constraints are to be applied) volumetric pumping rate
+        (negative for withdrawal or positive for injection) at the well (L3/T). Qdes should be set to 0
+        for nonpumping wells. If constraints are applied, then the calculated volumetric withdrawal or
+        injection rate may be adjusted to range from 0 to Qdes and is not allowed to switch directions
+        between withdrawal and injection conditions during any stress period. When PUMPCAP > 0, in the
+        first stress period in which Qdes is specified with a negative value, Qdes represents the maximum
+        operating discharge for the pump; in subsequent stress periods, any different negative values of
+        Qdes are ignored, although values are subject to adjustment for CapMult. If Qdes ≥ 0.0, then
+        pump-capacity adjustments are not applied.
+        (default is None)
+    extension : string
+        Filename extension (default is 'mnw2')
+    unitnumber : int
+        File unit number (default is 34).
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+    Parameters are not supported in FloPy.
+
+    This implementation does not allow well loss parameters {Rw,Rskin,Kskin,B,C,P,CWC,PP} to vary along the length
+    of a given well. It also does not currently support data sections 2e, 2f, 2g, 2h, or 4b as defined in the data
+    input instructions for the MNW2 package.
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> ml = flopy.modflow.Modflow()
+    >>> mnw2 = flopy.modflow.ModflowGhb(ml, ...)
+
+    """
 
     def __init__(self, model, mnwmax=0, iwl2cb=-1, mnwprnt=0, aux=None,
                  wellid=None, nnodes=None, losstype=None, pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
                  lay_row_col=None, ztop_zbotm_row_col=None, rw=0, rskin=0, kskin=0, b=0, c=0, p=0, cwc=0, pp=1,
-                 itmp=0,wellid_qdes=None,
+                 itmp=0, wellid_qdes=None,
                  extension='mnw2', unitnumber=34):
         """
         Package constructor
