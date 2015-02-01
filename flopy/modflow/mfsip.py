@@ -24,8 +24,8 @@ class ModflowSip(Package):
         during an iteration is less than or equal to HCLOSE, iteration stops. (default is 1e-5)
     ipcalc : 0 or 1
         A flag indicating where the seed for calculating iteration variables will come from.
-            0—the seed entered by the user will be used.
-            1—the seed will be calculated at the start of the simulation from problem variables.
+            0 is the seed entered by the user will be used.
+            1 is the seed will be calculated at the start of the simulation from problem variables.
         (default is 0)
     wseed : float > 0
         The seed for calculating iteration variables. WSEED is always read,
