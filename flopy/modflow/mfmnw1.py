@@ -2,10 +2,69 @@ from numpy import empty,zeros
 from flopy.mbase import Package
 
 class ModflowMnw1(Package):
-    '''
-    NOTE: The functionality of the ADD flag in data set 4 is not supported. Also not supported are all water-quality parameters (Qwval Iqwgrp),
-    water level limitations (Hlim Href DD), non-linear well losses, and pumping limitations (QCUT Q-%CUT Qfrcmn Qfrcmx DEFAULT).
-    '''
+    """
+    MODFLOW Multi-Node Well 1 Package Class.
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    mxmnw : integer
+        maximum number of multi-node wells to be simulated
+    iwl2cb : integer
+        flag and unit number
+    iwelpt : integer
+        verbosity flag
+    nomoiter : integer
+        the number of iterations for which flow in MNW wells is calculated
+    kspref : string
+        which set of water levels are to be used as reference values for calculating drawdown
+    losstype : string
+        head loss type for each well
+    wel1_bynode_qsum : list of lists
+        nested list containing file names, unit numbers, and ALLTIME flag for auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
+    itmp : array
+        number of wells to be simulated for each stress period (shape : (NPER))
+    lay_row_col_qdes_mn_multi : list of arrays
+        lay, row, col, qdes, and MN or MULTI flag for all well nodes (length : NPER)
+    mnwname : string
+        prefix name of file for outputting time series data from MNW1
+    extension : string
+        Filename extension (default is 'mnw1')
+    unitnumber : int
+        File unit number (default is 33).
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+    write_file : Writes Modflow input file for the drain package
+    load : no load method for this class
+
+    See Also
+    --------
+
+    Notes
+    -----
+    Parameters are not supported in FloPy.
+
+    The functionality of the ADD flag in data set 4 is not supported. Also not supported
+    are all water-quality parameters (Qwval Iqwgrp), water-level limitations (Hlim, Href, DD),
+    non-linear well losses, and pumping limitations (QCUT, Q-%CUT, Qfrcmn, Qfrcmx, DEFAULT).
+
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> ml = flopy.modflow.Modflow()
+    >>> lrcsc = {0:[2, 3, 4, 10., 100.]}  #this mnw1 will be applied to all
+    >>>                                   #stress periods
+    >>> mnw1 = flopy.modflow.ModflowGhb(ml, stress_period_data=lrcsc)
+
+    """
 
     def __init__( self, model, mxmnw=0, iwl2cb=0, iwelpt=0, nomoiter=0, kspref=1,
                   wel1_bynode_qsum=None,
