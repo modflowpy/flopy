@@ -25,11 +25,11 @@ class ModflowSip(Package):
         Write the package input file.
 
         """
-        # Open file for writing
-        f_sip = open(self.fn_path, 'w')
-        f_sip.write('%10i%10i\n' % (self.mxiter,self.nparm))
-        f_sip.write('%10f%10f%10i%10f%10i\n' % (self.accl, self.hclose, self.ipcalc, self.wseed, self.iprsip))
-        f_sip.close()
+        #--Open file for writing
+        f = open(self.fn_path, 'w')
+        f.write('{:10d}{:10d}\n'.format(self.mxiter, self.nparm))
+        f.write('{:10.3f}{:10.3f}{:10d}{:10.3f}{:10d}\n'.format(self.accl, self.hclose, self.ipcalc, self.wseed, self.iprsip))
+        f.close()
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
