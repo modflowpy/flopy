@@ -1,8 +1,49 @@
 from flopy.mbase import Package
 
 class ModflowMnwi(Package):
-    'Multi-node well information package class\n'
+    """
+    'Multi-Node Well Information Package Class'
 
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    wel1flag : integer
+        Flag indicating output to be written for each MNW node at the end of each stress period
+    qsumflag :integer
+        Flag indicating output to be written for each multi-node well
+    byndflag :integer
+        Flag indicating output to be written for each MNW node
+    mnwobs :integer
+        Number of multi-node wells for which detailed flow, head, and solute data re to be saved
+    wellid_unit_qndflag_qhbflag_concflag : list of lists
+        Containing wells and related information to be output (length : [MNWOBS][4or5])
+    extension : string
+        Filename extension (default is 'mnwi')
+    unitnumber : int
+        File unit number (default is 58).
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> ml = flopy.modflow.Modflow()
+    >>> ghb = flopy.modflow.ModflowMnwi(ml, ...)
+
+    """
     def __init__( self, model, wel1flag=1, qsumflag=1, byndflag=1, mnwobs=1, wellid_unit_qndflag_qhbflag_concflag=None,
                   extension='mnwi', unitnumber=58 ):
         Package.__init__(self, model, extension, 'MNWI', unitnumber) # Call ancestor's init to set self.parent, extension, name, and unit number
