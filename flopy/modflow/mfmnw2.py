@@ -32,10 +32,10 @@ class ModflowMnw2(Package):
         (default is 0)
     aux : list of strings
     (note: not sure if the words AUX or AUXILIARY are necessary)
-        in the style of “AUXILIARY abc” or “AUX abc” where
-        “abc” is the name of an auxiliary parameter to be read for each multi-node well as part
+        in the style of AUXILIARY abc or AUX abc where
+        abc is the name of an auxiliary parameter to be read for each multi-node well as part
         of dataset 4a. Up to five parameters can be specified, each of which must be preceded
-        by “AUXILIARY” or “AUX.” These parameters will not be used by the MNW2 Package, but
+        by AUXILIARY or AUX. These parameters will not be used by the MNW2 Package, but
         they will be available for use by other packages.
         (default is None)
     wellid : array of strings (shape = (MNWMAX))
@@ -70,8 +70,8 @@ class ModflowMnw2(Package):
             GENERAL head loss is defined with coefficients A, B, and C and power exponent P
                 (hWELL = hn + AQn + BQn + CQnP). A is determined by the model from the value of Rw.
                 must define Rw, B, C, and P in dataset 2c or 2d. A value of P = 2.0 is suggested if no other
-                data are available (the model allows 1.0 ≤ P ≤ 3.5). Entering a value of C = 0 will result
-                in a “linear” model in which the value of B is entered directly (rather than entering properties
+                data are available (the model allows 1.0 <= P <= 3.5). Entering a value of C = 0 will result
+                in a linear model in which the value of B is entered directly (rather than entering properties
                 of the skin, as with the SKIN option).
             SPECIFYcwc the user specifies an effective conductance value (equivalent to the combined
                 effects of the A, B, and C well-loss coefficients expressed in equation 15) between the well and
@@ -170,7 +170,7 @@ class ModflowMnw2(Package):
         (default is 1)
     itmp : integer
         For reusing or reading multi-node well data; it can change each stress period.
-        ITMP must be ≥ 0 for the first stress period of a simulation.
+        ITMP must be >= 0 for the first stress period of a simulation.
         if ITMP > 0, then ITMP is the total number of active multi-node wells simulated during the stress period,
         and only wells listed in dataset 4a will be active during the stress period. Characteristics of each
         well are defined in datasets 2 and 4.
@@ -187,7 +187,7 @@ class ModflowMnw2(Package):
         between withdrawal and injection conditions during any stress period. When PUMPCAP > 0, in the
         first stress period in which Qdes is specified with a negative value, Qdes represents the maximum
         operating discharge for the pump; in subsequent stress periods, any different negative values of
-        Qdes are ignored, although values are subject to adjustment for CapMult. If Qdes ≥ 0.0, then
+        Qdes are ignored, although values are subject to adjustment for CapMult. If Qdes >= 0.0, then
         pump-capacity adjustments are not applied.
         (default is None)
     extension : string
