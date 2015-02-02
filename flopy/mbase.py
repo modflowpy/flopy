@@ -279,6 +279,7 @@ class BaseModel(object):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
+                sys.stdout.write('\ncreating model workspace...{}\n'.format(new_pth))
                 os.makedirs(new_pth)
             except:
                 #print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
@@ -286,9 +287,10 @@ class BaseModel(object):
                 new_pth = os.getcwd()
         #--reset the model workspace
         self.model_ws = new_pth
+        sys.stdout.write('\nchanging model workspace...{}\n'.format(new_pth))
         #--reset the paths for each package
         for pp in (self.packagelist):
-            pp.fn_path = os.path.join(self.model_ws,pp.file_name[0])
+            pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
         return None
     
