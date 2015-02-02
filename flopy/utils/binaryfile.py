@@ -284,16 +284,16 @@ class BinaryLayerFile(object):
         '''
         return self.kstpkper
 
-    def get_data(self, kstp=0, kper=0, idx=None, totim=0, mflay=None):
+    def get_data(self, kstpkper=(0, 0), idx=None, totim=0, mflay=None):
         '''
-        Return a three dimensional value array for the specified kstp, kper
-        pair or totim value, or return a two dimensional head array
+        Return a three dimensional value array for the specified (kstp, kper)
+        tuple or totim value, or return a two dimensional head array
         if the mflay argument is specified, where mflay is the MODFLOW layer
         number (starting at 1).
         '''
         if idx is not None:
             totim = self.recordarray['totim'][idx]
-        self._fill_value_array(kstp, kper, totim)
+        self._fill_value_array(kstpkper[0], kstpkper[1], totim)
         if mflay is None:
             return self.value
         else:
