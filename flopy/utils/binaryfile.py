@@ -4,7 +4,7 @@ from collections import OrderedDict
 class BinaryHeader():
     """
     The binary_header class is a class to create headers for MODFLOW
-    binary files    
+    binary files
     """
     def __init__(self, bintype=None, precision='single'):
         floattype = 'f4'
@@ -35,6 +35,9 @@ class BinaryHeader():
         return
 
     def set_values(self, **kwargs):
+        """
+        Set values using kwargs
+        """
         ikey = ['ntrans', 'kstp', 'kper', 'ncol', 'nrow', 'ilay']
         fkey = ['pertim', 'totim']
         ckey = ['text']
@@ -64,12 +67,21 @@ class BinaryHeader():
                 self.header[0][k] = 'DUMMY TEXT'
 
     def get_dtype(self):
+        """
+        Return the dtype
+        """
         return self.dtype
 
     def get_names(self):
+        """
+        Return the dtype names
+        """
         return self.dtype.names
         
     def get_values(self):
+        """
+        Return the header values
+        """
         if self.header is None:
             return None
         else:
@@ -77,26 +89,35 @@ class BinaryHeader():
 
     @staticmethod
     def set_dtype(bintype=None, precision='single'):
+        """
+        Set the dtype
+        """
         header = BinaryHeader(bintype=bintype, precision=precision)
         return header.dtype
 
     @staticmethod
     def create(bintype=None, **kwargs):
+        """
+        Create a binary header
+        """
         header = BinaryHeader(bintype=bintype)
         if header.get_dtype() is not None:
             header.set_values(**kwargs)
         return header.get_values()
 
 def binaryread_struct(file, vartype, shape=(1), charlen=16):
-    '''Read text, a scalar value, or an array of values from a binary file.
-       file is an open file object
-       vartype is the return variable type: str, numpy.int32, numpy.float32, 
-           or numpy.float64
-       shape is the shape of the returned array (shape(1) returns a single value)
-           for example, shape = (nlay, nrow, ncol)
-       charlen is the length of the text string.  Note that string arrays cannot
-           be returned, only multi-character strings.  Shape has no affect on strings.
-    '''
+    """
+    Read text, a scalar value, or an array of values from a binary file.
+        file is an open file object
+        vartype is the return variable type: str, numpy.int32, numpy.float32,
+            or numpy.float64
+        shape is the shape of the returned array (shape(1) returns a single
+            value) for example, shape = (nlay, nrow, ncol)
+        charlen is the length of the text string.  Note that string arrays
+            cannot be returned, only multi-character strings.  Shape has no
+            affect on strings.
+
+    """
     import struct
     import numpy as np
     
@@ -125,10 +146,11 @@ def binaryread_struct(file, vartype, shape=(1), charlen=16):
     return result
     
 def binaryread(file, vartype, shape=(1), charlen=16):
-    '''uses numpy to read from binary file.  This
-       was found to be faster than the struct
-       approach and is used as the default.
-    '''
+    """
+    Uses numpy to read from binary file.  This was found to be faster than the
+        struct approach and is used as the default.
+
+    """
     
     #read a string variable of length charlen
     if vartype == str:
@@ -144,9 +166,10 @@ def binaryread(file, vartype, shape=(1), charlen=16):
     return result
 
 def join_struct_arrays(arrays):
-    '''
+    """
     Simple function that can join two numpy structured arrays.
-    '''
+
+    """
     newdtype = sum((a.dtype.descr for a in arrays), [])
     newrecarray = np.empty(len(arrays[0]), dtype = newdtype)
     for a in arrays:
@@ -156,10 +179,11 @@ def join_struct_arrays(arrays):
 
 
 class BinaryLayerFile(object):
-    '''
+    """
     The BinaryLayerFile class is the super class from which specific derived
     classes are formed.  This class should not be instantiated directly
-    '''
+
+    """
     def __init__(self, filename, precision, verbose):        
         self.filename = filename
         self.precision = precision
@@ -190,10 +214,10 @@ class BinaryLayerFile(object):
    
 
     def _build_index(self):
-        '''
+        """
         Build the recordarray and iposarray, which maps the header information
         to the position in the binary file.
-        '''        
+        """
         header = self.get_header()
         self.nrow = header['nrow']
         self.ncol = header['ncol']
@@ -230,17 +254,19 @@ class BinaryLayerFile(object):
         return
 
     def get_header(self):
-        '''
+        """
         Read the file header
-        '''        
+
+        """
         header = binaryread(self.file, self.header_dtype, (1,))
         return header[0]
 
     def list_records(self):
-        '''
+        """
         Print a list of all of the records in the file
         obj.list_records()
-        '''
+
+        """
         for header in self.recordarray:
             print header
         return
@@ -365,50 +391,116 @@ class BinaryLayerFile(object):
 
 
 class HeadFile(BinaryLayerFile):
-    '''
-    The HeadFile class provides simple ways to retrieve 2d and 3d 
+    """
+    HeadFile Class.
+
+    Parameters
+    ----------
+    filename : string
+        Name of the concentration file
+    text : string
+        Name of the text string in the ucn file.  Default is 'head'
+    precision : string
+        'single' or 'double'.  Default is 'single'.
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+    The HeadFile class provides simple ways to retrieve 2d and 3d
     head arrays from a MODFLOW binary head file and time series
     arrays for one or more cells.
-    
-    A HeadFile object is created as
-    hdobj = HeadFile(filename, precision='single')
-    
-    This class can also be used for a binary drawdown file as
-    ddnobj = HeadFile(filename, precision='single', text='drawdown')
-    
+
     The BinaryLayerFile class is built on a record array consisting of
     headers, which are record arrays of the modflow header information
     (kstp, kper, pertim, totim, text, nrow, ncol, ilay)
     and long integers, which are pointers to first bytes of data for
     the corresponding data array.
-    '''
-    def __init__(self, filename, text='head',precision='single', verbose=False):
+
+    Examples
+    --------
+
+    >>> import flopy.utils.binaryfile as bf
+    >>> hdobj = bf.UcnFile('model.hds', precision='single')
+    >>> hdobj.list_records()
+    >>> rec = hdobj.get_data(kstpkper=(1, 50))
+
+    >>> ddnobj = bf.UcnFile('model.ddn', text='drawdown', precision='single')
+    >>> ddnobj.list_records()
+    >>> rec = ddnobj.get_data(totim=100.)
+
+
+    """
+    def __init__(self, filename, text='head', precision='single',
+                 verbose=False):
         self.text = text
         self.header_dtype = BinaryHeader.set_dtype(bintype='Head',
                                                    precision=precision)
-        super(HeadFile,self).__init__(filename, precision, verbose)
+        super(HeadFile, self).__init__(filename, precision, verbose)
+        return
 
 
 class UcnFile(BinaryLayerFile):
-    '''
-    The UcnFile class provides simple ways to retrieve 2d and 3d 
+    """
+    UcnFile Class.
+
+    Parameters
+    ----------
+    filename : string
+        Name of the concentration file
+    text : string
+        Name of the text string in the ucn file.  Default is 'CONCENTRATION'
+    precision : string
+        'single' or 'double'.  Default is 'single'.
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+    The UcnFile class provides simple ways to retrieve 2d and 3d
     concentration arrays from a MT3D binary head file and time series
     arrays for one or more cells.
-    
-    A UcnFile object is created as
-    ucnobj = UcnFile(filename, precision='single')
-    
+
     The BinaryLayerFile class is built on a record array consisting of
     headers, which are record arrays of the modflow header information
     (kstp, kper, pertim, totim, text, nrow, ncol, ilay)
     and long integers, which are pointers to first bytes of data for
     the corresponding data array.
-    '''
-    def __init__(self, filename, text='concentration',precision='single', verbose=False):
+
+    Examples
+    --------
+
+    >>> import flopy.utils.binaryfile as bf
+    >>> ucnobj = bf.UcnFile('MT3D001.UCN', precision='single')
+    >>> ucnobj.list_records()
+    >>> rec = ucnobj.get_data(kstpkper=(1,1))
+
+    """
+    def __init__(self, filename, text='concentration', precision='single',
+                 verbose=False):
         self.text = text
         self.header_dtype = BinaryHeader.set_dtype(bintype='Ucn',
                                                    precision=precision)
-        super(UcnFile,self).__init__(filename, precision, verbose)
+        super(UcnFile, self).__init__(filename, precision, verbose)
+        return
 
 
 class CellBudgetFile(object):
