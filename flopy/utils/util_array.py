@@ -917,12 +917,12 @@ class util_2d(object):
                 #-- write constant as array to file or array to file
                 f = self.ext_filename
                 fr = os.path.relpath(f, self.model.model_ws)
-                if self.locat is None:
-                    cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(fr, self.cnstnt,
-                         self.fmtin.strip(), self.iprn, self.name)
-                else:
-                    cr = 'EXTERNAL  {0:5d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(self.locat, self.cnstnt,
-                         self.fmtin.strip(), self.iprn, self.name)
+                #if self.locat is None:
+                cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(fr, self.cnstnt,
+                     self.fmtin.strip(), self.iprn, self.name)
+                # else:
+                #     cr = 'EXTERNAL  {0:5d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(self.locat, self.cnstnt,
+                #          self.fmtin.strip(), self.iprn, self.name)
 
         else:                       
             #--if value is a scalar and we don't want external array
@@ -1051,7 +1051,7 @@ class util_2d(object):
 
 
     @staticmethod
-    def load(f_handle,model,shape,dtype,name,ext_unit_dict=None):
+    def load(f_handle, model, shape, dtype, name, ext_unit_dict=None):
         '''functionality to load util_2d instance from an existing
         model input file.
         external and internal record types must be fully loaded
@@ -1074,7 +1074,7 @@ class util_2d(object):
                                                ext_unit_dict=ext_unit_dict)
         
         if cr_dict['type'] == 'constant':
-            u2d = util_2d(model, shape,dtype, cr_dict['cnstnt'], name=name,
+            u2d = util_2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
                 iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
         
         elif cr_dict['type'] == 'open/close':
@@ -1083,33 +1083,46 @@ class util_2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
-            #fname = os.path.join(model.model_ws,fname)
-            u2d = util_2d(model, shape, dtype, fname, name=name,
+            fname = os.path.join(model.model_ws,fname)
+            #load_txt(shape, file_in, dtype, fmtin):
+            assert os.path.exists(fname),"util_2d.load() error: open/close " +\
+                "file " + str(fname) + " not found"
+            f = open(fname, 'r')
+            data = util_2d.load_txt(shape=shape,
+                                    file_in=f,
+                                    dtype=dtype, fmtin=cr_dict['fmtin'])
+            f.close()
+            # u2d = util_2d(model, shape, dtype, fname, name=name,
+            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+            #               ext_filename=fname)
+            u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
                           ext_filename=fname)
+
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+
         elif cr_dict['type'] == 'external':
             assert cr_dict['nunit'] in ext_unit_dict.keys()
-            # if 'binary' not in cr_dict['fmtin'].lower():
-            #     data = util_2d.load_txt(shape,
-            #                             ext_unit_dict[cr_dict['nunit']].
-            #                             filehandle, dtype, cr_dict['fmtin'])
-            # else:
-            #     header_data, data = util_2d.load_bin(
-            #         shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype)
-            # u2d = util_2d(model, shape, dtype, data, name=name,
-            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
-            fname = cr_dict['fname']
-            fname = fname.replace('\'', '')
-            fname = fname.replace('\"', '')
-            fname = fname.replace('\\', os.path.sep)
-            #fname = os.path.join(model.model_ws, fname)
-            u2d = util_2d(model, shape, dtype, fname, name=name, locat=cr_dict['nunit'],
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-                          ext_filename=fname)
+            if 'binary' not in cr_dict['fmtin'].lower():
+                data = util_2d.load_txt(shape,
+                                    ext_unit_dict[cr_dict['nunit']].filehandle,
+                                        dtype, cr_dict['fmtin'])
+            else:
+                header_data, data = util_2d.load_bin(
+                    shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype)
+            u2d = util_2d(model, shape, dtype, data, name=name,
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+            # fname = cr_dict['fname']
+            # fname = fname.replace('\'', '')
+            # fname = fname.replace('\"', '')
+            # fname = fname.replace('\\', os.path.sep)
+            # #fname = os.path.join(model.model_ws, fname)
+            # u2d = util_2d(model, shape, dtype, fname, name=name, locat=cr_dict['nunit'],
+            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+            #               ext_filename=fname)
         return u2d
             
 

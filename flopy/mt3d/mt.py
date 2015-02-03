@@ -56,7 +56,12 @@ class Mt3dms(BaseModel):
         self.load = load
         self.__next_ext_unit = 500
         if external_path is not None:
-            assert os.path.exists(external_path),'external_path does not exist'
+            if os.path.exists(external_path):
+                print "Note: external_path " + str(external_path) +\
+                    " already exists"
+            #assert os.path.exists(external_path),'external_path does not exist'
+            else:
+                os.mkdir(external_path)
             self.external = True         
         self.verbose = verbose            
         return

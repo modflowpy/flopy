@@ -125,6 +125,8 @@ class mflist(object):
 
         # If data is a dict, the we have to assume it is keyed on kper
         if isinstance(data, dict):
+            if len(data.keys()) == 0:
+                raise Exception("mflist error: data dict is empty")
             for kper, d in data.iteritems():
                 assert isinstance(kper, int), "mflist error: data dict key " +\
                                               " \'{0:s}\' " +\
@@ -308,7 +310,7 @@ class mflist(object):
                             "from file " + str(e))
         return d
 
-    def write_transient(self, f, single_per = None):
+    def write_transient(self, f, single_per=None):
         #write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
         assert isinstance(f, file), "mflist.write() error: " +\
