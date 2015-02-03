@@ -19,15 +19,15 @@ FloPy3 is significantly different from FloPy2 (hosted on [googlecode](https://co
 
 To install *FloPy* type:
 
-       ``pip install flopy``
+       `pip install flopy`
 
 To update *FloPy* type:
 
-       ``pip install flopy --update``
+       `pip install flopy --update`
 
 To uninstall *FloPy* type:
 
-       ``pip uninstall flopy``
+       `pip uninstall flopy`
 
 
 Documentation
@@ -65,7 +65,7 @@ Note that examples 2 and 5 also include *FloPy* scripts for running and post-pro
 
 A few simple *FloPy* tutorials are available at:
 
-+ [https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html](https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html)
++ [http://modflowpy.github.io/flopydoc/tutorials.html](http://modflowpy.github.io/flopydoc/tutorials.html)
 
 
 ### MODFLOW Resources
