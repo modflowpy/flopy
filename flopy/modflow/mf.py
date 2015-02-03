@@ -307,7 +307,7 @@ class Modflow(BaseModel):
                     sys.stdout.write('   {:4s} package load...success\n'
                                      .format(pck.name[0]))
                 except BaseException as o:
-                    sys.stdout.write('   {:4s} package load...failed\n      {!s}\n'
+                    sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
                                      .format(item.filetype, o))
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
@@ -321,15 +321,19 @@ class Modflow(BaseModel):
                 if key not in ml.pop_key_list:
                     ml.external_fnames.append(item.filename)
                     ml.external_units.append(key)
-                    ml.external_binflag.append("binary" in item.filetype.lower())
+                    ml.external_binflag.append("binary"
+                                               in item.filetype.lower())
 
-        #--pop binary output keys
+        #--pop binary output keys and any external file units that are now
+        #--internal
         for key in ml.pop_key_list:
             try:
+                ml.remove_external(unit=key)
                 ext_unit_dict.pop(key)
             except:
                 if ml.verbose:
-                    sys.stdout.write('Warning: external file unit {} does not exist in ext_unit_dict.\n'.format(key))
+                    sys.stdout.write('Warning: external file unit " +\
+                        "{} does not exist in ext_unit_dict.\n'.format(key))
 
         #--write message indicating packages that were successfully loaded
         print 1 * '\n'

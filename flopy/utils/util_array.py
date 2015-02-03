@@ -1115,14 +1115,9 @@ class util_2d(object):
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype)
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
-            # fname = cr_dict['fname']
-            # fname = fname.replace('\'', '')
-            # fname = fname.replace('\"', '')
-            # fname = fname.replace('\\', os.path.sep)
-            # #fname = os.path.join(model.model_ws, fname)
-            # u2d = util_2d(model, shape, dtype, fname, name=name, locat=cr_dict['nunit'],
-            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-            #               ext_filename=fname)
+            # track this unit number so we can remove it from the external
+            # file list later
+            model.pop_key_list.append(cr_dict['nunit'])
         return u2d
             
 
