@@ -213,7 +213,7 @@ class Modflow(BaseModel):
             f_nam.write('{:12s} {:3d} {}\n'.format(self.glo.name[0], self.glo.unit_number[0], self.glo.file_name[0]))
         f_nam.write('{:12s} {:3d} {}\n'.format(self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]))
         f_nam.write('{}'.format(self.get_name_file_entries()))
-        for u,f,b in zip(self.external_units, self.external_fnames, self.external_binflag):
+        for u, f, b in zip(self.external_units, self.external_fnames, self.external_binflag):
             fr = os.path.relpath(f, self.model_ws)
             if b:
                 f_nam.write('DATA(BINARY)  {0:3d}  '.format(u) + fr + ' REPLACE\n')

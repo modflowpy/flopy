@@ -1000,6 +1000,9 @@ class util_2d(object):
                 except:
                     # print value
                     # print os.path.join(self.model.model_ws,value)
+                    #--JDH Note: value should be the filename with
+                    #            the relative path. Trace through code to
+                    #            determine why it isn't
                     if os.path.basename(value) == value:
                         value = os.path.join(self.model.model_ws, value)
                     assert os.path.exists(value), 'could not find file: ' + str(value)
