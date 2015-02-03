@@ -13,7 +13,7 @@ A set of scripts for reading and writing datasets for MODFLOW-based programs.
 FloPy3 is significantly different from FloPy2 (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
 
 * FloPy3 is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
-* Input for packages that take *layer,row,column,data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [mflist](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/mflist/flopy3boundaries.ipynb)
+* Input for packages that take *layer,row,column,data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/flopy3boundaries.ipynb)
 
 ## Installation
 
