@@ -64,6 +64,7 @@ class BaseModel(object):
                 print '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd())
                 model_ws = os.getcwd()
         self.model_ws= model_ws
+        self.pop_key_list = []
         self.cl_params = ''
         return
 
@@ -186,13 +187,13 @@ class BaseModel(object):
 
         """
         if fname is not None:
-            for i,e in enumerate(self.external_fnames):
+            for i, e in enumerate(self.external_fnames):
                 if fname in e:
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
         elif unit is not None:
-            for i,u in enumerate(self.external_units):
+            for i, u in enumerate(self.external_units):
                 if u == unit:
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
@@ -212,7 +213,7 @@ class BaseModel(object):
         s = ''
         for p in self.packagelist:
             for i in range(len(p.name)):
-                s = s + ('{0:s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
+                s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
                                                              p.unit_number[i],
                                                              p.file_name[i],
                                                              p.extra[i]))
@@ -279,7 +280,7 @@ class BaseModel(object):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                sys.stdout.write('\ncreating model workspace...{}\n'.format(new_pth))
+                sys.stdout.write('\ncreating model workspace...\n   {}\n'.format(new_pth))
                 os.makedirs(new_pth)
             except:
                 #print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
@@ -287,7 +288,7 @@ class BaseModel(object):
                 new_pth = os.getcwd()
         #--reset the model workspace
         self.model_ws = new_pth
-        sys.stdout.write('\nchanging model workspace...{}\n'.format(new_pth))
+        sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
         #--reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
@@ -404,6 +405,26 @@ class BaseModel(object):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
     name = property(get_name, set_name)
 
+    def add_pop_key_list(self, key):
+        """
+        Add a external file unit number to a list that will be used to remove
+        model output (typically binary) files from ext_unit_dict.
+
+        Parameters
+        ----------
+        key : int
+            file unit number
+
+        Returns
+        -------
+
+        Examples
+        --------
+
+        """
+        if key not in self.pop_key_list:
+            self.pop_key_list.append(key)
+
 
 class Package(object):
     """
@@ -506,7 +527,7 @@ class Package(object):
         return
 
     @staticmethod
-    def load(model, pack_type, f, nper=None):
+    def load(model, pack_type, f, nper=None, pop_key_list=None):
         """
         The load method has not been implemented for this package.
 
@@ -540,6 +561,7 @@ class Package(object):
         try:
             if int(t[1]) != 0:
                 ipakcb = 53
+                pop_key_list = model.pop_key_list(int(t[1]), pop_key_list)
         except:
             pass
         options = []

@@ -210,14 +210,15 @@ class Modflow(BaseModel):
         f_nam = open(fn_path, 'w')
         f_nam.write('%s\n' % (self.heading) )
         if self.version == 'mf2k':
-            f_nam.write('%s %3i %s\n' % (self.glo.name[0], self.glo.unit_number[0], self.glo.file_name[0]))
-        f_nam.write('%s %3i %s\n' % (self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]))
-        f_nam.write('%s' % self.get_name_file_entries())
-        for u,f,b in zip(self.external_units,self.external_fnames,self.external_binflag):
+            f_nam.write('{:12s} {:3d} {}\n'.format(self.glo.name[0], self.glo.unit_number[0], self.glo.file_name[0]))
+        f_nam.write('{:12s} {:3d} {}\n'.format(self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]))
+        f_nam.write('{}'.format(self.get_name_file_entries()))
+        for u,f,b in zip(self.external_units, self.external_fnames, self.external_binflag):
+            fr = os.path.relpath(f, self.model_ws)
             if b:
-                f_nam.write('DATA(BINARY)  {0:3d}  '.format(u)+f+' REPLACE\n'	)
+                f_nam.write('DATA(BINARY)  {0:3d}  '.format(u) + fr + ' REPLACE\n')
             else:
-                f_nam.write('DATA  {0:3d}  '.format(u)+f+'\n'	)
+                f_nam.write('DATA          {0:3d}  '.format(u) + fr + '\n')
         f_nam.close()
         return
 
@@ -317,9 +318,18 @@ class Modflow(BaseModel):
                 sys.stdout.write('   {} file load...skipped\n      {}\n'
                                  .format(item.filetype,
                                          os.path.basename(item.filename)))
-                ml.external_fnames.append(item.filename)
-                ml.external_units.append(key)
-                ml.external_binflag.append("binary" in item.filetype.lower())
+                if key not in ml.pop_key_list:
+                    ml.external_fnames.append(item.filename)
+                    ml.external_units.append(key)
+                    ml.external_binflag.append("binary" in item.filetype.lower())
+
+        #--pop binary output keys
+        for key in ml.pop_key_list:
+            try:
+                ext_unit_dict.pop(key)
+            except:
+                if ml.verbose:
+                    sys.stdout.write('Warning: external file unit {} does not exist in ext_unit_dict.\n'.format(key))
 
         #--write message indicating packages that were successfully loaded
         print 1 * '\n'

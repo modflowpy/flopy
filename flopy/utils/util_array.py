@@ -199,7 +199,7 @@ class util_3d(object):
     """
     __metaclass__ = meta_interceptor
     def __init__(self, model, shape, dtype, value, name,
-        fmtin=None, cnstnt=1.0, iprn=-1, locat=None):
+        fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
         '''3-D wrapper from util_2d - shape must be 3-D
         '''
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
@@ -538,7 +538,8 @@ class util_2d(object):
     """
     __metaclass__ = meta_interceptor  
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
-        cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
+        cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
+        ext_unit_dict=None):
         '''1d or 2-d array support with minimum of mem footprint.  
         only creates arrays as needed, 
         otherwise functions with strings or constants
@@ -913,9 +914,16 @@ class util_2d(object):
                         .format(self.cnstnt, self.fmtin, self.iprn, self.name)
             else:
                 #--need to check if ext_filename exists, if not, need to 
-                #-- write constant as array to file or array to file               
-                cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(self.ext_filename, self.cnstnt,
-                     self.fmtin.strip(), self.iprn, self.name)
+                #-- write constant as array to file or array to file
+                f = self.ext_filename
+                fr = os.path.relpath(f, self.model.model_ws)
+                if self.locat is None:
+                    cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(fr, self.cnstnt,
+                         self.fmtin.strip(), self.iprn, self.name)
+                else:
+                    cr = 'EXTERNAL  {0:5d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(self.locat, self.cnstnt,
+                         self.fmtin.strip(), self.iprn, self.name)
+
         else:                       
             #--if value is a scalar and we don't want external array
             if self.vtype in [np.int, np.float32] and self.ext_filename is None:
@@ -990,9 +998,13 @@ class util_2d(object):
                 try:
                     value = int(value)
                 except:
-                    assert os.path.exists(
-                        os.path.join(self.model.model_ws,value)), \
-                        'could not find file: ' + str(value)
+                    # print value
+                    # print os.path.join(self.model.model_ws,value)
+                    if os.path.basename(value) == value:
+                        value = os.path.join(self.model.model_ws, value)
+                    assert os.path.exists(value), 'could not find file: ' + str(value)
+                    #assert os.path.exists(value), \
+                    #    'could not find file: ' + str(value)
                     return value
             else:
                 try:
@@ -1055,7 +1067,8 @@ class util_2d(object):
 
         cr_dict = util_2d.parse_control_record(f_handle.readline(),
                                                current_unit=curr_unit,
-                                               dtype=dtype)
+                                               dtype=dtype,
+                                               ext_unit_dict=ext_unit_dict)
         
         if cr_dict['type'] == 'constant':
             u2d = util_2d(model, shape,dtype, cr_dict['cnstnt'], name=name,
@@ -1067,7 +1080,7 @@ class util_2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
-            fname = os.path.join(model.model_ws,fname)
+            #fname = os.path.join(model.model_ws,fname)
             u2d = util_2d(model, shape, dtype, fname, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
                           ext_filename=fname)
@@ -1077,20 +1090,29 @@ class util_2d(object):
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
         elif cr_dict['type'] == 'external':
             assert cr_dict['nunit'] in ext_unit_dict.keys()
-            if 'binary' not in cr_dict['fmtin'].lower():
-                data = util_2d.load_txt(shape,
-                                        ext_unit_dict[cr_dict['nunit']].
-                                        filehandle, dtype, cr_dict['fmtin'])
-            else:
-                header_data, data = util_2d.load_bin(
-                    shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype)
-            u2d = util_2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
-        return u2d             
+            # if 'binary' not in cr_dict['fmtin'].lower():
+            #     data = util_2d.load_txt(shape,
+            #                             ext_unit_dict[cr_dict['nunit']].
+            #                             filehandle, dtype, cr_dict['fmtin'])
+            # else:
+            #     header_data, data = util_2d.load_bin(
+            #         shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype)
+            # u2d = util_2d(model, shape, dtype, data, name=name,
+            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+            fname = cr_dict['fname']
+            fname = fname.replace('\'', '')
+            fname = fname.replace('\"', '')
+            fname = fname.replace('\\', os.path.sep)
+            #fname = os.path.join(model.model_ws, fname)
+            u2d = util_2d(model, shape, dtype, fname, name=name, locat=cr_dict['nunit'],
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                          ext_filename=fname)
+        return u2d
             
 
     @staticmethod
-    def parse_control_record(line, current_unit=None, dtype=np.float32):
+    def parse_control_record(line, current_unit=None, dtype=np.float32,
+                             ext_unit_dict=None):
         '''parses a control record when reading an existing file
         rectifies fixed to free format
         current_unit (optional) indicates the unit number of the file being parsed
@@ -1114,6 +1136,12 @@ class util_2d(object):
                 fmtin = raw[2].strip()
                 iprn = int(raw[3])
             elif raw[0] == 'external':
+                if ext_unit_dict is not None:
+                    try:
+                        #td = ext_unit_dict[int(raw[1])]
+                        fname = ext_unit_dict[int(raw[1])].filename.strip()
+                    except:
+                        pass
                 nunit = int(raw[1])
                 if isFloat:                
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
@@ -1129,7 +1157,7 @@ class util_2d(object):
                     cnstnt = np.int(raw[2].lower())                   
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
-                npl,fmt,width,decimal = None,None,None,None
+                npl, fmt, width, decimal = None, None, None, None
         else:
             locat = np.int(line[0:10].strip())
             if isFloat:                

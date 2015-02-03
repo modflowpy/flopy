@@ -184,6 +184,7 @@ class ModflowEvt(Package):
         ipakcb = 0
         try:
             if int(t[1]) != 0:
+                model.add_pop_key_list(int(t[1]))
                 ipakcb = 53
         except:
             pass

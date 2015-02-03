@@ -400,7 +400,7 @@ class ModflowDis(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> dis = flopy.modflow.mfbas.load('test.dis', m)
+        >>> dis = flopy.modflow.ModflowDis.load('test.dis', m)
 
         """
 

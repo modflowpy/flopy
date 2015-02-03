@@ -154,6 +154,9 @@ class ModflowZon(Package):
             #--load data
             t = util_2d.load(f, model, (nrow, ncol), np.int, zonnam,
                              ext_unit_dict)
+            #--add unit number to list of external files in ext_unit_dict to remove.
+            if t.locat is not None:
+                model.add_pop_key_list(t.locat)
             zone_dict[zonnam] = t
         zon = ModflowZon(model, zone_dict=zone_dict)
         return zon

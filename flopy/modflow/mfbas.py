@@ -174,15 +174,15 @@ class ModflowBas(Package):
         Returns
         -------
         bas : ModflowBas object
-            ModflowBas object (of type :class:`flopy.modflow.mfbas.ModflowBas`)
+            ModflowBas object (of type :class:`flopy.modflow.ModflowBas`)
 
         Examples
         --------
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> bas = flopy.modflow.mfbas.load('test.bas', m, nlay=1, nrow=10,
-                                          ncol=10)
+        >>> bas = flopy.modflow.ModflowBas.load('test.bas', m, nlay=1, nrow=10,
+        >>>                                      ncol=10)
 
         """
 

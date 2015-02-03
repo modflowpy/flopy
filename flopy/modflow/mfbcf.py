@@ -167,7 +167,7 @@ class ModflowBcf(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> wel = flopy.modflow.mfbcf.load('test.bcf', m)
+        >>> wel = flopy.modflow.ModflowBcf.load('test.bcf', m)
 
         """
 
@@ -190,6 +190,7 @@ class ModflowBcf(Package):
         t = line.strip().split()
         ibcfcb,hdry,iwdflg,wetfct,iwetit,ihdwet = int(t[0]),float(t[1]),int(t[2]),float(t[3]),int(t[4]),int(t[5])
         if ibcfcb != 0:
+            model.add_pop_key_list(ibcfcb)
             ibcfcb = 53
         # LAYCON array
         if model.verbose:
@@ -254,8 +255,9 @@ class ModflowBcf(Package):
                 wetdry[k,:,:] = t.array
 
         #--create instance of bcf object
-        bcf = ModflowBcf(model,ibcfcb=ibcfcb,intercellt=intercellt,laycon=laycon,trpy=trpy,hdry=hdry,iwdflg=iwdflg,wetfct=wetfct,iwetit=iwetit,ihdwet=ihdwet,
-                         tran=tran,hy=hy,vcont=vcont,sf1=sf1,sf2=sf2,wetdry=wetdry)
+        bcf = ModflowBcf(model, ibcfcb=ibcfcb, intercellt=intercellt, laycon=laycon, trpy=trpy, hdry=hdry,
+                         iwdflg=iwdflg, wetfct=wetfct, iwetit=iwetit, ihdwet=ihdwet,
+                         tran=tran, hy=hy, vcont=vcont, sf1=sf1, sf2=sf2, wetdry=wetdry)
 
         #--return bcf object
         return bcf

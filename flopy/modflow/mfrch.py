@@ -152,7 +152,7 @@ class ModflowRch(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> rch = flopy.modflow.mfrch.load('test.rch', m)
+        >>> rch = flopy.modflow.ModflowRch.load('test.rch', m)
 
         """
         if model.verbose:
@@ -180,6 +180,7 @@ class ModflowRch(Package):
         ipakcb = 0
         try:
             if int(t[1]) != 0:
+                model.add_pop_key_list(int(t[1]))
                 ipakcb = 53
         except:
             pass

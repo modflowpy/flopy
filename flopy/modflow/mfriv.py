@@ -185,11 +185,11 @@ class ModflowRiv(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> riv = flopy.modflow.mfriv.load('test.riv', m)
+        >>> riv = flopy.modflow.ModflowRiv.load('test.riv', m)
 
         """
 
         if model.verbose:
             sys.stdout.write('loading riv package file...\n')
 
-        return Package.load(model,ModflowRiv,f,nper)
+        return Package.load(model, ModflowRiv, f, nper)
