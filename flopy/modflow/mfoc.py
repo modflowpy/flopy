@@ -350,7 +350,7 @@ class ModflowOc(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> oc = flopy.modflow.mfoc.load('test.oc', m)
+        >>> oc = flopy.modflow.ModflowOc.load('test.oc', m)
 
         """
 
@@ -464,16 +464,20 @@ class ModflowOc(Package):
         #store the last record in word
         if len(wordrec) > 3:
             words.append(wordrec)
+
+        #--reset unit numbers
         unitnumber=[14, 51, 52, 53]
         if ihedun > 0:
-            unitnumber[1] = ihedun
+            model.add_pop_key_list(ihedun)
+            #unitnumber[1] = ihedun
         if iddnun > 0:
-            unitnumber[2] = iddnun
+            model.add_pop_key_list(iddnun)
+            #unitnumber[2] = iddnun
 
         #--create instance of oc class
         oc = ModflowOc(model, ihedfm=ihedfm, iddnfm=iddnfm,
                  extension=['oc','hds','ddn','cbc'],
-                 unitnumber=[14, 51, 52, 53], words=words, compact=compact,
+                 unitnumber=unitnumber, words=words, compact=compact,
                  chedfm=chedfm, cddnfm=cddnfm)
 
         return oc

@@ -348,6 +348,7 @@ class ModflowSwi2(Package):
         if int(t[3]) > 0:
             iswizt = 55
         if int(t[4]) > 0:
+            model.add_pop_key_list(int(t[4]))
             iswibd = 56
         iswiobs = int(t[5])
         fsssopt = False

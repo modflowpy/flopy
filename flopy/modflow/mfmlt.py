@@ -156,8 +156,11 @@ class ModflowMlt(Package):
                     kwrd = t[1].lower()
             #--load data
             if readArray:
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, mltnam,
+                t = util_2d.load(f, model, (nrow, ncol), np.float32, mltnam,
                                  ext_unit_dict)
+                #--add unit number to list of external files in ext_unit_dict to remove.
+                if t.locat is not None:
+                    model.add_pop_key_list(t.locat)
             else:
                 line = f.readline()
                 t = [kwrd, line]

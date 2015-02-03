@@ -241,7 +241,7 @@ class ModflowLpf(Package):
         return
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None, zone_dict=None, mlt_dict=None):
+    def load(f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -269,7 +269,7 @@ class ModflowLpf(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> lpf = flopy.modflow.mflpf.load('test.lpf', m)
+        >>> lpf = flopy.modflow.ModflowLpf.load('test.lpf', m)
 
         """
 
@@ -292,6 +292,7 @@ class ModflowLpf(Package):
         t = line.strip().split()
         ilpfcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         if ilpfcb != 0:
+            model.add_pop_key_list(ilpfcb)
             ilpfcb = 53
         # options
         storagecoefficient = False

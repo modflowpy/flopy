@@ -126,6 +126,7 @@ class ModflowUpw(Package):
         t = line.strip().split()
         iupwcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
         if iupwcb != 0:
+            model.add_pop_key_list(iupwcb)
             iupwcb = 53
         # options
         noparcheck = False

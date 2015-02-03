@@ -183,7 +183,7 @@ class ModflowGhb(Package):
 
         Returns
         -------
-        rch : ModflowGhb object
+        ghb : ModflowGhb object
             ModflowGhb object.
 
         Examples

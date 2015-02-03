@@ -70,9 +70,6 @@ class ModflowDrn(Package):
 
     Methods
     -------
-    ncells : Returns the  maximum number of cells that have drains
-    write_file : Writes Modflow input file for the drain package
-    load : Loads existing drain package into a Modflow model object
 
     See Also
     --------
@@ -163,8 +160,38 @@ class ModflowDrn(Package):
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        drn : ModflowDrn object
+            ModflowDrn object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> drn = flopy.modflow.ModflowDrn.load('test.drn', m)
+
+        """
 
         if model.verbose:
             sys.stdout.write('loading drn package file...\n')
 
-        return Package.load(model,ModflowDrn,f,nper)
+        return Package.load(model, ModflowDrn, f, nper)

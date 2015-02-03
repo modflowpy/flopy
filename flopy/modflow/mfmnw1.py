@@ -100,8 +100,10 @@ class ModflowMnw1(Package):
         assert self.itmp.max() <= self.mxmnw, 'ITMP cannot exceed maximum number of wells to be simulated.'
         
         self.parent.add_package(self)
+
     def __repr__( self ):
-        return 'Multi-node well 1 Ppckage class'         
+        return 'Multi-node well 1 Ppckage class'
+
     def write_file( self ):
         
         #-open file for writing

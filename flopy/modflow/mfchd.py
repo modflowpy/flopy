@@ -171,7 +171,7 @@ class ModflowChd(Package):
 
         Returns
         -------
-        wel : ModflowChd object
+        chd : ModflowChd object
             ModflowChd object.
 
         Examples
@@ -179,7 +179,7 @@ class ModflowChd(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> wel = flopy.modflow.mfchd.load('test.chd', m)
+        >>> wel = flopy.modflow.ModflowChd.load('test.chd', m)
 
         """
 
