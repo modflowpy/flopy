@@ -19,15 +19,15 @@ FloPy3 is significantly different from FloPy2 (hosted on [googlecode](https://co
 
 To install *FloPy* type:
 
-       `pip install flopy`
+    pip install flopy
 
 To update *FloPy* type:
 
-       `pip install flopy --update`
+    pip install flopy --update
 
 To uninstall *FloPy* type:
 
-       `pip uninstall flopy`
+    pip uninstall flopy
 
 
 Documentation
