@@ -3,34 +3,42 @@
 
 ## Introduction
 
-*FloPy* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
+*FloPy<sub>3</sub>* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
 
-## FloPy3 Changes
+## FloPy<sub>3</sub> Changes
 
-FloPy3 is significantly different from FloPy2 (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
+*FloPy<sub>3</sub>* is significantly different from *FloPy<sub>2</sub>* (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
 
-* FloPy3 is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
+* *FloPy<sub>3</sub>* is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
 * Input for packages that take *layer,row,column,data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/flopy3boundaries.ipynb)
 
 ## Installation
 
-To install *FloPy* type:
+To install *FloPy<sub>3</sub>* type:
 
     pip install flopy
 
-To update *FloPy* type:
+To update *FloPy<sub>3</sub>* type:
 
     pip install flopy --update
 
-To uninstall *FloPy* type:
+To uninstall *FloPy<sub>3</sub>* type:
 
     pip uninstall flopy
+    
+To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
+
+    pip install git+https://github.com/modflowpy/flopy.git
+    
+To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
+
+    pip install git+https://github.com/modflowpy/flopy.git --update
 
 
 Documentation
 -----------------------------------------------
 
-Documentation for *FloPy* is a work in progress. *FloPy* code documentation is available at:
+Documentation for *FloPy<sub>3</sub>* is a work in progress. *FloPy<sub>3</sub>* code documentation is available at:
 
 + [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
@@ -42,25 +50,25 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 #### Basic examples
 
-+ The [lake example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
++ The [lake example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/lake_example.ipynb), a very simple *FloPy<sub>3</sub>* example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
 + An overview of the options to enter *layer,row,column,data* values for packages such as the wel and ghb packages is given in the [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/flopy3boundaries.ipynb) Notebook
 
 #### SWI2 examples
 
 + [Example 1](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/swi_examples/swiex1.ipynb) of the SWI2 manual, simulating a rotating interface.
 
-### SWI2 Test Problems for FloPy2
+### SWI2 Test Problems for *FloPy<sub>3</sub>*
 
-A zip file containing *FloPy* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) is available at:
+A zip file containing *FloPy<sub>3</sub>* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) is available at:
 
 + [http://flopy.googlecode.com/svn/examples/SWI2ExampleProblems_flopy.zip](http://flopy.googlecode.com/svn/examples/SWI2ExampleProblems_flopy.zip)
 
-Note that examples 2 and 5 also include *FloPy* scripts for running and post-processing SEAWAT models.
+Note that examples 2 and 5 also include *FloPy<sub>3</sub>* scripts for running and post-processing SEAWAT models.
 
 
 ### Tutorials
 
-A few simple *FloPy* tutorials are available at:
+A few simple *FloPy<sub>3</sub>* tutorials are available at:
 
 + [http://modflowpy.github.io/flopydoc/tutorials.html](http://modflowpy.github.io/flopydoc/tutorials.html)
 
