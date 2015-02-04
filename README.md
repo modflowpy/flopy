@@ -55,6 +55,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + The [lake example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/lake_example.ipynb), a very simple *FloPy<sub>3</sub>* example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
 + An overview of the options to enter *layer,row,column,data* values for packages such as the wel and ghb packages is given in the [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/flopy3boundaries.ipynb) Notebook
++ The [Henry Problem](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/henry/henry.ipynb), a simple saltwater intrusion model developed with Flopy and run using SEAWAT.
 
 #### SWI2 examples
 
