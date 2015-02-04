@@ -317,7 +317,7 @@ class BaseModel(object):
         """
         success = False
         buff = []
-        proc = sp.Popen([self.exe_name,self.namefile], 
+        proc = sp.Popen([self.exe_name, self.namefile],
                         stdout=sp.PIPE, cwd=self.model_ws)
         while True:
           line = proc.stdout.readline()
@@ -334,7 +334,7 @@ class BaseModel(object):
             break
         if pause == True:
             raw_input('Press Enter to continue...')
-        return ([success,buff])
+        return ([success, buff])
         
     def write_input(self, SelPackList=False):
         """
