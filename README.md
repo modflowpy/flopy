@@ -2,7 +2,7 @@
 
 A set of scripts for reading and writing datasets for MODFLOW-based programs.
 
-![flopyzero](https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopyzero.png)
+![flopy3](https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png)
 
 ## Introduction
 
