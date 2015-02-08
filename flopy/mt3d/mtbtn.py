@@ -344,10 +344,10 @@ class Mt3dBtn(Package):
         f_btn.write('{0:>10s}{1:10d}\n'.format(ss, self.nprmas))
         # PERLEN, NSTP, TSMULT
         for t in range(nper):            
-            f_btn.write('{0:10.4g}{1:10d}{2:10f}\n'
+            f_btn.write('{0:10.4G}{1:10d}{2:10.4G}\n'
                         .format(ModflowDis.perlen[t], ModflowDis.nstp[t],
                         ModflowDis.tsmult[t]))
-            f_btn.write('{0:10f}{1:10d}{2:10f}{3:10f}\n'
+            f_btn.write('{0:10.4G}{1:10G}{2:10.4G}{3:10.4G}\n'
                         .format(self.dt0[t], self.mxstrn[t],
                         self.ttsmult[t], self.ttsmax[t]))
         f_btn.close() 
