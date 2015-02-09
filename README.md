@@ -23,7 +23,7 @@ To install *FloPy<sub>3</sub>* type:
 
 To update *FloPy<sub>3</sub>* type:
 
-    pip install flopy --update
+    pip install flopy --upgrade
 
 To uninstall *FloPy<sub>3</sub>* type:
 
@@ -35,7 +35,7 @@ To install the bleeding edge version of *FloPy<sub>3</sub>* from the git reposit
     
 To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
 
-    pip install git+https://github.com/modflowpy/flopy.git --update
+    pip install git+https://github.com/modflowpy/flopy.git --upgrade
 
 
 Documentation
