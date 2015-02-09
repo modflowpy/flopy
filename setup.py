@@ -22,7 +22,7 @@ Installation
 
         To update *FloPy* type:
 
-                ``pip install flopy --update``
+                ``pip install flopy --upgrade``
 
         To uninstall *FloPy* type:
 
@@ -34,7 +34,7 @@ Documentation
 
         Documentation for *FloPy* is a work in progress. *FloPy* code documentation is available at: 
 
-                `<https://flopy.googlecode.com/svn/sphinx/_build/html/index.html>`_
+                `<http://modflowpy.github.io/flopydoc/>`_
 
 
 Examples
@@ -44,19 +44,21 @@ Examples
 MODFLOW Example
 ++++++++++++++++++++++++++++++++++
 
-        A *FloPy* script to create a simple MODFLOW example (**Lake Example**) with a square domain and constant heads in the center of the domain, which represent a lake, is available at:
+        A iPython Notebook for the **Lake Example** problem is available at:
 
-                `<https://code.google.com/p/flopy/source/browse/examples/lake_example.html>`_
+                          `<http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/lake_example.ipynb>`_
 
-        A iPython Notebook for the **Lake Example** problem is also available at:
-
-                        `<http://nbviewer.ipython.org/url/flopy.googlecode.com/svn/example_notebooks/lake_example.ipynb>`_
+_
 
 
 SWI2 Test Problems
 ++++++++++++++++++++++++++++++++++
 
-        A zip file containing *FloPy* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in `Bakker et al. (2013) <http://pubs.usgs.gov/tm/6a46/>`_ is available at:
+        A iPython Notebook for SWI2 Problem 1 (rotating interface) is available at:
+
+                `<http://flopy.googlecode.com/svn/examples/SWI2ExampleProblems_flopy.zip>`_
+        
+         A zip file containing *FloPy* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in `Bakker et al. (2013) <http://pubs.usgs.gov/tm/6a46/>`_ is available at:
 
                 `<http://flopy.googlecode.com/svn/examples/SWI2ExampleProblems_flopy.zip>`_
 
@@ -68,7 +70,7 @@ Tutorials
 
         A few simple *FloPy* tutorials are available at:
 
-                `<https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html>`_
+                `<http://modflowpy.github.io/flopydoc/tutorials.html>`_
 
 
 MODFLOW Resources
