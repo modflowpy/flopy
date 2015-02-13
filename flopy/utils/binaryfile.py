@@ -216,10 +216,6 @@ class BinaryLayerFile(object):
         
         #read through the file and build the pointer index
         self._build_index()
-        
-        #allocate the value array
-        self.value = np.empty((self.nlay, self.nrow, self.ncol),
-                              dtype=self.realtype)
         return
    
 
@@ -280,10 +276,10 @@ class BinaryLayerFile(object):
         for header in self.recordarray:
             print header
         return
-
-    def _fill_value_array(self, kstp=0, kper=0, totim=0):
+    
+    def _get_data_array(self, kstp=0, kper=0, totim=0):
         """
-        Fill the three dimensional value array, self.value, for the
+        Get the three dimensional data array for the
         specified kstp and kper value or totim value.
 
         """
@@ -298,17 +294,19 @@ class BinaryLayerFile(object):
             raise Exception('Data not found...')
 
         #initialize head with nan and then fill it
-        self.value[:, :, :] = np.nan
+        data = np.empty((self.nlay, self.nrow, self.ncol),
+                         dtype=self.realtype)
+        data[:, :, :] = np.nan
         for idx in keyindices:
             ipos = self.iposarray[idx]
             ilay = self.recordarray['ilay'][idx]
             if self.verbose:
                 print 'Byte position in file: {0}'.format(ipos)
             self.file.seek(ipos, 0)
-            self.value[ilay - 1, :, :] = binaryread(self.file, self.realtype, 
-                                                shape=(self.nrow, self.ncol))
-        return
-    
+            data[ilay - 1, :, :] = binaryread(self.file, self.realtype,
+                                              shape=(self.nrow, self.ncol))
+        return data
+
     def get_times(self):
         """
         Get a list of unique times in the file
@@ -329,11 +327,13 @@ class BinaryLayerFile(object):
         ----------
         out : list of (kstp, kper) tuples
             List of unique kstp, kper combinations in binary file.  kstp and
-            kper values are presently one-based.  This may change in the
-            future.
+            kper values are presently one-based.
 
         """
-        return self.kstpkper
+        kstpkper = []
+        for kstp, kper in self.kstpkper:
+            kstpkper.append((kstp - 1, kper - 1))
+        return kstpkper
 
     def get_data(self, kstpkper=(0, 0), idx=None, totim=0, mflay=None):
         """
@@ -344,7 +344,8 @@ class BinaryLayerFile(object):
         idx : int
             The zero-based record number.  The first record is record 0.
         kstpkper : tuple of ints
-            A tuple containing the time step and stress period (kstp, kper)
+            A tuple containing the time step and stress period (kstp, kper).
+            These are zero-based kstp and kper values.
         totim : float
             The simulation time.
         mflay : integer
@@ -367,13 +368,16 @@ class BinaryLayerFile(object):
         --------
 
         """
+        # One-based kstp and kper for pulling out of recarray
+        kstp1 = kstpkper[0] + 1
+        kper1 = kstpkper[1] + 1
         if idx is not None:
             totim = self.recordarray['totim'][idx]
-        self._fill_value_array(kstpkper[0], kstpkper[1], totim)
+        data = self._get_data_array(kstp1, kper1, totim)
         if mflay is None:
-            return self.value
+            return data
         else:
-            return self.value[mflay, :, :]
+            return data[mflay, :, :]
         return
 
     def get_alldata(self, mflay=None, nodata=-9999):
@@ -406,16 +410,12 @@ class BinaryLayerFile(object):
         --------
 
         """
-        if mflay is None:
-            h = np.zeros((self.nlay,self.nrow,self.ncol),dtype=np.float)
-        else:
-            h = np.zeros((self.nrow,self.ncol),dtype=np.float)
         rv = []
         for totim in self.times:
-            h[:] = self.get_data(totim=totim, mflay=mflay)
+            h = self.get_data(totim=totim, mflay=mflay)
             rv.append(h)
         rv = np.array(rv)
-        rv[ rv == nodata ] = np.nan
+        rv[rv == nodata] = np.nan
         return rv
 
     def get_ts(self, idx):
@@ -648,7 +648,7 @@ class CellBudgetFile(object):
     >>> import flopy.utils.binaryfile as bf
     >>> cbb = bf.CellBudgetFile('mymodel.cbb')
     >>> cbb.list_records()
-    >>> rec = cbb.get_data(kstpkper=(1,1), text='RIVER LEAKAGE')
+    >>> rec = cbb.get_data(kstpkper=(0,0), text='RIVER LEAKAGE')
 
     """
 
@@ -822,11 +822,14 @@ class CellBudgetFile(object):
         ----------
         out : list of (kstp, kper) tuples
             List of unique kstp, kper combinations in binary file.  kstp and
-            kper values are presently one-based.  This may change in the
+            kper values are zero-based.  This may change in the
             future.
 
         """
-        return self.kstpkper
+        kstpkper = []
+        for kstp, kper in self.kstpkper:
+            kstpkper.append(kstp - 1, kper - 1)
+        return kstpkper
 
     def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
                  verbose=False, full3D=False):
@@ -838,7 +841,8 @@ class CellBudgetFile(object):
         idx : int
             The zero-based record number.  The first record is record 0.
         kstpkper : tuple of ints
-            A tuple containing the time step and stress period (kstp, kper)
+            A tuple containing the time step and stress period (kstp, kper).
+            The kstp and kper values are zero based.
         totim : float
             The simulation time.
         text : str
@@ -894,16 +898,16 @@ class CellBudgetFile(object):
                 raise Exception(errmsg)
 
         if kstpkper is not None:
-            kstp = kstpkper[0]
-            kper = kstpkper[1]
+            kstp1 = kstpkper[0] + 1
+            kper1 = kstpkper[1] + 1
             if text is None:
                 select_indices = np.where(
-                    (self.recordarray['kstp'] == kstp) &
-                    (self.recordarray['kper'] == kper))
+                    (self.recordarray['kstp'] == kstp1) &
+                    (self.recordarray['kper'] == kper1))
             else:
                 select_indices = np.where(
-                    (self.recordarray['kstp'] == kstp) &
-                    (self.recordarray['kper'] == kper) &
+                    (self.recordarray['kstp'] == kstp1) &
+                    (self.recordarray['kper'] == kper1) &
                     (self.recordarray['text'] == text16))
 
         elif totim is not None:

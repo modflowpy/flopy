@@ -89,13 +89,13 @@ class BaseModel(object):
         p : Package object
 
         """
-        for pp in (self.packagelist):
+        for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
                 continue
             elif (isinstance(p, type(pp))):
                 print '****Warning -- two packages of the same type: ',type(p),type(pp)                 
-                print 'replacing existing Package...'                
-                pp = p
+                print 'replacing existing Package...'
+                self.packagelist[i] = p
                 return        
         if self.verbose:
             print 'adding Package: ', p.name[0]
