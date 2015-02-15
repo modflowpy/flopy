@@ -1,6 +1,8 @@
+import os
 import sys
 import platform
 import subprocess
+
 from updateversion import update_version
 
 #--determine if the version needs to be updated
@@ -21,5 +23,4 @@ if 'windows' in platform.system().lower():
 
 #--now register the package with PyPI
 subprocess.call(['python', 'setup.py', 'register'])
-
-    
+   
