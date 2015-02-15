@@ -17,6 +17,13 @@
 
 ## Installation
 
+**Dependencies**
+
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) 
+
+------
+**For base Python distributions:**
+
 To install *FloPy<sub>3</sub>* type:
 
     pip install flopy
@@ -29,6 +36,20 @@ To uninstall *FloPy<sub>3</sub>* type:
 
     pip uninstall flopy
     
+------
+**For Anaconda distributions (osx-64 and win-64):**
+
+To install or update *FloPy<sub>3</sub>* with conda run:
+
+    conda install -c https://conda.binstar.org/jdhughes flopy
+
+To uninstall *FloPy<sub>3</sub>* type:
+
+    conda remove flopy   
+
+------
+**Development versions of FloPy<sub>3</sub>:**
+
 To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
 
     pip install git+https://github.com/modflowpy/flopy.git
