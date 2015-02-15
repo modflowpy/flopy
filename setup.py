@@ -23,6 +23,8 @@ setup(name=__name__,
       url='https://github.com/modflowpy/flopy/',
       license='New BSD',
       platforms='Windows, Mac OS-X',
+      setup_requires=['numpy>=1.9'],
+      install_requires=['numpy>=1.9'],
       packages=['flopy','flopy.modflow','flopy.modpath','flopy.mt3d','flopy.seawat','flopy.utils'],
       # use this version ID if .svn data cannot be found
       version=__version__ )
