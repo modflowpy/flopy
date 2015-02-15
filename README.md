@@ -17,7 +17,7 @@
 
 ## Installation
 
-**Dependencies**
+**Dependencies:**
 
 *FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) 
 
