@@ -12,8 +12,8 @@ long_description = ''
 try:
    import pypandoc
    long_description = pypandoc.convert('README.md', 'rst')
-except (IOError, ImportError):
-   long_description = open('README.md').read()  
+except:
+   pass  
        
 setup(name=__name__,
       description='FloPy is a Python package to create, run, and post-process MODFLOW-based models.',
