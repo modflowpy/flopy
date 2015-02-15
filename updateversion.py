@@ -17,12 +17,12 @@ def update_version():
     print '  ', __version__, '->', version
     f = open(os.path.normpath('flopy/version.py'), 'w')
     f.write('#flopy version file automatically created using...{0}\n'.format(os.path.basename(__file__)))
-    f.write('#            created on......{0}\n'.format(datetime.date.today().strftime("%B %d, %Y  %H:%M:%S")))
+    f.write('#            created on......{0}\n'.format(datetime.date.today().strftime("%B %d, %Y %H:%M:%S")))
     f.write("__version__='{0}'\n".format(version))
     f.write("__build__='{0}.{1}'\n".format(version, build))
     f.close()
 
-    cmdtag = 'git commit -am "version number update"'
+    cmdtag = 'git commit ./flopy/version.py -m "version number update"'
     os.system(cmdtag)
     cmdtag = 'git push'
     os.system(cmdtag)
