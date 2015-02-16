@@ -57,3 +57,5 @@ flopy/.idea
 
 examples/basic/data
 examples/basic/.ipynb_checkpoints
+examples/swi_examples/data
+examples/swi_examples/.ipynb_checkpoints
