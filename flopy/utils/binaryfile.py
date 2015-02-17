@@ -327,7 +327,7 @@ class BinaryLayerFile(object):
         ----------
         out : list of (kstp, kper) tuples
             List of unique kstp, kper combinations in binary file.  kstp and
-            kper values are presently one-based.
+            kper values are presently zero-based.
 
         """
         kstpkper = []
@@ -822,13 +822,12 @@ class CellBudgetFile(object):
         ----------
         out : list of (kstp, kper) tuples
             List of unique kstp, kper combinations in binary file.  kstp and
-            kper values are zero-based.  This may change in the
-            future.
+            kper values are zero-based.
 
         """
         kstpkper = []
         for kstp, kper in self.kstpkper:
-            kstpkper.append(kstp - 1, kper - 1)
+            kstpkper.append((kstp - 1, kper - 1))
         return kstpkper
 
     def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
