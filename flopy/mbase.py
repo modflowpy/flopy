@@ -118,7 +118,24 @@ class BaseModel(object):
                 self.packagelist.pop(i)
                 return
         raise StopIteration , 'Package name '+pname+' not found in Package list'
-            
+
+    def __getattr__(self, item):
+        """
+        __getattr__ - syntactic sugar
+
+        Parameters
+        ----------
+        item : str
+            3 character package name (case insensitive)
+
+        Returns
+        -------
+        pp : Package object
+            Package object of type :class:`flopy.mbase.Package`
+
+        """
+        return self.get_package(item)
+
     def build_array_name(self, num, prefix):
         """
         Build array name
