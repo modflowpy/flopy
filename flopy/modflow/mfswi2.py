@@ -179,7 +179,7 @@ class ModflowSwi2(Package):
         units = [unit_number, iswizt, iswibd]
         extra = ['', 'REPLACE', 'REPLACE']
         if nobs > 0:
-            extension = name.append('zobs')
+            extension = extension.append('zobs')
             name = name.append('DATA')
             units = units.append(iswiobs)
             extra = extra.append('REPLACE')
