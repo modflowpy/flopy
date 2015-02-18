@@ -179,10 +179,10 @@ class ModflowSwi2(Package):
         units = [unit_number, iswizt, iswibd]
         extra = ['', 'REPLACE', 'REPLACE']
         if nobs > 0:
-            extension = extension.append('zobs')
-            name = name.append('DATA')
-            units = units.append(iswiobs)
-            extra = extra.append('REPLACE')
+            extension.append('zobs')
+            name.append('DATA')
+            units.append(iswiobs)
+            extra.append('REPLACE')
 
         Package.__init__(self, model, extension=extension, name=name, unit_number=units,
                          extra=extra)  # Call ancestor's init to set self.parent, extension, name and unit number
@@ -217,6 +217,8 @@ class ModflowSwi2(Package):
         self.isource = util_3d(model, (nlay, nrow, ncol), np.int, isource, name='isource')
         #
         self.obsnam = obsnam
+        if isinstance(obslrc, list):
+            obslrc = np.array(obslrc, dtype=np.int)
         self.obslrc = obslrc
         #
         self.parent.add_package(self)
@@ -231,67 +233,71 @@ class ModflowSwi2(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f_swi = open(self.fn_path, 'w')
+        f = open(self.fn_path, 'w')
         # First line: heading
-        f_swi.write('{}\n'.format(self.heading))  # Writing heading not allowed in SWI???
+        f.write('{}\n'.format(self.heading))  # Writing heading not allowed in SWI???
         # --write dataset 1
-        f_swi.write('#--Dataset 1\n')
-        f_swi.write(
+        f.write('#--Dataset 1\n')
+        f.write(
             '{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}'.format(self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswibd,
                                                           self.iswiobs))
 
         if self.fsssopt is True:
-            f_swi.write('    FSSSOPT')
+            f.write('    FSSSOPT')
         if self.adaptive is True:
-            f_swi.write('   ADAPTIVE')
-        f_swi.write('\n')
+            f.write('   ADAPTIVE')
+        f.write('\n')
         #--write dataset 2a
-        f_swi.write('#--Dataset 2a\n')
-        f_swi.write('{:10d}{:10d}{:10d}\n'.format(self.nsolver, self.iprsol, self.mutsol))
+        f.write('#--Dataset 2a\n')
+        f.write('{:10d}{:10d}{:10d}\n'.format(self.nsolver, self.iprsol, self.mutsol))
         #--write dataset 2b
         if self.nsolver == 2:
-            f_swi.write('#--Dataset 2b\n')
-            f_swi.write('{:10d}'.format(self.solver2params['mxiter']))
-            f_swi.write('{:10d}'.format(self.solver2params['iter1']))
-            f_swi.write('{:10d}'.format(self.solver2params['npcond']))
-            f_swi.write('%14.6e'.format(self.solver2params['zclose']))
-            f_swi.write('%14.6e'.format(self.solver2params['rclose']))
-            f_swi.write('%14.6e'.format(self.solver2params['relax']))
-            f_swi.write('{:10d}'.format(self.solver2params['nbpol']))
-            f_swi.write('{:14.6g}'.format(self.solver2params['damp']))
-            f_swi.write('{:14.6g}\n'.format(self.solver2params['dampt']))
+            f.write('#--Dataset 2b\n')
+            f.write('{:10d}'.format(self.solver2params['mxiter']))
+            f.write('{:10d}'.format(self.solver2params['iter1']))
+            f.write('{:10d}'.format(self.solver2params['npcond']))
+            f.write('%14.6e'.format(self.solver2params['zclose']))
+            f.write('%14.6e'.format(self.solver2params['rclose']))
+            f.write('%14.6e'.format(self.solver2params['relax']))
+            f.write('{:10d}'.format(self.solver2params['nbpol']))
+            f.write('{:14.6g}'.format(self.solver2params['damp']))
+            f.write('{:14.6g}\n'.format(self.solver2params['dampt']))
         #--write dataset 3a
-        f_swi.write('#--Dataset 3a\n')
-        f_swi.write('{:14.6g}{:14.6g}'.format(self.toeslope, self.tipslope))
+        f.write('#--Dataset 3a\n')
+        f.write('{:14.6g}{:14.6g}'.format(self.toeslope, self.tipslope))
         if self.alpha is not None:
-            f_swi.write('{:14.6g}{:14.6g}'.format(self.alpha, self.beta))
-        f_swi.write('\n')
+            f.write('{:14.6g}{:14.6g}'.format(self.alpha, self.beta))
+        f.write('\n')
         #--write dataset 3b
         if self.adaptive is True:
-            f_swi.write('#--Dataset 3b\n')
-            f_swi.write('{:10d}{:10d}{:14.6g}\n'.format(self.nadptmx, self.nadptmn, self.adptfct))
+            f.write('#--Dataset 3b\n')
+            f.write('{:10d}{:10d}{:14.6g}\n'.format(self.nadptmx, self.nadptmn, self.adptfct))
         #--write dataset 4
-        f_swi.write('#--Dataset 4\n')
-        f_swi.write(self.nu.get_file_entry())
+        f.write('#--Dataset 4\n')
+        f.write(self.nu.get_file_entry())
         #--write dataset 5
-        f_swi.write('#--Dataset 5\n')
+        f.write('#--Dataset 5\n')
         for isur in range(self.nsrf):
             for ilay in range(nlay):
-                f_swi.write(self.zeta[isur][ilay].get_file_entry())
+                f.write(self.zeta[isur][ilay].get_file_entry())
         #--write dataset 6
-        f_swi.write('#--Dataset 6\n')
-        f_swi.write(self.ssz.get_file_entry())
+        f.write('#--Dataset 6\n')
+        f.write(self.ssz.get_file_entry())
         #--write dataset 7
-        f_swi.write('#--Dataset 7\n')
-        f_swi.write(self.isource.get_file_entry())
+        f.write('#--Dataset 7\n')
+        f.write(self.isource.get_file_entry())
         #--write dataset 8
         if self.nobs > 0:
-            f_swi.write('#--Dataset 8\n')
+            f.write('#--Dataset 8\n')
             for i in range(self.nobs):
-                #f_swi.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
-                f_swi.write('{} {:10d}{:10d}{:10d}\n'.format(self.obsnam[i], self.obslrc))
+                #f.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
+                f.write('{} '.format(self.obsnam[i]))
+                for v in self.obslrc[i, :]:
+                    f.write('{:10d}'.format(v))
+                f.write('\n')
+                
         #--close swi2 file
-        f_swi.close()
+        f.close()
 
 
     @staticmethod
