@@ -182,7 +182,7 @@ class ModflowSwi2(Package):
             extension = name.append('zobs')
             name = name.append('DATA')
             units = units.append(iswiobs)
-            extra = extra.append('')
+            extra = extra.append('REPLACE')
 
         Package.__init__(self, model, extension=extension, name=name, unit_number=units,
                          extra=extra)  # Call ancestor's init to set self.parent, extension, name and unit number
