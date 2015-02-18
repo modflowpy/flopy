@@ -174,6 +174,33 @@ class Modflow(BaseModel):
         self.__next_ext_unit += 1
         return self.__next_ext_unit
 
+    @property
+    def nlay(self):
+        if (self.dis):
+            return self.dis.nlay
+        else:
+            return 0
+
+    @property
+    def nrow(self):
+        if (self.dis):
+            return self.dis.nrow
+        else:
+            return 0
+    @property
+    def ncol(self):
+        if (self.dis):
+            return self.dis.ncol
+        else:
+            return 0
+    @property
+    def nper(self):
+        if (self.dis):
+            return self.dis.nper
+        else:
+            return 0
+
+
     def get_nrow_ncol_nlay_nper(self):
         dis = self.get_package('DIS')
         if (dis):
