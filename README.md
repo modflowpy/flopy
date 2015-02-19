@@ -84,6 +84,8 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + [Example 1](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/swi_examples/swiex1.ipynb) of the SWI2 manual, simulating a rotating interface.
 
++ [Example 2](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/swi_examples/swiex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
+
 ### SWI2 Test Problems for *FloPy<sub>3</sub>*
 
 A zip file containing *FloPy<sub>3</sub>* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) is available at:
