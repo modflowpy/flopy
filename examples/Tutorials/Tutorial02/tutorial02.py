@@ -127,7 +127,7 @@ for iplot, time in enumerate(mytimes):
     #plt.subplot(1, len(mytimes), iplot + 1, aspect='equal')
     plt.subplot(1, 1, 1, aspect='equal')
     plt.title('stress period ' + str(iplot + 1))
-    plt.imshow(head[0, :, :], extent=extent, cmap='BrBG', vmin=0., vmax=10.)
+    plt.imshow(head[0, :, :], extent=extent, cmap='BrBG', vmin=0., vmax=10., origin='lower')
     plt.colorbar()
     CS = plt.contour(head[0, :, :], levels=levels, extent=extent)
     plt.clabel(CS, inline=1, fontsize=10, fmt='%1.1f')
