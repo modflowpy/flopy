@@ -419,5 +419,55 @@ class mflist(object):
                 break
             if (self.vtype[kper] != int) or (self.data[kper] != -1):
                 last = kper
-
         return kper
+
+    def get_indices(self):
+        """a helper function for plotting - get all unique indices
+        """
+        names = self.dtype.names
+        lnames = []
+        [lnames.append(name.lower()) for name in names]
+        if 'k' not in lnames or 'j' not in lnames:
+            raise NotImplementedError("mflist.get_indices requires kij")
+        kpers = self.data.keys()
+        kpers.sort()
+        indices = None
+        for i,kper in enumerate(kpers):
+            kper_vtype = self.__vtype[kper]
+            if (kper_vtype != int) or (kper_vtype is not None):
+                d = self.data[kper]
+                if indices is None:
+                    indices = zip(d['k'], d['i'], d['j'])
+                else:
+                    new_indices = zip(d['k'], d['i'], d['j'])
+                    for ni in new_indices:
+                        if ni not in indices:
+                            indices.append(ni)
+        return indices
+
+    def attribute_by_kper(self,attr,function=np.mean,idx_val=None):
+        assert attr in self.dtype.names
+        if idx_val is not None:
+            assert idx_val[0] in self.dtype.names
+        kpers = self.data.keys()
+        kpers.sort()
+        values = []
+        for kper in range(0, max(self.model.nper, max(kpers))):
+
+            if kper < min(kpers):
+                values.append(0)
+            elif kper > max(kpers) or kper not in kpers:
+                values.append(values[-1])
+            else:
+                kper_data = self.__data[kper]
+                if idx_val is not None:
+                    kper_data = kper_data[
+                        np.where(kper_data[idx_val[0]] == idx_val[1])]
+                #kper_vtype = self.__vtype[kper]
+                v = function(kper_data[attr])
+                values.append(v)
+        return values
+
+
+
+
