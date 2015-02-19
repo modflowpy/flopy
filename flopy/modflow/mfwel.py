@@ -215,3 +215,72 @@ class ModflowWel(Package):
 
         return Package.load(model, ModflowWel, f, nper)
 
+    def plot(self):
+        try:
+            import pylab as plt
+            from matplotlib import colors
+        except Exception as e:
+            print "error importing pylab: " + str(e)
+            return
+
+        indices = self.stress_period_data.get_indices()
+        loc = np.zeros((self.parent.nlay, self.parent.nrow, self.parent.ncol),
+                       dtype=np.int)
+        for idx in indices:
+            loc[idx] = 1
+
+        #get the bas for ibound masking
+        bas = self.parent.bas6
+        if bas is not None:
+            ibnd = bas.getibound()
+        else:
+            ibnd = np.ones((self.parent.nlay, self.parent.nrow,
+                            self.parent.ncol), dtype=np.int)
+
+        cmap = colors.ListedColormap(["white", "red"])
+        bounds = [-1,0.5,1.5]
+        norm = colors.BoundaryNorm(bounds,cmap.N)
+
+        icmap = colors.ListedColormap(["0.6", "0.4", "none"])
+        bounds = [-10, -0.5, 0.5, 10.0]
+        inorm = colors.BoundaryNorm(bounds,icmap.N)
+
+        fs = 5
+        nlay = self.parent.nlay
+        delt = 2.0
+        fig = plt.figure(figsize=(delt+(nlay*delt), delt * 2))
+        function = np.sum
+        attr = "flux"
+        width = 0.5
+        idx = np.arange(self.parent.nper)
+        shape = (2, nlay)
+        for k in xrange(nlay):
+            ax_loc = plt.subplot2grid(shape, (0, k), aspect="equal")
+            l = loc[k, :, :]
+            l = np.ma.masked_where(ibnd[k] == 0, l)
+            ax_loc.imshow(ibnd[k], alpha=0.7, interpolation="none", cmap=icmap,
+                          norm=inorm)
+            ax_loc.imshow(l, alpha=0.7, interpolation="none", cmap=cmap,
+                          norm=norm)
+            ax_loc.set_xticklabels(ax_loc.get_xticks(), fontsize=fs,
+                                   rotation=90)
+            ax_loc.set_yticklabels(ax_loc.get_yticks(), fontsize=fs)
+            ax_loc.set_title("wells in layer {0:d}: {1:g}".format(k,l.sum()),
+                             fontsize=fs)
+            ax_bar = plt.subplot2grid(shape, (1, k))
+            values = self.stress_period_data.attribute_by_kper(
+                attr, function, ('k', k))
+            if len(values) > 0 or max(values) == 0:
+                ax_bar.bar(idx, values, width=width, color='b')
+                ax_bar.set_xticks(idx+(width/2.0))
+                ax_bar.set_xticklabels(idx, fontsize=fs, rotation=90)
+                ax_bar.set_yticklabels(ax_bar.get_yticks(), fontsize=fs)
+            else:
+                ax_bar.set_xticklabels([])
+                ax_bar.set_yticklabels([])
+            ax_bar.set_title("flux by kper", fontsize=fs)
+        plt.show()
+
+
+
+

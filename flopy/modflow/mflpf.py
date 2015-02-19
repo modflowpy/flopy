@@ -456,7 +456,8 @@ class ModflowLpf(Package):
         if bas is not None:
             ibnd = bas.getibound()
         else:
-            ibnd = np.ones((self.nlay, self.nrow, self.ncol))
+            ibnd = np.ones((self.parent.nlay, self.parent.nrow,
+                            self.parent.ncol), dtype=np.int)
 
         cmap = plt.cm.winter
         cmap.set_bad('w', 1.0)

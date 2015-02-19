@@ -533,11 +533,10 @@ class ModflowDis(Package):
                 b.set_color('c')
 
         ax_time.set_xticks(idx+(width/2.0))
-        ax_time.set_xticklabels(idx)
+        ax_time.set_xticklabels(idx, fontsize=fs, rotation=90)
         ax_time.set_xlabel("stress period", fontsize=fs)
         ax_time.set_ylabel("time (" + self.itmuni_dict[self.itmuni] + ")",
                            fontsize=fs)
-        ax_time.set_xticklabels(ax_time.get_xticks(), fontsize=fs, rotation=90)
         ax_time.set_yticklabels(ax_time.get_yticks(), fontsize=fs)
 
         #plot model top in the lower left
