@@ -48,7 +48,8 @@ class Mt3dSsm(Package):
                                (i < 6))) # First 6 need T/F flag in file line 1
 
         self.__maxssm = 0
-        if (self.parent.btn.icbund != None):
+        #if (self.parent.btn.icbund != None):
+        if isinstance(self.parent.btn.icbund, np.ndarray):
             self.maxssm = (self.parent.btn.icbund < 0).sum()
         for p in self.__SsmPackages:
             if ((p.label == 'BAS6') and (p.instance != None)):
