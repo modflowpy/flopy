@@ -10,7 +10,7 @@
 *FloPy<sub>3</sub>* is significantly different from *FloPy<sub>2</sub>* (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
 
 * *FloPy<sub>3</sub>* is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
-* Input for packages that take *layer, row, column, data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/flopy3boundaries.ipynb)
+* Input for packages that take *layer, row, column, data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [flopy3boundaries](https://github.com/modflowpy/flopy/blob/master/examples/Notebooks/flopy3boundaries.ipynb)
 * Support for use of EXTERNAL and OPEN/CLOSE array specifiers has been improved.
 * *load()* methods have been developed for all of the standard MODFLOW packages and a few less used packages (*e.g.* SWI2).
 * MODFLOW parameter support has been added to the *load()* methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the *load()* methods. MODFLOW parameters are not supported in *write()* methods. MULT package FUNCTION and EXPRESSION functionality are not currently supported. 
