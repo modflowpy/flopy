@@ -78,9 +78,9 @@ ghb = flopy.modflow.ModflowGhb(mf, stress_period_data=stress_period_data)
 # Create the well package
 # Remember to use zero-based layer, row, column indices!
 pumping_rate = -100.
-wel_sp1 = [[0, nrow/2 - 1, ncol/2, 0.]]
-wel_sp2 = [[0, nrow/2 - 1, ncol/2, 0.]]
-wel_sp3 = [[0, nrow/2 - 1, ncol/2, pumping_rate]]
+wel_sp1 = [[0, nrow/2 - 1, ncol/2 - 1, 0.]]
+wel_sp2 = [[0, nrow/2 - 1, ncol/2 - 1, 0.]]
+wel_sp3 = [[0, nrow/2 - 1, ncol/2 - 1, pumping_rate]]
 stress_period_data = {0: wel_sp1, 1: wel_sp2, 2: wel_sp3}
 wel = flopy.modflow.ModflowWel(mf, stress_period_data=stress_period_data)
 
@@ -114,6 +114,7 @@ print 'Extent: ', extent
 
 # Well point
 wpt = ((float(ncol/2)-0.5)*delr, (float(nrow/2-1)+0.5)*delc)
+wpt = (450., 550.)
 
 # Make the plots
 mytimes = [1.0, 101.0, 201.0]
@@ -130,9 +131,10 @@ for iplot, time in enumerate(mytimes):
     #plt.subplot(1, len(mytimes), iplot + 1, aspect='equal')
     plt.subplot(1, 1, 1, aspect='equal')
     plt.title('stress period ' + str(iplot + 1))
-    plt.imshow(head[0, :, :], extent=extent, cmap='BrBG', vmin=0., vmax=10., origin='lower')
+    plt.imshow(head[0, :, :], extent=extent, cmap='BrBG', vmin=0., vmax=10.)
     plt.colorbar()
-    CS = plt.contour(head[0, :, :], levels=levels, extent=extent, zorder=10)
+    CS = plt.contour(np.flipud(head[0, :, :]), levels=levels, extent=extent,
+                     zorder=10)
     plt.clabel(CS, inline=1, fontsize=10, fmt='%1.1f', zorder=11)
     mfc = 'None'
     if (iplot+1) == len(mytimes):

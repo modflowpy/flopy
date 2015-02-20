@@ -320,7 +320,7 @@ class mflist(object):
         # Assert 0 in kpers,"mflist.write() error: kper 0 not defined"
         first = kpers[0]
         if (single_per == None):
-            loop_over_kpers = range(0, max(nper, max(kpers)) + 1)
+            loop_over_kpers = range(0, max(nper, max(kpers) + 1))
         else:
             if (not isinstance(single_per, list)):
                 single_per = [single_per]
