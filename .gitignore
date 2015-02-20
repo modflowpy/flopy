@@ -55,9 +55,7 @@ docs/_build/
 target/
 flopy/.idea
 
-examples/basic/data
-examples/basic/.ipynb_checkpoints
-examples/swi_examples/data
-examples/swi_examples/.ipynb_checkpoints
-examples/henry/data
-examples/henry/.ipynb_checkpoints
+examples/Notebooks/data
+examples/Notebooks/.ipynb_checkpoints
+examples/Testing/data
+examples/Testing/.ipynb_checkpoints
