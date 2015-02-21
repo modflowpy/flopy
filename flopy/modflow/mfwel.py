@@ -70,7 +70,7 @@ class ModflowWel(Package):
     mxactw : int
         Maximum number of wells for a stress period.  This is calculated
         automatically by FloPy based on the information in
-        layer_row_column_data.
+        stress_period_data.
 
     Methods
     -------
