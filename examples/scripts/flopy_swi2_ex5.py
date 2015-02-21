@@ -324,7 +324,7 @@ if not skipRuns:
                       nprs=nprs, timprs=timprs, mxstrn=1e8)
     dsp = mt3.Mt3dDsp(mt, al=0., trpt=1., trpv=1., dmcoef=0.)
     gcg = mt3.Mt3dGcg(mt, mxiter=1, iter1=50, isolve=1, cclose=1e-7)
-    ssm = mt3.Mt3dSsm(mt, stress_period_data=ssm_data) #, cibd=0.)
+    ssm = mt3.Mt3dSsm(mt, stress_period_data=ssm_data)
     mt.write_input()
     #--Create the SEAWAT model structure
     mswt = swt.Seawat(modelname, 'nam_swt', ml, mt, 
