@@ -100,7 +100,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + [SWI2 Example 5](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex5.py)
 
-Note that examples 2 and 5 also include *FloPy<sub>3</sub>* scripts for running and post-processing SEAWAT models.
+Note that examples 2 and 5 also include *FloPy<sub>3</sub>* code for running and post-processing SEAWAT models.
 
 
 ### Tutorials
