@@ -158,7 +158,7 @@ class ModflowSwi2(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> swi2 = flopy.modflow.ModflowSwi2(m,)
+    >>> swi2 = flopy.modflow.ModflowSwi2(m)
 
     """
 

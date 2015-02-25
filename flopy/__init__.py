@@ -30,3 +30,4 @@ import mt3d
 import seawat
 import modpath
 import utils
+import plot
