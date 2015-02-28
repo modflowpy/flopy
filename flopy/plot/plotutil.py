@@ -7,6 +7,96 @@ important classes that can be accessed by the user.
 """
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
+
+def rotate(x, y, theta, xorigin=0., yorigin=0.):
+    """
+    Given x and y array-like values calculate the rotation about an
+    arbitrary origin and then return the rotated coordinates.  theta is in
+    radians.
+
+    """
+    xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * (y - yorigin)
+    yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * (y - yorigin)
+    return xrot, yrot
+
+
+class MapPlanView(object):
+    """
+    Class to create a map of the model.
+
+    Parameters
+    ----------
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+    dis : flopy discretization object
+    layer : int
+        Layer to plot.  Default is 0.
+    xul : float
+        x coordinate for upper left corner
+    yul : float
+        y coordinate for upper left corner
+    rotation : float
+        Angle of grid rotation around the upper left corner.  A positive value
+        indicates clockwise rotation.  Angles are in degrees.
+    """
+    def __init__(self, ax=None, dis=None, layer=0, xul=0., yul=0.,
+                 rotation=0.):
+        if ax is None:
+            self.ax = plt.gca()
+        else:
+            self.ax = ax
+        self.dis = dis
+        self.layer = layer
+        self.xul = xul
+        self.yul = yul
+        self.rotation = -rotation * np.pi / 180.
+        self.xedge = self.get_xedge_array()
+        self.yedge = self.get_yedge_array()
+        self._grid_line_collection = None
+        return
+
+    def plot_grid(self, **kwargs):
+        """
+        Plot the grid lines on ax
+        """
+        if 'facecolors' not in kwargs:
+            kwargs['facecolors'] = 'None'
+
+        if 'edgecolors' not in kwargs:
+            kwargs['edgecolors'] = 'black'
+
+        if 'axes' not in kwargs:
+            kwargs['axes'] = self.ax
+
+        xgrid, ygrid = np.meshgrid(self.xedge, self.yedge)
+        xgrid, ygrid = rotate(xgrid, ygrid, self.rotation, 0, self.yedge[0])
+        xgrid += self.xul
+        ygrid += self.yul - self.yedge[0]
+        a = np.zeros(xgrid.shape)
+        quadmesh = plt.pcolormesh(xgrid, ygrid, a, **kwargs)
+        return quadmesh
+
+    def get_xedge_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell edge x
+        coordinates for every cell in the grid.  Array is of size (ncol + 1)
+
+        """
+        xedge = np.concatenate(([0.], np.add.accumulate(self.dis.delr.array)))
+        return xedge
+
+    def get_yedge_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell edge y
+        coordinates for every cell in the grid.  Array is of size (nrow + 1)
+
+        """
+        length_y = np.add.reduce(self.dis.delc.array)
+        yedge = np.concatenate(([length_y], length_y -
+                             np.add.accumulate(self.dis.delc.array)))
+        return yedge
+
 
 class SwiConcentration():
     """
