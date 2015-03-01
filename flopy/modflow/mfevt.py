@@ -232,16 +232,20 @@ class ModflowEvt(Package):
                                      ext_unit_dict)
                 else:
                     parm_dict = {}
-                    for ipar in xrange(npar):
+                    for ipar in xrange(inevtr):
                         line = f.readline()
                         t = line.strip().split()
                         pname = t[0].lower()
                         try:
-                            iname = t[1].lower()
+                            c = t[1].lower()
+                            if c in pak_parms.bc_parms:
+                                iname = c
+                            else:
+                                iname = 'static'
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'rech',
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'evtr',
                                                  parm_dict, pak_parms)
 
 
