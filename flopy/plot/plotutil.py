@@ -8,6 +8,7 @@ important classes that can be accessed by the user.
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors
 
 def rotate(x, y, theta, xorigin=0., yorigin=0.):
     """
@@ -20,6 +21,8 @@ def rotate(x, y, theta, xorigin=0., yorigin=0.):
     yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * (y - yorigin)
     return xrot, yrot
 
+bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
+                 'RIV': 'green', 'GHB': 'cyan'}
 
 class MapPlanView(object):
     """
@@ -43,13 +46,21 @@ class MapPlanView(object):
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation
     """
-    def __init__(self, ax=None, dis=None, layer=0, xul=0., yul=0.,
+    def __init__(self, ax=None, ml=None, dis=None, layer=0, xul=0., yul=0.,
                  rotation=0., extent=None):
+        self.ml = ml
+        if dis is None:
+            if ml is None:
+                raise Exception('Cannot find discretization package')
+            else:
+                self.dis = ml.get_package('DIS')
+        else:
+            self.dis = dis
+
         if ax is None:
             self.ax = plt.gca()
         else:
             self.ax = ax
-        self.dis = dis
         self.layer = layer
         self.xul = xul
         self.yul = yul
@@ -82,7 +93,6 @@ class MapPlanView(object):
         return quadmesh
 
     def plot_ibound(self, ibound, color_noflow='black', color_ch='blue'):
-        import matplotlib.colors
         # make plot array with 0 = active, 1 = noflow, 2 = constant head
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -91,7 +101,9 @@ class MapPlanView(object):
         plotarray[idx2] = 2
         plotarray = np.ma.masked_equal(plotarray, 0)
         cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_ch])
-        quadmesh = self.plot_array(plotarray, cmap=cmap)
+        bounds=[0, 1, 2, 3]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm)
         return quadmesh
 
     def plot_grid(self, **kwargs):
@@ -105,7 +117,7 @@ class MapPlanView(object):
 
         Returns
         -------
-            lc: LineCollection
+            lc : LineCollection
 
         """
         if 'axes' in kwargs:
@@ -121,6 +133,45 @@ class MapPlanView(object):
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
         return lc
+
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
+        """
+        Plot a boundary locations for a flopy model
+
+        """
+        # Find package to plot
+        if package is not None:
+            p = package
+        elif self.ml is not None:
+            if ftype is None:
+                raise Exception('ftype not specified')
+            p = self.ml.get_package(ftype)
+        else:
+            raise Exception('Cannot find package to plot')
+
+        # Get the list data
+        try:
+            mflist = p.stress_period_data[kper]
+        except:
+            raise Exception('Not a list-style boundary package')
+
+        # Plot the list locations
+        plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)
+        idx = [mflist['k'], mflist['i'], mflist['j']]
+        plotarray[idx] = 1
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        if color is None:
+            if ftype in bc_color_dict:
+                c = bc_color_dict[ftype]
+            else:
+                c = bc_color_dict['default']
+        else:
+            c = color
+        cmap = matplotlib.colors.ListedColormap(['0', c])
+        bounds=[0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        return quadmesh
 
     def get_grid_line_collection(self, **kwargs):
         """
