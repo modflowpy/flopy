@@ -39,9 +39,12 @@ class MapPlanView(object):
     rotation : float
         Angle of grid rotation around the upper left corner.  A positive value
         indicates clockwise rotation.  Angles are in degrees.
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation
     """
     def __init__(self, ax=None, dis=None, layer=0, xul=0., yul=0.,
-                 rotation=0.):
+                 rotation=0., extent=None):
         if ax is None:
             self.ax = plt.gca()
         else:
@@ -53,29 +56,112 @@ class MapPlanView(object):
         self.rotation = -rotation * np.pi / 180.
         self.xedge = self.get_xedge_array()
         self.yedge = self.get_yedge_array()
-        self._grid_line_collection = None
+        if extent is None:
+            self.extent = self.get_extent()
+        else:
+            self.extent = extent
         return
 
-    def plot_grid(self, **kwargs):
+    def plot_array(self, a, **kwargs):
         """
-        Plot the grid lines on ax
+        Plot the array
         """
-        if 'facecolors' not in kwargs:
-            kwargs['facecolors'] = 'None'
-
-        if 'edgecolors' not in kwargs:
-            kwargs['edgecolors'] = 'black'
-
-        if 'axes' not in kwargs:
-            kwargs['axes'] = self.ax
+        # Check array dimension
+        if a.ndim == 3:
+            plotarray = a[self.layer, :, :]
+        elif a.ndim == 2:
+            plotarray = a
+        else:
+            raise Exception('Array must be of dimension 2 or 3')
 
         xgrid, ygrid = np.meshgrid(self.xedge, self.yedge)
         xgrid, ygrid = rotate(xgrid, ygrid, self.rotation, 0, self.yedge[0])
         xgrid += self.xul
         ygrid += self.yul - self.yedge[0]
-        a = np.zeros(xgrid.shape)
-        quadmesh = plt.pcolormesh(xgrid, ygrid, a, **kwargs)
+        quadmesh = plt.pcolormesh(xgrid, ygrid, plotarray, **kwargs)
         return quadmesh
+
+    def plot_ibound(self, ibound, color_noflow='black', color_ch='blue'):
+        import matplotlib.colors
+        # make plot array with 0 = active, 1 = noflow, 2 = constant head
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        idx2 = (ibound < 0)
+        plotarray[idx1] = 1
+        plotarray[idx2] = 2
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_ch])
+        quadmesh = self.plot_array(plotarray, cmap=cmap)
+        return quadmesh
+
+    def plot_grid(self, **kwargs):
+        """
+        Plot the grid.
+
+        Parameters
+        ----------
+            kwargs : axes, colors.  The remaining kwargs are passed into the
+                the LineCollection constructor.
+
+        Returns
+        -------
+            lc: LineCollection
+
+        """
+        if 'axes' in kwargs:
+            ax = kwargs.pop('axes')
+        else:
+            ax = self.ax
+
+        if 'colors' not in kwargs:
+            kwargs['colors'] = '0.5'
+
+        lc = self.get_grid_line_collection(**kwargs)
+        ax.add_collection(lc)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+        return lc
+
+    def get_grid_line_collection(self, **kwargs):
+        """
+        Get a LineCollection of the grid
+        """
+        from matplotlib.collections import LineCollection
+        xmin = self.xedge[0]
+        xmax = self.xedge[-1]
+        ymin = self.yedge[-1]
+        ymax = self.yedge[0]
+        linecol = []
+        # Vertical lines
+        for j in xrange(self.dis.ncol + 1):
+            x0 = self.xedge[j]
+            x1 = x0
+            y0 = ymin
+            y1 = ymax
+            x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
+            x0r += self.xul
+            y0r += self.yul - self.yedge[0]
+            x1r, y1r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
+            x1r += self.xul
+            y1r += self.yul - self.yedge[0]
+            linecol.append(((x0r, y0r), (x1r, y1r)))
+
+        #horizontal lines
+        for i in xrange(self.dis.nrow + 1):
+            x0 = xmin
+            x1 = xmax
+            y0 = self.yedge[i]
+            y1 = y0
+            x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
+            x0r += self.xul
+            y0r += self.yul - self.yedge[0]
+            x1r, y1r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
+            x1r += self.xul
+            y1r += self.yul - self.yedge[0]
+            linecol.append(((x0r, y0r), (x1r, y1r)))
+
+        lc = LineCollection(linecol, **kwargs)
+        return lc
 
     def get_xedge_array(self):
         """
@@ -96,6 +182,45 @@ class MapPlanView(object):
         yedge = np.concatenate(([length_y], length_y -
                              np.add.accumulate(self.dis.delc.array)))
         return yedge
+
+    def get_extent(self):
+        """
+        Get the extent of the rotated and offset grid
+
+        Return (xmin, xmax, ymin, ymax)
+
+        """
+        x0 = self.xedge[0]
+        x1 = self.xedge[-1]
+        y0 = self.yedge[0]
+        y1 = self.yedge[-1]
+
+        # upper left point
+        x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
+        x0r += self.xul
+        y0r += self.yul - self.yedge[0]
+
+        # upper right point
+        x1r, y1r = rotate(x1, y0, self.rotation, 0, self.yedge[0])
+        x1r += self.xul
+        y1r += self.yul - self.yedge[0]
+
+        # lower right point
+        x2r, y2r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
+        x2r += self.xul
+        y2r += self.yul - self.yedge[0]
+
+        # lower left point
+        x3r, y3r = rotate(x0, y1, self.rotation, 0, self.yedge[0])
+        x3r += self.xul
+        y3r += self.yul - self.yedge[0]
+
+        xmin = min(x0r, x1r, x2r, x3r)
+        xmax = max(x0r, x1r, x2r, x3r)
+        ymin = min(y0r, y1r, y2r, y3r)
+        ymax = max(y0r, y1r, y2r, y3r)
+
+        return (xmin, xmax, ymin, ymax)
 
 
 class SwiConcentration():
