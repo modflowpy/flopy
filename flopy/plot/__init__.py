@@ -21,3 +21,4 @@
 
     """
 from plotutil import SwiConcentration
+from map import ModelMap
