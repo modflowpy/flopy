@@ -213,12 +213,16 @@ class ModflowRch(Package):
                     t = util_2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
                 else:
                     parm_dict = {}
-                    for ipar in xrange(npar):
+                    for ipar in xrange(inrech):
                         line = f.readline()
                         t = line.strip().split()
                         pname = t[0].lower()
                         try:
-                            iname = t[1].lower()
+                            c = t[1].lower()
+                            if c in pak_parms.bc_parms:
+                                iname = c
+                            else:
+                                iname = 'static'
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname

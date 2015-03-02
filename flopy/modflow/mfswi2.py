@@ -356,6 +356,8 @@ class ModflowSwi2(Package):
         if int(t[4]) > 0:
             model.add_pop_key_list(int(t[4]))
             iswibd = 56
+        else:
+            iswibd = 0
         iswiobs = int(t[5])
         fsssopt = False
         if 'fsssopt' in line.lower():
@@ -450,9 +452,8 @@ class ModflowSwi2(Package):
         zeta = []
         for n in xrange(nsrf):
             ctxt = 'zeta_surf{:02d}'.format(n+1)
-            z = util_3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                             ctxt, ext_unit_dict)
-            zeta.append(copy.deepcopy(z))
+            zeta.append(util_3d.load(f, model, (nlay, nrow, ncol),
+                                     np.float32, ctxt, ext_unit_dict))
 
         #--read dataset 6
         if model.verbose:
@@ -488,15 +489,19 @@ class ModflowSwi2(Package):
                 line = f.readline()
                 if line[0] != '#':
                     break
-            for i in range(nobs):
+            for i in xrange(nobs):
                 if i > 0:
-                    line = f.readline()
+                    try:
+                        line = f.readline()
+                    except:
+                        break
                 t = line.strip().split()
                 obsname.append(t[0])
                 kk = int(t[1])
                 ii = int(t[2])
                 jj = int(t[3])
                 obslrc.append([kk, ii, jj])
+                nobs = len(obsname)
 
         #--create swi2 instance
         swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs, iswizt=iswizt, iswibd=iswibd,

@@ -24,7 +24,7 @@ setup(name=__name__,
       license='New BSD',
       platforms='Windows, Mac OS-X',
       setup_requires=['numpy>=1.9'],
-      install_requires=['numpy>=1.9'],
+      #install_requires=['numpy>=1.9'],
       packages=['flopy', 'flopy.modflow', 'flopy.modpath', 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot'],
       # use this version ID if .svn data cannot be found
       version=__version__ )

@@ -143,6 +143,7 @@ class Modflow(BaseModel):
             "dis": flopy.modflow.ModflowDis,
             "lpf": flopy.modflow.ModflowLpf,
             "hfb6": flopy.modflow.ModflowHfb,
+            "chd": flopy.modflow.ModflowChd,
             "wel": flopy.modflow.ModflowWel,
             "drn": flopy.modflow.ModflowDrn,
             "rch": flopy.modflow.ModflowRch,

@@ -15,6 +15,9 @@ VERBOSE = False
 
 
 def decode_fortran_descriptor(fd):    
+    #--strip off any quotes around format string
+    fd = fd.replace("'", "")
+    fd = fd.replace('"', '')
     #--strip off '(' and ')'
     fd = fd.strip()[1:-1]
     if 'FREE' in fd.upper():
@@ -32,8 +35,14 @@ def decode_fortran_descriptor(fd):
     for fmt in fmts:
         if fmt in raw:
             raw = raw.split(fmt)
-            npl = int(raw[0])
-            width = int(raw[1])
+            #--'(F9.0)' will return raw = ['', '9']
+            #  try and except will catch this
+            try:
+                npl = int(raw[0])
+                width = int(raw[1])
+            except:
+                npl = 1
+                width = int(raw[1])
             if fmt == 'G':
                 fmt = 'E'
             return npl, fmt, width, decimal
@@ -1080,6 +1089,8 @@ class util_2d(object):
         elif cr_dict['type'] == 'open/close':
             #--clean up the filename a little
             fname = cr_dict['fname']
+            fname = fname.replace("'", "")
+            fname = fname.replace('"', '')
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
