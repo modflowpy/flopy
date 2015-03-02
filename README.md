@@ -41,11 +41,11 @@ To uninstall *FloPy<sub>3</sub>* type:
 
 To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
 
-    pip install git+https://github.com/modflowpy/flopy.git
+    pip install https://github.com/modflowpy/flopy/zipball/master
     
 To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
 
-    pip install git+https://github.com/modflowpy/flopy.git --upgrade
+    pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
 
 
 Documentation
