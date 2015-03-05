@@ -19,7 +19,7 @@
 
 **Python versions:**
 
-*FloPy<sub>3</sub>* requires **Python** 2.7.
+*FloPy<sub>3</sub>* requires **Python** 2.7
 
 
 **Dependencies:**
