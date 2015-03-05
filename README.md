@@ -17,9 +17,14 @@
 
 ## Installation
 
+**Python versions:**
+
+*FloPy<sub>3</sub>* requires **Python** 2.7.
+
+
 **Dependencies:**
 
-*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) 
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher)
 
 
 **For base Python distributions:**
