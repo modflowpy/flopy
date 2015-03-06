@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
+import plotutil
 
 bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
@@ -94,8 +95,19 @@ class ModelMap(object):
 
     def plot_array(self, a, **kwargs):
         """
-        Plot the array
+        Plot an array.  If the array is three-dimensional, then the method
+        will plot the layer tied to this class (self.layer).
 
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Array to plot.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
         """
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
@@ -111,6 +123,18 @@ class ModelMap(object):
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.ml
 
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+        color_noflow : string
+            (Default is 'black')
+        color_ch : string
+            Color for constant heads (Default is 'blue'.)
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
         """
         if ibound is None:
             bas = self.ml.get_package('BAS6')
@@ -138,7 +162,7 @@ class ModelMap(object):
 
         Returns
         -------
-            lc : LineCollection
+            lc : matplotlib.collections.LineCollection
 
         """
         if 'ax' in kwargs:
@@ -191,6 +215,27 @@ class ModelMap(object):
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return quadmesh
+
+    def plot_shapefile(self, shp, **kwargs):
+        """
+        Plot a shapefile.  The shapefile must be in the same coordinates as
+        the rotated and offset grid.
+
+        Parameters
+        ----------
+        shp : string
+            Name of the shapefile to plot
+
+        kwargs : dictionary
+            Keyword arguments passed to plotutil.plot_shapefile()
+
+        """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
+        return patch_collection
 
     def get_grid_line_collection(self, **kwargs):
         """
