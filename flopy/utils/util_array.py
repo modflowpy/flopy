@@ -178,8 +178,8 @@ class util_3d(object):
     ext_filename : string
         the external filename to write the array representation to
         (optional) (the default is None) .
-        If type(value) is a string and is an accessable filename, the ext_filename
-        is reset to value.
+        If type(value) is a string and is an accessible filename, the
+        ext_filename is reset to value.
     bin : bool
         flag to control writing external arrays as binary (optional)
         (the defaut is False)
@@ -192,7 +192,7 @@ class util_3d(object):
 
     Methods
     -------
-    get_file_entry() : string
+    get_file_entry : string
         get the model input file string including the control record for the
         entire 3-D property
 
@@ -225,8 +225,7 @@ class util_3d(object):
             self.ext_filename_base = os.path.join(
                 model.external_path, self.name_base.replace(' ', '_'))
         self.util_2ds = self.build_2d_instances()
-   
-    
+
     def __getitem__(self, k):
         if isinstance(k, int):
             return self.util_2ds[k]
@@ -424,7 +423,6 @@ class transient_2d(object):
         else:
             return (-1, '')
 
-
     def build_transient_sequence(self):
         """parse self.__value into a dict{kper:util_2d}
         """
@@ -532,7 +530,7 @@ class util_2d(object):
 
     Methods
     -------
-    get_file_entry() : string
+    get_file_entry : string
         get the model input file string including the control record
 
     See Also

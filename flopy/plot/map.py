@@ -34,7 +34,8 @@ class ModelMap(object):
     xul : float
         x coordinate for upper left corner
     yul : float
-        y coordinate for upper left corner
+        y coordinate for upper left corner.  The default is the sum of the
+        delc array.
     rotation : float
         Angle of grid rotation around the upper left corner.  A positive value
         indicates clockwise rotation.  Angles are in degrees.

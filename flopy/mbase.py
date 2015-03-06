@@ -20,6 +20,24 @@ iconst = 1 # Multiplier for individual array elements in integer and real arrays
 iprn = -1 # Printout flag. If >= 0 then array values read are printed in listing file.
 
 
+def is_exe(fpath):
+    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+
+def which(program):
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
+
+
 class BaseModel(object):
     """
     MODFLOW based models base class
@@ -334,6 +352,21 @@ class BaseModel(object):
         """
         success = False
         buff = []
+
+        # Check to make sure that program and namefile exist
+        exe = which(self.exe_name)
+        if exe is None:
+            s = 'The program {} does not exist or is not executable.'.format(self.exe_name)
+            raise Exception(s)
+        else:
+            if not silent:
+                s = 'FloPy is using the following executable to run the model: {}'.format(exe)
+                print (s)
+
+        if not os.path.isfile(self.namefile):
+            s = 'The namefile for this model does not exists: {}'.format(self.namefile)
+            raise Exception(s)
+
         proc = sp.Popen([self.exe_name, self.namefile],
                         stdout=sp.PIPE, cwd=self.model_ws)
         while True:
