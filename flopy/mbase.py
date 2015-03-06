@@ -687,8 +687,16 @@ class Package(object):
                     line = f.readline()
                     if "open/close" in line.lower():
                         raise NotImplementedError("load() method does not support \'open/close\'")
-                    t = line.strip().split()
-                    current[ibnd] = tuple(t[:len(current.dtype.names)])
+                    try:
+                        t = line.strip().split()
+                        current[ibnd] = tuple(t[:len(current.dtype.names)])
+                    except:
+                        t = []
+                        for ivar in xrange(len(current.dtype.names)):
+                            istart = ivar * 10
+                            istop = istart + 10
+                            t.append(line[istart:istop])
+                        current[ibnd] = tuple(t[:len(current.dtype.names)])
 
                 #--convert indices to zero-based
                 current['k'] -= 1
