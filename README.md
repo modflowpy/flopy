@@ -5,6 +5,10 @@
 
 *FloPy<sub>3</sub>* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
 
+For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users  Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed at the bottom of this page in the MODFLOW Resources section.
+
+If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like to suggest an improvement or enhancement, please submit a new Issue through the Github Issue tracker toward the upper-right corner of this page.
+
 ## FloPy<sub>3</sub> Changes
 
 *FloPy<sub>3</sub>* is significantly different from *FloPy<sub>2</sub>* (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
