@@ -226,6 +226,7 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, botm):
     NOT FINISHED YET!  STILL NEED TO
     1.  CALCULATE QZ
     2.  DIVIDE qx AND qy BY THE SATURATED THICKNESS
+    3.  ROTATE FOR MAP PRESENTATION
 
     """
     qx = None
@@ -250,7 +251,7 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, botm):
         qy = np.empty(Qy.shape, dtype=Qy.dtype)
 
         for k in xrange(nlay):
-            for i in xrange(ncol):
+            for i in xrange(nrow):
                 qy[k, i, :] = Qy[k, i, :] / delr[:]
 
         qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow-1, :] + qx[:, 1:nrow, :])

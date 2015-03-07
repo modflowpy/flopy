@@ -110,7 +110,7 @@ class ModelMap(object):
 
         return
 
-    def plot_array(self, a, **kwargs):
+    def plot_array(self, a, masked_values=None, **kwargs):
         """
         Plot an array.  If the array is three-dimensional, then the method
         will plot the layer tied to this class (self.layer).
@@ -119,6 +119,8 @@ class ModelMap(object):
         ----------
         a : numpy.ndarray
             Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
         **kwargs : dictionary
             keyword arguments passed to matplotlib.pyplot.pcolormesh
 
@@ -132,6 +134,9 @@ class ModelMap(object):
             plotarray = a
         else:
             raise Exception('Array must be of dimension 2 or 3')
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
         quadmesh = plt.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
         return quadmesh
 
@@ -285,8 +290,12 @@ class ModelMap(object):
 
         x = self.xcentergrid[::istep, ::jstep]
         y = self.ycentergrid[::istep, ::jstep]
-        u = qx[self.layer, ::istep, ::jstep]
-        v = qy[self.layer, ::istep, ::jstep]
+        u = qx[self.layer, :, :]
+        v = qy[self.layer, :, :]
+        u = u[::istep, ::jstep]
+        v = v[::istep, ::jstep]
+        print u.min(), u.max(), qx.min(), qx.max(), frf.min(), frf.max()
+        print v.min(), v.max(), qy.min(), qy.max(), fff.min(), fff.max()
         quiver = self.ax.quiver(x, y, u, v, **kwargs)
 
         return quiver
