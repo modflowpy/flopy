@@ -282,21 +282,25 @@ class ModelMap(object):
             Vectors
 
         """
+
+        # Calculate specific discharge
         delr = self.dis.delr.array
         delc = self.dis.delc.array
         botm = self.dis.botm.array
         qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, None, delr,
                                                           delc, botm)
 
+        # Select correct slice and step
         x = self.xcentergrid[::istep, ::jstep]
         y = self.ycentergrid[::istep, ::jstep]
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
         u = u[::istep, ::jstep]
         v = v[::istep, ::jstep]
-        print u.min(), u.max(), qx.min(), qx.max(), frf.min(), frf.max()
-        print v.min(), v.max(), qy.min(), qy.max(), fff.min(), fff.max()
-        quiver = self.ax.quiver(x, y, u, v, **kwargs)
+
+        # Rotate and plot
+        urot, vrot = rotate(u, v, self.rotation)
+        quiver = self.ax.quiver(x, y, urot, vrot, **kwargs)
 
         return quiver
 

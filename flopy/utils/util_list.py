@@ -258,7 +258,6 @@ class mflist(object):
         # If the data entry for kper is a string, 
         # return the corresponding recarray,
         # but don't reset the value in the data dict
-        print self.data.keys(), kper, kper in self.data.keys()
         assert kper in self.data.keys(), "mflist.__getitem__() kper " +\
                                          str(kper) + " not in data.keys()"
         if (self.vtype[kper] == int):
