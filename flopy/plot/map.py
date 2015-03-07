@@ -137,8 +137,39 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        quadmesh = plt.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
+        quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
         return quadmesh
+
+    def contour_array(self, a, masked_values=None, **kwargs):
+        """
+        Contour an array.  If the array is three-dimensional, then the method
+        will contour the layer tied to this class (self.layer).
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        contour_set : matplotlib.pyplot.contour
+        """
+        if a.ndim == 3:
+            plotarray = a[self.layer, :, :]
+        elif a.ndim == 2:
+            plotarray = a
+        else:
+            raise Exception('Array must be of dimension 2 or 3')
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
+        contour_set = self.ax.contour(self.xcentergrid, self.ycentergrid,
+                                      plotarray, **kwargs)
+        return contour_set
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue'):
         """
