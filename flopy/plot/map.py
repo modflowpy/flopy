@@ -31,7 +31,7 @@ class ModelMap(object):
         The plot axis.  If not provided it, plt.gca() will be used.
     dis : flopy discretization object
     layer : int
-        Layer to plot.  Default is 0.
+        Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
     xul : float
         x coordinate for upper left corner
     yul : float
@@ -55,6 +55,11 @@ class ModelMap(object):
                 self.dis = ml.get_package('DIS')
         else:
             self.dis = dis
+
+        if self.layer < 0 or self.layer > self.dis.nlay - 1:
+            s = 'Not a valid layer: {}.  Must be between 0 and {}.'.format(
+                self.layer, self.dis.nlay - 1)
+            raise Exception(s)
 
         if ax is None:
             self.ax = plt.gca()
@@ -80,6 +85,18 @@ class ModelMap(object):
                                         0, self.yedge[0])
         self.xgrid += self.xul
         self.ygrid += self.yul - self.yedge[0]
+
+        # Create x and y center arrays and meshgrid of centers
+        self.xcenter = self.get_xcenter_array()
+        self.ycenter = self.get_ycenter_array()
+        self.xcentergrid, self.ycentergrid = np.meshgrid(self.xcenter,
+                                                         self.ycenter)
+        self.xcentergrid, self.ycentergrid = rotate(self.xcentergrid,
+                                                    self.ycentergrid,
+                                                    self.rotation,
+                                                    0, self.yedge[0])
+        self.xcentergrid += self.xul
+        self.ycentergrid += self.yul - self.yedge[0]
 
         # Create model extent
         if extent is None:
@@ -237,6 +254,44 @@ class ModelMap(object):
         patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
         return patch_collection
 
+    def plot_discharge(self, frf, fff, istep=1, jstep=1, **kwargs):
+        """
+        Use quiver to plot vectors.
+
+        Parameters
+        ----------
+        frf : numpy.ndarray
+            MODFLOW's 'flow right face'
+        fff : numpy.ndarray
+            MODFLOW's 'flow front face'
+        istep : int
+            row frequency to plot. (Default is 1.)
+        jstep : int
+            column frequency to plot. (Default is 1.)
+        kwargs : dictionary
+            Keyword arguments passed to plt.quiver()
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            Vectors
+
+        """
+        delr = self.dis.delr.array
+        delc = self.dis.delc.array
+        botm = self.dis.botm.array
+        qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, None, delr,
+                                                          delc, botm)
+
+        x = self.xcentergrid[::istep, ::jstep]
+        y = self.ycentergrid[::istep, ::jstep]
+        u = qx[self.layer, ::istep, ::jstep]
+        v = qy[self.layer, ::istep, ::jstep]
+        quiver = self.ax.quiver(x, y, u, v, **kwargs)
+
+        return quiver
+
+
     def get_grid_line_collection(self, **kwargs):
         """
         Get a LineCollection of the grid
@@ -278,10 +333,30 @@ class ModelMap(object):
         lc = LineCollection(linecol, **kwargs)
         return lc
 
+    def get_xcenter_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell center x
+        coordinate for every column in the grid.
+
+        """
+        x = np.add.accumulate(self.dis.delr.array) - 0.5 * self.dis.delr.array
+        return x
+
+    def get_ycenter_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell center x
+        coordinate for every row in the grid.
+
+        """
+        Ly = np.add.reduce(self.dis.delc.array)
+        y = Ly - (np.add.accumulate(self.dis.delc.array) - 0.5 *
+                   self.dis.delc.array)
+        return y
+
     def get_xedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every cell in the grid.  Array is of size (ncol + 1)
+        coordinates for every column in the grid.  Array is of size (ncol + 1)
 
         """
         xedge = np.concatenate(([0.], np.add.accumulate(self.dis.delr.array)))
@@ -290,7 +365,7 @@ class ModelMap(object):
     def get_yedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every cell in the grid.  Array is of size (nrow + 1)
+        coordinates for every row in the grid.  Array is of size (nrow + 1)
 
         """
         length_y = np.add.reduce(self.dis.delc.array)

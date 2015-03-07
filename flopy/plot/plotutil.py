@@ -196,3 +196,72 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     ax.add_collection(pc)
     return pc
 
+def centered_specific_discharge(Qx, Qy, Qz, delr, delc, botm):
+    """
+    Using the MODFLOW discharge, calculate the cell centered specific discharge
+    by dividing by the flow width and then averaging to the cell center.
+
+    Parameters
+    ----------
+    Qx : numpy.ndarray
+        MODFLOW 'flow right face'
+    Qy : numpy.ndarray
+        MODFLOW 'flow front face'.  The sign on this array will be flipped
+        by this function so that the y axis is positive to north.
+    Qz : numpy.ndarray
+        MODFLOW 'flow lower face'.  The sign on this array will be flipped by
+        this function so that the z axis is positive in the upward direction.
+    delr : numpy.ndarray
+        MODFLOW delr array
+    delc : numpy.ndarray
+        MODFLOW delc array
+    botm : numpy.ndarray
+        MODFLOW botm array
+
+    Returns
+    -------
+    (qx, qy, qz) : tuple of numpy.ndarrays
+        Specific discharge arrays that have been interpolated to cell centers.
+
+    NOT FINISHED YET!  STILL NEED TO
+    1.  CALCULATE QZ
+    2.  DIVIDE qx AND qy BY THE SATURATED THICKNESS
+
+    """
+    qx = None
+    qy = None
+    qz = None
+
+    if Qx is not None:
+
+        nlay, nrow, ncol = Qx.shape
+        qx = np.empty(Qx.shape, dtype=Qx.dtype)
+
+        for k in xrange(nlay):
+            for j in xrange(ncol):
+                qx[k, :, j] = Qx[k, :, j] / delc[:]
+
+        qx[:, :, 1:] = 0.5 * (qx[:, :, 0:ncol-1] + qx[:, :, 1:ncol])
+        qx[:, :, 0] = 0.5 * qx[:, :, 0]
+
+    if Qy is not None:
+
+        nlay, nrow, ncol = Qy.shape
+        qy = np.empty(Qy.shape, dtype=Qy.dtype)
+
+        for k in xrange(nlay):
+            for i in xrange(ncol):
+                qy[k, i, :] = Qy[k, i, :] / delr[:]
+
+        qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow-1, :] + qx[:, 1:nrow, :])
+        qy[:, 0, :] = 0.5 * qy[:, 0, :]
+
+
+    if Qz is not None:
+        raise NotImplementedError('Qz not implemented yet.  Sorry. Set Qz=None')
+        qz = np.empty(Qz.shape, dtype=Qz.dtype)
+    # qz_avg = np.empty(qz.shape, dtype=qz.dtype)
+    # qz_avg[1:, :, :] = 0.5 * (qz[0:nlay-1, :, :] + qz[1:nlay, :, :])
+    # qz_avg[0, :, :] = 0.5 * qz[0, :, :]
+
+    return (qx, -qy, qz)
