@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d,util_3d
+from flopy.utils import util_2d, util_3d, read1d
 from flopy.modflow.mfpar import ModflowPar as mfpar
 
 class ModflowLpf(Package):
@@ -315,33 +315,28 @@ class ModflowLpf(Package):
         # LAYTYP array
         if model.verbose:
             print '   loading LAYTYP...'
-        line = f.readline()
-        t = line.strip().split()
-        laytyp = np.array((t[0:nlay]),dtype=np.int)
+        laytyp = np.empty((nlay), dtype=np.int)
+        laytyp = read1d(f, laytyp)
         # LAYAVG array
         if model.verbose:
             print '   loading LAYAVG...'
-        line = f.readline()
-        t = line.strip().split()
-        layavg = np.array((t[0:nlay]),dtype=np.int)
+        layavg = np.empty((nlay), dtype=np.int)
+        layavg = read1d(f, layavg)
         # CHANI array
         if model.verbose:
             print '   loading CHANI...'
-        line = f.readline()
-        t = line.strip().split()
-        chani = np.array((t[0:nlay]),dtype=np.float32)
+        chani = np.empty((nlay), dtype=np.float32)
+        chani = read1d(f, chani)
         # LAYVKA array
         if model.verbose:
             print '   loading LAYVKA...'
-        line = f.readline()
-        t = line.strip().split()
-        layvka = np.array((t[0:nlay]),dtype=np.int)
+        layvka = np.empty((nlay), dtype=np.float32)
+        layvka = read1d(f, layvka)
         # LAYWET array
         if model.verbose:
             print '   loading LAYWET...'
-        line = f.readline()
-        t = line.strip().split()
-        laywet = np.array((t[0:nlay]), dtype=np.int)
+        laywet = np.empty((nlay), dtype=np.int)
+        laywet = read1d(f, laywet)
         # Item 7: WETFCT, IWETIT, IHDWET
         wetfct,iwetit,ihdwet = None, None, None
         iwetdry = laywet.sum()

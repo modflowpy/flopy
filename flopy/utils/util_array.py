@@ -67,6 +67,22 @@ def build_python_descriptor(npl, fmt, width, decimal):
         pd += fmt+'}'
     return pd
 
+def read1d(f, a):
+    """
+    Fill the 1d array, a, with the correct number of values.  Required in
+    case lpf 1d arrays (chani, layvka, etc) extend over more than one line
+
+    """
+    values = []
+    while True:
+        line = f.readline()
+        t = line.strip().split()
+        values = values + t
+        if len(values) >= a.shape[0]:
+            break
+    a[:] = np.array(values[0:a.shape[0]], dtype=a.dtype)
+    return a
+
 def array2string(a, fmt_tup):
         '''Converts a 1D or 2D array into a string
         Input:
