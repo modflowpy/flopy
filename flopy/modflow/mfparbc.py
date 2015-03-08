@@ -80,6 +80,10 @@ class ModflowParBc(object):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
+                if parnam.startswith("'"):
+                    parnam = parnam[1:]
+                if parnam.endswith("'"):
+                    parnam = parnam[:-1]
                 if verbose:
                     print '   loading parameter "{}"...'.format(parnam)
                 partyp = t[1].lower()

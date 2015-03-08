@@ -681,6 +681,7 @@ class Package(object):
             
             if itmp == 0:
                 bnd_output = None
+                current = pack_type.get_empty(itmp, aux_names=aux_names)
             elif itmp > 0:
                 current = pack_type.get_empty(itmp, aux_names=aux_names)
                 for ibnd in xrange(itmp):
