@@ -219,7 +219,8 @@ class ModflowRch(Package):
                         pname = t[0].lower()
                         try:
                             c = t[1].lower()
-                            if c in pak_parms.bc_parms:
+                            instance_dict = pak_parms.bc_parms[pname][1]
+                            if c in instance_dict:
                                 iname = c
                             else:
                                 iname = 'static'
