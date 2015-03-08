@@ -57,5 +57,6 @@ flopy/.idea
 
 examples/Notebooks/data
 examples/Notebooks/.ipynb_checkpoints
+examples/Testing/.idea
 examples/Testing/data
 examples/Testing/.ipynb_checkpoints

@@ -18,6 +18,7 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 * Support for use of EXTERNAL and OPEN/CLOSE array specifiers has been improved.
 * *load()* methods have been developed for all of the standard MODFLOW packages and a few less used packages (*e.g.* SWI2).
 * MODFLOW parameter support has been added to the *load()* methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the *load()* methods. MODFLOW parameters are not supported in *write()* methods. MULT package FUNCTION and EXPRESSION functionality are not currently supported. 
+* Full support for all Output Control (OC) options including DDREFERENCE, SAVE IBOUND, and layer lists. All Output Control Input is specified using words. Output Control Input using numeric codes is still available in the ModflowOc88 class. The ModflowOc88 class is currently deprecated and no longer actively maintained.
 
 ## Installation
 

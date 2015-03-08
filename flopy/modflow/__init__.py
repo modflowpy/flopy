@@ -12,8 +12,8 @@ from mfrch import ModflowRch
 from mfriv import ModflowRiv
 from mfwel import ModflowWel
 from mfpval import ModflowPval
+from mfoc88 import ModflowOc88
 from mfoc import ModflowOc
-from mfoc3 import ModflowOc3
 from mfsip import ModflowSip
 from mfsor import ModflowSor
 from mfswr1 import ModflowSwr1

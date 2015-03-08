@@ -78,7 +78,7 @@ lpf = mf.ModflowLpf(ml, hk=2., vka=2.0, vkcb=0, laytyp=0, layavg=0)
 wel = mf.ModflowWel(ml, stress_period_data={0:[(0, 0, 0, 1)]})
 swi = mf.ModflowSwi2(ml, npln=1, istrat=1, toeslope=0.2, tipslope=0.2, nu=[0, 0.025],
                      zeta=z, ssz=0.2, isource=isource, nsolver=1)
-oc = mf.ModflowOc(ml, save_head_every=50)
+oc = mf.ModflowOc88(ml, save_head_every=50)
 pcg = mf.ModflowPcg(ml)
 #--create model files
 ml.write_input()

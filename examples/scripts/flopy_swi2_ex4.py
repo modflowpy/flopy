@@ -195,7 +195,7 @@ if not skipRuns:
                          zeta=z, ssz=ssz, isource=iso, nsolver=1,
                          adaptive=adaptive, nadptmx=nadptmx, nadptmn=nadptmn, 
                          nobs=nobs, iswiobs=iswiobs, obsnam=obsnam, obslrc=obslrc)
-    oc = mf.ModflowOc(ml, words=savewords)
+    oc = mf.ModflowOc88(ml, words=savewords)
     pcg = mf.ModflowPcg(ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
     #--create model files
     ml.write_input()
@@ -219,7 +219,7 @@ if not skipRuns:
                          zeta=z, ssz=ssz, isource=iso, nsolver=1,
                          adaptive=adaptive, nadptmx=nadptmx, nadptmn=nadptmn,
                          nobs=nobs, iswiobs=iswiobs, obsnam=obsnam, obslrc=obslrc)
-    oc = mf.ModflowOc(ml2, words=savewords)
+    oc = mf.ModflowOc88(ml2, words=savewords)
     pcg = mf.ModflowPcg(ml2, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
     #--create model files
     ml2.write_input()

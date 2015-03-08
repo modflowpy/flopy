@@ -12,7 +12,8 @@
 # 
 # Kolja Rotzoll (kolja@usgs.gov), 1/15/2015
 #------------------------------------------------------
-import sys, os 
+import os
+import sys
 import numpy as np
 from pylab import *
 from PIL import Image, ImageDraw
@@ -23,11 +24,16 @@ if flopypath not in sys.path:
     sys.path.append(flopypath)
 
 import flopy
-import flopy.utils.binaryfile as bf
+
+workspace = os.path.join('data')
+#make sure workspace directory exists
+if not os.path.exists(workspace):
+    os.makedirs(workspace)
+
 
 #--flopy objects
 modelname = 'Oahu_01'
-mf = flopy.modflow.Modflow(modelname, exe_name='mf2005', model_ws=os.path.join('data'))
+mf = flopy.modflow.Modflow(modelname, exe_name='mf2005', model_ws=workspace)
 
 #--model domain and grid definition
 ztop = 30.                       # top of layer (ft rel to msl)
@@ -111,7 +117,7 @@ lrcrch[:, 3] = arange(2,nhfb+2)           # row 2
 lrcrch[:, 4] = ones(nhfb)*(ncol/2)      # col 2
 lrcrch[:, 5] = 0.000001                  # hydrologic characteristics
 #print lrcrch
-hfb = flopy.modflow.ModflowHfb(mf,layer_row_column_data=lrcrch)
+hfb = flopy.modflow.ModflowHfb(mf, hfb_data=lrcrch)
 
 #--SWI input
 z1 = np.zeros((nrow, ncol))
@@ -123,11 +129,21 @@ iso[:,:][index==1] = 1 					# land
 iso[:,:][index==0] = -2 				# ocean (ghb)
 #print iso
 swi = flopy.modflow.ModflowSwi2(mf,nsrf=1,istrat=1,toeslope=0.04,tipslope=0.04,
-	        				    nu=[0,0.025],zeta=z,ssz=0.05,isource=iso,nsolver=1)
+	        				    nu=[0,0.025], zeta=z, ssz=0.05, isource=iso, nsolver=1)
 
 #--output control & solver
-oc = flopy.modflow.ModflowOc(mf, words=['head'], save_head_every=1,
-							 item2=[[0, 1, 0, 0]], item3=[[0, 1, 0, 0]])
+#oc = flopy.modflow.ModflowOc(mf, words=['head'], save_head_every=1,
+#							 item2=[[0, 1, 0, 0]], item3=[[0, 1, 0, 0]])
+spd = {(0, 0): ['print head'],
+       (0, 1): [],
+       (0, 249): ['print head'],
+       (0, 250): [],
+       (0, 499): ['print head', 'save ibound'],
+       (0, 500): [],
+       (0, 749): ['print head', 'ddreference'],
+       (0, 750): [],
+       (0, 999): ['print head']}
+oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd, cboufm='(20i5)')
 pcg = flopy.modflow.ModflowPcg(mf, hclose=1.0e-4, rclose=5.0e-0) # pre-conjugate gradient solver
 #de4 = flopy.modflow.ModflowDe4(mf, itmx=1, hclose=1e-5)  		 # direct solver
 #----------------------------------------------------------------------
@@ -135,4 +151,18 @@ pcg = flopy.modflow.ModflowPcg(mf, hclose=1.0e-4, rclose=5.0e-0) # pre-conjugate
 #--write the model input files
 mf.write_input()
 
-print '\n\nfinished...\n'
+print '\n\nfinished write...\n'
+
+m2 = flopy.modflow.Modflow.load(modelname, exe_name='mf2005', model_ws=workspace, verbose=True)
+
+print '\nfinished read...\n'
+
+oc2 = m2.get_package('OC')
+
+print oc2.stress_period_data.keys()
+
+oc2.write_file()
+
+print '\nthis is the end...my friend\n'
+
+

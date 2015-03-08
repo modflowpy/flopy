@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 import flopy.modflow as mf
-import flopy.mt3dms as mt3
+import flopy.mt3d as mt3
 import flopy.seawat as swt
 import flopy.utils as fu
 
@@ -102,7 +102,7 @@ bas = mf.ModflowBas(ml, ibound=ibound, strt=0.05)
 bcf = mf.ModflowBcf(ml, laycon=0, tran=2 * 40)
 swi = mf.ModflowSwi2(ml, nsrf=nsurf, istrat=1, toeslope=0.2, tipslope=0.2, nu=[0, 0.0125, 0.025],
                      zeta=z, ssz=ssz, isource=isource, nsolver=1)
-oc = mf.ModflowOc(ml, save_head_every=1000)
+oc = mf.ModflowOc88(ml, save_head_every=1000)
 pcg = mf.ModflowPcg(ml)
 ml.write_input()
 #--run stratified model
@@ -125,7 +125,7 @@ bas = mf.ModflowBas(ml, ibound=ibound, strt=0.05)
 bcf = mf.ModflowBcf(ml, laycon=0, tran=2 * 40)
 swi = mf.ModflowSwi2(ml, nsrf=nsurf, istrat=0, toeslope=0.2, tipslope=0.2, nu=[0, 0, 0.025, 0.025],
                      zeta=z, ssz=ssz, isource=isource, nsolver=1)
-oc = mf.ModflowOc(ml, save_head_every=1000)
+oc = mf.ModflowOc88(ml, save_head_every=1000)
 pcg = mf.ModflowPcg(ml)
 ml.write_input()
 #--run vd model
@@ -186,6 +186,11 @@ for ilay in range(0, swt_nlay):
         sconcp[ilay, icol] = sconc[ilay, 0, icol]
     xsb += swt_delz
     xbf += swt_delz
+
+#--ssm data
+itype = mt3.Mt3dSsm.itype_dict()
+ssm_data = {0: [0, 0, 0, 35., itype['BAS6']]}
+
 #print sconcp
 #mt3d print times
 timprs = (np.arange(5) + 1) * 2000.
@@ -198,7 +203,7 @@ discret = mf.ModflowDis(ml, nrow=swt_nrow, ncol=swt_ncol, nlay=swt_nlay,
                         nper=nper, perlen=perlen, nstp=1, steady=False)
 bas = mf.ModflowBas(ml, ibound=swt_ibound, strt=0.05)
 lpf = mf.ModflowLpf(ml, hk=2.0, vka=2.0, ss=0.0, sy=0.0, laytyp=0, layavg=0)
-oc = mf.ModflowOc(ml, save_head_every=1, item2=[[0, 1, 0, 0]])
+oc = mf.ModflowOc88(ml, save_head_every=1, item2=[[0, 1, 0, 0]])
 pcg = mf.ModflowPcg(ml)
 ml.write_input()
 #--Create the basic MT3DMS model structure
@@ -216,12 +221,12 @@ adv = mt3.Mt3dAdv(mt, mixelm=-1,  #-1 is TVD
                   nph=16,
                   npmin=8,
                   npmax=256)
-btn = mt3.Mt3dBtn(mt, icbund=1, prsity=ssz, sconc=[sconc], ifmtcn=-1,
+btn = mt3.Mt3dBtn(mt, icbund=1, prsity=ssz, sconc=sconc, ifmtcn=-1,
                   chkmas=False, nprobs=10, nprmas=10, dt0=0.0, ttsmult=1.2, ttsmax=100.0,
                   ncomp=1, nprs=nprs, timprs=timprs, mxstrn=1e8)
 dsp = mt3.Mt3dDsp(mt, al=0., trpt=1., trpv=1., dmcoef=0.)
 gcg = mt3.Mt3dGcg(mt, mxiter=1, iter1=50, isolve=3, cclose=1e-6, iprgcg=5)
-ssm = mt3.Mt3dSsm(mt, cibd=1.)
+ssm = mt3.Mt3dSsm(mt, stress_period_data=ssm_data)
 mt.write_input()
 # Create the SEAWAT model structure
 mswtf = swt.Seawat(modelname, 'nam_swt', modflowmodel=ml, mt3dmsmodel=mt,

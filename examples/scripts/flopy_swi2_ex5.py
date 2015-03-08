@@ -192,7 +192,7 @@ if not skipRuns:
     wel = mf.ModflowWel(ml, stress_period_data=well_data)
     swi = mf.ModflowSwi2(ml, npln=1, istrat=1, toeslope=0.025, tipslope=0.025, nu=[0, 0.025], \
                          zeta=z, ssz=ssz, isource=isource, nsolver=2, solver2params=solver2params)
-    oc = mf.ModflowOc(ml, words=savewords)
+    oc = mf.ModflowOc88(ml, words=savewords)
     pcg = mf.ModflowPcg(ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
     # --write the modflow files
     ml.write_input()
@@ -302,7 +302,7 @@ if not skipRuns:
     bas = mf.ModflowBas(ml, ibound=ibound, strt=strt)
     lpf = mf.ModflowLpf(ml, hk=kh, vka=kv, ss=ss, sy=ssz, vkcb=0, laytyp=0, layavg=1)
     wel = mf.ModflowWel(ml, stress_period_data=well_data)
-    oc = mf.ModflowOc(ml, save_head_every=365)
+    oc = mf.ModflowOc88(ml, save_head_every=365)
     pcg = mf.ModflowPcg(ml, hclose=1.0e-5, rclose=3.0e-3, mxiter=100, iter1=50)
     ml.write_input()
     #--Create the basic MT3DMS model structure

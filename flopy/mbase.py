@@ -363,7 +363,7 @@ class BaseModel(object):
                 s = 'FloPy is using the following executable to run the model: {}'.format(exe)
                 print (s)
 
-        if not os.path.isfile(self.namefile):
+        if not os.path.isfile(os.path.join(self.model_ws, self.namefile)):
             s = 'The namefile for this model does not exists: {}'.format(self.namefile)
             raise Exception(s)
 

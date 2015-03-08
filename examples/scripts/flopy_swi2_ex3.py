@@ -101,7 +101,7 @@ wel = mf.ModflowWel(ml, stress_period_data={0:lrcQ1, 1:lrcQ2})
 ghb = mf.ModflowGhb(ml, stress_period_data={0:lrchc})
 swi = mf.ModflowSwi2(ml, nsrf=1, istrat=1, toeslope=0.01, tipslope=0.04, nu=[0, 0.025],
                      zeta=[zini, zini, zini], ssz=0.2, isource=iso, nsolver=1)
-oc = mf.ModflowOc(ml, save_head_every=100)
+oc = mf.ModflowOc88(ml, save_head_every=100)
 pcg = mf.ModflowPcg(ml)
 #--write the model files
 ml.write_input()
