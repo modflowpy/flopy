@@ -171,7 +171,8 @@ class ModelMap(object):
                                       plotarray, **kwargs)
         return contour_set
 
-    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue'):
+    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
+                    **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.ml
@@ -201,7 +202,7 @@ class ModelMap(object):
         cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_ch])
         bounds=[0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm)
+        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return quadmesh
 
     def plot_grid(self, **kwargs):
@@ -250,6 +251,10 @@ class ModelMap(object):
             mflist = p.stress_period_data[kper]
         except:
             raise Exception('Not a list-style boundary package')
+
+        # Return if mflist is None
+        if mflist is None:
+            return None
 
         # Plot the list locations
         plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)

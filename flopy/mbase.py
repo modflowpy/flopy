@@ -715,7 +715,12 @@ class Package(object):
                 iname = 'static'
                 try:
                     tn = t[1]
-                    iname = tn
+                    c = tn.lower()
+                    instance_dict = pak_parms.bc_parms[pname][1]
+                    if c in instance_dict:
+                        iname = c
+                    else:
+                        iname = 'static'
                 except:
                     pass
                 #print pname, iname
