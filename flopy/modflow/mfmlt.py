@@ -164,9 +164,41 @@ class ModflowMlt(Package):
             else:
                 line = f.readline()
                 t = [kwrd, line]
+                t = ModflowMlt.mult_function(mult_dict, line)
             mult_dict[mltnam] = t
 
         #--create mlt dictionary
         mlt = ModflowMlt(model, mult_dict=mult_dict)
 
         return mlt
+
+    @staticmethod
+    def mult_function(mult_dict, line):
+        """
+        Construct a multiplier for the 'FUNCTION' option
+
+        """
+        t = line.strip().split()
+        basename = t.pop(0).lower()
+        multarray = mult_dict[basename]
+        multarray = multarray.array.copy()
+
+        # Construct the multiplier array
+        while True:
+            if len(t) < 2:
+                break
+            op = t.pop(0)
+            multname = t.pop(0)
+            atemp = mult_dict[multname].array
+            if op == '+':
+                multarray = multarray + atemp
+            elif op == '*':
+                multarray = multarray * atemp
+            elif op == '-':
+                multarray = multarray - atemp
+            elif op == '/':
+                multarray = multarray / atemp
+            else:
+                s = 'Invalid MULT operation {}'.format(op)
+                raise Exception(s)
+        return multarray
