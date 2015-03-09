@@ -85,9 +85,13 @@ stress_period_data = {0: wel_sp1, 1: wel_sp2, 2: wel_sp3}
 wel = flopy.modflow.ModflowWel(mf, stress_period_data=stress_period_data)
 
 # Output control
-words = ['head','drawdown','budget', 'phead', 'pbudget']
+stress_period_data = {(0, 0): ['save head',
+                               'save drawdown',
+                               'save budget',
+                               'print head',
+                               'print budget']}
 save_head_every = 1
-oc = flopy.modflow.ModflowOc(mf, words=words, save_head_every=save_head_every)
+oc = flopy.modflow.ModflowOc(mf, stress_period_data=stress_period_data)
 
 # Write the model input files
 mf.write_input()
