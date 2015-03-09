@@ -88,7 +88,7 @@ class ModflowOc(Package):
         (IPEROC, ITSOC) tuple until a (IPEROC, ITSOC) tuple is entered with
         and empty list.
     compact : boolean
-        Save results in compact budget form. (default is False).
+        Save results in compact budget form. (default is True).
     extension : list of strings
         (default is ['oc','hds','ddn','cbc']).
     unitnumber : list of ints
@@ -129,7 +129,7 @@ class ModflowOc(Package):
     """
     def __init__(self, model,\
                  ihedfm=0, iddnfm=0, chedfm=None, cddnfm=None,\
-                 cboufm=None, compact=False,\
+                 cboufm=None, compact=True,\
                  stress_period_data={(0,0):['save head']},\
                  extension=['oc','hds','ddn','cbc'],\
                  unitnumber=[14, 51, 52, 53]):
