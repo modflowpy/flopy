@@ -295,7 +295,8 @@ class ModelMap(object):
         patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
         return patch_collection
 
-    def plot_discharge(self, frf, fff, istep=1, jstep=1, **kwargs):
+    def plot_discharge(self, frf, fff, flf=None, head=None, istep=1, jstep=1,
+                       **kwargs):
         """
         Use quiver to plot vectors.
 
@@ -305,6 +306,11 @@ class ModelMap(object):
             MODFLOW's 'flow right face'
         fff : numpy.ndarray
             MODFLOW's 'flow front face'
+        fff : numpy.ndarray
+            MODFLOW's 'flow lower face' (Default is None.)
+        head : numpy.ndarray
+            MODFLOW's head array.  If not provided, then will assume confined
+            conditions in order to calculated saturated thickness.
         istep : int
             row frequency to plot. (Default is 1.)
         jstep : int
@@ -322,9 +328,32 @@ class ModelMap(object):
         # Calculate specific discharge
         delr = self.dis.delr.array
         delc = self.dis.delc.array
+        top = self.dis.top.array
         botm = self.dis.botm.array
-        qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, None, delr,
-                                                          delc, botm)
+        nlay, nrow, ncol = botm.shape
+        laytyp = None
+        hnoflo = 999.
+        hdry = 999.
+        if self.ml is not None:
+            lpf = self.ml.get_package('LPF')
+            if lpf is not None:
+                laytyp = lpf.laytyp.array
+                hdry = lpf.hdry
+            bas = self.ml.get_package('BAS6')
+            if bas is not None:
+                hnoflo = bas.hnoflo
+
+        # If no access to head or laytyp, then calculate confined saturated
+        # thickness by setting laytyp to zeros
+        if head is None or laytyp is None:
+            head = np.zeros(botm.shape, np.float32)
+            laytyp = np.zeros((nlay), dtype=np.int)
+        sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
+                                               [hnoflo, hdry])
+
+        # Calculate specific discharge
+        qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
+                                                          delc, sat_thk)
 
         # Select correct slice and step
         x = self.xcentergrid[::istep, ::jstep]

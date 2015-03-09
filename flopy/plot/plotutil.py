@@ -196,7 +196,57 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     ax.add_collection(pc)
     return pc
 
-def centered_specific_discharge(Qx, Qy, Qz, delr, delc, botm):
+def saturated_thickness(head, top, botm, laytyp, mask_values=None):
+    """
+    Calculate the saturated thickness.
+
+    Parameters
+    ----------
+    head : numpy.ndarray
+        head array
+    top : numpy.ndarray
+        top array of shape (nrow, ncol)
+    botm : numpy.ndarray
+        botm array of shape (nlay, nrow, ncol)
+    laytyp : numpy.ndarray
+        confined (0) or convertible (1) of shape (nlay)
+    mask_values : list of floats
+        If head is one of these values, then set sat to top - bot
+
+    Returns
+    -------
+    sat_thk : numpy.ndarray
+        Saturated thickness of shape (nlay, nrow, ncol).
+
+    """
+    nlay, nrow, ncol = head.shape
+    sat_thk = np.empty(head.shape, dtype=head.dtype)
+    for k in xrange(nlay):
+        if k == 0:
+            t = top
+        else:
+            t = botm[k-1, :, :]
+        sat_thk[k, :, :] = t - botm[k, :, :]
+    for k in xrange(nlay):
+        if laytyp[k] != 0:
+            dh = np.zeros((nrow, ncol), dtype=head.dtype)
+            s = sat_thk[k, :, :]
+
+            for mv in mask_values:
+                idx = (head[k, :, :] == mv)
+                dh[idx] = s[idx]
+
+            if k == 0:
+                t = top
+            else:
+                t = botm[k-1, :, :]
+            t = np.where(head[k, :, :] > t, t, head[k, :, :])
+            dh = np.where(dh == 0, t - botm[k, :, :], dh)
+            sat_thk[k, :, :] = dh[:, :]
+    return sat_thk
+
+
+def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
     """
     Using the MODFLOW discharge, calculate the cell centered specific discharge
     by dividing by the flow width and then averaging to the cell center.
@@ -215,18 +265,13 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, botm):
         MODFLOW delr array
     delc : numpy.ndarray
         MODFLOW delc array
-    botm : numpy.ndarray
-        MODFLOW botm array
+    sat_thk : numpy.ndarray
+        Saturated thickness for each cell
 
     Returns
     -------
     (qx, qy, qz) : tuple of numpy.ndarrays
         Specific discharge arrays that have been interpolated to cell centers.
-
-    NOT FINISHED YET!  STILL NEED TO
-    1.  CALCULATE QZ
-    2.  DIVIDE qx AND qy BY THE SATURATED THICKNESS
-    3.  ROTATE FOR MAP PRESENTATION
 
     """
     qx = None
@@ -236,11 +281,12 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, botm):
     if Qx is not None:
 
         nlay, nrow, ncol = Qx.shape
-        qx = np.empty(Qx.shape, dtype=Qx.dtype)
+        qx = np.zeros(Qx.shape, dtype=Qx.dtype)
 
         for k in xrange(nlay):
-            for j in xrange(ncol):
-                qx[k, :, j] = Qx[k, :, j] / delc[:]
+            for j in xrange(ncol-1):
+                area = delc[:] * 0.5 * (sat_thk[k, :, j] + sat_thk[k, :, j + 1])
+                qx[k, :, j] = Qx[k, :, j] / area
 
         qx[:, :, 1:] = 0.5 * (qx[:, :, 0:ncol-1] + qx[:, :, 1:ncol])
         qx[:, :, 0] = 0.5 * qx[:, :, 0]
@@ -248,21 +294,28 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, botm):
     if Qy is not None:
 
         nlay, nrow, ncol = Qy.shape
-        qy = np.empty(Qy.shape, dtype=Qy.dtype)
+        qy = np.zeros(Qy.shape, dtype=Qy.dtype)
 
         for k in xrange(nlay):
-            for i in xrange(nrow):
-                qy[k, i, :] = Qy[k, i, :] / delr[:]
+            for i in xrange(nrow-1):
+                area = delr[:] * 0.5 * (sat_thk[k, i, :] + sat_thk[k, i + 1, :])
+                qy[k, i, :] = Qy[k, i, :] / area
 
-        qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow-1, :] + qx[:, 1:nrow, :])
+        qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow-1, :] + qy[:, 1:nrow, :])
         qy[:, 0, :] = 0.5 * qy[:, 0, :]
+        qy = -qy
 
 
     if Qz is not None:
-        raise NotImplementedError('Qz not implemented yet.  Sorry. Set Qz=None')
-        qz = np.empty(Qz.shape, dtype=Qz.dtype)
-    # qz_avg = np.empty(qz.shape, dtype=qz.dtype)
-    # qz_avg[1:, :, :] = 0.5 * (qz[0:nlay-1, :, :] + qz[1:nlay, :, :])
-    # qz_avg[0, :, :] = 0.5 * qz[0, :, :]
+        qz = np.zeros(Qz.shape, dtype=Qz.dtype)
+        dr = delr.reshape((1, delr.shape[0]))
+        dc = delc.reshape((delc.shape[0], 1))
+        area = dr * dc
+        for k in xrange(nlay):
+            qz[k, :, :] = qz[k, :, :] / area[:, :]
+        qz[1:, :, :] = 0.5 * (qz[0:nlay-1, :, :] + qz[1:nlay, :, :])
+        qz[0, :, :] = 0.5 * qz[0, :, :]
+        qz = -qz
 
-    return (qx, -qy, qz)
+
+    return (qx, qy, qz)
