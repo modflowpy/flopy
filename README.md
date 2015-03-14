@@ -11,13 +11,13 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 ## FloPy<sub>3</sub> Changes
 
-*FloPy<sub>3</sub>* is significantly different from *FloPy<sub>2</sub>* (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
+*FloPy<sub>3</sub>* is significantly different from *FloPy<sub>2</sub>* (previously hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
 
 * *FloPy<sub>3</sub>* is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
 
 * Input for packages that take *layer, row, column, data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3boundaries.ipynb)
 
-* Input for the MT3DMS Source/Sink Mixing (SSM) Package has been modified to be consistent with the new MODFLOW boundary package input and is more flexible than previous versions of *FloPy*.
+* Input for the MT3DMS Source/Sink Mixing (SSM) Package has been modified to be consistent with the new MODFLOW boundary package input and is more flexible than previous versions of *FloPy*. See the notebook [flopy3ssm](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_multi-component_SSM.ipynb)
 
 * Support for use of EXTERNAL and OPEN/CLOSE array specifiers has been improved.
 
