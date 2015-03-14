@@ -6,6 +6,7 @@ important classes that can be accessed by the user.
 
 """
 import sys
+import math
 import numpy as np
 
 class SwiConcentration():
@@ -319,3 +320,113 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
 
 
     return (qx, qy, qz)
+    
+
+
+def findrowcolumn(pt, xedge, yedge):
+    #--find the modflow cell containing the cross-section point
+    jcol = -100
+    for jdx, xmf in enumerate(xedge):
+        if xmf > pt[0]:
+            jcol = jdx - 1
+            break
+    irow = -100
+    for jdx, ymf in enumerate(yedge):
+        if ymf < pt[1]:
+            irow = jdx - 1
+            break
+    return irow,jcol
+
+
+def line_intersect_grid(ptsin, xedge, yedge, returnVertices=False):
+    small_value = 1.0e-1
+    
+    #--build list of points along current line
+    pts = []
+    npts = len(ptsin)
+    dlen = 0.
+    for idx in xrange(1, npts):
+        x0 = ptsin[idx-1][0]
+        x1 = ptsin[idx][0]
+        y0 = ptsin[idx-1][1]
+        y1 = ptsin[idx][1]
+        a  = x1 - x0
+        b  = y1 - y0
+        c  = math.sqrt( math.pow(a, 2.) + math.pow(b, 2.) )
+        #--find cells with (x0, y0) and (x1, y1)
+        irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
+        irow1, jcol1 = findrowcolumn((x1, y1), xedge, yedge)
+        #--determine direction to go in the x- and y-directions
+        goRight = False
+        jx   = 0
+        incx =  abs( small_value * a / c )
+        goDown = False
+        iy   = 0
+        incy = -abs(small_value * b / c )
+        if a == 0.: 
+            incx = 0.
+        elif a > 0.: 
+            goRight = True
+            jx   = 1
+            incx *= -1.
+        if b == 0.: 
+            incy = 0.
+        elif b < 0.: 
+            goDown = True
+            iy   = 1
+            incy *= -1.
+        #--process data
+        if irow0 >= 0 and jcol0 >= 0:
+            iAdd = True
+            if idx > 1 and returnVertices==True: iAdd = False
+            if (iAdd==True): pts.append( (x0, y0, dlen) )
+        icnt = 0
+        while True:
+            icnt += 1
+            dx  = xedge[jcol0+jx] - x0
+            dlx = 0.
+            if a != 0.:
+                dlx = c * dx / a
+            dy  = yedge[irow0+iy] - y0
+            dly = 0.
+            if b != 0.:
+                dly = c * dy / b
+            if dlx != 0. and dly != 0.:
+                if abs(dlx) < abs(dly):
+                    dy = dx * b / a
+                else:
+                    dx = dy * a / b
+            xt = x0 + dx + incx
+            yt = y0 + dy + incy
+            dl = math.sqrt( math.pow((xt-x0),2.) + math.pow((yt-y0),2.) )
+            dlen += dl
+            if (returnVertices==False): pts.append( (xt, yt, dlen) )
+            x0,y0 = xt,yt
+            xt = x0 - 2. * incx
+            yt = y0 - 2. * incy
+            dl = math.sqrt( math.pow((xt-x0),2.) + math.pow((yt-y0), 2.) )
+            dlen += dl
+            x0,y0 = xt,yt
+            irow0,jcol0 = findrowcolumn((x0, y0), xedge, yedge)
+            if irow0 >= 0 and jcol0 >= 0:
+                if (returnVertices==False): pts.append( (xt, yt, dlen) )
+            elif irow1 < 0 or jcol1 < 0:
+                dl = math.sqrt( math.pow((x1-x0), 2.) + math.pow((y1-y0), 2.) )
+                dlen += dl
+                break
+            if irow0 == irow1 and jcol0 == jcol1:
+                dl = math.sqrt( math.pow((x1-x0),2.) + math.pow((y1-y0), 2.) )
+                dlen += dl
+                pts.append( (x1, y1, dlen) )
+                break
+    return np.array(pts)
+
+
+def cell_value_points(pts, xedge, yedge, vdata):
+    vcell = []
+    for idx, [xt, yt, dlen] in enumerate(pts):
+        #--find the modflow cell containing point
+        irow, jcol = findrowcolumn((xt, yt), xedge, yedge)
+        if irow >= 0 and jcol >= 0:
+            vcell.append(vdata[irow, jcol])
+    return np.array(vcell)
