@@ -132,8 +132,6 @@ swi = flopy.modflow.ModflowSwi2(mf,nsrf=1,istrat=1,toeslope=0.04,tipslope=0.04,
 	        				    nu=[0,0.025], zeta=z, ssz=0.05, isource=iso, nsolver=1)
 
 #--output control & solver
-#oc = flopy.modflow.ModflowOc(mf, words=['head'], save_head_every=1,
-#							 item2=[[0, 1, 0, 0]], item3=[[0, 1, 0, 0]])
 spd = {(0, 0): ['print head'],
        (0, 1): [],
        (0, 249): ['print head'],
@@ -143,7 +141,9 @@ spd = {(0, 0): ['print head'],
        (0, 749): ['print head', 'ddreference'],
        (0, 750): [],
        (0, 999): ['print head']}
-oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd, cboufm='(20i5)')
+#oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd, cboufm='(20i5)')
+oc = flopy.modflow.ModflowOc88(mf, save_head_every=100,
+                               item2=[[0, 1, 0, 0]], item3=[[0, 1, 0, 0]])
 pcg = flopy.modflow.ModflowPcg(mf, hclose=1.0e-4, rclose=5.0e-0) # pre-conjugate gradient solver
 #de4 = flopy.modflow.ModflowDe4(mf, itmx=1, hclose=1e-5)  		 # direct solver
 #----------------------------------------------------------------------

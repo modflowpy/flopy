@@ -267,7 +267,7 @@ class ModflowOc(Package):
         f_oc.close()
 
     @staticmethod
-    def load(f, model, nper=None, nstp=None, ext_unit_dict=None):
+    def load(f, model, nper=None, nstp=None, nlay=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -282,9 +282,14 @@ class ModflowOc(Package):
             The number of stress periods.  If nper is None, then nper will be
             obtained from the model object. (default is None).
         nstp : list
-            List containg the number of time steps in each stress period.  
+            List containing the number of time steps in each stress period.  
             If nstp is None, then nstp will be obtained from the DIS package 
             attached to the model object. (default is None).
+        nlay : int
+            The number of model layers.  If nlay is None, then nnlay will be
+            obtained from the model object. nlay only needs to be specified
+            if an empty model object is passed in and the oc file being loaded
+            is defined using numeric codes. (default is None).
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
             or older style array control records, then `f` should be a file
@@ -305,7 +310,7 @@ class ModflowOc(Package):
         >>> oc = flopy.modflow.ModflowOc.load('test.oc', m)
 
         """
-
+        
         if model.verbose:
             sys.stdout.write('loading oc package file...\n')
 
@@ -328,6 +333,9 @@ class ModflowOc(Package):
         cboufm = None
         words = []
         wordrec = []
+        
+        numericformat = False
+        ihedfm, iddnfm = 0, 0
 
         stress_period_data = {}
 
@@ -336,86 +344,201 @@ class ModflowOc(Package):
             filename = f
             f = open(filename, 'r')
 
-        #process each line
-        lines = []
-        iperoc, itsoc = 0, 0 
-        for line in f:
-            lnlst = line.strip().split()
+        #--read header
+        ipos = f.tell()
+        while True:
+            line = f.readline()
             if line[0] == '#':
                 continue
-            
-            # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
-            if lnlst == []:
+            elif line[0] == []:
                 continue
-            # end add
-
-            #dataset 1 values
-            elif ('HEAD' in lnlst[0].upper() and
-                  'PRINT' in lnlst[1].upper() and
-                  'FORMAT' in lnlst[2].upper()
-                  ):
-                ihedfm = int(lnlst[3])
-            elif ('HEAD' in lnlst[0].upper() and
-                  'SAVE' in lnlst[1].upper() and
-                  'FORMAT' in lnlst[2].upper()
-                  ):
-                chedfm = lnlst[3]
-            elif ('HEAD' in lnlst[0].upper() and
-                  'SAVE' in lnlst[1].upper() and
-                  'UNIT' in lnlst[2].upper()
-                  ):
-                ihedun = int(lnlst[3])
-            elif ('DRAWDOWN' in lnlst[0].upper() and
-                  'PRINT' in lnlst[1].upper() and
-                  'FORMAT' in lnlst[2].upper()
-                  ):
-                iddnfm = int(lnlst[3])
-            elif ('DRAWDOWN' in lnlst[0].upper() and
-                  'SAVE' in lnlst[1].upper() and
-                  'FORMAT' in lnlst[2].upper()
-                  ):
-                cddnfm = lnlst[3]
-            elif ('DRAWDOWN' in lnlst[0].upper() and
-                  'SAVE' in lnlst[1].upper() and
-                  'UNIT' in lnlst[2].upper()
-                  ):
-                iddnun = int(lnlst[3])
-            elif ('IBOUND' in lnlst[0].upper() and
-                  'SAVE' in lnlst[1].upper() and
-                  'FORMAT' in lnlst[2].upper()
-                  ):
-                cboufm = lnlst[3]
-            elif ('IBOUND' in lnlst[0].upper() and
-                  'SAVE' in lnlst[1].upper() and
-                  'UNIT' in lnlst[2].upper()
-                  ):
-                ibouun = int(lnlst[3])
-            elif 'COMPACT' in lnlst[0].upper():
-                compact = True
-
-            #dataset 2
-            elif 'PERIOD' in lnlst[0].upper():
-                if len(lines) > 0:
-                    if iperoc > 0:
-                        #--create period step tuple
-                        kperkstp = (iperoc-1, itsoc-1)
-                        #--save data
-                        stress_period_data[kperkstp] = lines
-                    #--reset lines
-                    lines = []
-                #--turn off oc if required
-                if iperoc > 0:
-                    if itsoc==nstp[iperoc-1]:
-                        iperoc1 = iperoc + 1
-                        itsoc1 = 1
+            else:
+                lnlst = line.strip().split()
+                try:
+                    ihedfm, iddnfm = int(lnlst[0]), int(lnlst[1])
+                    ihedun, iddnun = int(lnlst[2]), int(lnlst[3])
+                    numericformat = True
+                except:
+                    f.seek(ipos)
+                    pass
+                #--exit so the remaining data can be read 
+                #  from the file based on numericformat
+                break
+            #--set pointer to current position in the OC file    
+            ipos = f.tell()
+                 
+        
+        #process each line
+        lines = []
+        if numericformat == True:
+            for iperoc in xrange(nper):
+                for itsoc in xrange(nstp[iperoc]):
+                    line = f.readline()
+                    lnlst = line.strip().split()
+                    incode, ihddfl = int(lnlst[0]), int(lnlst[1])
+                    ibudfl, icbcfl = int(lnlst[2]), int(lnlst[3])
+                    #--new print and save flags are needed if incode is not 
+                    #  less than 0.
+                    if incode >= 0:
+                        lines = []
+                    #--use print options from the last time step
                     else:
-                        iperoc1 = iperoc
-                        itsoc1 = itsoc + 1
+                        if len(lines) > 0:
+                            stress_period_data[(iperoc, itsoc)] = list(lines)
+                        continue
+                    #--set print and save budget flags
+                    if ibudfl != 0:
+                        lines.append('PRINT BUDGET')
+                    if icbcfl != 0:
+                        lines.append('PRINT BUDGET')
+                    if incode == 0:
+                        line = f.readline()
+                        lnlst = line.strip().split()
+                        hdpr, ddpr = int(lnlst[0]), int(lnlst[1])
+                        hdsv, ddsv = int(lnlst[2]), int(lnlst[3])
+                        if hdpr != 0:
+                            lines.append('PRINT HEAD')
+                        if ddpr != 0:
+                            lines.append('PRINT DRAWDOWN')
+                        if hdsv != 0:
+                            lines.append('SAVE HEAD')
+                        if ddsv != 0:
+                            lines.append('SAVE DRAWDOWN')
+                    elif incode > 0:
+                        headprint = ''
+                        headsave = ''
+                        ddnprint = ''
+                        ddnsave = ''
+                        for k in xrange(nlay):
+                            line = f.readline()
+                            lnlst = line.strip().split()
+                            hdpr, ddpr = int(lnlst[0]), int(lnlst[1])
+                            hdsv, ddsv = int(lnlst[2]), int(lnlst[3])
+                            if hdpr != 0:
+                                headprint += ' {}'.format(k+1)
+                            if ddpr != 0:
+                                ddnprint += ' {}'.format(k+1)
+                            if hdsv != 0:
+                                headsave += ' {}'.format(k+1)
+                            if ddsv != 0:
+                                ddnsave += ' {}'.format(k+1)
+                        if len(headprint) > 0:
+                            lines.append('PRINT HEAD'+headprint)
+                        if len(ddnprint) > 0:
+                            lines.append('PRINT DRAWDOWN'+ddnprint)
+                        if len(headsave) > 0:
+                            lines.append('SAVE HEAD'+headdave)
+                        if len(ddnsave) > 0:
+                            lines.append('SAVE DRAWDOWN'+ddnsave)
+                    stress_period_data[(iperoc, itsoc)] = list(lines)
+        else:
+            iperoc, itsoc = 0, 0 
+            while True:
+                line = f.readline()
+                if len(line) < 1:
+                    break
+                lnlst = line.strip().split()
+                if line[0] == '#':
+                    continue
+                
+                # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
+                if lnlst == []:
+                    continue
+                # end add
+    
+                #dataset 1 values
+                elif ('HEAD' in lnlst[0].upper() and
+                      'PRINT' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                      ):
+                    ihedfm = int(lnlst[3])
+                elif ('HEAD' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                      ):
+                    chedfm = lnlst[3]
+                elif ('HEAD' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                      ):
+                    ihedun = int(lnlst[3])
+                elif ('DRAWDOWN' in lnlst[0].upper() and
+                      'PRINT' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                      ):
+                    iddnfm = int(lnlst[3])
+                elif ('DRAWDOWN' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                      ):
+                    cddnfm = lnlst[3]
+                elif ('DRAWDOWN' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                      ):
+                    iddnun = int(lnlst[3])
+                elif ('IBOUND' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                      ):
+                    cboufm = lnlst[3]
+                elif ('IBOUND' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                      ):
+                    ibouun = int(lnlst[3])
+                elif 'COMPACT' in lnlst[0].upper():
+                    compact = True
+    
+                #dataset 2
+                elif 'PERIOD' in lnlst[0].upper():
+                    if len(lines) > 0:
+                        if iperoc > 0:
+                            #--create period step tuple
+                            kperkstp = (iperoc-1, itsoc-1)
+                            #--save data
+                            stress_period_data[kperkstp] = lines
+                        #--reset lines
+                        lines = []
+                    #--turn off oc if required
+                    if iperoc > 0:
+                        if itsoc==nstp[iperoc-1]:
+                            iperoc1 = iperoc + 1
+                            itsoc1 = 1
+                        else:
+                            iperoc1 = iperoc
+                            itsoc1 = itsoc + 1
+                    else:
+                        iperoc1, itsoc1 = iperoc, itsoc 
+                    #--update iperoc and itsoc
+                    iperoc = int(lnlst[1])
+                    itsoc = int(lnlst[3])
+                    #--add a empty list if necessary
+                    iempty = False
+                    if iperoc != iperoc1:
+                        iempty = True
+                    else:
+                        if itsoc != itsoc1:
+                            iempty = True
+                    if iempty == True:
+                        kperkstp = (iperoc1-1, itsoc1-1)
+                        stress_period_data[kperkstp] = []
+                #dataset 3
+                elif 'PRINT' in lnlst[0].upper():
+                    lines.append('{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
+                elif 'SAVE' in lnlst[0].upper() :
+                    lines.append('{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
                 else:
-                    iperoc1, itsoc1 = iperoc, itsoc 
-                #--update iperoc and itsoc
-                iperoc = int(lnlst[1])
-                itsoc = int(lnlst[3])
+                    print 'Error encountered in OC import.'
+                    print 'Creating default OC package.'
+                    return ModflowOc(model)
+    
+            #store the last record in word
+            if len(lines) > 0:
+                #--create period step tuple
+                kperkstp = (iperoc-1, itsoc-1)
+                #--save data
+                stress_period_data[kperkstp] = lines
                 #--add a empty list if necessary
                 iempty = False
                 if iperoc != iperoc1:
@@ -426,32 +549,6 @@ class ModflowOc(Package):
                 if iempty == True:
                     kperkstp = (iperoc1-1, itsoc1-1)
                     stress_period_data[kperkstp] = []
-            #dataset 3
-            elif 'PRINT' in lnlst[0].upper():
-                lines.append('{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
-            elif 'SAVE' in lnlst[0].upper() :
-                lines.append('{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
-            else:
-                print 'Old style oc files not supported for import.'
-                print 'Convert to words.'
-                return ModflowOc(model)
-
-        #store the last record in word
-        if len(lines) > 0:
-            #--create period step tuple
-            kperkstp = (iperoc-1, itsoc-1)
-            #--save data
-            stress_period_data[kperkstp] = lines
-            #--add a empty list if necessary
-            iempty = False
-            if iperoc != iperoc1:
-                iempty = True
-            else:
-                if itsoc != itsoc1:
-                    iempty = True
-            if iempty == True:
-                kperkstp = (iperoc1-1, itsoc1-1)
-                stress_period_data[kperkstp] = []
                     
         #--reset unit numbers
         unitnumber=[14, 51, 52, 53]
