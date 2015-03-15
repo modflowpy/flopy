@@ -428,5 +428,9 @@ def cell_value_points(pts, xedge, yedge, vdata):
         #--find the modflow cell containing point
         irow, jcol = findrowcolumn((xt, yt), xedge, yedge)
         if irow >= 0 and jcol >= 0:
-            vcell.append(vdata[irow, jcol])
+            if np.isnan(vdata[irow, jcol]):
+                vcell.append(np.nan)
+            else:
+                v = np.asarray(vdata[irow, jcol])
+                vcell.append(v) 
     return np.array(vcell)

@@ -203,17 +203,33 @@ class ModelCrossSection(object):
         -------
         quadmesh : matplotlib.collections.QuadMesh
         """
-        if a.ndim == 3:
-            plotarray = a[self.layer, :, :]
-        elif a.ndim == 2:
-            plotarray = a
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
         else:
-            raise Exception('Array must be of dimension 2 or 3')
+            ax = self.ax
+        # if a.ndim == 3:
+        #     plotarray = a[self.layer, :, :]
+        # elif a.ndim == 2:
+        #     plotarray = a
+        # else:
+        #     raise Exception('Array must be of dimension 2 or 3')
+        plotarray = a
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
-        return quadmesh
+
+        vpts = []
+        for k in xrange(self.dis.nlay):
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+        vpts = np.array(vpts)
+        if self.layer != None:
+            vpts = vpts[this.layer, :]
+            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
+
+        #quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
+        pc = self.get_grid_patch_collection(vpts, **kwargs)
+        ax.add_collection(pc)
+        return pc
 
     def contour_array(self, a, masked_values=None, **kwargs):
         """
@@ -274,7 +290,7 @@ class ModelCrossSection(object):
         plotarray[idx1] = 1
         plotarray[idx2] = 2
         plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_ch])
+        cmap = matplotlib.colors.ListedColormap(['none', color_noflow, color_ch])
         bounds=[0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
@@ -343,32 +359,11 @@ class ModelCrossSection(object):
                 c = bc_color_dict['default']
         else:
             c = color
-        cmap = matplotlib.colors.ListedColormap(['0', c])
+        cmap = matplotlib.colors.ListedColormap(['none', c])
         bounds=[0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return quadmesh
-
-    def plot_shapefile(self, shp, **kwargs):
-        """
-        Plot a shapefile.  The shapefile must be in the same coordinates as
-        the rotated and offset grid.
-
-        Parameters
-        ----------
-        shp : string
-            Name of the shapefile to plot
-
-        kwargs : dictionary
-            Keyword arguments passed to plotutil.plot_shapefile()
-
-        """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-        patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
-        return patch_collection
 
     def plot_discharge(self, frf, fff, flf=None, head=None, istep=1, jstep=1,
                        **kwargs):
@@ -445,26 +440,35 @@ class ModelCrossSection(object):
         return quiver
 
 
-    def get_grid_patch_collection(self, **kwargs):
+    def get_grid_patch_collection(self, plotarray, **kwargs):
         """
         Get a PatchCollection of the grid
         """
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
         rectcol = []
+
+        v = []
         
+        colors = []
         for k in xrange(self.zpts.shape[0]-1):
-            for idx in xrange(0, len(self.xpts)-1):
+            for idx in xrange(0, len(self.xpts)-1, 2):
                 ll = ((self.xpts[idx][2], self.zpts[k+1, idx]))
-                dx = self.xpts[idx+1][2] - self.xpts[idx][2]
+                try:
+                    dx = self.xpts[idx+2][2] - self.xpts[idx][2]
+                except:
+                    dx = self.xpts[idx+1][2] - self.xpts[idx][2]
                 dz = self.zpts[k, idx] - self.zpts[k+1, idx]
-                #pts.append((self.xpts[idx][2], self.zpts[k, idx]))
                 pts = (ll, 
                       (ll[0], ll[1]+dz), (ll[0]+dx, ll[1]+dz),
                       (ll[0]+dx, ll[1])) #, ll) 
+                if np.isnan(plotarray[k, idx]):
+                    continue
                 rectcol.append(Polygon(pts, closed=True))
+                colors.append(plotarray[k, idx])
 
         pc = PatchCollection(rectcol, **kwargs)
+        pc.set_array(np.array(colors))
         return pc
 
     def get_grid_line_collection(self, **kwargs):

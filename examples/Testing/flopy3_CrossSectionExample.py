@@ -3,6 +3,7 @@ import os
 import platform
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors
 
 import flopy
 
@@ -40,6 +41,10 @@ for f in files:
         print (errmsg)
 
 
+fname = os.path.join(modelpth, 'freyberg.hds')
+hdobj = flopy.utils.HeadFile(fname)
+head = hdobj.get_data()
+
 
 # First step is to set up the plot
 fig = plt.figure(figsize=(5, 5))
@@ -51,9 +56,19 @@ modelxsect = flopy.plot.ModelCrossSection(ml=ml, line={'Row': 20})
 # Then we can use the plot_grid() method to draw the grid
 # The return value for this function is a matplotlib LineCollection object,
 # which could be manipulated (or used) later if necessary.
+cmap = plt.get_cmap('jet')
+cr = np.linspace(10., 25., num=cmap.N)
+norm = matplotlib.colors.BoundaryNorm(cr, cmap.N)
+hv = modelxsect.plot_array(head, masked_values=[999.00, -1.00000E+30], norm=norm)
+quadmesh = modelxsect.plot_ibound()
+quadmesh = modelxsect.plot_bc('RIV')
+quadmesh = modelxsect.plot_bc('WEL', color='navy')
 linecollection = modelxsect.plot_grid()
 t = ax.set_title('Row 20')
+fig.colorbar(hv, orientation='horizontal')
 plt.show()
+
+
 
 # First step is to set up the plot
 fig = plt.figure(figsize=(5, 5))
@@ -65,8 +80,11 @@ modelxsect = flopy.plot.ModelCrossSection(ml=ml, line={'Column': 10})
 # Then we can use the plot_grid() method to draw the grid
 # The return value for this function is a matplotlib LineCollection object,
 # which could be manipulated (or used) later if necessary.
+hv = modelxsect.plot_array(head, masked_values=[999.00, -1.00000E+30], norm=norm)
+quadmesh = modelxsect.plot_ibound()
 linecollection = modelxsect.plot_grid()
 t = ax.set_title('Column 10')
+fig.colorbar(hv, orientation='horizontal')
 plt.show()
 
 # # The ModelMap instance can be created using several different keyword arguments to position the model grid in space.  The three keywords are: xul, yul, and rotation.  The values represent the x-coordinate of the upper left corner, the y-coordinate of the upper-left coordinate, and the rotation angle (in degrees) of the upper left coordinate.  If these values are not specified, then they default to model coordinates.
