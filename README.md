@@ -27,7 +27,7 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 * Full support for all Output Control (OC) options including DDREFERENCE, SAVE IBOUND, and layer lists. All Output Control Input is specified using words. Output Control Input using numeric codes is still available in the ModflowOc88 class. The ModflowOc88 class is currently deprecated and no longer actively maintained.
 
-* *FloPy<sub>3</sub>* now supports some simple mapping capabilities through the flopy.plot submodule. See the notebook [flopy3_MapExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
+* *FloPy<sub>3</sub>* now supports some simple mapping and cross-section capabilities through the flopy.plot submodule. See the notebook [flopy3_MapExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
 
 ## Installation
 
@@ -102,7 +102,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 #### Plotting examples
 
-+ An overview of the *FloPy<sub>3</sub>* [map plotting capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
++ An overview of the *FloPy<sub>3</sub>* [map and cross-section plotting capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
 
 ### SWI2 Test Problems for *FloPy<sub>3</sub>*
 

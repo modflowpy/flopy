@@ -30,8 +30,17 @@ class ModelCrossSection(object):
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
     dis : flopy discretization object
+    line : dict
+        Dictionary with either "row", "column", or "line" key. If key
+        is "row" or "column" key value should be the zero-based row or
+        column index for cross-section. If key is "line" value should
+        be an array of (x, y) tuples with vertices of cross-section. 
+        Vertices should be in map coordinates consistent with xul,
+        yul, and rotation.
     layer : int
-        Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
+        Layer to plot.  Default is None.  If layer is not None, it must 
+        be between 0 and nlay - 1. If layer is None all layers will be
+        included in the cross-section.
     xul : float
         x coordinate for upper left corner
     yul : float
@@ -106,14 +115,10 @@ class ModelCrossSection(object):
         # Create edge arrays and meshgrid for pcolormesh
         self.xedge = self.get_xedge_array()
         self.yedge = self.get_yedge_array()
-        self.xgrid, self.ygrid = np.meshgrid(self.xedge, self.yedge)
-        
 
         # Create x and y center arrays and meshgrid of centers
         self.xcenter = self.get_xcenter_array()
         self.ycenter = self.get_ycenter_array()
-        self.xcentergrid, self.ycentergrid = np.meshgrid(self.xcenter,
-                                                         self.ycenter)
                                                          
         onkey = line.keys()[0]                      
         if 'row' in linekeys:
@@ -158,22 +163,33 @@ class ModelCrossSection(object):
         
         self.zpts = np.array(zpts)
         
+        xcentergrid = []
+        zcentergrid = []
+        nz = 0
+        if self.dis.nlay == 1:
+            for k in xrange(0, self.zpts.shape[0]):
+                nz += 1
+                nx = 0
+                for i in xrange(0, self.xpts.shape[0], 2):
+                    nx += 1
+                    xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
+                    zp = self.zpts[k, i]
+                    xcentergrid.append(xp)
+                    zcentergrid.append(zp)
+        else:
+            for k in xrange(0, self.zpts.shape[0], 2):
+                nz += 1
+                nx = 0
+                for i in xrange(0, self.xpts.shape[0], 2):
+                    nx += 1
+                    xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
+                    zp = 0.5 * (self.zpts[k, i] + self.zpts[k+1, i+1])
+                    xcentergrid.append(xp)
+                    zcentergrid.append(zp)
+        self.xcentergrid = np.array(xcentergrid).reshape((nz, nx))
+        self.zcentergrid = np.array(zcentergrid).reshape((nz, nx))
         
-        ## Rotate xgrid and ygrid
-        #self.xgrid, self.ygrid = rotate(self.xgrid, self.ygrid, self.rotation,
-        #                                0, self.yedge[0])
-        #self.xgrid += self.xul
-        #self.ygrid += self.yul - self.yedge[0]
-        #
-        ## Rotate xcentergrid and ycentergrid
-        #self.xcentergrid, self.ycentergrid = rotate(self.xcentergrid,
-        #                                            self.ycentergrid,
-        #                                            self.rotation,
-        #                                            0, self.yedge[0])
-        #self.xcentergrid += self.xul
-        #self.ycentergrid += self.yul - self.yedge[0]
-
-        # Create model extent
+        # Create cross-section extent
         if extent is None:
             self.extent = self.get_extent()
         else:
@@ -185,7 +201,7 @@ class ModelCrossSection(object):
 
         return
 
-    def plot_array(self, a, masked_values=None, **kwargs):
+    def csplot_array(self, a, masked_values=None, **kwargs):
         """
         Plot an array.  If the array is three-dimensional, then the method
         will plot the layer tied to this class (self.layer).
@@ -201,18 +217,12 @@ class ModelCrossSection(object):
 
         Returns
         -------
-        quadmesh : matplotlib.collections.QuadMesh
+        patches : matplotlib.collections.QuadMesh
         """
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        # if a.ndim == 3:
-        #     plotarray = a[self.layer, :, :]
-        # elif a.ndim == 2:
-        #     plotarray = a
-        # else:
-        #     raise Exception('Array must be of dimension 2 or 3')
         plotarray = a
         if masked_values is not None:
             for mval in masked_values:
@@ -226,12 +236,12 @@ class ModelCrossSection(object):
             vpts = vpts[this.layer, :]
             vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
 
-        #quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
+        #patches = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
         pc = self.get_grid_patch_collection(vpts, **kwargs)
         ax.add_collection(pc)
         return pc
 
-    def contour_array(self, a, masked_values=None, **kwargs):
+    def cscontour_array(self, a, masked_values=None, **kwargs):
         """
         Contour an array.  If the array is three-dimensional, then the method
         will contour the layer tied to this class (self.layer).
@@ -249,21 +259,29 @@ class ModelCrossSection(object):
         -------
         contour_set : matplotlib.pyplot.contour
         """
-        if a.ndim == 3:
-            plotarray = a[self.layer, :, :]
-        elif a.ndim == 2:
-            plotarray = a
-        else:
-            raise Exception('Array must be of dimension 2 or 3')
+        plotarray = a
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        contour_set = self.ax.contour(self.xcentergrid, self.ycentergrid,
-                                      plotarray, **kwargs)
+
+        vpts = []
+        for k in xrange(self.dis.nlay):
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+        vpts = np.array(vpts)
+        vpts = vpts[:, ::2]
+        if self.dis.nlay == 1:
+            vpts = np.vstack((vpts, vpts))
+
+        if self.layer != None:
+            vpts = vpts[this.layer, :]
+            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
+
+        contour_set = self.ax.contour(self.xcentergrid, self.zcentergrid,
+                                      vpts, **kwargs)
         return contour_set
 
-    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    **kwargs):
+    def csplot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
+                      **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.ml
@@ -279,7 +297,7 @@ class ModelCrossSection(object):
 
         Returns
         -------
-        quadmesh : matplotlib.collections.QuadMesh
+        patches : matplotlib.collections.QuadMesh
         """
         if ibound is None:
             bas = self.ml.get_package('BAS6')
@@ -293,10 +311,10 @@ class ModelCrossSection(object):
         cmap = matplotlib.colors.ListedColormap(['none', color_noflow, color_ch])
         bounds=[0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
-        return quadmesh
+        patches = self.csplot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        return patches
 
-    def plot_grid(self, **kwargs):
+    def csplot_grid(self, **kwargs):
         """
         Plot the grid lines.
 
@@ -322,7 +340,7 @@ class ModelCrossSection(object):
         ax.add_collection(lc)
         return lc
 
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
+    def csplot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
         """
         Plot a boundary locations for a flopy model
 
@@ -362,10 +380,10 @@ class ModelCrossSection(object):
         cmap = matplotlib.colors.ListedColormap(['none', c])
         bounds=[0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
-        return quadmesh
+        patches = self.csplot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        return patches
 
-    def plot_discharge(self, frf, fff, flf=None, head=None, istep=1, jstep=1,
+    def csplot_discharge(self, frf, fff, flf=None, head=None, istep=1, jstep=1,
                        **kwargs):
         """
         Use quiver to plot vectors.
