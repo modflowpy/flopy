@@ -122,12 +122,15 @@ class ModelCrossSection(object):
                                                          
         onkey = line.keys()[0]                      
         if 'row' in linekeys:
+            self.direction = 'x'
             pts = [(self.xedge[0], self.ycenter[int(line[onkey])]), 
                    (self.xedge[-1], self.ycenter[int(line[onkey])])]
         elif 'column' in linekeys:
+            self.direction = 'y'
             pts = [(self.xcenter[int(line[onkey])], self.yedge[0]), 
                    (self.xcenter[int(line[onkey])], self.yedge[-1])]
         else:
+            self.direction = 'xy'
             xp = np.array(line[onkey][0])
             yp = np.array(line[onkey][1])
             # remove offset and rotation from line
@@ -149,7 +152,7 @@ class ModelCrossSection(object):
         for k in xrange(self.dis.nlay):
             elev.append(botm[k, :, :])
         
-        elev = np.array(elev)
+        self.elev = np.array(elev)
         if self.layer == None:
             self.layer0 = 0
             self.layer1 = self.dis.nlay + 1
@@ -159,7 +162,7 @@ class ModelCrossSection(object):
         
         zpts = []
         for k in xrange(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, elev[k, :, :]))
+            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, self.elev[k, :, :]))
         
         self.zpts = np.array(zpts)
         
@@ -201,7 +204,7 @@ class ModelCrossSection(object):
 
         return
 
-    def csplot_array(self, a, masked_values=None, **kwargs):
+    def csplot_array(self, a, masked_values=None, head=None, **kwargs):
         """
         Plot an array.  If the array is three-dimensional, then the method
         will plot the layer tied to this class (self.layer).
@@ -235,13 +238,17 @@ class ModelCrossSection(object):
         if self.layer != None:
             vpts = vpts[this.layer, :]
             vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
-
-        #patches = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
-        pc = self.get_grid_patch_collection(vpts, **kwargs)
+            
+        if isinstance(head, np.ndarray):
+            zpts = self.set_zpts(head)
+        else:
+            zpts = self.zpts
+        
+        pc = self.get_grid_patch_collection(zpts, vpts, **kwargs)
         ax.add_collection(pc)
         return pc
 
-    def cscontour_array(self, a, masked_values=None, **kwargs):
+    def cscontour_array(self, a, masked_values=None, head=None, **kwargs):
         """
         Contour an array.  If the array is three-dimensional, then the method
         will contour the layer tied to this class (self.layer).
@@ -275,8 +282,13 @@ class ModelCrossSection(object):
         if self.layer != None:
             vpts = vpts[this.layer, :]
             vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
+            
+        if isinstance(head, np.ndarray):
+            zcentergrid = self.set_zcentergrid(head)
+        else:
+            zcentergrid = self.zcentergrid
 
-        contour_set = self.ax.contour(self.xcentergrid, self.zcentergrid,
+        contour_set = self.ax.contour(self.xcentergrid, zcentergrid,
                                       vpts, **kwargs)
         return contour_set
 
@@ -342,7 +354,8 @@ class ModelCrossSection(object):
 
     def csplot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
         """
-        Plot a boundary locations for a flopy model
+        Plot boundary conditions locations for a specific boundary
+        type from a flopy model
 
         """
         # Find package to plot
@@ -383,8 +396,9 @@ class ModelCrossSection(object):
         patches = self.csplot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return patches
 
-    def csplot_discharge(self, frf, fff, flf=None, head=None, istep=1, jstep=1,
-                       **kwargs):
+    def csplot_discharge(self, frf, fff, flf=None, head=None, 
+                         kstep=1, hstep=1,
+                         **kwargs):
         """
         Use quiver to plot vectors.
 
@@ -394,15 +408,15 @@ class ModelCrossSection(object):
             MODFLOW's 'flow right face'
         fff : numpy.ndarray
             MODFLOW's 'flow front face'
-        fff : numpy.ndarray
+        flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
         head : numpy.ndarray
             MODFLOW's head array.  If not provided, then will assume confined
             conditions in order to calculated saturated thickness.
-        istep : int
-            row frequency to plot. (Default is 1.)
-        jstep : int
-            column frequency to plot. (Default is 1.)
+        kstep : int
+            layer frequency to plot. (Default is 1.)
+        hstep : int
+            horizontal frequency to plot. (Default is 1.)
         kwargs : dictionary
             Keyword arguments passed to plt.quiver()
 
@@ -442,25 +456,80 @@ class ModelCrossSection(object):
         # Calculate specific discharge
         qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
                                                           delc, sat_thk)
-
-        # Select correct slice and step
-        x = self.xcentergrid[::istep, ::jstep]
-        y = self.ycentergrid[::istep, ::jstep]
-        u = qx[self.layer, :, :]
-        v = qy[self.layer, :, :]
-        u = u[::istep, ::jstep]
-        v = v[::istep, ::jstep]
-
-        # Rotate and plot
-        urot, vrot = rotate(u, v, self.rotation)
-        quiver = self.ax.quiver(x, y, urot, vrot, **kwargs)
+        
+        if qz == None:
+            qz = np.zeros((qx.shape), dtype=np.float)
+        
+        # Select correct specific discharge direction
+        if self.direction == 'x':
+            u = -qx[:, :, :]
+            u2 = -qy[:, :, :]
+            v = qz[:, :, :]
+        elif self.direction == 'y':
+            u = -qy[:, :, :]
+            u2 = -qx[:, :, :]
+            v = qz[:, :, :]
+        elif self.direction == 'xy':
+            print 'csplot_discharge does not support arbitrary cross-sections'
+            return None
+            
+        if isinstance(head, np.ndarray):
+            zcentergrid = self.set_zcentergrid(head)
+        else:
+            zcentergrid = self.zcentergrid
+        
+        if nlay == 1:
+            x = []
+            z = []
+            for k in xrange(1):
+                for i in xrange(self.xcentergrid.shape[1]):
+                    x.append(self.xcentergrid[k, i])
+                    z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k+1, i]))
+            x = np.array(x).reshape((1,self.xcentergrid.shape[1]))
+            z = np.array(z).reshape((1,self.xcentergrid.shape[1]))
+        else:
+            x = self.xcentergrid
+            z = zcentergrid
+            
+        upts = []
+        u2pts = []
+        vpts = []
+        for k in xrange(self.dis.nlay):
+            upts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, u[k, :, :]))
+            u2pts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, u2[k, :, :]))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, v[k, :, :]))
+        upts = np.array(upts)
+        u2pts = np.array(u2pts)
+        vpts = np.array(vpts)
+        if self.layer != None:
+            upts = upts[this.layer, :]
+            upts.reshape((1, upts.shape[0], upts.shape[1]))
+            u2pts = u2pts[this.layer, :]
+            u2pts.reshape((1, u2pts.shape[0], u2pts.shape[1]))
+            vpts = vpts[this.layer, :]
+            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
+        
+        x = x[::kstep, ::hstep]
+        z = z[::kstep, ::hstep]
+        upts = upts[::kstep, ::hstep]
+        u2pts = u2pts[::kstep, ::hstep]
+        vpts = vpts[::kstep, ::hstep]
+            
+        N = np.sqrt(upts**2. + u2pts**2. + vpts**2.)
+        idx = N > 0.
+        upts[idx] /= N[idx]
+        u2pts[idx] /= N[idx]
+        vpts[idx] /= N[idx]
+        
+        # plot the vectors
+        quiver = self.ax.quiver(x, z, upts, vpts, **kwargs)
 
         return quiver
 
 
-    def get_grid_patch_collection(self, plotarray, **kwargs):
+    def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
         """
-        Get a PatchCollection of the grid
+        Get a PatchCollection of plotarray in unmasked cells
         """
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
@@ -469,14 +538,14 @@ class ModelCrossSection(object):
         v = []
         
         colors = []
-        for k in xrange(self.zpts.shape[0]-1):
+        for k in xrange(zpts.shape[0]-1):
             for idx in xrange(0, len(self.xpts)-1, 2):
-                ll = ((self.xpts[idx][2], self.zpts[k+1, idx]))
+                ll = ((self.xpts[idx][2], zpts[k+1, idx]))
                 try:
                     dx = self.xpts[idx+2][2] - self.xpts[idx][2]
                 except:
                     dx = self.xpts[idx+1][2] - self.xpts[idx][2]
-                dz = self.zpts[k, idx] - self.zpts[k+1, idx]
+                dz = zpts[k, idx] - zpts[k+1, idx]
                 pts = (ll, 
                       (ll[0], ll[1]+dz), (ll[0]+dx, ll[1]+dz),
                       (ll[0]+dx, ll[1])) #, ll) 
@@ -568,5 +637,55 @@ class ModelCrossSection(object):
         ymax = self.zpts.max()
 
         return (xmin, xmax, ymin, ymax)
+        
+    def set_zpts(self, vs):
+        zpts = []
+        for k in xrange(self.layer0, self.layer1):
+            e = self.elev[k, :, :]
+            if k < self.dis.nlay:
+                v = vs[k, :, :]
+                idx =  v < e
+                e[idx] = v[idx] 
+            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
+        return np.array(zpts)
+        
+    def set_zcentergrid(self, vs):
+        vpts = []
+        for k in xrange(self.layer0, self.layer1):
+            if k < self.dis.nlay:
+                e = vs[k, :, :]
+            else:
+                e = self.elev[k, :, :]
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
+        vpts = np.array(vpts)
+
+        zcentergrid = []
+        nz = 0
+        if self.dis.nlay == 1:
+            for k in xrange(0, self.zpts.shape[0]):
+                nz += 1
+                nx = 0
+                for i in xrange(0, self.xpts.shape[0], 2):
+                    nx += 1
+                    vp = vpts[k, i]
+                    zp = self.zpts[k, i]
+                    if k == 0:
+                        if vp < zp:
+                            zp = vp
+                    zcentergrid.append(zp)
+        else:
+            for k in xrange(0, self.zpts.shape[0], 2):
+                nz += 1
+                nx = 0
+                for i in xrange(0, self.xpts.shape[0], 2):
+                    nx += 1
+                    vp = vpts[k, i]
+                    ep = self.zpts[k, i]
+                    if vp < ep:
+                        ep = vp
+                    zp = 0.5 * (ep + self.zpts[k+1, i+1])
+                    zcentergrid.append(zp)
+        return np.array(zcentergrid).reshape((nz, nx)) 
+
 
 
