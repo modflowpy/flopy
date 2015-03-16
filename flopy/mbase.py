@@ -30,6 +30,10 @@ def which(program):
         if is_exe(program):
             return program
     else:
+        # test for exe in current working directory
+        if is_exe(program):
+            return program
+        # test for exe in path statement
         for path in os.environ["PATH"].split(os.pathsep):
             path = path.strip('"')
             exe_file = os.path.join(path, program)
