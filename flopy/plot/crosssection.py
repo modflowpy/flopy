@@ -212,21 +212,26 @@ class ModelCrossSection(object):
 
     def csplot_array(self, a, masked_values=None, head=None, **kwargs):
         """
-        Plot an array.  If the array is three-dimensional, then the method
-        will plot the layer tied to this class (self.layer).
+        Plot a three-dimensional array as a patch collection.  If there 
+        is a layer tied to the class (self.layer), then the method will 
+        plot this layer.
 
         Parameters
         ----------
         a : numpy.ndarray
-            Array to plot.
+            Three-dimensional array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
         **kwargs : dictionary
-            keyword arguments passed to matplotlib.pyplot.pcolormesh
+            keyword arguments passed to matplotlib.collections.PatchCollection
 
         Returns
         -------
-        patches : matplotlib.collections.QuadMesh
+        patches : matplotlib.collections.PatchCollection
         """
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -251,28 +256,30 @@ class ModelCrossSection(object):
         else:
             zpts = self.zpts
 
-#        if masked_values is not None:
-#            for mval in masked_values:
-#                vpts = np.ma.masked_equal(vpts, mval)
+        if masked_values is not None:
+            for mval in masked_values:
+                vpts = np.ma.masked_equal(vpts, mval)
         
         pc = self.get_grid_patch_collection(zpts, vpts, **kwargs)
-        ax.add_collection(pc)
+        if pc != None:
+            ax.add_collection(pc)
         return pc
 
 
     def csplot_surface(self, a, masked_values=None, **kwargs):
         """
-        Plot an array.  If the array is three-dimensional, then the method
-        will plot the layer tied to this class (self.layer).
+        Plot a three-dimensional array as lines.  If there is a layer 
+        tied to the class (self.layer), then the method will plot 
+        this layer.
 
         Parameters
         ----------
         a : numpy.ndarray
-            Array to plot.
+            Three-dimensional array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
         **kwargs : dictionary
-            keyword arguments passed to matplotlib.pyplot.pcolormesh
+            keyword arguments passed to matplotlib.pyplot.plot
 
         Returns
         -------
@@ -304,17 +311,21 @@ class ModelCrossSection(object):
 
     def cscontour_array(self, a, masked_values=None, head=None, **kwargs):
         """
-        Contour an array.  If the array is three-dimensional, then the method
-        will contour the layer tied to this class (self.layer).
+        Contour a three-dimensional array. If there is a layer tied to 
+        the class (self.layer), then the method will plot this layer.
 
         Parameters
         ----------
         a : numpy.ndarray
-            Array to plot.
+            Three-dimensional array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
         **kwargs : dictionary
-            keyword arguments passed to matplotlib.pyplot.pcolormesh
+            keyword arguments passed to matplotlib.pyplot.contour
 
         Returns
         -------
@@ -352,7 +363,7 @@ class ModelCrossSection(object):
         return contour_set
 
     def csplot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                      **kwargs):
+                      head=None, **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.ml
@@ -365,10 +376,16 @@ class ModelCrossSection(object):
             (Default is 'black')
         color_ch : string
             Color for constant heads (Default is 'blue'.)
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
 
         Returns
         -------
-        patches : matplotlib.collections.QuadMesh
+        patches : matplotlib.collections.PatchCollection
         """
         if ibound is None:
             bas = self.ml.get_package('BAS6')
@@ -382,7 +399,9 @@ class ModelCrossSection(object):
         cmap = matplotlib.colors.ListedColormap(['none', color_noflow, color_ch])
         bounds=[0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        patches = self.csplot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        #--mask active cells
+        patches = self.csplot_array(plotarray, masked_values=[0], head=head, 
+                                    cmap=cmap, norm=norm, **kwargs)
         return patches
 
     def csplot_grid(self, **kwargs):
@@ -411,11 +430,34 @@ class ModelCrossSection(object):
         ax.add_collection(lc)
         return lc
 
-    def csplot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
+    def csplot_bc(self, ftype=None, package=None, kper=0, color=None, 
+                  masked_values=None, head=None, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
 
+        Parameters
+        ----------
+        ftype : string
+            Package name string ('WEL', 'GHB', etc.). (Default is None)
+        package : flopy.modflow.Modflow package class instance
+            flopy package class instance. (Default is None)
+        kper : int
+            Stress period to plot
+        color : string
+            matplotlib color string. (Default is None)
+        masked_values : iterable of floats, ints
+            Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        patches : matplotlib.collections.PatchCollection
         """
         # Find package to plot
         if package is not None:
@@ -452,7 +494,8 @@ class ModelCrossSection(object):
         cmap = matplotlib.colors.ListedColormap(['none', c])
         bounds=[0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        patches = self.csplot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        patches = self.csplot_array(plotarray, masked_values=masked_values, head=head,
+                                    cmap=cmap, norm=norm, **kwargs)
         return patches
 
     def csplot_discharge(self, frf, fff, flf=None, head=None, 
@@ -589,6 +632,20 @@ class ModelCrossSection(object):
     def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
         """
         Get a PatchCollection of plotarray in unmasked cells
+
+        Parameters
+        ----------
+        zpts : numpy.ndarray
+            array of z elevations that correspond to the x, y, and horizontal distance along
+            the cross-section (self.xpts). Constructed using plotutil.cell_value_points().
+        plotarray : numpy.ndarray
+            Three-dimensional array to attach to the Patch Collection.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        patches : matplotlib.collections.PatchCollection
         """
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
@@ -610,16 +667,30 @@ class ModelCrossSection(object):
                       (ll[0]+dx, ll[1])) #, ll) 
                 if np.isnan(plotarray[k, idx]):
                     continue
+                if plotarray[k, idx] is np.ma.masked:
+                    continue
                 rectcol.append(Polygon(pts, closed=True))
                 colors.append(plotarray[k, idx])
 
-        pc = PatchCollection(rectcol, **kwargs)
-        pc.set_array(np.array(colors))
-        return pc
+        if len(rectcol) > 0:
+            patches = PatchCollection(rectcol, **kwargs)
+            patches.set_array(np.array(colors))
+        else:
+            patches = None
+        return patches
 
     def get_grid_line_collection(self, **kwargs):
         """
         Get a LineCollection of the grid
+        
+        Parameters
+        ----------
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.LineCollection
+
+        Returns
+        -------
+        linecollection : matplotlib.collections.LineCollection
         """
         from matplotlib.collections import LineCollection
 
@@ -639,8 +710,83 @@ class ModelCrossSection(object):
                 linecol.append(((ll), (ll[0], ll[1]+dz)))
                 linecol.append(((ll[0]+dx, ll[1]), (ll[0]+dx, ll[1]+dz)))
 
-        lc = LineCollection(linecol, **kwargs)
-        return lc
+        linecollection = LineCollection(linecol, **kwargs)
+        return linecollection
+        
+    def set_zpts(self, vs):
+        """
+        Get an array of z elevations based on minimum of cell elevation
+        (self.elev) or passed vs numpy.ndarray
+
+        Parameters
+        ----------
+        vs : numpy.ndarray
+            Three-dimensional array to plot.
+
+        Returns
+        -------
+        zpts : numpy.ndarray
+        """
+        zpts = []
+        for k in xrange(self.layer0, self.layer1):
+            e = self.elev[k, :, :]
+            if k < self.dis.nlay:
+                v = vs[k, :, :]
+                idx =  v < e
+                e[idx] = v[idx] 
+            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
+        return np.array(zpts)
+        
+    def set_zcentergrid(self, vs):
+        """
+        Get an array of z elevations at the center of a cell that is based 
+        on minimum of cell top elevation (self.elev) or passed vs numpy.ndarray
+
+        Parameters
+        ----------
+        vs : numpy.ndarray
+            Three-dimensional array to plot.
+
+        Returns
+        -------
+        zcentergrid : numpy.ndarray
+        """
+        vpts = []
+        for k in xrange(self.layer0, self.layer1):
+            if k < self.dis.nlay:
+                e = vs[k, :, :]
+            else:
+                e = self.elev[k, :, :]
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
+        vpts = np.array(vpts)
+
+        zcentergrid = []
+        nz = 0
+        if self.dis.nlay == 1:
+            for k in xrange(0, self.zpts.shape[0]):
+                nz += 1
+                nx = 0
+                for i in xrange(0, self.xpts.shape[0], 2):
+                    nx += 1
+                    vp = vpts[k, i]
+                    zp = self.zpts[k, i]
+                    if k == 0:
+                        if vp < zp:
+                            zp = vp
+                    zcentergrid.append(zp)
+        else:
+            for k in xrange(0, self.zpts.shape[0], 2):
+                nz += 1
+                nx = 0
+                for i in xrange(0, self.xpts.shape[0], 2):
+                    nx += 1
+                    vp = vpts[k, i]
+                    ep = self.zpts[k, i]
+                    if vp < ep:
+                        ep = vp
+                    zp = 0.5 * (ep + self.zpts[k+1, i+1])
+                    zcentergrid.append(zp)
+        return np.array(zcentergrid).reshape((nz, nx)) 
 
     def get_xcenter_array(self):
         """
@@ -696,55 +842,6 @@ class ModelCrossSection(object):
         ymax = self.zpts.max()
 
         return (xmin, xmax, ymin, ymax)
-        
-    def set_zpts(self, vs):
-        zpts = []
-        for k in xrange(self.layer0, self.layer1):
-            e = self.elev[k, :, :]
-            if k < self.dis.nlay:
-                v = vs[k, :, :]
-                idx =  v < e
-                e[idx] = v[idx] 
-            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
-        return np.array(zpts)
-        
-    def set_zcentergrid(self, vs):
-        vpts = []
-        for k in xrange(self.layer0, self.layer1):
-            if k < self.dis.nlay:
-                e = vs[k, :, :]
-            else:
-                e = self.elev[k, :, :]
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
-        vpts = np.array(vpts)
-
-        zcentergrid = []
-        nz = 0
-        if self.dis.nlay == 1:
-            for k in xrange(0, self.zpts.shape[0]):
-                nz += 1
-                nx = 0
-                for i in xrange(0, self.xpts.shape[0], 2):
-                    nx += 1
-                    vp = vpts[k, i]
-                    zp = self.zpts[k, i]
-                    if k == 0:
-                        if vp < zp:
-                            zp = vp
-                    zcentergrid.append(zp)
-        else:
-            for k in xrange(0, self.zpts.shape[0], 2):
-                nz += 1
-                nx = 0
-                for i in xrange(0, self.xpts.shape[0], 2):
-                    nx += 1
-                    vp = vpts[k, i]
-                    ep = self.zpts[k, i]
-                    if vp < ep:
-                        ep = vp
-                    zp = 0.5 * (ep + self.zpts[k+1, i+1])
-                    zcentergrid.append(zp)
-        return np.array(zcentergrid).reshape((nz, nx)) 
 
 
 
