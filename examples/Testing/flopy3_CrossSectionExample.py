@@ -45,6 +45,19 @@ fname = os.path.join(modelpth, 'freyberg.hds')
 hdobj = flopy.utils.HeadFile(fname)
 head = hdobj.get_data()
 
+fig = plt.figure(figsize=(5, 5))
+ax = fig.add_subplot(1, 1, 1)
+
+# Next we create an instance of the ModelMap class
+modelxsect = flopy.plot.ModelCrossSection(ml=ml, line={'Row': 20})
+fb = modelxsect.csplot_fill_between(head, colors=['brown', 'cyan'], masked_values=[999.00])
+#patches = modelxsect.csplot_ibound(head=head)
+patches = modelxsect.csplot_bc('RIV', head=head)
+patches = modelxsect.csplot_bc('WEL', color='navy', head=head)
+linecollection = modelxsect.csplot_grid()
+t = ax.set_title('Row 20')
+plt.show()
+
 
 # First step is to set up the plot
 fig = plt.figure(figsize=(5, 5))

@@ -29,6 +29,8 @@ class ModelCrossSection(object):
     ----------
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
+    model : flopy.modflow object
+        flopy model object. (Default is None)
     dis : flopy discretization object
     line : dict
         Dictionary with either "row", "column", or "line" key. If key
@@ -53,15 +55,15 @@ class ModelCrossSection(object):
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation
     """
-    def __init__(self, ax=None, ml=None, dis=None, line=None, layer=None,
+    def __init__(self, ax=None, model=None, dis=None, line=None, layer=None,
                  xul=None, yul=None, rotation=0., extent=None):
-        self.ml = ml
+        self.model = model
         self.layer = layer
         if dis is None:
-            if ml is None:
+            if model is None:
                 raise Exception('Cannot find discretization package')
             else:
-                self.dis = ml.get_package('DIS')
+                self.dis = model.get_package('DIS')
         else:
             self.dis = dis
             
@@ -169,7 +171,6 @@ class ModelCrossSection(object):
         zpts = []
         for k in xrange(self.layer0, self.layer1):
             zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, self.elev[k, :, :]))
-        
         self.zpts = np.array(zpts)
         
         xcentergrid = []
@@ -186,7 +187,7 @@ class ModelCrossSection(object):
                     xcentergrid.append(xp)
                     zcentergrid.append(zp)
         else:
-            for k in xrange(0, self.zpts.shape[0], 2):
+            for k in xrange(0, self.zpts.shape[0]-1):
                 nz += 1
                 nx = 0
                 for i in xrange(0, self.xpts.shape[0], 2):
@@ -265,7 +266,6 @@ class ModelCrossSection(object):
             ax.add_collection(pc)
         return pc
 
-
     def csplot_surface(self, a, masked_values=None, **kwargs):
         """
         Plot a three-dimensional array as lines.  If there is a layer 
@@ -307,6 +307,70 @@ class ModelCrossSection(object):
         plot = []
         for k in xrange(vpts.shape[0]):
             plot.append(ax.plot(self.d, vpts[k, :], **kwargs))
+        return plot
+
+
+    def csplot_fill_between(self, a, colors=['blue', 'red'], 
+                            masked_values=None, **kwargs):
+        """
+        Plot a three-dimensional array as lines.  If there is a layer 
+        tied to the class (self.layer), then the method will plot 
+        this layer.
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Three-dimensional array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.plot
+
+        Returns
+        -------
+        plot : list containing matplotlib.fillbetween objects
+        """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        plotarray = a
+
+        vpts = []
+        for k in xrange(self.dis.nlay):
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+        vpts = np.ma.array(vpts, mask=False)
+        
+        if masked_values is not None:
+            for mval in masked_values:
+                vpts = np.ma.masked_equal(vpts, mval)
+        idxm = np.ma.getmask(vpts)
+
+        #if self.layer != None:
+        #    vpts = vpts[this.layer, :]
+        #    vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
+        
+        plot = []
+        for k in xrange(self.dis.nlay):
+            if self.layer != None:
+                if k != self.layer:
+                    continue
+            idxmk = idxm[k, :]
+            v = vpts[k, :]
+            y1 = self.zpts[k, :]
+            idx = v > y1
+            v[idx] = y1[idx]
+            y2 = v
+            idx = v > y2
+            y2[idx] =  v[idx]
+            y1[idxmk] = np.nan
+            y2[idxmk] = np.nan
+            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[0], **kwargs))
+            y1 = y2
+            y2 = self.zpts[k+1, :]
+            y2[idxmk] = np.nan
+            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[1], **kwargs))
         return plot
 
     def cscontour_array(self, a, masked_values=None, head=None, **kwargs):
@@ -366,7 +430,7 @@ class ModelCrossSection(object):
                       head=None, **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
-        self.ml
+        self.model
 
         Parameters
         ----------
@@ -388,7 +452,7 @@ class ModelCrossSection(object):
         patches : matplotlib.collections.PatchCollection
         """
         if ibound is None:
-            bas = self.ml.get_package('BAS6')
+            bas = self.model.get_package('BAS6')
             ibound = bas.ibound
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -462,10 +526,10 @@ class ModelCrossSection(object):
         # Find package to plot
         if package is not None:
             p = package
-        elif self.ml is not None:
+        elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
-            p = self.ml.get_package(ftype)
+            p = self.model.get_package(ftype)
         else:
             raise Exception('Cannot find package to plot')
 
@@ -538,12 +602,12 @@ class ModelCrossSection(object):
         laytyp = None
         hnoflo = 999.
         hdry = 999.
-        if self.ml is not None:
-            lpf = self.ml.get_package('LPF')
+        if self.model is not None:
+            lpf = self.model.get_package('LPF')
             if lpf is not None:
                 laytyp = lpf.laytyp.array
                 hdry = lpf.hdry
-            bas = self.ml.get_package('BAS6')
+            bas = self.model.get_package('BAS6')
             if bas is not None:
                 hnoflo = bas.hnoflo
 

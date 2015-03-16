@@ -352,13 +352,16 @@ class ModflowSwi2(Package):
         istrat = int(t[1])
         nobs = int(t[2])
         if int(t[3]) > 0:
+            model.add_pop_key_list(int(t[3]))
             iswizt = 55
         if int(t[4]) > 0:
             model.add_pop_key_list(int(t[4]))
             iswibd = 56
         else:
             iswibd = 0
-        iswiobs = int(t[5])
+        if int(t[5]) > 0:
+            model.add_pop_key_list(int(t[5]))
+            iswiobs = 1051
         fsssopt = False
         if 'fsssopt' in line.lower():
             fsssopt = True
