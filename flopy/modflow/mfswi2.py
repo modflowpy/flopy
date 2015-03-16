@@ -347,6 +347,8 @@ class ModflowSwi2(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # --read dataset 1
+        if model.verbose:
+            sys.stdout.write('  loading swi2 dataset 1\n')
         t = line.strip().split()
         nsrf = int(t[0])
         istrat = int(t[1])
@@ -359,6 +361,7 @@ class ModflowSwi2(Package):
             iswibd = 56
         else:
             iswibd = 0
+        iswiobs = 0
         if int(t[5]) > 0:
             model.add_pop_key_list(int(t[5]))
             iswiobs = 1051
@@ -370,6 +373,8 @@ class ModflowSwi2(Package):
             adaptive = True
 
         #--read dataset 2a
+        if model.verbose:
+            sys.stdout.write('  loading swi2 dataset 2a\n')
         while True:
             line = f.readline()
             if line[0] != '#':
@@ -382,6 +387,8 @@ class ModflowSwi2(Package):
         #--read dataset 2b
         solver2params = {}
         if nsolver == 2:
+            if model.verbose:
+                sys.stdout.write('  loading swi2 dataset 2b\n')
             while True:
                 line = f.readline()
                 if line[0] != '#':
@@ -398,6 +405,8 @@ class ModflowSwi2(Package):
             solver2params['dampt'] = float(t[8])
 
         #--read dataset 3a
+        if model.verbose:
+            sys.stdout.write('  loading swi2 dataset 3a\n')
         while True:
             line = f.readline()
             if line[0] != '#':
@@ -417,6 +426,8 @@ class ModflowSwi2(Package):
         #--read dataset 3b
         nadptmx, nadptmn, adptfct = None, None, None
         if adaptive:
+            if model.verbose:
+                sys.stdout.write('  loading swi2 dataset 3b\n')
             while True:
                 line = f.readline()
                 if line[0] != '#':
@@ -424,7 +435,7 @@ class ModflowSwi2(Package):
             t = line.strip().split()
             nadptmx = int(t[0])
             nadptmn = int(t[1])
-            adptfct = float(t[3])
+            adptfct = float(t[2])
 
         #--read dataset 4
         if model.verbose:
