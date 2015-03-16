@@ -145,6 +145,12 @@ class ModelCrossSection(object):
             
         # get points along the line
         self.xpts = plotutil.line_intersect_grid(self.pts, self.xedge, self.yedge)
+        
+        # set horizontal distance
+        d = []
+        for v in self.xpts:
+            d.append(v[2])
+        self.d = np.array(d)
 
         top = self.dis.top.array
         botm = self.dis.botm.array
@@ -226,6 +232,7 @@ class ModelCrossSection(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
         plotarray = a
         if masked_values is not None:
             for mval in masked_values:
@@ -243,10 +250,57 @@ class ModelCrossSection(object):
             zpts = self.set_zpts(head)
         else:
             zpts = self.zpts
+
+#        if masked_values is not None:
+#            for mval in masked_values:
+#                vpts = np.ma.masked_equal(vpts, mval)
         
         pc = self.get_grid_patch_collection(zpts, vpts, **kwargs)
         ax.add_collection(pc)
         return pc
+
+
+    def csplot_surface(self, a, masked_values=None, **kwargs):
+        """
+        Plot an array.  If the array is three-dimensional, then the method
+        will plot the layer tied to this class (self.layer).
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        plot : list containing matplotlib.plot objects
+        """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        plotarray = a
+
+        vpts = []
+        for k in xrange(self.dis.nlay):
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+        vpts = np.array(vpts)
+        
+        if masked_values is not None:
+            for mval in masked_values:
+                vpts = np.ma.masked_equal(vpts, mval)
+
+        if self.layer != None:
+            vpts = vpts[this.layer, :]
+            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
+        plot = []
+        for k in xrange(vpts.shape[0]):
+            plot.append(ax.plot(self.d, vpts[k, :], **kwargs))
+        return plot
 
     def cscontour_array(self, a, masked_values=None, head=None, **kwargs):
         """
@@ -267,9 +321,10 @@ class ModelCrossSection(object):
         contour_set : matplotlib.pyplot.contour
         """
         plotarray = a
-        if masked_values is not None:
-            for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
+
+#        if masked_values is not None:
+#            for mval in masked_values:
+#                plotarray = np.ma.masked_equal(plotarray, mval)
 
         vpts = []
         for k in xrange(self.dis.nlay):
@@ -282,6 +337,10 @@ class ModelCrossSection(object):
         if self.layer != None:
             vpts = vpts[this.layer, :]
             vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
+
+        if masked_values is not None:
+            for mval in masked_values:
+                vpts = np.ma.masked_equal(vpts, mval)
             
         if isinstance(head, np.ndarray):
             zcentergrid = self.set_zcentergrid(head)
