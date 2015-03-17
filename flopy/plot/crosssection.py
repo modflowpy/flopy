@@ -23,10 +23,6 @@ class ModelCrossSection(object):
         be an array of (x, y) tuples with vertices of cross-section. 
         Vertices should be in map coordinates consistent with xul,
         yul, and rotation.
-    layer : int
-        Layer to plot.  Default is None.  If layer is not None, it must 
-        be between 0 and nlay - 1. If layer is None all layers will be
-        included in the cross-section.
     xul : float
         x coordinate for upper left corner
     yul : float
@@ -39,10 +35,9 @@ class ModelCrossSection(object):
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
     """
-    def __init__(self, ax=None, model=None, dis=None, line=None, layer=None,
+    def __init__(self, ax=None, model=None, dis=None, line=None,
                  xul=None, yul=None, rotation=0., extent=None):
         self.model = model
-        self.layer = layer
         if dis is None:
             if model is None:
                 raise Exception('Cannot find discretization package')
@@ -75,12 +70,6 @@ class ModelCrossSection(object):
         if 'column' in linekeys and 'line' in linekeys: 
             s = 'column and line cannot both be specified in line dictionary.'
             raise Exception(s)
-
-        if self.layer != None:
-            if self.layer < 0 or self.layer > self.dis.nlay - 1:
-                s = 'Not a valid layer: {}.  Must be between 0 and {}.'.format(
-                    self.layer, self.dis.nlay - 1)
-                raise Exception(s)
 
         if ax is None:
             self.ax = plt.gca()
@@ -146,12 +135,8 @@ class ModelCrossSection(object):
             elev.append(botm[k, :, :])
         
         self.elev = np.array(elev)
-        if self.layer == None:
-            self.layer0 = 0
-            self.layer1 = self.dis.nlay + 1
-        else:
-            self.layer0 = self.layer
-            self.layer1 = min(self.layer + 2, self.dis.nlay + 1)
+        self.layer0 = 0
+        self.layer1 = self.dis.nlay + 1
         
         zpts = []
         for k in xrange(self.layer0, self.layer1):
@@ -200,10 +185,8 @@ class ModelCrossSection(object):
 
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
-        Plot a three-dimensional array as a patch collection.  If there 
-        is a layer tied to the class (self.layer), then the method will 
-        plot this layer.
-
+        Plot a three-dimensional array as a patch collection.
+        
         Parameters
         ----------
         a : numpy.ndarray
@@ -237,9 +220,6 @@ class ModelCrossSection(object):
                                                    self.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
-        if self.layer != None:
-            vpts = vpts[this.layer, :]
-            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
             
         if isinstance(head, np.ndarray):
             zpts = self.set_zpts(head)
@@ -257,9 +237,7 @@ class ModelCrossSection(object):
 
     def plot_surface(self, a, masked_values=None, **kwargs):
         """
-        Plot a three-dimensional array as lines.  If there is a layer 
-        tied to the class (self.layer), then the method will plot 
-        this layer.
+        Plot a three-dimensional array as lines.
 
         Parameters
         ----------
@@ -292,9 +270,6 @@ class ModelCrossSection(object):
             for mval in masked_values:
                 vpts = np.ma.masked_equal(vpts, mval)
 
-        if self.layer != None:
-            vpts = vpts[this.layer, :]
-            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
         plot = []
         for k in xrange(vpts.shape[0]):
             plot.append(ax.plot(self.d, vpts[k, :], **kwargs))
@@ -304,9 +279,7 @@ class ModelCrossSection(object):
     def plot_fill_between(self, a, colors=['blue', 'red'],
                             masked_values=None, **kwargs):
         """
-        Plot a three-dimensional array as lines.  If there is a layer 
-        tied to the class (self.layer), then the method will plot 
-        this layer.
+        Plot a three-dimensional array as lines.
 
         Parameters
         ----------
@@ -340,15 +313,8 @@ class ModelCrossSection(object):
                 vpts = np.ma.masked_equal(vpts, mval)
         idxm = np.ma.getmask(vpts)
 
-        #if self.layer != None:
-        #    vpts = vpts[this.layer, :]
-        #    vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
-        
         plot = []
         for k in xrange(self.dis.nlay):
-            if self.layer != None:
-                if k != self.layer:
-                    continue
             idxmk = idxm[k, :]
             v = vpts[k, :]
             y1 = self.zpts[k, :]
@@ -370,8 +336,7 @@ class ModelCrossSection(object):
 
     def contour_array(self, a, masked_values=None, head=None, **kwargs):
         """
-        Contour a three-dimensional array. If there is a layer tied to 
-        the class (self.layer), then the method will plot this layer.
+        Contour a three-dimensional array.
 
         Parameters
         ----------
@@ -405,10 +370,6 @@ class ModelCrossSection(object):
         vpts = vpts[:, ::2]
         if self.dis.nlay == 1:
             vpts = np.vstack((vpts, vpts))
-
-        if self.layer != None:
-            vpts = vpts[this.layer, :]
-            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
 
         if masked_values is not None:
             for mval in masked_values:
@@ -668,13 +629,6 @@ class ModelCrossSection(object):
         upts = np.array(upts)
         u2pts = np.array(u2pts)
         vpts = np.array(vpts)
-        if self.layer != None:
-            upts = upts[this.layer, :]
-            upts.reshape((1, upts.shape[0], upts.shape[1]))
-            u2pts = u2pts[this.layer, :]
-            u2pts.reshape((1, u2pts.shape[0], u2pts.shape[1]))
-            vpts = vpts[this.layer, :]
-            vpts.reshape((1, vpts.shape[0], vpts.shape[1]))
         
         x = x[::kstep, ::hstep]
         z = z[::kstep, ::hstep]
