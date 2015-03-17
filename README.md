@@ -111,7 +111,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 #### Additional MODFLOW examples
 
-+ Example problems from [chapters 3 to 5](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) in Applied Groundwater Modeling (2015) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt.
++ Example problems from the 2015 2nd edition of [Applied Groundwater Modeling](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt (https://github.com/Applied-Groundwater-Modeling-2nd-Ed)
 
 ### SWI2 Test Problems for *FloPy<sub>3</sub>*
 
