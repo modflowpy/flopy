@@ -11,6 +11,15 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 ## FloPy<sub>3</sub> Changes
 
+### Version 3.1
+* *FloPy<sub>3</sub>* now supports some simple mapping and cross-section capabilities through the flopy.plot submodule. See the notebook [flopy3_MapExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
+
+* Full support for all Output Control (OC) options including DDREFERENCE, SAVE IBOUND, and layer lists. All Output Control Input is specified using words. Output Control Input using numeric codes is still available in the ModflowOc88 class. The ModflowOc88 class is currently deprecated and no longer actively maintained.
+
+* Added support for standard MULT package FUNCTION and EXPRESSION functionality are supported. MODFLOW parameters are not supported in *write()* methods. 
+
+### Version 3.0
+
 *FloPy<sub>3</sub>* is significantly different from *FloPy<sub>2</sub>* (previously hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
 
 * *FloPy<sub>3</sub>* is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
@@ -23,11 +32,7 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 * *load()* methods have been developed for all of the standard MODFLOW packages and a few less used packages (*e.g.* SWI2).
 
-* MODFLOW parameter support has been added to the *load()* methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the *load()* methods. Standard MULT package FUNCTION and EXPRESSION functionality are supported. MODFLOW parameters are not supported in *write()* methods.  
-
-* Full support for all Output Control (OC) options including DDREFERENCE, SAVE IBOUND, and layer lists. All Output Control Input is specified using words. Output Control Input using numeric codes is still available in the ModflowOc88 class. The ModflowOc88 class is currently deprecated and no longer actively maintained.
-
-* *FloPy<sub>3</sub>* now supports some simple mapping and cross-section capabilities through the flopy.plot submodule. See the notebook [flopy3_MapExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
+* MODFLOW parameter support has been added to the *load()* methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the *load()* methods. MODFLOW parameters are not supported in *write()* methods.  
 
 ## Installation
 
@@ -103,6 +108,10 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 #### Plotting examples
 
 + An overview of the *FloPy<sub>3</sub>* [map and cross-section plotting capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
+
+#### Additional MODFLOW examples
+
++ Example problems from the 2015 2nd edition of [Applied Groundwater Modeling](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt (https://github.com/Applied-Groundwater-Modeling-2nd-Ed)
 
 ### SWI2 Test Problems for *FloPy<sub>3</sub>*
 
