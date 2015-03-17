@@ -2,24 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import plotutil
-
-bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
-                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
-
-
-def rotate(x, y, theta, xorigin=0., yorigin=0.):
-    """
-    Given x and y array-like values calculate the rotation about an
-    arbitrary origin and then return the rotated coordinates.  theta is in
-    radians.
-
-    """
-    xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
-                                                     (y - yorigin)
-    yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
-                                                     (y - yorigin)
-    return xrot, yrot
-
+from plotutil import bc_color_dict, rotate
 
 class ModelMap(object):
     """
@@ -29,6 +12,8 @@ class ModelMap(object):
     ----------
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
+    model : flopy.modflow object
+        flopy model object. (Default is None)
     dis : flopy discretization object
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
@@ -42,17 +27,17 @@ class ModelMap(object):
         indicates clockwise rotation.  Angles are in degrees.
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation
+        then these will be calculated based on grid, coordinates, and rotation.
     """
-    def __init__(self, ax=None, ml=None, dis=None, layer=0, xul=None, yul=None,
-                 rotation=0., extent=None):
-        self.ml = ml
+    def __init__(self, ax=None, model=None, dis=None, layer=0, xul=None,
+                 yul=None, rotation=0., extent=None):
+        self.ml = model
         self.layer = layer
         if dis is None:
-            if ml is None:
+            if model is None:
                 raise Exception('Cannot find discretization package')
             else:
-                self.dis = ml.get_package('DIS')
+                self.dis = model.get_package('DIS')
         else:
             self.dis = dis
 
@@ -137,7 +122,8 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray, **kwargs)
+        quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray,
+                                      **kwargs)
         return quadmesh
 
     def contour_array(self, a, masked_values=None, **kwargs):

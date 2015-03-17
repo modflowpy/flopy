@@ -1,4 +1,3 @@
-__author__ = 'langevin'
 
 import numpy as np
 import flopy
@@ -37,7 +36,8 @@ bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=strt)
 lpf = flopy.modflow.ModflowLpf(mf, hk=10., vka=10.)
 
 # Add OC package to the MODFLOW model
-oc = flopy.modflow.ModflowOc(mf)
+spd = {(0, 0): ['print head', 'print budget', 'save head', 'save budget']}
+oc = flopy.modflow.ModflowOc(mf, stress_period_data=spd, compact=True)
 
 # Add PCG package to the MODFLOW model
 pcg = flopy.modflow.ModflowPcg(mf)
@@ -51,10 +51,25 @@ success, buff = mf.run_model()
 # Post process the results
 import matplotlib.pyplot as plt
 import flopy.utils.binaryfile as bf
-plt.subplot(1, 1, 1, aspect='equal')
+fig = plt.figure(figsize=(10,10))
+ax = fig.add_subplot(1, 1, 1, aspect='equal')
+
 hds = bf.HeadFile(modelname+'.hds')
-head = hds.get_data(totim=1.0)
-levels = np.arange(1, 10, 1)
-extent = (delr/2., Lx - delr/2., Ly - delc/2., delc/2.)
-plt.contour(head[0, :, :], levels=levels, extent=extent)
+times = hds.get_times()
+head = hds.get_data(totim=times[-1])
+levels = np.linspace(0, 10, 11)
+
+cbb = bf.CellBudgetFile(modelname+'.cbc')
+kstpkper_list = cbb.get_kstpkper()
+frf = cbb.get_data(text='FLOW RIGHT FACE', totim=times[-1])[0]
+fff = cbb.get_data(text='FLOW FRONT FACE', totim=times[-1])[0]
+
+modelmap = flopy.plot.ModelMap(model=mf, layer=0)
+qm = modelmap.plot_ibound()
+lc = modelmap.plot_grid()
+cs = modelmap.contour_array(head, levels=levels)
+quiver = modelmap.plot_discharge(frf, fff, head=head)
 plt.show()
+
+
+

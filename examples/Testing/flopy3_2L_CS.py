@@ -62,9 +62,9 @@ ax = fig.add_subplot(1, 1, 1)
 
 # Next we create an instance of the ModelMap class
 modelxsect = flopy.plot.ModelCrossSection(ml=ml, line={'Row': 20})
-fb = modelxsect.csplot_fill_between(head[4], colors=['brown', 'cyan'])
+fb = modelxsect.plot_fill_between(head[4], colors=['brown', 'cyan'])
 #patches = modelxsect.csplot_ibound(head=head)
-linecollection = modelxsect.csplot_grid()
+linecollection = modelxsect.plot_grid()
 t = ax.set_title('Row 20')
 plt.show()
 

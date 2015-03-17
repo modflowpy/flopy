@@ -9,6 +9,25 @@ import sys
 import math
 import numpy as np
 
+
+bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
+                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
+
+
+def rotate(x, y, theta, xorigin=0., yorigin=0.):
+    """
+    Given x and y array-like values calculate the rotation about an
+    arbitrary origin and then return the rotated coordinates.  theta is in
+    radians.
+
+    """
+    xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
+                                                     (y - yorigin)
+    yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
+                                                     (y - yorigin)
+    return xrot, yrot
+
+
 class SwiConcentration():
     """
     The binary_header class is a class to create headers for MODFLOW

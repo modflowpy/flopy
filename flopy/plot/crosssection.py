@@ -2,23 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import plotutil
-
-bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
-                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
-
-
-def rotate(x, y, theta, xorigin=0., yorigin=0.):
-    """
-    Given x and y array-like values calculate the rotation about an
-    arbitrary origin and then return the rotated coordinates.  theta is in
-    radians.
-
-    """
-    xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
-                                                     (y - yorigin)
-    yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
-                                                     (y - yorigin)
-    return xrot, yrot
+from plotutil import bc_color_dict, rotate
 
 
 class ModelCrossSection(object):
@@ -53,7 +37,7 @@ class ModelCrossSection(object):
         indicates clockwise rotation.  Angles are in degrees.
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation
+        then these will be calculated based on grid, coordinates, and rotation.
     """
     def __init__(self, ax=None, model=None, dis=None, line=None, layer=None,
                  xul=None, yul=None, rotation=0., extent=None):
@@ -146,7 +130,8 @@ class ModelCrossSection(object):
         self.pts = np.array(pts)
             
         # get points along the line
-        self.xpts = plotutil.line_intersect_grid(self.pts, self.xedge, self.yedge)
+        self.xpts = plotutil.line_intersect_grid(self.pts, self.xedge,
+                                                 self.yedge)
         
         # set horizontal distance
         d = []
@@ -170,7 +155,9 @@ class ModelCrossSection(object):
         
         zpts = []
         for k in xrange(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, self.elev[k, :, :]))
+            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge,
+                                                   self.elev[k, :, :]))
         self.zpts = np.array(zpts)
         
         xcentergrid = []
@@ -211,7 +198,7 @@ class ModelCrossSection(object):
 
         return
 
-    def csplot_array(self, a, masked_values=None, head=None, **kwargs):
+    def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
         Plot a three-dimensional array as a patch collection.  If there 
         is a layer tied to the class (self.layer), then the method will 
@@ -246,7 +233,9 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in xrange(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge,
+                                                   plotarray[k, :, :]))
         vpts = np.array(vpts)
         if self.layer != None:
             vpts = vpts[this.layer, :]
@@ -266,7 +255,7 @@ class ModelCrossSection(object):
             ax.add_collection(pc)
         return pc
 
-    def csplot_surface(self, a, masked_values=None, **kwargs):
+    def plot_surface(self, a, masked_values=None, **kwargs):
         """
         Plot a three-dimensional array as lines.  If there is a layer 
         tied to the class (self.layer), then the method will plot 
@@ -294,7 +283,9 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in xrange(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge,
+                                                   plotarray[k, :, :]))
         vpts = np.array(vpts)
         
         if masked_values is not None:
@@ -310,7 +301,7 @@ class ModelCrossSection(object):
         return plot
 
 
-    def csplot_fill_between(self, a, colors=['blue', 'red'], 
+    def plot_fill_between(self, a, colors=['blue', 'red'],
                             masked_values=None, **kwargs):
         """
         Plot a three-dimensional array as lines.  If there is a layer 
@@ -339,7 +330,9 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in xrange(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge,
+                                                   plotarray[k, :, :]))
         vpts = np.ma.array(vpts, mask=False)
         
         if masked_values is not None:
@@ -366,14 +359,16 @@ class ModelCrossSection(object):
             y2[idx] =  v[idx]
             y1[idxmk] = np.nan
             y2[idxmk] = np.nan
-            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[0], **kwargs))
+            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[0],
+                                        **kwargs))
             y1 = y2
             y2 = self.zpts[k+1, :]
             y2[idxmk] = np.nan
-            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[1], **kwargs))
+            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[1],
+                                        **kwargs))
         return plot
 
-    def cscontour_array(self, a, masked_values=None, head=None, **kwargs):
+    def contour_array(self, a, masked_values=None, head=None, **kwargs):
         """
         Contour a three-dimensional array. If there is a layer tied to 
         the class (self.layer), then the method will plot this layer.
@@ -403,7 +398,9 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in xrange(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, plotarray[k, :, :]))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge,
+                                                   plotarray[k, :, :]))
         vpts = np.array(vpts)
         vpts = vpts[:, ::2]
         if self.dis.nlay == 1:
@@ -426,7 +423,7 @@ class ModelCrossSection(object):
                                       vpts, **kwargs)
         return contour_set
 
-    def csplot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
+    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                       head=None, **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
@@ -460,15 +457,16 @@ class ModelCrossSection(object):
         plotarray[idx1] = 1
         plotarray[idx2] = 2
         plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['none', color_noflow, color_ch])
+        cmap = matplotlib.colors.ListedColormap(['none', color_noflow,
+                                                 color_ch])
         bounds=[0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         #--mask active cells
-        patches = self.csplot_array(plotarray, masked_values=[0], head=head, 
+        patches = self.plot_array(plotarray, masked_values=[0], head=head,
                                     cmap=cmap, norm=norm, **kwargs)
         return patches
 
-    def csplot_grid(self, **kwargs):
+    def plot_grid(self, **kwargs):
         """
         Plot the grid lines.
 
@@ -494,7 +492,7 @@ class ModelCrossSection(object):
         ax.add_collection(lc)
         return lc
 
-    def csplot_bc(self, ftype=None, package=None, kper=0, color=None, 
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                   masked_values=None, head=None, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
@@ -558,11 +556,11 @@ class ModelCrossSection(object):
         cmap = matplotlib.colors.ListedColormap(['none', c])
         bounds=[0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        patches = self.csplot_array(plotarray, masked_values=masked_values, head=head,
-                                    cmap=cmap, norm=norm, **kwargs)
+        patches = self.plot_array(plotarray, masked_values=masked_values,
+                                    head=head, cmap=cmap, norm=norm, **kwargs)
         return patches
 
-    def csplot_discharge(self, frf, fff, flf=None, head=None, 
+    def plot_discharge(self, frf, fff, flf=None, head=None,
                          kstep=1, hstep=1,
                          **kwargs):
         """
@@ -661,9 +659,12 @@ class ModelCrossSection(object):
         u2pts = []
         vpts = []
         for k in xrange(self.dis.nlay):
-            upts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, u[k, :, :]))
-            u2pts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, u2[k, :, :]))
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, v[k, :, :]))
+            upts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge, u[k, :, :]))
+            u2pts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                    self.yedge, u2[k, :, :]))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge, v[k, :, :]))
         upts = np.array(upts)
         u2pts = np.array(u2pts)
         vpts = np.array(vpts)
@@ -700,8 +701,9 @@ class ModelCrossSection(object):
         Parameters
         ----------
         zpts : numpy.ndarray
-            array of z elevations that correspond to the x, y, and horizontal distance along
-            the cross-section (self.xpts). Constructed using plotutil.cell_value_points().
+            array of z elevations that correspond to the x, y, and horizontal
+            distance along the cross-section (self.xpts). Constructed using
+            plotutil.cell_value_points().
         plotarray : numpy.ndarray
             Three-dimensional array to attach to the Patch Collection.
         **kwargs : dictionary
@@ -798,7 +800,8 @@ class ModelCrossSection(object):
                 v = vs[k, :, :]
                 idx =  v < e
                 e[idx] = v[idx] 
-            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
+            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge, e))
         return np.array(zpts)
         
     def set_zcentergrid(self, vs):
@@ -821,7 +824,8 @@ class ModelCrossSection(object):
                 e = vs[k, :, :]
             else:
                 e = self.elev[k, :, :]
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge, self.yedge, e))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
+                                                   self.yedge, e))
         vpts = np.array(vpts)
 
         zcentergrid = []

@@ -1,4 +1,3 @@
-__author__ = 'langevin'
 
 import numpy as np
 import flopy
@@ -68,8 +67,8 @@ for il in xrange(nlay):
 print 'Adding ', len(bound_sp2), 'GHBs for stress period 2.'
 
 # We do not need to add a dictionary entry for stress period 3.
-# Flopy will automatically take the list from stess period 2 and apply it
-# to the end of the simulation, if necessary
+# Flopy will automatically take the list from stress period 2 and apply it
+# to the end of the simulation
 stress_period_data = {0: bound_sp1, 1: bound_sp2}
 
 # Create the flopy ghb object
@@ -77,7 +76,7 @@ ghb = flopy.modflow.ModflowGhb(mf, stress_period_data=stress_period_data)
 
 # Create the well package
 # Remember to use zero-based layer, row, column indices!
-pumping_rate = -100.
+pumping_rate = -500.
 wel_sp1 = [[0, nrow/2 - 1, ncol/2 - 1, 0.]]
 wel_sp2 = [[0, nrow/2 - 1, ncol/2 - 1, 0.]]
 wel_sp3 = [[0, nrow/2 - 1, ncol/2 - 1, pumping_rate]]
@@ -91,7 +90,8 @@ stress_period_data = {(0, 0): ['save head',
                                'print head',
                                'print budget']}
 save_head_every = 1
-oc = flopy.modflow.ModflowOc(mf, stress_period_data=stress_period_data)
+oc = flopy.modflow.ModflowOc(mf, stress_period_data=stress_period_data,
+                             compact=True)
 
 # Write the model input files
 mf.write_input()
@@ -106,12 +106,13 @@ if not success:
 import matplotlib.pyplot as plt
 import flopy.utils.binaryfile as bf
 
-# Create the headfile object
+# Create the headfile and budget file objects
 headobj = bf.HeadFile(modelname+'.hds')
 times = headobj.get_times()
+cbb = bf.CellBudgetFile(modelname+'.cbc')
 
 # Setup contour parameters
-levels = np.arange(1, 10, 1)
+levels = np.linspace(0, 10, 11)
 extent = (delr/2., Lx - delr/2., delc/2., Ly - delc/2.)
 print 'Levels: ', levels
 print 'Extent: ', extent
@@ -131,15 +132,25 @@ for iplot, time in enumerate(mytimes):
     print '  max: ', head.max()
     print '  std: ', head.std()
 
+    # Extract flow right face and flow front face
+    frf = cbb.get_data(text='FLOW RIGHT FACE', totim=time)[0]
+    fff = cbb.get_data(text='FLOW FRONT FACE', totim=time)[0]
+
     #Create the plot
     #plt.subplot(1, len(mytimes), iplot + 1, aspect='equal')
     plt.subplot(1, 1, 1, aspect='equal')
     plt.title('stress period ' + str(iplot + 1))
-    plt.imshow(head[0, :, :], extent=extent, cmap='BrBG', vmin=0., vmax=10.)
-    plt.colorbar()
-    CS = plt.contour(np.flipud(head[0, :, :]), levels=levels, extent=extent,
-                     zorder=10)
-    plt.clabel(CS, inline=1, fontsize=10, fmt='%1.1f', zorder=11)
+
+
+    modelmap = flopy.plot.ModelMap(model=mf, layer=0)
+    qm = modelmap.plot_ibound()
+    lc = modelmap.plot_grid()
+    qm = modelmap.plot_bc('GHB', alpha=0.5)
+    cs = modelmap.contour_array(head, levels=levels)
+    plt.clabel(cs, inline=1, fontsize=10, fmt='%1.1f', zorder=11)
+    quiver = modelmap.plot_discharge(frf, fff, head=head)
+
+
     mfc = 'None'
     if (iplot+1) == len(mytimes):
         mfc='black'
