@@ -6,8 +6,10 @@ import datetime
 def update_version():
     
     from flopy import __version__
-    v = __version__.strip().split('.')[-1]
-    version_type = ('3', '0', '{0}'.format(int(v)+1)) 
+    vmajor = __version__.strip().split('.')[-3]
+    vminor = __version__.strip().split('.')[-2]
+    vbuild = __version__.strip().split('.')[-1]
+    version_type = ('{}'.format(int(vmajor)), '{}'.format(int(vminor)), '{}'.format(int(vbuild)+1)) 
     version = '.'.join(version_type)
 
     b = subprocess.Popen(("git", "describe", "--match", "build"), stdout = subprocess.PIPE).communicate()[0]
