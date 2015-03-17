@@ -1,4 +1,4 @@
-#flopy version file automatically created using...updateversion.pyc
-#            created on......March 17, 2015 11:16:47
-__version__='3.0.0'
-__build__='3.0.0.498'
+#flopy version file automatically created using...updateversion.py
+#            created on......March 17, 2015 12:22:13
+__version__='3.1.0'
+__build__='3.1.0.499'
