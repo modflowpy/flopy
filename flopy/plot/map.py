@@ -14,7 +14,8 @@ class ModelMap(object):
         The plot axis.  If not provided it, plt.gca() will be used.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy discretization object
+    dis : flopy.modflow.ModflowDis object
+        flopy discretization object. (Default is None)
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
     xul : float
@@ -28,6 +29,7 @@ class ModelMap(object):
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
+
     """
     def __init__(self, ax=None, model=None, dis=None, layer=0, xul=None,
                  yul=None, rotation=0., extent=None):
@@ -112,6 +114,7 @@ class ModelMap(object):
         Returns
         -------
         quadmesh : matplotlib.collections.QuadMesh
+
         """
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
@@ -143,6 +146,7 @@ class ModelMap(object):
         Returns
         -------
         contour_set : matplotlib.pyplot.contour
+
         """
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
@@ -175,6 +179,7 @@ class ModelMap(object):
         Returns
         -------
         quadmesh : matplotlib.collections.QuadMesh
+
         """
         if ibound is None:
             bas = self.ml.get_package('BAS6')
@@ -197,12 +202,12 @@ class ModelMap(object):
 
         Parameters
         ----------
-            kwargs : ax, colors.  The remaining kwargs are passed into the
-                the LineCollection constructor.
+        kwargs : ax, colors.  The remaining kwargs are passed into the
+            the LineCollection constructor.
 
         Returns
         -------
-            lc : matplotlib.collections.LineCollection
+        lc : matplotlib.collections.LineCollection
 
         """
         if 'ax' in kwargs:
@@ -219,7 +224,25 @@ class ModelMap(object):
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
         """
-        Plot a boundary locations for a flopy model
+        Plot boundary conditions locations for a specific boundary
+        type from a flopy model
+
+        Parameters
+        ----------
+        ftype : string
+            Package name string ('WEL', 'GHB', etc.). (Default is None)
+        package : flopy.modflow.Modflow package class instance
+            flopy package class instance. (Default is None)
+        kper : int
+            Stress period to plot
+        color : string
+            matplotlib color string. (Default is None)
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
 
         """
         # Find package to plot
@@ -292,7 +315,7 @@ class ModelMap(object):
             MODFLOW's 'flow right face'
         fff : numpy.ndarray
             MODFLOW's 'flow front face'
-        fff : numpy.ndarray
+        flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
         head : numpy.ndarray
             MODFLOW's head array.  If not provided, then will assume confined
@@ -307,7 +330,7 @@ class ModelMap(object):
         Returns
         -------
         quiver : matplotlib.pyplot.quiver
-            Vectors
+            Vectors of specific discharge.
 
         """
 
@@ -359,6 +382,7 @@ class ModelMap(object):
     def get_grid_line_collection(self, **kwargs):
         """
         Get a LineCollection of the grid
+
         """
         from matplotlib.collections import LineCollection
         xmin = self.xedge[0]

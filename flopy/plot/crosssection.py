@@ -15,7 +15,8 @@ class ModelCrossSection(object):
         The plot axis.  If not provided it, plt.gca() will be used.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy discretization object
+    dis : flopy.modflow.ModflowDis object
+        flopy discretization object. (Default is None)
     line : dict
         Dictionary with either "row", "column", or "line" key. If key
         is "row" or "column" key value should be the zero-based row or
@@ -38,6 +39,7 @@ class ModelCrossSection(object):
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
+
     """
     def __init__(self, ax=None, model=None, dis=None, line=None, layer=None,
                  xul=None, yul=None, rotation=0., extent=None):
@@ -220,6 +222,7 @@ class ModelCrossSection(object):
         Returns
         -------
         patches : matplotlib.collections.PatchCollection
+
         """
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -273,6 +276,7 @@ class ModelCrossSection(object):
         Returns
         -------
         plot : list containing matplotlib.plot objects
+
         """
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -320,6 +324,7 @@ class ModelCrossSection(object):
         Returns
         -------
         plot : list containing matplotlib.fillbetween objects
+
         """
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -389,6 +394,7 @@ class ModelCrossSection(object):
         Returns
         -------
         contour_set : matplotlib.pyplot.contour
+
         """
         plotarray = a
 
@@ -447,6 +453,7 @@ class ModelCrossSection(object):
         Returns
         -------
         patches : matplotlib.collections.PatchCollection
+
         """
         if ibound is None:
             bas = self.model.get_package('BAS6')
@@ -520,6 +527,7 @@ class ModelCrossSection(object):
         Returns
         -------
         patches : matplotlib.collections.PatchCollection
+
         """
         # Find package to plot
         if package is not None:
@@ -712,6 +720,7 @@ class ModelCrossSection(object):
         Returns
         -------
         patches : matplotlib.collections.PatchCollection
+
         """
         from matplotlib.patches import Polygon
         from matplotlib.collections import PatchCollection
@@ -792,6 +801,7 @@ class ModelCrossSection(object):
         Returns
         -------
         zpts : numpy.ndarray
+
         """
         zpts = []
         for k in xrange(self.layer0, self.layer1):
@@ -817,6 +827,7 @@ class ModelCrossSection(object):
         Returns
         -------
         zcentergrid : numpy.ndarray
+
         """
         vpts = []
         for k in xrange(self.layer0, self.layer1):
