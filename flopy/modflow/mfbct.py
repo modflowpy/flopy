@@ -9,8 +9,8 @@ class ModflowBct(Package):
     def __init__(self, model, itrnsp=1, ibctcb=0, mcomp=1, ic_ibound_flg=1,
                  itvd=1, iadsorb=0, ict=0, cinact=-999., ciclose=1.e-6,
                  idisp=1, ixdisp=0, diffnc=0., izod=0, ifod=0, icbund=1,
-                 porosity=0.1, bulkd=1., dlh=0., dlv=0., dth=0., dtv=0.,
-                 sconc=0.,
+                 porosity=0.1, bulkd=1., arad=0., dlh=0., dlv=0., dth=0.,
+                 dtv=0., sconc=0.,
                  extension='bct', unitnumber=35):
         Package.__init__(self, model, extension, 'BCT', unitnumber)
         self.url = 'bct.htm'
@@ -33,6 +33,8 @@ class ModflowBct(Package):
                               'icbund',)
         self.porosity = util_3d(model, (nlay, nrow, ncol), np.float32,
                                 porosity, 'porosity')
+        #self.arad = util_2d(model, (1, nja), np.float32,
+        #                        arad, 'arad')
         self.dlh = util_3d(model, (nlay, nrow, ncol), np.float32, dlh, 'dlh')
         self.dlv = util_3d(model, (nlay, nrow, ncol), np.float32, dlv, 'dlv')
         self.dth = util_3d(model, (nlay, nrow, ncol), np.float32, dth, 'dth')
@@ -68,6 +70,10 @@ class ModflowBct(Package):
         if self.iadsorb != 0:
             for k in range(nlay):
                 f_bct.write(self.bulkd[k].get_file_entry())
+        #
+        #arad
+        if self.idisp != 0:
+            f_bct.write('open/close arad.dat 1.0 (free) -1' + '\n')
         #
         #dlh
         if self.idisp == 1:
