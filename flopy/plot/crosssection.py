@@ -84,7 +84,7 @@ class ModelCrossSection(object):
         else:
             self.xul = xul
         if yul is None:
-            self.yul = np.add.reduce(self.dis.delc.array)
+            self.yul = 0
         else:
             self.yul = yul
         self.rotation = -rotation * np.pi / 180.
@@ -100,16 +100,21 @@ class ModelCrossSection(object):
         onkey = line.keys()[0]                      
         if 'row' in linekeys:
             self.direction = 'x'
-            pts = [(self.xedge[0], self.ycenter[int(line[onkey])]), 
-                   (self.xedge[-1], self.ycenter[int(line[onkey])])]
+            pts = [(self.xedge[0]+0.1, self.ycenter[int(line[onkey])]-0.1), 
+                   (self.xedge[-1]-0.1, self.ycenter[int(line[onkey])]+0.1)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            pts = [(self.xcenter[int(line[onkey])], self.yedge[0]), 
-                   (self.xcenter[int(line[onkey])], self.yedge[-1])]
+            pts = [(self.xcenter[int(line[onkey])]+0.1, self.yedge[0]-0.1), 
+                   (self.xcenter[int(line[onkey])]-0.1, self.yedge[-1]+0.1)]
         else:
             self.direction = 'xy'
-            xp = np.array(line[onkey][0])
-            yp = np.array(line[onkey][1])
+            verts = line[onkey]
+            xp = []
+            yp = []
+            for [v1, v2] in verts:
+                xp.append(v1)
+                yp.append(v2)
+            xp, yp = np.array(xp), np.array(yp)
             # remove offset and rotation from line
             xp -= self.xul
             yp -= self.yul
@@ -123,6 +128,11 @@ class ModelCrossSection(object):
         # get points along the line
         self.xpts = plotutil.line_intersect_grid(self.pts, self.xedge,
                                                  self.yedge)
+        if len(self.xpts) < 2:
+            s = 'cross-section cannot be created\n.'
+            s += '   less than 2 points intersect the model grid\n'
+            s += '   {} points intersect the grid.'.format(len(self.xpts))
+            raise Exception(s)           
         
         # set horizontal distance
         d = []
@@ -155,21 +165,27 @@ class ModelCrossSection(object):
                 nz += 1
                 nx = 0
                 for i in xrange(0, self.xpts.shape[0], 2):
-                    nx += 1
-                    xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
-                    zp = self.zpts[k, i]
-                    xcentergrid.append(xp)
-                    zcentergrid.append(zp)
+                    try:
+                        xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
+                        zp = self.zpts[k, i]
+                        xcentergrid.append(xp)
+                        zcentergrid.append(zp)
+                        nx += 1
+                    except:
+                        break
         else:
             for k in xrange(0, self.zpts.shape[0]-1):
                 nz += 1
                 nx = 0
                 for i in xrange(0, self.xpts.shape[0], 2):
-                    nx += 1
-                    xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
-                    zp = 0.5 * (self.zpts[k, i] + self.zpts[k+1, i+1])
-                    xcentergrid.append(xp)
-                    zcentergrid.append(zp)
+                    try:
+                        xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
+                        zp = 0.5 * (self.zpts[k, i] + self.zpts[k+1, i+1])
+                        xcentergrid.append(xp)
+                        zcentergrid.append(zp)
+                        nx += 1
+                    except:
+                        break
         self.xcentergrid = np.array(xcentergrid).reshape((nz, nx))
         self.zcentergrid = np.array(zcentergrid).reshape((nz, nx))
         
@@ -323,11 +339,19 @@ class ModelCrossSection(object):
             idxmk = idxm[k, :]
             v = vpts[k, :]
             y1 = self.zpts[k, :]
+            y2 = self.zpts[k+1, :]
+            #--make sure y1 is not below y2
+            idx = y1 < y2
+            y1[idx] = y2[idx]
+            #--make sure v is not below y2
+            idx = v < y2
+            v[idx] = y2[idx]
+            #--make sure v is not above y1
             idx = v > y1
             v[idx] = y1[idx]
+            #--set y2 to v
             y2 = v
-            idx = v > y2
-            y2[idx] =  v[idx]
+            #--mask cells
             y1[idxmk] = np.nan
             y2[idxmk] = np.nan
             plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[0],
@@ -362,10 +386,6 @@ class ModelCrossSection(object):
 
         """
         plotarray = a
-
-#        if masked_values is not None:
-#            for mval in masked_values:
-#                plotarray = np.ma.masked_equal(plotarray, mval)
 
         vpts = []
         for k in xrange(self.dis.nlay):
@@ -461,7 +481,7 @@ class ModelCrossSection(object):
         return lc
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
-                  masked_values=None, head=None, **kwargs):
+                  head=None, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
@@ -476,8 +496,6 @@ class ModelCrossSection(object):
             Stress period to plot
         color : string
             matplotlib color string. (Default is None)
-        masked_values : iterable of floats, ints
-            Values to mask.
         head : numpy.ndarray
             Three-dimensional array to set top of patches to the minimum
             of the top of a layer or the head value. Used to create
@@ -525,7 +543,7 @@ class ModelCrossSection(object):
         cmap = matplotlib.colors.ListedColormap(['none', c])
         bounds=[0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        patches = self.plot_array(plotarray, masked_values=masked_values,
+        patches = self.plot_array(plotarray, masked_values=[0],
                                     head=head, cmap=cmap, norm=norm, **kwargs)
         return patches
 
@@ -685,21 +703,24 @@ class ModelCrossSection(object):
         colors = []
         for k in xrange(zpts.shape[0]-1):
             for idx in xrange(0, len(self.xpts)-1, 2):
-                ll = ((self.xpts[idx][2], zpts[k+1, idx]))
                 try:
-                    dx = self.xpts[idx+2][2] - self.xpts[idx][2]
+                    ll = ((self.xpts[idx][2], zpts[k+1, idx]))
+                    try:
+                        dx = self.xpts[idx+2][2] - self.xpts[idx][2]
+                    except:
+                        dx = self.xpts[idx+1][2] - self.xpts[idx][2]
+                    dz = zpts[k, idx] - zpts[k+1, idx]
+                    pts = (ll, 
+                          (ll[0], ll[1]+dz), (ll[0]+dx, ll[1]+dz),
+                          (ll[0]+dx, ll[1])) #, ll) 
+                    if np.isnan(plotarray[k, idx]):
+                        continue
+                    if plotarray[k, idx] is np.ma.masked:
+                        continue
+                    rectcol.append(Polygon(pts, closed=True))
+                    colors.append(plotarray[k, idx])
                 except:
-                    dx = self.xpts[idx+1][2] - self.xpts[idx][2]
-                dz = zpts[k, idx] - zpts[k+1, idx]
-                pts = (ll, 
-                      (ll[0], ll[1]+dz), (ll[0]+dx, ll[1]+dz),
-                      (ll[0]+dx, ll[1])) #, ll) 
-                if np.isnan(plotarray[k, idx]):
-                    continue
-                if plotarray[k, idx] is np.ma.masked:
-                    continue
-                rectcol.append(Polygon(pts, closed=True))
-                colors.append(plotarray[k, idx])
+                    pass
 
         if len(rectcol) > 0:
             patches = PatchCollection(rectcol, **kwargs)
@@ -726,18 +747,21 @@ class ModelCrossSection(object):
         linecol = []
         for k in xrange(self.zpts.shape[0]-1):
             for idx in xrange(0, len(self.xpts)-1, 2):
-                ll = ((self.xpts[idx][2], self.zpts[k+1, idx]))
                 try:
-                    dx = self.xpts[idx+2][2] - self.xpts[idx][2]
+                    ll = ((self.xpts[idx][2], self.zpts[k+1, idx]))
+                    try:
+                        dx = self.xpts[idx+2][2] - self.xpts[idx][2]
+                    except:
+                        dx = self.xpts[idx+1][2] - self.xpts[idx][2]
+                    dz = self.zpts[k, idx] - self.zpts[k+1, idx]
+                    # horizontal lines
+                    linecol.append(((ll), (ll[0]+dx, ll[1])))
+                    linecol.append(((ll[0], ll[1]+dz), (ll[0]+dx, ll[1]+dz)))
+                    #vertical lines
+                    linecol.append(((ll), (ll[0], ll[1]+dz)))
+                    linecol.append(((ll[0]+dx, ll[1]), (ll[0]+dx, ll[1]+dz)))
                 except:
-                    dx = self.xpts[idx+1][2] - self.xpts[idx][2]
-                dz = self.zpts[k, idx] - self.zpts[k+1, idx]
-                # horizontal lines
-                linecol.append(((ll), (ll[0]+dx, ll[1])))
-                linecol.append(((ll[0], ll[1]+dz), (ll[0]+dx, ll[1]+dz)))
-                #vertical lines
-                linecol.append(((ll), (ll[0], ll[1]+dz)))
-                linecol.append(((ll[0]+dx, ll[1]), (ll[0]+dx, ll[1]+dz)))
+                    pass
 
         linecollection = LineCollection(linecol, **kwargs)
         return linecollection

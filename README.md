@@ -43,7 +43,7 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 **Dependencies:**
 
-*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher)
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the flopy.plot submodule require **Pyshp** 1.2 (or higher).
 
 
 **For base Python distributions:**

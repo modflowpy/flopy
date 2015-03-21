@@ -252,6 +252,8 @@ class BaseModel(object):
         s = ''
         for p in self.packagelist:
             for i in range(len(p.name)):
+                if p.unit_number[i] == 0:
+                    continue
                 s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
                                                              p.unit_number[i],
                                                              p.file_name[i],

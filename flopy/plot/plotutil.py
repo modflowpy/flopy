@@ -111,6 +111,63 @@ class SwiConcentration():
         else:
             return conc[layer, :, :]
 
+def shapefile_get_vertices(shp):
+    """
+    Get vertices for the features in a shapefile
+
+    Parameters
+    ----------
+    shp : string
+        Name of the shapefile to extract shapefile feature vertices.
+
+    Returns
+    -------
+    vertices : list
+        Vertices is a list with vertices for each feature in the shapefile. 
+        Individual feature vertices are x, y tuples and contained in a list.
+        A list with a single x, y tuple is returned for point shapefiles. A
+        list with multiple x, y tuples is returned for polyline and polygon
+        shapefiles.
+
+    Examples
+    --------
+    >>>import flopy
+    >>>fshp = 'myshapefile'
+    >>>lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
+    
+    """
+    try:
+        import shapefile
+    except:
+        s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
+        raise Exception(s)
+    sf = shapefile.Reader(shp)
+    shapes = sf.shapes()
+    nshp = len(shapes)
+    vertices = []
+    for n in xrange(nshp):
+        st = shapes[n].shapeType
+        if st in [1, 8, 11, 21]:
+            #points
+            for p in shapes[n].points:
+                vertices.append([(p[0], p[1])])
+        elif st in [3, 13, 23]:
+            #line
+            line = []
+            for p in shapes[n].points:
+                line.append((p[0], p[1]))
+            line = np.array(line)
+            vertices.append(line)
+        elif st in [5, 25, 31]:
+            #polygons
+            pts = np.array(shapes[n].points)
+            prt = shapes[n].parts
+            par = list(prt) + [pts.shape[0]]
+            for pij in xrange(len(prt)):
+                vertices.append(pts[par[pij]:par[pij+1]])
+    return vertices
+    
+
 def shapefile_to_patch_collection(shp, radius=500.):
     """
     Create a patch collection from the shapes in a shapefile

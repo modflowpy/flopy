@@ -120,7 +120,7 @@ class ModflowDis(Package):
         self.perlen = util_2d(model, (self.nper,), np.float32, perlen,
                               name='perlen')
         self.nstp = util_2d(model, (self.nper,), np.int, nstp, name='nstp')
-        self.tsmult = util_2d(model, (self.nper,), np.float32,tsmult,
+        self.tsmult = util_2d(model, (self.nper,), np.float32, tsmult,
                               name='tsmult')
         self.steady = util_2d(model, (self.nper,), np.bool,
                               steady,name='steady')
