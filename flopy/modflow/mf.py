@@ -222,11 +222,13 @@ class Modflow(BaseModel):
         # Overrides BaseModel's setter for name property
         BaseModel.set_name(self, value)
 
-        for i in range(len(self.glo.extension)):
-            self.glo.file_name[i] = self.name + '.' + self.glo.extension[i]
+        if self.version == 'mf2k':
+            for i in range(len(self.glo.extension)):
+                self.glo.file_name[i] = self.name + '.' + self.glo.extension[i]
 
         for i in range(len(self.lst.extension)):
             self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
+    
     # Property must be redeclared to override basemodels setter method
     name = property(BaseModel.get_name, set_name)
 
