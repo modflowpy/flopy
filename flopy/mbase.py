@@ -460,7 +460,7 @@ class BaseModel(object):
         for p in self.packagelist:
             for i in xrange(len(p.extension)):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
-                p.fn_path = os.path.join(self.model_ws, p.file_name[i])
+                p.fn_path[i] = os.path.join(self.model_ws, p.file_name[i])
     
     name = property(get_name, set_name)
 
@@ -501,10 +501,12 @@ class Package(object):
             extension = [extension]
         self.extension = []
         self.file_name = []
+        self.fn_path = []
         for e in extension:
-            self.extension = self.extension + [e]
-            self.file_name = self.file_name + [self.parent.name + '.' + e]
-            self.fn_path = os.path.join(self.parent.model_ws,self.file_name[0])
+            self.extension.append(e)
+            file_name = self.parent.name + '.' + e
+            self.file_name.append(file_name)
+            self.fn_path.append(os.path.join(self.parent.model_ws, file_name))
         if (not isinstance(name, list)):
             name = [name]
         self.name = name
@@ -579,6 +581,26 @@ class Package(object):
                                            locat=old_value.locat)
             elif isinstance(old_value, utils.mflist):
                 value = utils.mflist(self.parent, old_value.dtype, data=value)
+            elif isinstance(old_value, list):
+                if isinstance(old_value[0], utils.util_3d):
+                    new_list = []
+                    for vo, v in zip(old_value, value):
+                        new_list.append(utils.util_3d(self.parent, vo.shape,
+                                                      vo.dtype, v,
+                                                      name=vo.name_base,
+                                                      fmtin=vo.fmtin,
+                                                      locat=vo.locat))
+                    value = new_list
+                elif isinstance(old_value[0], utils.util_2d):
+                    new_list = []
+                    for vo, v in zip(old_value, value):
+                        new_list.append(utils.util_2d(self.parent, vo.shape,
+                                                      vo.dtype, v,
+                                                      name=vo.name,
+                                                      fmtin=vo.fmtin,
+                                                      locat=vo.locat))
+                    value = new_list
+        
         super(Package, self).__setattr__(key, value)
 
 
