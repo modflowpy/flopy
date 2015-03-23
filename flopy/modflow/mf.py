@@ -223,10 +223,10 @@ class Modflow(BaseModel):
         BaseModel.set_name(self, value)
 
         if self.version == 'mf2k':
-            for i in range(len(self.glo.extension)):
+            for i in xrange(len(self.glo.extension)):
                 self.glo.file_name[i] = self.name + '.' + self.glo.extension[i]
 
-        for i in range(len(self.lst.extension)):
+        for i in xrange(len(self.lst.extension)):
             self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
     
     # Property must be redeclared to override basemodels setter method

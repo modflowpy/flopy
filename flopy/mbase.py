@@ -457,8 +457,10 @@ class BaseModel(object):
         self.__name = value
         self.namefile = self.__name + '.' + self.namefile_ext
         for p in self.packagelist:
-            for i in range(len(p.extension)):
+            for i in xrange(len(p.extension)):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
+                p.fn_path = os.path.join(self.model_ws, p.file_name[i])
+    
     name = property(get_name, set_name)
 
     def add_pop_key_list(self, key):
