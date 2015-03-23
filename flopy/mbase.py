@@ -13,6 +13,7 @@ import subprocess as sp
 import webbrowser as wb
 import warnings
 from modflow.mfparbc import ModflowParBc as mfparbc
+from flopy import utils
 
 
 # Global variables
@@ -551,6 +552,33 @@ class Package(object):
 
     def __setitem__(self, key, value):
         raise NotImplementedError("package.__setitem__() not implemented")
+
+    def __setattr__(self, key, value):
+        var_dict = vars(self)
+        if key in var_dict.keys():
+            old_value = var_dict[key]
+            if isinstance(old_value, utils.util_2d):
+                value = utils.util_2d(self.parent, old_value.shape,
+                                      old_value.dtype, value,
+                                      name=old_value.name,
+                                      fmtin=old_value.fmtin,
+                                      locat=old_value.locat)
+            elif isinstance(old_value, utils.util_3d):
+                value = utils.util_3d(self.parent, old_value.shape,
+                                      old_value.dtype, value,
+                                      name=old_value.name_base,
+                                      fmtin=old_value.fmtin,
+                                      locat=old_value.locat)
+            elif isinstance(old_value, utils.transient_2d):
+                value = utils.transient_2d(self.parent, old_value.shape,
+                                           old_value.dtype, value,
+                                           name=old_value.name_base,
+                                           fmtin=old_value.fmtin,
+                                           locat=old_value.locat)
+            elif isinstance(old_value, utils.mflist):
+                value = utils.mflist(self.parent, old_value.dtype, data=value)
+        super(Package, self).__setattr__(key, value)
+
 
     @staticmethod
     def add_to_dtype(dtype,field_names,field_types):
