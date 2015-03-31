@@ -1,6 +1,6 @@
 import os
 import sys
-from distutils.core import setup
+from setuptools import setup
 
 # To use:
 #	   python setup.py bdist --format=wininst
@@ -11,6 +11,8 @@ from flopy import __version__, __name__, __author__
 if not sys.version_info[0] == 2:
     print "Sorry, Python 3 is not supported (yet)"
     sys.exit(1) # return non-zero value for failure
+
+reqs = [line.strip() for line in open('requirements.txt')]
 
 long_description = ''
  
@@ -28,8 +30,7 @@ setup(name=__name__,
       url='https://github.com/modflowpy/flopy/',
       license='New BSD',
       platforms='Windows, Mac OS-X',
-      #setup_requires=['numpy==1.9','matplotlib==1.4'],
-      install_requires=['numpy==1.9', 'matplotlib==1.4'],
+      install_requires=reqs,
       packages=['flopy', 'flopy.modflow', 'flopy.modpath', 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot'],
       # use this version ID if .svn data cannot be found
       version=__version__ )
