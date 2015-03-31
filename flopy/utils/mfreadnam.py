@@ -70,6 +70,26 @@ class NamData(object):
         if self.filetype.lower() in packages.keys():
             self.package = packages[self.filetype.lower()]
 
+def getfiletypeunit(nf, filetype):
+    """
+    Method to return unit number of a package from a NamData instance
+
+    Parameters
+    ----------
+    nf : NamData instance
+    pkgtype : string, name of package seeking information for
+
+    Returns
+    -------
+    cunit : int, unit number corresponding to the package type
+
+    """
+    for cunit, cvals in nf.iteritems():
+        if cvals.filetype.lower() == filetype.lower():
+            return cunit
+    print 'Name file does not contain file of type "{0}"'.format(filetype)
+    return None
+
 # function to test if a string is an integer
 def testint(cval):
     try:
