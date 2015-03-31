@@ -192,18 +192,19 @@ class ModflowSwi2(Package):
         
         #--options
         self.fsssopt, self.adaptive = False, False
-        self.options = options
-        if self.options != None:
-            if len(self.options) < 1:
+        if isinstance(options, list):
+            if len(options) < 1:
                 self.options = None
             else:
+                self.options = options
                 for o in self.options:
                     if o.lower() == 'fsssopt':
                         self.fsssopt = True
                     elif o.lower() == 'adaptive':
                         self.adaptive = True
+        else:
+            self.options = None
 
-        #
         if npln is not None:
             print 'npln keyword is deprecated. use the nsrf keyword'
             nsrf = npln

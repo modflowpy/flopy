@@ -24,10 +24,11 @@ modelname = 'swiex4_s1'
 if not os.path.exists(modelpth):
     os.makedirs(modelpth)
 
-ml = flopy.modflow.Modflow.load(modelname, model_ws=loadpth, exe_name=exe_name, version=version)
+ml = flopy.modflow.Modflow.load(modelname, model_ws=loadpth, exe_name=exe_name, version=version, verbose=True)
 ml.change_model_ws(new_pth=modelpth)
+ml.set_name('woohoo')
 ml.write_input()
-#success, buff = ml.run_model()
+success, buff = ml.run_model()
 success = True
 
 if not success:

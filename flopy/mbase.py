@@ -460,7 +460,7 @@ class BaseModel(object):
         for p in self.packagelist:
             for i in xrange(len(p.extension)):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
-                p.fn_path[i] = os.path.join(self.model_ws, p.file_name[i])
+            p.fn_path = os.path.join(self.model_ws, p.file_name[0])
     
     name = property(get_name, set_name)
 
@@ -501,12 +501,11 @@ class Package(object):
             extension = [extension]
         self.extension = []
         self.file_name = []
-        self.fn_path = []
         for e in extension:
             self.extension.append(e)
             file_name = self.parent.name + '.' + e
             self.file_name.append(file_name)
-            self.fn_path.append(os.path.join(self.parent.model_ws, file_name))
+        self.fn_path = os.path.join(self.parent.model_ws, self.file_name[0])
         if (not isinstance(name, list)):
             name = [name]
         self.name = name
