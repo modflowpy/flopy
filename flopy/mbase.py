@@ -744,7 +744,21 @@ class Package(object):
                 for ibnd in xrange(itmp):
                     line = f.readline()
                     if "open/close" in line.lower():
-                        raise NotImplementedError("load() method does not support \'open/close\'")
+                        #raise NotImplementedError("load() method does not support \'open/close\'")
+                        oc_filename = os.path.join(model.model_ws,line.strip().split()[1])
+                        assert os.path.exists(oc_filename),"Package.load() error: open/close filename " +\
+                                                           oc_filename + " not found"
+                        try:
+                            current = np.genfromtxt(oc_filename,dtype=current.dtype)
+                        except Exception as e:
+                            raise Exception("Package.load() error loading open/close file " + oc_filename +\
+                                            " :" + str(e))
+                        assert current.shape[0] == itmp,"Package.load() error: open/close rec array from file " +\
+                                                     oc_filename + " shape (" + str(current.shape) + \
+                                                     ") does not match itmp: {0:d}".format(itmp)
+
+                        print oc_filename
+                        break
                     try:
                         t = line.strip().split()
                         current[ibnd] = tuple(t[:len(current.dtype.names)])

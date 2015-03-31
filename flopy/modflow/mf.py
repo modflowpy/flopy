@@ -256,7 +256,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
-             model_ws='.'):
+             model_ws='.', load_only=None):
         """
         Load an existing model.
 
@@ -266,6 +266,8 @@ class Modflow(BaseModel):
             File to load.
         
         model_ws : model workspace path
+
+        load_only : (optional) filetype(s) to load (e.g. ["dis","bas6"])
 
         Returns
         -------
@@ -324,6 +326,29 @@ class Modflow(BaseModel):
                 .format(os.path.basename(dis.filename))
             raise Exception(s)
 
+        if load_only is None:
+            load_only = []
+            for key,item in ext_unit_dict.iteritems():
+                load_only.append(item.filetype)
+        else:
+            if not isinstance(load_only,list):
+                load_only = [load_only]
+            not_found = []
+            for i,filetype in enumerate(load_only):
+                filetype = filetype.upper()
+                load_only[i] = filetype
+                found = False
+                for key,item in ext_unit_dict.iteritems():
+                    if item.filetype == filetype:
+                        found = True
+                        break
+                if not found:
+                    not_found.append(filetype)
+            if len(not_found) > 0:
+                raise Exception("the following load_only entries were not found "
+                                "in the ext_unit_dict: " +','.join(not_found))
+
+
         # zone, mult, pval
         ml.mfpar.set_pval(ml, ext_unit_dict)
         ml.mfpar.set_zone(ml, ext_unit_dict)
@@ -332,15 +357,20 @@ class Modflow(BaseModel):
         # try loading packages in ext_unit_dict
         for key, item in ext_unit_dict.iteritems():
             if item.package is not None:
-                try:
-                    pck = item.package.load(item.filename, ml,
-                                            ext_unit_dict=ext_unit_dict)
-                    files_succesfully_loaded.append(item.filename)
-                    sys.stdout.write('   {:4s} package load...success\n'
-                                     .format(pck.name[0]))
-                except BaseException as o:
-                    sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
-                                     .format(item.filetype, o))
+                if item.filetype in load_only:
+                    try:
+                        pck = item.package.load(item.filename, ml,
+                                                ext_unit_dict=ext_unit_dict)
+                        files_succesfully_loaded.append(item.filename)
+                        sys.stdout.write('   {:4s} package load...success\n'
+                                         .format(pck.name[0]))
+                    except BaseException as o:
+                        sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
+                                         .format(item.filetype, o))
+                        files_not_loaded.append(item.filename)
+                else:
+                    sys.stdout.write('   {:4s} package load...skipped\n'
+                                         .format(item.filetype))
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
