@@ -15,28 +15,20 @@ class NamData(object):
 
     Parameters
     ----------
-    model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
-        this package will be added.
     pkgtype : string
         String identifying the type of MODFLOW package. See the
         mfnam_packages dictionary keys in the model object for a list
         of supported packages. This dictionary is also passed in as packages.
-    packages : dictionary
-        Dictionary of package objects as defined in the
-        `mfnam_packages` attribute of :class:`flopy.modflow.mf.Modflow`.
-
     name : string
         Filename of the package file identified in the name file
     handle : file handle
         File handle referring to the file identified by `name`
+    packages : dictionary
+        Dictionary of package objects as defined in the
+        `mfnam_packages` attribute of :class:`flopy.modflow.mf.Modflow`.
 
     Attributes
     ----------
-    mxactd : int
-        Maximum number of drains for a stress period.  This is calculated
-        automatically by FloPy based on the information in
-        `stress_period_data`.
     filehandle : file handle
         File handle to the package file. Read from `handle`.
     filename : string
@@ -77,7 +69,7 @@ def getfiletypeunit(nf, filetype):
     Parameters
     ----------
     nf : NamData instance
-    pkgtype : string, name of package seeking information for
+    filetype : string, name of package seeking information for
 
     Returns
     -------
