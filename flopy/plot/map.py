@@ -4,6 +4,8 @@ import matplotlib.colors
 import plotutil
 from plotutil import bc_color_dict, rotate
 
+from flopy.utils import util_2d,util_3d,transient_2d
+
 class ModelMap(object):
     """
     Class to create a map of the model.
@@ -96,6 +98,81 @@ class ModelMap(object):
         self.ax.set_ylim(self.extent[2], self.extent[3])
 
         return
+
+    def write_grid_shapefile(self, filename, package_names=None):
+        """
+        Write a shapefile for the model grid.  If package_names is not none,
+        then search through the requested packages looking for arrays that can
+        be added to the shapefile as attributes
+
+        Parameters
+        ----------
+        filename : string
+            name of the shapefile to write
+        package_names : (optional) list if package names (e.g. ["dis","lpf"])
+            packages to scrap arrays out of for adding to shapefile
+
+        Returns
+        -------
+        None
+
+        """
+
+        try:
+            import shapefile
+        except Exception as e:
+            raise Exception("ModelMap.write_grid_shapefile(): error " +
+                            "importing shapefile - need to install pyshp")
+
+        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+        wr.field("row", "N", 10, 0)
+        wr.field("column", "N", 10, 0)
+
+        arrays = []
+        if package_names is not None:
+            if not isinstance(package_names, list):
+                package_names = [package_names]
+            for pname in package_names:
+                pak = self.ml.get_package(pname)
+                if pak is not None:
+                    attrs = dir(pak)
+                    for attr in attrs:
+                        a = pak.__getattribute__(attr)
+                        if isinstance(a, util_2d) and a.shape == (self.ml.nrow,
+                                                                  self.ml.ncol):
+                            name = a.name.lower()
+                            wr.field(name, 'N', 20, 6)
+                            arrays.append(a.array)
+                        elif isinstance(a, util_3d):
+                            for u2d in a:
+                                name = u2d.name.lower().replace(" layer", '')
+                                name = name.replace(' ','_')
+                                wr.field(name, 'N', 20, 6)
+                                arrays.append(u2d.array)
+                        elif isinstance(a,transient_2d):
+                            kpers = a.transient_2ds.keys()
+                            kpers.sort()
+                            for kper in kpers:
+                                u2d = a.transient_2ds[kper]
+                                name = u2d.name.lower()
+                                wr.field(name, 'N', 20, 6)
+                                arrays.append(u2d.array)
+
+        for i in range(self.ml.nrow):
+            for j in range(self.ml.ncol):
+                pts = []
+                pts.append([self.xgrid[i, j], self.ygrid[i, j]])
+                pts.append([self.xgrid[i, j], self.ygrid[i+1, j]])
+                pts.append([self.xgrid[i, j+1], self.ygrid[i+1, j]])
+                pts.append([self.xgrid[i, j+1], self.ygrid[i, j]])
+                pts.append([self.xgrid[i, j], self.ygrid[i, j]])
+                wr.poly(parts=[pts])
+                rec = [i+1, j+1]
+                for array in arrays:
+                    rec.append(array[i, j])
+                wr.record(*rec)
+        wr.save(filename)
+
 
     def plot_array(self, a, masked_values=None, **kwargs):
         """
