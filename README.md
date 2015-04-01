@@ -60,16 +60,27 @@ To uninstall *FloPy<sub>3</sub>* type:
 
     pip uninstall flopy
 
+**Installing from the git repository:**
 
-**Development versions of FloPy<sub>3</sub>:**
+***Current Version of FloPy<sub>3</sub>:***
 
-To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
+To install the current version of *FloPy<sub>3</sub>* from the git repository type:
 
     pip install https://github.com/modflowpy/flopy/zipball/master
     
-To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
+To update your version of *FloPy<sub>3</sub>* with the current version from the git repository type:
 
     pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
+
+***Development version of FloPy<sub>3</sub>:***
+
+To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/develop
+    
+To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
 Documentation
