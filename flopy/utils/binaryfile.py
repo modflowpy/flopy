@@ -65,8 +65,9 @@ class BinaryHeader():
                     print '{0} key not available in {1} header dtype'.format(k, self.header_type)
         for k in ckey:
             if kwargs.has_key(k):
-                #--Convert to upper case to be consistent case used by MODFLOW text strings.
-                #  Necessary to work with HeadFile and UcnFile routines
+                # Convert to upper case to be consistent case used by MODFLOW
+                # text strings. Necessary to work with HeadFile and UcnFile
+                # routines
                 ttext = kwargs[k].upper()
                 if len(ttext) > 16:
                     text = text[0:16]
