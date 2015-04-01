@@ -141,21 +141,24 @@ class ModelMap(object):
                         if isinstance(a, util_2d) and a.shape == (self.ml.nrow,
                                                                   self.ml.ncol):
                             name = a.name.lower()
-                            wr.field(name, 'N', 20, 6)
+                            wr.field(name, 'N', 20, 12)
                             arrays.append(a.array)
                         elif isinstance(a, util_3d):
-                            for u2d in a:
-                                name = u2d.name.lower().replace(" layer", '')
-                                name = name.replace(' ','_')
-                                wr.field(name, 'N', 20, 6)
+                            for i,u2d in enumerate(a):
+                                name = u2d.name.lower().replace(' ','_')
+                                if "_layer" in name:
+                                    name = name.replace("_layer", '')
+                                else:
+                                    name += '_{0:d}'.format(i+1)
+                                wr.field(name, 'N', 20, 12)
                                 arrays.append(u2d.array)
                         elif isinstance(a,transient_2d):
                             kpers = a.transient_2ds.keys()
                             kpers.sort()
                             for kper in kpers:
                                 u2d = a.transient_2ds[kper]
-                                name = u2d.name.lower()
-                                wr.field(name, 'N', 20, 6)
+                                name = u2d.name.lower() + "_{0:d}".format(kper+1)
+                                wr.field(name, 'N', 20, 12)
                                 arrays.append(u2d.array)
 
         for i in range(self.ml.nrow):
