@@ -13,7 +13,7 @@ class ModflowBcf(Package):
         The model object (of type :class:`flopy.modflow.Modflow`) to which
         this package will be added.
     ibcfcb : int
-        A flag and unit number. (default is 0)
+        A flag and unit number. (default is 53)
     intercellt : int
         Intercell transmissivities, harmonic mean (0), arithmetic mean (1),
         logarithmetic mean (2), combination (3). (default is 0)
@@ -74,27 +74,41 @@ class ModflowBcf(Package):
 
     """
 
-    def __init__(self, model, ibcfcb = 0, intercellt=0,laycon=3, trpy=1.0, hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0, \
-                 tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01, extension='bcf', unitnumber=15):
-        Package.__init__(self, model, extension, 'BCF6', unitnumber) # Call ancestor's init to set self.parent, extension, name and unit number
+    def __init__(self, model, ibcfcb=53, intercellt=0,laycon=3, trpy=1.0,
+                 hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0,
+                 tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01,
+                 extension='bcf', unitnumber=15):
+        Package.__init__(self, model, extension, 'BCF6', unitnumber)
         self.url = 'bcf.htm'
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Set values of all parameters
-        self.intercellt = util_2d(model,(nlay,),np.int,intercellt,name='laycon',locat=self.unit_number[0])
-        self.laycon = util_2d(model,(nlay,),np.int,laycon,name='laycon',locat=self.unit_number[0])
-        self.trpy = util_2d(model,(nlay,),np.int,trpy,name='Anisotropy factor',locat=self.unit_number[0])
-        self.ibcfcb = ibcfcb # Unit number for file with cell-by-cell flow terms
-        self.hdry = hdry # Head in cells that are converted to dry during a simulation
-        self.iwdflg = iwdflg # Flag that determines if the wetting capability is active
-        self.wetfct = wetfct # Factor that is included in the calculation of the head when a cell is converted from dry to wet
-        self.iwetit = iwetit # Iteration interval for attempting to wet cells
-        self.ihdwet = ihdwet # Flag that determines which equation is used to define the initial head at cells that become wet     
-        self.tran = util_3d(model,(nlay,nrow,ncol),np.float32,tran,'Transmissivity',locat=self.unit_number[0])    
-        self.hy = util_3d(model,(nlay,nrow,ncol),np.float32,hy,'Horizontal Hydraulic Conductivity',locat=self.unit_number[0])    
-        self.vcont = util_3d(model,(nlay-1,nrow,ncol),np.float32,vcont,'Vertical Conductance',locat=self.unit_number[0])    
-        self.sf1 = util_3d(model,(nlay,nrow,ncol),np.float32,sf1,'Primary Storage Coefficient',locat=self.unit_number[0])    
-        self.sf2 = util_3d(model,(nlay,nrow,ncol),np.float32,sf2,'Secondary Storage Coefficient',locat=self.unit_number[0])    
-        self.wetdry = util_3d(model,(nlay,nrow,ncol),np.float32,wetdry,'WETDRY',locat=self.unit_number[0])       
+        self.intercellt = util_2d(model, (nlay,), np.int,intercellt,
+                                  name='laycon',locat=self.unit_number[0])
+        self.laycon = util_2d(model, (nlay,), np.int,laycon, name='laycon',
+                              locat=self.unit_number[0])
+        self.trpy = util_2d(model, (nlay,), np.int, trpy,
+                            name='Anisotropy factor',locat=self.unit_number[0])
+        self.ibcfcb = ibcfcb
+        self.hdry = hdry
+        self.iwdflg = iwdflg
+        self.wetfct = wetfct
+        self.iwetit = iwetit
+        self.ihdwet = ihdwet
+        self.tran = util_3d(model, (nlay,nrow,ncol), np.float32, tran,
+                            'Transmissivity', locat=self.unit_number[0])
+        self.hy = util_3d(model, (nlay,nrow,ncol), np.float32, hy,
+                          'Horizontal Hydraulic Conductivity',
+                          locat=self.unit_number[0])
+        self.vcont = util_3d(model, (nlay-1,nrow,ncol), np.float32, vcont,
+                             'Vertical Conductance', locat=self.unit_number[0])
+        self.sf1 = util_3d(model, (nlay,nrow,ncol), np.float32, sf1,
+                           'Primary Storage Coefficient',
+                           locat=self.unit_number[0])
+        self.sf2 = util_3d(model, (nlay,nrow,ncol), np.float32, sf2,
+                           'Secondary Storage Coefficient',
+                           locat=self.unit_number[0])
+        self.wetdry = util_3d(model, (nlay,nrow,ncol), np.float32, wetdry,
+                              'WETDRY', locat=self.unit_number[0])
         self.parent.add_package(self)
     def write_file(self):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
