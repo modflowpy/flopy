@@ -807,6 +807,8 @@ class util_2d(object):
         npl, fmt, width, decimal = decode_fortran_descriptor(fmtin)
         data = np.zeros((nrow * ncol), dtype=dtype) - 1.0E+10
         d = 0
+        if not isinstance(file_in,file):
+            file_in = open(file_in,'r')
         while True:
             line = file_in.readline()
             if line is None or d == nrow*ncol:

@@ -99,7 +99,7 @@ class ModelMap(object):
 
         return
 
-    def write_grid_shapefile(self, filename, package_names=None):
+    def write_grid_shapefile(self, filename, package_names=None,array_dict=None):
         """
         Write a shapefile for the model grid.  If package_names is not none,
         then search through the requested packages looking for arrays that can
@@ -109,8 +109,11 @@ class ModelMap(object):
         ----------
         filename : string
             name of the shapefile to write
-        package_names : (optional) list if package names (e.g. ["dis","lpf"])
+        package_names : (optional) list of package names (e.g. ["dis","lpf"])
             packages to scrap arrays out of for adding to shapefile
+        array_dict : (optional) dict of {name:2D array} pairs
+           additional 2D arrays to add as attributes to the grid shapefile
+
 
         Returns
         -------
@@ -129,6 +132,12 @@ class ModelMap(object):
         wr.field("column", "N", 10, 0)
 
         arrays = []
+        if array_dict is not None:
+            for name,array in array_dict.iteritems():
+                assert array.shape == (self.ml.nrow,self.ml.ncol)
+                wr.field(name,"N",20,12)
+                arrays.append(array)
+
         if package_names is not None:
             if not isinstance(package_names, list):
                 package_names = [package_names]
