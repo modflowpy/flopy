@@ -11,36 +11,36 @@ class SwrBinaryStatements:
     realbyte = 8
     textbyte = 4
     def read_integer(self):
-        intvalue=strct.unpack('i',self.file.read(1*SWRBinaryStatements.integerbyte))[0]
+        intvalue=strct.unpack('i',self.file.read(1*SwrBinaryStatements.integerbyte))[0]
         return intvalue
     def read_real(self):
-        realvalue=strct.unpack('d',self.file.read(1*SWRBinaryStatements.realbyte))[0]
+        realvalue=strct.unpack('d',self.file.read(1*SwrBinaryStatements.realbyte))[0]
         return realvalue
     def read_text(self):
-        textvalue=np.fromfile(file = self.file, dtype=SWRBinaryStatements.character, count=16).tostring()
+        textvalue=np.fromfile(file = self.file, dtype=SwrBinaryStatements.character, count=16).tostring()
         return textvalue
     def read_obs_text(self,nchar=20):
-        textvalue=np.fromfile(file = self.file, dtype=MFReadBinaryStatements.character, count=nchar).tostring()
+        textvalue=np.fromfile(file = self.file, dtype=SwrBinaryStatements.character, count=nchar).tostring()
         return textvalue
     def read_record(self):
         if self.skip == True:
-            lpos = self.file.tell() + ( self.nrecord*self.items*SWRBinaryStatements.realbyte )
+            lpos = self.file.tell() + ( self.nrecord*self.items*SwrBinaryStatements.realbyte )
             self.file.seek(lpos)
-            x = np.zeros((self.nrecord*self.items),SWRBinaryStatements.real)
+            x = np.zeros((self.nrecord*self.items),SwrBinaryStatements.real)
         else:
-            x = np.fromfile(file=self.file,dtype=SWRBinaryStatements.real,count=self.nrecord*self.items)
+            x = np.fromfile(file=self.file,dtype=SwrBinaryStatements.real,count=self.nrecord*self.items)
         x.resize(self.nrecord,self.items)
         return x
     def read_items(self):
         if self.skip == True:
-            lpos = self.file.tell() + ( self.items * SWRBinaryStatements.realbyte )
+            lpos = self.file.tell() + ( self.items * SwrBinaryStatements.realbyte )
             self.file.seek(lpos)
-            x = np.zeros((self.items),SWRBinaryStatements.real)
+            x = np.zeros((self.items),SwrBinaryStatements.real)
         else:
-            x = np.fromfile(file=self.file,dtype=SWRBinaryStatements.real,count=self.items)
+            x = np.fromfile(file=self.file,dtype=SwrBinaryStatements.real,count=self.items)
         return x
     def read_1dintegerarray(self):
-        i = np.fromfile(file=self.file,dtype=SWRBinaryStatements.integer,count=self.nrecord)
+        i = np.fromfile(file=self.file,dtype=SwrBinaryStatements.integer,count=self.nrecord)
         return i
 
 class SwrObs(SwrBinaryStatements):
