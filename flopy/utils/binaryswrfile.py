@@ -160,7 +160,7 @@ class SwrObs(SwrBinaryStatements):
         point_offset = long(0)
         totim,success=self.read_header()
         idx = (ipos)
-        lpos1 = self.file.tell() + idx*SWRBinaryStatements.realbyte
+        lpos1 = self.file.tell() + idx*SwrBinaryStatements.realbyte
         self.file.seek(lpos1)
         point_offset = self.file.tell() - lpos0
         return point_offset
@@ -431,9 +431,9 @@ class SwrFile(SwrBinaryStatements):
         return totim,dt,kper,kstp,swrstp,True,r
 
     def read_qaq(self):
-        x = np.zeros((self.nqaqentries,self.items), SWRBinaryStatements.real)                
+        x = np.zeros((self.nqaqentries,self.items), SwrBinaryStatements.real)                
         if self.skip == True:
-            bytes = self.nqaqentries * (SWRBinaryStatements.integerbyte + 8*SWRBinaryStatements.realbyte)
+            bytes = self.nqaqentries * (SwrBinaryStatements.integerbyte + 8*SwrBinaryStatements.realbyte)
             lpos = self.file.tell() + ( bytes )
             self.file.seek(lpos)
         else:
@@ -502,7 +502,7 @@ class SwrFile(SwrBinaryStatements):
         #--stage and reach group terms
         elif self.type == 'stage' or self.type == 'reachgroup':
             idx = (rec_num-1)*self.items
-            lpos1 = self.file.tell() + idx*SWRBinaryStatements.realbyte
+            lpos1 = self.file.tell() + idx*SwrBinaryStatements.realbyte
             self.file.seek(lpos1)
             point_offset = self.file.tell() - lpos0
         #--connection flux and velocity terms
@@ -519,7 +519,7 @@ class SwrFile(SwrBinaryStatements):
             else:
                 self.dataAvailable = True
                 idx = (frec)*self.items
-                lpos1 = self.file.tell() + idx*SWRBinaryStatements.realbyte
+                lpos1 = self.file.tell() + idx*SwrBinaryStatements.realbyte
                 self.file.seek(lpos1)
                 point_offset = self.file.tell() - lpos0
         return point_offset
