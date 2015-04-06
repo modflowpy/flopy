@@ -15,17 +15,17 @@ class HydmodBinaryStatements:
     doublebyte=8
     textbyte=1
     def read_integer(self):
-        intvalue=strct.unpack('i',self.file.read(1*MFReadBinaryStatements.integerbyte))[0]
+        intvalue=strct.unpack('i',self.file.read(1*self.integerbyte))[0]
         return intvalue
     def read_real(self):
-        realvalue=strct.unpack('f',self.file.read(1*MFReadBinaryStatements.realbyte))[0]
+        realvalue=strct.unpack('f',self.file.read(1*self.realbyte))[0]
         return realvalue
     def read_double(self):
-        doublevalue=strct.unpack('f',self.file.read(1*MFReadBinaryStatements.doublebyte))[0]
+        doublevalue=strct.unpack('f',self.file.read(1*self.doublebyte))[0]
         return doublevalue
     def read_hyd_text(self,nchar=20):
         #textvalue=strct.unpack('cccccccccccccccc',self.file.read(16*self.textbyte))
-        textvalue=np.fromfile(file = self.file, dtype=MFReadBinaryStatements.character, count=nchar).tostring()
+        textvalue=np.fromfile(file = self.file, dtype=self.character, count=nchar).tostring()
         return textvalue
 
 class HydmodObs(HydmodBinaryStatements):
