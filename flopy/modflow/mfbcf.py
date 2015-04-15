@@ -115,7 +115,7 @@ class ModflowBcf(Package):
         # Open file for writing
         f_bcf = open(self.fn_path, 'w')
         # Item 1: IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
-        f_bcf.write('%10d%10.1e%10d%10f%10d%10d\n' % (self.ibcfcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit, self.ihdwet))
+        f_bcf.write('%10d%10.6G%10d%10f%10d%10d\n' % (self.ibcfcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit, self.ihdwet))
         # LAYCON array
         for k in range(nlay):            
             f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k],self.laycon[k]))
