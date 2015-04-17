@@ -32,5 +32,7 @@ setup(name=__name__,
       platforms='Windows, Mac OS-X',
       install_requires=reqs,
       packages=['flopy', 'flopy.modflow', 'flopy.modpath', 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot'],
+      package_data={'': ['requirements.txt']},
+      include_package_data=True,
       # use this version ID if .svn data cannot be found
       version=__version__ )
