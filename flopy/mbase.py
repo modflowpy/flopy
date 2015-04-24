@@ -750,14 +750,13 @@ class Package(object):
                                                            oc_filename + " not found"
                         try:
                             current = np.genfromtxt(oc_filename,dtype=current.dtype)
+                            current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception("Package.load() error loading open/close file " + oc_filename +\
                                             " :" + str(e))
                         assert current.shape[0] == itmp,"Package.load() error: open/close rec array from file " +\
                                                      oc_filename + " shape (" + str(current.shape) + \
                                                      ") does not match itmp: {0:d}".format(itmp)
-
-                        print oc_filename
                         break
                     try:
                         t = line.strip().split()
@@ -774,7 +773,6 @@ class Package(object):
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1
-                
                 bnd_output = np.recarray.copy(current)
             else:
                 bnd_output = np.recarray.copy(current)
