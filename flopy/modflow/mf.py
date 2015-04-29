@@ -267,7 +267,7 @@ class Modflow(BaseModel):
         
         model_ws : model workspace path
 
-        load_only : (optional) filetype(s) to load (e.g. ["dis","bas6"])
+        load_only : (optional) filetype(s) to load (e.g. ["bas6","lpf"])
 
         Returns
         -------
@@ -336,14 +336,15 @@ class Modflow(BaseModel):
             not_found = []
             for i,filetype in enumerate(load_only):
                 filetype = filetype.upper()
-                load_only[i] = filetype
-                found = False
-                for key,item in ext_unit_dict.iteritems():
-                    if item.filetype == filetype:
-                        found = True
-                        break
-                if not found:
-                    not_found.append(filetype)
+                if filetype != 'DIS':
+                    load_only[i] = filetype
+                    found = False
+                    for key,item in ext_unit_dict.iteritems():
+                        if item.filetype == filetype:
+                            found = True
+                            break
+                    if not found:
+                        not_found.append(filetype)
             if len(not_found) > 0:
                 raise Exception("the following load_only entries were not found "
                                 "in the ext_unit_dict: " +','.join(not_found))
