@@ -65,6 +65,13 @@ z = [z]
 isource = np.ones((nrow, ncol), np.int)
 isource[0, 0] = 2
 
+ocdict = {}
+for idx in xrange(49, 200, 50):
+    key = (0, idx)
+    ocdict[key] = ['save head', 'save budget']
+    key = (0, idx+1)  
+    ocdict[key] = []  
+
 
 #--create flopy modflow object
 ml = mf.Modflow(modelname, version='mf2005', exe_name=exe_name)
@@ -78,7 +85,7 @@ lpf = mf.ModflowLpf(ml, hk=2., vka=2.0, vkcb=0, laytyp=0, layavg=0)
 wel = mf.ModflowWel(ml, stress_period_data={0:[(0, 0, 0, 1)]})
 swi = mf.ModflowSwi2(ml, npln=1, istrat=1, toeslope=0.2, tipslope=0.2, nu=[0, 0.025],
                      zeta=z, ssz=0.2, isource=isource, nsolver=1)
-oc = mf.ModflowOc88(ml, save_head_every=50)
+oc = mf.ModflowOc(ml, stress_period_data=ocdict)
 pcg = mf.ModflowPcg(ml)
 #--create model files
 ml.write_input()

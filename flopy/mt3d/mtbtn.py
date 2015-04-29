@@ -183,7 +183,7 @@ class Mt3dBtn(Package):
         self.sconc = []
         u3d = util_3d(model, (nlay, nrow, ncol), np.float32, sconc,
                 name='sconc1', locat=self.unit_number[0])
-        self.sconc = [u3d]
+        self.sconc.append(u3d)
         if ncomp > 1:
             for icomp in xrange(2,ncomp+1):
                 name = "sconc"+str(icomp)

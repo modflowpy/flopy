@@ -805,11 +805,13 @@ class util_2d(object):
         #nrow,ncol = self.shape
         nrow, ncol = shape
         npl, fmt, width, decimal = decode_fortran_descriptor(fmtin)
-        data = np.zeros((nrow * ncol), dtype=dtype) - 1.0E+10
+        data = np.zeros((nrow * ncol), dtype=dtype) + np.NaN
         d = 0
+        if not isinstance(file_in,file):
+            file_in = open(file_in,'r')
         while True:
             line = file_in.readline()
-            if line is None or d == nrow*ncol:
+            if line in [None,''] or d == nrow*ncol:
                 break
             if npl == 'free':
                 raw = line.strip('\n').split()
@@ -840,6 +842,8 @@ class util_2d(object):
                     return(data) 
                 d += 1	
 #        file_in.close()
+        if np.isnan(np.sum(data)):
+            raise Exception("util_2d.load_txt() error: np.NaN in data array")
         data.resize(nrow, ncol)
         return data
 
