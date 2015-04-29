@@ -324,8 +324,8 @@ class Mt3dBtn(Package):
         else:            
             f_btn.write('{0:10d}\n'.format(len(self.timprs)))        
             timprs = util_2d(self.parent, (len(self.timprs),),
-                             np.int, self.timprs, name='timprs',
-                             fmtin='(8F10.0)')
+                             np.float32, self.timprs, name='timprs',
+                             fmtin='(8G10.4)')
             f_btn.write(timprs.string)
         # OBS
         if (self.obs == None):            
