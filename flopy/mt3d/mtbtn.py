@@ -146,7 +146,7 @@ class Mt3dBtn(Package):
                  munit='KG', prsity=0.30, icbund=1, sconc=0.0,
                  cinact=1e30, thkmin=0.01, ifmtcn=0, ifmtnp=0, 
                  ifmtrf=0, ifmtdp=0, savucn=True, nprs=0, timprs=None,
-                 obs=None,nprobs=1, chkmas=True, nprmas=1, dt0=0,
+                 obs=None, nprobs=1, chkmas=True, nprmas=1, dt0=0,
                  mxstrn=50000, ttsmult=1.0, ttsmax=0, 
                  species_names=[], extension='btn',**kwargs):
         Package.__init__(self, model, extension, 'BTN', 31) 
@@ -183,7 +183,7 @@ class Mt3dBtn(Package):
         self.sconc = []
         u3d = util_3d(model, (nlay, nrow, ncol), np.float32, sconc,
                 name='sconc1', locat=self.unit_number[0])
-        self.sconc = [u3d]
+        self.sconc.append(u3d)
         if ncomp > 1:
             for icomp in xrange(2,ncomp+1):
                 name = "sconc"+str(icomp)
@@ -344,10 +344,10 @@ class Mt3dBtn(Package):
         f_btn.write('{0:>10s}{1:10d}\n'.format(ss, self.nprmas))
         # PERLEN, NSTP, TSMULT
         for t in range(nper):            
-            f_btn.write('{0:10.4g}{1:10d}{2:10f}\n'
+            f_btn.write('{0:10.4G}{1:10d}{2:10.4G}\n'
                         .format(ModflowDis.perlen[t], ModflowDis.nstp[t],
                         ModflowDis.tsmult[t]))
-            f_btn.write('{0:10f}{1:10d}{2:10f}{3:10f}\n'
+            f_btn.write('{0:10.4G}{1:10d}{2:10.4G}{3:10.4G}\n'
                         .format(self.dt0[t], self.mxstrn[t],
                         self.ttsmult[t], self.ttsmax[t]))
         f_btn.close() 

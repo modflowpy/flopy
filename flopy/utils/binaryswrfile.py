@@ -11,36 +11,36 @@ class SwrBinaryStatements:
     realbyte = 8
     textbyte = 4
     def read_integer(self):
-        intvalue=strct.unpack('i',self.file.read(1*SWRReadBinaryStatements.integerbyte))[0]
+        intvalue=strct.unpack('i',self.file.read(1*SwrBinaryStatements.integerbyte))[0]
         return intvalue
     def read_real(self):
-        realvalue=strct.unpack('d',self.file.read(1*SWRReadBinaryStatements.realbyte))[0]
+        realvalue=strct.unpack('d',self.file.read(1*SwrBinaryStatements.realbyte))[0]
         return realvalue
     def read_text(self):
-        textvalue=np.fromfile(file = self.file, dtype=SWRReadBinaryStatements.character, count=16).tostring()
+        textvalue=np.fromfile(file = self.file, dtype=SwrBinaryStatements.character, count=16).tostring()
         return textvalue
     def read_obs_text(self,nchar=20):
-        textvalue=np.fromfile(file = self.file, dtype=MFReadBinaryStatements.character, count=nchar).tostring()
+        textvalue=np.fromfile(file = self.file, dtype=SwrBinaryStatements.character, count=nchar).tostring()
         return textvalue
     def read_record(self):
         if self.skip == True:
-            lpos = self.file.tell() + ( self.nrecord*self.items*SWRReadBinaryStatements.realbyte )
+            lpos = self.file.tell() + ( self.nrecord*self.items*SwrBinaryStatements.realbyte )
             self.file.seek(lpos)
-            x = np.zeros((self.nrecord*self.items),SWRReadBinaryStatements.real)
+            x = np.zeros((self.nrecord*self.items),SwrBinaryStatements.real)
         else:
-            x = np.fromfile(file=self.file,dtype=SWRReadBinaryStatements.real,count=self.nrecord*self.items)
+            x = np.fromfile(file=self.file,dtype=SwrBinaryStatements.real,count=self.nrecord*self.items)
         x.resize(self.nrecord,self.items)
         return x
     def read_items(self):
         if self.skip == True:
-            lpos = self.file.tell() + ( self.items * SWRReadBinaryStatements.realbyte )
+            lpos = self.file.tell() + ( self.items * SwrBinaryStatements.realbyte )
             self.file.seek(lpos)
-            x = np.zeros((self.items),SWRReadBinaryStatements.real)
+            x = np.zeros((self.items),SwrBinaryStatements.real)
         else:
-            x = np.fromfile(file=self.file,dtype=SWRReadBinaryStatements.real,count=self.items)
+            x = np.fromfile(file=self.file,dtype=SwrBinaryStatements.real,count=self.items)
         return x
     def read_1dintegerarray(self):
-        i = np.fromfile(file=self.file,dtype=SWRReadBinaryStatements.integer,count=self.nrecord)
+        i = np.fromfile(file=self.file,dtype=SwrBinaryStatements.integer,count=self.nrecord)
         return i
 
 class SwrObs(SwrBinaryStatements):
@@ -160,7 +160,7 @@ class SwrObs(SwrBinaryStatements):
         point_offset = long(0)
         totim,success=self.read_header()
         idx = (ipos)
-        lpos1 = self.file.tell() + idx*SWRReadBinaryStatements.realbyte
+        lpos1 = self.file.tell() + idx*SwrBinaryStatements.realbyte
         self.file.seek(lpos1)
         point_offset = self.file.tell() - lpos0
         return point_offset
@@ -431,9 +431,9 @@ class SwrFile(SwrBinaryStatements):
         return totim,dt,kper,kstp,swrstp,True,r
 
     def read_qaq(self):
-        x = np.zeros((self.nqaqentries,self.items), SWRReadBinaryStatements.real)                
+        x = np.zeros((self.nqaqentries,self.items), SwrBinaryStatements.real)                
         if self.skip == True:
-            bytes = self.nqaqentries * (SWRReadBinaryStatements.integerbyte + 8*SWRReadBinaryStatements.realbyte)
+            bytes = self.nqaqentries * (SwrBinaryStatements.integerbyte + 8*SwrBinaryStatements.realbyte)
             lpos = self.file.tell() + ( bytes )
             self.file.seek(lpos)
         else:
@@ -502,7 +502,7 @@ class SwrFile(SwrBinaryStatements):
         #--stage and reach group terms
         elif self.type == 'stage' or self.type == 'reachgroup':
             idx = (rec_num-1)*self.items
-            lpos1 = self.file.tell() + idx*SWRReadBinaryStatements.realbyte
+            lpos1 = self.file.tell() + idx*SwrBinaryStatements.realbyte
             self.file.seek(lpos1)
             point_offset = self.file.tell() - lpos0
         #--connection flux and velocity terms
@@ -519,7 +519,7 @@ class SwrFile(SwrBinaryStatements):
             else:
                 self.dataAvailable = True
                 idx = (frec)*self.items
-                lpos1 = self.file.tell() + idx*SWRReadBinaryStatements.realbyte
+                lpos1 = self.file.tell() + idx*SwrBinaryStatements.realbyte
                 self.file.seek(lpos1)
                 point_offset = self.file.tell() - lpos0
         return point_offset

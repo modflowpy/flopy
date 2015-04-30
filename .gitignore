@@ -27,6 +27,7 @@ var/
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+MANIFEST
 
 # Installer logs
 pip-log.txt
@@ -47,6 +48,9 @@ coverage.xml
 # Django stuff:
 *.log
 
+# shell stuff
+*.sh
+
 # Sphinx documentation
 docs/_build/
 
@@ -54,5 +58,8 @@ docs/_build/
 target/
 flopy/.idea
 
-examples/basic/data
-examples/basic/.ipynb_checkpoints
+examples/Notebooks/data
+examples/Notebooks/.ipynb_checkpoints
+examples/Testing/.idea
+examples/Testing/data
+examples/Testing/.ipynb_checkpoints

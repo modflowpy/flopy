@@ -1,3 +1,4 @@
+import sys
 from flopy.mbase import Package
 
 class ModflowPcgn(Package):
@@ -8,6 +9,10 @@ class ModflowPcgn(Package):
                  adamp=0, damp=1.0, damp_lb=0.001, rate_d=0.1, chglimit=0., \
                  acnvg=0, cnvg_lb=0.001, mcnvg=2, rate_c=-1.0, ipunit=0, \
                  extension=['pcgn'], unit_number=27):
+        """
+        Package constructor.
+
+        """
         name = ['PCGN']
         units = [unit_number]
         extra = ['']
@@ -47,9 +52,15 @@ class ModflowPcgn(Package):
         #--add package
         self.parent.add_package(self)
 
+
     def __repr__( self ):
         return 'Preconditioned conjugate gradient solver with improved nonlinear control package class'
+
     def write_file(self):
+        """
+        Write the package input file.
+
+        """
         # Open file for writing
         f_pcgn = open(self.fn_path, 'w')
         f_pcgn.write( '{0:s}\n'.format(self.heading) )
@@ -59,3 +70,50 @@ class ModflowPcgn(Package):
         f_pcgn.write( ' {0:9d} {1:9.3g} {2:9d} {3:9.3g} {4:9d}\n'.format( self.acnvg, self.cnvg_lb, self.mcnvg, self.rate_c, self.ipunit ) )
         f_pcgn.close()
 
+    @staticmethod
+    def load(f, model, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        pcgn : ModflowPcgn object
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> pcgn = flopy.modflow.ModflowPcgn.load('test.pcgn', m)
+
+        """
+
+        if model.verbose:
+            sys.stdout.write('loading pcgn package file...\n')
+
+        if type(f) is not file:
+            filename = f
+            f = open(filename, 'r')
+        #dataset 0 -- header
+
+        print '   Warning: load method not completed. default pcgn object created.'
+
+        #--close the open file
+        f.close()
+
+        pcgn = ModflowPcgn(model)
+        return pks

@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
@@ -22,39 +23,43 @@ class ModflowWel(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    iwelcb : int
+    ipakcb : int
         is a flag and a unit number. (the default is 0).
-    layer_row_column_data : list of records
-        In its most general form, this is a triple list of well records  The
-        innermost list is the layer, row, column, and flux rate for a single
-        well.  Then for a stress period, there can be a list of wells.  Then
-        for a simulation, there can be a separate list for each stress period.
-        This gives the form of
-            lrcq = [
-                     [  #stress period 1
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ],
-                     [  #stress period 2
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ], ...
-                     [  #stress period kper
-                       [l1, r1, c1, q1],
-                       [l2, r2, c2, q2],
-                       [l3, r3, c3, q3],
-                       ],
-                    ]
-        Note that if there are not records in layer_row_column_data, then the
-        last group of wells will apply until the end of the simulation.
-    layer_row_column_Q : list of records
-        Deprecated - use layer_row_column_data instead.
+    stress_period_data : list of boundaries or
+                         recarray of boundaries or
+                         dictionary of boundaries
+        Each well is defined through definition of
+        layer (int), row (int), column (int), flux (float).
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. This gives the form of
+            stress_period_data =
+            {0: [
+                [lay, row, col, flux],
+                [lay, row, col, flux],
+                [lay, row, col, flux]
+                ],
+            1:  [
+                [lay, row, col, flux],
+                [lay, row, col, flux],
+                [lay, row, col, flux]
+                ], ...
+            kper:
+                [
+                [lay, row, col, flux],
+                [lay, row, col, flux],
+                [lay, row, col, flux]
+                ]
+            }
+
+        Note that if the number of lists is smaller than the number of stress
+        periods, then the last list of wells will apply until the end of the
+        simulation. Full details of all options to specify stress_period_data
+        can be found in the flopy3 boundaries Notebook in the basic
+        subdirectory of the examples directory
     options : list of strings
         Package options. (default is None).
-    naux : int
-        number of auxiliary variables
     extension : string
         Filename extension (default is 'wel')
     unitnumber : int
@@ -65,7 +70,7 @@ class ModflowWel(Package):
     mxactw : int
         Maximum number of wells for a stress period.  This is calculated
         automatically by FloPy based on the information in
-        layer_row_column_data.
+        stress_period_data.
 
     Methods
     -------
@@ -82,12 +87,12 @@ class ModflowWel(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcq = [[[2, 3, 4, -100.]]]  #this well will be applied to all stress
+    >>> lrcq = {0:[[2, 3, 4, -100.]], 1:[[2, 3, 4, -100.]]}
     >>>                              #periods
-    >>> wel = flopy.modflow.ModflowWel(m, layer_row_column_data=lrcq)
+    >>> wel = flopy.modflow.ModflowWel(m, stress_period_data=lrcq)
 
     """
-    def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
+    def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
                  extension='wel', unitnumber=20, options=None):
         """
         Package constructor.
@@ -116,7 +121,7 @@ class ModflowWel(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype()
-        self.stress_period_data = mflist(model,self.dtype,stress_period_data)
+        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
 
     def __repr__( self ):
         return 'Well package class'
@@ -163,11 +168,11 @@ class ModflowWel(Package):
         #get an empty recaray that correponds to dtype
         dtype = ModflowWel.get_default_dtype()
         if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype,aux_names,np.float32)
-        d = np.zeros((ncells,len(dtype)),dtype=dtype)
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        d = np.zeros((ncells, len(dtype)), dtype=dtype)
 
-        d[:,:] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+        d[:, :] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
@@ -201,154 +206,15 @@ class ModflowWel(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> wel = flopy.modflow.mfwel.load('test.wel', m)
+        >>> wel = flopy.modflow.ModflowWel.load('test.wel', m)
 
         """
-#        dtype = np.dtype([("layer", np.int), ("row", np.int),
-#                          ("column", np.int), ("flux", np.float32)])
-#        if type(f) is not file:
-#            filename = f
-#            f = open(filename, 'r')
-#        #dataset 0 -- header
-#        while True:
-#            line = f.readline()
-#            if line[0] != '#':
-#                break
-#        #--check for parameters
-#        if "parameter" in line.lower():
-#            t = line.strip().split()
-#            #assert int(t[1]) == 0,"Parameters are not supported"
-#            npwel = np.int(t[1])
-#            mxl = 0
-#            if npwel > 0:
-#                mxl = np.int(t[2])
-#            line = f.readline()
-#        #dataset 2a
-#        t = line.strip().split()
-#        #mxactw, iwelcb = t[0:3]
-#        mxactw = int(t[0])
-#        iwelcb = 0
-#        try:
-#            if int(t[1]) != 0:
-#                iwelcb = 53
-#        except:
-#            pass
-#
-#        options = []
-#        naux = 0
-#        if len(t) > 2:
-#            for toption in t[3:-1]:
-#                if toption.lower() is 'noprint':
-#                    options.append(toption)
-#                elif 'aux' in toption.lower():
-#                    naux += 1
-#                    options.append(toption)
-#        
-#        #--read phiramp for modflow-nwt
-#        specify = False
-#        ipos = f.tell()
-#        line = f.readline()
-#        #--test for specify keyword if a NWT well file - This is a temporary hack
-#        if 'specify' in line.lower():
-#            readNext = False
-#            specify = True
-#            line = f.readline() #ditch line -- possibly save for NWT output
-#            t = line.strip().split()
-#            phiramp = np.float32(t[1])
-#            try:
-#                phiramp_unit = np.int32(t[2])
-#            except:
-#                phiramp_unit = 2
-#        else:
-#            f.seek(ipos)
-#                
-#        
-#        #--number of columns to read
-#        nitems = 4 + naux
-#
-#        #--read parameter data
-#        iparpos = 4
-#        if npwel > 0:
-#            well_parms = mfparbc.load(f, npwel, nitems)
-#        
-#        if nper is None:
-#            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-#            
-#        #read data for every stress period
-#        stress_period_data = {}
-#        current = []
-#        currentp = []
-#        for iper in xrange(nper):
-#            print "   loading wells for kper {0:5d}".format(iper+1)
-#            line = f.readline()
-#            t = line.strip().split()
-#            itmp = int(t[0])
-#            itmpnp = 0
-#            try:
-#                itmpnp = int(t[1])
-#            except:
-#                pass
-#
-#            if itmp == 0:
-#                current = []
-#            elif itmp > 0:
-#                for ibnd in xrange(itmp):
-#                    line = f.readline()
-#                    t = line.strip().split()
-#                    bnd = []
-#                    for jdx in xrange(nitems):
-#                        if jdx < 3:
-#                            bnd.append(int(t[jdx])-1) #convert to zero-based.
-#                        else:
-#                            bnd.append(float(t[jdx]))
-#                    current.append(bnd)
-#            #--parameters
-#            currentp = []
-#            for iparm in xrange(itmpnp):
-#                line = f.readline()
-#                t = line.strip().split()
-#                pname = t[0].lower()
-#                iname = 'static'
-#                try:
-#                    tn = t[1]
-#                    iname = tn
-#                except:
-#                    pass
-#                print pname, iname
-#                par_dict, current_dict = well_parms.get(pname)
-#                data_dict = current_dict[iname]
-#                print par_dict
-#                print data_dict
-#                
-#                #--
-#                parval = np.float(par_dict['parval'])
-#                for d in data_dict:
-#                    bnd = []
-#                    for jdx in xrange(len(d)):
-#                        if jdx < 3:
-#                            bnd.append(int(d[jdx])-1) #convert to zero-based.
-#                        elif jdx == (iparpos-1):
-#                            bnd.append(parval * float(d[jdx]))
-#                        else:
-#                            bnd.append(float(d[jdx]))
-#                    currentp.append(bnd)
-#                         
-#            current_out = []
-#            if len(current)> 0:
-#                current_out = list(current)
-#            if len(currentp) > 0:
-#                current_out = current_out + list(currentp)
-#            if len(current_out) > 0:
-#                print np.array(current_out).shape
-#                print np.array(current_out)
-#                stress_period_data[iper] = np.array(current_out)
-#        if specify:
-#            wel = ModflowWel(model, iwelcb, stress_period_data=stress_period_data, 
-#                             options=options, 
-#                             specify=specify, phiramp=phiramp, phiramp_unit=phiramp_unit)
-#        else:
-#            wel = ModflowWel(model, iwelcb, stress_period_data=stress_period_data, 
-#                             options=options)
-#        return wel
-        return Package.load(model,ModflowWel,f,nper)
+
+        if model.verbose:
+            sys.stdout.write('loading wel package file...\n')
+
+        return Package.load(model, ModflowWel, f, nper)
+
+
+
 

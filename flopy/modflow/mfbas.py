@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_3d
@@ -97,7 +98,7 @@ class ModflowBas(Package):
 
     def getibound(self):
         """
-        Return the ibound array.
+        Get ibound array.
 
         Returns
         -------
@@ -173,17 +174,21 @@ class ModflowBas(Package):
         Returns
         -------
         bas : ModflowBas object
-            ModflowBas object (of type :class:`flopy.modflow.mfbas.ModflowBas`)
+            ModflowBas object (of type :class:`flopy.modflow.ModflowBas`)
 
         Examples
         --------
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> bas = flopy.modflow.mfbas.load('test.bas', m, nlay=1, nrow=10,
-                                          ncol=10)
+        >>> bas = flopy.modflow.ModflowBas.load('test.bas', m, nlay=1, nrow=10,
+        >>>                                      ncol=10)
 
         """
+
+        if model.verbose:
+            sys.stdout.write('loading bas6 package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')

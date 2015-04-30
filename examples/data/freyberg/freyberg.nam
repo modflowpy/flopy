@@ -1,0 +1,12 @@
+LIST 7 freyberg.lst
+BAS6  1 freyberg.bas
+DIS  29 freyberg.dis
+LPF 11 freyberg.lpf
+WEL 12 freyberg.wel
+RIV 14 freyberg.riv
+RCH 18 freyberg.rch
+OC  22 freyberg.oc
+PCG 19 freyberg.pcg
+DATA(BINARY) 50 freyberg.cbb
+DATA(BINARY) 30 freyberg.hds
+DATA(BINARY) 31 freyberg.ddn

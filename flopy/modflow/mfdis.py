@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
@@ -119,13 +120,15 @@ class ModflowDis(Package):
         self.perlen = util_2d(model, (self.nper,), np.float32, perlen,
                               name='perlen')
         self.nstp = util_2d(model, (self.nper,), np.int, nstp, name='nstp')
-        self.tsmult = util_2d(model, (self.nper,), np.float32,tsmult,
+        self.tsmult = util_2d(model, (self.nper,), np.float32, tsmult,
                               name='tsmult')
         self.steady = util_2d(model, (self.nper,), np.bool,
                               steady,name='steady')
         self.itmuni = itmuni
         self.lenuni = lenuni
         self.parent.add_package(self)
+        self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
+                            3: "hours", 4: "days", 5: "years"}
 
     def checklayerthickness(self):
         """
@@ -399,19 +402,22 @@ class ModflowDis(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> dis = flopy.modflow.mfbas.load('test.dis', m)
+        >>> dis = flopy.modflow.ModflowDis.load('test.dis', m)
 
         """
+
+        if model.verbose:
+            sys.stdout.write('loading dis package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
-        #dataset 1
-        #t = line.strip().split()
+        # dataset 1
         nlay, nrow, ncol, nper, itmuni, lenuni = line.strip().split()[0:6]
         nlay = int(nlay)
         nrow = int(nrow)
@@ -419,14 +425,15 @@ class ModflowDis(Package):
         nper = int(nper)
         itmuni = int(itmuni)
         lenuni = int(lenuni)
-        #dataset 2 -- laycbd
-        print 'Loading DIS file with {0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol, nper)
-        print '   loading laycbd...'
+        # dataset 2 -- laycbd
+        if model.verbose:
+            print '   Loading dis package with:\n      ' + \
+                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol,nper)
+            print '   loading laycbd...'
         laycbd = np.empty( (nlay), dtype=np.int)
         d = 0
         while True:
             line = f.readline()
-            #print line
             raw = line.strip('\n').split()
             for val in raw:
                 laycbd[d] = np.int(val)
@@ -436,26 +443,31 @@ class ModflowDis(Package):
             if d == nlay:
                 break
         #dataset 3 -- delr
-        print '   loading delr...'
+        if model.verbose:
+            print '   loading delr...'
         delr = util_2d.load(f, model, (1, ncol), np.float32, 'delr',
                             ext_unit_dict)
         delr = delr.array.reshape( (ncol) )
         #dataset 4 -- delc
-        print '   loading delc...'
+        if model.verbose:
+            print '   loading delc...'
         delc = util_2d.load(f, model, (1, nrow), np.float32, 'delc',
                             ext_unit_dict)
         delc = delc.array.reshape( (nrow) )
         #dataset 5 -- top
-        print '   loading top...'
+        if model.verbose:
+            print '   loading top...'
         top = util_2d.load(f, model, (nrow,ncol), np.float32, 'top',
                            ext_unit_dict)
         #dataset 6 -- botm
-        print '   loading botm...'
+        if model.verbose:
+            print '   loading botm...'
         ncbd=laycbd.sum()
         botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
                             'botm', ext_unit_dict)
         #dataset 7 -- stress period info
-        print '   loading stress period data...'
+        if model.verbose:
+            print '   loading stress period data...'
         perlen = []
         nstp = []
         tsmult = []
@@ -474,7 +486,101 @@ class ModflowDis(Package):
             nstp.append(a2)
             tsmult.append(a3)
             steady.append(a4)
+
+        #--create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd, 
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
                          lenuni)
+        #--return dis object instance
         return dis
+
+
+    def plot(self):
+        try:
+            import pylab as plt
+        except Exception as e:
+            print "error importing pylab: " + str(e)
+            return
+
+        #get the bas for ibound masking
+        bas = self.parent.bas6
+        if bas is not None:
+            ibnd = bas.getibound()
+        else:
+            ibnd = np.ones((self.nlay, self.nrow, self.ncol))
+
+        cmap = plt.cm.winter
+        cmap.set_bad('w', 1.0)
+        fs = 5
+
+        #the width and height of each subplot
+        delt = 2.0
+        shape = (2, self.nlay+1)
+        fig = plt.figure(figsize=(delt+(self.nlay*delt), delt * 2.0))
+        #fig = plt.figure()
+
+        #plot the time stepping info in the upper left corner
+        ax_time = plt.subplot2grid(shape, (0, 0))
+        ax_time.set_title("time stepping information", fontsize=fs)
+        idx = np.arange((self.nper))
+        width = 0.5
+        bars = ax_time.bar(idx, self.perlen, width=width, edgecolor="none",
+                    facecolor='b')
+        for s, b in zip(self.steady, bars):
+            if s:
+                b.set_color('b')
+            else:
+                b.set_color('c')
+
+        ax_time.set_xticks(idx+(width/2.0))
+        ax_time.set_xticklabels(idx, fontsize=fs, rotation=90)
+        ax_time.set_xlabel("stress period", fontsize=fs)
+        ax_time.set_ylabel("time (" + self.itmuni_dict[self.itmuni] + ")",
+                           fontsize=fs)
+        ax_time.set_yticklabels(ax_time.get_yticks(), fontsize=fs)
+
+        #plot model top in the lower left
+        ax_top = plt.subplot2grid(shape, (1, 0),aspect='equal')
+        top = self.top.array
+        top = np.ma.masked_where(ibnd[0] == 0, top)
+        ax_top.set_xlabel("column", fontsize=fs)
+        ax_top.set_ylabel("row", fontsize=fs)
+        ax_top.imshow(top, cmap=cmap, alpha=0.7, interpolation="none")
+        ax_top.set_title("model top - max,min: {0:G},{1:G}"
+                         .format(top.max(), top.min()), fontsize=fs)
+        ax_top.set_xticklabels(ax_top.get_xticks(), fontsize=fs)
+        ax_top.set_yticklabels(ax_top.get_yticks(), fontsize=fs)
+
+
+        botm = self.botm.array
+        for k in xrange(self.nlay):
+            ax_botm = plt.subplot2grid(shape, (0, k+1), aspect="equal")
+            ax_thk = plt.subplot2grid(shape, (1, k+1), aspect="equal")
+            ax_thk.set_xlabel("column", fontsize=fs)
+            ax_thk.set_xlabel("row", fontsize=fs)
+            #botm for this layer
+            b = botm[k]
+            b = np.ma.masked_where(ibnd[k] == 0, b)
+            ax_botm.imshow(b,cmap=cmap, alpha=0.7,
+                           interpolation="none")
+            ax_botm.set_title("botm of layer {0:d} - max,min : {1:G},{2:G}"
+                              .format(k+1, b.max(), b.min()), fontsize=fs)
+            #thickness of this layer
+            if k == 0:
+                t = top - botm[k]
+            else:
+                t = botm[k-1] - botm[k]
+            t = np.ma.masked_where(ibnd[k] == 0, t)
+            ax_thk.imshow(t,cmap=cmap, alpha=0.7,
+                           interpolation="none")
+            ax_thk.set_title("thickness of layer {0:d} - max,min : {1:G},{2:G}"
+                             .format(k+1, t.max(), t.min()), fontsize=fs)
+            ax_thk.set_yticklabels([])
+            ax_botm.set_yticklabels([])
+            ax_botm.set_xticklabels([])
+            ax_thk.set_xlabel("column", fontsize=fs)
+            ax_thk.set_xticklabels(ax_thk.get_xticks(), fontsize=fs)
+        plt.tight_layout()
+        plt.show()
+
+

@@ -8,9 +8,10 @@ MODFLOW Guide
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d,util_3d
+from flopy.utils import util_2d, util_3d, read1d
 from flopy.modflow.mfpar import ModflowPar as mfpar
 
 class ModflowLpf(Package):
@@ -202,7 +203,7 @@ class ModflowLpf(Package):
         # Item 0: text
         f_lpf.write('%s\n' % self.heading)
         # Item 1: IBCFCB, HDRY, NPLPF        
-        f_lpf.write('{0:10d}{1:10.3G}{2:10d},{3:s}\n'.format(self.ilpfcb,
+        f_lpf.write('{0:10d}{1:10.6G}{2:10d} {3:s}\n'.format(self.ilpfcb,
                                                              self.hdry,
                                                              self.nplpf,
                                                              self.options))
@@ -240,7 +241,7 @@ class ModflowLpf(Package):
         return
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None, zone_dict=None, mlt_dict=None):
+    def load(f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -268,9 +269,13 @@ class ModflowLpf(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> lpf = flopy.modflow.mflpf.load('test.lpf', m)
+        >>> lpf = flopy.modflow.ModflowLpf.load('test.lpf', m)
 
         """
+
+        if model.verbose:
+            sys.stdout.write('loading lpf package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -282,10 +287,12 @@ class ModflowLpf(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
-        print '   loading IBCFCB, HDRY, NPLPF...'
+        if model.verbose:
+            print '   loading IBCFCB, HDRY, NPLPF...'
         t = line.strip().split()
         ilpfcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         if ilpfcb != 0:
+            model.add_pop_key_list(ilpfcb)
             ilpfcb = 53
         # options
         storagecoefficient = False
@@ -306,42 +313,44 @@ class ModflowLpf(Package):
                 elif 'NOVFC' in t[k].upper():
                     novfc = True
         # LAYTYP array
-        print '   loading LAYTYP...'
-        line = f.readline()
-        t = line.strip().split()
-        laytyp = np.array((t[0:nlay]),dtype=np.int)
+        if model.verbose:
+            print '   loading LAYTYP...'
+        laytyp = np.empty((nlay), dtype=np.int)
+        laytyp = read1d(f, laytyp)
         # LAYAVG array
-        print '   loading LAYAVG...'
-        line = f.readline()
-        t = line.strip().split()
-        layavg = np.array((t[0:nlay]),dtype=np.int)
+        if model.verbose:
+            print '   loading LAYAVG...'
+        layavg = np.empty((nlay), dtype=np.int)
+        layavg = read1d(f, layavg)
         # CHANI array
-        print '   loading CHANI...'
-        line = f.readline()
-        t = line.strip().split()
-        chani = np.array((t[0:nlay]),dtype=np.float32)
+        if model.verbose:
+            print '   loading CHANI...'
+        chani = np.empty((nlay), dtype=np.float32)
+        chani = read1d(f, chani)
         # LAYVKA array
-        print '   loading LAYVKA...'
-        line = f.readline()
-        t = line.strip().split()
-        layvka = np.array((t[0:nlay]),dtype=np.int)
+        if model.verbose:
+            print '   loading LAYVKA...'
+        layvka = np.empty((nlay), dtype=np.float32)
+        layvka = read1d(f, layvka)
         # LAYWET array
-        print '   loading LAYWET...'
-        line = f.readline()
-        t = line.strip().split()
-        laywet = np.array((t[0:nlay]), dtype=np.int)
+        if model.verbose:
+            print '   loading LAYWET...'
+        laywet = np.empty((nlay), dtype=np.int)
+        laywet = read1d(f, laywet)
         # Item 7: WETFCT, IWETIT, IHDWET
         wetfct,iwetit,ihdwet = None, None, None
         iwetdry = laywet.sum()
         if iwetdry > 0:
-            print '   loading WETFCT, IWETIT, IHDWET...'
+            if model.verbose:
+                print '   loading WETFCT, IWETIT, IHDWET...'
             line = f.readline()
             t = line.strip().split()
             wetfct, iwetit, ihdwet = float(t[0]), int(t[1]), int(t[2])
 
         #--parameters data
+        par_types = []
         if nplpf > 0:
-            par_types, parm_dict = mfpar.load(f, nplpf)
+            par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
             #print parm_dict
 
         #--non-parameter data
@@ -354,7 +363,8 @@ class ModflowLpf(Package):
         vkcb = [0] * nlay
         wetdry = [0] * nlay
         for k in range(nlay):
-            print '   loading hk layer {0:3d}...'.format(k+1)
+            if model.verbose:
+                print '   loading hk layer {0:3d}...'.format(k+1)
             if 'hk' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
                                  ext_unit_dict)
@@ -363,7 +373,8 @@ class ModflowLpf(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
             hk[k] = t
             if chani[k] < 0:
-                print '   loading hani layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading hani layer {0:3d}...'.format(k+1)
                 if 'hani' not in par_types:
                     t = util_2d.load(f, model, (nrow, ncol), np.float32, 'hani',
                                      ext_unit_dict)
@@ -371,8 +382,9 @@ class ModflowLpf(Package):
                     line = f.readline()
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
-            print '   loading vka layer {0:3d}...'.format(k+1)
-            if 'vka' not in par_types:
+            if model.verbose:
+                print '   loading vka layer {0:3d}...'.format(k+1)
+            if 'vka' not in par_types and 'vani' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
                                  ext_unit_dict)
             else:
@@ -380,7 +392,8 @@ class ModflowLpf(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
             vka[k] = t
             if transient:
-                print '   loading ss layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading ss layer {0:3d}...'.format(k+1)
                 if 'ss' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
                                      ext_unit_dict)
@@ -389,7 +402,8 @@ class ModflowLpf(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'ss', parm_dict, findlayer=k)
                 ss[k] = t
                 if laytyp[k] != 0:
-                    print '   loading sy layer {0:3d}...'.format(k+1)
+                    if model.verbose:
+                        print '   loading sy layer {0:3d}...'.format(k+1)
                     if 'sy' not in par_types:
                         t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
                                          ext_unit_dict)
@@ -399,7 +413,8 @@ class ModflowLpf(Package):
                     sy[k] = t
             #if self.parent.get_package('DIS').laycbd[k] > 0:
             if model.get_package('DIS').laycbd[k] > 0:
-                print '   loading vkcb layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading vkcb layer {0:3d}...'.format(k+1)
                 if 'vkcb' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vkcb',
                                      ext_unit_dict)
@@ -408,10 +423,13 @@ class ModflowLpf(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
                 vkcb[k] = t
             if (laywet[k] != 0 and laytyp[k] != 0):
-                print '   loading wetdry layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading wetdry layer {0:3d}...'.format(k+1)
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'wetdry',
                                  ext_unit_dict)
                 wetdry[k] = t
+
+        #--create instance of lpf class
         lpf = ModflowLpf(model, ilpfcb=ilpfcb, laytyp=laytyp, layavg=layavg, chani=chani,
                          laywet=laywet,hdry=hdry, iwdflg=iwetdry,
                          wetfct=wetfct, iwetit=iwetit, ihdwet=ihdwet,
@@ -419,3 +437,4 @@ class ModflowLpf(Package):
                          wetdry=wetdry, storagecoefficient=storagecoefficient,
                          constantcv=constantcv,thickstrt=thickstrt,novfc=novfc)
         return lpf
+

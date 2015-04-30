@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d,util_3d
@@ -105,6 +106,10 @@ class ModflowUpw(Package):
         >>> lpf = flopy.modflow.ModflowUpw.load('test.upw', m)
 
         """
+
+        if model.verbose:
+            sys.stdout.write('loading upw package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
@@ -116,10 +121,12 @@ class ModflowUpw(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
-        print '   loading IUPWCB, HDRY, NPUPW, IPHDRY...'
+        if model.verbose:
+            print '   loading IUPWCB, HDRY, NPUPW, IPHDRY...'
         t = line.strip().split()
         iupwcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
         if iupwcb != 0:
+            model.add_pop_key_list(iupwcb)
             iupwcb = 53
         # options
         noparcheck = False
@@ -128,27 +135,32 @@ class ModflowUpw(Package):
                 if 'NOPARCHECK' in t[k].upper():
                     noparcheck = True
         # LAYTYP array
-        print '   loading LAYTYP...'
+        if model.verbose:
+            print '   loading LAYTYP...'
         line = f.readline()
         t = line.strip().split()
         laytyp = np.array((t[0:nlay]),dtype=np.int)
         # LAYAVG array
-        print '   loading LAYAVG...'
+        if model.verbose:
+            print '   loading LAYAVG...'
         line = f.readline()
         t = line.strip().split()
         layavg = np.array((t[0:nlay]),dtype=np.int)
         # CHANI array
-        print '   loading CHANI...'
+        if model.verbose:
+            print '   loading CHANI...'
         line = f.readline()
         t = line.strip().split()
         chani = np.array((t[0:nlay]),dtype=np.float32)
         # LAYVKA array
-        print '   loading LAYVKA...'
+        if model.verbose:
+            print '   loading LAYVKA...'
         line = f.readline()
         t = line.strip().split()
         layvka = np.array((t[0:nlay]),dtype=np.int)
         # LAYWET array
-        print '   loading LAYWET...'
+        if model.verbose:
+            print '   loading LAYWET...'
         line = f.readline()
         t = line.strip().split()
         laywet = np.array((t[0:nlay]),dtype=np.int)
@@ -159,8 +171,9 @@ class ModflowUpw(Package):
             raise Exception, 'LAYWET should be 0 for UPW'
 
         #--get parameters
+        par_types = []
         if npupw > 0:
-            par_types, parm_dict = mfpar.load(f, nplpf)
+            par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
 
         #--get arrays
         transient = not model.get_package('DIS').steady.all()
@@ -171,7 +184,8 @@ class ModflowUpw(Package):
         sy = [0] * nlay
         vkcb = [0] * nlay
         for k in range(nlay):
-            print '   loading hk layer {0:3d}...'.format(k+1)
+            if model.verbose:
+                print '   loading hk layer {0:3d}...'.format(k+1)
             if 'hk' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
                                  ext_unit_dict)
@@ -180,7 +194,8 @@ class ModflowUpw(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
             hk[k] = t
             if chani[k] < 1:
-                print '   loading hani layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading hani layer {0:3d}...'.format(k+1)
                 if 'hani' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hani',
                                      ext_unit_dict)
@@ -188,8 +203,9 @@ class ModflowUpw(Package):
                     line = f.readline()
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
-            print '   loading vka layer {0:3d}...'.format(k+1)
-            if 'vka' not in par_types:
+            if model.verbose:
+                print '   loading vka layer {0:3d}...'.format(k+1)
+            if 'vka' not in par_types and 'vani' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
                                  ext_unit_dict)
             else:
@@ -197,7 +213,8 @@ class ModflowUpw(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
             vka[k] = t
             if transient:
-                print '   loading ss layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading ss layer {0:3d}...'.format(k+1)
                 if 'ss' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
                                      ext_unit_dict)
@@ -206,7 +223,8 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'ss', parm_dict, findlayer=k)
                 ss[k] = t
                 if laytyp[k] != 0:
-                    print '   loading sy layer {0:3d}...'.format(k+1)
+                    if model.verbose:
+                        print '   loading sy layer {0:3d}...'.format(k+1)
                     if 'sy' not in par_types:
                         t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
                                          ext_unit_dict)
@@ -215,7 +233,8 @@ class ModflowUpw(Package):
                         t = mfpar.parameter_fill(model, (nrow, ncol), 'sy', parm_dict, findlayer=k)
                     sy[k] = t
             if model.get_package('DIS').laycbd[k] > 0:
-                print '   loading vkcb layer {0:3d}...'.format(k+1)
+                if model.verbose:
+                    print '   loading vkcb layer {0:3d}...'.format(k+1)
                 if 'vkcb' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vkcb',
                                      ext_unit_dict)
@@ -224,11 +243,64 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
                 vkcb[k] = t
 
-        #create upw object
+        #--create upw object
         upw = ModflowUpw(model, iupwcb=iupwcb, iphdry=iphdry, hdry=hdry,
                          noparcheck=noparcheck,
                          laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet,
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb)
+
+        #--return upw object
         return upw
+
+    def plot(self):
+
+        try:
+            import pylab as plt
+        except Exception as e:
+            print "error importing pylab: " + str(e)
+            return
+
+        #get the bas for ibound masking
+        bas = self.parent.bas6
+        if bas is not None:
+            ibnd = bas.getibound()
+        else:
+            ibnd = np.ones((self.parent.nlay, self.parent.nrow,
+                            self.parent.ncol), dtype=np.int)
+
+        cmap = plt.cm.winter
+        cmap.set_bad('w', 1.0)
+        fs = 5
+
+        nlay = self.parent.nlay
+
+        #the width and height of each subplot
+        delt = 2.0
+
+        props = [self.hk.array, self.vka.array, self.ss.array, self.sy.array]
+        names = ["hk", "vk", "ss", "sy"]
+        shape = (len(names), nlay+1)
+        fig = plt.figure(figsize=(delt+(nlay*delt), delt * len(names)))
+        for k in xrange(nlay):
+            for iname, name in enumerate(names):
+                ax = plt.subplot2grid(shape, (iname, k), aspect="equal")
+                p = props[iname][k]
+                p = np.ma.masked_where(ibnd[k] == 0, p)
+                ax.imshow(p, cmap=cmap, alpha=0.7,
+                          interpolation="none")
+                ax.set_title(name + " of layer {0:d} - max,min : {1:G},{2:G}"
+                             .format(k+1, p.max(), p.min()), fontsize=fs)
+                if k == 0:
+                    ax.set_ylabel("row", fontsize=fs)
+                    ax.set_yticklabels(ax.get_yticks(), fontsize=fs)
+                else:
+                    ax.set_yticklabels([])
+                if iname == len(names)-1:
+                    ax.set_xticklabels(ax.get_xticks(), fontsize=fs)
+                    ax.set_xlabel("column", fontsize=fs)
+                else:
+                    ax.set_xticklabels([])
+        plt.tight_layout()
+        plt.show()
 

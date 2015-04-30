@@ -1,9 +1,179 @@
-﻿import numpy as np
+﻿import sys
+import numpy as np
 from flopy.mbase import Package
 from flopy.utils import util_2d
 
+
 class ModflowUzf1(Package):
-    'UZF1 class'
+    """
+    MODFLOW Unsaturated Zone Flow 1 Boundary Package Class.
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    nuztop : integer
+        used to define which cell in a vertical column that recharge and discharge is simulated.
+            1 Recharge to and discharge from only the top model layer. This option assumes land surface is defined
+              as top of layer 1.
+            2 Recharge to and discharge from the specified layer in variable IUZFBND. This option assumes land
+              surface is defined as top of layer specified in IUZFBND.
+            3 Recharge to and discharge from the highest active cell in each vertical column. Land surface is
+              determined as top of layer specified in IUZFBND. A constant head node intercepts any recharge and
+              prevents deeper percolation.
+        (default is 1)
+    iuzfopt : integer
+        equal to 1 or 2. A value of 1 indicates that the vertical hydraulic conductivity will be
+        specified within the UZF1 Package input file using array VKS. A value of 2 indicates that the vertical
+        hydraulic conductivity will be specified within either the BCF or LPF Package input file.
+        (default is 0)
+    irunflg : integer
+        specifies whether ground water that discharges to land surface will be routed to stream
+        segments or lakes as specified in the IRUNBND array (IRUNFLG not equal to zero) or if ground-water
+        discharge is removed from the model simulation and accounted for in the ground-water budget as a loss of
+        water (IRUNFLG=0). The Streamflow-Routing (SFR2) and(or) the Lake (LAK3) Packages must be active if
+        IRUNFLG is not zero.
+        (default is 0
+    ietflg : integer
+        specifies whether or not evapotranspiration (ET) will be simulated. ET will not be
+        simulated if IETFLG is zero, otherwise it will be simulated.
+        (default is 0)
+    iuzfcb1 : integer
+        flag for writing ground-water recharge, ET, and ground-water discharge to land
+        surface rates to a separate unformatted file using subroutine UBUDSV. If IUZFCB1>0, it is the unit number
+        to which the cell-by-cell rates will be written when 'SAVE BUDGET' or a non-zero value for ICBCFL is
+        specified in Output Control. If IUZFCB1 less than or equal to 0, cell-by-cell rates will not be written to a
+        file.
+        (default is 57)
+    iuzfcb2 : integer
+        flag for writing ground-water recharge, ET, and ground-water discharge to land
+        surface rates to a separate unformatted file using module UBDSV3. If IUZFCB2>0, it is the unit number to
+        which cell-by-cell rates will be written when 'SAVE BUDGET' or a non-zero value for ICBCFL is specified
+        in Output Control. If IUZFCB2 less than or equal to 0, cell-by-cell rates will not be written to file.
+        (default is 0)
+    ntrail2 : integer
+        equal to the number of trailing waves used to define the water-content profile following a
+        decrease in the infiltration rate. The number of trailing waves varies depending on the problem, but a range
+        between 10 and 20 is usually adequate. More trailing waves may decrease mass-balance error and will increase
+        computational requirements and memory usage.
+        (default is 10)
+    nsets : integer
+        equal to the number of wave sets used to simulate multiple infiltration periods. The number
+        of wave sets should be set to 20 for most problems involving time varying infiltration. The total number of
+        waves allowed within an unsaturated zone cell is equal to NTRAIL2*NSETS2. An error will occur if the
+        number of waves in a cell exceeds this value.
+        (default is 20)
+    nuzgag : integer
+        equal to the number of cells (one per vertical column) that will be specified for printing
+        detailed information on the unsaturated zone water budget and water content. A gage also may be used to print
+        the budget summed over all model cells.
+        (default is 0)
+    surfdep : float
+        The average height of undulations, D (Figure 1 in UZF documentation), in the land surface altitude.
+        (default is 1.0)
+    iuzfbnd : integer
+        used to define the aerial extent of the active model in which recharge and discharge
+        will be simulated.
+        (default is 1)
+    irunbnd : integer
+        used to define the stream segments within the Streamflow-Routing (SFR2) Package
+        or lake numbers in the Lake (LAK3) Package that overland runoff from excess infiltration and ground-water
+        discharge to land surface will be added. A positive integer value identifies the stream segment and a negative
+        integer value identifies the lake number.
+        (default is 0)
+    vks : float
+        used to define the saturated vertical hydraulic conductivity of the unsaturated
+        zone (LT-1).
+        (default is 1.0E-6)
+    eps : float
+        values for each model cell used to define the Brooks-Corey epsilon of the unsaturated
+        zone. Epsilon is used in the relation of water content to hydraulic conductivity (Brooks and Corey, 1966).
+        (default is 3.5)
+    thts : float
+        used to define the saturated water content of the unsaturated zone in units of
+        volume of water to total volume (L3L-3).
+        (default is 0.35)
+    thtr : float
+        used to define the residual water content for each vertical column of cells in units of volume of water to
+        total volume (L3L-3). THTR is the irreducible water content and the unsaturated water content cannot drain
+        to water contents less than THTR. This variable is not included unless the key word SPECIFYTHTR is specified.
+        (default is 0.15)
+    thti : float
+        used to define the initial water content for each vertical column of cells in
+        units of volume of water at start of simulation to total volume (L3L-3). THTI should not be specified for
+        steady-state simulations.
+       (default is 0.20)
+    row_col_iftunit_iuzopt : list
+        used to specify where information will be printed for each time step. IUZOPT specifies what that information
+        will be. IUZOPT is
+        1 Prints time, ground-water head, and thickness of unsaturated zone, and cumulative volumes of
+          infiltration, recharge, storage, change in storage and ground-water discharge to land surface.
+        2 Same as option 1 except rates of infiltration, recharge, change in storage, and ground-water discharge
+          also are printed.
+        3 Prints time, ground-water head, thickness of unsaturated zone, followed by a series of depths and
+          water contents in the unsaturated zone.
+        (default is [])
+    specifythtr : boolean
+        key word for specifying optional input variable THTR
+        (default is 0)
+    specifythti : boolean
+        key word for specifying optional input variable THTI.
+        (default is 0)
+    nosurfleak : boolean
+        key word for inactivating calculation of surface leakage.
+        (default is 0)
+    finf : float
+        used to define the infiltration rates (LT-1) at land surface for each vertical column of cells.
+        If FINF is specified as being greater than the vertical hydraulic conductivity then FINF is set equal to the
+        vertical unsaturated hydraulic conductivity. Excess water is routed to streams or lakes when IRUNFLG is not
+        zero, and if SFR2 or LAK3 is active.
+        (default is 1.0E-8)
+    pet : float
+        used to define the ET demand rates (L1T-1) within the ET extinction depth interval for each vertical
+        column of cells.
+        (default is 5.0E-8)
+    extdp : float
+        used to define the ET extinction depths.
+        The quantity of ET removed from a cell is limited by the volume of water stored in the unsaturated zone
+        above the extinction depth. If ground water is within the ET extinction depth, then the rate removed is based
+        on a linear decrease in the maximum rate at land surface and zero at the ET extinction depth. The linear
+        decrease is the same method used in the Evapotranspiration Package (McDonald and Harbaugh, 1988, chap. 10).
+        (default is 15.0)
+    extwc : float
+        used to define the extinction water content below which ET cannot be removed from the unsaturated zone.
+        EXTWC must have a value between (THTS-Sy) and THTS, where Sy is the specific yield specified in either the
+        LPF or BCF Package.
+        (default is 0.1)
+    uzfbud_ext : list
+        appears to be used for sequential naming of budget output files
+        (default is [])
+    extension : string
+        Filename extension (default is 'uzf')
+    unitnumber : int
+        File unit number (default is 19).
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+    Parameters are not supported in FloPy.
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> ml = flopy.modflow.Modflow()
+    >>> uzf = flopy.modflow.ModflowUzf1(ml, ...)
+
+    """
     def __init__(self, model, \
     nuztop = 1, iuzfopt = 0, irunflg = 0, ietflg = 0, iuzfcb1 = 57, iuzfcb2 = 0, ntrail2 = 10, nsets = 20, nuzgag = 0, surfdep = 1.0, \
     iuzfbnd = 1, irunbnd = 0, vks = 1.0E-6, eps = 3.5, thts = 0.35, thtr = 0.15, thti = 0.20, row_col_iftunit_iuzopt = [], \
@@ -278,23 +448,28 @@ class ModflowUzf1(Package):
         >>> uzf = flopy.modflow.ModflowUZF1.load('test.uzf', m)
 
         """
+        if model.verbose:
+            sys.stdout.write('loading uzf package file...\n')
+
         if type(f) is not file:
             filename = f
             f = open(filename, 'r')
+
         #dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
-        #dataset 1
+        #--dataset 1
 
-        #add functionality
-        print 'ModflowUzf1.load() method not fully implemented'
-        print 'empty uzf object is created'
+        #--todo: everything
+        print '   Warning: load method not completed. default uzf object created.'
 
-        #close the file
+        #--close the file
         f.close()
 
-        #create uzf object and return
+        #--create uzf object
         uzf = ModflowUzf1(model)
+
+        #--return default uzf object
         return uzf

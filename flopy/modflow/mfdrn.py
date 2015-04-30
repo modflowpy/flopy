@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?drn.htm>`_.
 
 """
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
@@ -21,39 +22,44 @@ class ModflowDrn(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    idrncb : int
-        is a flag and a unit number. (the default is 0).
-    layer_row_column_data : list of records
-        In its most general form, this is a triple list of drain records  The
-        innermost list is the layer, row, column, elevation and conductance for
-        a single drain.  Then for a stress period, there can be a list of
-        drains.  Then for a simulation, there can be a separate list for each
-        stress period. This gives the form of
-            lrcd = [
-                     [  #stress period 1
-                       [l1, r1, c1, elev1, cond1],
-                       [l2, r2, c2, elev2, cond2],
-                       [l3, r3, c3, elev3, cond3],
-                       ],
-                     [  #stress period 2
-                       [l1, r1, c1, elev1, cond1],
-                       [l2, r2, c2, elev2, cond2],
-                       [l3, r3, c3, elev3, cond3],
-                       ], ...
-                     [  #stress period kper
-                       [l1, r1, c1, elev1, cond1],
-                       [l2, r2, c2, elev2, cond2],
-                       [l3, r3, c3, elev3, cond3],
-                       ],
-                    ]
-        Note that if there are not records in layer_row_column_data, then the
-        last group of drains will apply until the end of the simulation.
-    layer_row_column_elevation_cond : list of records
-        Deprecated - use layer_row_column_data instead.
+    ipakcb : int
+        is a flag and a unit number. (default is 0).
+    stress_period_data : list of boundaries or
+                         recarray of boundaries or
+                         dictionary of boundaries
+        Each drain cell is defined through definition of
+        layer(int), row(int), column(int), elevation(float), conductance(float)
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. This gives the form of
+            stress_period_data =
+            {0: [
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                ],
+            1:  [
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                ], ...
+            kper:
+                [
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                [lay, row, col, stage, cond],
+                ]
+            }
+        Note that if no values are specified for a certain stress period, then
+        the list of boundaries for the previous stress period for which values
+        were defined is used. Full details of all options to specify
+        stress_period_data can be found in the flopy3boundaries Notebook in
+        the basic subdirectory of the examples directory
+    dtype : dtype definition
+        if data type is different from default
     options : list of strings
         Package options. (default is None).
-    naux : int
-        number of auxiliary variables
     extension : string
         Filename extension (default is 'drn')
     unitnumber : int
@@ -61,10 +67,6 @@ class ModflowDrn(Package):
 
     Attributes
     ----------
-    mxactd : int
-        Maximum number of drains for a stress period.  This is calculated
-        automatically by FloPy based on the information in
-        layer_row_column_data.
 
     Methods
     -------
@@ -80,13 +82,15 @@ class ModflowDrn(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 10., 100.]]]  #this drain will be applied to all
-    >>>                                  #stress periods
-    >>> drn = flopy.modflow.ModflowDrn(m, layer_row_column_data=lrcd)
+    >>> ml = flopy.modflow.Modflow()
+    >>> lrcec = {0:[2, 3, 4, 10., 100.]}  #this drain will be applied to all
+    >>>                                   #stress periods
+    >>> drn = flopy.modflow.ModflowDrn(ml, stress_period_data=lrcec)
+
     """
+
     def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
-                 extension ='drn', unitnumber=21, options=None,**kwargs):
+                 extension ='drn', unitnumber=21, options=None, **kwargs):
         """
         Package constructor
         """
@@ -105,6 +109,7 @@ class ModflowDrn(Package):
             self.dtype = self.get_default_dtype()
         self.stress_period_data = mflist(model, self.dtype, stress_period_data)
         self.parent.add_package(self)
+
     def __repr__( self ):
         return 'Drain class'
 
@@ -116,11 +121,15 @@ class ModflowDrn(Package):
         return dtype
 
     def ncells( self):
-        # Returns the  maximum number of cells that have drains (developped for MT3DMS SSM package)
+        # Returns the  maximum number of cells that have drains (developed for MT3DMS SSM package)
         #print 'Function must be implemented properly for drn package'
         return self.stress_period_data.mxact
 
     def write_file(self):
+        """
+        Write the file.
+
+        """
         f_drn = open(self.fn_path, 'w')
         f_drn.write('{0}\n'.format(self.heading))
         #f_drn.write('%10i%10i\n' % (self.mxactd, self.idrncb))
@@ -151,5 +160,38 @@ class ModflowDrn(Package):
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
+        """
+        Load an existing package.
 
-        return Package.load(model,ModflowDrn,f,nper)
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        drn : ModflowDrn object
+            ModflowDrn object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> drn = flopy.modflow.ModflowDrn.load('test.drn', m)
+
+        """
+
+        if model.verbose:
+            sys.stdout.write('loading drn package file...\n')
+
+        return Package.load(model, ModflowDrn, f, nper)

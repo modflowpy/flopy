@@ -4,10 +4,11 @@ the ModflowChd class as `flopy.modflow.ModflowChd`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?chd.htm>`_.
+<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/chd.htm>`_.
 
 """
 
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
@@ -21,7 +22,7 @@ class ModflowChd(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-       stress_period_data : list of boundaries or
+    stress_period_data : list of boundaries or
                          recarray of boundaries or
                          dictionary of boundaries
     Each chd cell is defined through definition of
@@ -148,5 +149,41 @@ class ModflowChd(Package):
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        nper : int
+            The number of stress periods.  If nper is None, then nper will be
+            obtained from the model object. (default is None).
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        chd : ModflowChd object
+            ModflowChd object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> wel = flopy.modflow.ModflowChd.load('test.chd', m)
+
+        """
+
+        if model.verbose:
+            sys.stdout.write('loading chd package file...\n')
 
         return Package.load(model, ModflowChd, f, nper)

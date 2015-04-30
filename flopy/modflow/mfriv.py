@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?riv.htm>`_.
 
 """
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
@@ -184,8 +185,11 @@ class ModflowRiv(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> riv = flopy.modflow.mfriv.load('test.riv', m)
+        >>> riv = flopy.modflow.ModflowRiv.load('test.riv', m)
 
         """
 
-        return Package.load(model,ModflowRiv,f,nper)
+        if model.verbose:
+            sys.stdout.write('loading riv package file...\n')
+
+        return Package.load(model, ModflowRiv, f, nper)

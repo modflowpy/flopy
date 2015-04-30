@@ -7,9 +7,12 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?hfb6.htm>`_.
 
 """
+import sys
+import numpy as np
 from flopy.mbase import Package
 from numpy import atleast_2d
-
+from flopy.modflow.mfparbc import ModflowParBc as mfparbc
+from numpy.lib.recfunctions import stack_arrays
 
 class ModflowHfb(Package):
     """
@@ -32,7 +35,7 @@ class ModflowHfb(Package):
         Number of horizontal-flow barriers not defined by parameters. This 
         is calculated automatically by FloPy based on the information in
         layer_row_column_data (default is 0).
-    layer_row_column_data : list of records
+    hfb_data : list of records
         In its most general form, this is a list of horizontal-flow 
         barrier records. A barrier is conceptualized as being located on 
         the boundary between two adjacent finite difference cells in the 
@@ -41,13 +44,12 @@ class ModflowHfb(Package):
         the cells. The hydraulic characteristic is the barrier hydraulic 
         conductivity divided by the width of the horizontal-flow barrier.
         This gives the form of
-            lrcrch = [
-                      [lay, row1, col1, row2, col2, hydchr],
-                      [lay, row1, col1, row2, col2, hydchr],
-                      [lay, row1, col1, row2, col2, hydchr],
-                     ].
-        Note that the variable is called layer_row_column_data, although
-        it describes layer_row_column_row_column_data (default is None).
+            hfb_data = [
+                        [lay, row1, col1, row2, col2, hydchr],
+                        [lay, row1, col1, row2, col2, hydchr],
+                        [lay, row1, col1, row2, col2, hydchr],
+                       ].
+        (default is None).
     nacthfb : int
         The number of active horizontal-flow barrier parameters 
         (default is 0).
@@ -73,21 +75,22 @@ class ModflowHfb(Package):
 
     Notes
     -----
-    Uses zero-based indexing for lay, row, col. 
-    Only programmed to work with horizontal-flow barriers not defined by 
-    parameters; may need work for other options.
+    Parameters are supported in Flopy only when reading in existing models.
+    Parameter values are converted to native values in Flopy and the
+    connection to "parameters" is thus nonexistent.
 
     Examples
     --------
-    import flopy
-    m = flopy.modflow.Modflow()
-    lrcrch = [[0, 10, 4, 10, 5, 0.01]]
-    hfb = flopy.modflow.ModflowHfb(m, layer_row_column_data=lrcrch)
+
+    >>> import flopy
+    >>> m = flopy.modflow.Modflow()
+    >>> hfb_data = [[0, 10, 4, 10, 5, 0.01],[1, 10, 4, 10, 5, 0.01]]
+    >>> hfb = flopy.modflow.ModflowHfb(m, hfb_data=hfb_data)
 
     """
 
     def __init__(self, model, nphfb=0, mxfb=0, nhfbnp=0,
-                 layer_row_column_data=None, nacthfb=0, no_print=False,
+                 hfb_data=None, nacthfb=0, no_print=False,
                  options=None, extension='hfb', unitnumber=17):
         Package.__init__(self, model, extension, 'HFB6',
                          unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
@@ -96,18 +99,6 @@ class ModflowHfb(Package):
 
         self.nphfb = nphfb
         self.mxfb = mxfb
-
-        if layer_row_column_data is None:
-            raise Exception('Failed to specify layer_row_column_data.')
-
-        self.layer_row_column_data = layer_row_column_data
-
-        if (layer_row_column_data is not None):
-            for a in layer_row_column_data:
-                a = atleast_2d(a)
-                nr, nc = a.shape
-                assert nc == 6, 'layer_row_column_data must have 6 columns. \nEntry: ' + str(nc)
-                self.nhfbnp = len(layer_row_column_data)
 
         self.nacthfb = nacthfb
 
@@ -118,32 +109,62 @@ class ModflowHfb(Package):
         if self.no_print:
             options.append('NOPRINT')
         self.options = options
+
+        aux_names = []
+        it = 0
+        while it < len(options):
+            print it, options[it]
+            if 'aux' in options[it].lower():
+                aux_names.append(options[it + 1].lower())
+                it += 1
+            it += 1
+
+        if hfb_data is None:
+            raise Exception('Failed to specify hfb_data.')
+
+        self.nhfbnp = len(hfb_data)
+        self.hfb_data = ModflowHfb.get_empty(self.nhfbnp)
+        for ibnd, t in enumerate(hfb_data):
+            self.hfb_data[ibnd] = tuple(t)
+
         self.parent.add_package(self)
 
     def __repr__(self):
         return 'HFB package class'
 
     def ncells(self):
-        # Returns the maximum number of cell pairs that have horizontal flow barriers (developed for MT3DMS SSM package)
+        """
+        Returns the maximum number of cell pairs that have horizontal
+        flow barriers (developed for MT3DMS SSM package)
+
+        """
         return self.nhfbnp
 
     def write_file(self):
+        """
+        Write the package input file.
+
+        """
         f_hfb = open(self.fn_path, 'w')
-        f_hfb.write('%s\n' % self.heading)
-        f_hfb.write('%9i %9i %9i' % (self.nphfb, self.mxfb, self.nhfbnp))
+        f_hfb.write('{}\n'.format(self.heading))
+        f_hfb.write('{:10d}{:10d}{:10d}'.format(self.nphfb, self.mxfb, self.nhfbnp))
         for option in self.options:
             f_hfb.write('  {}'.format(option))
         f_hfb.write('\n')
-        for a in self.layer_row_column_data:
-            f_hfb.write('%9i %9i %9i %9i %9i %13.6e' % (a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]))
-            f_hfb.write('\n')
-        f_hfb.write('%9i' % (self.nacthfb))
+        for a in self.hfb_data:
+            f_hfb.write('{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n'.format(a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]))
+        f_hfb.write('{:10d}'.format(self.nacthfb))
         f_hfb.close()
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None):
-        # get an empty recaray that correponds to dtype
-        dtype = ModflowGhb.get_default_dtype()
+        """
+        Get an empty recarray that correponds to hfb dtype and has
+        been extended to include aux variables and associated
+        aux names.
+
+        """
+        dtype = ModflowHfb.get_default_dtype()
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((ncells, len(dtype)), dtype=dtype)
@@ -152,10 +173,14 @@ class ModflowHfb(Package):
 
     @staticmethod
     def get_default_dtype():
+        """
+        Get the default dtype for hfb data
+
+        """
         dtype = np.dtype([("k", np.int),
                           ("irow1", np.int), ("icol1", np.int),
                           ("irow2", np.int), ("icol2", np.int),
-                          ("cond", np.float32)])
+                          ("hydchr", np.float32)])
         return dtype
 
 
@@ -171,67 +196,29 @@ class ModflowHfb(Package):
         model : model object
             The model object (of type: class:`flopy.modflow.mf.Modflow`) 
             to which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
 
         Returns
         -------
         hfb : ModflowHfb object
+            ModflowHfb object (of type :class:`flopy.modflow.mfbas.ModflowHfb`)
 
         Examples
         --------
-        import flopy
-        m = flopy.modflow.Modflow()
-        hfb = flopy.modflow.ModflowHfb.load('test.hfb', m)
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> hfb = flopy.modflow.ModflowHfb.load('test.hfb', m)
 
         """
-        # if type(f) is not file:
-        # filename = f
-        #     f = open(filename, 'r')
-        # # dataset 0 -- header
-        # while True:
-        #     line = f.readline()
-        #     if line[0] != '#':
-        #         break
-        # # dataset 1
-        # t = line.strip().split()
-        # nphfb = int(t[0])
-        # mxfb = int(t[1])
-        # nhfbnp = int(t[2])
-        # # --check for no-print suppressor
-        # options = []
-        # naux = 0
-        # if len(t) > 2:
-        #     for toption in t[3:-1]:
-        #         if toption.lower() is 'noprint':
-        #             options.append(toption)
-        #         elif 'aux' in toption.lower():
-        #             naux += 1
-        #             options.append(toption)
-        # # dataset 4
-        # layer_row_column_data = []
-        # current = []
-        # nitems = 6
-        # for ihfb in xrange(nhfbnp):
-        #     line = f.readline()
-        #     t = line.strip().split()
-        #     bnd = []
-        #     for jdx in xrange(nitems):
-        #         if jdx < nitems-1:
-        #             bnd.append(int(t[jdx]))
-        #         else:
-        #             bnd.append(float(t[jdx]))
-        #     current.append(bnd)
-        #     layer_row_column_data.append(current)
-        # # dataset 5
-        # line = f.readline()
-        # t = line.strip().split()
-        # nacthfb = int(t[0])
-        #
-        # hfb = ModflowHfb(model, nphfb=nphfb, mxfb=mxfb, nhfbnp=nhfbnp,
-        #                 layer_row_column_data=layer_row_column_data,
-        #                 nacthfb=nacthfb, options=options)
-        # return hfb
 
-        bc_pack_types = []
+        if model.verbose:
+            sys.stdout.write('loading hfb6 package file...\n')
 
         if type(f) is not file:
             filename = f
@@ -248,29 +235,12 @@ class ModflowHfb(Package):
         nhfbnp = int(t[2])
         #--check for no-print suppressor
         options = []
-        naux = 0
-        if len(t) > 2:
-            for toption in t[3:-1]:
-                if toption.lower() is 'noprint':
-                    options.append(toption)
-                elif 'aux' in toption.lower():
-                    naux += 1
-                    options.append(toption)
-        #dataset 2a
-        t = line.strip().split()
-        ipakcb = 0
-        try:
-            if int(t[1]) != 0:
-                ipakcb = 53
-        except:
-            pass
-        options = []
         aux_names = []
         if len(t) > 2:
             it = 2
             while it < len(t):
                 toption = t[it]
-                print it, t[it]
+                #print it, t[it]
                 if toption.lower() is 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
@@ -278,21 +248,78 @@ class ModflowHfb(Package):
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 it += 1
-        #--data set 2
+        #--data set 2 and 3
+        if nphfb > 0:
+            dt = ModflowHfb.get_empty(1).dtype
+            pak_parms = mfparbc.load(f, nphfb, dt, model.verbose)
+        #--data set 4
+        bnd_output = None
         if nhfbnp > 0:
-            i = 12
+            specified = ModflowHfb.get_empty(nhfbnp)
+            for ibnd in xrange(nhfbnp):
+                line = f.readline()
+                if "open/close" in line.lower():
+                    raise NotImplementedError("load() method does not support \'open/close\'")
+                t = line.strip().split()
+                specified[ibnd] = tuple(t[:len(specified.dtype.names)])
+
+            #--convert indices to zero-based
+            specified['k'] -= 1
+            specified['irow1'] -= 1
+            specified['icol1'] -= 1
+            specified['irow2'] -= 1
+            specified['icol2'] -= 1
+
+            bnd_output = np.recarray.copy(specified)
+
+        if nphfb > 0:
+            partype = ['hydchr']
+            line = f.readline()
+            t = line.strip().split()
+            nacthfb = int(t[0])
+            for iparm in xrange(nacthfb):
+                line = f.readline()
+                t = line.strip().split()
+                pname = t[0].lower()
+                iname = 'static'
+                par_dict, current_dict = pak_parms.get(pname)
+                data_dict = current_dict[iname]
+                #print par_dict
+                #print data_dict
+
+                par_current = ModflowHfb.get_empty(par_dict['nlst'])
+
+                #--
+                if model.mfpar.pval is None:
+                    parval = np.float(par_dict['parval'])
+                else:
+                    try:
+                        parval = np.float(model.mfpar.pval.pval_dict[pname])
+                    except:
+                        parval = np.float(par_dict['parval'])
+
+                #--fill current parameter data (par_current)
+                for ibnd, t in enumerate(data_dict):
+                    par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
+
+                #--convert indices to zero-based
+                par_current['k'] -= 1
+                par_current['irow1'] -= 1
+                par_current['icol1'] -= 1
+                par_current['irow2'] -= 1
+                par_current['icol2'] -= 1
+
+                for ptype in partype:
+                    par_current[ptype] *= parval
+
+                if bnd_output is None:
+                    bnd_output = np.recarray.copy(par_current)
+                else:
+                    bnd_output = stack_arrays((bnd_output, par_current),
+                                              asrecarray=True, usemask=False)
 
 
-        #--set partype
-        #  and read phiramp for modflow-nwt well package
-        partype = ['cond']
-
-        #--read parameter data
-        if nppak > 0:
-            dt = pack_type.get_empty(1, aux_names=aux_names).dtype
-            pak_parms = mfparbc.load(f, nppak, len(dt.names))
-
-        hfb = ModflowHfb(model, nphfb=nphfb, mxfb=mxfb, nhfbnp=nhfbnp,
-                         layer_row_column_data=[],
-                         nacthfb=nacthfb, options=options)
+        hfb = ModflowHfb(model, nphfb=0, mxfb=0, nhfbnp=len(bnd_output),
+                         hfb_data=bnd_output,
+                         nacthfb=0, options=options)
         return hfb

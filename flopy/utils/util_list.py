@@ -1,3 +1,10 @@
+"""
+util_list module.  Contains the mflist class.
+ This classes encapsulates modflow-style list inputs away
+ from the individual packages.  The end-user should not need to
+ instantiate this class directly.
+
+"""
 import os
 import warnings
 import numpy as np
@@ -118,6 +125,8 @@ class mflist(object):
 
         # If data is a dict, the we have to assume it is keyed on kper
         if isinstance(data, dict):
+            if len(data.keys()) == 0:
+                raise Exception("mflist error: data dict is empty")
             for kper, d in data.iteritems():
                 assert isinstance(kper, int), "mflist error: data dict key " +\
                                               " \'{0:s}\' " +\
@@ -210,6 +219,10 @@ class mflist(object):
 
     def add_record(self, kper, index, values):
         # Add a record to possible already set list for a given kper
+        # index is a list of k,i,j or nodes.
+        # values is a list of floats.
+        # The length of index + values must be equal to the number of names
+        # in dtype
         assert len(index) + len(values) == len(self.dtype), \
             "mflist.add_record() error: length of index arg +" +\
             "length of value arg != length of self dtype"
@@ -245,7 +258,6 @@ class mflist(object):
         # If the data entry for kper is a string, 
         # return the corresponding recarray,
         # but don't reset the value in the data dict
-        print self.data.keys(), kper, kper in self.data.keys()
         assert kper in self.data.keys(), "mflist.__getitem__() kper " +\
                                          str(kper) + " not in data.keys()"
         if (self.vtype[kper] == int):
@@ -258,8 +270,35 @@ class mflist(object):
         if (self.vtype[kper] == np.recarray):
             return self.data[kper]
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError("mflist.__setitem__() not implemented")
+    def __setitem__(self, kper, data):
+        if (kper in self.__data.keys()):
+            print 'removing existing data for kper={}'.format(kper)
+            self.data.pop(kper)
+        # If data is a list, then all we can do is try to cast it to
+        # an ndarray, then cast again to a recarray
+        if isinstance(data, list):
+            #warnings.warn("mflist casting list to array")
+            try:
+                data = np.array(data)
+            except Exception as e:
+                raise Exception("mflist error: casting list to ndarray: " +\
+                                str(e))
+        # cast data
+        if isinstance(data, int):
+            self.__cast_int(kper, data)
+        elif isinstance(data, np.recarray):
+            self.__cast_recarray(kper, data)
+        # A single ndarray
+        elif isinstance(data, np.ndarray):
+            self.__cast_ndarray(kper, data)
+        # A single filename
+        elif isinstance(data, str):
+            self.__cast_str(kper, data)
+        else:
+            raise Exception("mflist error: unsupported data type: " +\
+                            str(type(data)))
+
+        #raise NotImplementedError("mflist.__setitem__() not implemented")
 
     def __fromfile(self, f):
         #d = np.fromfile(f,dtype=self.dtype,count=count)
@@ -270,7 +309,7 @@ class mflist(object):
                             "from file " + str(e))
         return d
 
-    def write_transient(self, f, single_per = None):
+    def write_transient(self, f, single_per=None):
         #write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
         assert isinstance(f, file), "mflist.write() error: " +\
@@ -280,7 +319,7 @@ class mflist(object):
         # Assert 0 in kpers,"mflist.write() error: kper 0 not defined"
         first = kpers[0]
         if (single_per == None):
-            loop_over_kpers = range(0, max(nper, max(kpers)) + 1)
+            loop_over_kpers = range(0, max(nper, max(kpers) + 1))
         else:
             if (not isinstance(single_per, list)):
                 single_per = [single_per]
@@ -325,10 +364,12 @@ class mflist(object):
         names = self.dtype.names
         lnames = []
         [lnames.append(name.lower()) for name in names]
+        #--make copy of data for multiple calls
+        d = np.recarray.copy(data)
         for idx in ['k', 'i', 'j']:
             if (idx in lnames):
-                data[idx] += 1
-        np.savetxt(f, data, fmt = self.fmt_string, delimiter = '')
+                d[idx] += 1
+        np.savetxt(f, d, fmt = self.fmt_string, delimiter = '')
 
     def check_kij(self):
         names = self.dtype.names
@@ -377,5 +418,55 @@ class mflist(object):
                 break
             if (self.vtype[kper] != int) or (self.data[kper] != -1):
                 last = kper
-
         return kper
+
+    def get_indices(self):
+        """a helper function for plotting - get all unique indices
+        """
+        names = self.dtype.names
+        lnames = []
+        [lnames.append(name.lower()) for name in names]
+        if 'k' not in lnames or 'j' not in lnames:
+            raise NotImplementedError("mflist.get_indices requires kij")
+        kpers = self.data.keys()
+        kpers.sort()
+        indices = None
+        for i,kper in enumerate(kpers):
+            kper_vtype = self.__vtype[kper]
+            if (kper_vtype != int) or (kper_vtype is not None):
+                d = self.data[kper]
+                if indices is None:
+                    indices = zip(d['k'], d['i'], d['j'])
+                else:
+                    new_indices = zip(d['k'], d['i'], d['j'])
+                    for ni in new_indices:
+                        if ni not in indices:
+                            indices.append(ni)
+        return indices
+
+    def attribute_by_kper(self,attr,function=np.mean,idx_val=None):
+        assert attr in self.dtype.names
+        if idx_val is not None:
+            assert idx_val[0] in self.dtype.names
+        kpers = self.data.keys()
+        kpers.sort()
+        values = []
+        for kper in range(0, max(self.model.nper, max(kpers))):
+
+            if kper < min(kpers):
+                values.append(0)
+            elif kper > max(kpers) or kper not in kpers:
+                values.append(values[-1])
+            else:
+                kper_data = self.__data[kper]
+                if idx_val is not None:
+                    kper_data = kper_data[
+                        np.where(kper_data[idx_val[0]] == idx_val[1])]
+                #kper_vtype = self.__vtype[kper]
+                v = function(kper_data[attr])
+                values.append(v)
+        return values
+
+
+
+

@@ -1,39 +1,92 @@
-# FloPy3 -- Zero is the New One
 
-A set of scripts for reading and writing datasets for MODFLOW-based programs.
-
-![flopyzero](https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopyzero.png)
+<img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
 ## Introduction
 
-*FloPy* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
+*FloPy<sub>3</sub>* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
 
-## FloPy3 Changes
+For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users  Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed at the bottom of this page in the MODFLOW Resources section.
 
-FloPy3 is significantly different from FloPy2 (hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
+If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like to suggest an improvement or enhancement, please submit a new Issue through the Github Issue tracker toward the upper-right corner of this page.
 
-* FloPy3 is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
-* Input for packages that take *layer,row,column,data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [mflist](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/mflist/flopy3boundaries.ipynb)
+## FloPy<sub>3</sub> Changes
+
+### Version 3.1
+* *FloPy<sub>3</sub>* now supports some simple mapping and cross-section capabilities through the flopy.plot submodule. See the notebook [flopy3_MapExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
+
+* Full support for all Output Control (OC) options including DDREFERENCE, SAVE IBOUND, and layer lists. All Output Control Input is specified using words. Output Control Input using numeric codes is still available in the ModflowOc88 class. The ModflowOc88 class is currently deprecated and no longer actively maintained.
+
+* Added support for standard MULT package FUNCTION and EXPRESSION functionality are supported. MODFLOW parameters are not supported in *write()* methods. 
+
+### Version 3.0
+
+*FloPy<sub>3</sub>* is significantly different from *FloPy<sub>2</sub>* (previously hosted on [googlecode](https://code.google.com/p/flopy/)). The main changes are:
+
+* *FloPy<sub>3</sub>* is fully zero-based. This means that layers, rows and columns start counting at *zero*. The reason for this is consistency. Arrays are zero-based by default in Python, so it was confusing to have a mix.
+
+* Input for packages that take *layer, row, column, data* input (like the wel or ghb package) has changed and is much more flexible now. See the notebook [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3boundaries.ipynb)
+
+* Input for the MT3DMS Source/Sink Mixing (SSM) Package has been modified to be consistent with the new MODFLOW boundary package input and is more flexible than previous versions of *FloPy*. See the notebook [flopy3ssm](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_multi-component_SSM.ipynb)
+
+* Support for use of EXTERNAL and OPEN/CLOSE array specifiers has been improved.
+
+* *load()* methods have been developed for all of the standard MODFLOW packages and a few less used packages (*e.g.* SWI2).
+
+* MODFLOW parameter support has been added to the *load()* methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the *load()* methods. MODFLOW parameters are not supported in *write()* methods.  
 
 ## Installation
 
-To install *FloPy* type:
+**Python versions:**
 
-       ``pip install flopy``
+*FloPy<sub>3</sub>* requires **Python** 2.7
 
-To update *FloPy* type:
 
-       ``pip install flopy --update``
+**Dependencies:**
 
-To uninstall *FloPy* type:
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the flopy.plot submodule require **Pyshp** 1.2 (or higher).
 
-       ``pip uninstall flopy``
+
+**For base Python distributions:**
+
+To install *FloPy<sub>3</sub>* type:
+
+    pip install flopy
+
+To update *FloPy<sub>3</sub>* type:
+
+    pip install flopy --upgrade
+
+To uninstall *FloPy<sub>3</sub>* type:
+
+    pip uninstall flopy
+
+**Installing from the git repository:**
+
+***Current Version of FloPy<sub>3</sub>:***
+
+To install the current version of *FloPy<sub>3</sub>* from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/master
+    
+To update your version of *FloPy<sub>3</sub>* with the current version from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
+
+***Development version of FloPy<sub>3</sub>:***
+
+To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/develop
+    
+To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
 Documentation
 -----------------------------------------------
 
-Documentation for *FloPy* is a work in progress. *FloPy* code documentation is available at:
+Documentation for *FloPy<sub>3</sub>* is a work in progress. *FloPy<sub>3</sub>* code documentation is available at:
 
 + [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
@@ -45,27 +98,54 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 #### Basic examples
 
-+ The [lake example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
-+ An overview of the options to enter *layer,row,column,data* values for packages such as the wel and ghb packages is given in the [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/basic/flopy3boundaries.ipynb) Notebook
++ An overview of the options to enter *layer, row, column, data* values for packages such as the wel and ghb packages is given in the [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3boundaries.ipynb) Notebook
+
++ The [lake example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/lake_example.ipynb), a very simple *FloPy<sub>3</sub>* example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
+
++ A variant of the [water-table example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_WatertableRecharge_example.ipynb), a very simple example of one-dimensional groundwater flow in an unconfined aquifer with recharge, from the MODFLOW-NWT documentation (http://pubs.usgs.gov/tm/tm6a37/). This IPython Notebook build files for MODFLOW-NWT.
+
++ The [Zaidel discontinuous water-table example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_Zaidel_example.ipynb), which simulates a discontinuous water table over a stairway impervious base, from http://onlinelibrary.wiley.com/doi/10.1111/gwat.12019/abstract. This IPython Notebook build files for MODFLOW-USG. (http://pubs.usgs.gov/tm/06/a45/). 
+
++ An overview of the options for creating a Source/Sink Mixing (SSM) Package for MT3DMS and SEAWAT is given in the [flopy3ssm](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_multi-component_SSM.ipynb) Notebook.
+
++ The [Henry Problem](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/henry.ipynb), a simple saltwater intrusion model developed with Flopy and run using SEAWAT.
 
 #### SWI2 examples
 
-+ [Example 1](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/swi_examples/swiex1.ipynb) of the SWI2 manual, simulating a rotating interface.
++ [Example 1](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/swiex1.ipynb) of the SWI2 manual, simulating a rotating interface.
 
-### SWI2 Test Problems for FloPy2
++ [Example 4](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/swiex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
 
-A zip file containing *FloPy* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) is available at:
+#### Plotting examples
 
-+ [http://flopy.googlecode.com/svn/examples/SWI2ExampleProblems_flopy.zip](http://flopy.googlecode.com/svn/examples/SWI2ExampleProblems_flopy.zip)
++ An overview of the *FloPy<sub>3</sub>* [map and cross-section plotting capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
 
-Note that examples 2 and 5 also include *FloPy* scripts for running and post-processing SEAWAT models.
+#### Additional MODFLOW examples
+
++ Example problems from the 2015 2nd edition of [Applied Groundwater Modeling](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt (https://github.com/Applied-Groundwater-Modeling-2nd-Ed)
+
+### SWI2 Test Problems for *FloPy<sub>3</sub>*
+
+*FloPy<sub>3</sub>* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) are available:
+
++ [SWI2 Example 1](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex1.py)
+
++ [SWI2 Example 2](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex2.py)
+
++ [SWI2 Example 3](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex3.py)
+
++ [SWI2 Example 4](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex4.py)
+
++ [SWI2 Example 5](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex5.py)
+
+Note that examples 2 and 5 also include *FloPy<sub>3</sub>* code for running and post-processing SEAWAT models.
 
 
 ### Tutorials
 
-A few simple *FloPy* tutorials are available at:
+A few simple *FloPy<sub>3</sub>* tutorials are available at:
 
-+ [https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html](https://flopy.googlecode.com/svn/sphinx/_build/html/tutorials.html)
++ [http://modflowpy.github.io/flopydoc/tutorials.html](http://modflowpy.github.io/flopydoc/tutorials.html)
 
 
 ### MODFLOW Resources
