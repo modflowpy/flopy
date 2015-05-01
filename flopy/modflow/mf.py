@@ -284,8 +284,9 @@ class Modflow(BaseModel):
 
         #if model_ws is None:
         #    model_ws = os.path.dirname(f)
-        sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
-                         format(modelname, 50*'-'))
+        if verbose:
+            sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
+                             format(modelname, 50*'-'))
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
 
@@ -318,8 +319,9 @@ class Modflow(BaseModel):
             pck = dis.package.load(dis.filename, ml,
                                    ext_unit_dict=ext_unit_dict)
             files_succesfully_loaded.append(dis.filename)
-            sys.stdout.write('   {:4s} package load...success\n'
-                             .format(pck.name[0]))
+            if ml.verbose:
+                sys.stdout.write('   {:4s} package load...success\n'
+                                 .format(pck.name[0]))
             ext_unit_dict.pop(dis_key)
         except:
             s = 'Could not read discretization package: {}. Stopping...'\
@@ -363,23 +365,28 @@ class Modflow(BaseModel):
                         pck = item.package.load(item.filename, ml,
                                                 ext_unit_dict=ext_unit_dict)
                         files_succesfully_loaded.append(item.filename)
-                        sys.stdout.write('   {:4s} package load...success\n'
-                                         .format(pck.name[0]))
+                        if ml.verbose:
+                            sys.stdout.write('   {:4s} package load...success\n'
+                                             .format(pck.name[0]))
                     except BaseException as o:
-                        sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
-                                         .format(item.filetype, o))
+                        if ml.verbose:
+                            sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
+                                             .format(item.filetype, o))
                         files_not_loaded.append(item.filename)
                 else:
-                    sys.stdout.write('   {:4s} package load...skipped\n'
+                    if ml.verbose:
+                        sys.stdout.write('   {:4s} package load...skipped\n'
                                          .format(item.filetype))
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
-                sys.stdout.write('   {:4s} package load...skipped\n'
-                                 .format(item.filetype))
+                if ml.verbose:
+                    sys.stdout.write('   {:4s} package load...skipped\n'
+                                     .format(item.filetype))
             elif "data" in item.filetype.lower():
-                sys.stdout.write('   {} file load...skipped\n      {}\n'
-                                 .format(item.filetype,
+                if ml.verbose:
+                    sys.stdout.write('   {} file load...skipped\n      {}\n'
+                                     .format(item.filetype,
                                          os.path.basename(item.filename)))
                 if key not in ml.pop_key_list:
                     ml.external_fnames.append(item.filename)
@@ -399,19 +406,20 @@ class Modflow(BaseModel):
                         "{} does not exist in ext_unit_dict.\n'.format(key))
 
         #--write message indicating packages that were successfully loaded
-        print 1 * '\n'
-        s = '   The following {0} packages were successfully loaded.'.format(
-            len(files_succesfully_loaded))
-        print s
-        for fname in files_succesfully_loaded:
-            print '      ' + os.path.basename(fname)
-        if len(files_not_loaded) > 0:
-            s = '   The following {0} packages were not loaded.'.format(
-                len(files_not_loaded))
+        if ml.verbose:
+            print 1 * '\n'
+            s = '   The following {0} packages were successfully loaded.'\
+                .format(len(files_succesfully_loaded))
             print s
-            for fname in files_not_loaded:
+            for fname in files_succesfully_loaded:
                 print '      ' + os.path.basename(fname)
-            print '\n'
+            if len(files_not_loaded) > 0:
+                s = '   The following {0} packages were not loaded.'.format(
+                    len(files_not_loaded))
+                print s
+                for fname in files_not_loaded:
+                    print '      ' + os.path.basename(fname)
+                print '\n'
 
         #--return model object
         return ml
