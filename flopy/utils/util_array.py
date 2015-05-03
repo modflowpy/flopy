@@ -629,6 +629,16 @@ class util_2d(object):
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
 
+    @staticmethod
+    def get_default_numpy_fmt(dtype):
+        if dtype == np.int:
+            return "%6d"
+        elif dtype == np.float32:
+            return "%15.6E"
+        else:
+            raise Exception("util_2d.get_default_numpy_fmt(): unrecognized " +\
+                            "dtype, must be np.int or np.float32")
+
     def set_fmtin(self, fmtin):
         self.fmtin = fmtin
         self.py_desc = self.fort_2_py(self.fmtin)
@@ -848,7 +858,7 @@ class util_2d(object):
         return data
 
     @staticmethod
-    def write_txt(shape, file_out, data, fortran_format='(FREE)',
+    def write_txt(shape, file_out, data, fortran_format="(FREE)",
                   python_format=None):
         '''
         write a (possibly wrapped format) array from a file
@@ -857,6 +867,11 @@ class util_2d(object):
         this routine now supports fixed format arrays where the numbers
         may touch.
         '''
+
+        if fortran_format.upper() == '(FREE)' and python_format is None:
+            np.savetxt(file_out,data,util_2d.get_default_numpy_fmt(data.dtype))
+            return
+
         nrow,ncol = shape
         if python_format is None:
             column_length, fmt, width, decimal = \
