@@ -162,7 +162,7 @@ class ModflowLpf(Package):
         self.nplpf = 0 # number of LPF parameters
         self.laytyp = util_2d(model,(nlay,),np.int,laytyp,name='laytyp')
         self.layavg = util_2d(model,(nlay,),np.int,layavg,name='layavg')
-        self.chani = util_2d(model,(nlay,),np.int,chani,name='chani')
+        self.chani = util_2d(model,(nlay,),np.float32,chani,name='chani')
         self.layvka = util_2d(model,(nlay,),np.int,layvka,name='layvka')
         self.laywet = util_2d(model,(nlay,),np.int,laywet,name='laywet')
         self.wetfct = wetfct # Factor that is included in the calculation of the head when a cell is converted from dry to wet
@@ -226,7 +226,7 @@ class ModflowLpf(Package):
         transient = not self.parent.get_package('DIS').steady.all()
         for k in range(nlay):           
             f_lpf.write(self.hk[k].get_file_entry())
-            if self.chani[k] < 1:                
+            if self.chani[k] < 0:
                 f_lpf.write(self.hani[k].get_file_entry())            
             f_lpf.write(self.vka[k].get_file_entry())
             if transient == True:                
