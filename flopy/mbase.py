@@ -363,6 +363,11 @@ class BaseModel(object):
         # Check to make sure that program and namefile exist
         exe = which(self.exe_name)
         if exe is None:
+            import platform
+            if platform.system() in 'Windows':
+                if not self.exe_name.lower().endswith('.exe'):
+                    exe = which(self.exe_name + '.exe')
+        if exe is None:
             s = 'The program {} does not exist or is not executable.'.format(self.exe_name)
             raise Exception(s)
         else:
