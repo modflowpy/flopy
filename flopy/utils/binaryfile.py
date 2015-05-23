@@ -1077,7 +1077,8 @@ class CellBudgetFile(object):
                 if verbose:
                     s += 'a dictionary of size ' + str(nlist)
                     print s
-                return dict(zip(data['node'], data['q']))
+#                return dict(zip(data['node'], data['q'])) # next line added by JJS 5/23/15
+                return [dict(zip(data['node'], data['q'])), dict(zip(data['node'], data['IFACE           ']))]
 
         #should not reach this point
         return
