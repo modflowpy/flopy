@@ -832,7 +832,7 @@ class CellBudgetFile(object):
         return kstpkper
 
     def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
-                 verbose=False, full3D=False):
+                 verbose=False, full3D=False, asrecarray=False):
         """
         get data from the budget file.
 
@@ -855,6 +855,10 @@ class CellBudgetFile(object):
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records writen as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
+        asrecarray : boolean
+            If true, then return the record as a recarray including all AUX
+            variables. full3d and asrecarray cannot bot both be True.
+            (Default is False).
 
         Returns
         ----------
@@ -865,6 +869,9 @@ class CellBudgetFile(object):
             If full3D is True, then this method will return a numpy masked
             array of size (nlay, nrow, ncol) for those list-style
             'COMPACT BUDGET' records written by MODFLOW.
+
+            If asrecarray is True, then this method will return a numpy
+            recarray that includes all AUX variables.
 
         See Also
         --------
@@ -935,12 +942,12 @@ class CellBudgetFile(object):
             select_indices = select_indices[0]
         recordlist = []
         for idx in select_indices:
-            rec = self.get_record(idx, full3D=full3D, verbose=verbose)
+            rec = self.get_record(idx, full3D=full3D, asrecarray=asrecarray, verbose=verbose)
             recordlist.append(rec)
 
         return recordlist
 
-    def get_record(self, idx, full3D=False, verbose=False):
+    def get_record(self, idx, full3D=False, asrecarray=False, verbose=False):
         """
         Get a single data record from the budget file.
 
@@ -955,6 +962,11 @@ class CellBudgetFile(object):
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records writen as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
+        asrecarray : boolean
+            If true, then return the record as a recarray including all AUX
+            variables. full3d and asrecarray cannot bot both be True.
+            (Default is False).
+
 
         Returns
         ----------
@@ -965,6 +977,9 @@ class CellBudgetFile(object):
             If full3D is True, then this method will return a numpy masked
             array of size (nlay, nrow, ncol) for those list-style
             'COMPACT BUDGET' records written by MODFLOW.
+
+            If asrecarray is True, then this method will return a numpy
+            recarray that includes all AUX variables.
 
         See Also
         --------
@@ -1068,20 +1083,29 @@ class CellBudgetFile(object):
             dtype = np.dtype(l)                
             nlist = binaryread(self.file, np.int32)
             data = binaryread(self.file, dtype, shape=(nlist,))
+
+            # added 5/25/15 JJS
+            # asrecarray=True is the only way AUX variables get passed back to the caller
+            # the awkward construction and the following exception are necessary to maintain backward compatibility
+            if full3D and asrecarray:
+                raise Exception("full3D and asrecarray cannot both be True. Choose one.")
+
             if full3D:
                 if verbose:
                     s += 'a list array of shape ({}, {}, {})'.format(nlay, nrow, ncol)
                     print s
                 return self.create3D(data, nlay, nrow, ncol)
+
+            # added 5/25/15 JJS
+            elif asrecarray:
+                print('asrecarray=True')
+                return data
+
             else:
                 if verbose:
                     s += 'a dictionary of size ' + str(nlist)
                     print s
-#                return dict(zip(data['node'], data['q'])) # next 4 lines added by JJS 5/23/15
-                try:
-                    return [dict(zip(data['node'], data['q'])), dict(zip(data['node'], data['IFACE           ']))]
-                except ValueError:
-                    return dict(zip(data['node'], data['q']))
+                return dict(zip(data['node'], data['q']))
 
         #should not reach this point
         return
