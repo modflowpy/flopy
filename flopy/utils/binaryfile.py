@@ -1098,7 +1098,6 @@ class CellBudgetFile(object):
 
             # added 5/25/15 JJS
             elif asrecarray:
-                print('asrecarray=True')
                 return data
 
             else:
