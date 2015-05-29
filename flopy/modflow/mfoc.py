@@ -24,7 +24,7 @@ class ModflowOc(Package):
         is a code for the format in which heads will be printed.
         (default is 0).
     iddnfm : int
-        is a code for the format in which heads will be printed.
+        is a code for the format in which drawdowns will be printed.
         (default is 0).
     chedfm : string
         is a character value that specifies the format for saving heads.
