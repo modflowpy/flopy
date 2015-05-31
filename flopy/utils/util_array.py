@@ -840,7 +840,7 @@ class util_2d(object):
         npl, fmt, width, decimal = decode_fortran_descriptor(fmtin)
         data = np.zeros((nrow * ncol), dtype=dtype) + np.NaN
         d = 0
-        if not isinstance(file_in,file):
+        if not hasattr(file_in, 'read'):
             file_in = open(file_in,'r')
         while True:
             line = file_in.readline()

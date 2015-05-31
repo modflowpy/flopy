@@ -340,7 +340,7 @@ class ModflowOc(Package):
         stress_period_data = {}
 
         #open file
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
 

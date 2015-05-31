@@ -451,7 +451,7 @@ class ModflowUzf1(Package):
         if model.verbose:
             sys.stdout.write('loading uzf package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
 

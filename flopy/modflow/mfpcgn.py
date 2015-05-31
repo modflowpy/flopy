@@ -104,7 +104,7 @@ class ModflowPcgn(Package):
         if model.verbose:
             sys.stdout.write('loading pcgn package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header

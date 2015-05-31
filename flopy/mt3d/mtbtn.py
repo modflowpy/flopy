@@ -354,7 +354,7 @@ class Mt3dBtn(Package):
 
     @staticmethod
     def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None):
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #A1 and A2 

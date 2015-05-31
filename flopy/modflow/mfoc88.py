@@ -376,7 +376,7 @@ class ModflowOc88(Package):
         wordrec = []
 
         #open file
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
 

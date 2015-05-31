@@ -120,7 +120,7 @@ class ModflowSwr1(Package):
             sys.stdout.write('loading swr1 process file...\n')
 
         #--todo: everything
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
 

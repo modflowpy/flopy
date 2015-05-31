@@ -188,7 +188,7 @@ class ModflowBcf(Package):
         if model.verbose:
             sys.stdout.write('loading bcf package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header
