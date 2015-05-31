@@ -611,7 +611,7 @@ class UcnFile(BinaryLayerFile):
     """
     def __init__(self, filename, text='concentration', precision='single',
                  verbose=False):
-        self.text = text
+        self.text = text.encode()
         self.header_dtype = BinaryHeader.set_dtype(bintype='Ucn',
                                                    precision=precision)
         super(UcnFile, self).__init__(filename, precision, verbose)
