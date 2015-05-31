@@ -383,13 +383,13 @@ class BaseModel(object):
                         stdout=sp.PIPE, cwd=self.model_ws)
         while True:
           line = proc.stdout.readline()
-          if line != '':
-            if 'normal termination of simulation' in line.lower():
+          c = line.decode('utf-8')
+          if c != '':
+            if 'normal termination of simulation' in c.lower():
                 success = True
-            #c = line.split('\r')
-            c = line.rstrip('\r\n')
+            c = c.rstrip('\r\n')
             if not silent:
-                print(c)
+                print('{}'.format(c))
             if report == True:
                 buff.append(c)
           else:

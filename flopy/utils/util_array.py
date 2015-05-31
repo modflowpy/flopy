@@ -23,11 +23,11 @@ def decode_fortran_descriptor(fd):
     fd = fd.replace('"', '')
     #--strip off '(' and ')'
     fd = fd.strip()[1:-1]
-    if 'FREE' in fd.upper():
+    if str('FREE') in str(fd.upper()):
         return 'free', None, None, None
-    elif 'BINARY' in fd.upper():
+    elif str('BINARY') in str(fd.upper()):
         return 'binary', None, None, None
-    if '.' in fd:
+    if str('.') in str(fd):
         raw = fd.split('.')
         decimal = int(raw[1])
     else:
@@ -227,16 +227,14 @@ class util_3d(object):
 
     """
 
-    def __new__(cls,*args,**kwargs):
-        for a in args:
-            if isinstance(a,util_3d):
-                return a
-        return super(util_3d, cls).__new__(cls)
-
     def __init__(self, model, shape, dtype, value, name,
         fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
         '''3-D wrapper from util_2d - shape must be 3-D
         '''
+        if isinstance(value,util_3d):
+            for attr in value.__dict__.items():
+                setattr(self,attr[0],attr[1])
+            return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
         self.model = model
         self.shape = shape
@@ -413,14 +411,14 @@ class transient_2d(object):
 
     """
 
-    def __new__(cls,*args,**kwargs):
-        for a in args:
-            if isinstance(a,transient_2d):
-                return a
-        return super(transient_2d, cls).__new__(cls)
-
     def __init__(self,model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
+
+        if isinstance(value,transient_2d):
+            for attr in value.__dict__.items():
+                setattr(self,attr[0],attr[1])
+            return
+
         self.model = model
         assert len(shape) == 2, "transient_2d error: shape arg must be " +\
                                 "length two (nrow, ncol), not " +\
@@ -577,12 +575,6 @@ class util_2d(object):
 
     """
 
-    def __new__(cls,*args,**kwargs):
-        for a in args:
-            if isinstance(a,util_2d):
-                return a
-        return super(util_2d, cls).__new__(cls)
-
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
         ext_unit_dict=None):
@@ -599,6 +591,10 @@ class util_2d(object):
         used to determine external array writing
         bin controls writing of binary external arrays
         '''
+        if isinstance(value,util_2d):
+            for attr in value.__dict__.items():
+                setattr(self,attr[0],attr[1])
+            return
         self.model = model
         self.shape = shape
         self.dtype = dtype
@@ -1173,7 +1169,7 @@ class util_2d(object):
 
         elif cr_dict['type'] == 'external':
             assert cr_dict['nunit'] in list(ext_unit_dict.keys())
-            if 'binary' not in cr_dict['fmtin'].lower():
+            if str('binary') not in str(cr_dict['fmtin'].lower()):
                 data = util_2d.load_txt(shape,
                                     ext_unit_dict[cr_dict['nunit']].filehandle,
                                         dtype, cr_dict['fmtin'])
@@ -1203,7 +1199,7 @@ class util_2d(object):
         if dtype == np.float or dtype == np.float32:
             isFloat = True       
         #--if free format keywords
-        if raw[0] in free_fmt:
+        if str(raw[0]) in str(free_fmt):
             freefmt = raw[0]
             if raw[0] == 'constant':
                 if isFloat:                
