@@ -883,7 +883,8 @@ class CellBudgetFile(object):
         --------
 
         """
-        text = text.encode()
+        if text is not None:
+            text = text.encode()
         #trap for totim error
         if totim is not None:
             if len(self.times) == 0:
