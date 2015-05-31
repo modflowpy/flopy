@@ -1,6 +1,6 @@
 import numpy as np
 import flopy
-from flopy.utils.util_array import util_2d
+from flopy.utils.util_array import util_2d, util_3d
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
@@ -10,5 +10,14 @@ def test_util2d():
     assert np.array_equal(a1, a2)
     return
 
+def test_util3d():
+    ml = flopy.modflow.Modflow()
+    u2d = util_3d(ml, (10, 10, 10), np.float32, 10., 'test')
+    a1 = u2d.array
+    a2 = np.ones((10, 10, 10), dtype=np.float32) * 10.
+    assert np.array_equal(a1, a2)
+    return
+
 if __name__ == '__main__':
     test_util2d()
+    test_util3d()
