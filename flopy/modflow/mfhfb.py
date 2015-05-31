@@ -113,7 +113,7 @@ class ModflowHfb(Package):
         aux_names = []
         it = 0
         while it < len(options):
-            print it, options[it]
+            print(it, options[it])
             if 'aux' in options[it].lower():
                 aux_names.append(options[it + 1].lower())
                 it += 1
@@ -256,7 +256,7 @@ class ModflowHfb(Package):
         bnd_output = None
         if nhfbnp > 0:
             specified = ModflowHfb.get_empty(nhfbnp)
-            for ibnd in xrange(nhfbnp):
+            for ibnd in range(nhfbnp):
                 line = f.readline()
                 if "open/close" in line.lower():
                     raise NotImplementedError("load() method does not support \'open/close\'")
@@ -277,7 +277,7 @@ class ModflowHfb(Package):
             line = f.readline()
             t = line.strip().split()
             nacthfb = int(t[0])
-            for iparm in xrange(nacthfb):
+            for iparm in range(nacthfb):
                 line = f.readline()
                 t = line.strip().split()
                 pname = t[0].lower()

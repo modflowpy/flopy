@@ -150,7 +150,7 @@ class ModflowOc(Package):
 
         ibouun = 0
         ibndsav = False
-        for key in stress_period_data.keys():
+        for key in list(stress_period_data.keys()):
             t = stress_period_data[key]
             if len(t) > 0:
                 for option in t:
@@ -237,14 +237,14 @@ class ModflowOc(Package):
         nr, nc, nl, nper = self.parent.get_nrow_ncol_nlay_nper()
         nstp = self.parent.get_package('DIS').nstp
 
-        keys = self.stress_period_data.keys()
+        keys = list(self.stress_period_data.keys())
         keys.sort()
 
         data = []
         lines = ''
         ddnref = ''
-        for kper in xrange(nper):
-            for kstp in xrange(nstp[kper]):
+        for kper in range(nper):
+            for kstp in range(nstp[kper]):
                 kperkstp = (kper, kstp)
                 if kperkstp in keys:
                     data = self.stress_period_data[kperkstp]
@@ -371,8 +371,8 @@ class ModflowOc(Package):
         #process each line
         lines = []
         if numericformat == True:
-            for iperoc in xrange(nper):
-                for itsoc in xrange(nstp[iperoc]):
+            for iperoc in range(nper):
+                for itsoc in range(nstp[iperoc]):
                     line = f.readline()
                     lnlst = line.strip().split()
                     incode, ihddfl = int(lnlst[0]), int(lnlst[1])
@@ -409,7 +409,7 @@ class ModflowOc(Package):
                         headsave = ''
                         ddnprint = ''
                         ddnsave = ''
-                        for k in xrange(nlay):
+                        for k in range(nlay):
                             line = f.readline()
                             lnlst = line.strip().split()
                             hdpr, ddpr = int(lnlst[0]), int(lnlst[1])
@@ -529,8 +529,8 @@ class ModflowOc(Package):
                 elif 'SAVE' in lnlst[0].upper() :
                     lines.append('{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
                 else:
-                    print 'Error encountered in OC import.'
-                    print 'Creating default OC package.'
+                    print('Error encountered in OC import.')
+                    print('Creating default OC package.')
                     return ModflowOc(model)
     
             #store the last record in word

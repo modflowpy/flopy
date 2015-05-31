@@ -45,19 +45,19 @@ class Mt3dDsp(Package):
             for icomp in range(2, ncomp+1):
                 name = "dmcoef" + str(icomp)
                 val = 0.0
-                if name in kwargs.keys():
+                if name in list(kwargs.keys()):
                     val = kwargs[name]
                     kwargs.pop(name)
                 else:
-                    print "DSP: setting dmcoef for component " +\
+                    print("DSP: setting dmcoef for component " +\
                           str(icomp) + " to zero, kwarg name " +\
-                          name
+                          name)
                 a = util_3d(model, (nlay, nrow, ncol), np.float32, val,
                             name=name, locat=self.unit_number[0])
                 self.dmcoef.append(a)
-        if len(kwargs.keys()) > 0:
+        if len(list(kwargs.keys())) > 0:
             raise Exception("DSP error: unrecognized kwargs: " +
-                            ' '.join(kwargs.keys()))
+                            ' '.join(list(kwargs.keys())))
         self.parent.add_package(self)
         return
 

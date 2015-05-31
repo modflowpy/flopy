@@ -71,7 +71,7 @@ class ModpathSim(Package):
                         'BudgetOutputOption', 'ZoneArrayOption', 'RetardationOption',
                         'AdvectiveObservationsOption']
         self.option_flags = option_flags
-        options_dict = dict(zip(options_list, option_flags))
+        options_dict = dict(list(zip(options_list, option_flags)))
         self.options_dict = options_dict
         self.endpoint_file = endpoint_file 
         self.pathline_file = pathline_file

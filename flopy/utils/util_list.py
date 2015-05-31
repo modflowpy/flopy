@@ -71,7 +71,7 @@ class mflist(object):
 
     # Get the itmp for a given kper
     def get_itmp(self, kper):
-        if (kper not in self.__data.keys()):
+        if (kper not in list(self.__data.keys())):
             return None
         # If an external file, have to load it
         if (self.__vtype[kper] == str):
@@ -84,7 +84,7 @@ class mflist(object):
     @property
     def mxact(self):
         mxact = 0
-        for kper in self.__data.keys():
+        for kper in list(self.__data.keys()):
             mxact = max(mxact, self.get_itmp(kper))
         return mxact
 
@@ -125,9 +125,9 @@ class mflist(object):
 
         # If data is a dict, the we have to assume it is keyed on kper
         if isinstance(data, dict):
-            if len(data.keys()) == 0:
+            if len(list(data.keys())) == 0:
                 raise Exception("mflist error: data dict is empty")
-            for kper, d in data.iteritems():
+            for kper, d in data.items():
                 assert isinstance(kper, int), "mflist error: data dict key " +\
                                               " \'{0:s}\' " +\
                                               "not integer: ".format(kper) +\
@@ -227,7 +227,7 @@ class mflist(object):
             "mflist.add_record() error: length of index arg +" +\
             "length of value arg != length of self dtype"
         # If we already have something for this kper, then add to it
-        if (kper in self.__data.keys()):
+        if (kper in list(self.__data.keys())):
             # If a 0 or -1, reset
             if (self.vtype[kper] == int):
                 self.__data[kper] = self.get_empty(1)
@@ -258,7 +258,7 @@ class mflist(object):
         # If the data entry for kper is a string, 
         # return the corresponding recarray,
         # but don't reset the value in the data dict
-        assert kper in self.data.keys(), "mflist.__getitem__() kper " +\
+        assert kper in list(self.data.keys()), "mflist.__getitem__() kper " +\
                                          str(kper) + " not in data.keys()"
         if (self.vtype[kper] == int):
             if (self.data[kper] == 0):
@@ -271,8 +271,8 @@ class mflist(object):
             return self.data[kper]
 
     def __setitem__(self, kper, data):
-        if (kper in self.__data.keys()):
-            print 'removing existing data for kper={}'.format(kper)
+        if (kper in list(self.__data.keys())):
+            print('removing existing data for kper={}'.format(kper))
             self.data.pop(kper)
         # If data is a list, then all we can do is try to cast it to
         # an ndarray, then cast again to a recarray
@@ -314,12 +314,12 @@ class mflist(object):
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
         assert isinstance(f, file), "mflist.write() error: " +\
                                     "f argument must be a file handle"
-        kpers = self.data.keys()
+        kpers = list(self.data.keys())
         kpers.sort()
         # Assert 0 in kpers,"mflist.write() error: kper 0 not defined"
         first = kpers[0]
         if (single_per == None):
-            loop_over_kpers = range(0, max(nper, max(kpers) + 1))
+            loop_over_kpers = list(range(0, max(nper, max(kpers) + 1)))
         else:
             if (not isinstance(single_per, list)):
                 single_per = [single_per]
@@ -382,7 +382,7 @@ class mflist(object):
             warnings.warn("mflist.check_kij(): unable to get dis info from " +\
                           "model")
             return
-        for kper in self.data.keys():
+        for kper in list(self.data.keys()):
             out_idx = []
             data = self[kper]
             if (data is not None):
@@ -410,7 +410,7 @@ class mflist(object):
                     warnings.warn(warn_str)
 
     def __find_last_kper(self, kper):
-        kpers = self.data.keys()
+        kpers = list(self.data.keys())
         kpers.sort()
         last = kpers[0]
         for kper in kpers:
@@ -428,7 +428,7 @@ class mflist(object):
         [lnames.append(name.lower()) for name in names]
         if 'k' not in lnames or 'j' not in lnames:
             raise NotImplementedError("mflist.get_indices requires kij")
-        kpers = self.data.keys()
+        kpers = list(self.data.keys())
         kpers.sort()
         indices = None
         for i,kper in enumerate(kpers):
@@ -436,9 +436,9 @@ class mflist(object):
             if (kper_vtype != int) or (kper_vtype is not None):
                 d = self.data[kper]
                 if indices is None:
-                    indices = zip(d['k'], d['i'], d['j'])
+                    indices = list(zip(d['k'], d['i'], d['j']))
                 else:
-                    new_indices = zip(d['k'], d['i'], d['j'])
+                    new_indices = list(zip(d['k'], d['i'], d['j']))
                     for ni in new_indices:
                         if ni not in indices:
                             indices.append(ni)
@@ -448,7 +448,7 @@ class mflist(object):
         assert attr in self.dtype.names
         if idx_val is not None:
             assert idx_val[0] in self.dtype.names
-        kpers = self.data.keys()
+        kpers = list(self.data.keys())
         kpers.sort()
         values = []
         for kper in range(0, max(self.model.nper, max(kpers))):

@@ -143,8 +143,8 @@ class ModflowOc88(Package):
         
         self.heading += '\n# Deprecated flopy OC class'
         
-        print 'Warning: ModflowOc88 flopy class is deprecated'
-        print '         Please use ModflowOc class'
+        print('Warning: ModflowOc88 flopy class is deprecated')
+        print('         Please use ModflowOc class')
 
         self.url = 'oc.htm'
         self.ihedfm = ihedfm
@@ -173,8 +173,7 @@ class ModflowOc88(Package):
                 word_list = []
 
                 if save_head_every is None:
-                    raise TypeError,\
-                           'to use the 1d words OC option, save_head_every must be used'
+                    raise TypeError('to use the 1d words OC option, save_head_every must be used')
 
                 nstp = self.parent.get_package('DIS').nstp
                 for p in range(len(nstp)):
@@ -462,8 +461,8 @@ class ModflowOc88(Package):
             elif 'SAVE' in lnlst[0].upper() and 'BUDGET' in lnlst[1].upper():
                 wordrec.append('BUDGET')
             else:
-                print 'Old style oc files not supported for import.'
-                print 'Convert to words.'
+                print('Old style oc files not supported for import.')
+                print('Convert to words.')
                 return ModflowOc88(model)
 
         #store the last record in word

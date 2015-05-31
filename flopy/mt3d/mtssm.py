@@ -65,16 +65,16 @@ class Mt3dSsm(Package):
                                locat=self.unit_number[0])
             self.crch.append(t2d)
             if ncomp > 1:
-                for icomp in xrange(2, ncomp+1):
+                for icomp in range(2, ncomp+1):
                     val = 0.0
                     name = "crch" + str(icomp)
-                    if name in kwargs.keys():
+                    if name in list(kwargs.keys()):
                         val = kwargs[name]
                         kwargs.pop(name)
                     else:
-                        print "SSM: setting crch for component " +\
+                        print("SSM: setting crch for component " +\
                               str(icomp) + " to zero. kwarg name " +\
-                              name
+                              name)
                     t2d = transient_2d(model, (nrow, ncol), np.float32,
                                        val, name=name,
                                        locat=self.unit_number[0])
@@ -89,16 +89,16 @@ class Mt3dSsm(Package):
                                locat=self.unit_number[0])
             self.cevt.append(t2d)
             if ncomp > 1:
-                for icomp in xrange(2, ncomp+1):
+                for icomp in range(2, ncomp+1):
                     val = 0.0
                     name = "cevt" + str(icomp)
-                    if name in kwargs.keys():
+                    if name in list(kwargs.keys()):
                         val = kwargs[name]
                         kwargs.pop(name)
                     else:
-                        print "SSM: setting cevt for component " +\
+                        print("SSM: setting cevt for component " +\
                               str(icomp) + " to zero, kwarg name " +\
-                              name
+                              name)
                     t2d = transient_2d(model, (nrow, ncol), np.float32,
                                        val, name=name,
                                        locat=self.unit_number[0])
@@ -107,9 +107,9 @@ class Mt3dSsm(Package):
         else:
             self.cevt = None
 
-        if len(kwargs.keys()) > 0:
+        if len(list(kwargs.keys())) > 0:
             raise Exception("SSM error: unrecognized kwargs: " +
-                            ' '.join(kwargs.keys()))
+                            ' '.join(list(kwargs.keys())))
 
         if dtype is not None:
             self.dtype = dtype
@@ -151,7 +151,7 @@ class Mt3dSsm(Package):
         type_list = [("k", np.int), ("i", np.int), ("j", np.int),
                      ("css", np.float32), ("itype", np.int)]
         if ncomp > 1:
-            for comp in xrange(1,ncomp+1):
+            for comp in range(1,ncomp+1):
                 comp_name = "cssm({0:02d})".format(comp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)

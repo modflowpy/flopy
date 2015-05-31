@@ -160,7 +160,7 @@ class meta_interceptor(type):
         return type.__call__(cls, *args, **kwds)
         
 
-class util_3d(object):
+class util_3d(object, metaclass=meta_interceptor):
     """
     util_3d class for handling 3-D model arrays.  just a thin wrapper around
         util_2d
@@ -222,7 +222,6 @@ class util_3d(object):
     --------
 
     """
-    __metaclass__ = meta_interceptor
     def __init__(self, model, shape, dtype, value, name,
         fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
         '''3-D wrapper from util_2d - shape must be 3-D
@@ -336,7 +335,7 @@ class util_3d(object):
         return u3d
 
 
-class transient_2d(object):
+class transient_2d(object, metaclass=meta_interceptor):
     """
     transient_2d class for handling time-dependent 2-D model arrays.
     just a thin wrapper around util_2d
@@ -402,7 +401,6 @@ class transient_2d(object):
     --------
 
     """
-    __metaclass__ = meta_interceptor
     def __init__(self,model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
         self.model = model
@@ -432,7 +430,7 @@ class transient_2d(object):
         """get the file entry info for a given kper
         returns (itmp,file entry string from util_2d)
         """
-        if kper in self.transient_2ds.keys():
+        if kper in list(self.transient_2ds.keys()):
             return (1, self.transient_2ds[kper].get_file_entry())
         elif kper < min(self.transient_2ds.keys()):
             return (1, self.get_zero_2d(kper))
@@ -446,7 +444,7 @@ class transient_2d(object):
         # a dict keyed on kper (zero-based)
         if isinstance(self.__value, dict):
             tran_seq = {}
-            for key, val in self.__value.iteritems():
+            for key, val in self.__value.items():
                 try:
                     key = int(key)
                 except:
@@ -500,7 +498,7 @@ class transient_2d(object):
         return u2d
 
 
-class util_2d(object):
+class util_2d(object, metaclass=meta_interceptor):
     """
     util_2d class for handling 2-D model arrays
 
@@ -559,7 +557,6 @@ class util_2d(object):
     --------
 
     """
-    __metaclass__ = meta_interceptor  
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
         ext_unit_dict=None):
@@ -830,7 +827,7 @@ class util_2d(object):
                 rawlist = []
                 istart = 0
                 istop = width
-                for i in xrange(npl):
+                for i in range(npl):
                     txtval = line[istart:istop]
                     if txtval.strip() != '':
                         rawlist.append(txtval)
@@ -894,14 +891,14 @@ class util_2d(object):
         else:
             lineReturnFlag = True
         #--write the array
-        for i in xrange(nrow):
+        for i in range(nrow):
             icol = 0
-            for j in xrange(ncol):
+            for j in range(ncol):
                 try:
                     file_out.write(output_fmt.format(data[i,j]))
                 except:
-                    print 'Value {0} at row,col [{1},{2}] can not be written'\
-                        .format(data[i, j], i, j)
+                    print('Value {0} at row,col [{1},{2}] can not be written'\
+                        .format(data[i, j], i, j))
                     raise Exception
                 if (j + 1) % column_length == 0.0 and j != 0:
                     file_out.write('\n')
@@ -1021,7 +1018,7 @@ class util_2d(object):
         '''
         if isinstance(value, list):
             if VERBOSE:
-                print 'util_2d: casting list to array'
+                print('util_2d: casting list to array')
             value = np.array(value)
         if isinstance(value, bool):
             if self.dtype == np.bool:
@@ -1083,8 +1080,8 @@ class util_2d(object):
                                 str(value.shape))
             if self.dtype != value.dtype:
                 if VERBOSE:
-                    print 'util_2d:warning - casting array of type: ' +\
-                          str(value.dtype)+' to type: '+str(self.dtype)
+                    print('util_2d:warning - casting array of type: ' +\
+                          str(value.dtype)+' to type: '+str(self.dtype))
             return value.astype(self.dtype)
         
         else:
@@ -1149,7 +1146,7 @@ class util_2d(object):
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
 
         elif cr_dict['type'] == 'external':
-            assert cr_dict['nunit'] in ext_unit_dict.keys()
+            assert cr_dict['nunit'] in list(ext_unit_dict.keys())
             if 'binary' not in cr_dict['fmtin'].lower():
                 data = util_2d.load_txt(shape,
                                     ext_unit_dict[cr_dict['nunit']].filehandle,

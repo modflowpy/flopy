@@ -20,6 +20,6 @@
     --------
 
     """
-from plotutil import SwiConcentration
-from map import ModelMap
-from crosssection import ModelCrossSection
+from .plotutil import SwiConcentration
+from .map import ModelMap
+from .crosssection import ModelCrossSection

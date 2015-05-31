@@ -185,24 +185,24 @@ class Mt3dBtn(Package):
                 name='sconc1', locat=self.unit_number[0])
         self.sconc.append(u3d)
         if ncomp > 1:
-            for icomp in xrange(2,ncomp+1):
+            for icomp in range(2,ncomp+1):
                 name = "sconc"+str(icomp)
                 val = 0.0
-                if name in kwargs.keys():
+                if name in list(kwargs.keys()):
                     val = kwargs[name]
                     kwargs.pop(name)
                 else:
-                    print "BTN: setting sconc for component " +\
+                    print("BTN: setting sconc for component " +\
                           str(icomp) + " to zero, kwarg name " +\
-                          name
+                          name)
 
                 u3d = util_3d(model, (nlay, nrow, ncol), np.float32,
                               val, name=name,
                               locat=self.unit_number[0])
                 self.sconc.append(u3d)
-        if len(kwargs.keys()) > 0:
+        if len(list(kwargs.keys())) > 0:
             raise Exception("BTN error: unrecognized kwargs: " +
-                            ' '.join(kwargs.keys()))
+                            ' '.join(list(kwargs.keys())))
         self.dt0 = util_2d(model, (nper,), np.float32, dt0, name='dt0')
         self.mxstrn = util_2d(model, (nper,), np.int, mxstrn, name='mxstrn')
         self.ttsmult = util_2d(model, (nper,), np.float32, ttsmult,
@@ -422,7 +422,7 @@ class Mt3dBtn(Package):
         if (a20[0].lower() == 't'): chkmas = True
         nprmas = int(a20[1])
         dt0, mxstrn, ttsmult, ttsmax = [], [], [], []
-        for kper in xrange(nper):
+        for kper in range(nper):
             line = f.readline().strip().split()
             tsm = float(line[2])
             if tsm <= 0:

@@ -59,7 +59,7 @@ class NamData(object):
         self.filename = name
         self.filetype = pkgtype
         self.package = None
-        if self.filetype.lower() in packages.keys():
+        if self.filetype.lower() in list(packages.keys()):
             self.package = packages[self.filetype.lower()]
 
 def getfiletypeunit(nf, filetype):
@@ -76,10 +76,10 @@ def getfiletypeunit(nf, filetype):
     cunit : int, unit number corresponding to the package type
 
     """
-    for cunit, cvals in nf.iteritems():
+    for cunit, cvals in nf.items():
         if cvals.filetype.lower() == filetype.lower():
             return cunit
-    print 'Name file does not contain file of type "{0}"'.format(filetype)
+    print('Name file does not contain file of type "{0}"'.format(filetype))
     return None
 
 # function to test if a string is an integer
@@ -121,8 +121,8 @@ def parsenamefile(namfilename, packages, verbose=True):
     ext_unit_dict = dict()
 
     if verbose:
-        print 'Parsing the namefile --> {0:s}'.format(namfilename)
-        print 'Setting filehandles:'
+        print('Parsing the namefile --> {0:s}'.format(namfilename))
+        print('Setting filehandles:')
 
     indata = open(namfilename, 'r').readlines()
     for line in indata:
@@ -142,8 +142,8 @@ def parsenamefile(namfilename, packages, verbose=True):
                     filehandle = open(fname, openmode)
                 except:
                     if verbose:
-                        print 'could not set filehandle for {0:s}'\
-                            .format(tmp[2])
+                        print('could not set filehandle for {0:s}'\
+                            .format(tmp[2]))
                     filehandle = None
                 # populate the dictionary
                 ext_unit_dict[int(tmp[1])] = NamData(tmp[0], fname, filehandle,

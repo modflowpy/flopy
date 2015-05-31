@@ -22,12 +22,12 @@ contribute.
 
 __name__ = 'flopy'
 __author__ = 'Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy White, Jeff Starn, Mike Fienen, and Alain Frances'
-from version import __version__, __build__
+from .version import __version__, __build__
 
 #imports
-import modflow
-import mt3d
-import seawat
-import modpath
-import utils
-import plot
+from . import modflow
+from . import mt3d
+from . import seawat
+from . import modpath
+from . import utils
+from . import plot

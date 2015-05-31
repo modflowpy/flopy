@@ -143,7 +143,7 @@ class ModflowBcf(Package):
                 #comment = 'Sf2() = Specific yield of layer ' + str(k + 1)
                 #self.parent.write_array( f_bcf, self.sf2[k], self.unit_number[0], True, 13, ncol, comment,ext_base='sf2' )
                 f_bcf.write(self.sf2[k].get_file_entry())
-            if ((self.iwdflg <> 0) and ((self.laycon[k] == 1) or (self.laycon[k] == 3))):
+            if ((self.iwdflg != 0) and ((self.laycon[k] == 1) or (self.laycon[k] == 3))):
                 #comment = 'Wetdry() = Wetdry array of layer ' + str(k + 1)
                 #self.parent.write_array( f_bcf, self.wetdry[k], self.unit_number[0], True, 13, ncol, comment,ext_base='wetdry' )
                 f_bcf.write(self.wetdry[k].get_file_entry())
@@ -200,7 +200,7 @@ class ModflowBcf(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
-            print '   loading IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...'
+            print('   loading IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
         t = line.strip().split()
         ibcfcb,hdry,iwdflg,wetfct,iwetit,ihdwet = int(t[0]),float(t[1]),int(t[2]),float(t[3]),int(t[4]),int(t[5])
         if ibcfcb != 0:
@@ -208,12 +208,12 @@ class ModflowBcf(Package):
             ibcfcb = 53
         # LAYCON array
         if model.verbose:
-            print '   loading LAYCON...'
+            print('   loading LAYCON...')
         line = f.readline()
         t = line.strip().split()
         intercellt = np.zeros(nlay, dtype=np.int)
         laycon = np.zeros(nlay, dtype=np.int)
-        for k in xrange(nlay):
+        for k in range(nlay):
             ival = int(t[k])
             if ival > 9:
                 intercellt[k] = int(t[k][0])
@@ -222,7 +222,7 @@ class ModflowBcf(Package):
                 laycon[k] = ival
         # TRPY array
         if model.verbose:
-            print '   loading TRPY...'
+            print('   loading TRPY...')
         trpy = util_2d.load(f, model, (1, nlay), np.float32, 'trpy', ext_unit_dict)
         trpy = trpy.array.reshape( (nlay) )
         # property data for each layer based on options
@@ -236,35 +236,35 @@ class ModflowBcf(Package):
             vcont = 1.0
         sf2 = np.empty((nlay,nrow,ncol), dtype=np.float)
         wetdry = np.empty((nlay,nrow,ncol), dtype=np.float)
-        for k in xrange(nlay):
+        for k in range(nlay):
             if transient == True:
                 if model.verbose:
-                    print '   loading sf1 layer {0:3d}...'.format(k+1)
+                    print('   loading sf1 layer {0:3d}...'.format(k+1))
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sf1', ext_unit_dict)
                 sf1[k,:,:] = t.array
             if ((laycon[k] == 0) or (laycon[k] == 2)):
                 if model.verbose:
-                    print '   loading tran layer {0:3d}...'.format(k+1)
+                    print('   loading tran layer {0:3d}...'.format(k+1))
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'tran', ext_unit_dict)
                 tran[k,:,:] = t.array
             else:
                 if model.verbose:
-                    print '   loading hy layer {0:3d}...'.format(k+1)
+                    print('   loading hy layer {0:3d}...'.format(k+1))
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hy', ext_unit_dict)
                 hy[k,:,:] = t.array
             if k < (nlay - 1):
                 if model.verbose:
-                    print '   loading vcont layer {0:3d}...'.format(k+1)
+                    print('   loading vcont layer {0:3d}...'.format(k+1))
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vcont', ext_unit_dict)
                 vcont[k,:,:] = t.array
             if ((transient == True) and ((laycon[k] == 2) or (laycon[k] == 3))):
                 if model.verbose:
-                    print '   loading sf2 layer {0:3d}...'.format(k+1)
+                    print('   loading sf2 layer {0:3d}...'.format(k+1))
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sf2', ext_unit_dict)
                 sf2[k,:,:] = t.array
-            if ((iwdflg <> 0) and ((laycon[k] == 1) or (laycon[k] == 3))):
+            if ((iwdflg != 0) and ((laycon[k] == 1) or (laycon[k] == 3))):
                 if model.verbose:
-                    print '   loading sf2 layer {0:3d}...'.format(k+1)
+                    print('   loading sf2 layer {0:3d}...'.format(k+1))
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'wetdry', ext_unit_dict)
                 wetdry[k,:,:] = t.array
 

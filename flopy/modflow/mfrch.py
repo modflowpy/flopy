@@ -172,7 +172,7 @@ class ModflowRch(Package):
             npar = np.int(raw[1])
             if npar > 0:
                 if model.verbose:
-                    print '   Parameters detected. Number of parameters = ', npar
+                    print('   Parameters detected. Number of parameters = ', npar)
             line = f.readline()
         #dataset 2
         t = line.strip().split()
@@ -199,7 +199,7 @@ class ModflowRch(Package):
             irch = {}
         current_rech = []
         current_irch = []
-        for iper in xrange(nper):
+        for iper in range(nper):
             line = f.readline()
             t = line.strip().split()
             inrech = int(t[0])
@@ -208,12 +208,11 @@ class ModflowRch(Package):
             if inrech >= 0:
                 if npar == 0:
                     if model.verbose:
-                        print \
-                            '   loading rech stress period {0:3d}...'.format(iper+1)
+                        print('   loading rech stress period {0:3d}...'.format(iper+1))
                     t = util_2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
                 else:
                     parm_dict = {}
-                    for ipar in xrange(inrech):
+                    for ipar in range(inrech):
                         line = f.readline()
                         t = line.strip().split()
                         pname = t[0].lower()
@@ -234,8 +233,8 @@ class ModflowRch(Package):
             if nrchop == 2:
                 if inirch >= 0:
                     if model.verbose:
-                        print '   loading irch stress period {0:3d}...'.format(
-                            iper+1)
+                        print('   loading irch stress period {0:3d}...'.format(
+                            iper+1))
                     t = util_2d.load(f, model, (nrow,ncol), np.int, 'irch',
                                      ext_unit_dict)
                     current_irch = t

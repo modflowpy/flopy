@@ -64,7 +64,7 @@ class ModflowPar(object):
         """
         zone = None
         zone_key = None
-        for key, item in ext_unit_dict.iteritems():
+        for key, item in ext_unit_dict.items():
             if item.filetype.lower() == "zone":
                 zone = item
                 zone_key = key
@@ -107,7 +107,7 @@ class ModflowPar(object):
         """
         mult = None
         mult_key = None
-        for key, item in ext_unit_dict.iteritems():
+        for key, item in ext_unit_dict.items():
             if item.filetype.lower() == "mult":
                 mult = item
                 mult_key = key
@@ -152,7 +152,7 @@ class ModflowPar(object):
         """
         pval = None
         pval_key = None
-        for key, item in ext_unit_dict.iteritems():
+        for key, item in ext_unit_dict.items():
             if item.filetype.lower() == "pval":
                 pval = item
                 pval_key = key
@@ -200,19 +200,19 @@ class ModflowPar(object):
         if npar > 0:
             parm_dict = {}
             par_types = []
-            for nprm in xrange(npar):
+            for nprm in range(npar):
                 line = f.readline()
                 t = line.strip().split()
                 parnam = t[0].lower()
                 if verbose:
-                    print '   loading parameter "{}"...'.format(parnam)
+                    print('   loading parameter "{}"...'.format(parnam))
                 partyp = t[1].lower()
                 if partyp not in par_types:
                     par_types.append(partyp)
                 parval = np.float(t[2])
                 nclu = np.int(t[3])
                 clusters = []
-                for nc in xrange(nclu):
+                for nc in range(nclu):
                     line = f.readline()
                     t = line.strip().split()
                     lay = np.int(t[0])
@@ -275,7 +275,7 @@ class ModflowPar(object):
         """
         dtype = np.float32
         data = np.zeros(shape, dtype=dtype)
-        for key, tdict in parm_dict.iteritems():
+        for key, tdict in parm_dict.items():
             partyp, parval = tdict['partyp'], tdict['parval']
             nclu, clusters = tdict['nclu'], tdict['clusters']
             if model.mfpar.pval is None:

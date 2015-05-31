@@ -323,7 +323,7 @@ class ModflowNwt(Package):
             f = open(filename, 'r')
         #dataset 0 -- header
 
-        print '  ...load method not completed. default nwt file created.'
+        print('  ...load method not completed. default nwt file created.')
 
         #--close the open file
         f.close()

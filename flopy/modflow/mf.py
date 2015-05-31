@@ -122,8 +122,8 @@ class Modflow(BaseModel):
 
             #external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
-                print "Note: external_path " + str(external_path) +\
-                    " already exists"
+                print("Note: external_path " + str(external_path) +\
+                    " already exists")
             #assert os.path.exists(external_path),'external_path does not exist'
             else:
                 os.mkdir(external_path)
@@ -223,10 +223,10 @@ class Modflow(BaseModel):
         BaseModel.set_name(self, value)
 
         if self.version == 'mf2k':
-            for i in xrange(len(self.glo.extension)):
+            for i in range(len(self.glo.extension)):
                 self.glo.file_name[i] = self.name + '.' + self.glo.extension[i]
 
-        for i in xrange(len(self.lst.extension)):
+        for i in range(len(self.lst.extension)):
             self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
     
     # Property must be redeclared to override basemodels setter method
@@ -300,18 +300,18 @@ class Modflow(BaseModel):
                                                     ml.mfnam_packages,
                                                     verbose=verbose)
         except Exception as e:
-            print "error loading namfile entries from file"
-            print str(e)
+            print("error loading namfile entries from file")
+            print(str(e))
             return None
 
         if ml.verbose:
-            print '\n{}\nExternal unit dictionary:\n{}\n{}\n'.\
-                format(50*'-', ext_unit_dict, 50*'-')
+            print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.\
+                format(50*'-', ext_unit_dict, 50*'-'))
 
         # load dis
         dis = None
         dis_key = None
-        for key, item in ext_unit_dict.iteritems():
+        for key, item in ext_unit_dict.items():
             if item.filetype.lower() == "dis":
                 dis = item
                 dis_key = key
@@ -330,7 +330,7 @@ class Modflow(BaseModel):
 
         if load_only is None:
             load_only = []
-            for key,item in ext_unit_dict.iteritems():
+            for key,item in ext_unit_dict.items():
                 load_only.append(item.filetype)
         else:
             if not isinstance(load_only,list):
@@ -341,7 +341,7 @@ class Modflow(BaseModel):
                 if filetype != 'DIS':
                     load_only[i] = filetype
                     found = False
-                    for key,item in ext_unit_dict.iteritems():
+                    for key,item in ext_unit_dict.items():
                         if item.filetype == filetype:
                             found = True
                             break
@@ -358,7 +358,7 @@ class Modflow(BaseModel):
         ml.mfpar.set_mult(ml, ext_unit_dict)
 
         # try loading packages in ext_unit_dict
-        for key, item in ext_unit_dict.iteritems():
+        for key, item in ext_unit_dict.items():
             if item.package is not None:
                 if item.filetype in load_only:
                     try:
@@ -407,19 +407,19 @@ class Modflow(BaseModel):
 
         #--write message indicating packages that were successfully loaded
         if ml.verbose:
-            print 1 * '\n'
+            print(1 * '\n')
             s = '   The following {0} packages were successfully loaded.'\
                 .format(len(files_succesfully_loaded))
-            print s
+            print(s)
             for fname in files_succesfully_loaded:
-                print '      ' + os.path.basename(fname)
+                print('      ' + os.path.basename(fname))
             if len(files_not_loaded) > 0:
                 s = '   The following {0} packages were not loaded.'.format(
                     len(files_not_loaded))
-                print s
+                print(s)
                 for fname in files_not_loaded:
-                    print '      ' + os.path.basename(fname)
-                print '\n'
+                    print('      ' + os.path.basename(fname))
+                print('\n')
 
         #--return model object
         return ml

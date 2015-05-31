@@ -61,7 +61,7 @@ class ModflowMnwi(Package):
         assert self.byndflag >= 0, 'BYNDflag must be greater than or equal to zero.'
 
         if len(self.wellid_unit_qndflag_qhbflag_concflag) != self.mnwobs:
-            print 'WARNING: number of listed well ids to be monitored does not match MNWOBS.'
+            print('WARNING: number of listed well ids to be monitored does not match MNWOBS.')
 
         self.parent.add_package(self)
     def __repr__( self ):

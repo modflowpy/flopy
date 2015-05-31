@@ -39,9 +39,9 @@ class BinaryHeader():
         else:
             self.dtype = None
             self.header = None
-            print 'Specified {0} bintype is not available. Available bintypes are:'.format(self.header_type)
+            print('Specified {0} bintype is not available. Available bintypes are:'.format(self.header_type))
             for idx, t in enumerate(self.header_types):
-                print '  {0} {1}'.format(idx+1, t)
+                print('  {0} {1}'.format(idx+1, t))
         return
 
     def set_values(self, **kwargs):
@@ -52,19 +52,19 @@ class BinaryHeader():
         fkey = ['pertim', 'totim']
         ckey = ['text']
         for k in ikey:
-            if kwargs.has_key(k):
+            if k in kwargs:
                 try:
                     self.header[0][k] = int(kwargs[k])
                 except:
-                    print '{0} key not available in {1} header dtype'.format(k, self.header_type)
+                    print('{0} key not available in {1} header dtype'.format(k, self.header_type))
         for k in fkey:
-            if kwargs.has_key(k):
+            if k in kwargs:
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
-                    print '{0} key not available in {1} header dtype'.format(k, self.header_type)
+                    print('{0} key not available in {1} header dtype'.format(k, self.header_type))
         for k in ckey:
-            if kwargs.has_key(k):
+            if k in kwargs:
                 # Convert to upper case to be consistent case used by MODFLOW
                 # text strings. Necessary to work with HeadFile and UcnFile
                 # routines
@@ -275,7 +275,7 @@ class BinaryLayerFile(object):
 
         """
         for header in self.recordarray:
-            print header
+            print(header)
         return
     
     def _get_data_array(self, kstp=0, kper=0, totim=0):
@@ -302,7 +302,7 @@ class BinaryLayerFile(object):
             ipos = self.iposarray[idx]
             ilay = self.recordarray['ilay'][idx]
             if self.verbose:
-                print 'Byte position in file: {0}'.format(ipos)
+                print('Byte position in file: {0}'.format(ipos))
             self.file.seek(ipos, 0)
             data[ilay - 1, :, :] = binaryread(self.file, self.realtype,
                                               shape=(self.nrow, self.ncol))
@@ -710,7 +710,7 @@ class CellBudgetFile(object):
         while ipos < self.totalbytes:           
             header = self._get_header()
             if self.verbose:
-                print header
+                print(header)
             self.nrecords += 1
             totim = header['totim']
             if totim > 0 and totim not in self.times:
@@ -725,10 +725,10 @@ class CellBudgetFile(object):
             if self.verbose:
                 for itxt in ['kstp', 'kper', 'text', 'ncol', 'nrow', 'nlay',
                              'imeth', 'delt', 'pertim', 'totim']:
-                    print itxt + ': ' + str(header[itxt])
-                print 'file position: ', ipos
+                    print(itxt + ': ' + str(header[itxt]))
+                print('file position: ', ipos)
                 if int(header['imeth']) != 5:
-                    print '\n'
+                    print('\n')
 
             #store record and byte position mapping
             self.recorddict[tuple(header)] = ipos    #store the position right after header2
@@ -768,12 +768,12 @@ class CellBudgetFile(object):
         elif imeth == 5:
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
-            for i in xrange(naux):
+            for i in range(naux):
                 temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
             if self.verbose: 
-                print 'nlist: ', nlist
-                print '\n'
+                print('nlist: ', nlist)
+                print('\n')
             nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes + 
                               naux * self.realtype(1).nbytes)
         else:
@@ -800,7 +800,7 @@ class CellBudgetFile(object):
         Print a list of all of the records in the file
         """
         for rec in self.recordarray:
-            print rec
+            print(rec)
         return
 
     def unique_record_names(self):
@@ -1011,14 +1011,14 @@ class CellBudgetFile(object):
         if imeth == 0:
             if verbose:
                 s += 'an array of shape ' + str((nlay, nrow, ncol))
-                print s
+                print(s)
             return binaryread(self.file, self.realtype(1),
                               shape=(nlay, nrow, ncol))
         #imeth 1
         elif imeth == 1:
             if verbose:
                 s += 'an array of shape ' + str( (nlay, nrow, ncol) )
-                print s           
+                print(s)           
             return binaryread(self.file, self.realtype(1),
                               shape=(nlay, nrow, ncol))
 
@@ -1033,12 +1033,12 @@ class CellBudgetFile(object):
                                                                         ncol)
                 else:
                     s += 'a dictionary of size ' + str(nlist)
-                print s  
+                print(s)  
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 return self.create3D(data, nlay, nrow, ncol)
             else:
-                return dict(zip(data['node'], data['q']))
+                return dict(list(zip(data['node'], data['q'])))
 
         #imeth 3
         elif imeth == 3:
@@ -1055,7 +1055,7 @@ class CellBudgetFile(object):
                                                             (nrow, ncol))
                     s += 'The second is real data array of shape  ' + str(
                                                         (nrow, ncol) )
-                print s
+                print(s)
             if full3D:
                 out = np.ma.zeros((nlay, nrow, ncol), dtype=np.float32)
                 out.mask = True
@@ -1069,7 +1069,7 @@ class CellBudgetFile(object):
         elif imeth == 4:
             if verbose:
                 s += 'a 2d array of shape ' + str((nrow, ncol))
-                print s
+                print(s)
             return binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
 
         #imeth 5
@@ -1077,7 +1077,7 @@ class CellBudgetFile(object):
             nauxp1 = binaryread(self.file, np.int32)
             naux = nauxp1 - 1
             l = [('node', np.int32), ('q', self.realtype)]
-            for i in xrange(naux):
+            for i in range(naux):
                 auxname = binaryread(self.file, str, charlen=16)
                 l.append( (auxname, self.realtype))
             dtype = np.dtype(l)                
@@ -1093,7 +1093,7 @@ class CellBudgetFile(object):
             if full3D:
                 if verbose:
                     s += 'a list array of shape ({}, {}, {})'.format(nlay, nrow, ncol)
-                    print s
+                    print(s)
                 return self.create3D(data, nlay, nrow, ncol)
 
             # added 5/25/15 JJS
@@ -1103,8 +1103,8 @@ class CellBudgetFile(object):
             else:
                 if verbose:
                     s += 'a dictionary of size ' + str(nlist)
-                    print s
-                return dict(zip(data['node'], data['q']))
+                    print(s)
+                return dict(list(zip(data['node'], data['q'])))
 
         #should not reach this point
         return

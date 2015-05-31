@@ -456,9 +456,9 @@ class ModflowDis(Package):
         lenuni = int(lenuni)
         # dataset 2 -- laycbd
         if model.verbose:
-            print '   Loading dis package with:\n      ' + \
-                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol,nper)
-            print '   loading laycbd...'
+            print('   Loading dis package with:\n      ' + \
+                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol,nper))
+            print('   loading laycbd...')
         laycbd = np.empty( (nlay), dtype=np.int)
         d = 0
         while True:
@@ -473,35 +473,35 @@ class ModflowDis(Package):
                 break
         #dataset 3 -- delr
         if model.verbose:
-            print '   loading delr...'
+            print('   loading delr...')
         delr = util_2d.load(f, model, (1, ncol), np.float32, 'delr',
                             ext_unit_dict)
         delr = delr.array.reshape( (ncol) )
         #dataset 4 -- delc
         if model.verbose:
-            print '   loading delc...'
+            print('   loading delc...')
         delc = util_2d.load(f, model, (1, nrow), np.float32, 'delc',
                             ext_unit_dict)
         delc = delc.array.reshape( (nrow) )
         #dataset 5 -- top
         if model.verbose:
-            print '   loading top...'
+            print('   loading top...')
         top = util_2d.load(f, model, (nrow,ncol), np.float32, 'top',
                            ext_unit_dict)
         #dataset 6 -- botm
         if model.verbose:
-            print '   loading botm...'
+            print('   loading botm...')
         ncbd=laycbd.sum()
         botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
                             'botm', ext_unit_dict)
         #dataset 7 -- stress period info
         if model.verbose:
-            print '   loading stress period data...'
+            print('   loading stress period data...')
         perlen = []
         nstp = []
         tsmult = []
         steady = []
-        for k in xrange(nper):
+        for k in range(nper):
             line = f.readline()
             a1, a2, a3, a4 = line.strip().split()[0:4]
             a1 = float(a1)
@@ -528,7 +528,7 @@ class ModflowDis(Package):
         try:
             import pylab as plt
         except Exception as e:
-            print "error importing pylab: " + str(e)
+            print("error importing pylab: " + str(e))
             return
 
         #get the bas for ibound masking
@@ -582,7 +582,7 @@ class ModflowDis(Package):
 
 
         botm = self.botm.array
-        for k in xrange(self.nlay):
+        for k in range(self.nlay):
             ax_botm = plt.subplot2grid(shape, (0, k+1), aspect="equal")
             ax_thk = plt.subplot2grid(shape, (1, k+1), aspect="equal")
             ax_thk.set_xlabel("column", fontsize=fs)

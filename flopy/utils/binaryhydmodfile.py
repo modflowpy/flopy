@@ -52,12 +52,12 @@ class HydmodObs(HydmodBinaryStatements):
         #--read HYDLBL
         hydlbl = []
         #hydid = []
-        for idx in xrange(0,self.nhydtot):
+        for idx in range(0,self.nhydtot):
             cid = self.read_hyd_text()
             hydlbl.append( cid )
         self.hydlbl = np.array( hydlbl )
         if self.verbose == True:
-            print self.hydlbl
+            print(self.hydlbl)
         if not slurp:
             #--set position
             self.datastart = self.file.tell()
@@ -84,7 +84,7 @@ class HydmodObs(HydmodBinaryStatements):
         times = []
         while True:
             current_position = self.file.tell()
-            totim,v,success = self.next()
+            totim,v,success = next(self)
             if success == True:
                 times.append([totim,current_position])
             else: 
@@ -116,24 +116,24 @@ class HydmodObs(HydmodBinaryStatements):
         except:
             return -999.,False 
 
-    def next(self):
+    def __next__(self):
         totim,success=self.read_header()
         if(success):
-            for idx in xrange(0,self.nhydtot):
+            for idx in range(0,self.nhydtot):
                 if self.double==True:
                     self.v[idx] = float(self.read_double())
                 else:
                     self.v[idx] = self.read_real()
         else:
             if self.verbose == True:
-                print 'MODFLOW_HYDMOD object.next() reached end of file.'
+                print('MODFLOW_HYDMOD object.next() reached end of file.')
             self.v.fill(1.0E+32)
         return totim,self.v,success
 
     def get_values(self,idx):
-        iposition = long( self.times[idx,1] )
+        iposition = int( self.times[idx,1] )
         self.file.seek(iposition)
-        totim,v,success = self.next()
+        totim,v,success = next(self)
         if success == True:
             return totim,v,True
         else:
@@ -146,9 +146,9 @@ class HydmodObs(HydmodBinaryStatements):
             idx = int( record ) - 1
             if idx >= 0 and idx < self.nhydtot:
                 if self.verbose == True:
-                    print 'retrieving HYDMOD observation record [{0}]'.format( idx+1 )
+                    print('retrieving HYDMOD observation record [{0}]'.format( idx+1 ))
             else:
-                print 'Error: HYDMOD observation record {0} not found'.format( record.strip().lower() )
+                print('Error: HYDMOD observation record {0} not found'.format( record.strip().lower() ))
         except:
             for icnt,cid in enumerate(self.hydlbl):
                 if lblstrip > 0:
@@ -158,17 +158,17 @@ class HydmodObs(HydmodBinaryStatements):
                 if record.strip().lower() == tcid.strip().lower():
                     idx = icnt
                     if self.verbose == True:
-                        print 'retrieving HYDMOD observation record [{0}] {1}'.format( idx+1, record.strip().lower() )
+                        print('retrieving HYDMOD observation record [{0}] {1}'.format( idx+1, record.strip().lower() ))
                     break
             if idx == -1:
-                print 'Error: HYDMOD observation record {0} not found'.format( record.strip().lower() )
+                print('Error: HYDMOD observation record {0} not found'.format( record.strip().lower() ))
         gage_record = np.zeros((2))#tottime plus observation
         if idx != -1 and idx < self.nhydtot:
             #--find offset to position
             ilen = self.get_point_offset(idx)
             #--get data
             for time_data in self.times:
-                self.file.seek(long(time_data[1])+ilen)
+                self.file.seek(int(time_data[1])+ilen)
                 if self.double == True:
                     v=float(self.read_double())
                 else:
@@ -183,7 +183,7 @@ class HydmodObs(HydmodBinaryStatements):
     def get_point_offset(self,ipos):
         self.file.seek(self.datastart)
         lpos0 = self.file.tell()
-        point_offset = long(0)
+        point_offset = int(0)
         totim,success=self.read_header()
         idx = (ipos)
         if self.double == True:

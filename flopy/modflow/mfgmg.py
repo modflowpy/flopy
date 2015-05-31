@@ -88,7 +88,7 @@ class ModflowGmg(Package):
             f = open(filename, 'r')
         #dataset 0 -- header
 
-        print '   Warning: load method not completed. default gmg object created.'
+        print('   Warning: load method not completed. default gmg object created.')
 
         #--close the open file
         f.close()

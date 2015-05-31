@@ -139,7 +139,7 @@ class ModflowMlt(Package):
 
         #read zone data
         mult_dict = collections.OrderedDict()
-        for n in xrange(nml):
+        for n in range(nml):
             line = f.readline()
             t = line.strip().split()
             if len(t[0]) > 10:

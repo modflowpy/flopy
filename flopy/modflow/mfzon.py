@@ -142,7 +142,7 @@ class ModflowZon(Package):
 
         #read zone data
         zone_dict = collections.OrderedDict()
-        for n in xrange(nzn):
+        for n in range(nzn):
             line = f.readline()
             t = line.strip().split()
             if len(t[0]) > 10:
