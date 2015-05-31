@@ -557,7 +557,7 @@ class HeadFile(BinaryLayerFile):
     """
     def __init__(self, filename, text='head', precision='single',
                  verbose=False):
-        self.text = text
+        self.text = text.encode()
         self.header_dtype = BinaryHeader.set_dtype(bintype='Head',
                                                    precision=precision)
         super(HeadFile, self).__init__(filename, precision, verbose)
@@ -883,6 +883,7 @@ class CellBudgetFile(object):
         --------
 
         """
+        text = text.encode()
         #trap for totim error
         if totim is not None:
             if len(self.times) == 0:
@@ -1000,7 +1001,7 @@ class CellBudgetFile(object):
         self.file.seek(ipos, 0)
         imeth = header['imeth'][0]
 
-        t = header['text'][0]
+        t = str(header['text'][0])
         s = 'Returning ' + t.strip() + ' as '
 
         nlay = abs(header['nlay'][0])
