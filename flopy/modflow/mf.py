@@ -147,6 +147,7 @@ class Modflow(BaseModel):
             "wel": flopy.modflow.ModflowWel,
             "drn": flopy.modflow.ModflowDrn,
             "rch": flopy.modflow.ModflowRch,
+            "evt": flopy.modflow.ModflowEvt,
             "ghb": flopy.modflow.ModflowGhb,
             "gmg": flopy.modflow.ModflowGmg,
             "riv": flopy.modflow.ModflowRiv,
