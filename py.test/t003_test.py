@@ -2,7 +2,7 @@ import flopy
 import os.path
 
 def test_loadfreyberg():
-    pth = os.path.join('..', 'examples', 'freyberg')
+    pth = os.path.join('..', 'examples', 'data', 'freyberg')
     assert(os.path.isdir(pth))
     os.chdir(pth)
     namefile = 'freyberg.nam'
