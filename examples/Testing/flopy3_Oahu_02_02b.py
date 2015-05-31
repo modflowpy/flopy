@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw
 
 flopypath = os.path.join('..', '..')
 if flopypath not in sys.path:
-    print 'Adding to sys.path: ', flopypath
+    print('Adding to sys.path: ', flopypath)
     sys.path.append(flopypath)
 
 import flopy
@@ -151,18 +151,18 @@ pcg = flopy.modflow.ModflowPcg(mf, hclose=1.0e-4, rclose=5.0e-0) # pre-conjugate
 #--write the model input files
 mf.write_input()
 
-print '\n\nfinished write...\n'
+print('\n\nfinished write...\n')
 
 m2 = flopy.modflow.Modflow.load(modelname, exe_name='mf2005', model_ws=workspace, verbose=True)
 
-print '\nfinished read...\n'
+print('\nfinished read...\n')
 
 oc2 = m2.get_package('OC')
 
-print oc2.stress_period_data.keys()
+print(oc2.stress_period_data.keys())
 
 oc2.write_file()
 
-print '\nthis is the end...my friend\n'
+print('\nthis is the end...my friend\n')
 
 

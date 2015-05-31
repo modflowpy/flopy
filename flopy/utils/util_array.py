@@ -5,6 +5,9 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
  instantiate these classes directly.
 
 """
+from __future__ import division, print_function
+from future.utils import with_metaclass
+
 import os
 import shutil
 import copy
@@ -160,7 +163,7 @@ class meta_interceptor(type):
         return type.__call__(cls, *args, **kwds)
         
 
-class util_3d(object, metaclass=meta_interceptor):
+class util_3d((with_metaclass(meta_interceptor, object))):
     """
     util_3d class for handling 3-D model arrays.  just a thin wrapper around
         util_2d
@@ -334,8 +337,7 @@ class util_3d(object, metaclass=meta_interceptor):
         u3d = util_3d(model, shape, dtype, u2ds, name)
         return u3d
 
-
-class transient_2d(object, metaclass=meta_interceptor):
+class transient_2d((with_metaclass(meta_interceptor, object))):
     """
     transient_2d class for handling time-dependent 2-D model arrays.
     just a thin wrapper around util_2d
@@ -498,7 +500,7 @@ class transient_2d(object, metaclass=meta_interceptor):
         return u2d
 
 
-class util_2d(object, metaclass=meta_interceptor):
+class util_2d((with_metaclass(meta_interceptor, object))):
     """
     util_2d class for handling 2-D model arrays
 
@@ -731,7 +733,7 @@ class util_2d(object, metaclass=meta_interceptor):
                 #--write external formatted or unformatted array    
                 if not self.use_existing:    
                     if not self.bin:
-                        f = open(self.ext_filename, 'w', 0)
+                        f = open(self.ext_filename, 'w')
                         f.write(self.string)
                         f.close()
                     else:
