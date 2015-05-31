@@ -171,6 +171,7 @@ class ModflowEvt(Package):
             line = f.readline()
             if line[0] != '#':
                 break
+        npar = 0
         if "parameter" in line.lower():
             raw = line.strip().split()
             npar = int(raw[1])
