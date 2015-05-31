@@ -356,10 +356,12 @@ class mflist(object):
             if (kper_vtype == np.recarray):
                 name = f.name
                 f.close()
-                f = open(name,'ba')
+                f = open(name,'ab+')
+                #print(f)
                 self.__tofile(f, kper_data)
                 f.close()
                 f = open(name,'a')
+                #print(f)
             elif (kper_vtype == str):
                 f.write("         open/close " + kper_data + '\n')
 
