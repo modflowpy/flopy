@@ -67,7 +67,8 @@ class BaseModel(object):
 
     """
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
-                 exe_name='mf2k.exe', model_ws=None):
+                 exe_name='mf2k.exe', model_ws=None,
+                 structured=True):
         """
         BaseModel init
         """
@@ -87,6 +88,7 @@ class BaseModel(object):
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd()))
                 model_ws = os.getcwd()
         self.model_ws= model_ws
+        self.structured = structured
         self.pop_key_list = []
         self.cl_params = ''
         return
