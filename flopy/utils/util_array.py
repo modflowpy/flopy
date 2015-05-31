@@ -6,7 +6,7 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
 
 """
 from __future__ import division, print_function
-from future.utils import with_metaclass
+#from future.utils import with_metaclass
 
 import os
 import shutil
@@ -150,20 +150,21 @@ def u2d_like(model, other):
     u2d.model = model
     return u2d
 
-class meta_interceptor(type):
-    '''meta class to catch existing instances of util_2d,
-    transient_2d and util_3d to prevent re-instantiating them.
-    a lot of python trickery here...
 
-    '''
-    def __call__(cls, *args, **kwds):
-        for a in args:
-            if isinstance(a, util_2d) or isinstance(a, util_3d):
-                return a
-        return type.__call__(cls, *args, **kwds)
-        
+# class meta_interceptor(type):
+#     '''meta class to catch existing instances of util_2d,
+#     transient_2d and util_3d to prevent re-instantiating them.
+#     a lot of python trickery here...
+#     '''
+#     def __call__(cls, *args, **kwds):
+#         for a in args:
+#             if isinstance(a, util_2d) or isinstance(a, util_3d):
+#                 return a
+#         return type.__call__(cls, *args, **kwds)
 
-class util_3d((with_metaclass(meta_interceptor, object))):
+
+#class util_3d((with_metaclass(meta_interceptor, object))):
+class util_3d(object):
     """
     util_3d class for handling 3-D model arrays.  just a thin wrapper around
         util_2d
@@ -225,6 +226,13 @@ class util_3d((with_metaclass(meta_interceptor, object))):
     --------
 
     """
+
+    def __new__(cls,*args,**kwargs):
+        for a in args:
+            if isinstance(a,util_3d):
+                return a
+        return super(util_3d, cls).__new__(cls)
+
     def __init__(self, model, shape, dtype, value, name,
         fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
         '''3-D wrapper from util_2d - shape must be 3-D
@@ -337,7 +345,8 @@ class util_3d((with_metaclass(meta_interceptor, object))):
         u3d = util_3d(model, shape, dtype, u2ds, name)
         return u3d
 
-class transient_2d((with_metaclass(meta_interceptor, object))):
+#class transient_2d((with_metaclass(meta_interceptor, object))):
+class transient_2d(object):
     """
     transient_2d class for handling time-dependent 2-D model arrays.
     just a thin wrapper around util_2d
@@ -403,6 +412,13 @@ class transient_2d((with_metaclass(meta_interceptor, object))):
     --------
 
     """
+
+    def __new__(cls,*args,**kwargs):
+        for a in args:
+            if isinstance(a,transient_2d):
+                return a
+        return super(transient_2d, cls).__new__(cls)
+
     def __init__(self,model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
         self.model = model
@@ -500,7 +516,8 @@ class transient_2d((with_metaclass(meta_interceptor, object))):
         return u2d
 
 
-class util_2d((with_metaclass(meta_interceptor, object))):
+#class util_2d((with_metaclass(meta_interceptor, object))):
+class util_2d(object):
     """
     util_2d class for handling 2-D model arrays
 
@@ -559,6 +576,13 @@ class util_2d((with_metaclass(meta_interceptor, object))):
     --------
 
     """
+
+    def __new__(cls,*args,**kwargs):
+        for a in args:
+            if isinstance(a,util_2d):
+                return a
+        return super(util_2d, cls).__new__(cls)
+
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
         ext_unit_dict=None):
