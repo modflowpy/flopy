@@ -8,6 +8,16 @@ def test_util2d():
     a1 = u2d.array
     a2 = np.ones((10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
+    #bin read write test
+    fname = "test.bin"
+    u2d.write_bin((10,10),fname,u2d.array)
+    a3 = u2d.load_bin((10,10),fname,u2d.dtype)[1]
+    assert np.array_equal(a3, a1)
+    #ascii read write test
+    fname = "text.dat"
+    u2d.write_txt((10,10),fname,u2d.array)
+    a4 = u2d.load_txt((10,10),fname,u2d.dtype,"(FREE)")
+    assert np.array_equal(a1, a4)
     return
 
 def test_util3d():
