@@ -170,7 +170,8 @@ class Mt3dSsm(Package):
         
         # Loop through each stress period and write ssm information
         for kper in range(nper):
-
+            if f_ssm.closed == True:
+                f_ssm = open(f_ssm.name,'a')
             # Distributed sources and sinks (Recharge and Evapotranspiration)
             if (self.crch != None):
                 for c, t2d in enumerate(self.crch):
