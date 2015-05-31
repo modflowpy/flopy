@@ -73,7 +73,7 @@ class ModflowSwr1(Package):
         Write the package input file.
 
         """
-        print 'SWR1 write method not implemented yet'
+        print('SWR1 write method not implemented yet')
         # f_swr = open(self.fn_path, 'w')
         #f_swr.write('{0}\n'.format(self.heading))
         #f_swr.close()
@@ -120,11 +120,11 @@ class ModflowSwr1(Package):
             sys.stdout.write('loading swr1 process file...\n')
 
         #--todo: everything
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
 
-        print '   Warning: load method not completed. default swr1 object created.'
+        print('   Warning: load method not completed. default swr1 object created.')
 
         #--close open file
         f.close()

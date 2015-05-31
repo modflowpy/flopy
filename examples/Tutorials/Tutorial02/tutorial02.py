@@ -46,13 +46,13 @@ pcg = flopy.modflow.ModflowPcg(mf)
 stageleft = 10.
 stageright = 10.
 bound_sp1 = []
-for il in xrange(nlay):
+for il in range(nlay):
     condleft = hk * (stageleft - zbot) * delc
     condright = hk * (stageright - zbot) * delc
-    for ir in xrange(nrow):
+    for ir in range(nrow):
         bound_sp1.append([il, ir, 0, stageleft, condleft])
         bound_sp1.append([il, ir, ncol - 1, stageright, condright])
-print 'Adding ', len(bound_sp1), 'GHBs for stress period 1.'
+print('Adding ', len(bound_sp1), 'GHBs for stress period 1.')
 
 # Make list for stress period 2
 stageleft = 10.
@@ -60,11 +60,11 @@ stageright = 0.
 condleft = hk * (stageleft - zbot) * delc
 condright = hk * (stageright - zbot) * delc
 bound_sp2 = []
-for il in xrange(nlay):
-    for ir in xrange(nrow):
+for il in range(nlay):
+    for ir in range(nrow):
         bound_sp2.append([il, ir, 0, stageleft, condleft])
         bound_sp2.append([il, ir, ncol - 1, stageright, condright])
-print 'Adding ', len(bound_sp2), 'GHBs for stress period 2.'
+print('Adding ', len(bound_sp2), 'GHBs for stress period 2.')
 
 # We do not need to add a dictionary entry for stress period 3.
 # Flopy will automatically take the list from stress period 2 and apply it
@@ -114,8 +114,8 @@ cbb = bf.CellBudgetFile(modelname+'.cbc')
 # Setup contour parameters
 levels = np.linspace(0, 10, 11)
 extent = (delr/2., Lx - delr/2., delc/2., Ly - delc/2.)
-print 'Levels: ', levels
-print 'Extent: ', extent
+print('Levels: ', levels)
+print('Extent: ', extent)
 
 # Well point
 wpt = ((float(ncol/2)-0.5)*delr, (float(nrow/2-1)+0.5)*delc)
@@ -124,13 +124,13 @@ wpt = (450., 550.)
 # Make the plots
 mytimes = [1.0, 101.0, 201.0]
 for iplot, time in enumerate(mytimes):
-    print '*****Processing time: ', time
+    print('*****Processing time: ', time)
     head = headobj.get_data(totim=time)
     #Print statistics
-    print 'Head statistics'
-    print '  min: ', head.min()
-    print '  max: ', head.max()
-    print '  std: ', head.std()
+    print('Head statistics')
+    print('  min: ', head.min())
+    print('  max: ', head.max())
+    print('  std: ', head.std())
 
     # Extract flow right face and flow front face
     frf = cbb.get_data(text='FLOW RIGHT FACE', totim=time)[0]

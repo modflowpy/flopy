@@ -321,7 +321,7 @@ class ModflowMnw2(Package):
                                                  auxParamString))
 
         # -Section 2 - Repeat this section MNWMAX times (once for each well)
-        for i in xrange(self.mnwmax):
+        for i in range(self.mnwmax):
             #-Section 2a - WELLID, NNODES
             f.write('{}{:10d}\n'.format(self.wellid[i], self.nnodes[i]))
             #-Section 2b - LOSSTYPE, PUMPLOC, Qlimit, PPFLAG, PUMPCAP
@@ -349,13 +349,13 @@ class ModflowMnw2(Package):
             #-Section 2d-1 - NNODES > 0; LAY, ROW, COL {Rw, Rskin, Kskin, B, C, P, CWC, PP}
             absNnodes = abs(self.nnodes[i])
             if self.nnodes[i] > 0:
-                for n in xrange(absNnodes):
+                for n in range(absNnodes):
                     f.write('{:10d}{:10d}{:10d}\n'.format(self.lay_row_col[i][n, 0]+1,
                                                           self.lay_row_col[i][n, 1]+1,
                                                           self.lay_row_col[i][n, 2]+1))
             #-Section 2d-2 - NNODES < 0; Ztop, Zbotm, ROW, COL {Rw, Rskin, Kskin, B, C, P, CWC, PP}
             elif self.nnodes[i] < 0:
-                for n in xrange(absNnodes):
+                for n in range(absNnodes):
                     #print i, n
                     #print self.ztop_zbotm_row_col
                     f.write('{:10.4g} {:10.4g} {:10d} {:10d}\n'.format(self.ztop_zbotm_row_col[i][n, 0],
@@ -374,11 +374,11 @@ class ModflowMnw2(Package):
                 index number in the "wellid" array so the right parameters (Hlim Qcut {Qfrcmn Qfrcmx}) are accessed.
                 '''
                 itmp_wellid_index_array = np.empty((self.itmp[p], 2), dtype='object')
-                for well in xrange(self.itmp[p]):
+                for well in range(self.itmp[p]):
                     itmp_wellid_index_array[well, 0] = self.wellid_qdes[p][well, 0]
                     itmp_wellid_index_array[well, 1] = np.where(self.wellid == self.wellid_qdes[p][well, 0])
 
-                for j in xrange(self.itmp[p]):
+                for j in range(self.itmp[p]):
                     #-Section 4a - WELLID Qdes {CapMult} {Cprime} {xyz}
                     assert self.wellid_qdes[p][j, 0] in self.wellid, \
                         'WELLID for pumping well is not present in "wellid" array'

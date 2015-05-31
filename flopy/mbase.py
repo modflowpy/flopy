@@ -12,7 +12,7 @@ import os
 import subprocess as sp
 import webbrowser as wb
 import warnings
-from modflow.mfparbc import ModflowParBc as mfparbc
+from .modflow.mfparbc import ModflowParBc as mfparbc
 from flopy import utils
 
 
@@ -84,7 +84,7 @@ class BaseModel(object):
                 os.makedirs(model_ws)
             except:
                 #print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
-                print '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd())
+                print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd()))
                 model_ws = os.getcwd()
         self.model_ws= model_ws
         self.pop_key_list = []
@@ -116,12 +116,12 @@ class BaseModel(object):
             if pp.allowDuplicates:
                 continue
             elif (isinstance(p, type(pp))):
-                print '****Warning -- two packages of the same type: ',type(p),type(pp)                 
-                print 'replacing existing Package...'
+                print('****Warning -- two packages of the same type: ',type(p),type(pp))                 
+                print('replacing existing Package...')
                 self.packagelist[i] = p
                 return        
         if self.verbose:
-            print 'adding Package: ', p.name[0]
+            print('adding Package: ', p.name[0])
         self.packagelist.append(p)
     
     def remove_package(self, pname):
@@ -137,10 +137,10 @@ class BaseModel(object):
         for i, pp in enumerate(self.packagelist):
             if pname in pp.name:
                 if self.verbose:
-                    print 'removing Package: ', pp.name
+                    print('removing Package: ', pp.name)
                 self.packagelist.pop(i)
                 return
-        raise StopIteration , 'Package name '+pname+' not found in Package list'
+        raise StopIteration('Package name '+pname+' not found in Package list')
 
     def __getattr__(self, item):
         """
@@ -239,7 +239,7 @@ class BaseModel(object):
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
         else:
-            raise Exception,' either fname or unit must be passed to remove_external()'
+            raise Exception(' either fname or unit must be passed to remove_external()')
         return            
 
     def get_name_file_entries(self):
@@ -326,7 +326,7 @@ class BaseModel(object):
                 os.makedirs(new_pth)
             except:
                 #print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
-                print '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd())
+                print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd()))
                 new_pth = os.getcwd()
         #--reset the model workspace
         self.model_ws = new_pth
@@ -363,6 +363,11 @@ class BaseModel(object):
         # Check to make sure that program and namefile exist
         exe = which(self.exe_name)
         if exe is None:
+            import platform
+            if platform.system() in 'Windows':
+                if not self.exe_name.lower().endswith('.exe'):
+                    exe = which(self.exe_name + '.exe')
+        if exe is None:
             s = 'The program {} does not exist or is not executable.'.format(self.exe_name)
             raise Exception(s)
         else:
@@ -378,19 +383,19 @@ class BaseModel(object):
                         stdout=sp.PIPE, cwd=self.model_ws)
         while True:
           line = proc.stdout.readline()
-          if line != '':
-            if 'normal termination of simulation' in line.lower():
+          c = line.decode('utf-8')
+          if c != '':
+            if 'normal termination of simulation' in c.lower():
                 success = True
-            #c = line.split('\r')
-            c = line.rstrip('\r\n')
+            c = c.rstrip('\r\n')
             if not silent:
-                print c
+                print('{}'.format(c))
             if report == True:
                 buff.append(c)
           else:
             break
         if pause == True:
-            raw_input('Press Enter to continue...')
+            input('Press Enter to continue...')
         return ([success, buff])
         
     def write_input(self, SelPackList=False):
@@ -405,22 +410,22 @@ class BaseModel(object):
         #org_dir = os.getcwd()
         #os.chdir(self.model_ws)
         if self.verbose:
-            print '\nWriting packages:'
+            print('\nWriting packages:')
         if SelPackList == False:
             for p in self.packagelist:            
                 if self.verbose:
-                    print '   Package: ', p.name[0]
+                    print('   Package: ', p.name[0])
                 p.write_file()
         else:
             for pon in SelPackList:
                 for i, p in enumerate(self.packagelist):
                     if pon in p.name:
                         if self.verbose:
-                            print '   Package: ', p.name[0]
+                            print('   Package: ', p.name[0])
                         p.write_file()
                         break
         if self.verbose:
-            print ' '
+            print(' ')
         #--write name file
         self.write_name_file()
         #os.chdir(org_dir)
@@ -431,7 +436,7 @@ class BaseModel(object):
         Every Package needs its own writenamefile function
 
         """
-        raise Exception, 'IMPLEMENTATION ERROR: writenamefile must be overloaded'
+        raise Exception('IMPLEMENTATION ERROR: writenamefile must be overloaded')
 
     def get_name(self):
         """
@@ -458,7 +463,7 @@ class BaseModel(object):
         self.__name = value
         self.namefile = self.__name + '.' + self.namefile_ext
         for p in self.packagelist:
-            for i in xrange(len(p.extension)):
+            for i in range(len(p.extension)):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
     
@@ -525,7 +530,7 @@ class Package(object):
     def __repr__(self):
         s = self.__doc__
         exclude_attributes = ['extension', 'heading', 'name', 'parent', 'url']
-        for attr, value in sorted(self.__dict__.iteritems()):
+        for attr, value in sorted(self.__dict__.items()):
             if not (attr in exclude_attributes):
                 if (isinstance(value, list)):
                     if (len(value) == 1):
@@ -544,12 +549,12 @@ class Package(object):
 
     def __getitem__(self, item):
         if not isinstance(item,list) and not isinstance(item,tuple):
-            assert item in self.stress_period_data.data.keys(),"package.__getitem__() kper "+str(item)+" not in data.keys()"
+            assert item in list(self.stress_period_data.data.keys()),"package.__getitem__() kper "+str(item)+" not in data.keys()"
             return self.stress_period_data[item]
 
         if item[1] not in self.dtype.names:
             raise Exception ("package.__getitem(): item \'"+item+"\' not in dtype names "+str(self.dtype.names))
-        assert item[0] in self.stress_period_data.data.keys(),"package.__getitem__() kper "+str(item[0])+" not in data.keys()"
+        assert item[0] in list(self.stress_period_data.data.keys()),"package.__getitem__() kper "+str(item[0])+" not in data.keys()"
         if self.stress_period_data.vtype[item[0]] == np.recarray:
             return self.stress_period_data[item[0]][item[1]]
 
@@ -558,7 +563,7 @@ class Package(object):
 
     def __setattr__(self, key, value):
         var_dict = vars(self)
-        if key in var_dict.keys():
+        if key in list(var_dict.keys()):
             old_value = var_dict[key]
             if isinstance(old_value, utils.util_2d):
                 value = utils.util_2d(self.parent, old_value.shape,
@@ -630,7 +635,7 @@ class Package(object):
         Every Package needs its own write_file function
 
         """
-        print 'IMPLEMENTATION ERROR: write_file must be overloaded'
+        print('IMPLEMENTATION ERROR: write_file must be overloaded')
         return
 
     @staticmethod
@@ -642,7 +647,7 @@ class Package(object):
 
         bc_pack_types = []
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header
@@ -660,7 +665,7 @@ class Package(object):
             if nppak > 0:
                 mxl = np.int(t[2])
                 if model.verbose:
-                    print '   Parameters detected. Number of parameters = ', nppak
+                    print('   Parameters detected. Number of parameters = ', nppak)
             line = f.readline()
         #dataset 2a
         t = line.strip().split()
@@ -722,9 +727,9 @@ class Package(object):
         #read data for every stress period
         bnd_output = None
         stress_period_data = {}
-        for iper in xrange(nper):
+        for iper in range(nper):
             if model.verbose:
-                print "   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1)
+                print("   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1))
             line = f.readline()
             if line == '':
                 break
@@ -741,7 +746,7 @@ class Package(object):
                 current = pack_type.get_empty(itmp, aux_names=aux_names)
             elif itmp > 0:
                 current = pack_type.get_empty(itmp, aux_names=aux_names)
-                for ibnd in xrange(itmp):
+                for ibnd in range(itmp):
                     line = f.readline()
                     if "open/close" in line.lower():
                         #raise NotImplementedError("load() method does not support \'open/close\'")
@@ -763,7 +768,7 @@ class Package(object):
                         current[ibnd] = tuple(t[:len(current.dtype.names)])
                     except:
                         t = []
-                        for ivar in xrange(len(current.dtype.names)):
+                        for ivar in range(len(current.dtype.names)):
                             istart = ivar * 10
                             istop = istart + 10
                             t.append(line[istart:istop])
@@ -777,7 +782,7 @@ class Package(object):
             else:
                 bnd_output = np.recarray.copy(current)
 
-            for iparm in xrange(itmpp):
+            for iparm in range(itmpp):
                 line = f.readline()
                 t = line.strip().split()
                 pname = t[0].lower()

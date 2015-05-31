@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
-import plotutil
-from plotutil import bc_color_dict, rotate
+from . import plotutil
+from .plotutil import bc_color_dict, rotate
 
 
 class ModelCrossSection(object):
@@ -52,7 +52,7 @@ class ModelCrossSection(object):
             s = 'line must be specified.'
             raise Exception(s)
         
-        linekeys = [linekeys.lower() for linekeys in line.keys()]
+        linekeys = [linekeys.lower() for linekeys in list(line.keys())]
         
         if len(linekeys) < 1:
             s = 'only row, column, or line can be specified in line dictionary.\n'
@@ -97,7 +97,7 @@ class ModelCrossSection(object):
         self.xcenter = self.get_xcenter_array()
         self.ycenter = self.get_ycenter_array()
                                                          
-        onkey = line.keys()[0]                      
+        onkey = list(line.keys())[0]                      
         if 'row' in linekeys:
             self.direction = 'x'
             pts = [(self.xedge[0]+0.1, self.ycenter[int(line[onkey])]-0.1), 
@@ -143,7 +143,7 @@ class ModelCrossSection(object):
         top = self.dis.top.array
         botm = self.dis.botm.array
         elev = [top.copy()]
-        for k in xrange(self.dis.nlay):
+        for k in range(self.dis.nlay):
             elev.append(botm[k, :, :])
         
         self.elev = np.array(elev)
@@ -151,7 +151,7 @@ class ModelCrossSection(object):
         self.layer1 = self.dis.nlay + 1
         
         zpts = []
-        for k in xrange(self.layer0, self.layer1):
+        for k in range(self.layer0, self.layer1):
             zpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
                                                    self.yedge,
                                                    self.elev[k, :, :]))
@@ -161,10 +161,10 @@ class ModelCrossSection(object):
         zcentergrid = []
         nz = 0
         if self.dis.nlay == 1:
-            for k in xrange(0, self.zpts.shape[0]):
+            for k in range(0, self.zpts.shape[0]):
                 nz += 1
                 nx = 0
-                for i in xrange(0, self.xpts.shape[0], 2):
+                for i in range(0, self.xpts.shape[0], 2):
                     try:
                         xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
                         zp = self.zpts[k, i]
@@ -174,10 +174,10 @@ class ModelCrossSection(object):
                     except:
                         break
         else:
-            for k in xrange(0, self.zpts.shape[0]-1):
+            for k in range(0, self.zpts.shape[0]-1):
                 nz += 1
                 nx = 0
-                for i in xrange(0, self.xpts.shape[0], 2):
+                for i in range(0, self.xpts.shape[0], 2):
                     try:
                         xp = 0.5 * (self.xpts[i][2] + self.xpts[i+1][2])
                         zp = 0.5 * (self.zpts[k, i] + self.zpts[k+1, i+1])
@@ -234,7 +234,7 @@ class ModelCrossSection(object):
                 plotarray = np.ma.masked_equal(plotarray, mval)
 
         vpts = []
-        for k in xrange(self.dis.nlay):
+        for k in range(self.dis.nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
                                                    self.yedge,
                                                    plotarray[k, :, :]))
@@ -280,7 +280,7 @@ class ModelCrossSection(object):
         plotarray = a
 
         vpts = []
-        for k in xrange(self.dis.nlay):
+        for k in range(self.dis.nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
                                                    self.yedge,
                                                    plotarray[k, :, :]))
@@ -291,7 +291,7 @@ class ModelCrossSection(object):
                 vpts = np.ma.masked_equal(vpts, mval)
 
         plot = []
-        for k in xrange(vpts.shape[0]):
+        for k in range(vpts.shape[0]):
             plot.append(ax.plot(self.d, vpts[k, :], **kwargs))
         return plot
 
@@ -323,7 +323,7 @@ class ModelCrossSection(object):
         plotarray = a
 
         vpts = []
-        for k in xrange(self.dis.nlay):
+        for k in range(self.dis.nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
                                                    self.yedge,
                                                    plotarray[k, :, :]))
@@ -335,7 +335,7 @@ class ModelCrossSection(object):
         idxm = np.ma.getmask(vpts)
 
         plot = []
-        for k in xrange(self.dis.nlay):
+        for k in range(self.dis.nlay):
             idxmk = idxm[k, :]
             v = vpts[k, :]
             y1 = self.zpts[k, :]
@@ -388,7 +388,7 @@ class ModelCrossSection(object):
         plotarray = a
 
         vpts = []
-        for k in xrange(self.dis.nlay):
+        for k in range(self.dis.nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
                                                    self.yedge,
                                                    plotarray[k, :, :]))
@@ -621,7 +621,7 @@ class ModelCrossSection(object):
             u2 = -qx[:, :, :]
             v = qz[:, :, :]
         elif self.direction == 'xy':
-            print 'csplot_discharge does not support arbitrary cross-sections'
+            print('csplot_discharge does not support arbitrary cross-sections')
             return None
             
         if isinstance(head, np.ndarray):
@@ -632,8 +632,8 @@ class ModelCrossSection(object):
         if nlay == 1:
             x = []
             z = []
-            for k in xrange(1):
-                for i in xrange(self.xcentergrid.shape[1]):
+            for k in range(1):
+                for i in range(self.xcentergrid.shape[1]):
                     x.append(self.xcentergrid[k, i])
                     z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k+1, i]))
             x = np.array(x).reshape((1,self.xcentergrid.shape[1]))
@@ -645,7 +645,7 @@ class ModelCrossSection(object):
         upts = []
         u2pts = []
         vpts = []
-        for k in xrange(self.dis.nlay):
+        for k in range(self.dis.nlay):
             upts.append(plotutil.cell_value_points(self.xpts, self.xedge,
                                                    self.yedge, u[k, :, :]))
             u2pts.append(plotutil.cell_value_points(self.xpts, self.xedge,
@@ -701,8 +701,8 @@ class ModelCrossSection(object):
         v = []
         
         colors = []
-        for k in xrange(zpts.shape[0]-1):
-            for idx in xrange(0, len(self.xpts)-1, 2):
+        for k in range(zpts.shape[0]-1):
+            for idx in range(0, len(self.xpts)-1, 2):
                 try:
                     ll = ((self.xpts[idx][2], zpts[k+1, idx]))
                     try:
@@ -745,8 +745,8 @@ class ModelCrossSection(object):
         from matplotlib.collections import LineCollection
 
         linecol = []
-        for k in xrange(self.zpts.shape[0]-1):
-            for idx in xrange(0, len(self.xpts)-1, 2):
+        for k in range(self.zpts.shape[0]-1):
+            for idx in range(0, len(self.xpts)-1, 2):
                 try:
                     ll = ((self.xpts[idx][2], self.zpts[k+1, idx]))
                     try:
@@ -782,7 +782,7 @@ class ModelCrossSection(object):
 
         """
         zpts = []
-        for k in xrange(self.layer0, self.layer1):
+        for k in range(self.layer0, self.layer1):
             e = self.elev[k, :, :]
             if k < self.dis.nlay:
                 v = vs[k, :, :]
@@ -808,7 +808,7 @@ class ModelCrossSection(object):
 
         """
         vpts = []
-        for k in xrange(self.layer0, self.layer1):
+        for k in range(self.layer0, self.layer1):
             if k < self.dis.nlay:
                 e = vs[k, :, :]
             else:
@@ -820,10 +820,10 @@ class ModelCrossSection(object):
         zcentergrid = []
         nz = 0
         if self.dis.nlay == 1:
-            for k in xrange(0, self.zpts.shape[0]):
+            for k in range(0, self.zpts.shape[0]):
                 nz += 1
                 nx = 0
-                for i in xrange(0, self.xpts.shape[0], 2):
+                for i in range(0, self.xpts.shape[0], 2):
                     nx += 1
                     vp = vpts[k, i]
                     zp = self.zpts[k, i]
@@ -832,10 +832,10 @@ class ModelCrossSection(object):
                             zp = vp
                     zcentergrid.append(zp)
         else:
-            for k in xrange(0, self.zpts.shape[0], 2):
+            for k in range(0, self.zpts.shape[0], 2):
                 nz += 1
                 nx = 0
-                for i in xrange(0, self.xpts.shape[0], 2):
+                for i in range(0, self.xpts.shape[0], 2):
                     nx += 1
                     vp = vpts[k, i]
                     ep = self.zpts[k, i]

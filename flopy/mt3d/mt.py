@@ -1,12 +1,12 @@
 from flopy.mbase import BaseModel, Package
-from mtadv import Mt3dAdv
-from mtbtn import Mt3dBtn
-from mtdsp import Mt3dDsp
-from mtgcg import Mt3dGcg
-from mtphc import Mt3dPhc
-from mtrct import Mt3dRct
-from mtssm import Mt3dSsm
-from mttob import Mt3dTob
+from .mtadv import Mt3dAdv
+from .mtbtn import Mt3dBtn
+from .mtdsp import Mt3dDsp
+from .mtgcg import Mt3dGcg
+from .mtphc import Mt3dPhc
+from .mtrct import Mt3dRct
+from .mtssm import Mt3dSsm
+from .mttob import Mt3dTob
 import os
 
 class Mt3dList(Package):
@@ -57,8 +57,8 @@ class Mt3dms(BaseModel):
         self.__next_ext_unit = 500
         if external_path is not None:
             if os.path.exists(external_path):
-                print "Note: external_path " + str(external_path) +\
-                    " already exists"
+                print("Note: external_path " + str(external_path) +\
+                    " already exists")
             #assert os.path.exists(external_path),'external_path does not exist'
             else:
                 os.mkdir(external_path)

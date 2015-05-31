@@ -85,7 +85,7 @@ class ModflowPval(Package):
 
         """
 
-        if item in self.pval_dict.keys():
+        if item in list(self.pval_dict.keys()):
             return self.pval_dict[item]
         else:
             return None
@@ -125,7 +125,7 @@ class ModflowPval(Package):
         if model.verbose:
             sys.stdout.write('loading pval package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         else:
@@ -145,7 +145,7 @@ class ModflowPval(Package):
 
         #read PVAL data
         pval_dict = dict()
-        for n in xrange(npval):
+        for n in range(npval):
             line = f.readline()
             t = line.strip().split()
             if len(t[0]) > 10:
