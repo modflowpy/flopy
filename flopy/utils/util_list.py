@@ -313,8 +313,10 @@ class mflist(object):
     def write_transient(self, f, single_per=None):
         #write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
-        assert isinstance(f, file), "mflist.write() error: " +\
-                                    "f argument must be a file handle"
+        # assert isinstance(f, file), "mflist.write() error: " +\
+        #                             "f argument must be a file handle"
+        assert hasattr(f,"read"), "mflist.write() error: "+\
+                                  "f argument must be a file handle"
         kpers = list(self.data.keys())
         kpers.sort()
         # Assert 0 in kpers,"mflist.write() error: kper 0 not defined"
@@ -352,7 +354,12 @@ class mflist(object):
                     0, kper))
 
             if (kper_vtype == np.recarray):
+                name = f.name
+                f.close()
+                f = open(name,'ba')
                 self.__tofile(f, kper_data)
+                f.close()
+                f = open(name,'a')
             elif (kper_vtype == str):
                 f.write("         open/close " + kper_data + '\n')
 
