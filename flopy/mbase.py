@@ -17,8 +17,8 @@ from flopy import utils
 
 
 # Global variables
-iconst = 1 # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
-iprn = -1 # Printout flag. If >= 0 then array values read are printed in listing file.
+iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
+iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
 
 
 def is_exe(fpath):
@@ -66,6 +66,7 @@ class BaseModel(object):
         to the current working directory.
 
     """
+
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
                  exe_name='mf2k.exe', model_ws=None,
                  structured=True):
@@ -84,10 +85,10 @@ class BaseModel(object):
             try:
                 os.makedirs(model_ws)
             except:
-                #print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
+                # print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd()))
                 model_ws = os.getcwd()
-        self.model_ws= model_ws
+        self.model_ws = model_ws
         self.structured = structured
         self.pop_key_list = []
         self.cl_params = ''
@@ -104,7 +105,7 @@ class BaseModel(object):
         """
         self.exe_name = exe_name
         return
-        
+
     def add_package(self, p):
         """
         Add a package.
@@ -118,14 +119,14 @@ class BaseModel(object):
             if pp.allowDuplicates:
                 continue
             elif (isinstance(p, type(pp))):
-                print('****Warning -- two packages of the same type: ',type(p),type(pp))                 
+                print('****Warning -- two packages of the same type: ', type(p), type(pp))
                 print('replacing existing Package...')
                 self.packagelist[i] = p
-                return        
+                return
         if self.verbose:
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
-    
+
     def remove_package(self, pname):
         """
         Remove a package from this model
@@ -142,7 +143,7 @@ class BaseModel(object):
                     print('removing Package: ', pp.name)
                 self.packagelist.pop(i)
                 return
-        raise StopIteration('Package name '+pname+' not found in Package list')
+        raise StopIteration('Package name ' + pname + ' not found in Package list')
 
     def __getattr__(self, item):
         """
@@ -174,7 +175,7 @@ class BaseModel(object):
 
         """
         return self.external_path + prefix + '_' + str(num) + '.' + self.external_extension
-       
+
     def assign_external(self, num, prefix):
         """
         Assign external file
@@ -190,10 +191,10 @@ class BaseModel(object):
         fname = self.build_array_name(num, prefix)
         unit = (self.next_ext_unit())
         self.external_fnames.append(fname)
-        self.external_units.append(unit)       
-        self.external_binflag.append(False)        
+        self.external_units.append(unit)
+        self.external_binflag.append(False)
         return fname, unit
-    
+
     def add_external(self, fname, unit, binflag=False):
         """
         Assign an external array so that it will be listed as a DATA or
@@ -211,10 +212,10 @@ class BaseModel(object):
 
         """
         self.external_fnames.append(fname)
-        self.external_units.append(unit)        
+        self.external_units.append(unit)
         self.external_binflag.append(binflag)
         return
-    
+
     def remove_external(self, fname=None, unit=None):
         """
         Remove an external file from the model by specifying either the
@@ -242,7 +243,7 @@ class BaseModel(object):
                     self.external_binflag.pop(i)
         else:
             raise Exception(' either fname or unit must be passed to remove_external()')
-        return            
+        return
 
     def get_name_file_entries(self):
         """
@@ -258,11 +259,11 @@ class BaseModel(object):
                 if p.unit_number[i] == 0:
                     continue
                 s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                             p.unit_number[i],
-                                                             p.file_name[i],
-                                                             p.extra[i]))
+                                                               p.unit_number[i],
+                                                               p.file_name[i],
+                                                               p.extra[i]))
         return s
-                
+
     def get_package(self, name):
         """
         Get a package.
@@ -282,7 +283,7 @@ class BaseModel(object):
             if (pp.name[0].upper() == name.upper()):
                 return pp
         return None
-   
+
     def get_package_list(self):
         """
         Get a list of all the package names.
@@ -301,7 +302,7 @@ class BaseModel(object):
         for pp in (self.packagelist):
             val.append(pp.name[0].upper())
         return val
-    
+
     def change_model_ws(self, new_pth=None):
         """
         Change the model work space.
@@ -327,10 +328,10 @@ class BaseModel(object):
                 sys.stdout.write('\ncreating model workspace...\n   {}\n'.format(new_pth))
                 os.makedirs(new_pth)
             except:
-                #print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
+                # print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd()))
                 new_pth = os.getcwd()
-        #--reset the model workspace
+        # --reset the model workspace
         self.model_ws = new_pth
         sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
         #--reset the paths for each package
@@ -338,7 +339,7 @@ class BaseModel(object):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
         return None
-    
+
     def run_model(self, silent=False, pause=False, report=False):
         """
         This method will run the model using subprocess.Popen.
@@ -366,6 +367,7 @@ class BaseModel(object):
         exe = which(self.exe_name)
         if exe is None:
             import platform
+
             if platform.system() in 'Windows':
                 if not self.exe_name.lower().endswith('.exe'):
                     exe = which(self.exe_name + '.exe')
@@ -375,7 +377,7 @@ class BaseModel(object):
         else:
             if not silent:
                 s = 'FloPy is using the following executable to run the model: {}'.format(exe)
-                print (s)
+                print(s)
 
         if not os.path.isfile(os.path.join(self.model_ws, self.namefile)):
             s = 'The namefile for this model does not exists: {}'.format(self.namefile)
@@ -384,22 +386,22 @@ class BaseModel(object):
         proc = sp.Popen([self.exe_name, self.namefile],
                         stdout=sp.PIPE, cwd=self.model_ws)
         while True:
-          line = proc.stdout.readline()
-          c = line.decode('utf-8')
-          if c != '':
-            if 'normal termination of simulation' in c.lower():
-                success = True
-            c = c.rstrip('\r\n')
-            if not silent:
-                print('{}'.format(c))
-            if report == True:
-                buff.append(c)
-          else:
-            break
+            line = proc.stdout.readline()
+            c = line.decode('utf-8')
+            if c != '':
+                if 'normal termination of simulation' in c.lower():
+                    success = True
+                c = c.rstrip('\r\n')
+                if not silent:
+                    print('{}'.format(c))
+                if report == True:
+                    buff.append(c)
+            else:
+                break
         if pause == True:
             input('Press Enter to continue...')
         return ([success, buff])
-        
+
     def write_input(self, SelPackList=False):
         """
         Write the input.
@@ -409,12 +411,12 @@ class BaseModel(object):
         SelPackList : False or list of packages
 
         """
-        #org_dir = os.getcwd()
+        # org_dir = os.getcwd()
         #os.chdir(self.model_ws)
         if self.verbose:
             print('\nWriting packages:')
         if SelPackList == False:
-            for p in self.packagelist:            
+            for p in self.packagelist:
                 if self.verbose:
                     print('   Package: ', p.name[0])
                 p.write_file()
@@ -432,7 +434,7 @@ class BaseModel(object):
         self.write_name_file()
         #os.chdir(org_dir)
         return
-    
+
     def write_name_file(self):
         """
         Every Package needs its own writenamefile function
@@ -468,7 +470,7 @@ class BaseModel(object):
             for i in range(len(p.extension)):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
-    
+
     name = property(get_name, set_name)
 
     def add_pop_key_list(self, key):
@@ -497,13 +499,14 @@ class Package(object):
     Base package class from which most other packages are derived.
 
     """
-    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1, extra='', 
+
+    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1, extra='',
                  allowDuplicates=False):
         """
         Package init
 
         """
-        self.parent = parent # To be able to access the parent modflow object's attributes
+        self.parent = parent  # To be able to access the parent modflow object's attributes
         if (not isinstance(extension, list)):
             extension = [extension]
         self.extension = []
@@ -526,7 +529,7 @@ class Package(object):
         self.url = 'index.html'
         self.allowDuplicates = allowDuplicates
 
-        self.acceptable_dtypes = [int,np.float32,str]
+        self.acceptable_dtypes = [int, np.float32, str]
         return
 
     def __repr__(self):
@@ -536,27 +539,29 @@ class Package(object):
             if not (attr in exclude_attributes):
                 if (isinstance(value, list)):
                     if (len(value) == 1):
-                        #s = s + ' %s = %s (list)\n' % (attr, str(value[0]))
-                        s = s + ' {0:s} = {1:s}\n'.format(attr,str(value[0]))
+                        # s = s + ' %s = %s (list)\n' % (attr, str(value[0]))
+                        s = s + ' {0:s} = {1:s}\n'.format(attr, str(value[0]))
                     else:
-                        #s = s + ' %s (list, items = %d)\n' % (attr, len(value))
-                        s = s + ' {0:s} (list, items = {1:d}\n'.format(attr,len(value))
+                        # s = s + ' %s (list, items = %d)\n' % (attr, len(value))
+                        s = s + ' {0:s} (list, items = {1:d}\n'.format(attr, len(value))
                 elif (isinstance(value, np.ndarray)):
-                    #s = s + ' %s (array, shape = %s)\n' % (attr, value.shape.__str__()[1:-1] )
-                    s = s + ' {0:s} (array, shape = {1:s}\n'.fomrat(attr,value.shape__str__()[1:-1])
+                    # s = s + ' %s (array, shape = %s)\n' % (attr, value.shape.__str__()[1:-1] )
+                    s = s + ' {0:s} (array, shape = {1:s}\n'.fomrat(attr, value.shape__str__()[1:-1])
                 else:
-                    #s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
-                    s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr,str(value),str(type(value))[7:-2])
+                    # s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
+                    s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr, str(value), str(type(value))[7:-2])
         return s
 
     def __getitem__(self, item):
-        if not isinstance(item,list) and not isinstance(item,tuple):
-            assert item in list(self.stress_period_data.data.keys()),"package.__getitem__() kper "+str(item)+" not in data.keys()"
+        if not isinstance(item, list) and not isinstance(item, tuple):
+            assert item in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                item) + " not in data.keys()"
             return self.stress_period_data[item]
 
         if item[1] not in self.dtype.names:
-            raise Exception ("package.__getitem(): item \'"+item+"\' not in dtype names "+str(self.dtype.names))
-        assert item[0] in list(self.stress_period_data.data.keys()),"package.__getitem__() kper "+str(item[0])+" not in data.keys()"
+            raise Exception("package.__getitem(): item \'" + item + "\' not in dtype names " + str(self.dtype.names))
+        assert item[0] in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+            item[0]) + " not in data.keys()"
         if self.stress_period_data.vtype[item[0]] == np.recarray:
             return self.stress_period_data[item[0]][item[1]]
 
@@ -606,19 +611,19 @@ class Package(object):
                                                       fmtin=vo.fmtin,
                                                       locat=vo.locat))
                     value = new_list
-        
+
         super(Package, self).__setattr__(key, value)
 
 
     @staticmethod
-    def add_to_dtype(dtype,field_names,field_types):
-        if not isinstance(field_names,list):
+    def add_to_dtype(dtype, field_names, field_types):
+        if not isinstance(field_names, list):
             field_names = [field_names]
-        if not isinstance(field_types,list):
+        if not isinstance(field_types, list):
             field_types = [field_types] * len(field_names)
         newdtypes = [dtype]
-        for field_name,field_type in zip(field_names,field_types):
-            tempdtype = np.dtype([(field_name,field_type)])
+        for field_name, field_type in zip(field_names, field_types):
+            tempdtype = np.dtype([(field_name, field_type)])
             newdtypes.append(tempdtype)
         newdtype = sum((dtype.descr for dtype in newdtypes), [])
         newdtype = np.dtype(newdtype)
@@ -652,7 +657,7 @@ class Package(object):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
@@ -687,11 +692,11 @@ class Package(object):
                 if toption.lower() is 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
-                    options.append(' '.join(t[it:it+2]))
-                    aux_names.append(t[it+1].lower())
+                    options.append(' '.join(t[it:it + 2]))
+                    aux_names.append(t[it + 1].lower())
                     it += 1
                 it += 1
-        
+
         #--set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
@@ -703,7 +708,7 @@ class Package(object):
             #--test for specify keyword if a NWT well file - This is a temporary hack
             if 'specify' in line.lower():
                 specify = True
-                line = f.readline() #ditch line -- possibly save for NWT output
+                line = f.readline()  #ditch line -- possibly save for NWT output
                 t = line.strip().split()
                 phiramp = np.float32(t[1])
                 try:
@@ -724,14 +729,14 @@ class Package(object):
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        
-        
+
+
         #read data for every stress period
         bnd_output = None
         stress_period_data = {}
         for iper in range(nper):
             if model.verbose:
-                print("   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1))
+                print("   loading " + str(pack_type) + " for kper {0:5d}".format(iper + 1))
             line = f.readline()
             if line == '':
                 break
@@ -742,7 +747,7 @@ class Package(object):
                 itmpp = int(t[1])
             except:
                 pass
-            
+
             if itmp == 0:
                 bnd_output = None
                 current = pack_type.get_empty(itmp, aux_names=aux_names)
@@ -752,18 +757,18 @@ class Package(object):
                     line = f.readline()
                     if "open/close" in line.lower():
                         #raise NotImplementedError("load() method does not support \'open/close\'")
-                        oc_filename = os.path.join(model.model_ws,line.strip().split()[1])
-                        assert os.path.exists(oc_filename),"Package.load() error: open/close filename " +\
-                                                           oc_filename + " not found"
+                        oc_filename = os.path.join(model.model_ws, line.strip().split()[1])
+                        assert os.path.exists(oc_filename), "Package.load() error: open/close filename " + \
+                                                            oc_filename + " not found"
                         try:
-                            current = np.genfromtxt(oc_filename,dtype=current.dtype)
+                            current = np.genfromtxt(oc_filename, dtype=current.dtype)
                             current = current.view(np.recarray)
                         except Exception as e:
-                            raise Exception("Package.load() error loading open/close file " + oc_filename +\
+                            raise Exception("Package.load() error loading open/close file " + oc_filename + \
                                             " :" + str(e))
-                        assert current.shape[0] == itmp,"Package.load() error: open/close rec array from file " +\
-                                                     oc_filename + " shape (" + str(current.shape) + \
-                                                     ") does not match itmp: {0:d}".format(itmp)
+                        assert current.shape[0] == itmp, "Package.load() error: open/close rec array from file " + \
+                                                         oc_filename + " shape (" + str(current.shape) + \
+                                                         ") does not match itmp: {0:d}".format(itmp)
                         break
                     try:
                         t = line.strip().split()
@@ -804,9 +809,9 @@ class Package(object):
                 data_dict = current_dict[iname]
                 #print par_dict
                 #print data_dict
-                
-                par_current = pack_type.get_empty(par_dict['nlst'],aux_names=aux_names)
-                
+
+                par_current = pack_type.get_empty(par_dict['nlst'], aux_names=aux_names)
+
                 #--
                 #parval = np.float(par_dict['parval'])
                 if model.mfpar.pval is None:
@@ -820,30 +825,30 @@ class Package(object):
                 #--fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
-                    
+
                 par_current['k'] -= 1
                 par_current['i'] -= 1
                 par_current['j'] -= 1
 
                 for ptype in partype:
                     par_current[ptype] *= parval
-                 
+
                 if bnd_output is None:
                     bnd_output = np.recarray.copy(par_current)
                 else:
-                    bnd_output = stack_arrays((bnd_output, par_current), 
+                    bnd_output = stack_arrays((bnd_output, par_current),
                                               asrecarray=True, usemask=False)
-                     
+
             if bnd_output is None:
                 stress_period_data[iper] = itmp
                 #print 'crap'
-            else: 
+            else:
                 stress_period_data[iper] = bnd_output
                 #print bnd_output.shape
                 #print bnd_output   
-                
+
         pak = pack_type(model, ipakcb=ipakcb,
-                        stress_period_data=stress_period_data,\
-                        dtype=pack_type.get_empty(0,aux_names=aux_names).dtype,\
+                        stress_period_data=stress_period_data, \
+                        dtype=pack_type.get_empty(0, aux_names=aux_names).dtype, \
                         options=options)
         return pak
