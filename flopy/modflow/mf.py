@@ -128,7 +128,7 @@ class Modflow(BaseModel):
 
             #external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
-                print("Note: external_path " + str(external_path) +\
+                print("Note: external_path " + str(external_path) +
                     " already exists")
             #assert os.path.exists(external_path),'external_path does not exist'
             else:

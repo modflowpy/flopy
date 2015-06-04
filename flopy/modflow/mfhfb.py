@@ -14,6 +14,7 @@ from numpy import atleast_2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 from numpy.lib.recfunctions import stack_arrays
 
+
 class ModflowHfb(Package):
     """
     MODFLOW HFB6 - Horizontal Flow Barrier Package
@@ -152,19 +153,21 @@ class ModflowHfb(Package):
             f_hfb.write('  {}'.format(option))
         f_hfb.write('\n')
         for a in self.hfb_data:
-            f_hfb.write('{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n'.format(a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1, a[5]))
+            f_hfb.write(
+                '{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n'.format(a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1,
+                                                                  a[5]))
         f_hfb.write('{:10d}'.format(self.nacthfb))
         f_hfb.close()
 
     @staticmethod
-    def get_empty(ncells=0, aux_names=None):
+    def get_empty(ncells=0, aux_names=None, structured=True):
         """
         Get an empty recarray that correponds to hfb dtype and has
         been extended to include aux variables and associated
         aux names.
 
         """
-        dtype = ModflowHfb.get_default_dtype()
+        dtype = ModflowHfb.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((ncells, len(dtype)), dtype=dtype)
@@ -172,15 +175,18 @@ class ModflowHfb(Package):
         return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
-    def get_default_dtype():
+    def get_default_dtype(structured=True):
         """
         Get the default dtype for hfb data
 
         """
-        dtype = np.dtype([("k", np.int),
-                          ("irow1", np.int), ("icol1", np.int),
-                          ("irow2", np.int), ("icol2", np.int),
-                          ("hydchr", np.float32)])
+        if structured:
+            dtype = np.dtype([("k", np.int),
+                              ("irow1", np.int), ("icol1", np.int),
+                              ("irow2", np.int), ("icol2", np.int),
+                              ("hydchr", np.float32)])
+        else:
+            assert not structured, 'is there an unstructured HFB???'
         return dtype
 
 
@@ -223,7 +229,7 @@ class ModflowHfb(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
@@ -317,7 +323,6 @@ class ModflowHfb(Package):
                 else:
                     bnd_output = stack_arrays((bnd_output, par_current),
                                               asrecarray=True, usemask=False)
-
 
         hfb = ModflowHfb(model, nphfb=0, mxfb=0, nhfbnp=len(bnd_output),
                          hfb_data=bnd_output,

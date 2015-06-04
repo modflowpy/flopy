@@ -12,6 +12,7 @@ import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
 
+
 class ModflowRiv(Package):
     """
     MODFLOW River Package Class.
@@ -84,8 +85,9 @@ class ModflowRiv(Package):
     >>> riv = flopy.modflow.ModflowRiv(m, layer_row_column_data=lrcd)
 
     """
-    def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
-                 extension ='riv', unitnumber=18, options=None,**kwargs):
+
+    def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
+                 extension='riv', unitnumber=18, options=None, **kwargs):
         """
         Package constructor.
 
@@ -103,32 +105,37 @@ class ModflowRiv(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype()
-        self.stress_period_data = mflist(model,self.dtype,stress_period_data)
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
         self.parent.add_package(self)
 
-    def __repr__( self ):
+    def __repr__(self):
         return 'River class'
 
     @staticmethod
-    def get_empty(ncells=0,aux_names=None):
-        #get an empty recarray that correponds to dtype
-        dtype = ModflowRiv.get_default_dtype()
+    def get_empty(ncells=0, aux_names=None, structured=True):
+        # get an empty recarray that correponds to dtype
+        dtype = ModflowRiv.get_default_dtype(structured=structured)
         if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype,aux_names,np.float32)
-        d = np.zeros((ncells,len(dtype)),dtype=dtype)
-        d[:,:] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        d = np.zeros((ncells, len(dtype)), dtype=dtype)
+        d[:, :] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
 
     @staticmethod
-    def get_default_dtype():
-        dtype = np.dtype([("k",np.int),("i",np.int),\
-                         ("j",np.int),("stage",np.float32),\
-                        ("cond",np.float32),("rbot",np.float32)])
+    def get_default_dtype(structured=True):
+        if structured:
+            dtype = np.dtype([("k", np.int), ("i", np.int),
+                              ("j", np.int), ("stage", np.float32),
+                              ("cond", np.float32), ("rbot", np.float32)])
+        else:
+            dtype = np.dtype([("node", np.int), ("stage", np.float32),
+                              ("cond", np.float32), ("rbot", np.float32)])
+
         return dtype
 
-    def ncells( self):
+    def ncells(self):
         # Returns the  maximum number of cells that have river (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
@@ -147,11 +154,11 @@ class ModflowRiv(Package):
         self.stress_period_data.write_transient(f_riv)
         f_riv.close()
 
-    def add_record(self,kper,index,values):
+    def add_record(self, kper, index, values):
         try:
-            self.stress_period_data.add_record(kper,index,values)
+            self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
-            raise Exception("mfriv error adding record to list: "+str(e))
+            raise Exception("mfriv error adding record to list: " + str(e))
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
