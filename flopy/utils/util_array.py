@@ -888,7 +888,8 @@ class util_2d(object):
         '''
 
         if fortran_format.upper() == '(FREE)' and python_format is None:
-            np.savetxt(file_out,data,util_2d.get_default_numpy_fmt(data.dtype))
+            np.savetxt(file_out,data,util_2d.get_default_numpy_fmt(data.dtype),
+                       delimiter='')
             return
 
         nrow,ncol = shape
