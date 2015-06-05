@@ -11,6 +11,11 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 ## FloPy<sub>3</sub> Changes
 
+### Version 3.2
+* *FloPy<sub>3</sub>* can now be used with **Python 3.x**
+
+* Revised setters for package class variables stored using the util_2d or util_3d classes.
+
 ### Version 3.1
 * *FloPy<sub>3</sub>* now supports some simple mapping and cross-section capabilities through the flopy.plot submodule. See the notebook [flopy3_MapExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
 
@@ -38,7 +43,7 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 **Python versions:**
 
-*FloPy<sub>3</sub>* requires **Python** 2.7
+*FloPy<sub>3</sub>* requires **Python** 2.7 or **Python** 3.3 (or higher)
 
 
 **Dependencies:**
