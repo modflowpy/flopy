@@ -240,9 +240,10 @@ class util_3d(object):
         self.shape = shape
         self.dtype = dtype
         self.__value = value
+        self.name = name
         self.name_base = name + ' Layer '
         self.fmtin = fmtin
-        self.cnstst = cnstnt
+        self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
         if model.external_path is not None:
@@ -343,6 +344,23 @@ class util_3d(object):
         u3d = util_3d(model, shape, dtype, u2ds, name)
         return u3d
 
+
+    def __mul__(self, other):
+        if np.isscalar(other):
+            new_u2ds = []
+            for u2d in self.util_2ds:
+                new_u2ds.append(u2d * other)
+            return util_3d(self.model,self.shape,self.dtype,new_u2ds,
+                           self.name,self.fmtin,self.cnstnt,self.iprn,
+                           self.locat)
+        elif isinstance(other,list):
+            assert len(other) == self.shape[0]
+            new_u2ds = []
+            for i in range(self.shape[0]):
+                new_u2ds.append(u2d * other)
+            return util_3d(self.model,self.shape,self.dtype,new_u2ds,
+                           self.name,self.fmtin,self.cnstnt,self.iprn,
+                           self.locat)
 #class transient_2d((with_metaclass(meta_interceptor, object))):
 class transient_2d(object):
     """
@@ -1268,3 +1286,14 @@ class util_2d(object):
         cr_dict['fmtin'] = fmtin
         cr_dict['fname'] = fname           
         return cr_dict
+
+    def __mul__(self, other):
+        if np.isscalar(other):
+            self.array
+            return util_2d(self.model,self.shape,self.dtype,
+                           self.__value_built * other,self.name,
+                           self.fmtin,self.cnstnt,self.iprn,self.ext_filename,
+                           self.locat,self.bin)
+        else:
+            raise NotImplementedError(
+                "util_2d.__mul__() not implemented for non-scalars")
