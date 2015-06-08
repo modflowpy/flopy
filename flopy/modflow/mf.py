@@ -274,7 +274,7 @@ class Modflow(BaseModel):
         
         model_ws : model workspace path
 
-        load_only : (optional) filetype(s) to load (e.g. ["bas6","lpf"])
+        load_only : (optional) filetype(s) to load (e.g. ["bas6", "lpf"])
 
         Returns
         -------
@@ -312,7 +312,7 @@ class Modflow(BaseModel):
             return None
 
         if ml.verbose:
-            print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.\
+            print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.
                 format(50*'-', ext_unit_dict, 50*'-'))
 
         # load dis

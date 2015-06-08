@@ -350,8 +350,9 @@ class BaseModel(object):
             Echo run information to screen (default is True).
         pause : boolean, optional
             Pause upon completion (the default is False).
-        report : string, optional
-            Name of file to store stdout. (default is None).
+        report : boolean, optional
+            Save stdout lines to a list (buff) which is returned 
+            by the method . (the default is False).
 
         Returns
         -------
