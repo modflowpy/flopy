@@ -13,6 +13,7 @@ import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
 
+
 class ModflowChd(Package):
     """
     MODFLOW Constant Head Package Class.
@@ -103,7 +104,7 @@ class ModflowChd(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype()
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = mflist(model, self.dtype, stress_period_data)
 
         self.np = 0
@@ -127,13 +128,13 @@ class ModflowChd(Package):
         try:
             self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
-            raise Exception("mfchd error adding record to list: "+str(e))
+            raise Exception("mfchd error adding record to list: " + str(e))
 
 
     @staticmethod
-    def get_empty(ncells=0, aux_names=None):
-        #get an empty recaray that corresponds to dtype
-        dtype = ModflowChd.get_default_dtype()
+    def get_empty(ncells=0, aux_names=None, structured=True):
+        # get an empty recaray that corresponds to dtype
+        dtype = ModflowChd.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((ncells, len(dtype)), dtype=dtype)
@@ -141,10 +142,14 @@ class ModflowChd(Package):
         return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
-    def get_default_dtype():
-        dtype = np.dtype([("k", np.int), ("i", np.int), \
-                         ("j", np.int), ("shead", np.float32), \
-                        ("ehead", np.float32)])
+    def get_default_dtype(structured=True):
+        if structured:
+            dtype = np.dtype([("k", np.int), ("i", np.int),
+                              ("j", np.int), ("shead", np.float32),
+                              ("ehead", np.float32)])
+        else:
+            dtype = np.dtype([("node", np.int), ("shead", np.float32),
+                              ("ehead", np.float32)])
         return dtype
 
     @staticmethod

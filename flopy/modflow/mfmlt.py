@@ -121,7 +121,7 @@ class ModflowMlt(Package):
         if model.verbose:
             sys.stdout.write('loading mult package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header
@@ -139,7 +139,7 @@ class ModflowMlt(Package):
 
         #read zone data
         mult_dict = collections.OrderedDict()
-        for n in xrange(nml):
+        for n in range(nml):
             line = f.readline()
             t = line.strip().split()
             if len(t[0]) > 10:

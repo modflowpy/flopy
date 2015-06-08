@@ -57,7 +57,7 @@ class ModflowUpw(Package):
         # Item 7: WETFCT, IWETIT, IHDWET
         iwetdry = self.laywet.sum()
         if iwetdry > 0:
-            raise Exception, 'LAYWET should be 0 for UPW'
+            raise Exception('LAYWET should be 0 for UPW')
         transient = not self.parent.get_package('DIS').steady.all()
         for k in range(nlay):           
             f_upw.write(self.hk[k].get_file_entry())
@@ -110,7 +110,7 @@ class ModflowUpw(Package):
         if model.verbose:
             sys.stdout.write('loading upw package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header
@@ -122,7 +122,7 @@ class ModflowUpw(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
-            print '   loading IUPWCB, HDRY, NPUPW, IPHDRY...'
+            print('   loading IUPWCB, HDRY, NPUPW, IPHDRY...')
         t = line.strip().split()
         iupwcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
         if iupwcb != 0:
@@ -131,36 +131,36 @@ class ModflowUpw(Package):
         # options
         noparcheck = False
         if len(t) > 3:
-            for k in xrange(3,len(t)):
+            for k in range(3,len(t)):
                 if 'NOPARCHECK' in t[k].upper():
                     noparcheck = True
         # LAYTYP array
         if model.verbose:
-            print '   loading LAYTYP...'
+            print('   loading LAYTYP...')
         line = f.readline()
         t = line.strip().split()
         laytyp = np.array((t[0:nlay]),dtype=np.int)
         # LAYAVG array
         if model.verbose:
-            print '   loading LAYAVG...'
+            print('   loading LAYAVG...')
         line = f.readline()
         t = line.strip().split()
         layavg = np.array((t[0:nlay]),dtype=np.int)
         # CHANI array
         if model.verbose:
-            print '   loading CHANI...'
+            print('   loading CHANI...')
         line = f.readline()
         t = line.strip().split()
         chani = np.array((t[0:nlay]),dtype=np.float32)
         # LAYVKA array
         if model.verbose:
-            print '   loading LAYVKA...'
+            print('   loading LAYVKA...')
         line = f.readline()
         t = line.strip().split()
         layvka = np.array((t[0:nlay]),dtype=np.int)
         # LAYWET array
         if model.verbose:
-            print '   loading LAYWET...'
+            print('   loading LAYWET...')
         line = f.readline()
         t = line.strip().split()
         laywet = np.array((t[0:nlay]),dtype=np.int)
@@ -168,7 +168,7 @@ class ModflowUpw(Package):
         wetfct,iwetit,ihdwet = None,None,None
         iwetdry = laywet.sum()
         if iwetdry > 0:
-            raise Exception, 'LAYWET should be 0 for UPW'
+            raise Exception('LAYWET should be 0 for UPW')
 
         #--get parameters
         par_types = []
@@ -185,7 +185,7 @@ class ModflowUpw(Package):
         vkcb = [0] * nlay
         for k in range(nlay):
             if model.verbose:
-                print '   loading hk layer {0:3d}...'.format(k+1)
+                print('   loading hk layer {0:3d}...'.format(k+1))
             if 'hk' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hk',
                                  ext_unit_dict)
@@ -195,7 +195,7 @@ class ModflowUpw(Package):
             hk[k] = t
             if chani[k] < 1:
                 if model.verbose:
-                    print '   loading hani layer {0:3d}...'.format(k+1)
+                    print('   loading hani layer {0:3d}...'.format(k+1))
                 if 'hani' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'hani',
                                      ext_unit_dict)
@@ -204,7 +204,7 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'hani', parm_dict, findlayer=k)
                 hani[k] = t
             if model.verbose:
-                print '   loading vka layer {0:3d}...'.format(k+1)
+                print('   loading vka layer {0:3d}...'.format(k+1))
             if 'vka' not in par_types and 'vani' not in par_types:
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vka',
                                  ext_unit_dict)
@@ -214,7 +214,7 @@ class ModflowUpw(Package):
             vka[k] = t
             if transient:
                 if model.verbose:
-                    print '   loading ss layer {0:3d}...'.format(k+1)
+                    print('   loading ss layer {0:3d}...'.format(k+1))
                 if 'ss' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'ss',
                                      ext_unit_dict)
@@ -224,7 +224,7 @@ class ModflowUpw(Package):
                 ss[k] = t
                 if laytyp[k] != 0:
                     if model.verbose:
-                        print '   loading sy layer {0:3d}...'.format(k+1)
+                        print('   loading sy layer {0:3d}...'.format(k+1))
                     if 'sy' not in par_types:
                         t = util_2d.load(f, model, (nrow,ncol), np.float32, 'sy',
                                          ext_unit_dict)
@@ -234,7 +234,7 @@ class ModflowUpw(Package):
                     sy[k] = t
             if model.get_package('DIS').laycbd[k] > 0:
                 if model.verbose:
-                    print '   loading vkcb layer {0:3d}...'.format(k+1)
+                    print('   loading vkcb layer {0:3d}...'.format(k+1))
                 if 'vkcb' not in par_types:
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'vkcb',
                                      ext_unit_dict)
@@ -258,7 +258,7 @@ class ModflowUpw(Package):
         try:
             import pylab as plt
         except Exception as e:
-            print "error importing pylab: " + str(e)
+            print("error importing pylab: " + str(e))
             return
 
         #get the bas for ibound masking
@@ -282,7 +282,7 @@ class ModflowUpw(Package):
         names = ["hk", "vk", "ss", "sy"]
         shape = (len(names), nlay+1)
         fig = plt.figure(figsize=(delt+(nlay*delt), delt * len(names)))
-        for k in xrange(nlay):
+        for k in range(nlay):
             for iname, name in enumerate(names):
                 ax = plt.subplot2grid(shape, (iname, k), aspect="equal")
                 p = props[iname][k]

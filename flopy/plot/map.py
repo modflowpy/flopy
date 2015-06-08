@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
-import plotutil
-from plotutil import bc_color_dict, rotate
+from . import plotutil
+from .plotutil import bc_color_dict, rotate
 
 from flopy.utils import util_2d,util_3d,transient_2d
 
@@ -133,7 +133,7 @@ class ModelMap(object):
 
         arrays = []
         if array_dict is not None:
-            for name,array in array_dict.iteritems():
+            for name,array in array_dict.items():
                 assert array.shape == (self.ml.nrow,self.ml.ncol)
                 wr.field(name,"N",20,12)
                 arrays.append(array)
@@ -162,7 +162,7 @@ class ModelMap(object):
                                 wr.field(name, 'N', 20, 12)
                                 arrays.append(u2d.array)
                         elif isinstance(a,transient_2d):
-                            kpers = a.transient_2ds.keys()
+                            kpers = list(a.transient_2ds.keys())
                             kpers.sort()
                             for kper in kpers:
                                 u2d = a.transient_2ds[kper]
@@ -480,7 +480,7 @@ class ModelMap(object):
         ymax = self.yedge[0]
         linecol = []
         # Vertical lines
-        for j in xrange(self.dis.ncol + 1):
+        for j in range(self.dis.ncol + 1):
             x0 = self.xedge[j]
             x1 = x0
             y0 = ymin
@@ -494,7 +494,7 @@ class ModelMap(object):
             linecol.append(((x0r, y0r), (x1r, y1r)))
 
         #horizontal lines
-        for i in xrange(self.dis.nrow + 1):
+        for i in range(self.dis.nrow + 1):
             x0 = xmin
             x1 = xmax
             y0 = self.yedge[i]

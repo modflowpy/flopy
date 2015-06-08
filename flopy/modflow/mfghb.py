@@ -12,6 +12,7 @@ import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
 
+
 class ModflowGhb(Package):
     """
     MODFLOW General-Head Boundary Package Class.
@@ -87,6 +88,7 @@ class ModflowGhb(Package):
     >>> ghb = flopy.modflow.ModflowGhb(ml, stress_period_data=lrcsc)
 
     """
+
     def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
                  no_print=False, options=None, extension='ghb', unitnumber=23):
         """
@@ -109,8 +111,8 @@ class ModflowGhb(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype()
-        self.stress_period_data = mflist(model,self.dtype,stress_period_data)
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
 
     def __repr__(self):
         return 'GHB package class'
@@ -136,27 +138,31 @@ class ModflowGhb(Package):
         self.stress_period_data.write_transient(f_ghb)
         f_ghb.close()
 
-    def add_record(self,kper,index,values):
+    def add_record(self, kper, index, values):
         try:
-            self.stress_period_data.add_record(kper,index,values)
+            self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
-            raise Exception("mfghb error adding record to list: "+str(e))
+            raise Exception("mfghb error adding record to list: " + str(e))
 
     @staticmethod
-    def get_empty(ncells=0,aux_names=None):
-        #get an empty recaray that correponds to dtype
-        dtype = ModflowGhb.get_default_dtype()
+    def get_empty(ncells=0, aux_names=None, structured=True):
+        # get an empty recaray that correponds to dtype
+        dtype = ModflowGhb.get_default_dtype(structured=structured)
         if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype,aux_names,np.float32)
-        d = np.zeros((ncells,len(dtype)),dtype=dtype)
-        d[:,:] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        d = np.zeros((ncells, len(dtype)), dtype=dtype)
+        d[:, :] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
-    def get_default_dtype():
-        dtype = np.dtype([("k", np.int),("i",np.int),\
-                         ("j", np.int),("bhead", np.float32),\
-                         ("cond", np.float32)])
+    def get_default_dtype(structured=True):
+        if structured:
+            dtype = np.dtype([("k", np.int), ("i", np.int),
+                              ("j", np.int), ("bhead", np.float32),
+                              ("cond", np.float32)])
+        else:
+            dtype = np.dtype([("node", np.int), ("bhead", np.float32),
+                              ("cond", np.float32)])
         return dtype
 
     @staticmethod

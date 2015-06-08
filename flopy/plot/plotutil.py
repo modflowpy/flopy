@@ -96,10 +96,10 @@ class SwiConcentration():
         conc = np.zeros((self.__nlay, self.__nrow, self.__ncol), np.float)
         
         pct = {}
-        for isrf in xrange(self.__nsrf):
+        for isrf in range(self.__nsrf):
             z = zeta[isrf]
             pct[isrf] = (self.__botm[:-1, :, :] - z[:, :, :]) / self.__b[:, :, :]
-        for isrf in xrange(self.__nsrf):
+        for isrf in range(self.__nsrf):
             p = pct[isrf]
             if self.__istrat == 1:
                 conc[:, :, :] += self.__nu[isrf] * p[:, :, :]
@@ -145,7 +145,7 @@ def shapefile_get_vertices(shp):
     shapes = sf.shapes()
     nshp = len(shapes)
     vertices = []
-    for n in xrange(nshp):
+    for n in range(nshp):
         st = shapes[n].shapeType
         if st in [1, 8, 11, 21]:
             #points
@@ -163,7 +163,7 @@ def shapefile_get_vertices(shp):
             pts = np.array(shapes[n].points)
             prt = shapes[n].parts
             par = list(prt) + [pts.shape[0]]
-            for pij in xrange(len(prt)):
+            for pij in range(len(prt)):
                 vertices.append(pts[par[pij]:par[pij+1]])
     return vertices
     
@@ -191,7 +191,7 @@ def shapefile_to_patch_collection(shp, radius=500.):
     shapes = sf.shapes()
     nshp = len(shapes)
     ptchs = []
-    for n in xrange(nshp):
+    for n in range(nshp):
         st = shapes[n].shapeType
         if st in [1, 8, 11, 21]:
             #points
@@ -210,7 +210,7 @@ def shapefile_to_patch_collection(shp, radius=500.):
             pts = np.array(shapes[n].points)
             prt = shapes[n].parts
             par = list(prt) + [pts.shape[0]]
-            for pij in xrange(len(prt)):
+            for pij in range(len(prt)):
                 ptchs.append(Polygon(pts[par[pij]:par[pij+1]]))
     pc = PatchCollection(ptchs)
     return pc
@@ -298,13 +298,13 @@ def saturated_thickness(head, top, botm, laytyp, mask_values=None):
     """
     nlay, nrow, ncol = head.shape
     sat_thk = np.empty(head.shape, dtype=head.dtype)
-    for k in xrange(nlay):
+    for k in range(nlay):
         if k == 0:
             t = top
         else:
             t = botm[k-1, :, :]
         sat_thk[k, :, :] = t - botm[k, :, :]
-    for k in xrange(nlay):
+    for k in range(nlay):
         if laytyp[k] != 0:
             dh = np.zeros((nrow, ncol), dtype=head.dtype)
             s = sat_thk[k, :, :]
@@ -360,8 +360,8 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         nlay, nrow, ncol = Qx.shape
         qx = np.zeros(Qx.shape, dtype=Qx.dtype)
 
-        for k in xrange(nlay):
-            for j in xrange(ncol-1):
+        for k in range(nlay):
+            for j in range(ncol-1):
                 area = delc[:] * 0.5 * (sat_thk[k, :, j] + sat_thk[k, :, j + 1])
                 qx[k, :, j] = Qx[k, :, j] / area
 
@@ -373,8 +373,8 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         nlay, nrow, ncol = Qy.shape
         qy = np.zeros(Qy.shape, dtype=Qy.dtype)
 
-        for k in xrange(nlay):
-            for i in xrange(nrow-1):
+        for k in range(nlay):
+            for i in range(nrow-1):
                 area = delr[:] * 0.5 * (sat_thk[k, i, :] + sat_thk[k, i + 1, :])
                 qy[k, i, :] = Qy[k, i, :] / area
 
@@ -388,7 +388,7 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         dr = delr.reshape((1, delr.shape[0]))
         dc = delc.reshape((delc.shape[0], 1))
         area = dr * dc
-        for k in xrange(nlay):
+        for k in range(nlay):
             qz[k, :, :] = qz[k, :, :] / area[:, :]
         qz[1:, :, :] = 0.5 * (qz[0:nlay-1, :, :] + qz[1:nlay, :, :])
         qz[0, :, :] = 0.5 * qz[0, :, :]
@@ -421,7 +421,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnVertices=False):
     pts = []
     npts = len(ptsin)
     dlen = 0.
-    for idx in xrange(1, npts):
+    for idx in range(1, npts):
         x0 = ptsin[idx-1][0]
         x1 = ptsin[idx][0]
         y0 = ptsin[idx-1][1]

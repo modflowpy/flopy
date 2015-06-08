@@ -318,12 +318,12 @@ class ModflowNwt(Package):
         if model.verbose:
             sys.stdout.write('loading nwt package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header
 
-        print '  ...load method not completed. default nwt file created.'
+        print('  ...load method not completed. default nwt file created.')
 
         #--close the open file
         f.close()

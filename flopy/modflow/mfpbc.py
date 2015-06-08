@@ -11,8 +11,8 @@ class ModflowPbc(Package):
         self.mxactp = 0
         if layer_row_column_data is None:
           if layer_row_column_shead_ehead is not None:
-            print '\nWARNING: ModflowPbc - Do not use layer_row_column_shead_ehead!\n'+\
-                  '                      Use layer_row_column_data instead.'
+            print('\nWARNING: ModflowPbc - Do not use layer_row_column_shead_ehead!\n'+\
+                  '                      Use layer_row_column_data instead.')
             layer_row_column_data = layer_row_column_shead_ehead
           else:
             raise Exception('Failed to specify layer_row_column_shead_ehead or layer_row_column_data.')

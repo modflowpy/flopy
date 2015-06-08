@@ -163,7 +163,7 @@ class ModflowEvt(Package):
         if model.verbose:
             sys.stdout.write('loading evt package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #dataset 0 -- header
@@ -171,12 +171,13 @@ class ModflowEvt(Package):
             line = f.readline()
             if line[0] != '#':
                 break
+        npar = 0
         if "parameter" in line.lower():
             raw = line.strip().split()
             npar = int(raw[1])
             if npar > 0:
                 if model.verbose:
-                    print '  Parameters detected. Number of parameters = ', npar
+                    print('  Parameters detected. Number of parameters = ', npar)
             line = f.readline()
         #dataset 2
         t = line.strip().split()
@@ -206,7 +207,7 @@ class ModflowEvt(Package):
         current_evtr = []
         current_exdp = []
         current_ievt = []
-        for iper in xrange(nper):
+        for iper in range(nper):
             line = f.readline()
             t = line.strip().split()
             insurf = int(t[0])
@@ -216,8 +217,7 @@ class ModflowEvt(Package):
               inievt = int(t[3])
             if insurf >= 0:
                 if model.verbose:
-                    print \
-                        '   loading surf stress period {0:3d}...'.format(iper+1)
+                    print('   loading surf stress period {0:3d}...'.format(iper+1))
                 t = util_2d.load(f, model, (nrow,ncol), np.float32, 'surf',
                                  ext_unit_dict)
                 current_surf = t
@@ -226,13 +226,12 @@ class ModflowEvt(Package):
             if inevtr >= 0:
                 if npar == 0:
                     if model.verbose:
-                        print \
-                            '   loading evtr stress period {0:3d}...'.format(iper+1)
+                        print('   loading evtr stress period {0:3d}...'.format(iper+1))
                     t = util_2d.load(f, model, (nrow,ncol), np.float32, 'evtr',
                                      ext_unit_dict)
                 else:
                     parm_dict = {}
-                    for ipar in xrange(inevtr):
+                    for ipar in range(inevtr):
                         line = f.readline()
                         t = line.strip().split()
                         pname = t[0].lower()
@@ -253,8 +252,7 @@ class ModflowEvt(Package):
             evtr[iper] = current_evtr
             if inexdp >= 0:
                 if model.verbose:
-                    print \
-                        '   loading exdp stress period {0:3d}...'.format(iper+1)
+                    print('   loading exdp stress period {0:3d}...'.format(iper+1))
                 t = util_2d.load(f, model, (nrow, ncol), np.float32, 'exdp',
                                  ext_unit_dict)
                 current_exdp = t
@@ -262,8 +260,8 @@ class ModflowEvt(Package):
             if nevtop == 2:
                 if inievt >= 0:
                     if model.verbose:
-                        print '   loading ievt stress period {0:3d}...'.format(
-                            iper+1)
+                        print('   loading ievt stress period {0:3d}...'.format(
+                            iper+1))
                     t = util_2d.load(f, model, (nrow, ncol), np.int32, 'ievt',
                                      ext_unit_dict)
                     current_ievt = t

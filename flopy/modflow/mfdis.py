@@ -235,11 +235,22 @@ class ModflowDis(Package):
             v.append(node)
         return v
 
-    def read_from_cnf(self, cnf_file_name):
+    def read_from_cnf(self, cnf_file_name, n_per_line = 0):
         """
         Read discretization informatio from an MT3D configuration file.
 
         """
+
+        def getn(ii, jj):
+            if (jj == 0):
+                n = 1
+            else:
+                n = int(ii / jj)
+                if (ii % jj != 0):
+                    n = n + 1
+
+            return n
+
         try:
             f_cnf = open(cnf_file_name, 'r')
 
@@ -251,22 +262,36 @@ class ModflowDis(Package):
             cnf_ncol = int(s[2])
 
             # ncol column widths delr[c]
-            line = f_cnf.readline()
+            line = ''
+            for dummy in range(getn(cnf_ncol, n_per_line)):
+                line = line + f_cnf.readline()
             cnf_delr = [float(s) for s in line.split()]
 
             # nrow row widths delc[r]
-            line = f_cnf.readline()
+            line = ''
+            for dummy in range(getn(cnf_nrow, n_per_line)):
+                line = line + f_cnf.readline()
             cnf_delc = [float(s) for s in line.split()]
 
             # nrow * ncol htop[r, c]
-            line = f_cnf.readline()
+            line = ''
+            for dummy in range(getn(cnf_nrow * cnf_ncol, n_per_line)):
+                line = line + f_cnf.readline()
             cnf_top = [float(s) for s in line.split()]
             cnf_top = np.reshape(cnf_top, (cnf_nrow, cnf_ncol))
 
             # nlay * nrow * ncol layer thickness dz[l, r, c]
-            line = f_cnf.readline()
+            line = ''
+            for dummy in range(getn(cnf_nlay * cnf_nrow * cnf_ncol, n_per_line)):
+                line = line + f_cnf.readline()
             cnf_dz = [float(s) for s in line.split()]
             cnf_dz = np.reshape(cnf_dz, (cnf_nlay, cnf_nrow, cnf_ncol))
+
+            # cinact, cdry, not used here so commented
+            '''line = f_cnf.readline()
+            s = line.split()
+            cinact = float(s[0])
+            cdry = float(s[1])'''
 
             f_cnf.close()
         finally:
@@ -274,23 +299,27 @@ class ModflowDis(Package):
             self.nrow = cnf_nrow
             self.ncol = cnf_ncol
 
-            self.delr = np.empty( self.ncol )
-            self.assignarray_old( self.delr, cnf_delr )
+            self.delr = util_2d(model, (self.ncol,), np.float32, cnf_delr, 
+                                name='delr', locat=self.unit_number[0])
+            self.delc = util_2d(model, (self.nrow,), np.float32, cnf_delc, 
+                                name='delc', locat=self.unit_number[0])
+            self.top = util_2d(model, (self.nrow,self.ncol), np.float32,
+                                       cnf_top, name='model_top', 
+                                       locat = self.unit_number[0])
 
-            self.delc = np.empty( self.nrow )
-            self.assignarray_old( self.delc, cnf_delc )
+            cnf_botm = np.empty((self.nlay + sum(self.laycbd),self.nrow, 
+                                 self.ncol))
 
-            self.top = np.empty((self.nrow, self.ncol))
-            self.assignarray_old( self.top, cnf_top)
-
-            self.botm = np.empty((self.nrow, self.ncol, self.nlay +
-                                                        sum(self.laycbd)))
             # First model layer
-            self.botm[:, :, 0] = self.top - cnf_dz[0, :, :]
+            cnf_botm[0:, :, :] = cnf_top - cnf_dz[0, :, :]
             # All other layers
             for l in range(1, self.nlay):
-                self.botm[:, :, l] = self.botm[:, :, l - 1] - cnf_dz[l, :, :]
-            self.update_thickness()
+                cnf_botm[l, :, :] = cnf_botm[l - 1, :, :] - cnf_dz[l, :, :]
+
+            self.botm = util_3d(model, (self.nlay + sum(self.laycbd),
+                                        self.nrow, self.ncol), np.float32,
+                                        cnf_botm, 'botm', 
+                                        locat = self.unit_number[0])
 
     def gettop(self):
         """
@@ -361,7 +390,7 @@ class ModflowDis(Package):
         f_dis.write(self.top.get_file_entry())
         # Item 5: BOTM(NCOL, NROW)        
         f_dis.write(self.botm.get_file_entry())
-        
+
         # Item 6: NPER, NSTP, TSMULT, Ss/tr
         for t in range(self.nper):           
             f_dis.write('{0:14f}{1:14d}{2:10f} '.format(self.perlen[t],
@@ -409,7 +438,7 @@ class ModflowDis(Package):
         if model.verbose:
             sys.stdout.write('loading dis package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         # dataset 0 -- header
@@ -427,9 +456,9 @@ class ModflowDis(Package):
         lenuni = int(lenuni)
         # dataset 2 -- laycbd
         if model.verbose:
-            print '   Loading dis package with:\n      ' + \
-                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol,nper)
-            print '   loading laycbd...'
+            print('   Loading dis package with:\n      ' + \
+                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol,nper))
+            print('   loading laycbd...')
         laycbd = np.empty( (nlay), dtype=np.int)
         d = 0
         while True:
@@ -444,35 +473,35 @@ class ModflowDis(Package):
                 break
         #dataset 3 -- delr
         if model.verbose:
-            print '   loading delr...'
+            print('   loading delr...')
         delr = util_2d.load(f, model, (1, ncol), np.float32, 'delr',
                             ext_unit_dict)
         delr = delr.array.reshape( (ncol) )
         #dataset 4 -- delc
         if model.verbose:
-            print '   loading delc...'
+            print('   loading delc...')
         delc = util_2d.load(f, model, (1, nrow), np.float32, 'delc',
                             ext_unit_dict)
         delc = delc.array.reshape( (nrow) )
         #dataset 5 -- top
         if model.verbose:
-            print '   loading top...'
+            print('   loading top...')
         top = util_2d.load(f, model, (nrow,ncol), np.float32, 'top',
                            ext_unit_dict)
         #dataset 6 -- botm
         if model.verbose:
-            print '   loading botm...'
+            print('   loading botm...')
         ncbd=laycbd.sum()
         botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
                             'botm', ext_unit_dict)
         #dataset 7 -- stress period info
         if model.verbose:
-            print '   loading stress period data...'
+            print('   loading stress period data...')
         perlen = []
         nstp = []
         tsmult = []
         steady = []
-        for k in xrange(nper):
+        for k in range(nper):
             line = f.readline()
             a1, a2, a3, a4 = line.strip().split()[0:4]
             a1 = float(a1)
@@ -499,7 +528,7 @@ class ModflowDis(Package):
         try:
             import pylab as plt
         except Exception as e:
-            print "error importing pylab: " + str(e)
+            print("error importing pylab: " + str(e))
             return
 
         #get the bas for ibound masking
@@ -553,7 +582,7 @@ class ModflowDis(Package):
 
 
         botm = self.botm.array
-        for k in xrange(self.nlay):
+        for k in range(self.nlay):
             ax_botm = plt.subplot2grid(shape, (0, k+1), aspect="equal")
             ax_thk = plt.subplot2grid(shape, (1, k+1), aspect="equal")
             ax_thk.set_xlabel("column", fontsize=fs)

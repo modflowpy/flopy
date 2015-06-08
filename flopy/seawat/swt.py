@@ -1,5 +1,5 @@
 from flopy.mbase import BaseModel, Package
-from swtvdf import SeawatVdf
+from .swtvdf import SeawatVdf
 import os
 
 class SeawatList(Package):

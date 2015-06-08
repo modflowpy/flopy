@@ -1,7 +1,7 @@
 
 from flopy.mbase import BaseModel, Package
-from mpsim import ModpathSim
-from mpbas import ModpathBas
+from .mpsim import ModpathSim
+from .mpbas import ModpathBas
 import os
 
 class ModpathList(Package):

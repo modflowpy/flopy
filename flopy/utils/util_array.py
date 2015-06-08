@@ -5,6 +5,9 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
  instantiate these classes directly.
 
 """
+from __future__ import division, print_function
+#from future.utils import with_metaclass
+
 import os
 import shutil
 import copy
@@ -20,11 +23,11 @@ def decode_fortran_descriptor(fd):
     fd = fd.replace('"', '')
     #--strip off '(' and ')'
     fd = fd.strip()[1:-1]
-    if 'FREE' in fd.upper():
+    if str('FREE') in str(fd.upper()):
         return 'free', None, None, None
-    elif 'BINARY' in fd.upper():
+    elif str('BINARY') in str(fd.upper()):
         return 'binary', None, None, None
-    if '.' in fd:
+    if str('.') in str(fd):
         raw = fd.split('.')
         decimal = int(raw[1])
     else:
@@ -147,19 +150,20 @@ def u2d_like(model, other):
     u2d.model = model
     return u2d
 
-class meta_interceptor(type):
-    '''meta class to catch existing instances of util_2d,
-    transient_2d and util_3d to prevent re-instantiating them.
-    a lot of python trickery here...
 
-    '''
-    def __call__(cls, *args, **kwds):
-        for a in args:
-            if isinstance(a, util_2d) or isinstance(a, util_3d):
-                return a
-        return type.__call__(cls, *args, **kwds)
-        
+# class meta_interceptor(type):
+#     '''meta class to catch existing instances of util_2d,
+#     transient_2d and util_3d to prevent re-instantiating them.
+#     a lot of python trickery here...
+#     '''
+#     def __call__(cls, *args, **kwds):
+#         for a in args:
+#             if isinstance(a, util_2d) or isinstance(a, util_3d):
+#                 return a
+#         return type.__call__(cls, *args, **kwds)
 
+
+#class util_3d((with_metaclass(meta_interceptor, object))):
 class util_3d(object):
     """
     util_3d class for handling 3-D model arrays.  just a thin wrapper around
@@ -222,19 +226,24 @@ class util_3d(object):
     --------
 
     """
-    __metaclass__ = meta_interceptor
+
     def __init__(self, model, shape, dtype, value, name,
         fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
         '''3-D wrapper from util_2d - shape must be 3-D
         '''
+        if isinstance(value,util_3d):
+            for attr in value.__dict__.items():
+                setattr(self,attr[0],attr[1])
+            return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
         self.model = model
         self.shape = shape
         self.dtype = dtype
         self.__value = value
+        self.name = name
         self.name_base = name + ' Layer '
         self.fmtin = fmtin
-        self.cnstst = cnstnt
+        self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
         if model.external_path is not None:
@@ -336,6 +345,23 @@ class util_3d(object):
         return u3d
 
 
+    def __mul__(self, other):
+        if np.isscalar(other):
+            new_u2ds = []
+            for u2d in self.util_2ds:
+                new_u2ds.append(u2d * other)
+            return util_3d(self.model,self.shape,self.dtype,new_u2ds,
+                           self.name,self.fmtin,self.cnstnt,self.iprn,
+                           self.locat)
+        elif isinstance(other,list):
+            assert len(other) == self.shape[0]
+            new_u2ds = []
+            for i in range(self.shape[0]):
+                new_u2ds.append(u2d * other)
+            return util_3d(self.model,self.shape,self.dtype,new_u2ds,
+                           self.name,self.fmtin,self.cnstnt,self.iprn,
+                           self.locat)
+#class transient_2d((with_metaclass(meta_interceptor, object))):
 class transient_2d(object):
     """
     transient_2d class for handling time-dependent 2-D model arrays.
@@ -402,9 +428,15 @@ class transient_2d(object):
     --------
 
     """
-    __metaclass__ = meta_interceptor
+
     def __init__(self,model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
+
+        if isinstance(value,transient_2d):
+            for attr in value.__dict__.items():
+                setattr(self,attr[0],attr[1])
+            return
+
         self.model = model
         assert len(shape) == 2, "transient_2d error: shape arg must be " +\
                                 "length two (nrow, ncol), not " +\
@@ -432,7 +464,7 @@ class transient_2d(object):
         """get the file entry info for a given kper
         returns (itmp,file entry string from util_2d)
         """
-        if kper in self.transient_2ds.keys():
+        if kper in list(self.transient_2ds.keys()):
             return (1, self.transient_2ds[kper].get_file_entry())
         elif kper < min(self.transient_2ds.keys()):
             return (1, self.get_zero_2d(kper))
@@ -446,7 +478,7 @@ class transient_2d(object):
         # a dict keyed on kper (zero-based)
         if isinstance(self.__value, dict):
             tran_seq = {}
-            for key, val in self.__value.iteritems():
+            for key, val in self.__value.items():
                 try:
                     key = int(key)
                 except:
@@ -500,6 +532,7 @@ class transient_2d(object):
         return u2d
 
 
+#class util_2d((with_metaclass(meta_interceptor, object))):
 class util_2d(object):
     """
     util_2d class for handling 2-D model arrays
@@ -559,7 +592,7 @@ class util_2d(object):
     --------
 
     """
-    __metaclass__ = meta_interceptor  
+
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
         ext_unit_dict=None):
@@ -576,6 +609,10 @@ class util_2d(object):
         used to determine external array writing
         bin controls writing of binary external arrays
         '''
+        if isinstance(value,util_2d):
+            for attr in value.__dict__.items():
+                setattr(self,attr[0],attr[1])
+            return
         self.model = model
         self.shape = shape
         self.dtype = dtype
@@ -628,6 +665,16 @@ class util_2d(object):
 
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
+
+    @staticmethod
+    def get_default_numpy_fmt(dtype):
+        if dtype == np.int:
+            return "%6d"
+        elif dtype == np.float32:
+            return "%15.6E"
+        else:
+            raise Exception("util_2d.get_default_numpy_fmt(): unrecognized " +\
+                            "dtype, must be np.int or np.float32")
 
     def set_fmtin(self, fmtin):
         self.fmtin = fmtin
@@ -724,7 +771,7 @@ class util_2d(object):
                 #--write external formatted or unformatted array    
                 if not self.use_existing:    
                     if not self.bin:
-                        f = open(self.ext_filename, 'w', 0)
+                        f = open(self.ext_filename, 'w')
                         f.write(self.string)
                         f.close()
                     else:
@@ -807,7 +854,7 @@ class util_2d(object):
         npl, fmt, width, decimal = decode_fortran_descriptor(fmtin)
         data = np.zeros((nrow * ncol), dtype=dtype) + np.NaN
         d = 0
-        if not isinstance(file_in,file):
+        if not hasattr(file_in, 'read'):
             file_in = open(file_in,'r')
         while True:
             line = file_in.readline()
@@ -820,7 +867,7 @@ class util_2d(object):
                 rawlist = []
                 istart = 0
                 istop = width
-                for i in xrange(npl):
+                for i in range(npl):
                     txtval = line[istart:istop]
                     if txtval.strip() != '':
                         rawlist.append(txtval)
@@ -848,7 +895,7 @@ class util_2d(object):
         return data
 
     @staticmethod
-    def write_txt(shape, file_out, data, fortran_format='(FREE)',
+    def write_txt(shape, file_out, data, fortran_format="(FREE)",
                   python_format=None):
         '''
         write a (possibly wrapped format) array from a file
@@ -857,6 +904,12 @@ class util_2d(object):
         this routine now supports fixed format arrays where the numbers
         may touch.
         '''
+
+        if fortran_format.upper() == '(FREE)' and python_format is None:
+            np.savetxt(file_out,data,util_2d.get_default_numpy_fmt(data.dtype),
+                       delimiter='')
+            return
+
         nrow,ncol = shape
         if python_format is None:
             column_length, fmt, width, decimal = \
@@ -879,14 +932,14 @@ class util_2d(object):
         else:
             lineReturnFlag = True
         #--write the array
-        for i in xrange(nrow):
+        for i in range(nrow):
             icol = 0
-            for j in xrange(ncol):
+            for j in range(ncol):
                 try:
                     file_out.write(output_fmt.format(data[i,j]))
                 except:
-                    print 'Value {0} at row,col [{1},{2}] can not be written'\
-                        .format(data[i, j], i, j)
+                    print('Value {0} at row,col [{1},{2}] can not be written'\
+                        .format(data[i, j], i, j))
                     raise Exception
                 if (j + 1) % column_length == 0.0 and j != 0:
                     file_out.write('\n')
@@ -1006,7 +1059,7 @@ class util_2d(object):
         '''
         if isinstance(value, list):
             if VERBOSE:
-                print 'util_2d: casting list to array'
+                print('util_2d: casting list to array')
             value = np.array(value)
         if isinstance(value, bool):
             if self.dtype == np.bool:
@@ -1068,8 +1121,8 @@ class util_2d(object):
                                 str(value.shape))
             if self.dtype != value.dtype:
                 if VERBOSE:
-                    print 'util_2d:warning - casting array of type: ' +\
-                          str(value.dtype)+' to type: '+str(self.dtype)
+                    print('util_2d:warning - casting array of type: ' +\
+                          str(value.dtype)+' to type: '+str(self.dtype))
             return value.astype(self.dtype)
         
         else:
@@ -1134,8 +1187,8 @@ class util_2d(object):
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
 
         elif cr_dict['type'] == 'external':
-            assert cr_dict['nunit'] in ext_unit_dict.keys()
-            if 'binary' not in cr_dict['fmtin'].lower():
+            assert cr_dict['nunit'] in list(ext_unit_dict.keys())
+            if str('binary') not in str(cr_dict['fmtin'].lower()):
                 data = util_2d.load_txt(shape,
                                     ext_unit_dict[cr_dict['nunit']].filehandle,
                                         dtype, cr_dict['fmtin'])
@@ -1165,7 +1218,7 @@ class util_2d(object):
         if dtype == np.float or dtype == np.float32:
             isFloat = True       
         #--if free format keywords
-        if raw[0] in free_fmt:
+        if str(raw[0]) in str(free_fmt):
             freefmt = raw[0]
             if raw[0] == 'constant':
                 if isFloat:                
@@ -1233,3 +1286,14 @@ class util_2d(object):
         cr_dict['fmtin'] = fmtin
         cr_dict['fname'] = fname           
         return cr_dict
+
+    def __mul__(self, other):
+        if np.isscalar(other):
+            self.array
+            return util_2d(self.model,self.shape,self.dtype,
+                           self.__value_built * other,self.name,
+                           self.fmtin,self.cnstnt,self.iprn,self.ext_filename,
+                           self.locat,self.bin)
+        else:
+            raise NotImplementedError(
+                "util_2d.__mul__() not implemented for non-scalars")

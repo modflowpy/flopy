@@ -7,9 +7,12 @@ from setuptools import setup
 
 from flopy import __version__, __name__, __author__
 
-#--trap someone trying to install flopy with python 3
-if not sys.version_info[0] == 2:
-    print "Sorry, Python 3 is not supported (yet)"
+#--trap someone trying to install flopy with something other
+#  than python 2 or 3
+if not sys.version_info[0] in [2, 3]:
+    print('Sorry, Flopy not supported in your Python version')
+    print('  Supported versions: 2 and 3')
+    print('  Your version of Python: {}'.format(sys.version_info[0]))
     sys.exit(1) # return non-zero value for failure
 
 reqs = [line.strip() for line in open('requirements.txt')]

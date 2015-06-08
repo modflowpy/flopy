@@ -203,7 +203,7 @@ class ModflowDe4(Package):
         if model.verbose:
             sys.stdout.write('loading de4 package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         #--read dataset 0 -- header

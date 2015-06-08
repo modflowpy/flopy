@@ -206,7 +206,7 @@ class ModflowSwi2(Package):
             self.options = None
 
         if npln is not None:
-            print 'npln keyword is deprecated. use the nsrf keyword'
+            print('npln keyword is deprecated. use the nsrf keyword')
             nsrf = npln
 
         self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswibd, self.iswiobs = nsrf, istrat, nobs, \
@@ -347,7 +347,7 @@ class ModflowSwi2(Package):
         if model.verbose:
             sys.stdout.write('loading swi2 package file...\n')
 
-        if type(f) is not file:
+        if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
         # dataset 0 -- header
@@ -379,7 +379,7 @@ class ModflowSwi2(Package):
             iswiobs = 1051
         options = []
         adaptive = False
-        for idx in xrange(6, len(t)):
+        for idx in range(6, len(t)):
             if '#' in t[idx]:
                 break
             options.append(t[idx])
@@ -453,7 +453,7 @@ class ModflowSwi2(Package):
 
         #--read dataset 4
         if model.verbose:
-            print '   loading nu...'
+            print('   loading nu...')
         if istrat == 1:
             nnu = nsrf + 1
         else:
@@ -470,7 +470,7 @@ class ModflowSwi2(Package):
 
         #--read dataset 5
         if model.verbose:
-            print '   loading initial zeta surfaces...'
+            print('   loading initial zeta surfaces...')
         while True:
             ipos = f.tell()
             line = f.readline()
@@ -478,14 +478,14 @@ class ModflowSwi2(Package):
                 f.seek(ipos)
                 break
         zeta = []
-        for n in xrange(nsrf):
+        for n in range(nsrf):
             ctxt = 'zeta_surf{:02d}'.format(n+1)
             zeta.append(util_3d.load(f, model, (nlay, nrow, ncol),
                                      np.float32, ctxt, ext_unit_dict))
 
         #--read dataset 6
         if model.verbose:
-            print '   loading initial ssz...'
+            print('   loading initial ssz...')
         while True:
             ipos = f.tell()
             line = f.readline()
@@ -497,7 +497,7 @@ class ModflowSwi2(Package):
 
         #--read dataset 7
         if model.verbose:
-            print '   loading initial isource...'
+            print('   loading initial isource...')
         while True:
             ipos = f.tell()
             line = f.readline()
@@ -512,12 +512,12 @@ class ModflowSwi2(Package):
         obslrc = []
         if nobs > 0:
             if model.verbose:
-                print '   loading observation locations...'
+                print('   loading observation locations...')
             while True:
                 line = f.readline()
                 if line[0] != '#':
                     break
-            for i in xrange(nobs):
+            for i in range(nobs):
                 if i > 0:
                     try:
                         line = f.readline()
