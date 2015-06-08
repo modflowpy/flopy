@@ -16,6 +16,8 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 
 * Revised setters for package class variables stored using the util_2d or util_3d classes.
 
+* Added option to load a subset of MODFLOW packages using ***load_only=*** keyword.
+
 ### Version 3.1
 * *FloPy<sub>3</sub>* now supports some simple mapping and cross-section capabilities through the flopy.plot submodule. See the notebook [flopy3_MapExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
 
