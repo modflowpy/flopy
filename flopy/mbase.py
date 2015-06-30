@@ -709,7 +709,6 @@ class Package(object):
             #--test for specify keyword if a NWT well file - This is a temporary hack
             if 'specify' in line.lower():
                 specify = True
-                line = f.readline()  #ditch line -- possibly save for NWT output
                 t = line.strip().split()
                 phiramp = np.float32(t[1])
                 try:
@@ -805,16 +804,12 @@ class Package(object):
                         iname = 'static'
                 except:
                     pass
-                #print pname, iname
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
-                #print par_dict
-                #print data_dict
 
                 par_current = pack_type.get_empty(par_dict['nlst'], aux_names=aux_names)
 
-                #--
-                #parval = np.float(par_dict['parval'])
+                #-- get appropriate parval
                 if model.mfpar.pval is None:
                     parval = np.float(par_dict['parval'])
                 else:
@@ -842,11 +837,8 @@ class Package(object):
 
             if bnd_output is None:
                 stress_period_data[iper] = itmp
-                #print 'crap'
             else:
                 stress_period_data[iper] = bnd_output
-                #print bnd_output.shape
-                #print bnd_output   
 
         pak = pack_type(model, ipakcb=ipakcb,
                         stress_period_data=stress_period_data, \
