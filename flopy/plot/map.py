@@ -467,6 +467,72 @@ class ModelMap(object):
 
         return quiver
 
+    def plot_pathline(self, pl, **kwargs):
+        """
+        Plot the MODPATH pathlines.
+
+        Parameters
+        ----------
+        pl : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
+            modpathfile PathlineFile get_data() or get_alldata()
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            'k', and 'particleid'.
+
+        kwargs : layer, ax, colors.  The remaining kwargs are passed
+            into the LineCollection constructor. If layer='all',
+            pathlines are output for all layers
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+        from matplotlib.collections import LineCollection
+        #make sure pathlines is a list
+        if isinstance(pl, np.ndarray):
+            pl = [pl]
+        
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if 'colors' not in kwargs:
+            kwargs['colors'] = '0.5'
+        
+        linecol = []
+        for p in pl:
+            vlc = []
+            for v in p:
+                x0, y0, k = v['x'], v['y'], v['k']
+                if k == kon or kon < 0:
+                    x0r, y0r = rotate(x0, y0, self.rotation, 0., self.yedge[0])
+                    x0r += self.xul
+                    y0r += self.yul - self.yedge[0]
+                    vlc.append((x0r, y0r))
+                else:
+                    if len(vlc) > 0:
+                        linecol.append(vlc)
+                        vlc = []
+                #--finalize pathline
+                if len(vlc) > 0:
+                    linecol.append(vlc)
+
+        lc = LineCollection(linecol, **kwargs)            
+        ax.add_collection(lc)
+        return lc
+
 
     def get_grid_line_collection(self, **kwargs):
         """

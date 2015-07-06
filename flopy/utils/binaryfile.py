@@ -276,7 +276,7 @@ class HeadFile(BinaryLayerFile):
     filename : string
         Name of the concentration file
     text : string
-        Name of the text string in the ucn file.  Default is 'head'
+        Name of the text string in the head file.  Default is 'head'
     precision : string
         'single' or 'double'.  Default is 'single'.
     verbose : bool
