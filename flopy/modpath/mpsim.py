@@ -166,7 +166,9 @@ class ModpathSim(Package):
                 f_sim.write('{0:s}\n'.format(self.group_name[i]))
                 # item 13
                 Grid, GridCellRegionOption, PlacementOption, ReleaseStartTime, ReleaseOption, CHeadOption = self.group_placement[i]
-                f_sim.write('{0:d} {1:d} {2:d} {3:f} {4:d} {5:d}\n'.format(Grid, GridCellRegionOption, PlacementOption, ReleaseStartTime, ReleaseOption, CHeadOption))
+                f_sim.write('{0:d} {1:d} {2:d} {3:f} {4:d} {5:d}\n'.format(Grid, GridCellRegionOption, 
+                                                                           PlacementOption, ReleaseStartTime, 
+                                                                           ReleaseOption, CHeadOption))
                 # item 14
                 if ReleaseOption == 2:
                     ReleasePeriodLength, ReleaseEventCount = self.release_times[i]
@@ -174,7 +176,8 @@ class ModpathSim(Package):
                 # item 15
                 if GridCellRegionOption == 1:
                     MinLayer, MinRow, MinColumn, MaxLayer, MaxRow, MaxColumn = self.group_region[i]
-                    f_sim.write('{0:d} {1:d} {2:d} {3:d} {4:d} {5:d}\n'.format(MinLayer, MinRow, MinColumn, MaxLayer, MaxRow, MaxColumn))
+                    f_sim.write('{0:d} {1:d} {2:d} {3:d} {4:d} {5:d}\n'.format(MinLayer+1, MinRow+1, MinColumn+1, 
+                                                                               MaxLayer+1, MaxRow+1, MaxColumn+1))
                 # item 16
                 if GridCellRegionOption == 2:
                     f_sim.write(self.mask_nlay[i].get_file_entry())                        
