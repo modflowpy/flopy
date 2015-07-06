@@ -201,7 +201,7 @@ class ModpathSim(Package):
         if self.options_dict['ParticleGenerationOption'] == 2:
             f_sim.write('{0:s}\n'.format(self.strt_file))
             
-        if self.options_dict['ParticleGenerationOption'] != 1:
+        if self.options_dict['TimePointOption'] != 1:
             # item 23
             if self.options_dict['TimePointOption'] == 2 or self.options_dict['TimePointOption'] == 3:
                 f_sim.write('{0:d}\n'.format(self.time_ct))
@@ -211,7 +211,7 @@ class ModpathSim(Package):
             # item 25
             if self.options_dict['TimePointOption'] == 3:
                 for r in range(self.time_ct):
-                    f_sim.write('{0:s}\n'.format(self.time_pts[r]))
+                    f_sim.write('{0:f}\n'.format(self.time_pts[r]))
                 
         if self.options_dict['BudgetOutputOption'] != 1 or self.options_dict['BudgetOutputOption'] != 2:
             # item 26

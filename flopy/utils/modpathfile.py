@@ -45,19 +45,21 @@ class PathlineFile():
     """
     def __init__(self, filename, verbose=False):
         self.fname = filename
-        self.dtype = self._get_dtype()
+        self.dtype, self.outdtype = self._get_dtypes()
         self._build_index()
-        self.data = np.loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
+        self._data = np.loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
         #--set number of particle ids
-        self.nid = self.data['particleid'].max()
+        self.nid = self._data['particleid'].max()
         #--convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
-        self.data['k'] -= 1
-        self.data['i'] -= 1
-        self.data['j'] -= 1
-        self.data['particleid'] -= 1
-        self.data['particlegroup'] -= 1
-        self.data['linesegmentindex'] -= 1
+        self._data['k'] -= 1
+        self._data['i'] -= 1
+        self._data['j'] -= 1
+        self._data['particleid'] -= 1
+        self._data['particlegroup'] -= 1
+        self._data['linesegmentindex'] -= 1
+        #--close the input file
+        self.file.close()
         return
         
     def _build_index(self):
@@ -73,7 +75,7 @@ class PathlineFile():
                 break
         self.file.seek(0)
 
-    def _get_dtype(self):
+    def _get_dtypes(self):
         """
            Build numpy dtype for the MODPATH 6 pathline file.
         """
@@ -85,7 +87,9 @@ class PathlineFile():
                           ("grid", np.int), ("xloc", np.float32), 
                           ("yloc", np.float32), ("zloc", np.float32),
                           ("linesegmentindex", np.int)])
-        return dtype
+        outdtype = np.dtype([("x", np.float32), ("y", np.float32), ("z", np.float32),
+                             ("time", np.float32), ("k", np.int), ("id", np.int)])
+        return dtype, outdtype
                               
 
     def get_maxid(self):
@@ -100,7 +104,21 @@ class PathlineFile():
         """
         return self.maxid
 
-    def get_data(self, partid=0, totim=None):
+
+    def get_maxtime(self):
+        """
+        Get the maximum time in pathline file
+
+        Returns
+        ----------
+        out : float
+            Maximum pathline number.
+
+        """
+        return self.data['time'].max()
+
+
+    def get_data(self, partid=0, totim=None, ge=True):
         """
         get pathline data from the pathline file for a single pathline.
 
@@ -110,7 +128,12 @@ class PathlineFile():
             The zero-based particle id.  The first record is record 0.
         totim : float
             The simulation time. All pathline points for particle partid
-            that are greater than or equal to totim will be returned
+            that are greater than or equal to (ge=True) or less than or
+            equal to (ge=False) totim will be returned. Default is None
+        ge : bool
+            Boolean that determines if pathline times greater than or equal
+            to or less than or equal to totim is used to create a subset
+            of pathlines. Default is True.
 
         Returns
         ----------
@@ -133,23 +156,34 @@ class PathlineFile():
         >>> p1 = pthobj.get_data(partid=1)
 
         """
-        dtype = np.dtype([("x", np.float32), ("y", np.float32), ("z", np.float32),
-                          ("time", np.float32), ("k", np.int), ("id", np.int)])
+        idx = self._data['particleid'] == partid
         if totim is not None:
-            idx = self.data['particleid'] == partid & self.data['time'] > totime
+            if ge:
+                idx = (self._data['time'] >= totim) & (self._data['particleid'] == partid)
+            else:
+                idx = (self._data['time'] <= totim) & (self._data['particleid'] == partid)
         else:
-            idx = self.data['particleid'] == partid
-        ta = self.data[idx]
+            idx = self._data['particleid'] == partid
         #x, y, z, time, k, id = ta['x'], ta['y'], ta['z'], ta['time'], ta['k'], ta['particleid']
-        ra = np.rec.fromarrays((ta['x'], ta['y'], ta['z'], ta['time'], ta['k'], ta['particleid']), dtype=dtype)
+        self._ta = self._data[idx]
+        ra = np.rec.fromarrays((self._ta['x'], self._ta['y'], self._ta['z'],
+                                self._ta['time'], self._ta['k'], self._ta['particleid']), dtype=self.outdtype)
         return ra
 
-    def get_alldata(self):
+    def get_alldata(self, totim=None, ge=True):
         """
         get pathline data from the pathline file for all pathlines and all times.
 
         Parameters
         ----------
+        totim : float
+            The simulation time. All pathline points for particle partid
+            that are greater than or equal to (ge=True) or less than or
+            equal to (ge=False) totim will be returned. Default is None
+        ge : bool
+            Boolean that determines if pathline times greater than or equal
+            to or less than or equal to totim is used to create a subset
+            of pathlines. Default is True.
 
         Returns
         ----------
@@ -174,5 +208,5 @@ class PathlineFile():
         """
         plist = []
         for partid in range(self.nid):
-            plist.append(self.get_data(partid=partid))
+            plist.append(self.get_data(partid=partid, totim=totim))
         return plist

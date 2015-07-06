@@ -514,6 +514,9 @@ class ModelMap(object):
         linecol = []
         for p in pl:
             vlc = []
+            #vectorize this code
+            #x0, y0, k = p['x'], p['y'], p['k']
+
             for v in p:
                 x0, y0, k = v['x'], v['y'], v['k']
                 if k == kon or kon < 0:
