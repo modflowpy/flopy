@@ -164,7 +164,6 @@ class PathlineFile():
                 idx = (self._data['time'] <= totim) & (self._data['particleid'] == partid)
         else:
             idx = self._data['particleid'] == partid
-        #x, y, z, time, k, id = ta['x'], ta['y'], ta['z'], ta['time'], ta['k'], ta['particleid']
         self._ta = self._data[idx]
         ra = np.rec.fromarrays((self._ta['x'], self._ta['y'], self._ta['z'],
                                 self._ta['time'], self._ta['k'], self._ta['particleid']), dtype=self.outdtype)

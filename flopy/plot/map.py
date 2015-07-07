@@ -511,7 +511,7 @@ class ModelMap(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        dtype = np.dtype([("x", np.float32), ("y", np.float32)])
+        #dtype = np.dtype([("x", np.float32), ("y", np.float32)])
 
         linecol = []
         for p in pl:
@@ -520,31 +520,19 @@ class ModelMap(object):
             x0r, y0r = rotate(p['x'], p['y'], self.rotation, 0., self.yedge[0])
             x0r += self.xul
             y0r += self.yul - self.yedge[0]
+            #build polyline array
+            arr = np.vstack((x0r, y0r)).T
             #select based on layer
-            if kon < 0:
-                isel = p['k'] >= 0
-            else:
-                isel = p['k'] == kon
-            t0 = (999., 999.)
-            for idx, lv in enumerate(isel):
-                if lv:
-                    t = (x0r[idx], y0r[idx])
-                    #--only keep unique points in the pathline
-                    if t == t0:
-                        continue
-                    #--append new point to list and save current point
-                    vlc.append(t)
-                    t0 = t
-                else:
-                    if len(vlc) > 0:
-                        linecol.append(vlc)
-                        vlc = []
-                #--finalize pathline
-                if len(vlc) > 0:
-                    linecol.append(vlc)
-
-        lc = LineCollection(linecol, **kwargs)            
-        ax.add_collection(lc)
+            if kon >= 0:
+                arr = np.ma.masked_where((p['k'] != kon), arr)
+            #append line to linecol if there is some unmasked segment
+            if not arr.mask.all():
+                linecol.append(arr)
+        #create line collection
+        lc = None
+        if len(linecol) > 0:
+            lc = LineCollection(linecol, **kwargs)
+            ax.add_collection(lc)
         return lc
 
 
