@@ -525,9 +525,16 @@ class ModelMap(object):
                 isel = p['k'] >= 0
             else:
                 isel = p['k'] == kon
+            t0 = (999., 999.)
             for idx, lv in enumerate(isel):
                 if lv:
-                    vlc.append((x0r[idx], y0r[idx]))
+                    t = (x0r[idx], y0r[idx])
+                    #--only keep unique points in the pathline
+                    if t == t0:
+                        continue
+                    #--append new point to list and save current point
+                    vlc.append(t)
+                    t0 = t
                 else:
                     if len(vlc) > 0:
                         linecol.append(vlc)
