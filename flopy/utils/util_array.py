@@ -892,7 +892,7 @@ class util_2d(object):
         if np.isnan(np.sum(data)):
             raise Exception("util_2d.load_txt() error: np.NaN in data array")
         data.resize(nrow, ncol)
-        return data
+        return data * mult
 
     @staticmethod
     def write_txt(shape, file_out, data, fortran_format="(FREE)",
@@ -1183,6 +1183,7 @@ class util_2d(object):
 
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
+            data *= cr_dict['cnstnt']
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
 
@@ -1195,6 +1196,7 @@ class util_2d(object):
             else:
                 header_data, data = util_2d.load_bin(
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype)
+            data *= cr_dict['cnstnt']
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
             # track this unit number so we can remove it from the external
