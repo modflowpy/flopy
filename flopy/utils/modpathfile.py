@@ -208,5 +208,5 @@ class PathlineFile():
         """
         plist = []
         for partid in range(self.nid):
-            plist.append(self.get_data(partid=partid, totim=totim))
+            plist.append(self.get_data(partid=partid, totim=totim, ge=ge))
         return plist

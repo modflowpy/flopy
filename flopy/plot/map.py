@@ -510,20 +510,24 @@ class ModelMap(object):
 
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
-        
+
+        dtype = np.dtype([("x", np.float32), ("y", np.float32)])
+
         linecol = []
         for p in pl:
             vlc = []
-            #vectorize this code
-            #x0, y0, k = p['x'], p['y'], p['k']
-
-            for v in p:
-                x0, y0, k = v['x'], v['y'], v['k']
-                if k == kon or kon < 0:
-                    x0r, y0r = rotate(x0, y0, self.rotation, 0., self.yedge[0])
-                    x0r += self.xul
-                    y0r += self.yul - self.yedge[0]
-                    vlc.append((x0r, y0r))
+            #rotate data
+            x0r, y0r = rotate(p['x'], p['y'], self.rotation, 0., self.yedge[0])
+            x0r += self.xul
+            y0r += self.yul - self.yedge[0]
+            #select based on layer
+            if kon < 0:
+                isel = p['k'] >= 0
+            else:
+                isel = p['k'] == kon
+            for idx, lv in enumerate(isel):
+                if lv:
+                    vlc.append((x0r[idx], y0r[idx]))
                 else:
                     if len(vlc) > 0:
                         linecol.append(vlc)
