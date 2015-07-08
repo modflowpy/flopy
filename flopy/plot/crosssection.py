@@ -256,12 +256,12 @@ class ModelCrossSection(object):
 
     def plot_surface(self, a, masked_values=None, **kwargs):
         """
-        Plot a three-dimensional array as lines.
+        Plot a two- or three-dimensional array as line(s).
 
         Parameters
         ----------
         a : numpy.ndarray
-            Three-dimensional array to plot.
+            Two- or three-dimensional array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
         **kwargs : dictionary
@@ -280,7 +280,14 @@ class ModelCrossSection(object):
         plotarray = a
 
         vpts = []
-        for k in range(self.dis.nlay):
+        if len(plotarray.shape) == 2:
+            nlay = 1
+            plotarray = np.reshape(plotarray, (1, plotarray.shape[0], plotarray.shape[1]))
+        elif len(plotarray.shape) == 3:
+            nlay = plotarray.shape[0]
+        else:
+            raise Exception('plot_array array must be a 2D or 3D array')
+        for k in range(nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
                                                    self.yedge,
                                                    plotarray[k, :, :]))
@@ -297,7 +304,7 @@ class ModelCrossSection(object):
 
 
     def plot_fill_between(self, a, colors=['blue', 'red'],
-                            masked_values=None, **kwargs):
+                          masked_values=None, head=None, **kwargs):
         """
         Plot a three-dimensional array as lines.
 
@@ -307,6 +314,10 @@ class ModelCrossSection(object):
             Three-dimensional array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
         **kwargs : dictionary
             keyword arguments passed to matplotlib.pyplot.plot
 
@@ -328,7 +339,12 @@ class ModelCrossSection(object):
                                                    self.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.ma.array(vpts, mask=False)
-        
+
+        if isinstance(head, np.ndarray):
+            zpts = self.set_zpts(head)
+        else:
+            zpts = self.zpts
+
         if masked_values is not None:
             for mval in masked_values:
                 vpts = np.ma.masked_equal(vpts, mval)
@@ -338,8 +354,8 @@ class ModelCrossSection(object):
         for k in range(self.dis.nlay):
             idxmk = idxm[k, :]
             v = vpts[k, :]
-            y1 = self.zpts[k, :]
-            y2 = self.zpts[k+1, :]
+            y1 = zpts[k, :]
+            y2 = zpts[k+1, :]
             #--make sure y1 is not below y2
             idx = y1 < y2
             y1[idx] = y2[idx]
