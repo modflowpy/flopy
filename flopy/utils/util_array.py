@@ -1228,6 +1228,10 @@ class util_2d(object):
                 else:
                     cnstnt = np.int(raw[1].lower())                   
             if raw[0] == 'internal':
+                if isFloat:
+                    cnstnt = np.float(raw[1].lower().replace('d', 'e'))
+                else:
+                    cnstnt = np.int(raw[1].lower())
                 fmtin = raw[2].strip()
                 iprn = int(raw[3])
             elif raw[0] == 'external':

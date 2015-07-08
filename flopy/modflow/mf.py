@@ -322,6 +322,7 @@ class Modflow(BaseModel):
             if item.filetype.lower() == "dis":
                 dis = item
                 dis_key = key
+                break
         try:
             pck = dis.package.load(dis.filename, ml,
                                    ext_unit_dict=ext_unit_dict)
