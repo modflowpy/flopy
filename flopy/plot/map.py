@@ -511,8 +511,6 @@ class ModelMap(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        #dtype = np.dtype([("x", np.float32), ("y", np.float32)])
-
         linecol = []
         for p in pl:
             vlc = []
@@ -534,6 +532,90 @@ class ModelMap(object):
             lc = LineCollection(linecol, **kwargs)
             ax.add_collection(lc)
         return lc
+
+
+    def plot_endpoint(self, ep, **kwargs):
+        """
+        Plot the MODPATH endpoints.
+
+        Parameters
+        ----------
+        ep : rec array
+            rec array is data returned from modpathfile EndpointFile
+            get_data() or get_alldata() methods. Data in rec array
+            is 'x', 'y', 'z', 'time', 'k', and 'particleid'.
+
+        kwargs : layer, ax, c, s, colorbar, colorbar_label, shrink. The
+            remaining kwargs are passed into the matplotlib scatter
+            method. If layer='all', endpoints are output for all layers.
+            If colorbar is True a colorbar will be added to the plot.
+            If colorbar_label is passed in and colorbar is True then
+            colorbar_label will be passed to the colorbar set_label()
+            method. If shrink is passed in and colorbar is True then
+            the colorbar size will be set using shrink.
+
+        Returns
+        -------
+        sp : matplotlib.pyplot.scatter
+
+        """
+
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        #scatter kwargs that users may redefine
+        if 'c' not in kwargs:
+            c = ep['time']
+        else:
+            c = np.empty((ep.shape[0]), dtype="S30")
+            c.fill(kwargs.pop('c'))
+
+        if 's' not in kwargs:
+            s = 50.
+        else:
+            s = float(kwargs.pop('s'))**2.
+
+        #colorbar kwargs
+        createcb = False
+        if 'colorbar' in kwargs:
+            createcb = kwargs.pop('colorbar')
+
+        colorbar_label = 'Endpoint Time'
+        if 'colorbar_label' in kwargs:
+            colorbar_label = kwargs.pop('colorbar_label')
+
+        shrink = 1.
+        if 'shrink' in kwargs:
+            shrink = float(kwargs.pop('shrink'))
+
+        #rotate data
+        x0r, y0r = rotate(ep['x'], ep['y'], self.rotation, 0., self.yedge[0])
+        x0r += self.xul
+        y0r += self.yul - self.yedge[0]
+        #build array to plot
+        arr = np.vstack((x0r, y0r)).T
+        #select based on layer
+        if kon >= 0:
+            c = np.ma.masked_where((ep['k'] != kon), c)
+        #plot the end point data
+        sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        #add a colorbar for endpoint times
+        if createcb:
+            cb = plt.colorbar(sp, shrink=shrink)
+            cb.set_label(colorbar_label)
+        return sp
 
 
     def get_grid_line_collection(self, **kwargs):
