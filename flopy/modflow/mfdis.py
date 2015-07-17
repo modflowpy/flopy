@@ -132,7 +132,8 @@ class ModflowDis(Package):
 
         self.sr = reference.SpatialReference(self.delr, self.delc, self.lenuni, xul=xul,
                                              yul=yul, rotation_degrees=rotation)
-        self.tr = reference.TemporalReference(self.perlen, self.steady, self.itmuni, start_datetime=start_datetime)
+        self.tr = reference.TemporalReference(self.perlen, self.steady, self.nstp, self.tsmult,
+                                              self.itmuni, start_datetime=start_datetime)
 
     def checklayerthickness(self):
         """

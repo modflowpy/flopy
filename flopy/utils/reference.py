@@ -161,7 +161,7 @@ class SpatialReference(object):
 
 class TemporalReference(object):
 
-    def __init__(self,perlen,steady,itmuni, start_datetime=None):
+    def __init__(self, perlen, steady, nstp, tsmult, itmuni, start_datetime=None):
         self.itmuni_daterange = {1: "s", 2: "m", 3: "h", 4: "d", 5: "y"}
         if start_datetime is None:
             self.start = datetime(2015,1,1)
@@ -170,19 +170,32 @@ class TemporalReference(object):
         if itmuni == 0:
             print("temporalReference warning: time units (itmuni) undefined, assuming days")
         self.unit = self.itmuni_daterange[itmuni]
+        #--work out stress period lengths,starts and ends
         self.stressperiod_deltas = pd.to_timedelta(perlen.array,unit=self.unit)
-        self.stressperiod_start = self.start + self.stressperiod_deltas
-        self.stressperiod_end = None
-        self.timestep_start = None
-        self.timestep_end = None
-        self.timestep_deltas = None
+        self.stressperiod_end = self.start + np.cumsum(self.stressperiod_deltas)
+        self.stressperiod_start = self.stressperiod_end - self.stressperiod_deltas
+
+        #--work out time step lengths - not very elegant
+        offsets = []
+        for plen,nts,tmult in zip(perlen.array,nstp.array,tsmult.array):
+            if tmult != 1.0:
+                dt1 = plen * ((tmult-1.)/((tmult**nts)-1.))
+            else:
+                dt1 = float(plen) / float(nts)
+            offsets.append(dt1)
+            for its in range(nts-1):
+                offsets.append(offsets[-1]*tmult)
+        self.timestep_deltas = pd.to_timedelta(offsets,unit=self.unit)
+        self.timestep_end = self.start + np.cumsum(self.timestep_deltas)
+        self.timestep_start = self.timestep_end - self.timestep_deltas
+
         self.perlen = perlen
         self.steady = steady
 
         if False in steady:
-            raise NotImplementedError("temporalReference: not dealng wth steady state yet")
+            raise NotImplementedError("temporalReference: not dealing wth steady state yet")
         return
 
 
-    def get_output_control_date_range(self,oc):
+    def get_datetimes_from_oc(self,oc):
         raise NotImplementedError()
