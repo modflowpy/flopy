@@ -11,7 +11,14 @@ from flopy.utils import util_2d
 class SpatialReference(object):
 
     def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation_degrees=0.0,):
-
+        """
+            delr: util_2d instance of delr from dis constructor
+            delc: util_2d instance of delc from dis constructor
+            lenuni: lenght unit code
+            xul: x coord of upper left corner of grid
+            yul: y coord of upper left corner of grid
+            rotation_degrees: grid rotation
+        """
         assert isinstance(delc,util_2d),"spatialReference error: delc must be util_2d instance"
         assert isinstance(delr,util_2d),"spatialReference error: delr must be util_2d instance"
         self.delc = delc
@@ -162,10 +169,35 @@ class SpatialReference(object):
 class TemporalReference(object):
 
     def __init__(self, perlen, steady, nstp, tsmult, itmuni, start_datetime=None):
+        """
+        :param perlen: util_2d instance of perlen from dis constructor
+        :param steady: util_2d instance of steady from dis constructor
+        :param nstp: util_2d instance of nstp from dis constructor
+        :param tsmult: util_2d instance of tsmult from dis constructor
+        :param itmuni: time unit
+        :param start_datetime: datetime instance
+        :return: none
+
+        stressperiod_start: date_range for start of stress periods
+        stressperiod_end: date_range for end of stress periods
+        stressperiod_deltas: timeoffset range for stress periods
+
+        timestep_start: date_range for start of time steps
+        timestep_end: date_range for end of time steps
+        timestep_delta: timeoffset range for time steps
+
+        kperkstp_loc: dict keyed on (kper,kstp) stores the index pos in the timestep ranges
+
+        """
+        assert isinstance(perlen,util_2d)
+        assert isinstance(nstp,util_2d)
+        assert isinstance(steady,util_2d)
+        assert isinstance(tsmult,util_2d)
         self.itmuni_daterange = {1: "s", 2: "m", 3: "h", 4: "d", 5: "y"}
         if start_datetime is None:
             self.start = datetime(2015,1,1)
         else:
+            assert isinstance(start_datetime,datetime)
             self.start = start_datetime
         if itmuni == 0:
             print("temporalReference warning: time units (itmuni) undefined, assuming days")
@@ -177,15 +209,21 @@ class TemporalReference(object):
 
         #--work out time step lengths - not very elegant
         offsets = []
-        for plen,nts,tmult in zip(perlen.array,nstp.array,tsmult.array):
+        idt = 0
+        self.kperkstp_loc = {}
+        for kper,(plen, nts, tmult) in enumerate(zip(perlen.array, nstp.array, tsmult.array)):
             if tmult != 1.0:
-                dt1 = plen * ((tmult-1.)/((tmult**nts)-1.))
+                dt1 = plen * ((tmult - 1.)/((tmult**nts) - 1.))
             else:
                 dt1 = float(plen) / float(nts)
             offsets.append(dt1)
+            self.kperkstp_loc[(kper, 0)] = idt
+            idt += 1
             for its in range(nts-1):
-                offsets.append(offsets[-1]*tmult)
-        self.timestep_deltas = pd.to_timedelta(offsets,unit=self.unit)
+                offsets.append(offsets[-1] * tmult)
+                self.kperkstp_loc[(kper, its + 1)] = idt
+                idt += 1
+        self.timestep_deltas = pd.to_timedelta(offsets, unit=self.unit)
         self.timestep_end = self.start + np.cumsum(self.timestep_deltas)
         self.timestep_start = self.timestep_end - self.timestep_deltas
 

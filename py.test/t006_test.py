@@ -11,7 +11,7 @@ def test_reference():
     botm = [20,10,0]
     top = 30
     perlen  = np.zeros(10) + 10.0
-    #perlen[1] = 45.2
+    perlen[1] = 45.2
     start = datetime(1979,9,29)
     ibound = np.ones((nrow,ncol))
     ibound[:,0] = 2
@@ -43,7 +43,10 @@ def test_reference():
     print(dis.tr.stressperiod_start)
     #print(dis.tr.stressperiod_end)
     print(dis.tr.timestep_start)
+    s = dis.tr.timestep_start[dis.tr.kperkstp_loc[(0,0)]]
+    e = dis.tr.timestep_end[dis.tr.kperkstp_loc[(9,2)]]
 
+    print((e-s).days,np.cumsum(perlen)[-1])
 
     return
 
