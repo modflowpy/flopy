@@ -33,63 +33,17 @@ class ModelMap(object):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
-    def __init__(self, ax=None, model=None, dis=None, layer=0, xul=None,
-                 yul=None, rotation=0., extent=None):
+    def __init__(self, ax=None, model=None, dis=None, layer=0, extent=None):
         self.ml = model
         self.layer = layer
-        if dis is None:
-            if model is None:
-                raise Exception('Cannot find discretization package')
-            else:
-                self.dis = model.get_package('DIS')
-        else:
+        if dis is not None:
             self.dis = dis
-
-        if self.layer < 0 or self.layer > self.dis.nlay - 1:
-            s = 'Not a valid layer: {}.  Must be between 0 and {}.'.format(
-                self.layer, self.dis.nlay - 1)
-            raise Exception(s)
-
-        if ax is None:
-            self.ax = plt.gca()
         else:
-            self.ax = ax
-
-        # Set origin and rotation
-        if xul is None:
-            self.xul = 0.
-        else:
-            self.xul = xul
-        if yul is None:
-            self.yul = np.add.reduce(self.dis.delc.array)
-        else:
-            self.yul = yul
-        self.rotation = -rotation * np.pi / 180.
-
-        # Create edge arrays and meshgrid for pcolormesh
-        self.xedge = self.get_xedge_array()
-        self.yedge = self.get_yedge_array()
-        self.xgrid, self.ygrid = np.meshgrid(self.xedge, self.yedge)
-        self.xgrid, self.ygrid = rotate(self.xgrid, self.ygrid, self.rotation,
-                                        0, self.yedge[0])
-        self.xgrid += self.xul
-        self.ygrid += self.yul - self.yedge[0]
-
-        # Create x and y center arrays and meshgrid of centers
-        self.xcenter = self.get_xcenter_array()
-        self.ycenter = self.get_ycenter_array()
-        self.xcentergrid, self.ycentergrid = np.meshgrid(self.xcenter,
-                                                         self.ycenter)
-        self.xcentergrid, self.ycentergrid = rotate(self.xcentergrid,
-                                                    self.ycentergrid,
-                                                    self.rotation,
-                                                    0, self.yedge[0])
-        self.xcentergrid += self.xul
-        self.ycentergrid += self.yul - self.yedge[0]
-
-        # Create model extent
+            self.dis = model.dis
+        self.ax = ax
+        # # Create model extent
         if extent is None:
-            self.extent = self.get_extent()
+            self.extent = self.dis.sr.get_extent()
         else:
             self.extent = extent
 
@@ -99,91 +53,86 @@ class ModelMap(object):
 
         return
 
-    def write_grid_shapefile(self, filename, package_names=None,array_dict=None):
-        """
-        Write a shapefile for the model grid.  If package_names is not none,
-        then search through the requested packages looking for arrays that can
-        be added to the shapefile as attributes
-
-        Parameters
-        ----------
-        filename : string
-            name of the shapefile to write
-        package_names : (optional) list of package names (e.g. ["dis","lpf"])
-            packages to scrap arrays out of for adding to shapefile
-        array_dict : (optional) dict of {name:2D array} pairs
-           additional 2D arrays to add as attributes to the grid shapefile
-
-
-        Returns
-        -------
-        None
-
-        """
-
-        try:
-            import shapefile
-        except Exception as e:
-            raise Exception("ModelMap.write_grid_shapefile(): error " +
-                            "importing shapefile - need to install pyshp")
-
-        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-        wr.field("row", "N", 10, 0)
-        wr.field("column", "N", 10, 0)
-
-        arrays = []
-        if array_dict is not None:
-            for name,array in array_dict.items():
-                assert array.shape == (self.ml.nrow,self.ml.ncol)
-                wr.field(name,"N",20,12)
-                arrays.append(array)
-
-        if package_names is not None:
-            if not isinstance(package_names, list):
-                package_names = [package_names]
-            for pname in package_names:
-                pak = self.ml.get_package(pname)
-                if pak is not None:
-                    attrs = dir(pak)
-                    for attr in attrs:
-                        a = pak.__getattribute__(attr)
-                        if isinstance(a, util_2d) and a.shape == (self.ml.nrow,
-                                                                  self.ml.ncol):
-                            name = a.name.lower()
-                            wr.field(name, 'N', 20, 12)
-                            arrays.append(a.array)
-                        elif isinstance(a, util_3d):
-                            for i,u2d in enumerate(a):
-                                name = u2d.name.lower().replace(' ','_')
-                                if "_layer" in name:
-                                    name = name.replace("_layer", '')
-                                else:
-                                    name += '_{0:d}'.format(i+1)
-                                wr.field(name, 'N', 20, 12)
-                                arrays.append(u2d.array)
-                        elif isinstance(a,transient_2d):
-                            kpers = list(a.transient_2ds.keys())
-                            kpers.sort()
-                            for kper in kpers:
-                                u2d = a.transient_2ds[kper]
-                                name = u2d.name.lower() + "_{0:d}".format(kper+1)
-                                wr.field(name, 'N', 20, 12)
-                                arrays.append(u2d.array)
-
-        for i in range(self.ml.nrow):
-            for j in range(self.ml.ncol):
-                pts = []
-                pts.append([self.xgrid[i, j], self.ygrid[i, j]])
-                pts.append([self.xgrid[i, j], self.ygrid[i+1, j]])
-                pts.append([self.xgrid[i, j+1], self.ygrid[i+1, j]])
-                pts.append([self.xgrid[i, j+1], self.ygrid[i, j]])
-                pts.append([self.xgrid[i, j], self.ygrid[i, j]])
-                wr.poly(parts=[pts])
-                rec = [i+1, j+1]
-                for array in arrays:
-                    rec.append(array[i, j])
-                wr.record(*rec)
-        wr.save(filename)
+    # def write_grid_shapefile(self, filename, package_names=None,array_dict=None):
+    #     """
+    #     Write a shapefile for the model grid.  If package_names is not none,
+    #     then search through the requested packages looking for arrays that can
+    #     be added to the shapefile as attributes
+    #
+    #     Parameters
+    #     ----------
+    #     filename : string
+    #         name of the shapefile to write
+    #     package_names : (optional) list of package names (e.g. ["dis","lpf"])
+    #         packages to scrap arrays out of for adding to shapefile
+    #     array_dict : (optional) dict of {name:2D array} pairs
+    #        additional 2D arrays to add as attributes to the grid shapefile
+    #
+    #
+    #     Returns
+    #     -------
+    #     None
+    #
+    #     """
+    #
+    #     try:
+    #         import shapefile
+    #     except Exception as e:
+    #         raise Exception("ModelMap.write_grid_shapefile(): error " +
+    #                         "importing shapefile - need to install pyshp")
+    #
+    #     wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+    #     wr.field("row", "N", 10, 0)
+    #     wr.field("column", "N", 10, 0)
+    #
+    #     arrays = []
+    #     if array_dict is not None:
+    #         for name,array in array_dict.items():
+    #             assert array.shape == (self.ml.nrow,self.ml.ncol)
+    #             wr.field(name,"N",20,12)
+    #             arrays.append(array)
+    #
+    #     if package_names is not None:
+    #         if not isinstance(package_names, list):
+    #             package_names = [package_names]
+    #         for pname in package_names:
+    #             pak = self.ml.get_package(pname)
+    #             if pak is not None:
+    #                 attrs = dir(pak)
+    #                 for attr in attrs:
+    #                     a = pak.__getattribute__(attr)
+    #                     if isinstance(a, util_2d) and a.shape == (self.ml.nrow,
+    #                                                               self.ml.ncol):
+    #                         name = a.name.lower()
+    #                         wr.field(name, 'N', 20, 12)
+    #                         arrays.append(a.array)
+    #                     elif isinstance(a, util_3d):
+    #                         for i,u2d in enumerate(a):
+    #                             name = u2d.name.lower().replace(' ','_')
+    #                             if "_layer" in name:
+    #                                 name = name.replace("_layer", '')
+    #                             else:
+    #                                 name += '_{0:d}'.format(i+1)
+    #                             wr.field(name, 'N', 20, 12)
+    #                             arrays.append(u2d.array)
+    #                     elif isinstance(a,transient_2d):
+    #                         kpers = list(a.transient_2ds.keys())
+    #                         kpers.sort()
+    #                         for kper in kpers:
+    #                             u2d = a.transient_2ds[kper]
+    #                             name = u2d.name.lower() + "_{0:d}".format(kper+1)
+    #                             wr.field(name, 'N', 20, 12)
+    #                             arrays.append(u2d.array)
+    #
+    #     for i in range(self.ml.nrow):
+    #         for j in range(self.ml.ncol):
+    #             pts = self.sr.get_vertices(i,j)
+    #             wr.poly(parts=[pts])
+    #             rec = [i+1, j+1]
+    #             for array in arrays:
+    #                 rec.append(array[i, j])
+    #             wr.record(*rec)
+    #     wr.save(filename)
 
 
     def plot_array(self, a, masked_values=None, **kwargs):
@@ -214,7 +163,7 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray,
+        quadmesh = self.ax.pcolormesh(self.dis.sr.xgrid, self.dis.sr.ygrid, plotarray,
                                       **kwargs)
         return quadmesh
 
@@ -246,7 +195,7 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        contour_set = self.ax.contour(self.xcentergrid, self.ycentergrid,
+        contour_set = self.ax.contour(self.dis.sr.xcentergrid, self.dis.sr.ycentergrid,
                                       plotarray, **kwargs)
         return contour_set
 
@@ -454,15 +403,15 @@ class ModelMap(object):
                                                           delc, sat_thk)
 
         # Select correct slice and step
-        x = self.xcentergrid[::istep, ::jstep]
-        y = self.ycentergrid[::istep, ::jstep]
+        x = self.dis.sr.xcentergrid[::istep, ::jstep]
+        y = self.dis.sr.ycentergrid[::istep, ::jstep]
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
         u = u[::istep, ::jstep]
         v = v[::istep, ::jstep]
 
         # Rotate and plot
-        urot, vrot = rotate(u, v, self.rotation)
+        urot, vrot = rotate(u, v, self.dis.sr.rotation)
         quiver = self.ax.quiver(x, y, urot, vrot, **kwargs)
 
         return quiver
@@ -515,9 +464,9 @@ class ModelMap(object):
         for p in pl:
             vlc = []
             #rotate data
-            x0r, y0r = rotate(p['x'], p['y'], self.rotation, 0., self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
+            x0r, y0r = rotate(p['x'], p['y'], self.dis.sr.rotation, 0., self.dis.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
             #build polyline array
             arr = np.vstack((x0r, y0r)).T
             #select based on layer
@@ -601,9 +550,9 @@ class ModelMap(object):
             shrink = float(kwargs.pop('shrink'))
 
         #rotate data
-        x0r, y0r = rotate(ep['x'], ep['y'], self.rotation, 0., self.yedge[0])
-        x0r += self.xul
-        y0r += self.yul - self.yedge[0]
+        x0r, y0r = self.dis.sr.rotate(ep['x'], ep['y'], self.dis.sr.rotation, 0., self.dis.sr.yedge[0])
+        x0r += self.dis.sr.xul
+        y0r += self.dis.sr.yul - self.dis.sr.yedge[0]
         #build array to plot
         arr = np.vstack((x0r, y0r)).T
         #select based on layer
@@ -624,119 +573,39 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
-        xmin = self.xedge[0]
-        xmax = self.xedge[-1]
-        ymin = self.yedge[-1]
-        ymax = self.yedge[0]
+        xmin = self.dis.sr.xedge[0]
+        xmax = self.dis.sr.xedge[-1]
+        ymin = self.dis.sr.yedge[-1]
+        ymax = self.dis.sr.yedge[0]
         linecol = []
         # Vertical lines
         for j in range(self.dis.ncol + 1):
-            x0 = self.xedge[j]
+            x0 = self.dis.sr.xedge[j]
             x1 = x0
             y0 = ymin
             y1 = ymax
-            x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.dis.sr.rotate(x0, y0, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
+            x0r += self.dis.sr.xul
+            y0r += self.dis.sr.yul - self.dis.sr.yedge[0]
+            x1r, y1r = self.dis.sr.rotate(x1, y1, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
+            x1r += self.dis.sr.xul
+            y1r += self.dis.sr.yul - self.dis.sr.yedge[0]
             linecol.append(((x0r, y0r), (x1r, y1r)))
 
         #horizontal lines
         for i in range(self.dis.nrow + 1):
             x0 = xmin
             x1 = xmax
-            y0 = self.yedge[i]
+            y0 = self.dis.sr.yedge[i]
             y1 = y0
-            x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.dis.sr.rotate(x0, y0, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
+            x0r += self.dis.sr.xul
+            y0r += self.dis.sr.yul - self.dis.sr.yedge[0]
+            x1r, y1r = self.dis.sr.rotate(x1, y1, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
+            x1r += self.dis.sr.xul
+            y1r += self.dis.sr.yul - self.dis.sr.yedge[0]
             linecol.append(((x0r, y0r), (x1r, y1r)))
 
         lc = LineCollection(linecol, **kwargs)
         return lc
-
-    def get_xcenter_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every column in the grid.
-
-        """
-        x = np.add.accumulate(self.dis.delr.array) - 0.5 * self.dis.delr.array
-        return x
-
-    def get_ycenter_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every row in the grid.
-
-        """
-        Ly = np.add.reduce(self.dis.delc.array)
-        y = Ly - (np.add.accumulate(self.dis.delc.array) - 0.5 *
-                   self.dis.delc.array)
-        return y
-
-    def get_xedge_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid.  Array is of size (ncol + 1)
-
-        """
-        xedge = np.concatenate(([0.], np.add.accumulate(self.dis.delr.array)))
-        return xedge
-
-    def get_yedge_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid.  Array is of size (nrow + 1)
-
-        """
-        length_y = np.add.reduce(self.dis.delc.array)
-        yedge = np.concatenate(([length_y], length_y -
-                             np.add.accumulate(self.dis.delc.array)))
-        return yedge
-
-    def get_extent(self):
-        """
-        Get the extent of the rotated and offset grid
-
-        Return (xmin, xmax, ymin, ymax)
-
-        """
-        x0 = self.xedge[0]
-        x1 = self.xedge[-1]
-        y0 = self.yedge[0]
-        y1 = self.yedge[-1]
-
-        # upper left point
-        x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
-        x0r += self.xul
-        y0r += self.yul - self.yedge[0]
-
-        # upper right point
-        x1r, y1r = rotate(x1, y0, self.rotation, 0, self.yedge[0])
-        x1r += self.xul
-        y1r += self.yul - self.yedge[0]
-
-        # lower right point
-        x2r, y2r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
-        x2r += self.xul
-        y2r += self.yul - self.yedge[0]
-
-        # lower left point
-        x3r, y3r = rotate(x0, y1, self.rotation, 0, self.yedge[0])
-        x3r += self.xul
-        y3r += self.yul - self.yedge[0]
-
-        xmin = min(x0r, x1r, x2r, x3r)
-        xmax = max(x0r, x1r, x2r, x3r)
-        ymin = min(y0r, y1r, y2r, y3r)
-        ymax = max(y0r, y1r, y2r, y3r)
-
-        return (xmin, xmax, ymin, ymax)
-
 
