@@ -251,6 +251,20 @@ class util_3d(object):
                 model.external_path, self.name_base.replace(' ', '_'))
         self.util_2ds = self.build_2d_instances()
 
+    def plot(self,axes=None):
+        import matplotlib.pyplot as plt
+        if axes is not None:
+            assert len(axes) == self.shape[0]
+            for k in range(self.shape[0]):
+                self.util_2ds[k].plot(ax=axes[k])
+
+        else:
+            for k in range(self.shape[0]):
+                fig = plt.figure()
+                ax = plt.subplot(111)
+                self.util_2ds[k].plot(ax=ax)
+
+
     def __getitem__(self, k):
         if isinstance(k, int):
             return self.util_2ds[k]
@@ -665,6 +679,13 @@ class util_2d(object):
 
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
+
+    def plot(self,ax=None):
+        from flopy.plot.map import ModelMap
+        mm = ModelMap(ax=ax, dis=self.model.dis)
+        mm.plot_array(self.array)
+        mm.ax.set_title(self.name)
+
 
     @staticmethod
     def get_default_numpy_fmt(dtype):

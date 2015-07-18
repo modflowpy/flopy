@@ -16,22 +16,25 @@ def test_reference():
     ibound = np.ones((nrow,ncol))
     ibound[:,0] = 2
     ibound[:,9] = -1
+    k = np.random.random((nrow,ncol))
     dis = flopy.modflow.ModflowDis(mf,nrow=nrow,ncol=ncol,nlay=nlay,nstp=3,tsmult=1.2,nper=perlen.shape[0],botm=botm,perlen=perlen,
                                    start_datetime=start,xul=2000.0,yul=5000.0,rotation=10.0)
     bas = flopy.modflow.ModflowBas(mf,ibound=ibound)
-    lpf = flopy.modflow.ModflowLpf(mf)
+    lpf = flopy.modflow.ModflowLpf(mf, hk=k)
     wel = flopy.modflow.ModflowWel(mf, stress_period_data={0:[[0,0,0, -100]]})
     ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0:[[1,1,1,5.9,1000.]]})
     oc = flopy.modflow.ModflowOc(mf)
     sms = flopy.modflow.ModflowPcg(mf)
-
+    wel.write_file()
     try:
         fig = plt.figure()
         ax = plt.subplot(111)
+        ax.set_title("1")
         mm = flopy.plot.ModelMap(ax,model=mf)
-        mm.plot_grid()
+        mm.plot_grid(ax=ax)
         mm.plot_bc("WEL")
-        mm.plot_ibound()
+        mm.plot_ibound(ax=ax)
+        #plt.show()
         plt.close(fig)
     except Exception as e:
         raise Exception("error in modelmap: "+str(e))
@@ -47,7 +50,9 @@ def test_reference():
     e = dis.tr.timestep_end[dis.tr.kperkstp_loc[(9,2)]]
 
     print((e-s).days,np.cumsum(perlen)[-1])
-
+    fig, axes = plt.subplots(nlay)
+    lpf.hk.plot(axes=axes)
+    plt.show()
     return
 
 test_reference()

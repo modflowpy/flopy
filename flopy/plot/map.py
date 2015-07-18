@@ -40,100 +40,28 @@ class ModelMap(object):
             self.dis = dis
         else:
             self.dis = model.dis
-        self.ax = ax
-        # # Create model extent
-        if extent is None:
-            self.extent = self.dis.sr.get_extent()
+        if ax is None:
+            self.ax = plt.subplot(111)
         else:
-            self.extent = extent
+            self.ax = ax
+        self._extent = None
+        # # Create model extent
+        # if extent is None:
+        #     self.extent = self.dis.sr.get_extent()
+        # else:
+        #     self.extent = extent
 
         # Set axis limits
-        self.ax.set_xlim(self.extent[0], self.extent[1])
-        self.ax.set_ylim(self.extent[2], self.extent[3])
+        # self.ax.set_xlim(self.extent[0], self.extent[1])
+        # self.ax.set_ylim(self.extent[2], self.extent[3])
 
         return
 
-    # def write_grid_shapefile(self, filename, package_names=None,array_dict=None):
-    #     """
-    #     Write a shapefile for the model grid.  If package_names is not none,
-    #     then search through the requested packages looking for arrays that can
-    #     be added to the shapefile as attributes
-    #
-    #     Parameters
-    #     ----------
-    #     filename : string
-    #         name of the shapefile to write
-    #     package_names : (optional) list of package names (e.g. ["dis","lpf"])
-    #         packages to scrap arrays out of for adding to shapefile
-    #     array_dict : (optional) dict of {name:2D array} pairs
-    #        additional 2D arrays to add as attributes to the grid shapefile
-    #
-    #
-    #     Returns
-    #     -------
-    #     None
-    #
-    #     """
-    #
-    #     try:
-    #         import shapefile
-    #     except Exception as e:
-    #         raise Exception("ModelMap.write_grid_shapefile(): error " +
-    #                         "importing shapefile - need to install pyshp")
-    #
-    #     wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-    #     wr.field("row", "N", 10, 0)
-    #     wr.field("column", "N", 10, 0)
-    #
-    #     arrays = []
-    #     if array_dict is not None:
-    #         for name,array in array_dict.items():
-    #             assert array.shape == (self.ml.nrow,self.ml.ncol)
-    #             wr.field(name,"N",20,12)
-    #             arrays.append(array)
-    #
-    #     if package_names is not None:
-    #         if not isinstance(package_names, list):
-    #             package_names = [package_names]
-    #         for pname in package_names:
-    #             pak = self.ml.get_package(pname)
-    #             if pak is not None:
-    #                 attrs = dir(pak)
-    #                 for attr in attrs:
-    #                     a = pak.__getattribute__(attr)
-    #                     if isinstance(a, util_2d) and a.shape == (self.ml.nrow,
-    #                                                               self.ml.ncol):
-    #                         name = a.name.lower()
-    #                         wr.field(name, 'N', 20, 12)
-    #                         arrays.append(a.array)
-    #                     elif isinstance(a, util_3d):
-    #                         for i,u2d in enumerate(a):
-    #                             name = u2d.name.lower().replace(' ','_')
-    #                             if "_layer" in name:
-    #                                 name = name.replace("_layer", '')
-    #                             else:
-    #                                 name += '_{0:d}'.format(i+1)
-    #                             wr.field(name, 'N', 20, 12)
-    #                             arrays.append(u2d.array)
-    #                     elif isinstance(a,transient_2d):
-    #                         kpers = list(a.transient_2ds.keys())
-    #                         kpers.sort()
-    #                         for kper in kpers:
-    #                             u2d = a.transient_2ds[kper]
-    #                             name = u2d.name.lower() + "_{0:d}".format(kper+1)
-    #                             wr.field(name, 'N', 20, 12)
-    #                             arrays.append(u2d.array)
-    #
-    #     for i in range(self.ml.nrow):
-    #         for j in range(self.ml.ncol):
-    #             pts = self.sr.get_vertices(i,j)
-    #             wr.poly(parts=[pts])
-    #             rec = [i+1, j+1]
-    #             for array in arrays:
-    #                 rec.append(array[i, j])
-    #             wr.record(*rec)
-    #     wr.save(filename)
-
+    @property
+    def extent(self):
+        if self._extent is None:
+            self._extent = self.dis.sr.get_extent()
+        return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
         """
@@ -163,8 +91,14 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        quadmesh = self.ax.pcolormesh(self.dis.sr.xgrid, self.dis.sr.ygrid, plotarray,
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        quadmesh = ax.pcolormesh(self.dis.sr.xgrid, self.dis.sr.ygrid, plotarray,
                                       **kwargs)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
         return quadmesh
 
     def contour_array(self, a, masked_values=None, **kwargs):
@@ -195,8 +129,15 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        contour_set = self.ax.contour(self.dis.sr.xcentergrid, self.dis.sr.ycentergrid,
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        contour_set = ax.contour(self.dis.sr.xcentergrid, self.dis.sr.ycentergrid,
                                       plotarray, **kwargs)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+
         return contour_set
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
@@ -258,6 +199,9 @@ class ModelMap(object):
 
         lc = self.get_grid_line_collection(**kwargs)
         ax.add_collection(lc)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+
         return lc
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
@@ -410,9 +354,14 @@ class ModelMap(object):
         u = u[::istep, ::jstep]
         v = v[::istep, ::jstep]
 
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
         # Rotate and plot
         urot, vrot = rotate(u, v, self.dis.sr.rotation)
-        quiver = self.ax.quiver(x, y, urot, vrot, **kwargs)
+        quiver = ax.quiver(x, y, urot, vrot, **kwargs)
 
         return quiver
 

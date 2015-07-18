@@ -35,26 +35,103 @@ class SpatialReference(object):
             self.yul = yul
         self.rotation = -rotation_degrees * np.pi / 180.
 
-        # Create edge arrays and meshgrid for pcolormesh
-        self.xedge = self.get_xedge_array()
-        self.yedge = self.get_yedge_array()
-        self.xgrid, self.ygrid = np.meshgrid(self.xedge, self.yedge)
-        self.xgrid, self.ygrid = self.rotate(self.xgrid, self.ygrid, self.rotation,
-                                        0, self.yedge[0])
-        self.xgrid += self.xul
-        self.ygrid += self.yul - self.yedge[0]
+        self._xedge = None
+        self._yedge = None
+        self._xgrid = None
+        self._ygrid = None
+        self._xcenter = None
+        self._ycenter = None
+        self._ycentergrid = None
+        self._xcentergrid = None
 
-        # Create x and y center arrays and meshgrid of centers
-        self.xcenter = self.get_xcenter_array()
-        self.ycenter = self.get_ycenter_array()
-        self.xcentergrid, self.ycentergrid = np.meshgrid(self.xcenter,
-                                                         self.ycenter)
-        self.xcentergrid, self.ycentergrid = self.rotate(self.xcentergrid,
-                                                    self.ycentergrid,
-                                                    self.rotation,
-                                                    0, self.yedge[0])
-        self.xcentergrid += self.xul
-        self.ycentergrid += self.yul - self.yedge[0]
+
+        # Create edge arrays and meshgrid for pcolormesh
+        # self.xedge = self.get_xedge_array()
+        # self.yedge = self.get_yedge_array()
+
+        # self.xgrid, self.ygrid = np.meshgrid(self.xedge, self.yedge)
+        # self.xgrid, self.ygrid = self.rotate(self.xgrid, self.ygrid, self.rotation,
+        #                                 0, self.yedge[0])
+        # self.xgrid += self.xul
+        # self.ygrid += self.yul - self.yedge[0]
+        #
+        # # Create x and y center arrays and meshgrid of centers
+        # self.xcenter = self.get_xcenter_array()
+        # self.ycenter = self.get_ycenter_array()
+        # self.xcentergrid, self.ycentergrid = np.meshgrid(self.xcenter,
+        #                                                  self.ycenter)
+        # self.xcentergrid, self.ycentergrid = self.rotate(self.xcentergrid,
+        #                                             self.ycentergrid,
+        #                                             self.rotation,
+        #                                             0, self.yedge[0])
+        # self.xcentergrid += self.xul
+        # self.ycentergrid += self.yul - self.yedge[0]
+
+
+    @property
+    def xedge(self):
+        if self._xedge is None:
+            self._xedge = self.get_xedge_array()
+        return self._xedge
+
+    @property
+    def yedge(self):
+        if self._yedge is None:
+            self._yedge = self.get_yedge_array()
+        return self._yedge
+
+    @property
+    def xgrid(self):
+        if self._xgrid is None:
+            self._set_xygrid()
+        return self._xgrid
+
+    @property
+    def ygrid(self):
+        if self._ygrid is None:
+            self._set_xygrid()
+        return self._ygrid
+
+    @property
+    def xcenter(self):
+        if self._xcenter is None:
+            self._xcenter = self.get_xcenter_array()
+        return self._xcenter
+
+    @property
+    def ycenter(self):
+        if self._ycenter is None:
+            self._ycenter = self.get_ycenter_array()
+        return self._ycenter
+
+    @property
+    def ycentergrid(self):
+        if self._ycentergrid is None:
+            self._set_xycentergrid()
+        return self._ycentergrid
+
+    @property
+    def xcentergrid(self):
+        if self._xcentergrid is None:
+            self._set_xycentergrid()
+        return self._xcentergrid
+
+    def _set_xycentergrid(self):
+        self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter,
+                                                          self.ycenter)
+        self._xcentergrid, self._ycentergrid = self.rotate(self._xcentergrid,
+                                                          self._ycentergrid,
+                                                          self.rotation,
+                                                          0, self.yedge[0])
+        self._xcentergrid += self.xul
+        self._ycentergrid += self.yul - self.yedge[0]
+
+    def _set_xygrid(self):
+        self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
+        self._xgrid, self._ygrid = self.rotate(self._xgrid, self._ygrid, self.rotation,
+                                               0, self.yedge[0])
+        self._xgrid += self.xul
+        self._ygrid += self.yul - self.yedge[0]
 
 
     @staticmethod

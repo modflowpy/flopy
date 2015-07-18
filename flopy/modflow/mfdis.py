@@ -124,8 +124,8 @@ class ModflowDis(Package):
                               name='tsmult')
         self.steady = util_2d(model, (self.nper,), np.bool,
                               steady,name='steady')
-        self.itmuni = itmuni
-        self.lenuni = lenuni
+        self.itmuni = int(itmuni)
+        self.lenuni = int(lenuni)
         self.parent.add_package(self)
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}

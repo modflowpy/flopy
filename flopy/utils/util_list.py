@@ -351,9 +351,12 @@ class mflist(object):
             else:
                 itmp = -1
                 kper_vtype = int
-
-            f.write(" {0:9d} {1:9d} # stress period {2:d}\n".format(itmp,
-                                                                    0, kper))
+            start_dt = self.model.dis.tr.stressperiod_start[kper]\
+                           .to_datetime().strftime("%d-%m-%Y")
+            end_dt = self.model.dis.tr.stressperiod_end[kper]\
+                         .to_datetime().strftime("%d-%m-%Y")
+            f.write(" {0:9d} {1:9d} # stress period {2:d}:{3:s} to {4:s}\n"
+                    .format(itmp,0, kper,start_dt,end_dt))
 
             if (kper_vtype == np.recarray):
                 name = f.name
