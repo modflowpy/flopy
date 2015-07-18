@@ -111,8 +111,12 @@ class ModflowRch(Package):
                 inirch, file_entry_irch = self.irch.get_kper_entry(kper)
             else:
                 inirch = -1
-            f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech, 
-                        inirch, "Stress period " + str(kper + 1)))
+            start_dt = self.parent.dis.tr.stressperiod_start[kper]\
+                           .to_datetime().strftime("%d-%m-%Y")
+            end_dt = self.parent.dis.tr.stressperiod_end[kper]\
+                         .to_datetime().strftime("%d-%m-%Y")
+            f_rch.write('{0:10d}{1:10d} # {2:s}: {3:s} to {4:s}\n'.format(inrech,
+                        inirch, "Stress period " + str(kper + 1), start_dt, end_dt))
             if (inrech >= 0):
                 f_rch.write(file_entry_rech)
             if self.nrchop == 2:

@@ -17,15 +17,21 @@ def test_reference():
     ibound[:,0] = 2
     ibound[:,9] = -1
     k = np.random.random((nrow,ncol))
+    rech = {}
+    for kper in range(perlen.shape[0]):
+        rech[kper] = np.random.random((nrow,ncol))
+
     dis = flopy.modflow.ModflowDis(mf,nrow=nrow,ncol=ncol,nlay=nlay,nstp=3,tsmult=1.2,nper=perlen.shape[0],botm=botm,perlen=perlen,
                                    start_datetime=start,xul=2000.0,yul=5000.0,rotation=10.0)
     bas = flopy.modflow.ModflowBas(mf,ibound=ibound)
     lpf = flopy.modflow.ModflowLpf(mf, hk=k)
+    rch = flopy.modflow.ModflowRch(mf,rech=rech)
     wel = flopy.modflow.ModflowWel(mf, stress_period_data={0:[[0,0,0, -100]]})
     ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0:[[1,1,1,5.9,1000.]]})
     oc = flopy.modflow.ModflowOc(mf)
     sms = flopy.modflow.ModflowPcg(mf)
     wel.write_file()
+    rch.write_file()
     try:
         fig = plt.figure()
         ax = plt.subplot(111)
@@ -52,6 +58,9 @@ def test_reference():
     print((e-s).days,np.cumsum(perlen)[-1])
     fig, axes = plt.subplots(nlay)
     lpf.hk.plot(axes=axes)
+    plt.show()
+
+    rch.rech.plot()
     plt.show()
     return
 

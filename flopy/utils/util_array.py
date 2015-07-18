@@ -251,6 +251,17 @@ class util_3d(object):
                 model.external_path, self.name_base.replace(' ', '_'))
         self.util_2ds = self.build_2d_instances()
 
+
+    def to_shapefile(self,filename):
+        from flopy_io import grid_attributes_to_shapfile
+        array_dict = {}
+        for ilay in range(self.model.nlay):
+            u2d = self[ilay]
+            array_dict[u2d.name] = u2d.array
+        grid_attributes_to_shapfile(filename,self.model,
+                                    array_dict=array_dict)
+
+
     def plot(self,axes=None):
         import matplotlib.pyplot as plt
         if axes is not None:
@@ -474,6 +485,49 @@ class transient_2d(object):
         return util_2d(self.model, self.shape,
                        self.dtype, 0.0, name=name).get_file_entry()
 
+
+    def to_shapefile(self,filename):
+        from flopy_io import grid_attributes_to_shapfile
+        array_dict = {}
+        for kper in range(self.model.nper):
+            u2d = self[kper]
+            array_dict[u2d.name] = u2d.array
+        grid_attributes_to_shapfile(filename,self.model,
+                                    array_dict=array_dict)
+
+
+    def plot(self, filename_base=None):
+        import matplotlib.pyplot as plt
+        axes = []
+        for kper in range(self.model.nper):
+            fig = plt.figure()
+            ax = plt.subplot(111,aspect="equal")
+            start_dt = self.model.dis.tr.stressperiod_start[kper]\
+                           .to_datetime().strftime("%d-%m-%Y")
+            end_dt = self.model.dis.tr.stressperiod_end[kper]\
+                         .to_datetime().strftime("%d-%m-%Y")
+            ax.set_title("stress period {0:d}:{1:s} to {2:s}".\
+                         format(kper,start_dt,end_dt))
+            self[kper].plot(ax=ax)
+            if filename_base is not None:
+                plt.savefig(filename_base+"_{0:05d}.png".format(kper))
+                plt.close(fig)
+            else:
+                axes.append(ax)
+        return axes
+
+    def __getitem__(self,kper):
+        if kper in list(self.transient_2ds.keys()):
+            return self.transient_2ds[kper]
+        elif kper < min(self.transient_2ds.keys()):
+            return self.get_zero_2d(kper)
+        else:
+            for i in range(kper,0,-1):
+                if i in list(self.transient_2ds.keys()):
+                    return self.transient_2ds[i]
+            raise Exception("transient_2d.__getitem__(): error:" +\
+                            " could find an entry before kper {0:d}".format(kper))
+
     def get_kper_entry(self, kper):
         """get the file entry info for a given kper
         returns (itmp,file entry string from util_2d)
@@ -686,6 +740,11 @@ class util_2d(object):
         mm.plot_array(self.array)
         mm.ax.set_title(self.name)
 
+
+    def to_shapefile(self,filename):
+        from flopy_io import grid_attributes_to_shapfile
+        grid_attributes_to_shapfile(filename,self.model,
+                                    array_dict={self.name: self.array})
 
     @staticmethod
     def get_default_numpy_fmt(dtype):
