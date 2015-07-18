@@ -33,7 +33,8 @@ class ModelMap(object):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
-    def __init__(self, ax=None, model=None, dis=None, layer=0, extent=None):
+    def __init__(self, ax=None, model=None, dis=None, layer=0, extent=None,
+                 xul=None,yul=None,rotation=None):
         self.ml = model
         self.layer = layer
         if dis is not None:
@@ -44,7 +45,16 @@ class ModelMap(object):
             self.ax = plt.subplot(111)
         else:
             self.ax = ax
-        self._extent = None
+        if extent is not None:
+            self._extent = extent
+        else:
+            self._extent = None
+        if xul is not None:
+            self.ml.dis.sr.xul = xul
+        if yul is not None:
+            self.ml.dis.sr.yul = yul
+        if rotation is not None:
+            self.ml.dis.sr.rotation = rotation
         # # Create model extent
         # if extent is None:
         #     self.extent = self.dis.sr.get_extent()

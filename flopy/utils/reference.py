@@ -10,7 +10,7 @@ from flopy.utils import util_2d
 
 class SpatialReference(object):
 
-    def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation_degrees=0.0,):
+    def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0):
         """
             delr: util_2d instance of delr from dis constructor
             delc: util_2d instance of delc from dis constructor
@@ -33,7 +33,7 @@ class SpatialReference(object):
             self.yul = np.add.reduce(self.delc.array)
         else:
             self.yul = yul
-        self.rotation = -rotation_degrees * np.pi / 180.
+        self.rotation = rotation
 
         self._xedge = None
         self._yedge = None
@@ -45,75 +45,105 @@ class SpatialReference(object):
         self._xcentergrid = None
 
 
-        # Create edge arrays and meshgrid for pcolormesh
-        # self.xedge = self.get_xedge_array()
-        # self.yedge = self.get_yedge_array()
-
-        # self.xgrid, self.ygrid = np.meshgrid(self.xedge, self.yedge)
-        # self.xgrid, self.ygrid = self.rotate(self.xgrid, self.ygrid, self.rotation,
-        #                                 0, self.yedge[0])
-        # self.xgrid += self.xul
-        # self.ygrid += self.yul - self.yedge[0]
-        #
-        # # Create x and y center arrays and meshgrid of centers
-        # self.xcenter = self.get_xcenter_array()
-        # self.ycenter = self.get_ycenter_array()
-        # self.xcentergrid, self.ycentergrid = np.meshgrid(self.xcenter,
-        #                                                  self.ycenter)
-        # self.xcentergrid, self.ycentergrid = self.rotate(self.xcentergrid,
-        #                                             self.ycentergrid,
-        #                                             self.rotation,
-        #                                             0, self.yedge[0])
-        # self.xcentergrid += self.xul
-        # self.ycentergrid += self.yul - self.yedge[0]
-
+    # @property
+    # def xedge(self):
+    #     if self._xedge is None:
+    #         self._xedge = self.get_xedge_array()
+    #     return self._xedge
+    #
+    # @property
+    # def yedge(self):
+    #     if self._yedge is None:
+    #         self._yedge = self.get_yedge_array()
+    #     return self._yedge
+    #
+    # @property
+    # def xgrid(self):
+    #     if self._xgrid is None:
+    #         self._set_xygrid()
+    #     return self._xgrid
+    #
+    # @property
+    # def ygrid(self):
+    #     if self._ygrid is None:
+    #         self._set_xygrid()
+    #     return self._ygrid
+    #
+    # @property
+    # def xcenter(self):
+    #     if self._xcenter is None:
+    #         self._xcenter = self.get_xcenter_array()
+    #     return self._xcenter
+    #
+    # @property
+    # def ycenter(self):
+    #     if self._ycenter is None:
+    #         self._ycenter = self.get_ycenter_array()
+    #     return self._ycenter
+    #
+    # @property
+    # def ycentergrid(self):
+    #     if self._ycentergrid is None:
+    #         self._set_xycentergrid()
+    #     return self._ycentergrid
+    #
+    # @property
+    # def xcentergrid(self):
+    #     if self._xcentergrid is None:
+    #         self._set_xycentergrid()
+    #     return self._xcentergrid
+    #
+    # def _set_xycentergrid(self):
+    #     self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter,
+    #                                                       self.ycenter)
+    #     self._xcentergrid, self._ycentergrid = self.rotate(self._xcentergrid,
+    #                                                       self._ycentergrid,
+    #                                                       self.rotation,
+    #                                                       0, self.yedge[0])
+    #     self._xcentergrid += self.xul
+    #     self._ycentergrid += self.yul - self.yedge[0]
+    #
+    # def _set_xygrid(self):
+    #     self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
+    #     self._xgrid, self._ygrid = self.rotate(self._xgrid, self._ygrid, self.rotation,
+    #                                            0, self.yedge[0])
+    #     self._xgrid += self.xul
+    #     self._ygrid += self.yul - self.yedge[0]
 
     @property
     def xedge(self):
-        if self._xedge is None:
-            self._xedge = self.get_xedge_array()
-        return self._xedge
+        return self.get_xedge_array()
 
     @property
     def yedge(self):
-        if self._yedge is None:
-            self._yedge = self.get_yedge_array()
-        return self._yedge
+        return self.get_yedge_array()
 
     @property
     def xgrid(self):
-        if self._xgrid is None:
-            self._set_xygrid()
+        self._set_xygrid()
         return self._xgrid
 
     @property
     def ygrid(self):
-        if self._ygrid is None:
-            self._set_xygrid()
+        self._set_xygrid()
         return self._ygrid
 
     @property
     def xcenter(self):
-        if self._xcenter is None:
-            self._xcenter = self.get_xcenter_array()
-        return self._xcenter
+        return self.get_xcenter_array()
 
     @property
     def ycenter(self):
-        if self._ycenter is None:
-            self._ycenter = self.get_ycenter_array()
-        return self._ycenter
+        return self.get_ycenter_array()
 
     @property
     def ycentergrid(self):
-        if self._ycentergrid is None:
-            self._set_xycentergrid()
+        self._set_xycentergrid()
         return self._ycentergrid
 
     @property
     def xcentergrid(self):
-        if self._xcentergrid is None:
-            self._set_xycentergrid()
+        self._set_xycentergrid()
         return self._xcentergrid
 
     def _set_xycentergrid(self):
@@ -139,9 +169,10 @@ class SpatialReference(object):
         """
         Given x and y array-like values calculate the rotation about an
         arbitrary origin and then return the rotated coordinates.  theta is in
-        radians.
+        degrees.
 
         """
+        theta = -theta * np.pi / 180.
         xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
                                                          (y - yorigin)
         yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \

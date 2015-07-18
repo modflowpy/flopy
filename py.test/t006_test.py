@@ -1,10 +1,15 @@
 # Test reference class
 
 def test_reference():
+    import os
     from datetime import datetime
     import numpy as np
     import matplotlib.pyplot as plt
     import flopy
+    loadpth = os.path.join('..', 'data', 'freyberg')
+    ml = flopy.modflow.Modflow.load('freyberg.nam', model_ws=loadpth)
+
+
     mf = flopy.modflow.Modflow(model_ws='data/')
     nrow,ncol = 10,10
     nlay = 3
@@ -50,18 +55,18 @@ def test_reference():
     assert len(dis.tr.stressperiod_start) == len(perlen)
     assert len(dis.tr.stressperiod_end) == len(perlen)
     print(dis.tr.stressperiod_start)
-    #print(dis.tr.stressperiod_end)
-    print(dis.tr.timestep_start)
     s = dis.tr.timestep_start[dis.tr.kperkstp_loc[(0,0)]]
     e = dis.tr.timestep_end[dis.tr.kperkstp_loc[(9,2)]]
+    assert np.abs((e-s).days - np.cumsum(perlen)[-1]) < 1.0
 
-    print((e-s).days,np.cumsum(perlen)[-1])
-    fig, axes = plt.subplots(nlay)
-    lpf.hk.plot(axes=axes)
-    plt.show()
-
-    rch.rech.plot()
-    plt.show()
+    #print(dis.tr.stressperiod_end)
+    #print(dis.tr.timestep_start)
+    #print((e-s).days,np.cumsum(perlen)[-1])
+    #fig, axes = plt.subplots(nlay)
+    #lpf.hk.plot(axes=axes)
+    #plt.show()
+    #rch.rech.plot()
+    #plt.show()
     return
 
 test_reference()

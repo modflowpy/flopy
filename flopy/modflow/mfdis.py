@@ -131,7 +131,7 @@ class ModflowDis(Package):
                             3: "hours", 4: "days", 5: "years"}
 
         self.sr = reference.SpatialReference(self.delr, self.delc, self.lenuni, xul=xul,
-                                             yul=yul, rotation_degrees=rotation)
+                                             yul=yul, rotation=rotation)
         self.tr = reference.TemporalReference(self.perlen, self.steady, self.nstp, self.tsmult,
                                               self.itmuni, start_datetime=start_datetime)
 
