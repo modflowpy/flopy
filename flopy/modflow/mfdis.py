@@ -130,10 +130,10 @@ class ModflowDis(Package):
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
 
-        self.sr = reference.SpatialReference(self.delr, self.delc, self.lenuni, xul=xul,
+        self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni, xul=xul,
                                              yul=yul, rotation=rotation)
-        self.tr = reference.TemporalReference(self.perlen, self.steady, self.nstp, self.tsmult,
-                                              self.itmuni, start_datetime=start_datetime)
+        self.tr = reference.TemporalReference(self.perlen.array, self.steady.array, self.nstp.array,
+                                              self.tsmult.array, self.itmuni, start_datetime=start_datetime)
 
     def checklayerthickness(self):
         """

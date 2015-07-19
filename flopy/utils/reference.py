@@ -8,19 +8,62 @@ import numpy as np
 import pandas as pd
 from flopy.utils import util_2d
 
+
+def spatialreference_from_gridspc_file(filename, lenuni=0):
+    f = open(filename,'r')
+    lines = f.readlines()
+    raw = f.readline().strip().split()
+    nrow = int(raw[0])
+    ncol = int(raw[1])
+    raw = f.readline().strip().split()
+    xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
+    delr = []
+    j = 0
+    while j < ncol:
+        raw = f.readline().strip().split()
+        for r in raw:
+            if '*' in r:
+                rraw = r.split('*')
+                for n in range(int(rraw[0])):
+                    delr.append(int(rraw[1]))
+                    j += 1
+            else:
+                delr.append(int(r))
+                j += 1
+
+    delc = []
+    i = 0
+    while i < nrow:
+        raw = f.readline().strip().split()
+        for r in raw:
+            if '*' in r:
+                rraw = r.split('*')
+                for n in range(int(rraw[0])):
+                    delc.append(int(rraw[1]))
+                    i += 1
+            else:
+                delc.append(int(r))
+                i += 1
+
+    f.close()
+    return SpatialReference(np.array(delr), np.array(delc),
+                            lenuni, xul=xul, yul=yul, rotation=rot)
+
 class SpatialReference(object):
 
     def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0):
         """
-            delr: util_2d instance of delr from dis constructor
-            delc: util_2d instance of delc from dis constructor
+            delr: delr array
+            delc: delc array
             lenuni: lenght unit code
             xul: x coord of upper left corner of grid
             yul: y coord of upper left corner of grid
             rotation_degrees: grid rotation
         """
-        assert isinstance(delc,util_2d),"spatialReference error: delc must be util_2d instance"
-        assert isinstance(delr,util_2d),"spatialReference error: delr must be util_2d instance"
+        #assert isinstance(delc,util_2d),\
+        #    "spatialReference error: delc must be util_2d instance"
+        #assert isinstance(delr,util_2d),\
+        #    "spatialReference error: delr must be util_2d instance"
         self.delc = delc
         self.delr = delr
         self.lenuni = lenuni
@@ -30,85 +73,17 @@ class SpatialReference(object):
         else:
             self.xul = xul
         if yul is None:
-            self.yul = np.add.reduce(self.delc.array)
+            self.yul = np.add.reduce(self.delc)
         else:
             self.yul = yul
         self.rotation = rotation
 
-        self._xedge = None
-        self._yedge = None
         self._xgrid = None
         self._ygrid = None
-        self._xcenter = None
-        self._ycenter = None
         self._ycentergrid = None
         self._xcentergrid = None
 
 
-    # @property
-    # def xedge(self):
-    #     if self._xedge is None:
-    #         self._xedge = self.get_xedge_array()
-    #     return self._xedge
-    #
-    # @property
-    # def yedge(self):
-    #     if self._yedge is None:
-    #         self._yedge = self.get_yedge_array()
-    #     return self._yedge
-    #
-    # @property
-    # def xgrid(self):
-    #     if self._xgrid is None:
-    #         self._set_xygrid()
-    #     return self._xgrid
-    #
-    # @property
-    # def ygrid(self):
-    #     if self._ygrid is None:
-    #         self._set_xygrid()
-    #     return self._ygrid
-    #
-    # @property
-    # def xcenter(self):
-    #     if self._xcenter is None:
-    #         self._xcenter = self.get_xcenter_array()
-    #     return self._xcenter
-    #
-    # @property
-    # def ycenter(self):
-    #     if self._ycenter is None:
-    #         self._ycenter = self.get_ycenter_array()
-    #     return self._ycenter
-    #
-    # @property
-    # def ycentergrid(self):
-    #     if self._ycentergrid is None:
-    #         self._set_xycentergrid()
-    #     return self._ycentergrid
-    #
-    # @property
-    # def xcentergrid(self):
-    #     if self._xcentergrid is None:
-    #         self._set_xycentergrid()
-    #     return self._xcentergrid
-    #
-    # def _set_xycentergrid(self):
-    #     self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter,
-    #                                                       self.ycenter)
-    #     self._xcentergrid, self._ycentergrid = self.rotate(self._xcentergrid,
-    #                                                       self._ycentergrid,
-    #                                                       self.rotation,
-    #                                                       0, self.yedge[0])
-    #     self._xcentergrid += self.xul
-    #     self._ycentergrid += self.yul - self.yedge[0]
-    #
-    # def _set_xygrid(self):
-    #     self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
-    #     self._xgrid, self._ygrid = self.rotate(self._xgrid, self._ygrid, self.rotation,
-    #                                            0, self.yedge[0])
-    #     self._xgrid += self.xul
-    #     self._ygrid += self.yul - self.yedge[0]
 
     @property
     def xedge(self):
@@ -226,7 +201,7 @@ class SpatialReference(object):
         coordinate for every column in the grid.
 
         """
-        x = np.add.accumulate(self.delr.array) - 0.5 * self.delr.array
+        x = np.add.accumulate(self.delr) - 0.5 * self.delr
         return x
 
     def get_ycenter_array(self):
@@ -235,9 +210,9 @@ class SpatialReference(object):
         coordinate for every row in the grid.
 
         """
-        Ly = np.add.reduce(self.delc.array)
-        y = Ly - (np.add.accumulate(self.delc.array) - 0.5 *
-                   self.delc.array)
+        Ly = np.add.reduce(self.delc)
+        y = Ly - (np.add.accumulate(self.delc) - 0.5 *
+                   self.delc)
         return y
 
     def get_xedge_array(self):
@@ -246,7 +221,7 @@ class SpatialReference(object):
         coordinates for every column in the grid.  Array is of size (ncol + 1)
 
         """
-        xedge = np.concatenate(([0.], np.add.accumulate(self.delr.array)))
+        xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
         return xedge
 
     def get_yedge_array(self):
@@ -255,14 +230,22 @@ class SpatialReference(object):
         coordinates for every row in the grid.  Array is of size (nrow + 1)
 
         """
-        length_y = np.add.reduce(self.delc.array)
+        length_y = np.add.reduce(self.delc)
         yedge = np.concatenate(([length_y], length_y -
-                np.add.accumulate(self.delc.array)))
+                np.add.accumulate(self.delc)))
         return yedge
 
 
     def write_gridSpec(self, filename):
-        raise NotImplementedError()
+        f = open(filename,'w')
+        f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
+        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul,self.yul,self.rotation))
+        for c in self.delc:
+            f.write("{0:15.6E} ".format(c))
+        f.write('\n')
+        for r in self.delr:
+            f.write("{0:15.6E} ".format(c))
+        f.write('\n')
         return
 
     def get_vertices(self, i, j):
@@ -278,10 +261,10 @@ class TemporalReference(object):
 
     def __init__(self, perlen, steady, nstp, tsmult, itmuni, start_datetime=None):
         """
-        :param perlen: util_2d instance of perlen from dis constructor
-        :param steady: util_2d instance of steady from dis constructor
-        :param nstp: util_2d instance of nstp from dis constructor
-        :param tsmult: util_2d instance of tsmult from dis constructor
+        :param perlen: stress period length array
+        :param steady: array-like boolean steady-state flag array
+        :param nstp: array of number of time steps per stress period
+        :param tsmult: array of time step length multiplier per stress period
         :param itmuni: time unit
         :param start_datetime: datetime instance
         :return: none
@@ -297,10 +280,10 @@ class TemporalReference(object):
         kperkstp_loc: dict keyed on (kper,kstp) stores the index pos in the timestep ranges
 
         """
-        assert isinstance(perlen,util_2d)
-        assert isinstance(nstp,util_2d)
-        assert isinstance(steady,util_2d)
-        assert isinstance(tsmult,util_2d)
+        #assert isinstance(perlen,util_2d)
+        #assert isinstance(nstp,util_2d)
+        #assert isinstance(steady,util_2d)
+        #assert isinstance(tsmult,util_2d)
         self.itmuni_daterange = {1: "s", 2: "m", 3: "h", 4: "d", 5: "y"}
         if start_datetime is None:
             self.start = datetime(2015,1,1)
@@ -311,7 +294,7 @@ class TemporalReference(object):
             print("temporalReference warning: time units (itmuni) undefined, assuming days")
         self.unit = self.itmuni_daterange[itmuni]
         #--work out stress period lengths,starts and ends
-        self.stressperiod_deltas = pd.to_timedelta(perlen.array,unit=self.unit)
+        self.stressperiod_deltas = pd.to_timedelta(perlen,unit=self.unit)
         self.stressperiod_end = self.start + np.cumsum(self.stressperiod_deltas)
         self.stressperiod_start = self.stressperiod_end - self.stressperiod_deltas
 
@@ -319,7 +302,7 @@ class TemporalReference(object):
         offsets = []
         idt = 0
         self.kperkstp_loc = {}
-        for kper,(plen, nts, tmult) in enumerate(zip(perlen.array, nstp.array, tsmult.array)):
+        for kper,(plen, nts, tmult) in enumerate(zip(perlen, nstp, tsmult)):
             if tmult != 1.0:
                 dt1 = plen * ((tmult - 1.)/((tmult**nts) - 1.))
             else:
