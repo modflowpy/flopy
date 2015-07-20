@@ -60,12 +60,12 @@ class SpatialReference(object):
             yul: y coord of upper left corner of grid
             rotation_degrees: grid rotation
         """
-        #assert isinstance(delc,util_2d),\
-        #    "spatialReference error: delc must be util_2d instance"
-        #assert isinstance(delr,util_2d),\
-        #    "spatialReference error: delr must be util_2d instance"
         self.delc = delc
         self.delr = delr
+
+        self.nrow = self.delc.shape[0]
+        self.ncol = self.delr.shape[0]
+
         self.lenuni = lenuni
         # Set origin and rotation
         if xul is None:
@@ -280,10 +280,6 @@ class TemporalReference(object):
         kperkstp_loc: dict keyed on (kper,kstp) stores the index pos in the timestep ranges
 
         """
-        #assert isinstance(perlen,util_2d)
-        #assert isinstance(nstp,util_2d)
-        #assert isinstance(steady,util_2d)
-        #assert isinstance(tsmult,util_2d)
         self.itmuni_daterange = {1: "s", 2: "m", 3: "h", 4: "d", 5: "y"}
         if start_datetime is None:
             self.start = datetime(2015,1,1)

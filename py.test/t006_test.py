@@ -37,18 +37,18 @@ def test_reference():
     sms = flopy.modflow.ModflowPcg(mf)
     wel.write_file()
     rch.write_file()
-    try:
-        fig = plt.figure()
-        ax = plt.subplot(111)
-        ax.set_title("1")
-        mm = flopy.plot.ModelMap(ax,model=mf)
-        mm.plot_grid(ax=ax)
-        mm.plot_bc("WEL")
-        mm.plot_ibound(ax=ax)
-        #plt.show()
-        plt.close(fig)
-    except Exception as e:
-        raise Exception("error in modelmap: "+str(e))
+    #try:
+    fig = plt.figure()
+    ax = plt.subplot(111)
+    ax.set_title("1")
+    mm = flopy.plot.ModelMap(ax=ax,sr=mf.dis.sr,model=mf)
+    mm.plot_grid(ax=ax)
+    mm.plot_bc("WEL")
+    mm.plot_ibound(ax=ax)
+    #plt.show()
+    plt.close(fig)
+    #except Exception as e:
+    #    raise Exception("error in modelmap: "+str(e))
 
     #print(dis.tr.stressperiod_deltas)
     assert len(dis.tr.stressperiod_deltas) == len(perlen)

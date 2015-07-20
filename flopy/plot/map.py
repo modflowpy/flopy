@@ -33,14 +33,20 @@ class ModelMap(object):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
-    def __init__(self, ax=None, model=None, dis=None, layer=0, extent=None,
+    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0, extent=None,
                  xul=None,yul=None,rotation=None):
-        self.ml = model
+        self.model = model
         self.layer = layer
+        self.dis = dis
         if dis is not None:
-            self.dis = dis
-        else:
-            self.dis = model.dis
+            #print("warning: the dis arg to model map is deprecated")
+            self.sr = dis.sr
+        elif model is not None:
+            #print("warning: the model arg to model map is deprecated")
+            self.sr = model.dis.sr
+        if sr is not None:
+            self.sr = sr
+
         if ax is None:
             self.ax = plt.subplot(111)
         else:
@@ -50,14 +56,14 @@ class ModelMap(object):
         else:
             self._extent = None
         if xul is not None:
-            self.ml.dis.sr.xul = xul
+            self.sr.xul = xul
         if yul is not None:
-            self.ml.dis.sr.yul = yul
+            self.sr.yul = yul
         if rotation is not None:
-            self.ml.dis.sr.rotation = rotation
+            self.sr.rotation = rotation
         # # Create model extent
         # if extent is None:
-        #     self.extent = self.dis.sr.get_extent()
+        #     self.extent = self.sr.get_extent()
         # else:
         #     self.extent = extent
 
@@ -70,7 +76,7 @@ class ModelMap(object):
     @property
     def extent(self):
         if self._extent is None:
-            self._extent = self.dis.sr.get_extent()
+            self._extent = self.sr.get_extent()
         return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
@@ -105,7 +111,7 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        quadmesh = ax.pcolormesh(self.dis.sr.xgrid, self.dis.sr.ygrid, plotarray,
+        quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
                                       **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -143,7 +149,7 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        contour_set = ax.contour(self.dis.sr.xcentergrid, self.dis.sr.ycentergrid,
+        contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
                                       plotarray, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -171,7 +177,7 @@ class ModelMap(object):
 
         """
         if ibound is None:
-            bas = self.ml.get_package('BAS6')
+            bas = self.model.get_package('BAS6')
             ibound = bas.ibound
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -240,10 +246,10 @@ class ModelMap(object):
         # Find package to plot
         if package is not None:
             p = package
-        elif self.ml is not None:
+        elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
-            p = self.ml.get_package(ftype)
+            p = self.model.get_package(ftype)
         else:
             raise Exception('Cannot find package to plot')
 
@@ -256,9 +262,9 @@ class ModelMap(object):
         # Return if mflist is None
         if mflist is None:
             return None
-
+        nlay = self.model.nlay
         # Plot the list locations
-        plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)
+        plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
         idx = [mflist['k'], mflist['i'], mflist['j']]
         plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
@@ -296,7 +302,7 @@ class ModelMap(object):
         patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
         return patch_collection
 
-    def plot_discharge(self, frf, fff, flf=None, head=None, istep=1, jstep=1,
+    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1, jstep=1,
                        **kwargs):
         """
         Use quiver to plot vectors.
@@ -325,22 +331,24 @@ class ModelMap(object):
             Vectors of specific discharge.
 
         """
-
+        if dis is None and self.dis is None:
+            print("ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
+            return
         # Calculate specific discharge
-        delr = self.dis.delr.array
-        delc = self.dis.delc.array
-        top = self.dis.top.array
-        botm = self.dis.botm.array
+        delr = dis.delr.array
+        delc = dis.delc.array
+        top = dis.top.array
+        botm = dis.botm.array
         nlay, nrow, ncol = botm.shape
         laytyp = None
         hnoflo = 999.
         hdry = 999.
-        if self.ml is not None:
-            lpf = self.ml.get_package('LPF')
+        if self.model is not None:
+            lpf = self.model.get_package('LPF')
             if lpf is not None:
                 laytyp = lpf.laytyp.array
                 hdry = lpf.hdry
-            bas = self.ml.get_package('BAS6')
+            bas = self.model.get_package('BAS6')
             if bas is not None:
                 hnoflo = bas.hnoflo
 
@@ -357,8 +365,8 @@ class ModelMap(object):
                                                           delc, sat_thk)
 
         # Select correct slice and step
-        x = self.dis.sr.xcentergrid[::istep, ::jstep]
-        y = self.dis.sr.ycentergrid[::istep, ::jstep]
+        x = self.sr.xcentergrid[::istep, ::jstep]
+        y = self.sr.ycentergrid[::istep, ::jstep]
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
         u = u[::istep, ::jstep]
@@ -370,7 +378,7 @@ class ModelMap(object):
             ax = self.ax
 
         # Rotate and plot
-        urot, vrot = rotate(u, v, self.dis.sr.rotation)
+        urot, vrot = rotate(u, v, self.sr.rotation)
         quiver = ax.quiver(x, y, urot, vrot, **kwargs)
 
         return quiver
@@ -423,7 +431,7 @@ class ModelMap(object):
         for p in pl:
             vlc = []
             #rotate data
-            x0r, y0r = rotate(p['x'], p['y'], self.dis.sr.rotation, 0., self.dis.sr.yedge[0])
+            x0r, y0r = rotate(p['x'], p['y'], self.sr.rotation, 0., self.sr.yedge[0])
             x0r += self.sr.xul
             y0r += self.sr.yul - self.sr.yedge[0]
             #build polyline array
@@ -509,9 +517,9 @@ class ModelMap(object):
             shrink = float(kwargs.pop('shrink'))
 
         #rotate data
-        x0r, y0r = self.dis.sr.rotate(ep['x'], ep['y'], self.dis.sr.rotation, 0., self.dis.sr.yedge[0])
-        x0r += self.dis.sr.xul
-        y0r += self.dis.sr.yul - self.dis.sr.yedge[0]
+        x0r, y0r = self.sr.rotate(ep['x'], ep['y'], self.sr.rotation, 0., self.sr.yedge[0])
+        x0r += self.sr.xul
+        y0r += self.sr.yul - self.sr.yedge[0]
         #build array to plot
         arr = np.vstack((x0r, y0r)).T
         #select based on layer
@@ -532,37 +540,37 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
-        xmin = self.dis.sr.xedge[0]
-        xmax = self.dis.sr.xedge[-1]
-        ymin = self.dis.sr.yedge[-1]
-        ymax = self.dis.sr.yedge[0]
+        xmin = self.sr.xedge[0]
+        xmax = self.sr.xedge[-1]
+        ymin = self.sr.yedge[-1]
+        ymax = self.sr.yedge[0]
         linecol = []
         # Vertical lines
-        for j in range(self.dis.ncol + 1):
-            x0 = self.dis.sr.xedge[j]
+        for j in range(self.sr.ncol + 1):
+            x0 = self.sr.xedge[j]
             x1 = x0
             y0 = ymin
             y1 = ymax
-            x0r, y0r = self.dis.sr.rotate(x0, y0, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
-            x0r += self.dis.sr.xul
-            y0r += self.dis.sr.yul - self.dis.sr.yedge[0]
-            x1r, y1r = self.dis.sr.rotate(x1, y1, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
-            x1r += self.dis.sr.xul
-            y1r += self.dis.sr.yul - self.dis.sr.yedge[0]
+            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
+            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
+            x1r += self.sr.xul
+            y1r += self.sr.yul - self.sr.yedge[0]
             linecol.append(((x0r, y0r), (x1r, y1r)))
 
         #horizontal lines
-        for i in range(self.dis.nrow + 1):
+        for i in range(self.sr.nrow + 1):
             x0 = xmin
             x1 = xmax
-            y0 = self.dis.sr.yedge[i]
+            y0 = self.sr.yedge[i]
             y1 = y0
-            x0r, y0r = self.dis.sr.rotate(x0, y0, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
-            x0r += self.dis.sr.xul
-            y0r += self.dis.sr.yul - self.dis.sr.yedge[0]
-            x1r, y1r = self.dis.sr.rotate(x1, y1, self.dis.sr.rotation, 0, self.dis.sr.yedge[0])
-            x1r += self.dis.sr.xul
-            y1r += self.dis.sr.yul - self.dis.sr.yedge[0]
+            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
+            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
+            x1r += self.sr.xul
+            y1r += self.sr.yul - self.sr.yedge[0]
             linecol.append(((x0r, y0r), (x1r, y1r)))
 
         lc = LineCollection(linecol, **kwargs)
