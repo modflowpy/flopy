@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
@@ -39,14 +40,24 @@ class ModelMap(object):
         self.model = model
         self.layer = layer
         self.dis = dis
-        if dis is not None:
+        self.sr = None
+        if sr is not None:
+            self.sr = copy.deepcopy(sr)
+        elif dis is not None:
             #print("warning: the dis arg to model map is deprecated")
-            self.sr = dis.sr
+            self.sr = copy.deepcopy(dis.sr)
         elif model is not None:
             #print("warning: the model arg to model map is deprecated")
-            self.sr = model.dis.sr
-        if sr is not None:
-            self.sr = sr
+            self.sr = copy.deepcopy(model.dis.sr)
+    
+        #--model map override spatial reference settings
+        if xul is not None:
+            self.sr.xul = xul
+        if yul is not None:
+            self.sr.yul = yul
+        if rotation is not None:
+            self.sr.rotation = rotation
+        
 
         if ax is None:
             try:
@@ -59,18 +70,7 @@ class ModelMap(object):
             self._extent = extent
         else:
             self._extent = None
-        if xul is not None:
-            self.sr.xul = xul
-        else:
-            self.sr.xul = 0.
-        if yul is not None:
-            self.sr.yul = yul
-        else:
-            self.sr.yul = 0.
-        if rotation is not None:
-            self.sr.rotation = rotation
-        else:
-            self.sr.rotation = 0.
+        
         # # Create model extent
         # if extent is None:
         #     self.extent = self.sr.get_extent()
