@@ -61,10 +61,16 @@ class ModelMap(object):
             self._extent = None
         if xul is not None:
             self.sr.xul = xul
+        else:
+            self.sr.xul = 0.
         if yul is not None:
             self.sr.yul = yul
+        else:
+            self.sr.yul = 0.
         if rotation is not None:
             self.sr.rotation = rotation
+        else:
+            self.sr.rotation = 0.
         # # Create model extent
         # if extent is None:
         #     self.extent = self.sr.get_extent()
@@ -335,10 +341,14 @@ class ModelMap(object):
             Vectors of specific discharge.
 
         """
-        if dis is None and self.dis is None:
-            print("ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
-            return
         # Calculate specific discharge
+        # make sure dis is defined
+        if dis is None:
+            if self.model is not None:
+                dis = self.model.dis
+            else:
+                print("ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
+                return
         delr = dis.delr.array
         delc = dis.delc.array
         top = dis.top.array
