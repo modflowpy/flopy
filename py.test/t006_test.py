@@ -5,6 +5,7 @@ def test_reference():
     from datetime import datetime
     import numpy as np
     import matplotlib.pyplot as plt
+    import shapefile
     import flopy
     loadpth = os.path.join('..', 'data', 'freyberg')
     ml = flopy.modflow.Modflow.load('freyberg.nam', model_ws=loadpth)
@@ -37,7 +38,7 @@ def test_reference():
     sms = flopy.modflow.ModflowPcg(mf)
     wel.write_file()
     rch.write_file()
-    #try:
+
     fig = plt.figure()
     ax = plt.subplot(111)
     ax.set_title("1")
@@ -45,28 +46,78 @@ def test_reference():
     mm.plot_grid(ax=ax)
     mm.plot_bc("WEL")
     mm.plot_ibound(ax=ax)
-    #plt.show()
     plt.close(fig)
-    #except Exception as e:
-    #    raise Exception("error in modelmap: "+str(e))
 
-    #print(dis.tr.stressperiod_deltas)
     assert len(dis.tr.stressperiod_deltas) == len(perlen)
     assert len(dis.tr.stressperiod_start) == len(perlen)
     assert len(dis.tr.stressperiod_end) == len(perlen)
-    print(dis.tr.stressperiod_start)
     s = dis.tr.timestep_start[dis.tr.kperkstp_loc[(0,0)]]
     e = dis.tr.timestep_end[dis.tr.kperkstp_loc[(9,2)]]
     assert np.abs((e-s).days - np.cumsum(perlen)[-1]) < 1.0
 
-    #print(dis.tr.stressperiod_end)
-    #print(dis.tr.timestep_start)
-    #print((e-s).days,np.cumsum(perlen)[-1])
-    #fig, axes = plt.subplots(nlay)
-    #lpf.hk.plot(axes=axes)
-    #plt.show()
-    #rch.rech.plot()
-    #plt.show()
+    shapename = os.path.join("reference_testing","test1.shp")
+    lpf.hk.to_shapefile(shapename)
+    shp = shapefile.Reader(shapename)
+    assert shp.numRecords == mf.nrow * mf.ncol
     return
 
+def test_binaryfile_reference():
+    import os
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import shapefile
+    import flopy
+    import flopy.modflow as fmf
+
+    #--make the model
+    ml = fmf.Modflow()
+    perlen = np.arange(1,20,1)
+    nstp = np.flipud(perlen) + 3
+    tsmult = 1.2
+    nlay = 10
+    nrow,ncol = 50,40
+    botm = np.arange(0,-100,-10)
+    dis = fmf.ModflowDis(ml,delr=100.0,delc=100.0,nrow=nrow,ncol=ncol,nlay=nlay,nper=perlen.shape[0],perlen=perlen,
+        nstp=nstp,tsmult=tsmult,top=10,botm=botm,steady=False,rotation=45)
+    lpf = fmf.ModflowLpf(ml,hk=10.0,vka=10.0,laytyp=1)
+    pcg = fmf.ModflowPcg(ml)
+    oc =  fmf.ModflowOc(ml)
+    ibound = np.ones((nrow,ncol))
+    ibound[:,0] = -1
+    ibound[25:30,30:39] = 0
+    bas = fmf.ModflowBas(ml,strt=5.0,ibound=ibound)
+    rch = fmf.ModflowRch(ml,rech={0:0.00001,5:0.0001,6:0.0})
+    wel_data = [9,25,20,-200]
+    wel = fmf.ModflowWel(ml,stress_period_data={0:wel_data})
+
+    #instance without any knowledge of sr tr - builds defaults from info in hds file
+    hds = os.path.join("reference_testing","modflowtest.hds")
+    bf = flopy.utils.HeadFile(hds)
+    assert bf.nrow == dis.nrow
+    assert bf.ncol == dis.ncol
+    assert bf.tr.perlen.shape == dis.perlen.shape
+    assert bf.tr.nstp.shape == dis.nstp.shape
+
+    name = os.path.join("reference_testing","test2.shp")
+    bf.to_shapefile(name)
+    shp = shapefile.Reader(name)
+    assert shp.numRecords == ml.nrow * ml.ncol
+
+    # print(bf.tr)
+    # bf.plot_data(mflay=0,masked_values=[-999.99])
+    # plt.show()
+    #
+    # #instance with dis info
+    # bf = flopy.utils.HeadFile(hds,dis=dis)
+    # print(bf.sr)
+    # print(bf.tr)
+    #
+    # #instance with model info
+    # bf = flopy.utils.HeadFile(hds,model=ml)
+    # print(bf.sr)
+    # print(bf.tr)
+    # #ax = plt.subplot(111)
+    # bf.plot_data(mflay=0,masked_values=[-999.99])
+    # plt.show()
 test_reference()
+test_binaryfile_reference()

@@ -6,8 +6,33 @@ Module spatial and temporal referencing for flopy model objects
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from flopy.utils import util_2d
+#from flopy.utils.util_array import util_2d
 
+def temporalreference_from_binary_headers(recordarray):
+
+    ukper = np.unique(recordarray["kper"])
+    totim = []
+    nstp = []
+    tsmult = []
+    for uk in ukper:
+        uk_recarray = recordarray[recordarray["kper"] == uk]
+        us = np.unique(uk_recarray["pertim"])
+        tm = (us[1] - us[0]) / (us[2] - us[1])
+        t = uk_recarray["totim"].max()
+        n = uk_recarray["kstp"].max()
+        totim.append(t)
+        nstp.append(n)
+        tsmult.append(tm)
+    totim = np.array(totim,dtype=np.float32)
+    nstp = np.array(nstp,dtype=np.int)
+    tsmults = np.array(tsmult,dtype=np.float32)
+    perlen = [totim[0]]
+    perlen.extend(list(totim[1:] - totim[:-1]))
+    perlen = np.array(perlen,dtype=np.float32)
+    print("LayerFile._build_tr(): assuming time units of days...")
+    tr = TemporalReference(np.array(perlen),np.zeros_like(nstp),
+                                   nstp,tsmult,4)
+    return tr
 
 def spatialreference_from_gridspc_file(filename, lenuni=0):
     f = open(filename,'r')
@@ -83,6 +108,13 @@ class SpatialReference(object):
         self._ycentergrid = None
         self._xcentergrid = None
 
+
+    def __repr__(self):
+        s = "spatialReference:xul:{0:<G}, yul:{1:<G},rotation:{2:<G}\n".\
+            format(self.xul,self.yul,self.rotation)
+        s += "delr:" + str(self.delr) + "\n"
+        s += "delc:" + str(self.delc) + "\n"
+        return s
 
 
     @property
@@ -255,6 +287,7 @@ class SpatialReference(object):
         pts.append([self.xgrid[i, j+1], self.ygrid[i+1, j]])
         pts.append([self.xgrid[i, j+1], self.ygrid[i, j]])
         pts.append([self.xgrid[i, j], self.ygrid[i, j]])
+        return pts
 
 
 class TemporalReference(object):
@@ -282,7 +315,7 @@ class TemporalReference(object):
         """
         self.itmuni_daterange = {1: "s", 2: "m", 3: "h", 4: "d", 5: "y"}
         if start_datetime is None:
-            self.start = datetime(2015,1,1)
+            self.start = datetime(1970,1,1)
         else:
             assert isinstance(start_datetime,datetime)
             self.start = start_datetime
@@ -316,11 +349,23 @@ class TemporalReference(object):
 
         self.perlen = perlen
         self.steady = steady
+        self.nstp = nstp
+        self.tsmult = tsmult
 
-        if False in steady:
-            raise NotImplementedError("temporalReference: not dealing wth steady state yet")
+        if True in steady:
+            #raise NotImplementedError("temporalReference: not dealing wth steady state yet")
+            print("temporalReference warning: not dealing wth steady state yet")
         return
 
+    def __repr__(self):
+        s = "TemporalReference:start_datetime:" + str(self.start)
+        s += ", nper:{0:G}\n".format(self.perlen.shape[0])
+        s += "perlen:" + str(self.perlen) + '\n'
+        s += "nstp:" + str(self.nstp) + '\n'
+        s += "steady:" + str(self.steady) + '\n'
+        s += "tsmult:" + str(self.tsmult) + '\n'
+
+        return s
 
     def get_datetimes_from_oc(self,oc):
         raise NotImplementedError()

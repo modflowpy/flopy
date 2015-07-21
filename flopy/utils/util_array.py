@@ -12,7 +12,7 @@ import os
 import shutil
 import copy
 import numpy as np
-from flopy.utils.binaryfile import BinaryHeader
+import flopy.utils
 VERBOSE = False
 
 
@@ -256,13 +256,13 @@ class util_3d(object):
         '''
         How about some doc strings
         '''
-        from flopy_io import grid_attributes_to_shapfile
+        from utils.flopy_io import write_grid_shapefile
         array_dict = {}
         for ilay in range(self.model.nlay):
             u2d = self[ilay]
             array_dict[u2d.name] = u2d.array
-        grid_attributes_to_shapfile(filename,self.model,
-                                    array_dict=array_dict)
+        write_grid_shapefile(filename,self.model.dis.sr,
+                             array_dict)
 
 
     def plot(self, axes=None, **kwargs):
@@ -504,13 +504,12 @@ class transient_2d(object):
         '''
         How about some doc strings
         '''
-        from flopy_io import grid_attributes_to_shapfile
+        from utils.flopy_io import write_grid_shapefile
         array_dict = {}
         for kper in range(self.model.nper):
             u2d = self[kper]
             array_dict[u2d.name] = u2d.array
-        grid_attributes_to_shapfile(filename, self.model,
-                                    array_dict=array_dict)
+        write_grid_shapefile(filename, self.model.dis.sr, array_dict)
 
 
     def plot(self, filename_base=None, title=None, **kwargs):
@@ -783,9 +782,6 @@ class util_2d(object):
             title = self.name
             
         plotarray = self.array
-        if masked_values is not None:
-            for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
         if ax is None:
             fig = plt.figure()
             ax = plt.subplot(1, 1, 1, aspect='equal')
@@ -800,9 +796,8 @@ class util_2d(object):
         '''
         How about some doc strings
         '''
-        from flopy_io import grid_attributes_to_shapfile
-        grid_attributes_to_shapfile(filename, self.model,
-                                    array_dict={self.name: self.array})
+        from utils.flopy_io import write_grid_shapefile
+        write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
 
     @staticmethod
     def get_default_numpy_fmt(dtype):

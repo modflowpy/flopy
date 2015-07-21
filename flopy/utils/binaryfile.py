@@ -156,8 +156,8 @@ class BinaryLayerFile(LayerFile):
     classes are formed.  This class should not be instantiated directly
 
     """
-    def __init__(self, filename, precision, verbose):        
-        super(BinaryLayerFile, self).__init__(filename, precision, verbose)
+    def __init__(self, filename, precision, verbose, kwargs):
+        super(BinaryLayerFile, self).__init__(filename, precision, verbose, kwargs)
         return
    
 
@@ -318,11 +318,11 @@ class HeadFile(BinaryLayerFile):
 
     """
     def __init__(self, filename, text='head', precision='single',
-                 verbose=False):
-        self.text = text
+                 verbose=False, **kwargs):
+        self.text = text.encode()
         self.header_dtype = BinaryHeader.set_dtype(bintype='Head',
                                                    precision=precision)
-        super(HeadFile, self).__init__(filename, precision, verbose)
+        super(HeadFile, self).__init__(filename, precision, verbose,kwargs)
         return
 
 
@@ -372,11 +372,11 @@ class UcnFile(BinaryLayerFile):
 
     """
     def __init__(self, filename, text='concentration', precision='single',
-                 verbose=False):
+                 verbose=False, **kwargs):
         self.text = text
         self.header_dtype = BinaryHeader.set_dtype(bintype='Ucn',
                                                    precision=precision)
-        super(UcnFile, self).__init__(filename, precision, verbose)
+        super(UcnFile, self).__init__(filename, precision, verbose, kwargs)
         return
 
 
@@ -415,7 +415,7 @@ class CellBudgetFile(object):
 
     """
 
-    def __init__(self, filename, precision='single', verbose=False):        
+    def __init__(self, filename, precision='single', verbose=False, **kwargs):
         self.filename = filename
         self.precision = precision
         self.verbose = verbose
@@ -442,6 +442,9 @@ class CellBudgetFile(object):
                     ('totim', 'f8')]
         else:
             raise Exception('Unknown precision specified: ' + precision)
+
+        if len(kwargs.keys()) > 0:
+            raise NotImplementedError()
 
         self.header1_dtype = np.dtype(h1dt)
         self.header2_dtype = np.dtype(h2dt)

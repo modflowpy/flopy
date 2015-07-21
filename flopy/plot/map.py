@@ -106,7 +106,6 @@ class ModelMap(object):
         Returns
         -------
         quadmesh : matplotlib.collections.QuadMesh
-
         """
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
