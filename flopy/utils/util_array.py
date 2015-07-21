@@ -765,8 +765,12 @@ class util_2d(object):
         How about some doc strings
         '''
         from flopy.plot.map import ModelMap
+        
         if 'masked_values' in kwargs:
             masked_values = kwargs.pop('masked_values')
+        else:
+            masked_values = None
+            
         plotarray = self.array
         if masked_values is not None:
             for mval in masked_values:
