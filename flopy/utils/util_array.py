@@ -777,7 +777,7 @@ class util_2d(object):
                 plotarray = np.ma.masked_equal(plotarray, mval)
         #--create ModelMap instance
         mm = ModelMap(ax=ax, dis=self.model.dis)
-        mm.plot_array(plotarray, masked_values=masked_values)
+        mm.plot_array(plotarray, masked_values=masked_values, **kwargs)
         mm.ax.set_title(self.name)
 
 
