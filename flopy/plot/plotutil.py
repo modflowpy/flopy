@@ -415,6 +415,9 @@ def findrowcolumn(pt, xedge, yedge):
 
 
 def line_intersect_grid(ptsin, xedge, yedge, returnVertices=False):
+    '''
+    How about some doc strings
+    '''
     small_value = 1.0e-1
     
     #--build list of points along current line
@@ -499,6 +502,9 @@ def line_intersect_grid(ptsin, xedge, yedge, returnVertices=False):
 
 
 def cell_value_points(pts, xedge, yedge, vdata):
+    '''
+    How about some doc strings
+    '''
     vcell = []
     for idx, [xt, yt, dlen] in enumerate(pts):
         #--find the modflow cell containing point
@@ -510,3 +516,6 @@ def cell_value_points(pts, xedge, yedge, vdata):
                 v = np.asarray(vdata[irow, jcol])
                 vcell.append(v) 
     return np.array(vcell)
+
+
+    
