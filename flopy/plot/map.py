@@ -62,6 +62,7 @@ class ModelMap(object):
         if ax is None:
             try:
                 self.ax = plt.gca()
+                self.ax.set_aspect('equal')
             except:
                 self.ax = plt.subplot(1, 1, 1, aspect='equal')
         else:
