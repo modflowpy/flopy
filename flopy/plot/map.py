@@ -48,7 +48,7 @@ class ModelMap(object):
             self.sr = sr
 
         if ax is None:
-            self.ax = plt.subplot(111)
+            self.ax = plt.subplot(111,aspect="equal")
         else:
             self.ax = ax
         if extent is not None:
