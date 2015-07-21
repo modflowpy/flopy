@@ -4,7 +4,7 @@ import matplotlib.colors
 from . import plotutil
 from .plotutil import bc_color_dict, rotate
 
-from flopy.utils import util_2d,util_3d,transient_2d
+from flopy.utils import util_2d, util_3d, transient_2d
 
 class ModelMap(object):
     """
@@ -14,6 +14,7 @@ class ModelMap(object):
     ----------
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
+        If there is not a current axis then a new one will be created.
     model : flopy.modflow object
         flopy model object. (Default is None)
     dis : flopy.modflow.ModflowDis object
@@ -34,7 +35,7 @@ class ModelMap(object):
 
     """
     def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0, extent=None,
-                 xul=None,yul=None,rotation=None):
+                 xul=None, yul=None, rotation=None):
         self.model = model
         self.layer = layer
         self.dis = dis
@@ -48,7 +49,10 @@ class ModelMap(object):
             self.sr = sr
 
         if ax is None:
-            self.ax = plt.subplot(111,aspect="equal")
+            try:
+                self.ax = plt.gca()
+            except:
+                self.ax = plt.subplot(1, 1, 1, aspect='equal')
         else:
             self.ax = ax
         if extent is not None:

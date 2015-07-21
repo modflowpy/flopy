@@ -253,6 +253,9 @@ class util_3d(object):
 
 
     def to_shapefile(self,filename):
+        '''
+        How about some doc strings
+        '''
         from flopy_io import grid_attributes_to_shapfile
         array_dict = {}
         for ilay in range(self.model.nlay):
@@ -263,7 +266,15 @@ class util_3d(object):
 
 
     def plot(self,axes=None):
-        import matplotlib.pyplot as plt
+        '''
+        How about some doc strings
+        '''
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            s = 'Could not import matplotlib.  Must install matplotlib ' +\
+                ' in order to plot util_3d data.'
+            raise Exception(s)
         if axes is not None:
             assert len(axes) == self.shape[0]
             for k in range(self.shape[0]):
@@ -272,7 +283,7 @@ class util_3d(object):
         else:
             for k in range(self.shape[0]):
                 fig = plt.figure()
-                ax = plt.subplot(111)
+                ax = plt.subplot(1, 1, 1)
                 self.util_2ds[k].plot(ax=ax)
 
 
@@ -386,6 +397,7 @@ class util_3d(object):
             return util_3d(self.model,self.shape,self.dtype,new_u2ds,
                            self.name,self.fmtin,self.cnstnt,self.iprn,
                            self.locat)
+
 #class transient_2d((with_metaclass(meta_interceptor, object))):
 class transient_2d(object):
     """
@@ -481,33 +493,47 @@ class transient_2d(object):
         self.transient_2ds = self.build_transient_sequence()
 
     def get_zero_2d(self, kper):
-        name = self.name_base + str(kper + 1) + "(filled zero)"
+        name = self.name_base + str(kper + 1) + '(filled zero)'
         return util_2d(self.model, self.shape,
                        self.dtype, 0.0, name=name).get_file_entry()
 
 
     def to_shapefile(self,filename):
+        '''
+        How about some doc strings
+        '''
         from flopy_io import grid_attributes_to_shapfile
         array_dict = {}
         for kper in range(self.model.nper):
             u2d = self[kper]
             array_dict[u2d.name] = u2d.array
-        grid_attributes_to_shapfile(filename,self.model,
+        grid_attributes_to_shapfile(filename, self.model,
                                     array_dict=array_dict)
 
 
-    def plot(self, filename_base=None):
-        import matplotlib.pyplot as plt
+    def plot(self, filename_base=None, title=None):
+        '''
+        How about some doc strings
+        '''
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to plot transient_2d data.'
+            raise Exception(s)
         axes = []
         for kper in range(self.model.nper):
             fig = plt.figure()
-            ax = plt.subplot(111,aspect="equal")
+            ax = plt.subplot(1, 1, 1, aspect='equal')
             start_dt = self.model.dis.tr.stressperiod_start[kper]\
                            .to_datetime().strftime("%d-%m-%Y")
             end_dt = self.model.dis.tr.stressperiod_end[kper]\
                          .to_datetime().strftime("%d-%m-%Y")
-            ax.set_title("stress period {0:d}:{1:s} to {2:s}".\
-                         format(kper,start_dt,end_dt))
+            if title is None:
+                ax.set_title('stress period {0:d}:{1:s} to {2:s}'.\
+                             format(kper,start_dt,end_dt))
+            else:
+                ax.set_title(title)
             self[kper].plot(ax=ax)
             if filename_base is not None:
                 plt.savefig(filename_base+"_{0:05d}.png".format(kper))
@@ -735,6 +761,9 @@ class util_2d(object):
             raise Exception('util_2d: binary flag requires ext_filename')
 
     def plot(self,ax=None):
+        '''
+        How about some doc strings
+        '''
         from flopy.plot.map import ModelMap
         mm = ModelMap(ax=ax, dis=self.model.dis)
         mm.plot_array(self.array)
@@ -742,8 +771,11 @@ class util_2d(object):
 
 
     def to_shapefile(self,filename):
+        '''
+        How about some doc strings
+        '''
         from flopy_io import grid_attributes_to_shapfile
-        grid_attributes_to_shapfile(filename,self.model,
+        grid_attributes_to_shapfile(filename, self.model,
                                     array_dict={self.name: self.array})
 
     @staticmethod
