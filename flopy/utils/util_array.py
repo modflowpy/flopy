@@ -265,7 +265,7 @@ class util_3d(object):
                                     array_dict=array_dict)
 
 
-    def plot(self,axes=None):
+    def plot(self, axes=None, **kwargs):
         '''
         How about some doc strings
         '''
@@ -278,13 +278,13 @@ class util_3d(object):
         if axes is not None:
             assert len(axes) == self.shape[0]
             for k in range(self.shape[0]):
-                self.util_2ds[k].plot(ax=axes[k])
+                self.util_2ds[k].plot(ax=axes[k], **kwargs)
 
         else:
             for k in range(self.shape[0]):
                 fig = plt.figure()
-                ax = plt.subplot(1, 1, 1)
-                self.util_2ds[k].plot(ax=ax)
+                ax = plt.subplot(1, 1, 1, aspect='equal')
+                self.util_2ds[k].plot(ax=ax, **kwargs)
 
 
     def __getitem__(self, k):
@@ -511,7 +511,7 @@ class transient_2d(object):
                                     array_dict=array_dict)
 
 
-    def plot(self, filename_base=None, title=None):
+    def plot(self, filename_base=None, title=None, **kwargs):
         '''
         How about some doc strings
         '''
@@ -760,17 +760,24 @@ class util_2d(object):
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
 
-    def plot(self,ax=None):
+    def plot(self, ax=None, **kwargs):
         '''
         How about some doc strings
         '''
         from flopy.plot.map import ModelMap
+        if 'masked_values' in kwargs:
+            masked_values = kwargs.pop('masked_values')
+        plotarray = self.array
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
+        #--create ModelMap instance
         mm = ModelMap(ax=ax, dis=self.model.dis)
-        mm.plot_array(self.array)
+        mm.plot_array(plotarray, masked_values=masked_values)
         mm.ax.set_title(self.name)
 
 
-    def to_shapefile(self,filename):
+    def to_shapefile(self, filename):
         '''
         How about some doc strings
         '''
