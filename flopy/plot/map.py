@@ -392,7 +392,7 @@ class ModelMap(object):
             ax = self.ax
 
         # Rotate and plot
-        urot, vrot = rotate(u, v, self.sr.rotation)
+        urot, vrot = self.sr.rotate(u, v, self.sr.rotation)
         quiver = ax.quiver(x, y, urot, vrot, **kwargs)
 
         return quiver
