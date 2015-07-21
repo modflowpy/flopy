@@ -3,7 +3,7 @@ Module to read MODFLOW output files.  The module contains shared
 abstract classes that should not be directly accessed.
 
 """
-
+from __future__ import print_function
 import numpy as np
 
 class Header():
@@ -33,9 +33,9 @@ class Header():
         else:
             self.dtype = None
             self.header = None
-            print 'Specified {0} type is not available. Available types are:'.format(self.header_type)
+            print('Specified {0} type is not available. Available types are:'.format(self.header_type))
             for idx, t in enumerate(self.header_types):
-                print '  {0} {1}'.format(idx+1, t)
+                print('  {0} {1}'.format(idx+1, t))
         return
 
     def get_dtype(self):
@@ -105,7 +105,7 @@ class LayerFile(object):
 
         """
         for header in self.recordarray:
-            print header
+            print(header)
         return
     
     def _get_data_array(self, kstp=0, kper=0, totim=0):
@@ -132,7 +132,7 @@ class LayerFile(object):
             ipos = self.iposarray[idx]
             ilay = self.recordarray['ilay'][idx]
             if self.verbose:
-                print 'Byte position in file: {0}'.format(ipos)
+                print('Byte position in file: {0}'.format(ipos))
             self.file.seek(ipos, 0)
             data[ilay - 1, :, :] = self._read_data()
         return data
