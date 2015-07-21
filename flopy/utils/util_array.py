@@ -278,13 +278,15 @@ class util_3d(object):
         if axes is not None:
             assert len(axes) == self.shape[0]
             for k in range(self.shape[0]):
-                self.util_2ds[k].plot(ax=axes[k], **kwargs)
+                title = '{} Layer {}'.format(self.name, k+1)
+                self.util_2ds[k].plot(ax=axes[k], title=title, **kwargs)
 
         else:
             for k in range(self.shape[0]):
                 fig = plt.figure()
                 ax = plt.subplot(1, 1, 1, aspect='equal')
-                self.util_2ds[k].plot(ax=ax, **kwargs)
+                title = '{} Layer {}'.format(self.name, k+1)
+                self.util_2ds[k].plot(ax=ax, title=title, **kwargs)
 
 
     def __getitem__(self, k):
@@ -529,12 +531,12 @@ class transient_2d(object):
                            .to_datetime().strftime("%d-%m-%Y")
             end_dt = self.model.dis.tr.stressperiod_end[kper]\
                          .to_datetime().strftime("%d-%m-%Y")
+            
             if title is None:
-                ax.set_title('stress period {0:d}:{1:s} to {2:s}'.\
-                             format(kper,start_dt,end_dt))
-            else:
-                ax.set_title(title)
-            self[kper].plot(ax=ax)
+                title = 'stress period {0:d}:{1:s} to {2:s}'.\
+                        format(kper, start_dt, end_dt)
+
+            self[kper].plot(ax=ax, title=title)
             if filename_base is not None:
                 plt.savefig(filename_base+"_{0:05d}.png".format(kper))
                 plt.close(fig)
@@ -760,25 +762,38 @@ class util_2d(object):
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, title=None, **kwargs):
         '''
         How about some doc strings
         '''
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            s = 'Could not import matplotlib.  Must install matplotlib ' +\
+                ' in order to plot util_3d data.'
+            raise Exception(s)
         from flopy.plot.map import ModelMap
         
         if 'masked_values' in kwargs:
             masked_values = kwargs.pop('masked_values')
         else:
             masked_values = None
+        
+        if title is None:
+            title = self.name
             
         plotarray = self.array
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+        if ax is None:
+            fig = plt.figure()
+            ax = plt.subplot(1, 1, 1, aspect='equal')
+
         #--create ModelMap instance
         mm = ModelMap(ax=ax, dis=self.model.dis)
         mm.plot_array(plotarray, masked_values=masked_values, **kwargs)
-        mm.ax.set_title(self.name)
+        mm.ax.set_title(title)
 
 
     def to_shapefile(self, filename):
