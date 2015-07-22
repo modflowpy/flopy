@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 #from flopy.utils.util_array import util_2d
 
-def temporalreference_from_binary_headers(recordarray):
+def temporalreference_from_binary_headers(recordarray, verbose=False):
 
     ukper = np.unique(recordarray["kper"])
     totim = []
@@ -32,9 +32,10 @@ def temporalreference_from_binary_headers(recordarray):
     perlen = [totim[0]]
     perlen.extend(list(totim[1:] - totim[:-1]))
     perlen = np.array(perlen,dtype=np.float32)
-    print("LayerFile._build_tr(): assuming time units of days...")
-    tr = TemporalReference(np.array(perlen),np.zeros_like(nstp),
-                                   nstp,tsmult,4)
+    if verbose:
+        print('LayerFile._build_tr(): assuming time units of days...')
+    tr = TemporalReference(np.array(perlen), np.zeros_like(nstp),
+                                   nstp, tsmult, 4)
     return tr
 
 def spatialreference_from_gridspc_file(filename, lenuni=0):

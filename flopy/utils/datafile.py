@@ -115,9 +115,9 @@ class LayerFile(object):
         #--now that we read the data and know nrow and ncol,
         #--we can make a generic sr if needed
         if self.sr is None:
-            self.sr = flopy.utils.SpatialReference(np.ones(self.ncol), np.ones(self.nrow),0)
+            self.sr = flopy.utils.SpatialReference(np.ones(self.ncol), np.ones(self.nrow), 0)
         if self.tr is None:
-            self.tr = flopy.utils.reference.temporalreference_from_binary_headers(self.recordarray)
+            self.tr = flopy.utils.reference.temporalreference_from_binary_headers(self.recordarray, self.verbose)
         return
 
     def to_shapefile(self,filename,kstpkper=None, totim=None, mflay=None, attrib_name="lf_data"):
@@ -205,7 +205,7 @@ class LayerFile(object):
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()
         import flopy.plot.plotutil as pu
-        return pu._plot_array_helper(plotarray,self.sr,axes)
+        return pu._plot_array_helper(plotarray,self.sr, axes, **kwargs)
 
     def _build_index(self):
         """
