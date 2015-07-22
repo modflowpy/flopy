@@ -55,6 +55,11 @@ def _plot_array_helper(plotarray, sr, axes=None,
         dpi = kwargs.pop('dpi')
     else:
         dpi = None
+    
+    if 'fmt' in kwargs:
+        fmt = kwargs.pop('fmt')
+    else:
+        fmt = None
 
     #--reshape 2d arrays to 3d for convenience
     if len(plotarray.shape) == 2:
@@ -105,7 +110,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
         if contourdata:
             cl = mm.contour_array(plotarray[k], masked_values=masked_values,
                                   ax=axes[k], colors='k', levels=levels)
-            axes[k].clabel(cl)
+            axes[k].clabel(cl, fmt=fmt)
     
     if len(axes) == 1:
         axes = axes[0]
