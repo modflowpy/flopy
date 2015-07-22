@@ -256,7 +256,7 @@ class util_3d(object):
         '''
         How about some doc strings
         '''
-        from utils.flopy_io import write_grid_shapefile
+        from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
         for ilay in range(self.model.nlay):
             u2d = self[ilay]
@@ -490,7 +490,7 @@ class transient_2d(object):
         '''
         How about some doc strings
         '''
-        from utils.flopy_io import write_grid_shapefile
+        from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
         for kper in range(self.model.nper):
             u2d = self[kper]
@@ -757,7 +757,7 @@ class util_2d(object):
         '''
         How about some doc strings
         '''
-        from utils.flopy_io import write_grid_shapefile
+        from flopy.utils.flopy_io import write_grid_shapefile
         write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
 
     @staticmethod
