@@ -14,7 +14,9 @@ bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
 
 
-def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
+def _plot_array_helper(plotarray, sr, axes=None, 
+                       names=None, filenames=None, fignum=None, 
+                       **kwargs):
     try:
         import matplotlib.pyplot as plt
     except:
@@ -23,6 +25,11 @@ def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
         raise Exception(s)
 
     import flopy.plot.map as map
+    
+    if 'figsize' in kwargs:
+        figsize = kwargs.pop('figsize')
+    else:
+        figsize = None
 
     if 'masked_values' in kwargs:
         masked_values = kwargs.pop('masked_values')
@@ -43,15 +50,32 @@ def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
         levels = kwargs.pop('levels')
     else:
         levels = None
+    
+    if 'dpi' in kwargs:
+        dpi = kwargs.pop('dpi')
+    else:
+        dpi = None
 
     #--reshape 2d arrays to 3d for convenience
     if len(plotarray.shape) == 2:
         plotarray = plotarray.reshape((1, plotarray.shape[0], plotarray.shape[1]))
     
     if names is not None:
-        if not isinstance(names,list):
+        if not isinstance(names, list):
             names = [names]
         assert len(names) == plotarray.shape[0]
+    
+    if filenames is not None:
+        if not isinstance(filenames, list):
+            filenames = [filenames]
+        assert len(filenames) == plotarray.shape[0]
+    
+    if fignum is not None:
+        if not isinstance(fignum, list):
+            fignum = [fignum]
+        assert len(fignum) == plotarray.shape[0]
+    else:
+        fignum = np.arange(plotarray.shape[0])
 
     if axes is not None:
         assert len(axes) == plotarray.shape[0]
@@ -60,7 +84,7 @@ def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
     else:
         axes = []
         for k in range(plotarray.shape[0]):
-            fig = plt.figure()
+            fig = plt.figure(figsize=figsize, num=fignum[k])
             ax = plt.subplot(1, 1, 1, aspect='equal')
             if names is not None:
                 title = names[k]
@@ -72,6 +96,7 @@ def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
     cm = []
     mm = map.ModelMap(ax=axes[0], sr=sr)
     for k in range(plotarray.shape[0]):
+        fig = plt.figure(num=fignum[k])
         cm = mm.plot_array(plotarray[k], masked_values=masked_values,
                            ax=axes[k], **kwargs)
         if cb:
@@ -81,8 +106,18 @@ def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
             cl = mm.contour_array(plotarray[k], masked_values=masked_values,
                                   ax=axes[k], colors='k', levels=levels)
             axes[k].clabel(cl)
+    
     if len(axes) == 1:
         axes = axes[0]
+    
+    if filenames is not None:
+        for k in range(plotarray.shape[0]):
+            fig = plt.figure(num=fignum[k])
+            fig.savefig(filenames[k], dpi=dpi)
+            plt.close(fignum[k])
+        #--there will be nothing to return when done
+        axes = None
+        
     return axes
 
 

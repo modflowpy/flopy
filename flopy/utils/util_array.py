@@ -502,12 +502,13 @@ class transient_2d(object):
         '''
         How about some doc strings
         '''
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to plot transient_2d data.'
-            raise Exception(s)
+        import flopy.plot.plotutil as pu
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+        
         axes = []
         for kper in range(self.model.nper):
             start_dt = self.model.dis.tr.stressperiod_start[kper]\
@@ -516,13 +517,12 @@ class transient_2d(object):
                          .to_datetime().strftime("%d-%m-%Y")
             title = 'stress period {0:d}:{1:s} to {2:s}'.\
                     format(kper, start_dt, end_dt)
-            ax = self[kper].plot(ax=None, title=title, **kwargs)
-            #--need another way to do this
             if filename_base is not None:
-                plt.savefig(filename_base+"_{0:05d}.png".format(kper))
-                plt.close("all")
+                filenames = filename_base + '_{:05d}.{}'.format(kper, fext)
             else:
-                axes.append(ax)
+                filenames = None
+            axes.append(pu._plot_array_helper(self[kper].array, self.model.dis.sr, 
+                        names=title, filenames=filenames, fignum=kper, **kwargs))        
         return axes
 
     def __getitem__(self,kper):
