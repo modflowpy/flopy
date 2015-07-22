@@ -261,7 +261,7 @@ class util_3d(object):
         for ilay in range(self.model.nlay):
             u2d = self[ilay]
             array_dict[u2d.name] = u2d.array
-        write_grid_shapefile(filename,self.model.dis.sr,
+        write_grid_shapefile(filename, self.model.dis.sr,
                              array_dict)
 
 
@@ -272,7 +272,7 @@ class util_3d(object):
         import flopy.plot.plotutil as pu
         names = []
         [names.append('{} Layer {}'.format(self.name, k+1)) for k in range(self.shape[0])]
-        return pu._plot_array_helper(self.array, self.sr, names=names)
+        return pu._plot_array_helper(self.array, self.model.dis.sr, names=names, **kwargs)
 
 
     def __getitem__(self, k):
@@ -750,7 +750,7 @@ class util_2d(object):
         import flopy.plot.plotutil as pu
         if title is None:
             title = self.name
-        return pu._plot_array_helper(self.array, self.sr, names=title)
+        return pu._plot_array_helper(self.array, self.model.dis.sr, names=title, **kwargs)
 
 
     def to_shapefile(self, filename):

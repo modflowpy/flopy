@@ -29,6 +29,25 @@ def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
     else:
         masked_values = None
 
+    if 'contour' in kwargs:
+        contourdata = kwargs.pop('contour')
+    else:
+        contourdata = False
+
+    if 'colorbar' in kwargs:
+        cb = kwargs.pop('colorbar')
+    else:
+        cb = False
+    
+    if 'levels' in kwargs:
+        levels = kwargs.pop('levels')
+    else:
+        levels = None
+
+    #--reshape 2d arrays to 3d for convenience
+    if len(plotarray.shape) == 2:
+        plotarray = plotarray.reshape((1, plotarray.shape[0], plotarray.shape[1]))
+    
     if names is not None:
         if not isinstance(names,list):
             names = [names]
@@ -46,18 +65,22 @@ def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
             if names is not None:
                 title = names[k]
             else:
-                title = '{} Layer {}'.format("data", k+1)
+                title = '{} Layer {}'.format('data', k+1)
             ax.set_title(title)
             axes.append(ax)
 
+    cm = []
     mm = map.ModelMap(ax=axes[0], sr=sr)
     for k in range(plotarray.shape[0]):
-        cm = mm.plot_array(plotarray, masked_values=masked_values,
+        cm = mm.plot_array(plotarray[k], masked_values=masked_values,
                            ax=axes[k], **kwargs)
-        plt.colorbar(cm)
-        cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                              ax=axes[k],colors='k')
-        axes[k].clabel(cl)
+        if cb:
+            plt.colorbar(cm, ax=axes[k], shrink=0.5)
+        
+        if contourdata:
+            cl = mm.contour_array(plotarray[k], masked_values=masked_values,
+                                  ax=axes[k], colors='k', levels=levels)
+            axes[k].clabel(cl)
     if len(axes) == 1:
         axes = axes[0]
     return axes
