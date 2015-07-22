@@ -167,7 +167,7 @@ class LayerFile(object):
 
 
 
-    def plot_data(self,axes=None, kstpkper=None, totim=None, mflay=None, subplots=False, **kwargs):
+    def plot_data(self, axes=None, kstpkper=None, totim=None, mflay=None, **kwargs):
         '''
         Function for plotting a data array at a specific location
          in LayerFile instance.  Plots pcolormesh and contour and add colorbar
@@ -199,41 +199,13 @@ class LayerFile(object):
         Examples
         --------
         '''
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            s = 'Could not import matplotlib.  Must install matplotlib ' +\
-                ' in order to plot LayerFile data.'
-            raise Exception(s)
 
+        #--make sure we have a (lay,row,col) shape plotarray
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()
-        plotarray = np.ma.masked_where(plotarray < -999,plotarray)
-        import flopy.plot.map as map
-        if 'masked_values' in kwargs:
-            masked_values = kwargs.pop('masked_values')
-        else:
-            masked_values = None
-
-
-        if axes is not None:
-            assert len(axes) == plotarray.shape[0]
-        else:
-            axes = []
-            for k in range(plotarray.shape[0]):
-                fig = plt.figure()
-                ax = plt.subplot(1, 1, 1, aspect='equal')
-                axes.append(ax)
-        mm = map.ModelMap(ax=axes[0],sr=self.sr)
-        for k in range(plotarray.shape[0]):
-            title = '{} Layer {}'.format("LayerFile data", k+1)
-            cm = mm.plot_array(plotarray, masked_values=masked_values,
-                               ax=axes[k], **kwargs)
-            plt.colorbar(cm)
-            cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                  ax=axes[k],colors='k')
-            axes[k].clabel(cl)
+        import flopy.plot.plotutil as pu
+        return pu._plot_array_helper(plotarray,self.sr,axes)
 
     def _build_index(self):
         """

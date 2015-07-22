@@ -14,6 +14,56 @@ bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
 
 
+def _plot_array_helper(plotarray, sr, axes=None, names=None, **kwargs):
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        s = 'Could not import matplotlib.  Must install matplotlib ' +\
+            ' in order to plot LayerFile data.'
+        raise Exception(s)
+
+    import flopy.plot.map as map
+
+    if 'masked_values' in kwargs:
+        masked_values = kwargs.pop('masked_values')
+    else:
+        masked_values = None
+
+    if names is not None:
+        if not isinstance(names,list):
+            names = [names]
+        assert len(names) == plotarray.shape[0]
+
+    if axes is not None:
+        assert len(axes) == plotarray.shape[0]
+
+    #--prepare some axis objects for use
+    else:
+        axes = []
+        for k in range(plotarray.shape[0]):
+            fig = plt.figure()
+            ax = plt.subplot(1, 1, 1, aspect='equal')
+            if names is not None:
+                title = names[k]
+            else:
+                title = '{} Layer {}'.format("data", k+1)
+            ax.set_title(title)
+            axes.append(ax)
+
+    mm = map.ModelMap(ax=axes[0], sr=sr)
+    for k in range(plotarray.shape[0]):
+        cm = mm.plot_array(plotarray, masked_values=masked_values,
+                           ax=axes[k], **kwargs)
+        plt.colorbar(cm)
+        cl = mm.contour_array(plotarray[k], masked_values=masked_values,
+                              ax=axes[k],colors='k')
+        axes[k].clabel(cl)
+    if len(axes) == 1:
+        axes = axes[0]
+    return axes
+
+
+
 def rotate(x, y, theta, xorigin=0., yorigin=0.):
     """
     Given x and y array-like values calculate the rotation about an

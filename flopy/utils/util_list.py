@@ -487,6 +487,31 @@ class mflist(object):
                 values.append(v)
         return values
 
+    def plot(self,kper):
+        import flopy.plot.plotutil as pu
+        arr_dict = self.to_array(kper)
+        return pu._plot_array_helper(arr_dict.values(), self.sr, names=arr_dict.keys())
+
+    def to_shapefile(self,kper):
+        raise NotImplementedError()
+
+    def to_array(self,kper):
+        if "inode" in self.dtype.names:
+            raise NotImplementedError()
+        arrays = {}
+        for name in self.dtype.names[3:]:
+            arr = np.zeros((self.model.nlay,self.model.nrow,self.model.ncol))
+            arrays[name] = arr
+        if kper in self.data.keys():
+            sarr = self.data[kper]
+            for rec in sarr:
+                for name,arr in arrays.items():
+                    arr[rec['k'],rec['i'],rec['j']] += rec[name]
+        #--mask where zero?
+        for name,arr in arrays.items():
+            arrays[name] = np.ma.masked_where(arr==0,arr)
+        return arrays
+
 
 
 

@@ -265,28 +265,14 @@ class util_3d(object):
                              array_dict)
 
 
-    def plot(self, axes=None, **kwargs):
+    def plot(self, **kwargs):
         '''
         How about some doc strings
         '''
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            s = 'Could not import matplotlib.  Must install matplotlib ' +\
-                ' in order to plot util_3d data.'
-            raise Exception(s)
-        if axes is not None:
-            assert len(axes) == self.shape[0]
-            for k in range(self.shape[0]):
-                title = '{} Layer {}'.format(self.name, k+1)
-                self.util_2ds[k].plot(ax=axes[k], title=title, **kwargs)
-
-        else:
-            for k in range(self.shape[0]):
-                fig = plt.figure()
-                ax = plt.subplot(1, 1, 1, aspect='equal')
-                title = '{} layer {}'.format(self.name, k+1)
-                self.util_2ds[k].plot(ax=None, title=title, **kwargs)
+        import flopy.plot.plotutil as pu
+        names = []
+        [names.append('{} Layer {}'.format(self.name, k+1)) for k in range(self.shape[0])]
+        return pu._plot_array_helper(self.array, self.sr, names=names)
 
 
     def __getitem__(self, k):
@@ -512,7 +498,7 @@ class transient_2d(object):
         write_grid_shapefile(filename, self.model.dis.sr, array_dict)
 
 
-    def plot(self, filename_base=None, title=None, **kwargs):
+    def plot(self, filename_base=None, **kwargs):
         '''
         How about some doc strings
         '''
@@ -524,22 +510,17 @@ class transient_2d(object):
             raise Exception(s)
         axes = []
         for kper in range(self.model.nper):
-            fig = plt.figure()
-            ax = plt.subplot(1, 1, 1, aspect='equal')
             start_dt = self.model.dis.tr.stressperiod_start[kper]\
                            .to_datetime().strftime("%d-%m-%Y")
             end_dt = self.model.dis.tr.stressperiod_end[kper]\
                          .to_datetime().strftime("%d-%m-%Y")
-            
-            if title is None:
-                title = 'stress period {0:d}:{1:s} to {2:s}'.\
-                        format(kper, start_dt, end_dt)
-
-            self[kper].plot(ax=None, title=title, **kwargs)
+            title = 'stress period {0:d}:{1:s} to {2:s}'.\
+                    format(kper, start_dt, end_dt)
+            ax = self[kper].plot(ax=None, title=title, **kwargs)
             #--need another way to do this
             if filename_base is not None:
                 plt.savefig(filename_base+"_{0:05d}.png".format(kper))
-                plt.close(fig)
+                plt.close("all")
             else:
                 axes.append(ax)
         return axes
@@ -766,23 +747,10 @@ class util_2d(object):
         '''
         How about some doc strings
         '''
-        from flopy.plot.map import ModelMap
-        
-        if 'masked_values' in kwargs:
-            masked_values = kwargs.pop('masked_values')
-        else:
-            masked_values = None
-        
+        import flopy.plot.plotutil as pu
         if title is None:
             title = self.name
-            
-        plotarray = self.array
-
-        #--create ModelMap instance
-        mm = ModelMap(ax=ax, dis=self.model.dis)
-        mm.plot_array(plotarray, masked_values=masked_values, **kwargs)
-        mm.ax.set_title(title)
-
+        return pu._plot_array_helper(self.array, self.sr, names=title)
 
 
     def to_shapefile(self, filename):
