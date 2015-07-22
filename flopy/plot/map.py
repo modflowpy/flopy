@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
 from . import plotutil
-from .plotutil import bc_color_dict, rotate
+from .plotutil import bc_color_dict
 
 from flopy.utils import util_2d, util_3d, transient_2d
 
@@ -72,15 +72,7 @@ class ModelMap(object):
         else:
             self._extent = None
         
-        # # Create model extent
-        # if extent is None:
-        #     self.extent = self.sr.get_extent()
-        # else:
-        #     self.extent = extent
-
-        # Set axis limits
-        # self.ax.set_xlim(self.extent[0], self.extent[1])
-        # self.ax.set_ylim(self.extent[2], self.extent[3])
+        self.cmap = plotutil.viridis
 
         return
 
@@ -121,8 +113,11 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+        cmap = self.cmap
+        if "cmap" in kwargs.keys():
+            cmap = kwargs.pop("cmap")
         quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
-                                      **kwargs)
+                                 cmap=cmap, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
         return quadmesh
@@ -159,8 +154,11 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+        cmap = self.cmap
+        if "colors" in kwargs.keys():
+            cmap = None
         contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
-                                      plotarray, **kwargs)
+                                      plotarray, cmap=cmap, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
 
@@ -286,7 +284,7 @@ class ModelMap(object):
         else:
             c = color
         cmap = matplotlib.colors.ListedColormap(['0', c])
-        bounds=[0, 1, 2]
+        bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return quadmesh
@@ -445,7 +443,7 @@ class ModelMap(object):
         for p in pl:
             vlc = []
             #rotate data
-            x0r, y0r = rotate(p['x'], p['y'], self.sr.rotation, 0., self.sr.yedge[0])
+            x0r, y0r = self.sr.rotate(p['x'], p['y'], self.sr.rotation, 0., self.sr.yedge[0])
             x0r += self.sr.xul
             y0r += self.sr.yul - self.sr.yedge[0]
             #build polyline array

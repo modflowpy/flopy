@@ -533,7 +533,7 @@ class CellBudgetFile(object):
         elif imeth == 5:
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
-            for i in xrange(naux):
+            for i in range(naux):
                 temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
             if self.verbose: 
@@ -655,7 +655,7 @@ class CellBudgetFile(object):
         if text is not None:
             text16 = None
             for t in self.unique_record_names():
-                if text.upper() in t:
+                if text.encode().upper() in t:
                     text16 = t
                     break
             if text16 is None:
@@ -751,7 +751,7 @@ class CellBudgetFile(object):
         imeth = header['imeth'][0]
 
         t = header['text'][0]
-        s = 'Returning ' + t.strip() + ' as '
+        s = 'Returning ' + str(t).strip() + ' as '
 
         nlay = abs(header['nlay'][0])
         nrow = header['nrow'][0]
@@ -827,7 +827,7 @@ class CellBudgetFile(object):
             nauxp1 = binaryread(self.file, np.int32)
             naux = nauxp1 - 1
             l = [('node', np.int32), ('q', self.realtype)]
-            for i in xrange(naux):
+            for i in range(naux):
                 auxname = binaryread(self.file, str, charlen=16)
                 l.append( (auxname, self.realtype))
             dtype = np.dtype(l)                

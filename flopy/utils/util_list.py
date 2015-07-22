@@ -53,6 +53,7 @@ class mflist(object):
 
     def __init__(self, model, dtype, data=None):
         self.model = model
+        self.sr = self.model.dis.sr
         assert isinstance(dtype, np.dtype)
         self.__dtype = dtype
         self.__vtype = {}
@@ -487,13 +488,26 @@ class mflist(object):
                 values.append(v)
         return values
 
-    def plot(self,kper):
+    def plot(self,kper, **kwargs):
         import flopy.plot.plotutil as pu
         arr_dict = self.to_array(kper)
-        return pu._plot_array_helper(arr_dict.values(), self.sr, names=arr_dict.keys())
+        axes = []
+        for name,arr in arr_dict.items():
+            names = []
+            [names.append(name+"{0:3d}".format(k)) for k in range(arr.shape[0])]
+            ax = pu._plot_array_helper(arr, self.sr, names=names, **kwargs)
+            axes.append(ax)
+        return axes
 
-    def to_shapefile(self,kper):
-        raise NotImplementedError()
+    def to_shapefile(self, filename, kper):
+        import flopy.utils.flopy_io as fio
+        arrays = self.to_array(kper)
+        array_dict = {}
+        for name,array in arrays.items():
+            for k in range(array.shape[0]):
+                aname = name+"{0:03d}_{1:02d}".format(kper,k)
+                array_dict[aname] = array[k]
+        fio.write_grid_shapefile(filename, self.sr, array_dict)
 
     def to_array(self,kper):
         if "inode" in self.dtype.names:
@@ -507,11 +521,9 @@ class mflist(object):
             for rec in sarr:
                 for name,arr in arrays.items():
                     arr[rec['k'],rec['i'],rec['j']] += rec[name]
+
         #--mask where zero?
         for name,arr in arrays.items():
-            arrays[name] = np.ma.masked_where(arr==0,arr)
+            arrays[name] = np.atleast_3d(np.ma.masked_where(arr==0,arr)
+                                         .transpose()).transpose()
         return arrays
-
-
-
-

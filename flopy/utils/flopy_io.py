@@ -1,6 +1,7 @@
 """
 Module for exporting and importing flopy model attributes
 """
+import numpy as np
 from flopy.utils import util_2d,util_3d,transient_2d
 
 def results_to_netCDF(filename):
@@ -11,7 +12,7 @@ def grid_attributes_from_shapefile():
     raise NotImplementedError()
 
 
-def write_grid_shapefile(filename, sr, array_dict):
+def write_grid_shapefile(filename, sr, array_dict,nan_val=-1.0e10):
     """
     Write a grid shapefile array_dict attributes.
     Parameters
@@ -43,8 +44,16 @@ def write_grid_shapefile(filename, sr, array_dict):
     wr.field("column", "N", 10, 0)
 
     arrays = []
-    for name,array in array_dict.items():
+    names = list(array_dict.keys())
+    names.sort()
+    #for name,array in array_dict.items():
+    for name in names:
+        array = array_dict[name]
+        if array.ndim == 3:
+            assert array.shape[0] == 1
+            array = array[0,:,:]
         assert array.shape == (sr.nrow, sr.ncol)
+        array[np.where(np.isnan(array))] = nan_val
         wr.field(name,"N",20,12)
         arrays.append(array)
 

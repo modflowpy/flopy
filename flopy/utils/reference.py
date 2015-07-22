@@ -286,11 +286,12 @@ class SpatialReference(object):
 
     def get_vertices(self, i, j):
         pts = []
-        pts.append([self.xgrid[i, j], self.ygrid[i, j]])
-        pts.append([self.xgrid[i, j], self.ygrid[i+1, j]])
-        pts.append([self.xgrid[i, j+1], self.ygrid[i+1, j]])
-        pts.append([self.xgrid[i, j+1], self.ygrid[i, j]])
-        pts.append([self.xgrid[i, j], self.ygrid[i, j]])
+        xgrid, ygrid = self.xgrid, self.ygrid
+        pts.append([xgrid[i, j], ygrid[i, j]])
+        pts.append([xgrid[i, j], ygrid[i+1, j]])
+        pts.append([xgrid[i, j+1], ygrid[i+1, j]])
+        pts.append([xgrid[i, j+1], ygrid[i, j]])
+        pts.append([xgrid[i, j], ygrid[i, j]])
         return pts
 
 

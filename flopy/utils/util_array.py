@@ -254,7 +254,25 @@ class util_3d(object):
 
     def to_shapefile(self,filename):
         '''
-        How about some doc strings
+        Function for writing a shapefile (polygons).  Adds an
+            attribute for each util_2d in self.u2ds
+
+        Parameters
+        ----------
+        filename : shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
         '''
         from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
@@ -267,7 +285,24 @@ class util_3d(object):
 
     def plot(self, **kwargs):
         '''
-        How about some doc strings
+        Function for plotting
+
+        Parameters
+        ----------
+        a pile of **kwargs - just figure it out!
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
         '''
         import flopy.plot.plotutil as pu
         names = []
@@ -488,7 +523,25 @@ class transient_2d(object):
 
     def to_shapefile(self,filename):
         '''
-        How about some doc strings
+        Function for writing a shapefile (polygons). Adds an attribute for each
+            unique util_2d instance in self.data
+
+        Parameters
+        ----------
+        filename : shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
         '''
         from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
@@ -500,7 +553,28 @@ class transient_2d(object):
 
     def plot(self, filename_base=None, **kwargs):
         '''
-        How about some doc strings
+        Function for plotting
+
+        Parameters
+        ----------
+        filename_base : string
+            the base filename to append the kper number
+            to form a sequence of plots
+
+        a pile of **kwargs - just figure it out!
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
         '''
         import flopy.plot.plotutil as pu
         if 'file_extension' in kwargs:
@@ -743,9 +817,28 @@ class util_2d(object):
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
 
-    def plot(self, ax=None, title=None, **kwargs):
+    def plot(self, title=None, **kwargs):
         '''
-        How about some doc strings
+        Function for plotting
+
+        Parameters
+        ----------
+        title : string
+            the title of the axis object.  Uses self.name by default
+        a pile of **kwargs - just figure it out!
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
         '''
         import flopy.plot.plotutil as pu
         if title is None:
@@ -755,7 +848,24 @@ class util_2d(object):
 
     def to_shapefile(self, filename):
         '''
-        How about some doc strings
+        Function for writing a shapefile (polygons) of self.array
+
+        Parameters
+        ----------
+        filename : shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
         '''
         from flopy.utils.flopy_io import write_grid_shapefile
         write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
