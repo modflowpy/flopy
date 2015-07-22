@@ -17,7 +17,10 @@ def temporalreference_from_binary_headers(recordarray):
     for uk in ukper:
         uk_recarray = recordarray[recordarray["kper"] == uk]
         us = np.unique(uk_recarray["pertim"])
-        tm = (us[1] - us[0]) / (us[2] - us[1])
+        tm = 1.0
+        if us.shape[0] > 1:
+            tm = (us[1] / us[0]) - 1.0
+
         t = uk_recarray["totim"].max()
         n = uk_recarray["kstp"].max()
         totim.append(t)
