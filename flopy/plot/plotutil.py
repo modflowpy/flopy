@@ -49,21 +49,30 @@ def _plot_array_helper(plotarray, sr, axes=None,
     else:
         contourdata = False
 
+    if 'clabel' in kwargs:
+        clabel = kwargs.pop('clabel')
+    else:
+        clabel = False
+
     if 'colorbar' in kwargs:
         cb = kwargs.pop('colorbar')
     else:
         cb = False
 
     grid = False
-    if "grid" in kwargs:
+    if 'grid' in kwargs:
         grid = True
-        kwargs.pop("grid")
-
+        kwargs.pop('grid')
 
     if 'levels' in kwargs:
         levels = kwargs.pop('levels')
     else:
         levels = None
+
+    if 'colors' in kwargs:
+        colors = kwargs.pop('colors')
+    else:
+        colors = None
     
     if 'dpi' in kwargs:
         dpi = kwargs.pop('dpi')
@@ -73,7 +82,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
     if 'fmt' in kwargs:
         fmt = kwargs.pop('fmt')
     else:
-        fmt = None
+        fmt = '%1.3f'
     
     if 'mflay' in kwargs:
         i0 = int(kwargs.pop('mflay'))
@@ -119,12 +128,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
                 title = '{} Layer {}'.format('data', k+1)
             ax.set_title(title)
             axes.append(ax)
-
-    # -- this adversly affects the extents when masked_values
-    #    are passed because it includes values that may be excluded
-    #    later as part of masking (i.e., hnoflo, hdry, etc.)
-    #vmax, vmin = plotarray.max(), plotarray.min()
-    
+   
     cm = []
     mm = map.ModelMap(ax=axes[0], sr=sr)
     #for k in range(plotarray.shape[0]):
@@ -141,12 +145,13 @@ def _plot_array_helper(plotarray, sr, axes=None,
             cm = mm.plot_array(plotarray[k], masked_values=masked_values,
                                ax=axes[idx], **kwargs)
             if cb:
-                plt.colorbar(cm, ax=axes[k], shrink=0.5)
+                plt.colorbar(cm, ax=axes[idx], shrink=0.5)
 
             if contourdata:
                 cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                      ax=axes[idx], colors='k', levels=levels)
-                axes[idx].clabel(cl, fmt=fmt)
+                                      ax=axes[idx], colors=colors, levels=levels)
+                if clabel:
+                    axes[idx].clabel(cl, fmt=fmt)
             if grid:
                 mm.plot_grid(ax=axes[idx])
 
