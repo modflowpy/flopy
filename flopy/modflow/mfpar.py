@@ -222,7 +222,7 @@ class ModflowPar(object):
                     for iv in t[3:]:
                         try:
                             iz = int(np.int(iv))
-                            if iz > 0:
+                            if iz != 0:
                                 iarr.append(iz)
                         except:
                             break
