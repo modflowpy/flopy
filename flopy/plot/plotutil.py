@@ -59,6 +59,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
         grid = True
         kwargs.pop("grid")
 
+
     if 'levels' in kwargs:
         levels = kwargs.pop('levels')
     else:
@@ -119,7 +120,11 @@ def _plot_array_helper(plotarray, sr, axes=None,
             ax.set_title(title)
             axes.append(ax)
 
-    vmax, vmin = plotarray.max(), plotarray.min()
+    # -- this adversly affects the extents when masked_values
+    #    are passed because it includes values that may be excluded
+    #    later as part of masking (i.e., hnoflo, hdry, etc.)
+    #vmax, vmin = plotarray.max(), plotarray.min()
+    
     cm = []
     mm = map.ModelMap(ax=axes[0], sr=sr)
     #for k in range(plotarray.shape[0]):
@@ -134,7 +139,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
         else:
             fig = plt.figure(num=fignum[idx])
             cm = mm.plot_array(plotarray[k], masked_values=masked_values,
-                               ax=axes[idx], vmax=vmax, vmin=vmin, **kwargs)
+                               ax=axes[idx], **kwargs)
             if cb:
                 plt.colorbar(cm, ax=axes[k], shrink=0.5)
 
