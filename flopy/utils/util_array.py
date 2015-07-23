@@ -577,14 +577,24 @@ class transient_2d(object):
         --------
         '''
         import flopy.plot.plotutil as pu
+        
         if 'file_extension' in kwargs:
             fext = kwargs.pop('file_extension')
             fext = fext.replace('.', '')
         else:
             fext = 'png'
         
+        if 'kper' in kwargs:
+            k0 = int(kwargs.pop('kper'))
+            if k0+1 >= self.model.nper:
+                k0 = self.model.nper - 1
+            k1 = k0 + 1
+        else:
+            k0 = 0
+            k1 = self.model.nper
+        
         axes = []
-        for kper in range(self.model.nper):
+        for kper in range(k0, k1):
             start_dt = self.model.dis.tr.stressperiod_start[kper]\
                            .to_datetime().strftime("%d-%m-%Y")
             end_dt = self.model.dis.tr.stressperiod_end[kper]\

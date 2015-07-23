@@ -27,6 +27,13 @@ def _plot_array_helper(plotarray, sr, axes=None,
 
     import flopy.plot.map as map
     
+
+    #--reshape 2d arrays to 3d for convenience
+    if len(plotarray.shape) == 2:
+        plotarray = plotarray.reshape((1, plotarray.shape[0],
+                                       plotarray.shape[1]))
+
+    #--parse keyword arguments
     if 'figsize' in kwargs:
         figsize = kwargs.pop('figsize')
     else:
@@ -66,11 +73,15 @@ def _plot_array_helper(plotarray, sr, axes=None,
         fmt = kwargs.pop('fmt')
     else:
         fmt = None
-
-    #--reshape 2d arrays to 3d for convenience
-    if len(plotarray.shape) == 2:
-        plotarray = plotarray.reshape((1, plotarray.shape[0],
-                                       plotarray.shape[1]))
+    
+    if 'mflay' in kwargs:
+        i0 = int(kwargs.pop('mflay'))
+        if i0+1 >= plotarray.shape[0]:
+            i0 = plotarray.shape[0] - 1
+        i1 = i0 + 1
+    else:
+        i0 = 0
+        i1 = plotarray.shape[0]
     
     if names is not None:
         if not isinstance(names, list):
@@ -87,8 +98,9 @@ def _plot_array_helper(plotarray, sr, axes=None,
             fignum = [fignum]
         assert len(fignum) == plotarray.shape[0]
     else:
-        fignum = np.arange(plotarray.shape[0])
-
+        #fignum = np.arange(plotarray.shape[0])
+        fignum = np.arange(i0, i1)
+        
     show = True
     if axes is not None:
         assert len(axes) == plotarray.shape[0]
@@ -96,8 +108,9 @@ def _plot_array_helper(plotarray, sr, axes=None,
     #--prepare some axis objects for use
     else:
         axes = []
-        for k in range(plotarray.shape[0]):
-            fig = plt.figure(figsize=figsize, num=fignum[k])
+        #for k in range(plotarray.shape[0]):
+        for idx, k in enumerate(range(i0, i1)):
+            fig = plt.figure(figsize=figsize, num=fignum[idx])
             ax = plt.subplot(1, 1, 1, aspect='equal')
             if names is not None:
                 title = names[k]
@@ -109,7 +122,8 @@ def _plot_array_helper(plotarray, sr, axes=None,
     vmax, vmin = plotarray.max(), plotarray.min()
     cm = []
     mm = map.ModelMap(ax=axes[0], sr=sr)
-    for k in range(plotarray.shape[0]):
+    #for k in range(plotarray.shape[0]):
+    for idx, k in enumerate(range(i0, i1)):
         #--check that there is atleast one cell that is not masked
         count = plotarray[k].size - np.ma.getmask(plotarray[k]).sum()
         if count == 0:
@@ -118,27 +132,28 @@ def _plot_array_helper(plotarray, sr, axes=None,
             axes[k].set_xticks([])
             axes[k].set_yticks([])
         else:
-            fig = plt.figure(num=fignum[k])
+            fig = plt.figure(num=fignum[idx])
             cm = mm.plot_array(plotarray[k], masked_values=masked_values,
-                               ax=axes[k], vmax=vmax, vmin=vmin, **kwargs)
+                               ax=axes[idx], vmax=vmax, vmin=vmin, **kwargs)
             if cb:
                 plt.colorbar(cm, ax=axes[k], shrink=0.5)
 
             if contourdata:
                 cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                      ax=axes[k], colors='k', levels=levels)
-                axes[k].clabel(cl, fmt=fmt)
+                                      ax=axes[idx], colors='k', levels=levels)
+                axes[idx].clabel(cl, fmt=fmt)
             if grid:
-                mm.plot_grid(ax=axes[k])
+                mm.plot_grid(ax=axes[idx])
 
     if len(axes) == 1:
         axes = axes[0]
     
     if filenames is not None:
-        for k in range(plotarray.shape[0]):
-            fig = plt.figure(num=fignum[k])
+        #for k in range(plotarray.shape[0]):
+        for idx, k in enumerate(range(i0, i1)):
+            fig = plt.figure(num=fignum[idx])
             fig.savefig(filenames[k], dpi=dpi)
-            plt.close(fignum[k])
+            plt.close(fignum[idx])
         #--there will be nothing to return when done
         axes = None
     elif show:

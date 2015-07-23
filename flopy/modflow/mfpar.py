@@ -72,7 +72,9 @@ class ModflowPar(object):
             try:
                 self.zone = ModflowZon.load(zone.filename, model,
                                             ext_unit_dict=ext_unit_dict)
-                sys.stdout.write('   {} package load...success\n'.format(self.zone.name[0]))
+                if model.verbose:
+                    sys.stdout.write('   {} package load...success\n'\
+                              .format(self.zone.name[0]))
                 ext_unit_dict.pop(zone_key)
                 model.remove_package("ZONE")
             except BaseException as o:
@@ -115,7 +117,9 @@ class ModflowPar(object):
             try:
                 self.mult = ModflowMlt.load(mult.filename, model,
                                             ext_unit_dict=ext_unit_dict)
-                sys.stdout.write('   {} package load...success\n'.format(self.mult.name[0]))
+                if model.verbose:
+                    sys.stdout.write('   {} package load...success\n'\
+                              .format(self.mult.name[0]))
                 ext_unit_dict.pop(mult_key)
                 model.remove_package("MULT")
             except BaseException as o:
@@ -160,7 +164,9 @@ class ModflowPar(object):
             try:
                 self.pval = ModflowPval.load(pval.filename, model,
                                              ext_unit_dict=ext_unit_dict)
-                sys.stdout.write('   {} package load...success\n'.format(self.pval.name[0]))
+                if model.verbose:
+                    sys.stdout.write('   {} package load...success\n'\
+                              .format(self.pval.name[0]))
                 ext_unit_dict.pop(pval_key)
                 model.remove_package("PVAL")
             except BaseException as o:
