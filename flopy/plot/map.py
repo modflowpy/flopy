@@ -72,7 +72,9 @@ class ModelMap(object):
         else:
             self._extent = None
         
-        self.cmap = plotutil.viridis
+        #--why is this non-default color scale used?? 
+        #  This should be passed as a kwarg by the user to the indivudual plotting method.
+        #self.cmap = plotutil.viridis
 
         return
 
@@ -113,11 +115,8 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        cmap = self.cmap
-        if "cmap" in kwargs.keys():
-            cmap = kwargs.pop("cmap")
         quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
-                                 cmap=cmap, **kwargs)
+                                 **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
         return quadmesh
@@ -154,11 +153,12 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        cmap = self.cmap
-        if "colors" in kwargs.keys():
+        if 'colors' in kwargs.keys():
+            if 'cmap' in kwargs.keys():
+                cmap = kwargs.pop('cmap')
             cmap = None
         contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
-                                      plotarray, cmap=cmap, **kwargs)
+                                      plotarray, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
 
