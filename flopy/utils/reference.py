@@ -358,8 +358,8 @@ class TemporalReference(object):
         self.tsmult = tsmult
 
         if True in steady:
-            #raise NotImplementedError("temporalReference: not dealing wth steady state yet")
-            print("temporalReference warning: not dealing wth steady state yet")
+            #raise NotImplementedError("temporalReference: not dealing with steady state yet")
+            print("temporalReference warning: not dealing with steady state yet")
         return
 
     def __repr__(self):

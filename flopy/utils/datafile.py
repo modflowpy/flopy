@@ -167,7 +167,8 @@ class LayerFile(object):
 
 
 
-    def plot_data(self, axes=None, kstpkper=None, totim=None, mflay=None, **kwargs):
+    def plot_data(self, axes=None, kstpkper=None, totim=None, mflay=None, 
+                  filename_base=None, **kwargs):
         '''
         Function for plotting a data array at a specific location
          in LayerFile instance.  Plots pcolormesh and contour and add colorbar
@@ -200,12 +201,34 @@ class LayerFile(object):
         --------
         '''
 
+        
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+               
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0+1 >= self.nlay:
+                    i0 = self.nlay - 1
+                i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = self.nlay
+            filenames = []
+            [filenames.append('{}_Layer{}.{}'.format(filename_base, k+1, fext)) for k in range(i0, i1)]
+
         #--make sure we have a (lay,row,col) shape plotarray
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()
         import flopy.plot.plotutil as pu
-        return pu._plot_array_helper(plotarray,self.sr, axes, **kwargs)
+        return pu._plot_array_helper(plotarray, self.sr, axes, 
+                                     filenames=filenames, 
+                                     mflay=mflay, **kwargs)
 
     def _build_index(self):
         """

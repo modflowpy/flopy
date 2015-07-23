@@ -283,7 +283,7 @@ class util_3d(object):
                              array_dict)
 
 
-    def plot(self, **kwargs):
+    def plot(self, filename_base=None, mflay=None, **kwargs):
         '''
         Function for plotting
 
@@ -305,9 +305,29 @@ class util_3d(object):
         --------
         '''
         import flopy.plot.plotutil as pu
+        
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+        
         names = []
         [names.append('{} Layer {}'.format(self.name, k+1)) for k in range(self.shape[0])]
-        return pu._plot_array_helper(self.array, self.model.dis.sr, names=names, **kwargs)
+        
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0+1 >= self.shape[0]:
+                    i0 = self.shape[0] - 1
+                i1 = i0 + 1
+            filenames = []
+            [filenames.append('{}_{}_Layer{}.{}'.format(filename_base, self.name, k+1, fext)) for k in range(i0, i1)]
+        
+        return pu._plot_array_helper(self.array, self.model.dis.sr, 
+                                     names=names, filenames=filenames, 
+                                     mflay=mflay, **kwargs)
 
 
     def __getitem__(self, k):
@@ -594,19 +614,19 @@ class transient_2d(object):
             k1 = self.model.nper
         
         axes = []
-        for kper in range(k0, k1):
+        for idx, kper in enumerate(range(k0, k1)):
             start_dt = self.model.dis.tr.stressperiod_start[kper]\
                            .to_datetime().strftime("%d-%m-%Y")
             end_dt = self.model.dis.tr.stressperiod_end[kper]\
                          .to_datetime().strftime("%d-%m-%Y")
             title = 'stress period {0:d}:{1:s} to {2:s}'.\
-                    format(kper, start_dt, end_dt)
+                    format(kper+1, start_dt, end_dt)
             if filename_base is not None:
-                filenames = filename_base + '_{:05d}.{}'.format(kper, fext)
+                filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
             else:
-                filenames = None
+                filename = None
             axes.append(pu._plot_array_helper(self[kper].array, self.model.dis.sr, 
-                        names=title, filenames=filenames, fignum=kper, **kwargs))        
+                        names=title, filenames=filename, fignum=kper, **kwargs))        
         return axes
 
     def __getitem__(self,kper):
@@ -827,7 +847,7 @@ class util_2d(object):
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
 
-    def plot(self, title=None, **kwargs):
+    def plot(self, title=None, filename_base=None, **kwargs):
         '''
         Function for plotting
 
@@ -853,7 +873,19 @@ class util_2d(object):
         import flopy.plot.plotutil as pu
         if title is None:
             title = self.name
-        return pu._plot_array_helper(self.array, self.model.dis.sr, names=title, **kwargs)
+        
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+            
+        filename = None
+        if filename_base is not None:
+            filename = '{}_{}.{}'.format(filename_base, self.name, fext)
+        
+        return pu._plot_array_helper(self.array, self.model.dis.sr, 
+                                     names=title, filenames=filename, **kwargs)
 
 
     def to_shapefile(self, filename):

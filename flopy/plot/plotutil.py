@@ -16,8 +16,8 @@ bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
 
 
 def _plot_array_helper(plotarray, sr, axes=None, 
-                       names=None, filenames=None, fignum=None, 
-                       **kwargs):
+                       names=None, filenames=None, fignum=None,
+                       mflay=None, **kwargs):
     try:
         import matplotlib.pyplot as plt
     except:
@@ -44,6 +44,11 @@ def _plot_array_helper(plotarray, sr, axes=None,
     else:
         masked_values = None
 
+    if 'pcolor' in kwargs:
+        pcolor = kwargs.pop('pcolor')
+    else:
+        pcolor = True
+
     if 'contour' in kwargs:
         contourdata = kwargs.pop('contour')
     else:
@@ -59,10 +64,10 @@ def _plot_array_helper(plotarray, sr, axes=None,
     else:
         cb = False
 
-    grid = False
     if 'grid' in kwargs:
-        grid = True
-        kwargs.pop('grid')
+        grid = kwargs.pop('grid')
+    else:
+        grid = False
 
     if 'levels' in kwargs:
         levels = kwargs.pop('levels')
@@ -72,7 +77,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
     if 'colors' in kwargs:
         colors = kwargs.pop('colors')
     else:
-        colors = None
+        colors = 'black'
     
     if 'dpi' in kwargs:
         dpi = kwargs.pop('dpi')
@@ -84,8 +89,8 @@ def _plot_array_helper(plotarray, sr, axes=None,
     else:
         fmt = '%1.3f'
     
-    if 'mflay' in kwargs:
-        i0 = int(kwargs.pop('mflay'))
+    if mflay is not None:
+        i0 = int(mflay)
         if i0+1 >= plotarray.shape[0]:
             i0 = plotarray.shape[0] - 1
         i1 = i0 + 1
@@ -101,7 +106,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
     if filenames is not None:
         if not isinstance(filenames, list):
             filenames = [filenames]
-        assert len(filenames) == plotarray.shape[0]
+        assert len(filenames) == (i1 - i0)
     
     if fignum is not None:
         if not isinstance(fignum, list):
@@ -111,10 +116,12 @@ def _plot_array_helper(plotarray, sr, axes=None,
         #fignum = np.arange(plotarray.shape[0])
         fignum = np.arange(i0, i1)
         
-    show = True
+    #show = True
     if axes is not None:
+        if not isinstance(axes, list):
+            axes = [axes]
         assert len(axes) == plotarray.shape[0]
-        show = False
+        #show = False
     #--prepare some axis objects for use
     else:
         axes = []
@@ -125,7 +132,10 @@ def _plot_array_helper(plotarray, sr, axes=None,
             if names is not None:
                 title = names[k]
             else:
-                title = '{} Layer {}'.format('data', k+1)
+                klay = k
+                if mflay is not None:
+                    klay = int(mflay)
+                title = '{} Layer {}'.format('data', klay+1)
             ax.set_title(title)
             axes.append(ax)
    
@@ -142,10 +152,11 @@ def _plot_array_helper(plotarray, sr, axes=None,
             axes[k].set_yticks([])
         else:
             fig = plt.figure(num=fignum[idx])
-            cm = mm.plot_array(plotarray[k], masked_values=masked_values,
-                               ax=axes[idx], **kwargs)
-            if cb:
-                plt.colorbar(cm, ax=axes[idx], shrink=0.5)
+            if pcolor:
+                cm = mm.plot_array(plotarray[k], masked_values=masked_values,
+                                   ax=axes[idx], **kwargs)
+                if cb:
+                    plt.colorbar(cm, ax=axes[idx], shrink=0.5)
 
             if contourdata:
                 cl = mm.contour_array(plotarray[k], masked_values=masked_values,
@@ -162,12 +173,12 @@ def _plot_array_helper(plotarray, sr, axes=None,
         #for k in range(plotarray.shape[0]):
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            fig.savefig(filenames[k], dpi=dpi)
+            fig.savefig(filenames[idx], dpi=dpi)
             plt.close(fignum[idx])
         #--there will be nothing to return when done
         axes = None
-    elif show:
-        plt.show()
+    #elif show:
+    #    plt.show()
     return axes
 
 
