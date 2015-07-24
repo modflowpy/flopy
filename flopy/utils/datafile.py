@@ -3,8 +3,9 @@ Module to read MODFLOW output files.  The module contains shared
 abstract classes that should not be directly accessed.
 
 """
-
+from __future__ import print_function
 import numpy as np
+import flopy.utils
 
 class Header():
     """
@@ -33,9 +34,9 @@ class Header():
         else:
             self.dtype = None
             self.header = None
-            print 'Specified {0} type is not available. Available types are:'.format(self.header_type)
+            print('Specified {0} type is not available. Available types are:'.format(self.header_type))
             for idx, t in enumerate(self.header_types):
-                print '  {0} {1}'.format(idx+1, t)
+                print('  {0} {1}'.format(idx+1, t))
         return
 
     def get_dtype(self):
@@ -66,7 +67,7 @@ class LayerFile(object):
     classes are formed.  LayerFile This class should not be instantiated directly.
 
     """
-    def __init__(self, filename, precision, verbose):
+    def __init__(self, filename, precision, verbose, kwargs):
         self.filename = filename
         self.precision = precision
         self.verbose = verbose
@@ -85,11 +86,149 @@ class LayerFile(object):
             self.realtype = np.float64
         else:
             raise Exception('Unknown precision specified: ' + precision)
-        
+
+        self.model = None
+        self.dis = None
+        self.sr = None
+        self.tr = None
+        if "model" in kwargs.keys():
+            self.model = kwargs.pop("model")
+            self.sr = self.model.dis.sr
+            self.tr = self.model.dis.tr
+            self.dis = self.model.dis
+        if "dis" in kwargs.keys():
+            self.dis = kwargs.pop("dis")
+            self.sr = self.dis.sr
+            self.tr = self.dis.tr
+        if "sr" in kwargs.keys():
+            self.sr = kwargs.pop("sr")
+        if "tr" in kwargs.keys():
+            self.tr = kwargs.pop("tr")
+
+        if len(kwargs.keys()) > 0:
+            args = ','.join(kwargs.keys())
+            raise Exception("LayerFile error: unrecognized kwargs: "+args)
+
         #read through the file and build the pointer index
         self._build_index()
+
+        #--now that we read the data and know nrow and ncol,
+        #--we can make a generic sr if needed
+        if self.sr is None:
+            self.sr = flopy.utils.SpatialReference(np.ones(self.ncol), np.ones(self.nrow), 0)
+        if self.tr is None:
+            self.tr = flopy.utils.reference.temporalreference_from_binary_headers(self.recordarray, self.verbose)
         return
-   
+
+    def to_shapefile(self,filename,kstpkper=None, totim=None, mflay=None, attrib_name="lf_data"):
+       '''
+        Function for writing a shapefile of 2-D data array at a specific location
+         in LayerFile instance.
+
+        Parameters
+        ----------
+        filename : string
+            name of shapefile to write
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper).
+            These are zero-based kstp and kper values.
+        totim : float
+            The simulation time.
+        mflay : integer
+           MODFLOW zero-based layer number to return.  If None, then layer 1
+           will be written
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+
+       plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
+                                                totim=totim, mflay=mflay)
+                                                .transpose()).transpose()
+       if mflay != None:
+           attrib_dict = {attrib_name+"{0:03d}".format(mflay):plotarray[0,:,:]}
+       else:
+           attrib_dict = {}
+           for k in range(plotarray.shape[0]):
+               name = attrib_name+"{0:03d}".format(k)
+               attrib_dict[name] = plotarray[k]
+       from flopy.utils.flopy_io import write_grid_shapefile
+       write_grid_shapefile(filename, self.sr, attrib_dict)
+
+
+
+    def plot_data(self, axes=None, kstpkper=None, totim=None, mflay=None, 
+                  filename_base=None, **kwargs):
+        '''
+        Function for plotting a data array at a specific location
+         in LayerFile instance.  Plots pcolormesh and contour and add colorbar
+
+        Parameters
+        ----------
+        axes : list(matplotlib axis)
+            a list of nlay axis instances to plot on.  If None, generate separate
+            for each layer
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper).
+            These are zero-based kstp and kper values.
+        totim : float
+            The simulation time.
+        mflay : integer
+           MODFLOW zero-based layer number to return.  If None, then all
+           all layers will be included. (Default is None.)
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+
+        
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+               
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0+1 >= self.nlay:
+                    i0 = self.nlay - 1
+                i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = self.nlay
+            filenames = []
+            [filenames.append('{}_Layer{}.{}'.format(filename_base, k+1, fext)) for k in range(i0, i1)]
+
+        #--make sure we have a (lay,row,col) shape plotarray
+        plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
+                                                totim=totim, mflay=mflay)
+                                                .transpose()).transpose()
+        import flopy.plot.plotutil as pu
+        return pu._plot_array_helper(plotarray, self.sr, axes, 
+                                     filenames=filenames, 
+                                     mflay=mflay, **kwargs)
 
     def _build_index(self):
         """
@@ -105,10 +244,10 @@ class LayerFile(object):
 
         """
         for header in self.recordarray:
-            print header
+            print(header)
         return
     
-    def _get_data_array(self, kstp=0, kper=0, totim=0):
+    def _get_data_array(self, totim=0):
         """
         Get the three dimensional data array for the
         specified kstp and kper value or totim value.
@@ -117,10 +256,7 @@ class LayerFile(object):
 
         if totim > 0.:
             keyindices = np.where((self.recordarray['totim'] == totim))[0]
-        elif kstp > 0 and kper > 0:
-            keyindices = np.where(
-                                  (self.recordarray['kstp'] == kstp) &
-                                  (self.recordarray['kper'] == kper))[0]
+
         else:
             raise Exception('Data not found...')
 
@@ -132,7 +268,7 @@ class LayerFile(object):
             ipos = self.iposarray[idx]
             ilay = self.recordarray['ilay'][idx]
             if self.verbose:
-                print 'Byte position in file: {0}'.format(ipos)
+                print('Byte position in file: {0}'.format(ipos))
             self.file.seek(ipos, 0)
             data[ilay - 1, :, :] = self._read_data()
         return data
@@ -165,7 +301,8 @@ class LayerFile(object):
             kstpkper.append((kstp - 1, kper - 1))
         return kstpkper
 
-    def get_data(self, kstpkper=(0, 0), idx=None, totim=0, mflay=None):
+
+    def get_data(self, kstpkper=None, idx=None, totim=None, mflay=None):
         """
         Get data from the file for the specified conditions.
 
@@ -193,17 +330,27 @@ class LayerFile(object):
 
         Notes
         -----
-
+        if both kstpkper and totim are None, will return the last entry
         Examples
         --------
 
         """
         # One-based kstp and kper for pulling out of recarray
-        kstp1 = kstpkper[0] + 1
-        kper1 = kstpkper[1] + 1
-        if idx is not None:
-            totim = self.recordarray['totim'][idx]
-        data = self._get_data_array(kstp1, kper1, totim)
+        if kstpkper is not None:
+            kstp1 = kstpkper[0] + 1
+            kper1 = kstpkper[1] + 1
+
+            totim1 = self.recordarray[np.where(
+                                  (self.recordarray['kstp'] == kstp1) &
+                                  (self.recordarray['kper'] == kper1))]["totim"][0]
+        elif totim is not None:
+            totim1 = totim
+        elif idx is not None:
+            totim1 = self.recordarray['totim'][idx]
+        else:
+            totim1 =self.times[-1]
+
+        data = self._get_data_array(totim1)
         if mflay is None:
             return data
         else:

@@ -12,7 +12,7 @@ import os
 import shutil
 import copy
 import numpy as np
-from flopy.utils.binaryfile import BinaryHeader
+import flopy.utils
 VERBOSE = False
 
 
@@ -251,6 +251,85 @@ class util_3d(object):
                 model.external_path, self.name_base.replace(' ', '_'))
         self.util_2ds = self.build_2d_instances()
 
+
+    def to_shapefile(self,filename):
+        '''
+        Function for writing a shapefile (polygons).  Adds an
+            attribute for each util_2d in self.u2ds
+
+        Parameters
+        ----------
+        filename : shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+        from flopy.utils.flopy_io import write_grid_shapefile
+        array_dict = {}
+        for ilay in range(self.model.nlay):
+            u2d = self[ilay]
+            array_dict[u2d.name] = u2d.array
+        write_grid_shapefile(filename, self.model.dis.sr,
+                             array_dict)
+
+
+    def plot(self, filename_base=None, mflay=None, **kwargs):
+        '''
+        Function for plotting
+
+        Parameters
+        ----------
+        a pile of **kwargs - just figure it out!
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+        import flopy.plot.plotutil as pu
+        
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+        
+        names = []
+        [names.append('{} Layer {}'.format(self.name, k+1)) for k in range(self.shape[0])]
+        
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0+1 >= self.shape[0]:
+                    i0 = self.shape[0] - 1
+                i1 = i0 + 1
+            filenames = []
+            [filenames.append('{}_{}_Layer{}.{}'.format(filename_base, self.name, k+1, fext)) for k in range(i0, i1)]
+        
+        return pu._plot_array_helper(self.array, self.model.dis.sr, 
+                                     names=names, filenames=filenames, 
+                                     mflay=mflay, **kwargs)
+
+
     def __getitem__(self, k):
         if isinstance(k, int):
             return self.util_2ds[k]
@@ -361,6 +440,7 @@ class util_3d(object):
             return util_3d(self.model,self.shape,self.dtype,new_u2ds,
                            self.name,self.fmtin,self.cnstnt,self.iprn,
                            self.locat)
+
 #class transient_2d((with_metaclass(meta_interceptor, object))):
 class transient_2d(object):
     """
@@ -456,9 +536,110 @@ class transient_2d(object):
         self.transient_2ds = self.build_transient_sequence()
 
     def get_zero_2d(self, kper):
-        name = self.name_base + str(kper + 1) + "(filled zero)"
+        name = self.name_base + str(kper + 1) + '(filled zero)'
         return util_2d(self.model, self.shape,
                        self.dtype, 0.0, name=name).get_file_entry()
+
+
+    def to_shapefile(self,filename):
+        '''
+        Function for writing a shapefile (polygons). Adds an attribute for each
+            unique util_2d instance in self.data
+
+        Parameters
+        ----------
+        filename : shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+        from flopy.utils.flopy_io import write_grid_shapefile
+        array_dict = {}
+        for kper in range(self.model.nper):
+            u2d = self[kper]
+            array_dict[u2d.name] = u2d.array
+        write_grid_shapefile(filename, self.model.dis.sr, array_dict)
+
+
+    def plot(self, filename_base=None, **kwargs):
+        '''
+        Function for plotting
+
+        Parameters
+        ----------
+        filename_base : string
+            the base filename to append the kper number
+            to form a sequence of plots
+
+        a pile of **kwargs - just figure it out!
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+        import flopy.plot.plotutil as pu
+        
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+        
+        if 'kper' in kwargs:
+            k0 = int(kwargs.pop('kper'))
+            if k0+1 >= self.model.nper:
+                k0 = self.model.nper - 1
+            k1 = k0 + 1
+        else:
+            k0 = 0
+            k1 = self.model.nper
+        
+        axes = []
+        for idx, kper in enumerate(range(k0, k1)):
+            start_dt = self.model.dis.tr.stressperiod_start[kper]\
+                           .to_datetime().strftime("%d-%m-%Y")
+            end_dt = self.model.dis.tr.stressperiod_end[kper]\
+                         .to_datetime().strftime("%d-%m-%Y")
+            title = 'stress period {0:d}:{1:s} to {2:s}'.\
+                    format(kper+1, start_dt, end_dt)
+            if filename_base is not None:
+                filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
+            else:
+                filename = None
+            axes.append(pu._plot_array_helper(self[kper].array, self.model.dis.sr, 
+                        names=title, filenames=filename, fignum=kper, **kwargs))        
+        return axes
+
+    def __getitem__(self,kper):
+        if kper in list(self.transient_2ds.keys()):
+            return self.transient_2ds[kper]
+        elif kper < min(self.transient_2ds.keys()):
+            return self.get_zero_2d(kper)
+        else:
+            for i in range(kper,0,-1):
+                if i in list(self.transient_2ds.keys()):
+                    return self.transient_2ds[i]
+            raise Exception("transient_2d.__getitem__(): error:" +\
+                            " could find an entry before kper {0:d}".format(kper))
 
     def get_kper_entry(self, kper):
         """get the file entry info for a given kper
@@ -665,6 +846,71 @@ class util_2d(object):
 
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
+
+    def plot(self, title=None, filename_base=None, **kwargs):
+        '''
+        Function for plotting
+
+        Parameters
+        ----------
+        title : string
+            the title of the axis object.  Uses self.name by default
+        a pile of **kwargs - just figure it out!
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+        import flopy.plot.plotutil as pu
+        if title is None:
+            title = self.name
+        
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+            
+        filename = None
+        if filename_base is not None:
+            filename = '{}_{}.{}'.format(filename_base, self.name, fext)
+        
+        return pu._plot_array_helper(self.array, self.model.dis.sr, 
+                                     names=title, filenames=filename, **kwargs)
+
+
+    def to_shapefile(self, filename):
+        '''
+        Function for writing a shapefile (polygons) of self.array
+
+        Parameters
+        ----------
+        filename : shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        '''
+        from flopy.utils.flopy_io import write_grid_shapefile
+        write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
 
     @staticmethod
     def get_default_numpy_fmt(dtype):

@@ -331,10 +331,10 @@ class Modflow(BaseModel):
                 sys.stdout.write('   {:4s} package load...success\n'
                                  .format(pck.name[0]))
             ext_unit_dict.pop(dis_key)
-        except:
+        except Exception as e:
             s = 'Could not read discretization package: {}. Stopping...'\
                 .format(os.path.basename(dis.filename))
-            raise Exception(s)
+            raise Exception(s + " " + str(e))
 
         if load_only is None:
             load_only = []

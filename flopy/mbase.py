@@ -630,6 +630,12 @@ class Package(object):
         newdtype = np.dtype(newdtype)
         return newdtype
 
+    def plot(self, *args, **kwargs):
+        self.stress_period_data.plot(*args, **kwargs)
+
+    def to_shapfile(self, *args, **kwargs):
+        self.stress_period_data.to_shapefile(*args, **kwargs)
+
     def webdoc(self):
         if self.parent.version == 'mf2k':
             wb.open('http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)

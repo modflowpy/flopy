@@ -53,6 +53,7 @@ class mflist(object):
 
     def __init__(self, model, dtype, data=None):
         self.model = model
+        self.sr = self.model.dis.sr
         assert isinstance(dtype, np.dtype)
         self.__dtype = dtype
         self.__vtype = {}
@@ -352,8 +353,16 @@ class mflist(object):
                 itmp = -1
                 kper_vtype = int
 
-            f.write(" {0:9d} {1:9d} # stress period {2:d}\n".format(itmp,
-                                                                    0, kper))
+            if self.model.dis is not None:
+                start_dt = self.model.dis.tr.stressperiod_start[kper]\
+                           .to_datetime().strftime("%d-%m-%Y")
+                end_dt = self.model.dis.tr.stressperiod_end[kper]\
+                             .to_datetime().strftime("%d-%m-%Y")
+                f.write(" {0:9d} {1:9d} # stress period {2:d}:{3:s} to {4:s}\n"
+                        .format(itmp,0, kper,start_dt,end_dt))
+            else:
+                f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
+                        .format(itmp,0, kper))
 
             if (kper_vtype == np.recarray):
                 name = f.name
@@ -479,6 +488,42 @@ class mflist(object):
                 values.append(v)
         return values
 
+    def plot(self,kper, **kwargs):
+        import flopy.plot.plotutil as pu
+        arr_dict = self.to_array(kper)
+        axes = []
+        for name,arr in arr_dict.items():
+            names = []
+            [names.append(name+"{0:3d}".format(k)) for k in range(arr.shape[0])]
+            ax = pu._plot_array_helper(arr, self.sr, names=names, **kwargs)
+            axes.append(ax)
+        return axes
 
+    def to_shapefile(self, filename, kper):
+        import flopy.utils.flopy_io as fio
+        arrays = self.to_array(kper)
+        array_dict = {}
+        for name,array in arrays.items():
+            for k in range(array.shape[0]):
+                aname = name+"{0:03d}_{1:02d}".format(kper,k)
+                array_dict[aname] = array[k]
+        fio.write_grid_shapefile(filename, self.sr, array_dict)
 
+    def to_array(self,kper):
+        if "inode" in self.dtype.names:
+            raise NotImplementedError()
+        arrays = {}
+        for name in self.dtype.names[3:]:
+            arr = np.zeros((self.model.nlay,self.model.nrow,self.model.ncol))
+            arrays[name] = arr
+        if kper in self.data.keys():
+            sarr = self.data[kper]
+            for rec in sarr:
+                for name,arr in arrays.items():
+                    arr[rec['k'],rec['i'],rec['j']] += rec[name]
 
+        #--mask where zero?
+        for name,arr in arrays.items():
+            arrays[name] = np.atleast_3d(np.ma.masked_where(arr==0,arr)
+                                         .transpose()).transpose()
+        return arrays

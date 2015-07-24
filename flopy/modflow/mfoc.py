@@ -229,7 +229,10 @@ class ModflowOc(Package):
                        .format(self.unit_number[4]))
 
         if self.compact:
-            f_oc.write('COMPACT BUDGET FILES')
+            f_oc.write('COMPACT BUDGET FILES\n')
+        
+        #--add a line separator between header and stress
+        #  period data
         f_oc.write('\n')
 
 
@@ -513,6 +516,9 @@ class ModflowOc(Package):
                     #--update iperoc and itsoc
                     iperoc = int(lnlst[1])
                     itsoc = int(lnlst[3])
+                    #--do not used data that exceeds nper
+                    if iperoc > nper:
+                        break
                     #--add a empty list if necessary
                     iempty = False
                     if iperoc != iperoc1:
