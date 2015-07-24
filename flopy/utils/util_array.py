@@ -312,8 +312,7 @@ class util_3d(object):
         else:
             fext = 'png'
         
-        names = []
-        [names.append('{} Layer {}'.format(self.name, k+1)) for k in range(self.shape[0])]
+        names = ['{} Layer {}'.format(self.name, k+1) for k in range(self.shape[0])]
         
         filenames = None
         if filename_base is not None:
@@ -322,9 +321,9 @@ class util_3d(object):
                 if i0+1 >= self.shape[0]:
                     i0 = self.shape[0] - 1
                 i1 = i0 + 1
-            filenames = []
-            [filenames.append('{}_{}_Layer{}.{}'.format(filename_base, self.name, k+1, fext)) for k in range(i0, i1)]
-        
+            filenames = ['{}_{}_Layer{}.{}'.format(filename_base, self.name,
+                                                   k+1, fext) for k in range(i0, i1)]
+
         return pu._plot_array_helper(self.array, self.model.dis.sr, 
                                      names=names, filenames=filenames, 
                                      mflay=mflay, **kwargs)
