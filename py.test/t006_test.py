@@ -52,7 +52,7 @@ def test_reference():
     e = dis.tr.timestep_end[dis.tr.kperkstp_loc[(9,2)]]
     assert np.abs((e-s).days - np.cumsum(perlen)[-1]) < 1.0
 
-    shapename = os.path.join("reference_testing","test1.shp")
+    shapename = os.path.join('data', 'test1.shp')
     lpf.hk.to_shapefile(shapename)
     shp = shapefile.Reader(shapename)
     assert shp.numRecords == mf.nrow * mf.ncol
@@ -88,7 +88,7 @@ def test_binaryfile_reference():
     wel = fmf.ModflowWel(ml,stress_period_data={0:wel_data})
 
     #instance without any knowledge of sr tr - builds defaults from info in hds file
-    hds = os.path.join("py.test","reference_testing","modflowtest.hds")
+    hds = os.path.join('py.test', 'data', 'modflowtest.hds')
     if not os.path.exists(hds):
         print("could not find hds file " + hds)
         return
@@ -98,7 +98,7 @@ def test_binaryfile_reference():
     assert bf.tr.perlen.shape == dis.perlen.shape
     assert bf.tr.nstp.shape == dis.nstp.shape
 
-    name = os.path.join("reference_testing","test2.shp")
+    name = os.path.join('data', 'test2.shp')
     bf.to_shapefile(name)
     shp = shapefile.Reader(name)
     assert shp.numRecords == ml.nrow * ml.ncol
@@ -111,8 +111,8 @@ def test_mflist_reference():
     import flopy
     import flopy.modflow as fmf
 
-    #model_ws = os.path.join("..","data","freyberg")
-    #ml = fmf.Modflow.load("freyberg.nam",model_ws=model_ws)
+    #model_ws = os.path.join('..', 'data', 'freyberg')
+    #ml = fmf.Modflow.load('freyberg.nam', model_ws=model_ws)
     #--make the model
     ml = fmf.Modflow()
     perlen = np.arange(1,20,1)
@@ -141,7 +141,7 @@ def test_mflist_reference():
     ghb_dict = {0:[1,10,10,400,300]}
     ghb = fmf.ModflowGhb(ml,stress_period_data=ghb_dict)
 
-    test = os.path.join("reference_testing","test3.shp")
+    test = os.path.join('data', 'test3.shp')
     ml.wel.to_shapefile(test,kper=0)
     shp = shapefile.Reader(test)
     assert len(shp.fields) == nlay + 3

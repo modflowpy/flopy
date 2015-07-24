@@ -120,15 +120,15 @@ class LayerFile(object):
             self.tr = flopy.utils.reference.temporalreference_from_binary_headers(self.recordarray, self.verbose)
         return
 
-    def to_shapefile(self,filename,kstpkper=None, totim=None, mflay=None, attrib_name="lf_data"):
+    def to_shapefile(self,filename, kstpkper=None, totim=None, mflay=None, attrib_name="lf_data"):
        '''
-        Function for writing a shapefile of 2-D data array at a specific location
+        Export model output data to a shapefile at a specific location
          in LayerFile instance.
 
         Parameters
         ----------
-        filename : string
-            name of shapefile to write
+        filename : str
+            Shapefile name to write
         kstpkper : tuple of ints
             A tuple containing the time step and stress period (kstp, kper).
             These are zero-based kstp and kper values.
@@ -150,6 +150,10 @@ class LayerFile(object):
 
         Examples
         --------
+        >>> import flopy
+        >>> hdobj = flopy.utils.HeadFile('test.hds')
+        >>> times = hdobj.get_times()
+        >>> hdobj.to_shapefile('test_heads_sp6.shp', totim=times[-1])
         '''
 
        plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
@@ -167,25 +171,51 @@ class LayerFile(object):
 
 
 
-    def plot_data(self, axes=None, kstpkper=None, totim=None, mflay=None, 
-                  filename_base=None, **kwargs):
+    def plot(self, axes=None, kstpkper=None, totim=None, mflay=None, 
+             filename_base=None, **kwargs):
         '''
-        Function for plotting a data array at a specific location
-         in LayerFile instance.  Plots pcolormesh and contour and add colorbar
+        Plot 3-D model output data in a specific location
+        in LayerFile instance
 
         Parameters
         ----------
-        axes : list(matplotlib axis)
-            a list of nlay axis instances to plot on.  If None, generate separate
-            for each layer
+        axes : list of matplotlib.pyplot.axis
+            List of matplotlib.pyplot.axis that will be used to plot 
+            data for each layer. If axes=None axes will be generated.
+            (default is None)
         kstpkper : tuple of ints
             A tuple containing the time step and stress period (kstp, kper).
             These are zero-based kstp and kper values.
         totim : float
             The simulation time.
-        mflay : integer
-           MODFLOW zero-based layer number to return.  If None, then all
-           all layers will be included. (Default is None.)
+        pcolor : bool
+            Boolean used to determine if matplotlib.pyplot.pcolormesh 
+            plot will be plotted. (default is True)
+        colorbar : bool
+            Boolean used to determine if a color bar will be added to
+            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+            (default is False)
+        contour : bool
+            Boolean used to determine if matplotlib.pyplot.contour
+            plot will be plotted. (default is False)
+        clabel : bool
+            Boolean used to determine if matplotlib.pyplot.clabel
+            will be plotted. Only used if contour=True. (default is False)
+        grid : bool
+            Boolean used to determine if the model grid will be plotted
+            on the figure. (default is False)
+        masked_values : list 
+            List of unique values to be excluded from the plot.
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        filename_base : str
+            Base file name that will be used to automatically generate file 
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
 
         Returns
         ----------
@@ -199,8 +229,12 @@ class LayerFile(object):
 
         Examples
         --------
+        >>> import flopy
+        >>> hdobj = flopy.utils.HeadFile('test.hds')
+        >>> times = hdobj.get_times()
+        >>> hdobj.plot(totim=times[-1])
+        
         '''
-
         
         if 'file_extension' in kwargs:
             fext = kwargs.pop('file_extension')
