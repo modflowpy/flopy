@@ -252,14 +252,15 @@ class util_3d(object):
         self.util_2ds = self.build_2d_instances()
 
 
-    def to_shapefile(self,filename):
+    def to_shapefile(self, filename):
         '''
-        Function for writing a shapefile (polygons).  Adds an
+        Export 3-D model data to shapefile (polygons).  Adds an
             attribute for each util_2d in self.u2ds
 
         Parameters
         ----------
-        filename : shapefile name to write
+        filename : str
+            Shapefile name to write
 
         Returns
         ----------
@@ -273,6 +274,9 @@ class util_3d(object):
 
         Examples
         --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.lpf.hk.as_shapefile('test_hk.shp')
         '''
         from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
@@ -285,15 +289,48 @@ class util_3d(object):
 
     def plot(self, filename_base=None, mflay=None, **kwargs):
         '''
-        Function for plotting
+        Plot 3-D model input data
 
         Parameters
         ----------
-        a pile of **kwargs - just figure it out!
+        axes : list of matplotlib.pyplot.axis
+            List of matplotlib.pyplot.axis that will be used to plot 
+            data for each layer. If axes=None axes will be generated.
+            (default is None)
+        pcolor : bool
+            Boolean used to determine if matplotlib.pyplot.pcolormesh 
+            plot will be plotted. (default is True)
+        colorbar : bool
+            Boolean used to determine if a color bar will be added to
+            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+            (default is False)
+        contour : bool
+            Boolean used to determine if matplotlib.pyplot.contour
+            plot will be plotted. (default is False)
+        clabel : bool
+            Boolean used to determine if matplotlib.pyplot.clabel
+            will be plotted. Only used if contour=True. (default is False)
+        grid : bool
+            Boolean used to determine if the model grid will be plotted
+            on the figure. (default is False)
+        masked_values : list 
+            List of unique values to be excluded from the plot.
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        filename_base : str
+            Base file name that will be used to automatically generate file 
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
 
         Returns
         ----------
-        None
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
 
         See Also
         --------
@@ -303,6 +340,10 @@ class util_3d(object):
 
         Examples
         --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.lpf.hk.plot()
+        
         '''
         import flopy.plot.plotutil as pu
         
@@ -543,12 +584,13 @@ class transient_2d(object):
 
     def to_shapefile(self,filename):
         '''
-        Function for writing a shapefile (polygons). Adds an attribute for each
-            unique util_2d instance in self.data
+        Export transient 2D data to a shapefile (as polygons). Adds an 
+            attribute for each unique util_2d instance in self.data
 
         Parameters
         ----------
-        filename : shapefile name to write
+        filename : str
+            Shapefile name to write
 
         Returns
         ----------
@@ -562,6 +604,9 @@ class transient_2d(object):
 
         Examples
         --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.rch.rech.as_shapefile('test_rech.shp')
         '''
         from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
@@ -573,19 +618,47 @@ class transient_2d(object):
 
     def plot(self, filename_base=None, **kwargs):
         '''
-        Function for plotting
+        Plot transient 2-D model input data
 
         Parameters
         ----------
-        filename_base : string
-            the base filename to append the kper number
-            to form a sequence of plots
-
-        a pile of **kwargs - just figure it out!
+        axes : list of matplotlib.pyplot.axis
+            List of matplotlib.pyplot.axis that will be used to plot 
+            data for each layer. If axes=None axes will be generated.
+            (default is None)
+        pcolor : bool
+            Boolean used to determine if matplotlib.pyplot.pcolormesh 
+            plot will be plotted. (default is True)
+        colorbar : bool
+            Boolean used to determine if a color bar will be added to
+            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+            (default is False)
+        contour : bool
+            Boolean used to determine if matplotlib.pyplot.contour
+            plot will be plotted. (default is False)
+        clabel : bool
+            Boolean used to determine if matplotlib.pyplot.clabel
+            will be plotted. Only used if contour=True. (default is False)
+        grid : bool
+            Boolean used to determine if the model grid will be plotted
+            on the figure. (default is False)
+        masked_values : list 
+            List of unique values to be excluded from the plot.
+        kper : int
+            MODFLOW zero-based stress period number to return
+        filename_base : str
+            Base file name that will be used to automatically generate file 
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
 
         Returns
         ----------
-        None
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
 
         See Also
         --------
@@ -595,6 +668,10 @@ class transient_2d(object):
 
         Examples
         --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.rch.rech.plot()
+        
         '''
         import flopy.plot.plotutil as pu
         
@@ -849,17 +926,45 @@ class util_2d(object):
 
     def plot(self, title=None, filename_base=None, **kwargs):
         '''
-        Function for plotting
+        Plot 2-D model input data
 
         Parameters
         ----------
-        title : string
-            the title of the axis object.  Uses self.name by default
-        a pile of **kwargs - just figure it out!
+        axes : list of matplotlib.pyplot.axis
+            List of matplotlib.pyplot.axis that will be used to plot 
+            data for each layer. If axes=None axes will be generated.
+            (default is None)
+        pcolor : bool
+            Boolean used to determine if matplotlib.pyplot.pcolormesh 
+            plot will be plotted. (default is True)
+        colorbar : bool
+            Boolean used to determine if a color bar will be added to
+            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+            (default is False)
+        contour : bool
+            Boolean used to determine if matplotlib.pyplot.contour
+            plot will be plotted. (default is False)
+        clabel : bool
+            Boolean used to determine if matplotlib.pyplot.clabel
+            will be plotted. Only used if contour=True. (default is False)
+        grid : bool
+            Boolean used to determine if the model grid will be plotted
+            on the figure. (default is False)
+        masked_values : list 
+            List of unique values to be excluded from the plot.
+        filename_base : str
+            Base file name that will be used to automatically generate file 
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
 
         Returns
         ----------
-        None
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
 
         See Also
         --------
@@ -869,7 +974,11 @@ class util_2d(object):
 
         Examples
         --------
-        '''
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.dis.top.plot()
+        
+        '''        
         import flopy.plot.plotutil as pu
         if title is None:
             title = self.name
@@ -890,11 +999,12 @@ class util_2d(object):
 
     def to_shapefile(self, filename):
         '''
-        Function for writing a shapefile (polygons) of self.array
+        Export 2-D model data to a shapefile (as polygons) of self.array
 
         Parameters
         ----------
-        filename : shapefile name to write
+        filename : str
+            Shapefile name to write
 
         Returns
         ----------
@@ -908,6 +1018,9 @@ class util_2d(object):
 
         Examples
         --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.dis.top.as_shapefile('test_top.shp')
         '''
         from flopy.utils.flopy_io import write_grid_shapefile
         write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
