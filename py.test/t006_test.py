@@ -7,7 +7,7 @@ def test_reference():
     import matplotlib.pyplot as plt
     import shapefile
     import flopy
-    loadpth = os.path.join('..', 'data', 'freyberg')
+    loadpth = os.path.join('data', 'freyberg')
     ml = flopy.modflow.Modflow.load('freyberg.nam', model_ws=loadpth)
 
 
@@ -36,9 +36,6 @@ def test_reference():
     ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0:[[1,1,1,5.9,1000.]]})
     oc = flopy.modflow.ModflowOc(mf)
     sms = flopy.modflow.ModflowPcg(mf)
-    wel.write_file()
-    rch.write_file()
-
     fig = plt.figure()
     ax = plt.subplot(111)
     ax.set_title("1")
@@ -91,7 +88,10 @@ def test_binaryfile_reference():
     wel = fmf.ModflowWel(ml,stress_period_data={0:wel_data})
 
     #instance without any knowledge of sr tr - builds defaults from info in hds file
-    hds = os.path.join("reference_testing","modflowtest.hds")
+    hds = os.path.join("py.test","reference_testing","modflowtest.hds")
+    if not os.path.exists(hds):
+        print("could not find hds file " + hds)
+        return
     bf = flopy.utils.HeadFile(hds)
     assert bf.nrow == dis.nrow
     assert bf.ncol == dis.ncol
@@ -149,5 +149,5 @@ def test_mflist_reference():
 
 
 test_mflist_reference()
-#test_reference()
-#test_binaryfile_reference()
+test_reference()
+test_binaryfile_reference()

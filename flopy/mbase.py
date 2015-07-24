@@ -633,7 +633,7 @@ class Package(object):
     def plot(self, *args, **kwargs):
         self.stress_period_data.plot(*args, **kwargs)
 
-    def to_shapfile(self, *args, **kwargs):
+    def to_shapefile(self, *args, **kwargs):
         self.stress_period_data.to_shapefile(*args, **kwargs)
 
     def webdoc(self):
