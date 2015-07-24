@@ -493,8 +493,7 @@ class mflist(object):
         arr_dict = self.to_array(kper)
         axes = []
         for name,arr in arr_dict.items():
-            names = []
-            [names.append(name+"{0:3d}".format(k)) for k in range(arr.shape[0])]
+            names = [name+"{0:3d}".format(k) for k in range(arr.shape[0])]
             ax = pu._plot_array_helper(arr, self.sr, names=names, **kwargs)
             axes.append(ax)
         return axes
