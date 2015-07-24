@@ -5,6 +5,7 @@ important classes that can be accessed by the user.
 *  SwiConcentration (Process Zeta results to concentrations)
 
 """
+import os
 import sys
 import math
 import numpy as np
@@ -175,6 +176,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
             fig = plt.figure(num=fignum[idx])
             fig.savefig(filenames[idx], dpi=dpi)
             plt.close(fignum[idx])
+            print('    created...{}'.format(os.path.basename(filenames[idx])))
         #--there will be nothing to return when done
         axes = None
     #elif show:

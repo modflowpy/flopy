@@ -167,8 +167,8 @@ class LayerFile(object):
 
 
 
-    def plot_data(self, axes=None, kstpkper=None, totim=None, mflay=None, 
-                  filename_base=None, **kwargs):
+    def plot(self, axes=None, kstpkper=None, totim=None, mflay=None, 
+             filename_base=None, **kwargs):
         '''
         Function for plotting a data array at a specific location
          in LayerFile instance.  Plots pcolormesh and contour and add colorbar
