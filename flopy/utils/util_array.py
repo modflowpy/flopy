@@ -293,38 +293,39 @@ class util_3d(object):
 
         Parameters
         ----------
-        axes : list of matplotlib.pyplot.axis
-            List of matplotlib.pyplot.axis that will be used to plot 
-            data for each layer. If axes=None axes will be generated.
-            (default is None)
-        pcolor : bool
-            Boolean used to determine if matplotlib.pyplot.pcolormesh 
-            plot will be plotted. (default is True)
-        colorbar : bool
-            Boolean used to determine if a color bar will be added to
-            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
-            (default is False)
-        contour : bool
-            Boolean used to determine if matplotlib.pyplot.contour
-            plot will be plotted. (default is False)
-        clabel : bool
-            Boolean used to determine if matplotlib.pyplot.clabel
-            will be plotted. Only used if contour=True. (default is False)
-        grid : bool
-            Boolean used to determine if the model grid will be plotted
-            on the figure. (default is False)
-        masked_values : list 
-            List of unique values to be excluded from the plot.
         mflay : int
             MODFLOW zero-based layer number to return.  If None, then all
             all layers will be included. (default is None)
         filename_base : str
-            Base file name that will be used to automatically generate file 
+            Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
             files if file_name_base is not None. (default is None)
-        file_extension : str
-            Valid matplotlib.pyplot file extension for savefig(). Only used
-            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
 
         Returns
         ----------
@@ -581,7 +582,7 @@ class transient_2d(object):
                        self.dtype, 0.0, name=name).get_file_entry()
 
 
-    def to_shapefile(self,filename):
+    def to_shapefile(self, filename):
         '''
         Export transient 2D data to a shapefile (as polygons). Adds an 
             attribute for each unique util_2d instance in self.data
@@ -621,37 +622,38 @@ class transient_2d(object):
 
         Parameters
         ----------
-        axes : list of matplotlib.pyplot.axis
-            List of matplotlib.pyplot.axis that will be used to plot 
-            data for each layer. If axes=None axes will be generated.
-            (default is None)
-        pcolor : bool
-            Boolean used to determine if matplotlib.pyplot.pcolormesh 
-            plot will be plotted. (default is True)
-        colorbar : bool
-            Boolean used to determine if a color bar will be added to
-            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
-            (default is False)
-        contour : bool
-            Boolean used to determine if matplotlib.pyplot.contour
-            plot will be plotted. (default is False)
-        clabel : bool
-            Boolean used to determine if matplotlib.pyplot.clabel
-            will be plotted. Only used if contour=True. (default is False)
-        grid : bool
-            Boolean used to determine if the model grid will be plotted
-            on the figure. (default is False)
-        masked_values : list 
-            List of unique values to be excluded from the plot.
-        kper : int
-            MODFLOW zero-based stress period number to return
         filename_base : str
-            Base file name that will be used to automatically generate file 
+            Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
             files if file_name_base is not None. (default is None)
-        file_extension : str
-            Valid matplotlib.pyplot file extension for savefig(). Only used
-            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            kper : int
+                MODFLOW zero-based stress period number to return
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
 
         Returns
         ----------
@@ -929,35 +931,39 @@ class util_2d(object):
 
         Parameters
         ----------
-        axes : list of matplotlib.pyplot.axis
-            List of matplotlib.pyplot.axis that will be used to plot 
-            data for each layer. If axes=None axes will be generated.
-            (default is None)
-        pcolor : bool
-            Boolean used to determine if matplotlib.pyplot.pcolormesh 
-            plot will be plotted. (default is True)
-        colorbar : bool
-            Boolean used to determine if a color bar will be added to
-            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
-            (default is False)
-        contour : bool
-            Boolean used to determine if matplotlib.pyplot.contour
-            plot will be plotted. (default is False)
-        clabel : bool
-            Boolean used to determine if matplotlib.pyplot.clabel
-            will be plotted. Only used if contour=True. (default is False)
-        grid : bool
-            Boolean used to determine if the model grid will be plotted
-            on the figure. (default is False)
-        masked_values : list 
-            List of unique values to be excluded from the plot.
+        title : str
+            Plot title. If a plot title is not provide one will be
+            created based on data name (self.name). (default is None)
         filename_base : str
-            Base file name that will be used to automatically generate file 
+            Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
             files if file_name_base is not None. (default is None)
-        file_extension : str
-            Valid matplotlib.pyplot file extension for savefig(). Only used
-            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
 
         Returns
         ----------

@@ -302,9 +302,10 @@ def shapefile_get_vertices(shp):
 
     Examples
     --------
-    >>>import flopy
-    >>>fshp = 'myshapefile'
-    >>>lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
+
+    >>> import flopy
+    >>> fshp = 'myshapefile'
+    >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
     
     """
     try:
@@ -571,73 +572,151 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
 
 
 def findrowcolumn(pt, xedge, yedge):
-    #--find the modflow cell containing the cross-section point
+    '''
+    Find the MODFLOW cell containing the x- and y- point provided.
+
+    Parameters
+    ----------
+    pt : list or tuple
+        A list or tuple containing a x- and y- coordinate
+    xedge : numpy.ndarray
+        x-coordinate of the edge of each MODFLOW column. xedge is dimensioned
+        to NCOL + 1. If xedge is not a numpy.ndarray it is converted to a
+        numpy.ndarray.
+    yedge : numpy.ndarray
+        y-coordinate of the edge of each MODFLOW row. yedge is dimensioned
+        to NROW + 1. If yedge is not a numpy.ndarray it is converted to a
+        numpy.ndarray.
+
+    Returns
+    -------
+    irow, jcol : int
+        Row and column location containing x- and y- point passed to function.
+
+    Examples
+    --------
+    >>> import flopy
+    >>> irow, jcol = flopy.plotutil.findrowcolumn(pt, xedge, yedge)
+
+    '''
+
+    #--make sure xedge and yedge are numpy arrays
+    if not isinstance(xedge, np.ndarray):
+        xedge = np.array(xedge)
+    if not isinstance(yedge, np.ndarray):
+        yedge = np.array(yedge)
+
+    #--find column
     jcol = -100
     for jdx, xmf in enumerate(xedge):
         if xmf > pt[0]:
             jcol = jdx - 1
             break
+
+    #--find row
     irow = -100
     for jdx, ymf in enumerate(yedge):
         if ymf < pt[1]:
             irow = jdx - 1
             break
-    return irow,jcol
+    return irow, jcol
 
 
-def line_intersect_grid(ptsin, xedge, yedge, returnVertices=False):
+def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
     '''
-    How about some doc strings
+    Intersect a list of polyline vertices with a rectilinear MODFLOW
+    grid. Vertices at the intersection of the polyline with the grid
+    cell edges is returned. Optionally the original polyline vertices
+    are returned.
+
+    Parameters
+    ----------
+    ptsin : list
+        A list of x, y points defining the vertices of a polyline that will be
+        intersected with the rectilinear MODFLOW grid
+    xedge : numpy.ndarray
+        x-coordinate of the edge of each MODFLOW column. xedge is dimensioned
+        to NCOL + 1. If xedge is not a numpy.ndarray it is converted to a
+        numpy.ndarray.
+    yedge : numpy.ndarray
+        y-coordinate of the edge of each MODFLOW row. yedge is dimensioned
+        to NROW + 1. If yedge is not a numpy.ndarray it is converted to a
+        numpy.ndarray.
+    returnvertices: bool
+        Return the original polyline vertices in the list of numpy.ndarray
+        containing vertices resulting from intersection of the provided
+        polygon and the MODFLOW model grid if returnvertices=True.
+        (default is False).
+
+    Returns
+    -------
+    (x, y, dlen) : numpy.ndarray of tuples
+        numpy.ndarray of tuples containing the x, y, and segment length of the
+        intersection of the provided polyline with the rectilinear MODFLOW
+        grid.
+
+    Examples
+    --------
+    >>> import flopy
+    >>> ptsout = flopy.plotutil.line_intersect_grid(ptsin, xedge, yedge)
+
     '''
+
     small_value = 1.0e-1
-    
+
+    #--make sure xedge and yedge are numpy arrays
+    if not isinstance(xedge, np.ndarray):
+        xedge = np.array(xedge)
+    if not isinstance(yedge, np.ndarray):
+        yedge = np.array(yedge)
+
     #--build list of points along current line
     pts = []
     npts = len(ptsin)
     dlen = 0.
     for idx in range(1, npts):
-        x0 = ptsin[idx-1][0]
+        x0 = ptsin[idx - 1][0]
         x1 = ptsin[idx][0]
-        y0 = ptsin[idx-1][1]
+        y0 = ptsin[idx - 1][1]
         y1 = ptsin[idx][1]
-        a  = x1 - x0
-        b  = y1 - y0
-        c  = math.sqrt( math.pow(a, 2.) + math.pow(b, 2.) )
+        a = x1 - x0
+        b = y1 - y0
+        c = math.sqrt(math.pow(a, 2.) + math.pow(b, 2.))
         #--find cells with (x0, y0) and (x1, y1)
         irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
         irow1, jcol1 = findrowcolumn((x1, y1), xedge, yedge)
         #--determine direction to go in the x- and y-directions
-        goRight = False
-        jx   = 0
-        incx =  abs( small_value * a / c )
-        goDown = False
-        iy   = 0
-        incy = -abs(small_value * b / c )
-        if a == 0.: 
+        jx = 0
+        incx = abs(small_value * a / c)
+        iy = 0
+        incy = -abs(small_value * b / c)
+        if a == 0.:
             incx = 0.
-        elif a > 0.: 
-            goRight = True
-            jx   = 1
+        #--go to the right
+        elif a > 0.:
+            jx = 1
             incx *= -1.
-        if b == 0.: 
+        if b == 0.:
             incy = 0.
-        elif b < 0.: 
-            goDown = True
-            iy   = 1
+        #--go down
+        elif b < 0.:
+            iy = 1
             incy *= -1.
         #--process data
         if irow0 >= 0 and jcol0 >= 0:
-            iAdd = True
-            if idx > 1 and returnVertices==True: iAdd = False
-            if (iAdd==True): pts.append( (x0, y0, dlen) )
+            iadd = True
+            if idx > 1 and returnvertices: 
+                iadd = False
+            if iadd: 
+                pts.append((x0, y0, dlen))
         icnt = 0
         while True:
             icnt += 1
-            dx  = xedge[jcol0+jx] - x0
+            dx = xedge[jcol0 + jx] - x0
             dlx = 0.
             if a != 0.:
                 dlx = c * dx / a
-            dy  = yedge[irow0+iy] - y0
+            dy = yedge[irow0 + iy] - y0
             dly = 0.
             if b != 0.:
                 dly = c * dy / b
@@ -648,34 +727,78 @@ def line_intersect_grid(ptsin, xedge, yedge, returnVertices=False):
                     dx = dy * a / b
             xt = x0 + dx + incx
             yt = y0 + dy + incy
-            dl = math.sqrt( math.pow((xt-x0),2.) + math.pow((yt-y0),2.) )
+            dl = math.sqrt(math.pow((xt - x0), 2.) + math.pow((yt - y0), 2.))
             dlen += dl
-            if (returnVertices==False): pts.append( (xt, yt, dlen) )
-            x0,y0 = xt,yt
+            if not returnvertices: 
+                pts.append((xt, yt, dlen))
+            x0, y0 = xt, yt
             xt = x0 - 2. * incx
             yt = y0 - 2. * incy
-            dl = math.sqrt( math.pow((xt-x0),2.) + math.pow((yt-y0), 2.) )
+            dl = math.sqrt(math.pow((xt - x0), 2.) + math.pow((yt - y0), 2.))
             dlen += dl
-            x0,y0 = xt,yt
-            irow0,jcol0 = findrowcolumn((x0, y0), xedge, yedge)
+            x0, y0 = xt, yt
+            irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
             if irow0 >= 0 and jcol0 >= 0:
-                if (returnVertices==False): pts.append( (xt, yt, dlen) )
+                if not returnvertices: 
+                    pts.append((xt, yt, dlen))
             elif irow1 < 0 or jcol1 < 0:
-                dl = math.sqrt( math.pow((x1-x0), 2.) + math.pow((y1-y0), 2.) )
+                dl = math.sqrt(math.pow((x1 - x0), 2.) + math.pow((y1 - y0), 2.))
                 dlen += dl
                 break
             if irow0 == irow1 and jcol0 == jcol1:
-                dl = math.sqrt( math.pow((x1-x0),2.) + math.pow((y1-y0), 2.) )
+                dl = math.sqrt(math.pow((x1 - x0), 2.) + math.pow((y1 - y0), 2.))
                 dlen += dl
-                pts.append( (x1, y1, dlen) )
+                pts.append((x1, y1, dlen))
                 break
     return np.array(pts)
 
 
 def cell_value_points(pts, xedge, yedge, vdata):
     '''
-    How about some doc strings
+    Intersect a list of polyline vertices with a rectilinear MODFLOW
+    grid. Vertices at the intersection of the polyline with the grid
+    cell edges is returned. Optionally the original polyline vertices
+    are returned.
+
+    Parameters
+    ----------
+    pts : list
+        A list of x, y points and polyline length to extract defining the
+        vertices of a polyline that
+    xedge : numpy.ndarray
+        x-coordinate of the edge of each MODFLOW column. The shape of xedge is
+        (NCOL + 1). If xedge is not a numpy.ndarray it is converted to a
+        numpy.ndarray.
+    yedge : numpy.ndarray
+        y-coordinate of the edge of each MODFLOW row. The shape of yedge is
+        (NROW + 1). If yedge is not a numpy.ndarray it is converted to a
+        numpy.ndarray.
+    vdata : numpy.ndarray
+        Data (i.e., head, hk, etc.) for a rectilinear MODFLOW model grid. The
+        shape of vdata is (NROW, NCOL). If vdata is not a numpy.ndarray it is
+        converted to a numpy.ndarray.
+
+    Returns
+    -------
+    vcell : numpy.ndarray
+        numpy.ndarray of of data values from the vdata numpy.ndarray at x- and
+        y-coordinate locations in pts.
+
+    Examples
+    --------
+    >>> import flopy
+    >>> vcell = flopy.plotutil.cell_value_points(xpts, xedge, yedge, head[0, :, :])
+
     '''
+
+    #--make sure xedge and yedge are numpy arrays
+    if not isinstance(xedge, np.ndarray):
+        xedge = np.array(xedge)
+    if not isinstance(yedge, np.ndarray):
+        yedge = np.array(yedge)
+    if not isinstance(vdata, np.ndarray):
+        vdata = np.array(vdata)
+
     vcell = []
     for idx, [xt, yt, dlen] in enumerate(pts):
         #--find the modflow cell containing point
