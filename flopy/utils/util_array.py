@@ -287,7 +287,7 @@ class util_3d(object):
                              array_dict)
 
 
-    def plot(self, filename_base=None, mflay=None, **kwargs):
+    def plot(self, filename_base=None, mflay=None, file_extension=None, **kwargs):
         '''
         Plot 3-D model input data
 
@@ -300,6 +300,9 @@ class util_3d(object):
             Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
             files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
         **kwargs : dict
             axes : list of matplotlib.pyplot.axis
                 List of matplotlib.pyplot.axis that will be used to plot
@@ -323,9 +326,6 @@ class util_3d(object):
                 on the figure. (default is False)
             masked_values : list
                 List of unique values to be excluded from the plot.
-            file_extension : str
-                Valid matplotlib.pyplot file extension for savefig(). Only used
-                if filename_base is not None. (default is 'png')
 
         Returns
         ----------
@@ -348,9 +348,8 @@ class util_3d(object):
         '''
         import flopy.plot.plotutil as pu
         
-        if 'file_extension' in kwargs:
-            fext = kwargs.pop('file_extension')
-            fext = fext.replace('.', '')
+        if file_extension is not None:
+            fext = file_extension
         else:
             fext = 'png'
         
@@ -616,7 +615,7 @@ class transient_2d(object):
         write_grid_shapefile(filename, self.model.dis.sr, array_dict)
 
 
-    def plot(self, filename_base=None, **kwargs):
+    def plot(self, filename_base=None, file_extension=None, **kwargs):
         '''
         Plot transient 2-D model input data
 
@@ -626,6 +625,9 @@ class transient_2d(object):
             Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
             files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
         **kwargs : dict
             axes : list of matplotlib.pyplot.axis
                 List of matplotlib.pyplot.axis that will be used to plot
@@ -651,9 +653,6 @@ class transient_2d(object):
                 List of unique values to be excluded from the plot.
             kper : int
                 MODFLOW zero-based stress period number to return
-            file_extension : str
-                Valid matplotlib.pyplot file extension for savefig(). Only used
-                if filename_base is not None. (default is 'png')
 
         Returns
         ----------
@@ -676,9 +675,8 @@ class transient_2d(object):
         '''
         import flopy.plot.plotutil as pu
         
-        if 'file_extension' in kwargs:
-            fext = kwargs.pop('file_extension')
-            fext = fext.replace('.', '')
+        if file_extension is not None:
+            fext = file_extension
         else:
             fext = 'png'
         
@@ -925,7 +923,7 @@ class util_2d(object):
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
 
-    def plot(self, title=None, filename_base=None, **kwargs):
+    def plot(self, title=None, filename_base=None, file_extension=None, **kwargs):
         '''
         Plot 2-D model input data
 
@@ -938,6 +936,9 @@ class util_2d(object):
             Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
             files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
         **kwargs : dict
             axes : list of matplotlib.pyplot.axis
                 List of matplotlib.pyplot.axis that will be used to plot
@@ -961,9 +962,6 @@ class util_2d(object):
                 on the figure. (default is False)
             masked_values : list
                 List of unique values to be excluded from the plot.
-            file_extension : str
-                Valid matplotlib.pyplot file extension for savefig(). Only used
-                if filename_base is not None. (default is 'png')
 
         Returns
         ----------
@@ -988,9 +986,8 @@ class util_2d(object):
         if title is None:
             title = self.name
         
-        if 'file_extension' in kwargs:
-            fext = kwargs.pop('file_extension')
-            fext = fext.replace('.', '')
+        if file_extension is not None:
+            fext = file_extension
         else:
             fext = 'png'
             

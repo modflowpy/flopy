@@ -80,9 +80,10 @@ class ModflowRiv(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 15.6, 1050., -4]]]  #this river boundary will be
-    >>>                                        #applied to all stress periods
-    >>> riv = flopy.modflow.ModflowRiv(m, layer_row_column_data=lrcd)
+    >>> lrcd = {}
+    >>> lrcd[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this river boundary will be
+    >>>                                         #applied to all stress periods
+    >>> riv = flopy.modflow.ModflowRiv(m, stress_period_data=lrcd)
 
     """
 
