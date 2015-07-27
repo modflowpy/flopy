@@ -302,9 +302,10 @@ def shapefile_get_vertices(shp):
 
     Examples
     --------
-    >>>import flopy
-    >>>fshp = 'myshapefile'
-    >>>lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
+
+    >>> import flopy
+    >>> fshp = 'myshapefile'
+    >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
     
     """
     try:
