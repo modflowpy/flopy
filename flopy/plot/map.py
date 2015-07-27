@@ -184,6 +184,11 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
         if ibound is None:
             bas = self.model.get_package('BAS6')
             ibound = bas.ibound
@@ -251,6 +256,11 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
         # Find package to plot
         if package is not None:
             p = package
@@ -587,4 +597,3 @@ class ModelMap(object):
 
         lc = LineCollection(linecol, **kwargs)
         return lc
-

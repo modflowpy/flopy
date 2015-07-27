@@ -630,11 +630,52 @@ class Package(object):
         newdtype = np.dtype(newdtype)
         return newdtype
 
-    def plot(self, *args, **kwargs):
-        self.stress_period_data.plot(*args, **kwargs)
+    def plot(self, kper=0, key=None, **kwargs):
+        #import flopy.plot.plotutil as pu
+        axes = []
+        for item, value in self.__dict__.items():
+            if isinstance(value, utils.mflist):
+                names = ['{} Stress period: {} Layer: {}'.format(self.name[0], kper+1, k+1)
+                         for k in range(self.parent.nlay)]
+                axes.append(value.plot(self, key, names, kper, **kwargs))
+                # if key is None:
+                #     names = ['{} Stress period: {} Layer: {}'.format(self.name[0], kper+1, k+1)
+                #              for k in range(self.parent.nlay)]
+                #     axes = pu._plot_bc_helper(self, self.parent.nlay, kper,
+                #                               names=names, **kwargs)
+                # else:
+                #     arr_dict = value.to_array(kper)
+                #
+                #     try:
+                #         arr = arr_dict[key]
+                #     except:
+                #         p = 'Cannot find key to plot\n'
+                #         p += '  Provided key={}\n  Available keys='.format(key)
+                #         for name, arr in arr_dict.items():
+                #             p += '{}, '.format(name)
+                #         p += '\n'
+                #         raise Exception(p)
+                #
+                #     names = ['{} Stress Period: {} Layer: {}'.format(key, kper+1, k+1) for k in range(arr.shape[0])]
+                #     axes = pu._plot_array_helper(arr, self.parent.dis.sr, names=names, **kwargs)
+
+            elif isinstance(value, utils.util_3d):
+                print('util_3d', item)
+            elif isinstance(value, utils.util_2d):
+                print('util_2d', item)
+            elif isinstance(value, utils.transient_2d):
+                print('transient_2d', item)
+            else:
+                pass
+        return axes
+
 
     def to_shapefile(self, *args, **kwargs):
-        self.stress_period_data.to_shapefile(*args, **kwargs)
+        try:
+            if isinstance(self.stress_period_data, utils.mflist):
+                self.stress_period_data.to_shapefile(*args, **kwargs)
+        except:
+            pass
 
     def webdoc(self):
         if self.parent.version == 'mf2k':

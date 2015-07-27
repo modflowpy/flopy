@@ -707,7 +707,7 @@ class transient_2d(object):
                         names=title, filenames=filename, fignum=kper, **kwargs))        
         return axes
 
-    def __getitem__(self,kper):
+    def __getitem__(self, kper):
         if kper in list(self.transient_2ds.keys()):
             return self.transient_2ds[kper]
         elif kper < min(self.transient_2ds.keys()):

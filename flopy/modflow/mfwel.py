@@ -88,7 +88,6 @@ class ModflowWel(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> lrcq = {0:[[2, 3, 4, -100.]], 1:[[2, 3, 4, -100.]]}
-    >>>                              #periods
     >>> wel = flopy.modflow.ModflowWel(m, stress_period_data=lrcq)
 
     """

@@ -22,14 +22,14 @@ class Header():
             self.header_type = filetype.lower()
         if self.header_type in self.header_types:
             if self.header_type == 'head':
-                self.dtype = np.dtype([('kstp','i4'),('kper','i4'),\
-                                       ('pertim',floattype),('totim',floattype),\
-                                       ('text','a16'),\
-                                       ('ncol','i4'),('nrow','i4'),('ilay','i4')])
+                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
+                                       ('pertim', floattype), ('totim', floattype),
+                                       ('text', 'a16'), \
+                                       ('ncol', 'i4'), ('nrow', 'i4'), ('ilay', 'i4')])
             elif self.header_type == 'ucn':
-                self.dtype = np.dtype([('ntrans','i4'),('kstp','i4'),('kper','i4'),\
-                                       ('totim',floattype),('text','a16'),\
-                                       ('ncol','i4'),('nrow','i4'),('ilay','i4')])
+                self.dtype = np.dtype([('ntrans', 'i4'), ('kstp', 'i4'), ('kper', 'i4'),
+                                       ('totim', floattype), ('text', 'a16'),
+                                       ('ncol', 'i4'), ('nrow', 'i4'), ('ilay', 'i4')])
             self.header = np.ones(1, self.dtype)
         else:
             self.dtype = None
@@ -91,23 +91,23 @@ class LayerFile(object):
         self.dis = None
         self.sr = None
         self.tr = None
-        if "model" in kwargs.keys():
-            self.model = kwargs.pop("model")
+        if 'model' in kwargs.keys():
+            self.model = kwargs.pop('model')
             self.sr = self.model.dis.sr
             self.tr = self.model.dis.tr
             self.dis = self.model.dis
-        if "dis" in kwargs.keys():
-            self.dis = kwargs.pop("dis")
+        if 'dis' in kwargs.keys():
+            self.dis = kwargs.pop('dis')
             self.sr = self.dis.sr
             self.tr = self.dis.tr
-        if "sr" in kwargs.keys():
-            self.sr = kwargs.pop("sr")
-        if "tr" in kwargs.keys():
-            self.tr = kwargs.pop("tr")
+        if 'sr' in kwargs.keys():
+            self.sr = kwargs.pop('sr')
+        if 'tr' in kwargs.keys():
+            self.tr = kwargs.pop('tr')
 
         if len(kwargs.keys()) > 0:
             args = ','.join(kwargs.keys())
-            raise Exception("LayerFile error: unrecognized kwargs: "+args)
+            raise Exception('LayerFile error: unrecognized kwargs: '+args)
 
         #read through the file and build the pointer index
         self._build_index()
@@ -120,7 +120,7 @@ class LayerFile(object):
             self.tr = flopy.utils.reference.temporalreference_from_binary_headers(self.recordarray, self.verbose)
         return
 
-    def to_shapefile(self,filename, kstpkper=None, totim=None, mflay=None, attrib_name='lf_data'):
+    def to_shapefile(self, filename, kstpkper=None, totim=None, mflay=None, attrib_name='lf_data'):
        """
         Export model output data to a shapefile at a specific location
          in LayerFile instance.
@@ -162,7 +162,7 @@ class LayerFile(object):
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()
        if mflay != None:
-           attrib_dict = {attrib_name+'{0:03d}'.format(mflay):plotarray[0,:,:]}
+           attrib_dict = {attrib_name+'{0:03d}'.format(mflay):plotarray[0, :, :]}
        else:
            attrib_dict = {}
            for k in range(plotarray.shape[0]):

@@ -142,15 +142,18 @@ def _plot_array_helper(plotarray, sr, axes=None,
    
     cm = []
     mm = map.ModelMap(ax=axes[0], sr=sr)
-    #for k in range(plotarray.shape[0]):
     for idx, k in enumerate(range(i0, i1)):
         #--check that there is atleast one cell that is not masked
         count = plotarray[k].size - np.ma.getmask(plotarray[k]).sum()
         if count == 0:
-            axes[k].text(0.5,0.5, "No Data", fontsize=12,
-                         ha="center", va="center")
-            axes[k].set_xticks([])
-            axes[k].set_yticks([])
+            title = ax.get_title()
+            title += ' NO DATA'
+            ax.set_title(title)
+            mm.set_extent()
+            #axes[k].text(0.5, 0.5, 'No Data', fontsize=12,
+            #             ha='center', va='center')
+            #axes[k].set_xticks([])
+            #axes[k].set_yticks([])
         else:
             fig = plt.figure(num=fignum[idx])
             if pcolor:
@@ -164,6 +167,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
                                       ax=axes[idx], colors=colors, levels=levels)
                 if clabel:
                     axes[idx].clabel(cl, fmt=fmt)
+
             if grid:
                 mm.plot_grid(ax=axes[idx])
 
@@ -179,10 +183,112 @@ def _plot_array_helper(plotarray, sr, axes=None,
             print('    created...{}'.format(os.path.basename(filenames[idx])))
         #--there will be nothing to return when done
         axes = None
-    #elif show:
-    #    plt.show()
     return axes
 
+
+def _plot_bc_helper(package, nlay, kper,
+                    axes=None, names=None, filenames=None, fignum=None,
+                    mflay=None, **kwargs):
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        s = 'Could not import matplotlib.  Must install matplotlib ' +\
+            ' in order to plot boundary condition data.'
+        raise Exception(s)
+
+    import flopy.plot.map as map
+
+    #--reshape 2d arrays to 3d for convenience
+    ftype = package.name[0]
+
+    #--parse keyword arguments
+    if 'figsize' in kwargs:
+        figsize = kwargs.pop('figsize')
+    else:
+        figsize = None
+
+    if 'grid' in kwargs:
+        grid = kwargs.pop('grid')
+    else:
+        grid = False
+
+    if 'dpi' in kwargs:
+        dpi = kwargs.pop('dpi')
+    else:
+        dpi = None
+
+    if 'masked_values' in kwargs:
+        masked_values = kwargs.pop('masked_values ')
+    else:
+        masked_values = None
+
+    if mflay is not None:
+        i0 = int(mflay)
+        if i0+1 >= nlay:
+            i0 = nlay - 1
+        i1 = i0 + 1
+    else:
+        i0 = 0
+        i1 = nlay
+
+    if names is not None:
+        if not isinstance(names, list):
+            names = [names]
+        assert len(names) == nlay
+
+    if filenames is not None:
+        if not isinstance(filenames, list):
+            filenames = [filenames]
+        assert len(filenames) == (i1 - i0)
+
+    if fignum is not None:
+        if not isinstance(fignum, list):
+            fignum = [fignum]
+        assert len(fignum) == nlay
+    else:
+        fignum = np.arange(i0, i1)
+
+    if axes is not None:
+        if not isinstance(axes, list):
+            axes = [axes]
+        assert len(axes) == plotarray.shape[0]
+    #--prepare some axis objects for use
+    else:
+        axes = []
+        for idx, k in enumerate(range(i0, i1)):
+            fig = plt.figure(figsize=figsize, num=fignum[idx])
+            ax = plt.subplot(1, 1, 1, aspect='equal')
+            if names is not None:
+                title = names[k]
+            else:
+                klay = k
+                if mflay is not None:
+                    klay = int(mflay)
+                title = '{} Layer {}'.format('data', klay+1)
+            ax.set_title(title)
+            axes.append(ax)
+
+    #mm = map.ModelMap(ax=axes[0], model=package.parent)
+    for idx, k in enumerate(range(i0, i1)):
+        mm = map.ModelMap(ax=axes[idx], model=package.parent, layer=k)
+        fig = plt.figure(num=fignum[idx])
+        qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
+
+        if grid:
+            mm.plot_grid(ax=axes[idx])
+
+    if len(axes) == 1:
+        axes = axes[0]
+
+    if filenames is not None:
+        for idx, k in enumerate(range(i0, i1)):
+            fig = plt.figure(num=fignum[idx])
+            fig.savefig(filenames[idx], dpi=dpi)
+            plt.close(fignum[idx])
+            print('    created...{}'.format(os.path.basename(filenames[idx])))
+        #--there will be nothing to return when done
+        axes = None
+    return axes
 
 
 # def rotate(x, y, theta, xorigin=0., yorigin=0.):
@@ -753,7 +859,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
 
 
 def cell_value_points(pts, xedge, yedge, vdata):
-    '''
+    """
     Intersect a list of polyline vertices with a rectilinear MODFLOW
     grid. Vertices at the intersection of the polyline with the grid
     cell edges is returned. Optionally the original polyline vertices
@@ -788,7 +894,7 @@ def cell_value_points(pts, xedge, yedge, vdata):
     >>> import flopy
     >>> vcell = flopy.plotutil.cell_value_points(xpts, xedge, yedge, head[0, :, :])
 
-    '''
+    """
 
     #--make sure xedge and yedge are numpy arrays
     if not isinstance(xedge, np.ndarray):
@@ -808,6 +914,7 @@ def cell_value_points(pts, xedge, yedge, vdata):
             else:
                 v = np.asarray(vdata[irow, jcol])
                 vcell.append(v) 
+
     return np.array(vcell)
 
 

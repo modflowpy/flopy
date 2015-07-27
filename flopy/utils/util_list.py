@@ -23,6 +23,9 @@ class mflist(object):
         this package will be added.
     dtype : np.dtype
         a numpy dtype describing the columns of the list data
+    name : str
+        Unique name for package stress_period_data. Identical to the package
+        name.
     data : varies
         the data of the transient list (optional). (the default is None)
 
@@ -442,7 +445,8 @@ class mflist(object):
         return kper
 
     def get_indices(self):
-        """a helper function for plotting - get all unique indices
+        """
+            a helper function for plotting - get all unique indices
         """
         names = self.dtype.names
         lnames = []
@@ -488,41 +492,58 @@ class mflist(object):
                 values.append(v)
         return values
 
-    def plot(self,kper, **kwargs):
+    def plot(self, pack, key, names, kper, **kwargs):
         import flopy.plot.plotutil as pu
-        arr_dict = self.to_array(kper)
-        axes = []
-        for name,arr in arr_dict.items():
-            names = [name+"{0:3d}".format(k) for k in range(arr.shape[0])]
-            ax = pu._plot_array_helper(arr, self.sr, names=names, **kwargs)
-            axes.append(ax)
+        if key is None:
+            axes = pu._plot_bc_helper(pack, pack.parent.nlay, kper,
+                                      names=names, **kwargs)
+        else:
+            arr_dict = self.to_array(kper)
+
+            try:
+                arr = arr_dict[key]
+            except:
+                p = 'Cannot find key to plot\n'
+                p += '  Provided key={}\n  Available keys='.format(key)
+                for name, arr in arr_dict.items():
+                    p += '{}, '.format(name)
+                p += '\n'
+                raise Exception(p)
+
+            names = ['{} Stress Period: {} Layer: {}'.format(key, kper+1, k+1) for k in range(arr.shape[0])]
+            axes = pu._plot_array_helper(arr, pack.parent.dis.sr, names=names, **kwargs)
         return axes
 
-    def to_shapefile(self, filename, kper):
+    def to_shapefile(self, filename, kper=0):
         import flopy.utils.flopy_io as fio
         arrays = self.to_array(kper)
         array_dict = {}
-        for name,array in arrays.items():
+        for name, array in arrays.items():
             for k in range(array.shape[0]):
-                aname = name+"{0:03d}_{1:02d}".format(kper,k)
+                aname = name+"{0:03d}_{1:02d}".format(kper, k)
                 array_dict[aname] = array[k]
         fio.write_grid_shapefile(filename, self.sr, array_dict)
 
-    def to_array(self,kper):
-        if "inode" in self.dtype.names:
+    def to_array(self, kper=0):
+        i0 = 3
+        if 'inode' in self.dtype.names:
             raise NotImplementedError()
         arrays = {}
-        for name in self.dtype.names[3:]:
-            arr = np.zeros((self.model.nlay,self.model.nrow,self.model.ncol))
-            arrays[name] = arr
+        for name in self.dtype.names[i0:]:
+            arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
+            arrays[name] = arr.copy()
         if kper in self.data.keys():
             sarr = self.data[kper]
-            for rec in sarr:
-                for name,arr in arrays.items():
-                    arr[rec['k'],rec['i'],rec['j']] += rec[name]
+            for name, arr in arrays.items():
+                cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol), dtype=np.float)
+                for rec in sarr:
+                    arr[rec['k'], rec['i'], rec['j']] += rec[name]
+                    if name != 'cond' and name != 'flux':
+                        cnt[rec['k'], rec['i'], rec['j']] += 1.
+                #--average keys that should not be added
+                if name != 'cond' and name != 'flux':
+                    idx = cnt > 0.
+                    arr[idx] /= cnt[idx]
+                arrays[name] = arr
 
-        #--mask where zero?
-        for name,arr in arrays.items():
-            arrays[name] = np.atleast_3d(np.ma.masked_where(arr==0,arr)
-                                         .transpose()).transpose()
         return arrays

@@ -94,7 +94,7 @@ lrchc[:, 2] = colcell[index == 0]
 lrchc[:, 3] = 0.
 lrchc[:, 4] = hk * 10
 #print lrchc
-ghb = flopy.modflow.ModflowGhb(mf, stress_period_data=lrchc)
+ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0: lrchc})
 
 #--recharge & withdrawal
 Recharge = 600 * 133680.56  # Total recharge over the island, in ft^3/d
@@ -106,7 +106,7 @@ lrcq[:, 2] = colcell[index == 1]
 lrcq[:, 3] = Recharge / nrech
 lrcq = np.vstack((lrcq, [0, 8, 7, -90 * 133680], [0, 10, 9, -80 * 133680]))  # add wells (row/col, zero-based)
 #print lrcq
-wel = flopy.modflow.ModflowWel(mf, stress_period_data=lrcq)
+wel = flopy.modflow.ModflowWel(mf, stress_period_data={0: lrcq})
 
 #--horizontal flow barrier
 nhfb = 12
@@ -154,15 +154,21 @@ mf.write_input()
 
 print('\n\nfinished write...\n')
 
-m2 = flopy.modflow.Modflow.load(modelname, exe_name='mf2005', model_ws=workspace, verbose=True)
+m2 = flopy.modflow.Modflow.load(modelname, exe_name='mf2005', model_ws=workspace, verbose=False)
 
 print('\nfinished read...\n')
 
 oc2 = m2.get_package('OC')
 
-print(oc2.stress_period_data.keys())
+#print(oc2.stress_period_data.keys())
 
 oc2.write_file()
+
+m2.lpf.plot()
+
+
+m2.ghb.plot(key='cond', colorbar=True, masked_values=[0])
+plt.show()
 
 print('\nthis is the end...my friend\n')
 
