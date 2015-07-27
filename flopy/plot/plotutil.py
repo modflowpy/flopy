@@ -161,9 +161,9 @@ def _plot_array_helper(plotarray, sr, axes=None,
 
             if contourdata:
                 cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                      ax=axes[idx], colors=colors, levels=levels)
+                                      ax=axes[idx], colors=colors, levels=levels, **kwargs)
                 if clabel:
-                    axes[idx].clabel(cl, fmt=fmt)
+                    axes[idx].clabel(cl, fmt=fmt,**kwargs)
             if grid:
                 mm.plot_grid(ax=axes[idx])
 
