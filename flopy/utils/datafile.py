@@ -120,8 +120,8 @@ class LayerFile(object):
             self.tr = flopy.utils.reference.temporalreference_from_binary_headers(self.recordarray, self.verbose)
         return
 
-    def to_shapefile(self,filename, kstpkper=None, totim=None, mflay=None, attrib_name="lf_data"):
-       '''
+    def to_shapefile(self,filename, kstpkper=None, totim=None, mflay=None, attrib_name='lf_data'):
+       """
         Export model output data to a shapefile at a specific location
          in LayerFile instance.
 
@@ -137,6 +137,8 @@ class LayerFile(object):
         mflay : integer
            MODFLOW zero-based layer number to return.  If None, then layer 1
            will be written
+        attrib_name : str
+            Base name of attribute columns. (default is 'lf_data')
 
         Returns
         ----------
@@ -154,17 +156,17 @@ class LayerFile(object):
         >>> hdobj = flopy.utils.HeadFile('test.hds')
         >>> times = hdobj.get_times()
         >>> hdobj.to_shapefile('test_heads_sp6.shp', totim=times[-1])
-        '''
+        """
 
        plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()
        if mflay != None:
-           attrib_dict = {attrib_name+"{0:03d}".format(mflay):plotarray[0,:,:]}
+           attrib_dict = {attrib_name+'{0:03d}'.format(mflay):plotarray[0,:,:]}
        else:
            attrib_dict = {}
            for k in range(plotarray.shape[0]):
-               name = attrib_name+"{0:03d}".format(k)
+               name = attrib_name+'{0:03d}'.format(k)
                attrib_dict[name] = plotarray[k]
        from flopy.utils.flopy_io import write_grid_shapefile
        write_grid_shapefile(filename, self.sr, attrib_dict)
@@ -188,34 +190,35 @@ class LayerFile(object):
             These are zero-based kstp and kper values.
         totim : float
             The simulation time.
-        pcolor : bool
-            Boolean used to determine if matplotlib.pyplot.pcolormesh 
-            plot will be plotted. (default is True)
-        colorbar : bool
-            Boolean used to determine if a color bar will be added to
-            the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
-            (default is False)
-        contour : bool
-            Boolean used to determine if matplotlib.pyplot.contour
-            plot will be plotted. (default is False)
-        clabel : bool
-            Boolean used to determine if matplotlib.pyplot.clabel
-            will be plotted. Only used if contour=True. (default is False)
-        grid : bool
-            Boolean used to determine if the model grid will be plotted
-            on the figure. (default is False)
-        masked_values : list 
-            List of unique values to be excluded from the plot.
         mflay : int
             MODFLOW zero-based layer number to return.  If None, then all
             all layers will be included. (default is None)
         filename_base : str
-            Base file name that will be used to automatically generate file 
+            Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
             files if file_name_base is not None. (default is None)
-        file_extension : str
-            Valid matplotlib.pyplot file extension for savefig(). Only used
-            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
 
         Returns
         ----------
