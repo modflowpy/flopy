@@ -146,14 +146,10 @@ def _plot_array_helper(plotarray, sr, axes=None,
         #--check that there is atleast one cell that is not masked
         count = plotarray[k].size - np.ma.getmask(plotarray[k]).sum()
         if count == 0:
-            title = ax.get_title()
-            title += ' NO DATA'
-            ax.set_title(title)
-            mm.set_extent()
-            #axes[k].text(0.5, 0.5, 'No Data', fontsize=12,
-            #             ha='center', va='center')
-            #axes[k].set_xticks([])
-            #axes[k].set_yticks([])
+            axes[k].text(0.5,0.5, "No Data", fontsize=12,
+                         ha="center", va="center")
+            axes[k].set_xticks([])
+            axes[k].set_yticks([])
         else:
             fig = plt.figure(num=fignum[idx])
             if pcolor:
@@ -164,9 +160,9 @@ def _plot_array_helper(plotarray, sr, axes=None,
 
             if contourdata:
                 cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                      ax=axes[idx], colors=colors, levels=levels)
+                                      ax=axes[idx], colors=colors, levels=levels, **kwargs)
                 if clabel:
-                    axes[idx].clabel(cl, fmt=fmt)
+                    axes[idx].clabel(cl, fmt=fmt,**kwargs)
 
             if grid:
                 mm.plot_grid(ax=axes[idx])
@@ -408,9 +404,10 @@ def shapefile_get_vertices(shp):
 
     Examples
     --------
-    >>>import flopy
-    >>>fshp = 'myshapefile'
-    >>>lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
+
+    >>> import flopy
+    >>> fshp = 'myshapefile'
+    >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
     
     """
     try:
