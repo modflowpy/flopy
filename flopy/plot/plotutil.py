@@ -16,7 +16,7 @@ bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
 
 
-def _plot_array_helper(plotarray, sr, axes=None, 
+def _plot_array_helper(plotarray, model, axes=None,
                        names=None, filenames=None, fignum=None,
                        mflay=None, **kwargs):
     try:
@@ -49,6 +49,11 @@ def _plot_array_helper(plotarray, sr, axes=None,
         pcolor = kwargs.pop('pcolor')
     else:
         pcolor = True
+
+    if 'inactive' in kwargs:
+        inactive = kwargs.pop('inactive')
+    else:
+        inactive = True
 
     if 'contour' in kwargs:
         contourdata = kwargs.pop('contour')
@@ -114,19 +119,15 @@ def _plot_array_helper(plotarray, sr, axes=None,
             fignum = [fignum]
         assert len(fignum) == plotarray.shape[0]
     else:
-        #fignum = np.arange(plotarray.shape[0])
         fignum = np.arange(i0, i1)
         
-    #show = True
     if axes is not None:
         if not isinstance(axes, list):
             axes = [axes]
         assert len(axes) == plotarray.shape[0]
-        #show = False
     #--prepare some axis objects for use
     else:
         axes = []
-        #for k in range(plotarray.shape[0]):
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(figsize=figsize, num=fignum[idx])
             ax = plt.subplot(1, 1, 1, aspect='equal')
@@ -140,32 +141,30 @@ def _plot_array_helper(plotarray, sr, axes=None,
             ax.set_title(title)
             axes.append(ax)
    
-    cm = []
-    mm = map.ModelMap(ax=axes[0], sr=sr)
+    mm = map.ModelMap(ax=axes[0], model=model) #sr=sr)
     for idx, k in enumerate(range(i0, i1)):
-        #--check that there is atleast one cell that is not masked
-        count = plotarray[k].size - np.ma.getmask(plotarray[k]).sum()
-        if count == 0:
-            axes[k].text(0.5,0.5, "No Data", fontsize=12,
-                         ha="center", va="center")
-            axes[k].set_xticks([])
-            axes[k].set_yticks([])
-        else:
-            fig = plt.figure(num=fignum[idx])
-            if pcolor:
-                cm = mm.plot_array(plotarray[k], masked_values=masked_values,
-                                   ax=axes[idx], **kwargs)
-                if cb:
-                    plt.colorbar(cm, ax=axes[idx], shrink=0.5)
+        fig = plt.figure(num=fignum[idx])
+        if pcolor:
+            cm = mm.plot_array(plotarray[k], masked_values=masked_values,
+                               ax=axes[idx], **kwargs)
+            if cb:
+                plt.colorbar(cm, ax=axes[idx], shrink=0.5)
 
-            if contourdata:
-                cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                      ax=axes[idx], colors=colors, levels=levels, **kwargs)
-                if clabel:
-                    axes[idx].clabel(cl, fmt=fmt,**kwargs)
+        if contourdata:
+            cl = mm.contour_array(plotarray[k], masked_values=masked_values,
+                                  ax=axes[idx], colors=colors, levels=levels, **kwargs)
+            if clabel:
+                axes[idx].clabel(cl, fmt=fmt,**kwargs)
 
-            if grid:
-                mm.plot_grid(ax=axes[idx])
+        if grid:
+            mm.plot_grid(ax=axes[idx])
+
+        if inactive:
+            try:
+                ib = model.bas6.getibound()
+                mm.plot_inactive(ibound=ib, ax=axes[idx])
+            except:
+                pass
 
     if len(axes) == 1:
         axes = axes[0]
@@ -182,7 +181,7 @@ def _plot_array_helper(plotarray, sr, axes=None,
     return axes
 
 
-def _plot_bc_helper(package, nlay, kper,
+def _plot_bc_helper(package, kper,
                     axes=None, names=None, filenames=None, fignum=None,
                     mflay=None, **kwargs):
     try:
@@ -197,11 +196,18 @@ def _plot_bc_helper(package, nlay, kper,
     #--reshape 2d arrays to 3d for convenience
     ftype = package.name[0]
 
+    nlay = package.parent.nlay
+
     #--parse keyword arguments
     if 'figsize' in kwargs:
         figsize = kwargs.pop('figsize')
     else:
         figsize = None
+
+    if 'inactive' in kwargs:
+        inactive = kwargs.pop('inactive')
+    else:
+        inactive = True
 
     if 'grid' in kwargs:
         grid = kwargs.pop('grid')
@@ -213,8 +219,9 @@ def _plot_bc_helper(package, nlay, kper,
     else:
         dpi = None
 
+    masked_values = None
     if 'masked_values' in kwargs:
-        masked_values = kwargs.pop('masked_values ')
+        kwargs.pop('masked_values ')
     else:
         masked_values = None
 
@@ -264,7 +271,6 @@ def _plot_bc_helper(package, nlay, kper,
             ax.set_title(title)
             axes.append(ax)
 
-    #mm = map.ModelMap(ax=axes[0], model=package.parent)
     for idx, k in enumerate(range(i0, i1)):
         mm = map.ModelMap(ax=axes[idx], model=package.parent, layer=k)
         fig = plt.figure(num=fignum[idx])
@@ -272,6 +278,13 @@ def _plot_bc_helper(package, nlay, kper,
 
         if grid:
             mm.plot_grid(ax=axes[idx])
+
+        if inactive:
+            try:
+                ib = package.parent.bas6.getibound()
+                mm.plot_inactive(ibound=ib, ax=axes[idx])
+            except:
+                pass
 
     if len(axes) == 1:
         axes = axes[0]

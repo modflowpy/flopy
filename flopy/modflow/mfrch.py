@@ -78,10 +78,10 @@ class ModflowRch(Package):
         self.nrchop = nrchop
         self.ipakcb = ipakcb
         self.rech = transient_2d(model, (nrow, ncol), np.float32,
-                                 rech, name = "rech_")
+                                 rech, name = 'rech_')
         if self.nrchop == 2:
             self.irch = transient_2d(model, (nrow, ncol), np.int,
-                                     irch+1, name = "irch_")  # irch+1, as irch is zero based
+                                     irch+1, name = 'irch_')  # irch+1, as irch is zero based
         else:
             self.irch = None
         self.np = 0

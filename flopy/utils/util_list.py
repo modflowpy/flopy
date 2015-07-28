@@ -495,7 +495,7 @@ class mflist(object):
     def plot(self, pack, key, names, kper, **kwargs):
         import flopy.plot.plotutil as pu
         if key is None:
-            axes = pu._plot_bc_helper(pack, pack.parent.nlay, kper,
+            axes = pu._plot_bc_helper(pack, kper,
                                       names=names, **kwargs)
         else:
             arr_dict = self.to_array(kper)

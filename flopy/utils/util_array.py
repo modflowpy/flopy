@@ -253,7 +253,7 @@ class util_3d(object):
 
 
     def to_shapefile(self, filename):
-        '''
+        """
         Export 3-D model data to shapefile (polygons).  Adds an
             attribute for each util_2d in self.u2ds
 
@@ -276,8 +276,9 @@ class util_3d(object):
         --------
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
-        >>> ml.lpf.hk.as_shapefile('test_hk.shp')
-        '''
+        >>> ml.lpf.hk.to_shapefile('test_hk.shp')
+        """
+
         from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
         for ilay in range(self.model.nlay):
@@ -366,7 +367,7 @@ class util_3d(object):
             filenames = ['{}_{}_Layer{}.{}'.format(filename_base, self.name,
                                                    k+1, fext) for k in range(i0, i1)]
 
-        return pu._plot_array_helper(self.array, self.model.dis.sr, 
+        return pu._plot_array_helper(self.array, self.model,
                                      names=names, filenames=filenames, 
                                      mflay=mflay, fignum=fignum, **kwargs)
 
@@ -550,7 +551,7 @@ class transient_2d(object):
 
     """
 
-    def __init__(self,model, shape, dtype, value, name=None, fmtin=None,
+    def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
 
         if isinstance(value,transient_2d):
@@ -682,29 +683,30 @@ class transient_2d(object):
             fext = 'png'
         
         if 'kper' in kwargs:
-            k0 = int(kwargs.pop('kper'))
-            if k0+1 >= self.model.nper:
-                k0 = self.model.nper - 1
-            k1 = k0 + 1
+            kper = int(kwargs.pop('kper'))
         else:
-            k0 = 0
-            k1 = self.model.nper
-        
+            kper = 0
+
+        if 'fignum' in kwargs:
+            fignum = kwargs.pop('fignum')
+        else:
+            fignum = list(range(self[kper].array.shape[0]))
+
         axes = []
-        for idx, kper in enumerate(range(k0, k1)):
-            start_dt = self.model.dis.tr.stressperiod_start[kper]\
-                           .to_datetime().strftime("%d-%m-%Y")
-            end_dt = self.model.dis.tr.stressperiod_end[kper]\
-                         .to_datetime().strftime("%d-%m-%Y")
-            title = 'stress period {0:d}:{1:s} to {2:s}'.\
-                    format(kper+1, start_dt, end_dt)
-            if filename_base is not None:
-                filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
-            else:
-                filename = None
-            axes.append(pu._plot_array_helper(self[kper].array, self.model.dis.sr, 
-                        names=title, filenames=filename, fignum=kper, **kwargs))        
-        return axes
+        start_dt = self.model.dis.tr.stressperiod_start[kper]\
+                       .to_datetime().strftime("%d-%m-%Y")
+        end_dt = self.model.dis.tr.stressperiod_end[kper]\
+                     .to_datetime().strftime("%d-%m-%Y")
+        title = '{} stress period {:d}:{:s} to {:s}'.\
+                 format(self.name_base.replace('_', '').upper(),
+                        kper+1, start_dt, end_dt)
+        if filename_base is not None:
+            filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
+        else:
+            filename = None
+        return pu._plot_array_helper(self[kper].array, self.model,
+                                     names=title, filenames=filename, fignum=fignum, **kwargs)
+
 
     def __getitem__(self, kper):
         if kper in list(self.transient_2ds.keys()):
@@ -854,7 +856,8 @@ class util_2d(object):
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
         cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
         ext_unit_dict=None):
-        '''1d or 2-d array support with minimum of mem footprint.  
+        """
+        1d or 2-d array support with minimum of mem footprint.
         only creates arrays as needed, 
         otherwise functions with strings or constants
         shape = 1-d or 2-d tuple
@@ -866,10 +869,10 @@ class util_2d(object):
         model instance string attribute "external_path" 
         used to determine external array writing
         bin controls writing of binary external arrays
-        '''
-        if isinstance(value,util_2d):
+        """
+        if isinstance(value, util_2d):
             for attr in value.__dict__.items():
-                setattr(self,attr[0],attr[1])
+                setattr(self, attr[0], attr[1])
             return
         self.model = model
         self.shape = shape
@@ -997,7 +1000,7 @@ class util_2d(object):
         if filename_base is not None:
             filename = '{}_{}.{}'.format(filename_base, self.name, fext)
         
-        return pu._plot_array_helper(self.array, self.model.dis.sr, 
+        return pu._plot_array_helper(self.array, self.model,
                                      names=title, filenames=filename,
                                      fignum=fignum, **kwargs)
 

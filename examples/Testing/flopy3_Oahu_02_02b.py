@@ -164,20 +164,21 @@ oc2 = m2.get_package('OC')
 
 oc2.write_file()
 
-#m2.plot(colorbar=True)
-#plt.show()
+ax = m2.plot(colorbar=True)
+print(len(ax))
+plt.show()
 
 #m2.dis.plot(colorbar=True)
 #plt.show()
 
-m2.lpf.plot(colorbar=True)
-plt.show()
+#m2.lpf.plot(colorbar=True)
+#plt.show()
 
 #m2.ghb.plot(key='cond', colorbar=True, masked_values=[0])
 #plt.show()
 
-m2.ghb.plot()
-plt.show()
+#m2.ghb.plot()
+#plt.show()
 
 print('\nthis is the end...my friend\n')
 

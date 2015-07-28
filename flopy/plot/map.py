@@ -164,6 +164,42 @@ class ModelMap(object):
 
         return contour_set
 
+    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
+        """
+        Make a plot of inactive cells.  If not specified, then pull ibound from the
+        self.ml
+
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+        color_noflow : string
+            (Default is 'black')
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if ibound is None:
+            bas = self.model.get_package('BAS6')
+            ibound = bas.ibound
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        plotarray[idx1] = 1
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        return quadmesh
+
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                     **kwargs):
         """
