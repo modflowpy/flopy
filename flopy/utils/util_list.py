@@ -495,6 +495,74 @@ class mflist(object):
     def plot(self, pack, key, names, kper,
              filename_base=None, file_extension=None, mflay=None,
              **kwargs):
+        """
+        Plot stress period boundary condition (mflist) data for a specified
+        stress period
+
+        Parameters
+        ----------
+        pack : Package object
+            flopy package object
+        key : str
+            mflist dictionary key
+        names : list
+            List of names for figure titles
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is zero)
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.wel.plot(kper=1)
+
+        """
+
         import flopy.plot.plotutil as pu
 
         if file_extension is not None:
@@ -540,6 +608,34 @@ class mflist(object):
         return axes
 
     def to_shapefile(self, filename, kper=0):
+        """
+        Export stress period boundary condition (mflist) data for a specified
+        stress period
+
+        Parameters
+        ----------
+        filename : str
+            Shapefile name to write
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is zero)
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.wel.to_shapefile('test_hk.shp', kper=1)
+        """
+
         import flopy.utils.flopy_io as fio
         arrays = self.to_array(kper)
         array_dict = {}
@@ -550,6 +646,35 @@ class mflist(object):
         fio.write_grid_shapefile(filename, self.sr, array_dict)
 
     def to_array(self, kper=0):
+        """
+        Convert stress period boundary condition (mflist) data for a
+        specified stress period to a 3-D numpy array
+
+        Parameters
+        ----------
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is zero)
+
+        Returns
+        ----------
+        out : dict of numpy.ndarrays
+            Dictionary of 3-D numpy arrays containing the stress period data for
+            a selected stress period. The dictonary keys are the mflist dtype
+            names for the stress period data ('cond', 'flux', 'bhead', etc.).
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> v = ml.wel.stress_period_data.to_array(kper=1)
+
+        """
         i0 = 3
         if 'inode' in self.dtype.names:
             raise NotImplementedError()

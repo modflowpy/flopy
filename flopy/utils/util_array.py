@@ -87,14 +87,16 @@ def read1d(f, a):
     return a
 
 def array2string(a, fmt_tup):
-        '''Converts a 1D or 2D array into a string
+        """
+        Converts a 1D or 2D array into a string
         Input:
             a: array
             fmt_tup = (npl,fmt_str)
             fmt_str: format string
             npl: number of numbers per line
         Output:
-            s: string representation of the array'''
+            s: string representation of the array
+        """
 
         aa = np.atleast_2d(a)
         nr, nc = np.shape(aa)[0:2]
@@ -152,10 +154,11 @@ def u2d_like(model, other):
 
 
 # class meta_interceptor(type):
-#     '''meta class to catch existing instances of util_2d,
+#     """
+#     meta class to catch existing instances of util_2d,
 #     transient_2d and util_3d to prevent re-instantiating them.
 #     a lot of python trickery here...
-#     '''
+#     """
 #     def __call__(cls, *args, **kwds):
 #         for a in args:
 #             if isinstance(a, util_2d) or isinstance(a, util_3d):
@@ -229,8 +232,9 @@ class util_3d(object):
 
     def __init__(self, model, shape, dtype, value, name,
         fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
-        '''3-D wrapper from util_2d - shape must be 3-D
-        '''
+        """
+        3-D wrapper from util_2d - shape must be 3-D
+        """
         if isinstance(value,util_3d):
             for attr in value.__dict__.items():
                 setattr(self,attr[0],attr[1])
@@ -288,16 +292,13 @@ class util_3d(object):
                              array_dict)
 
 
-    def plot(self, filename_base=None, mflay=None, file_extension=None,
+    def plot(self, filename_base=None, file_extension=None, mflay=None,
              fignum=None, **kwargs):
         """
         Plot 3-D model input data
 
         Parameters
         ----------
-        mflay : int
-            MODFLOW zero-based layer number to return.  If None, then all
-            all layers will be included. (default is None)
         filename_base : str
             Base file name that will be used to automatically generate file
             names for output image files. Plots will be exported as image
@@ -305,6 +306,9 @@ class util_3d(object):
         file_extension : str
             Valid matplotlib.pyplot file extension for savefig(). Only used
             if filename_base is not None. (default is 'png')
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
         **kwargs : dict
             axes : list of matplotlib.pyplot.axis
                 List of matplotlib.pyplot.axis that will be used to plot
@@ -588,7 +592,7 @@ class transient_2d(object):
 
 
     def to_shapefile(self, filename):
-        '''
+        """
         Export transient 2D data to a shapefile (as polygons). Adds an 
             attribute for each unique util_2d instance in self.data
 
@@ -612,7 +616,7 @@ class transient_2d(object):
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.rch.rech.as_shapefile('test_rech.shp')
-        '''
+        """
         from flopy.utils.flopy_io import write_grid_shapefile
         array_dict = {}
         for kper in range(self.model.nper):
@@ -622,7 +626,7 @@ class transient_2d(object):
 
 
     def plot(self, filename_base=None, file_extension=None, **kwargs):
-        '''
+        """
         Plot transient 2-D model input data
 
         Parameters
@@ -678,7 +682,7 @@ class transient_2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.rch.rech.plot()
         
-        '''
+        """
         import flopy.plot.plotutil as pu
         
         if file_extension is not None:
@@ -728,7 +732,8 @@ class transient_2d(object):
                             " could find an entry before kper {0:d}".format(kper))
 
     def get_kper_entry(self, kper):
-        """get the file entry info for a given kper
+        """
+        get the file entry info for a given kper
         returns (itmp,file entry string from util_2d)
         """
         if kper in list(self.transient_2ds.keys()):
@@ -739,7 +744,8 @@ class transient_2d(object):
             return (-1, '')
 
     def build_transient_sequence(self):
-        """parse self.__value into a dict{kper:util_2d}
+        """
+        parse self.__value into a dict{kper:util_2d}
         """
 
         # a dict keyed on kper (zero-based)
@@ -786,7 +792,8 @@ class transient_2d(object):
 
 
     def __get_2d_instance(self,kper,arg):
-        """parse an argument into a util_2d instance
+        """
+        parse an argument into a util_2d instance
         """
         ext_filename = None
         name = self.name_base+str(kper + 1)
@@ -936,7 +943,7 @@ class util_2d(object):
 
     def plot(self, title=None, filename_base=None, file_extension=None,
              fignum=None, **kwargs):
-        '''
+        """
         Plot 2-D model input data
 
         Parameters
@@ -993,7 +1000,7 @@ class util_2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.dis.top.plot()
         
-        '''        
+        """       
         import flopy.plot.plotutil as pu
         if title is None:
             title = self.name
@@ -1013,7 +1020,7 @@ class util_2d(object):
 
 
     def to_shapefile(self, filename):
-        '''
+        """
         Export 2-D model data to a shapefile (as polygons) of self.array
 
         Parameters
@@ -1036,7 +1043,7 @@ class util_2d(object):
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.dis.top.as_shapefile('test_top.shp')
-        '''
+        """
         from flopy.utils.flopy_io import write_grid_shapefile
         write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
 
@@ -1088,8 +1095,9 @@ class util_2d(object):
                 return self.array[(k,)]
 
     def __setitem__(self, k, value):
-        '''this one is dangerous because it resets __value
-        '''
+        """
+        his one is dangerous because it resets __value
+        """
         a = self.array
         a[k] = value
         a = a.astype(self.dtype)
@@ -1111,9 +1119,10 @@ class util_2d(object):
         return type(self.__value)
     
     def get_file_entry(self):
-        '''this is the entry point for getting an 
+        """
+        this is the entry point for getting an
         input file entry for this object
-        '''
+        """
         #--call get_file_array first in case we need to
        #-- get a new external unit number and reset self.locat
         vstring = self.get_file_array()
@@ -1122,10 +1131,11 @@ class util_2d(object):
     
 
     def get_file_array(self):
-        '''increments locat and update model instance if needed.
+        """
+        increments locat and update model instance if needed.
         if the value is a constant, or a string, or external, 
         return an empty string
-        '''       
+        """       
         #--if the value is not a filename
         if self.vtype != str:
             
@@ -1185,8 +1195,9 @@ class util_2d(object):
 
     @property
     def string(self):
-        '''get the string represenation of value attribute
-        '''
+        """
+        get the string represenation of value attribute
+        """
         a = self.array
         #--convert array to sting with specified format
         a_string = array2string(a,self.py_desc)
@@ -1194,9 +1205,10 @@ class util_2d(object):
                                     
     @property
     def array(self):
-        '''get the array representation of value attribute
-           if value is a string or a constant, the array is loaded/built only once
-        '''
+        """
+        get the array representation of value attribute
+        if value is a string or a constant, the array is loaded/built only once
+        """
         if self.vtype == str:
             if self.__value_built is None:
                 file_in = open(self.__value,'r')
@@ -1215,12 +1227,12 @@ class util_2d(object):
     
     @staticmethod
     def load_txt(shape, file_in, dtype, fmtin):
-        '''load a (possibly wrapped format) array from a file 
+        """load a (possibly wrapped format) array from a file 
         (self.__value) and casts to the proper type (self.dtype)
         made static to support the load functionality 
         this routine now supports fixed format arrays where the numbers
         may touch.
-        '''
+        """
         #file_in = open(self.__value,'r')
         #file_in = open(filename,'r')
         #nrow,ncol = self.shape
@@ -1271,13 +1283,13 @@ class util_2d(object):
     @staticmethod
     def write_txt(shape, file_out, data, fortran_format="(FREE)",
                   python_format=None):
-        '''
+        """
         write a (possibly wrapped format) array from a file
         (self.__value) and casts to the proper type (self.dtype)
         made static to support the load functionality
         this routine now supports fixed format arrays where the numbers
         may touch.
-        '''
+        """
 
         if fortran_format.upper() == '(FREE)' and python_format is None:
             np.savetxt(file_out,data,util_2d.get_default_numpy_fmt(data.dtype),
@@ -1346,8 +1358,9 @@ class util_2d(object):
         return
 
     def get_control_record(self):
-        '''get the modflow control record
-        '''      
+        """
+        get the modflow control record
+        """      
         lay_space = '{0:>27s}'.format('')
         if self.model.free_format:
             if self.ext_filename is None:
@@ -1410,10 +1423,11 @@ class util_2d(object):
 
 
     def fort_2_py(self,fd):
-        '''converts the fortran format descriptor 
+        """
+        converts the fortran format descriptor
         into a tuple of npl and a python format specifier
 
-        '''
+        """
         npl,fmt,width,decimal = decode_fortran_descriptor(fd)
         if npl == 'free':
             if self.vtype == np.int:
@@ -1428,9 +1442,10 @@ class util_2d(object):
 
 
     def parse_value(self, value):
-        '''parses and casts the raw value into an acceptable format for __value
+        """
+        parses and casts the raw value into an acceptable format for __value
         lot of defense here, so we can make assumptions later
-        '''
+        """
         if isinstance(value, list):
             if VERBOSE:
                 print('util_2d: casting list to array')
@@ -1506,12 +1521,13 @@ class util_2d(object):
 
     @staticmethod
     def load(f_handle, model, shape, dtype, name, ext_unit_dict=None):
-        '''functionality to load util_2d instance from an existing
+        """
+        functionality to load util_2d instance from an existing
         model input file.
         external and internal record types must be fully loaded
         if you are using fixed format record types,make sure 
         ext_unit_dict has been initialized from the NAM file
-        '''     
+        """     
 
         curr_unit = None
         if ext_unit_dict is not None:
@@ -1582,10 +1598,11 @@ class util_2d(object):
     @staticmethod
     def parse_control_record(line, current_unit=None, dtype=np.float32,
                              ext_unit_dict=None):
-        '''parses a control record when reading an existing file
+        """
+        parses a control record when reading an existing file
         rectifies fixed to free format
         current_unit (optional) indicates the unit number of the file being parsed
-        '''
+        """
         free_fmt = ['open/close', 'internal', 'external', 'constant']
         raw = line.lower().strip().split()
         freefmt, cnstnt, fmtin, iprn, nunit = None, None, None, -1, None

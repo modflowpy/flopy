@@ -496,17 +496,17 @@ class BaseModel(object):
             self.pop_key_list.append(key)
 
 
-    def plot(self, SelPackList=False, **kwargs):
+    def plot(self, SelPackList=None, **kwargs):
         """
-        Plot 3-D model input data
+        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        model input data
 
         Parameters
         ----------
-        SelPackList : False or list of packages
+        SelPackList : bool or list
+            List of of packages to plot. If SelPackList=None all packages
+            are plotted. (default is None)
         **kwargs : dict
-            mflay : int
-                MODFLOW zero-based layer number to return.  If None, then all
-                all layers will be included. (default is None)
             filename_base : str
                 Base file name that will be used to automatically generate file
                 names for output image files. Plots will be exported as image
@@ -514,34 +514,17 @@ class BaseModel(object):
             file_extension : str
                 Valid matplotlib.pyplot file extension for savefig(). Only used
                 if filename_base is not None. (default is 'png')
-            axes : list of matplotlib.pyplot.axis
-                List of matplotlib.pyplot.axis that will be used to plot
-                data for each layer. If axes=None axes will be generated.
-                (default is None)
-            pcolor : bool
-                Boolean used to determine if matplotlib.pyplot.pcolormesh
-                plot will be plotted. (default is True)
-            colorbar : bool
-                Boolean used to determine if a color bar will be added to
-                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
-                (default is False)
-            contour : bool
-                Boolean used to determine if matplotlib.pyplot.contour
-                plot will be plotted. (default is False)
-            clabel : bool
-                Boolean used to determine if matplotlib.pyplot.clabel
-                will be plotted. Only used if contour=True. (default is False)
-            grid : bool
-                Boolean used to determine if the model grid will be plotted
-                on the figure. (default is False)
-            masked_values : list
-                List of unique values to be excluded from the plot.
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is zero)
 
         Returns
         ----------
         out : list
             Empty list is returned if filename_base is not None. Otherwise
-            a list of matplotlib.pyplot.axis is returned.
+            a list of matplotlib.pyplot.axis are returned.
 
         See Also
         --------
@@ -583,7 +566,7 @@ class BaseModel(object):
 
         axes = []
         ifig = 0
-        if SelPackList == False:
+        if SelPackList is None:
             for p in self.packagelist:
                 caxs = p.plot(initial_fig=ifig,
                               filename_base=fileb, file_extension=fext,
@@ -751,6 +734,45 @@ class Package(object):
         return newdtype
 
     def plot(self, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        package input data
+
+        Parameters
+        ----------
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is zero)
+
+        Returns
+        ----------
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.dis.plot()
+
+        """
 
         #--valid keyword arguments
         if 'kper' in kwargs:

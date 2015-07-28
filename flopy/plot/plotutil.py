@@ -1,9 +1,7 @@
 """
-Module to post-process MODFLOW binary output.  The module contains one
-important classes that can be accessed by the user.
-
-*  SwiConcentration (Process Zeta results to concentrations)
-
+Module containing helper functions for plotting model data
+using ModelMap and ModelCrossSection. Functions for plotting
+shapefiles are also included.
 """
 import os
 import sys
@@ -219,11 +217,8 @@ def _plot_bc_helper(package, kper,
     else:
         dpi = None
 
-    masked_values = None
     if 'masked_values' in kwargs:
         kwargs.pop('masked_values ')
-    else:
-        masked_values = None
 
     if mflay is not None:
         i0 = int(mflay)
@@ -298,20 +293,6 @@ def _plot_bc_helper(package, kper,
         #--there will be nothing to return when done
         axes = None
     return axes
-
-
-# def rotate(x, y, theta, xorigin=0., yorigin=0.):
-#     """
-#     Given x and y array-like values calculate the rotation about an
-#     arbitrary origin and then return the rotated coordinates.  theta is in
-#     radians.
-#
-#     """
-#     xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
-#                                                      (y - yorigin)
-#     yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
-#                                                      (y - yorigin)
-#     return xrot, yrot
 
 
 class SwiConcentration():
