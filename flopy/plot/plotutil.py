@@ -115,7 +115,7 @@ def _plot_array_helper(plotarray, model, axes=None,
     if fignum is not None:
         if not isinstance(fignum, list):
             fignum = [fignum]
-        assert len(fignum) == plotarray.shape[0]
+        assert len(fignum) == (i1 - i0) #plotarray.shape[0]
     else:
         fignum = np.arange(i0, i1)
         
@@ -139,9 +139,10 @@ def _plot_array_helper(plotarray, model, axes=None,
             ax.set_title(title)
             axes.append(ax)
    
-    mm = map.ModelMap(ax=axes[0], model=model) #sr=sr)
+    #mm = map.ModelMap(ax=axes[0], model=model) #sr=sr)
     for idx, k in enumerate(range(i0, i1)):
         fig = plt.figure(num=fignum[idx])
+        mm = map.ModelMap(ax=axes[idx], model=model, layer=k)
         if pcolor:
             cm = mm.plot_array(plotarray[k], masked_values=masked_values,
                                ax=axes[idx], **kwargs)
@@ -242,7 +243,7 @@ def _plot_bc_helper(package, kper,
     if fignum is not None:
         if not isinstance(fignum, list):
             fignum = [fignum]
-        assert len(fignum) == nlay
+        assert len(fignum) == (i1 - i0)
     else:
         fignum = np.arange(i0, i1)
 

@@ -322,7 +322,7 @@ class HeadFile(BinaryLayerFile):
         self.text = text.encode()
         self.header_dtype = BinaryHeader.set_dtype(bintype='Head',
                                                    precision=precision)
-        super(HeadFile, self).__init__(filename, precision, verbose,kwargs)
+        super(HeadFile, self).__init__(filename, precision, verbose, kwargs)
         return
 
 

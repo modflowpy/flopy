@@ -263,7 +263,7 @@ class LayerFile(object):
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()
         import flopy.plot.plotutil as pu
-        return pu._plot_array_helper(plotarray, self.sr, axes, 
+        return pu._plot_array_helper(plotarray, self.model, axes,
                                      filenames=filenames, 
                                      mflay=mflay, **kwargs)
 

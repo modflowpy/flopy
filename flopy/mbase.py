@@ -573,7 +573,11 @@ class BaseModel(object):
                               kper=kper, mflay=mflay)
                 if isinstance(caxs, list):
                     for c in caxs:
-                        axes.append(c)
+                        if isinstance(c, list):
+                            for cc in c:
+                                axes.append(cc)
+                        else:
+                            axes.append(c)
                 else:
                     axes.append(caxs)
                 ifig = len(axes) + 1
@@ -588,7 +592,11 @@ class BaseModel(object):
                                       kper=kper, mflay=mflay)
                         if isinstance(caxs, list):
                             for c in caxs:
-                                axes.append(c)
+                                if isinstance(c, list):
+                                    for cc in c:
+                                        axes.append(cc)
+                                else:
+                                    axes.append(c)
                         else:
                             axes.append(caxs)
                         ifig = len(axes) + 1
@@ -776,7 +784,7 @@ class Package(object):
 
         #--valid keyword arguments
         if 'kper' in kwargs:
-            kper = int(kwargs.pop('kper'))
+            kper = kwargs.pop('kper')
         else:
             kper = 0
 
@@ -841,7 +849,7 @@ class Package(object):
                     print('plotting {} package transient_2d instance: {}'.format(self.name[0], item))
                 fignum = list(range(ifig, ifig+inc))
                 ifig = fignum[-1] + 1
-                caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay, kper=kper,
+                caxs.append(value.plot(filename_base=fileb, file_extension=fext, kper=kper,
                                        fignum=fignum, colorbar=True))
             elif isinstance(value, list):
                 for v in value:

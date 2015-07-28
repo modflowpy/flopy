@@ -661,8 +661,10 @@ class transient_2d(object):
                 on the figure. (default is False)
             masked_values : list
                 List of unique values to be excluded from the plot.
-            kper : int
-                MODFLOW zero-based stress period number to return
+            kper : str
+                MODFLOW zero-based stress period number to return. If
+                kper='all' then data for all stress period will be
+                extracted. (default is zero).
 
         Returns
         ----------
@@ -691,32 +693,58 @@ class transient_2d(object):
             fext = 'png'
         
         if 'kper' in kwargs:
-            kper = int(kwargs.pop('kper'))
+            kk = kwargs['kper']
+            kwargs.pop('kper')
+            try:
+                kk = kk.lower()
+                if kk == 'all':
+                    k0 = 0
+                    k1 = self.model.nper
+                else:
+                    k0 = 0
+                    k1 = 1
+            except:
+                k0 = int(kk)
+                k1 = k0 + 1
+            # if kwargs['kper'] == 'all':
+            #     kwargs.pop('kper')
+            #     k0 = 0
+            #     k1 = self.model.nper
+            # else:
+            #     k0 = int(kwargs.pop('kper'))
+            #     k1 = k0 + 1
         else:
-            kper = 0
+            k0 = 0
+            k1 = 1
 
         if 'fignum' in kwargs:
             fignum = kwargs.pop('fignum')
         else:
-            fignum = list(range(self[kper].array.shape[0]))
+            fignum = list(range(k0, k1))
+
+        if 'mflay' in kwargs:
+            kwargs.pop('mflay')
 
         axes = []
-        title = '{} stress period {:d}'.\
-                 format(self.name_base.replace('_', '').upper(),
-                        kper+1)
-        if not self.model.dis.tr.assumed:
-            start_dt = self.model.dis.tr.stressperiod_start[kper]\
-                           .to_datetime().strftime("%d-%m-%Y")
-            end_dt = self.model.dis.tr.stressperiod_end[kper]\
-                         .to_datetime().strftime("%d-%m-%Y")
-            title += ' ({:s} to {:s})'.format(start_dt, end_dt)
+        for idx, kper in enumerate(range(k0, k1)):
+            title = '{} stress period {:d}'.\
+                     format(self.name_base.replace('_', '').upper(),
+                            kper+1)
+            if not self.model.dis.tr.assumed:
+                start_dt = self.model.dis.tr.stressperiod_start[kper]\
+                               .to_datetime().strftime("%d-%m-%Y")
+                end_dt = self.model.dis.tr.stressperiod_end[kper]\
+                             .to_datetime().strftime("%d-%m-%Y")
+                title += ' ({:s} to {:s})'.format(start_dt, end_dt)
 
-        if filename_base is not None:
-            filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
-        else:
-            filename = None
-        return pu._plot_array_helper(self[kper].array, self.model,
-                                     names=title, filenames=filename, fignum=fignum, **kwargs)
+            if filename_base is not None:
+                filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
+            else:
+                filename = None
+            axes.append(pu._plot_array_helper(self[kper].array, self.model,
+                                              names=title, filenames=filename,
+                                              fignum=fignum[idx], **kwargs))
+        return axes
 
 
     def __getitem__(self, kper):
