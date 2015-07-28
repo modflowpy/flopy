@@ -119,6 +119,7 @@ class Modflow(BaseModel):
         self.external_units = []
         self.external_binflag = []
         self.external = False
+        self.verbose = verbose
         self.load = load
         # the starting external data unit number
         self.__next_ext_unit = 1000

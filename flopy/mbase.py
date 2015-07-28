@@ -5,6 +5,7 @@ mbase module
 
 """
 
+from __future__ import print_function
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 import sys
@@ -495,6 +496,142 @@ class BaseModel(object):
             self.pop_key_list.append(key)
 
 
+    def plot(self, SelPackList=False, **kwargs):
+        """
+        Plot 3-D model input data
+
+        Parameters
+        ----------
+        SelPackList : False or list of packages
+        **kwargs : dict
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.plot()
+
+        """
+        if 'pcolor' in kwargs:
+            pcolor = kwargs.pop('pcolor')
+        else:
+            pcolor = True
+
+        if 'contour' in kwargs:
+            contour = kwargs.pop('contour')
+        else:
+            contour = False
+
+        if 'clabel' in kwargs:
+            clabel = kwargs.pop('clabel')
+        else:
+            clabel = False
+
+        if 'colorbar' in kwargs:
+            colorbar = kwargs.pop('colorbar')
+        else:
+            colorbar = False
+
+        if 'grid' in kwargs:
+            grid = kwargs.pop('grid')
+        else:
+            grid = False
+
+        if 'levels' in kwargs:
+            levels = kwargs.pop('levels')
+        else:
+            levels = None
+
+        if 'colors' in kwargs:
+            colors = kwargs.pop('colors')
+        else:
+            colors = 'black'
+
+        if 'dpi' in kwargs:
+            dpi = kwargs.pop('dpi')
+        else:
+            dpi = None
+
+        if 'fmt' in kwargs:
+            fmt = kwargs.pop('fmt')
+        else:
+            fmt = '%1.3f'
+
+        if self.verbose:
+            print('\nPlotting Packages')
+
+        axes = []
+        ifig = 0
+        if SelPackList == False:
+            for p in self.packagelist:
+                axes.append(p.plot(initial_fig=ifig,
+                                   pcolor=pcolor, contour=contour, clabel=clabel,
+                                   colorbar=colorbar, grid=grid, levels=levels,
+                                   colors=colors, dpi=dpi, fmt=fmt,
+                                   **kwargs))
+                ifig = len(axes)
+        else:
+            for pon in SelPackList:
+                for i, p in enumerate(self.packagelist):
+                    if pon in p.name:
+                        if self.verbose:
+                            print('   Plotting Package: ', p.name[0])
+                        axes.append(p.plot(initial_fig=ifig,
+                                           pcolor=pcolor, contour=contour, clabel=clabel,
+                                           colorbar=colorbar, grid=grid, levels=levels,
+                                           colors=colors, dpi=dpi, fmt=fmt,
+                                           **kwargs))
+                        ifig = len(axes)
+                        break
+        if self.verbose:
+            print(' ')
+        return axes
+
+
 class Package(object):
     """
     Base package class from which most other packages are derived.
@@ -631,6 +768,52 @@ class Package(object):
         return newdtype
 
     def plot(self, **kwargs):
+
+        if 'pcolor' in kwargs:
+            pcolor = kwargs.pop('pcolor')
+        else:
+            pcolor = True
+
+        if 'contour' in kwargs:
+            contour = kwargs.pop('contour')
+        else:
+            contour = False
+
+        if 'clabel' in kwargs:
+            clabel = kwargs.pop('clabel')
+        else:
+            clabel = False
+
+        if 'colorbar' in kwargs:
+            colorbar = kwargs.pop('colorbar')
+        else:
+            colorbar = False
+
+        if 'grid' in kwargs:
+            grid = kwargs.pop('grid')
+        else:
+            grid = False
+
+        if 'levels' in kwargs:
+            levels = kwargs.pop('levels')
+        else:
+            levels = None
+
+        if 'colors' in kwargs:
+            colors = kwargs.pop('colors')
+        else:
+            colors = 'black'
+
+        if 'dpi' in kwargs:
+            dpi = kwargs.pop('dpi')
+        else:
+            dpi = None
+
+        if 'fmt' in kwargs:
+            fmt = kwargs.pop('fmt')
+        else:
+            fmt = '%1.3f'
+
         if 'kper' in kwargs:
             kper = int(kwargs.pop('kper'))
         else:
@@ -653,25 +836,75 @@ class Package(object):
         else:
             fext = 'png'
 
-        i3d = 0
+        if 'initial_fig' in kwargs:
+            ifig = int(kwargs.pop('initial_fig'))
+        else:
+            ifig = 0
+        inc = self.parent.nlay
+        if mflay is not None:
+            inc = 1
 
         axes = []
         for item, value in self.__dict__.items():
             if isinstance(value, utils.mflist):
+                if self.parent.verbose:
+                    print('plotting {} package mflist instance: {}'.format(self.name[0], item))
                 names = ['{} Stress period: {} Layer: {}'.format(self.name[0], kper+1, k+1)
                          for k in range(self.parent.nlay)]
-                axes.append(value.plot(self, key, names, kper, **kwargs))
+                axes.append(value.plot(self, key, names, kper,
+                                       pcolor=pcolor, contour=contour, clabel=clabel,
+                                       colorbar=colorbar, grid=grid, levels=levels,
+                                       colors=colors, dpi=dpi, fmt=fmt,
+                                       **kwargs))
 
             elif isinstance(value, utils.util_3d):
-                print('util_3d', item)
-                fignum = range(i3d, i3d+self.parent.nlay)
-                i3d += self.parent.nlay
+                if self.parent.verbose:
+                    print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                fignum = range(ifig, ifig+inc)
+                ifig += inc
                 axes.append(value.plot(filename_base=fileb, mflay=mflay, file_extension=fext,
-                                       fignum=fignum, **kwargs))
+                                       fignum=fignum,
+                                       pcolor=pcolor, contour=contour, clabel=clabel,
+                                       colorbar=colorbar, grid=grid, levels=levels,
+                                       colors=colors, dpi=dpi, fmt=fmt,
+                                       **kwargs))
             elif isinstance(value, utils.util_2d):
-                print('util_2d', item)
+                if (len(value.shape)==2):
+                    if self.parent.verbose:
+                        print('plotting {} package util_2d instance: {}'.format(self.name[0], item))
+                    fignum = range(ifig, ifig+1)
+                    ifig += 1
+                    axes.append(value.plot(filename_base=fileb, file_extension=fext,
+                                           fignum=fignum,
+                                           pcolor=pcolor, contour=contour, clabel=clabel,
+                                           colorbar=colorbar, grid=grid, levels=levels,
+                                           colors=colors, dpi=dpi, fmt=fmt,
+                                           **kwargs))
             elif isinstance(value, utils.transient_2d):
-                print('transient_2d', item)
+                if self.parent.verbose:
+                    print('plotting {} package transient_2d instance: {}'.format(self.name[0], item))
+                fignum = range(ifig, ifig+inc)
+                ifig += inc
+                #plot(self, filename_base=None, file_extension=None, **kwargs)
+                axes.append(value.plot(filename_base=fileb, file_extension=fext, kper=kper,
+                                       pcolor=pcolor, contour=contour, clabel=clabel,
+                                       colorbar=colorbar, grid=grid, levels=levels,
+                                       colors=colors, dpi=dpi, fmt=fmt,
+                                       **kwargs))
+            elif isinstance(value, list):
+                for v in value:
+                    if isinstance(v, utils.util_3d):
+                        if self.parent.verbose:
+                            print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                        fignum = range(ifig, ifig+inc)
+                        ifig += inc
+                        axes.append(v.plot(filename_base=fileb, mflay=mflay,
+                                           file_extension=fext,
+                                           fignum=fignum,
+                                           pcolor=pcolor, contour=contour, clabel=clabel,
+                                           colorbar=colorbar, grid=grid, levels=levels,
+                                           colors=colors, dpi=dpi, fmt=fmt,
+                                           **kwargs))
             else:
                 pass
         return axes

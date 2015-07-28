@@ -287,8 +287,9 @@ class util_3d(object):
                              array_dict)
 
 
-    def plot(self, filename_base=None, mflay=None, file_extension=None, **kwargs):
-        '''
+    def plot(self, filename_base=None, mflay=None, file_extension=None,
+             fignum=None, **kwargs):
+        """
         Plot 3-D model input data
 
         Parameters
@@ -345,7 +346,7 @@ class util_3d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.lpf.hk.plot()
         
-        '''
+        """
         import flopy.plot.plotutil as pu
         
         if file_extension is not None:
@@ -367,7 +368,7 @@ class util_3d(object):
 
         return pu._plot_array_helper(self.array, self.model.dis.sr, 
                                      names=names, filenames=filenames, 
-                                     mflay=mflay, **kwargs)
+                                     mflay=mflay, fignum=fignum, **kwargs)
 
 
     def __getitem__(self, k):
@@ -923,7 +924,8 @@ class util_2d(object):
         if self.bin and self.ext_filename is None:
             raise Exception('util_2d: binary flag requires ext_filename')
 
-    def plot(self, title=None, filename_base=None, file_extension=None, **kwargs):
+    def plot(self, title=None, filename_base=None, file_extension=None,
+             fignum=None, **kwargs):
         '''
         Plot 2-D model input data
 
@@ -996,7 +998,8 @@ class util_2d(object):
             filename = '{}_{}.{}'.format(filename_base, self.name, fext)
         
         return pu._plot_array_helper(self.array, self.model.dis.sr, 
-                                     names=title, filenames=filename, **kwargs)
+                                     names=title, filenames=filename,
+                                     fignum=fignum, **kwargs)
 
 
     def to_shapefile(self, filename):
@@ -1271,7 +1274,7 @@ class util_2d(object):
                        delimiter='')
             return
 
-        nrow,ncol = shape
+        nrow, ncol = shape
         if python_format is None:
             column_length, fmt, width, decimal = \
                 decode_fortran_descriptor(fortran_format)

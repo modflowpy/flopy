@@ -154,7 +154,7 @@ mf.write_input()
 
 print('\n\nfinished write...\n')
 
-m2 = flopy.modflow.Modflow.load(modelname, exe_name='mf2005', model_ws=workspace, verbose=False)
+m2 = flopy.modflow.Modflow.load(modelname, exe_name='mf2005', model_ws=workspace, verbose=True)
 
 print('\nfinished read...\n')
 
@@ -164,10 +164,19 @@ oc2 = m2.get_package('OC')
 
 oc2.write_file()
 
-m2.lpf.plot()
+#m2.plot(colorbar=True)
+#plt.show()
 
+#m2.dis.plot(colorbar=True)
+#plt.show()
 
-m2.ghb.plot(key='cond', colorbar=True, masked_values=[0])
+m2.lpf.plot(colorbar=True)
+plt.show()
+
+#m2.ghb.plot(key='cond', colorbar=True, masked_values=[0])
+#plt.show()
+
+m2.ghb.plot()
 plt.show()
 
 print('\nthis is the end...my friend\n')
