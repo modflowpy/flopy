@@ -791,11 +791,12 @@ class Package(object):
             if isinstance(value, utils.mflist):
                 if self.parent.verbose:
                     print('plotting {} package mflist instance: {}'.format(self.name[0], item))
-                names = ['{} Stress period: {} Layer: {}'.format(self.name[0], kper+1, k+1)
+                names = ['{} location stress period {} layer {}'.format(self.name[0], kper+1, k+1)
                          for k in range(self.parent.nlay)]
                 fignum = list(range(ifig, ifig+inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(self, key, names, kper,
+                                       filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=True))
 
             elif isinstance(value, utils.util_3d):
@@ -803,7 +804,7 @@ class Package(object):
                     print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
                 fignum = list(range(ifig, ifig+inc))
                 ifig = fignum[-1] + 1
-                caxs.append(value.plot(filename_base=fileb, mflay=mflay, file_extension=fext,
+                caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=True))
             elif isinstance(value, utils.util_2d):
                 if len(value.shape) == 2:

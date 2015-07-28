@@ -355,7 +355,7 @@ class util_3d(object):
         else:
             fext = 'png'
         
-        names = ['{} Layer {}'.format(self.name, k+1) for k in range(self.shape[0])]
+        names = ['{} layer {}'.format(self.name, k+1) for k in range(self.shape[0])]
         
         filenames = None
         if filename_base is not None:
@@ -364,6 +364,10 @@ class util_3d(object):
                 if i0+1 >= self.shape[0]:
                     i0 = self.shape[0] - 1
                 i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = self.shape[0]
+            #--build filenames
             filenames = ['{}_{}_Layer{}.{}'.format(filename_base, self.name,
                                                    k+1, fext) for k in range(i0, i1)]
 
@@ -693,13 +697,16 @@ class transient_2d(object):
             fignum = list(range(self[kper].array.shape[0]))
 
         axes = []
-        start_dt = self.model.dis.tr.stressperiod_start[kper]\
-                       .to_datetime().strftime("%d-%m-%Y")
-        end_dt = self.model.dis.tr.stressperiod_end[kper]\
-                     .to_datetime().strftime("%d-%m-%Y")
-        title = '{} stress period {:d}:{:s} to {:s}'.\
+        title = '{} stress period {:d}'.\
                  format(self.name_base.replace('_', '').upper(),
-                        kper+1, start_dt, end_dt)
+                        kper+1)
+        if not self.model.dis.tr.assumed:
+            start_dt = self.model.dis.tr.stressperiod_start[kper]\
+                           .to_datetime().strftime("%d-%m-%Y")
+            end_dt = self.model.dis.tr.stressperiod_end[kper]\
+                         .to_datetime().strftime("%d-%m-%Y")
+            title += ' ({:s} to {:s})'.format(start_dt, end_dt)
+
         if filename_base is not None:
             filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
         else:

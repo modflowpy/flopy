@@ -318,17 +318,19 @@ class TemporalReference(object):
         kperkstp_loc: dict keyed on (kper,kstp) stores the index pos in the timestep ranges
 
         """
-        self.itmuni_daterange = {1: "s", 2: "m", 3: "h", 4: "d", 5: "y"}
+        self.itmuni_daterange = {1: 's', 2: 'm', 3: 'h', 4: 'd', 5: 'y'}
         if start_datetime is None:
-            self.start = datetime(1970,1,1)
+            self.start = datetime(1970, 1, 1)
+            self.assumed = True
         else:
-            assert isinstance(start_datetime,datetime)
+            assert isinstance(start_datetime, datetime)
             self.start = start_datetime
+            self.assumed = False
         if itmuni == 0:
             print("temporalReference warning: time units (itmuni) undefined, assuming days")
         self.unit = self.itmuni_daterange[itmuni]
         #--work out stress period lengths,starts and ends
-        self.stressperiod_deltas = pd.to_timedelta(perlen,unit=self.unit)
+        self.stressperiod_deltas = pd.to_timedelta(perlen, unit=self.unit)
         self.stressperiod_end = self.start + np.cumsum(self.stressperiod_deltas)
         self.stressperiod_start = self.stressperiod_end - self.stressperiod_deltas
 
@@ -336,7 +338,7 @@ class TemporalReference(object):
         offsets = []
         idt = 0
         self.kperkstp_loc = {}
-        for kper,(plen, nts, tmult) in enumerate(zip(perlen, nstp, tsmult)):
+        for kper, (plen, nts, tmult) in enumerate(zip(perlen, nstp, tsmult)):
             if tmult != 1.0:
                 dt1 = plen * ((tmult - 1.)/((tmult**nts) - 1.))
             else:

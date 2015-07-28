@@ -492,11 +492,34 @@ class mflist(object):
                 values.append(v)
         return values
 
-    def plot(self, pack, key, names, kper, **kwargs):
+    def plot(self, pack, key, names, kper,
+             filename_base=None, file_extension=None, mflay=None,
+             **kwargs):
         import flopy.plot.plotutil as pu
+
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0+1 >= self.model.nlay:
+                    i0 = self.model.nlay - 1
+                i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = self.model.nlay
+            #--build filenames
+            pn = pack.name[0].upper()
+            filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
+                                                                  kper+1, k+1, fext) for k in range(i0, i1)]
         if key is None:
             axes = pu._plot_bc_helper(pack, kper,
-                                      names=names, **kwargs)
+                                      names=names, filenames=filenames,
+                                      mflay=mflay, **kwargs)
         else:
             arr_dict = self.to_array(kper)
 
@@ -510,8 +533,10 @@ class mflist(object):
                 p += '\n'
                 raise Exception(p)
 
-            names = ['{} Stress Period: {} Layer: {}'.format(key, kper+1, k+1) for k in range(arr.shape[0])]
-            axes = pu._plot_array_helper(arr, pack.parent.dis.sr, names=names, **kwargs)
+            names = ['{} stress period: {} layer: {}'.format(key, kper+1, k+1) for k in range(arr.shape[0])]
+            axes = pu._plot_array_helper(arr, pack.parent.dis.sr,
+                                         names=names, filenames=filenames,
+                                         mflay=mflay, **kwargs)
         return axes
 
     def to_shapefile(self, filename, kper=0):
