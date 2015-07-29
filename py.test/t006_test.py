@@ -142,7 +142,7 @@ def test_mflist_reference():
     ghb = fmf.ModflowGhb(ml,stress_period_data=ghb_dict)
 
     test = os.path.join('data', 'test3.shp')
-    ml.wel.to_shapefile(test,kper=0)
+    ml.wel.stress_period_data.to_shapefile(test, kper=0)
     shp = shapefile.Reader(test)
     assert len(shp.fields) == nlay + 3
     assert shp.numRecords == nrow * ncol
