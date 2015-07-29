@@ -3,6 +3,7 @@ Module containing helper functions for plotting model data
 using ModelMap and ModelCrossSection. Functions for plotting
 shapefiles are also included.
 """
+from __future__ import print_function
 import os
 import sys
 import math
@@ -115,10 +116,26 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
     if fignum is not None:
         if not isinstance(fignum, list):
             fignum = [fignum]
-        assert len(fignum) == (i1 - i0) #plotarray.shape[0]
+        assert len(fignum) == (i1 - i0)
+        #--check for existing figures
+        f0 = fignum[0]
+        for i in plt.get_fignums():
+            if i >= f0:
+                f0 = i + 1
+        finc = f0 - fignum[0]
+        for idx in range(len(fignum)):
+            fignum[idx] += finc
     else:
-        fignum = np.arange(i0, i1)
-        
+        #fignum = np.arange(i0, i1)
+        #--check for existing figures
+        f0 = 0
+        for i in plt.get_fignums():
+            if i >= f0:
+                f0 += 1
+        f1 = f0 + (i1 - i0)
+        fignum = np.arange(f0, f1)
+
+
     if axes is not None:
         if not isinstance(axes, list):
             axes = [axes]
@@ -139,7 +156,6 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
             ax.set_title(title)
             axes.append(ax)
    
-    #mm = map.ModelMap(ax=axes[0], model=model) #sr=sr)
     for idx, k in enumerate(range(i0, i1)):
         fig = plt.figure(num=fignum[idx])
         mm = map.ModelMap(ax=axes[idx], model=model, sr=sr, layer=k)
@@ -167,16 +183,14 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
 
     if len(axes) == 1:
         axes = axes[0]
-    
     if filenames is not None:
-        #for k in range(plotarray.shape[0]):
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
             fig.savefig(filenames[idx], dpi=dpi)
             print('    created...{}'.format(os.path.basename(filenames[idx])))
         #--there will be nothing to return when done
         axes = None
-        plt.close("all")
+        plt.close('all')
     return axes
 
 
@@ -244,8 +258,23 @@ def _plot_bc_helper(package, kper,
         if not isinstance(fignum, list):
             fignum = [fignum]
         assert len(fignum) == (i1 - i0)
+        #--check for existing figures
+        f0 = fignum[0]
+        for i in plt.get_fignums():
+            if i >= f0:
+                f0 = i + 1
+        finc = f0 - fignum[0]
+        for idx in range(len(fignum)):
+            fignum[idx] += finc
     else:
-        fignum = np.arange(i0, i1)
+        #fignum = np.arange(i0, i1)
+        #--check for existing figures
+        f0 = 0
+        for i in plt.get_fignums():
+            if i >= f0:
+                f0 += 1
+        f1 = f0 + (i1 - i0)
+        fignum = np.arange(f0, f1)
 
     if axes is not None:
         if not isinstance(axes, list):
@@ -293,6 +322,7 @@ def _plot_bc_helper(package, kper,
             print('    created...{}'.format(os.path.basename(filenames[idx])))
         #--there will be nothing to return when done
         axes = None
+        plt.close('all')
     return axes
 
 

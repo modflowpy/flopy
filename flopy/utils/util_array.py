@@ -357,6 +357,7 @@ class util_3d(object):
         """
         import flopy.plot.plotutil as pu
         
+
         if file_extension is not None:
             fext = file_extension
         else:

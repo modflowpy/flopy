@@ -5,14 +5,16 @@ import subprocess
 
 from updateversion import update_version
 
-def build_distribution(upd=False, utag=False, reg=False, winbuild=False, 
+def build_distribution(upd=False, utag=False, install=False, 
+                       reg=False, winbuild=False, 
                        major=False, minor=False):
     #--determine if the version needs to be updated
     if upd:
         update_version(utag, major, minor)
     
-    #--install the source
-    subprocess.call(['python', 'setup.py', 'install'])
+    #--install the source in site_packages
+    if install:
+        subprocess.call(['python', 'setup.py', 'install'])
     
     #--create the source distribution
     subprocess.call(['python', 'setup.py', 'sdist', '--format=zip'])
@@ -40,6 +42,9 @@ if __name__ == "__main__":
         if arg.lower() == '--update' or arg.lower() == '-u':
             uver = True
             sys.stdout.write('  Will update version number.\n')    
+        elif arg.lower() == '--install' or arg.lower() == '-i':
+            install = True
+            sys.stdout.write('  Will install flopy in python site_packages directory.\n')    
         elif arg.lower() == '--register' or arg.lower() == '-r':
             register = True
             sys.stdout.write('  Will register version with PyPI.\n')    
@@ -56,5 +61,6 @@ if __name__ == "__main__":
             minor = True
             sys.stdout.write('  Will update minor version number by one.\n')    
 
-    build_distribution(uver, utag, register, winbuild, major, minor)
+    build_distribution(uver, utag, install, 
+                       register, winbuild, major, minor)
    
