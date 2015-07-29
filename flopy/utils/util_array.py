@@ -736,13 +736,6 @@ class transient_2d(object):
             title = '{} stress period {:d}'.\
                      format(self.name_base.replace('_', '').upper(),
                             kper+1)
-            if not self.model.dis.tr.assumed:
-                start_dt = self.model.dis.tr.stressperiod_start[kper]\
-                               .to_datetime().strftime("%d-%m-%Y")
-                end_dt = self.model.dis.tr.stressperiod_end[kper]\
-                             .to_datetime().strftime("%d-%m-%Y")
-                title += ' ({:s} to {:s})'.format(start_dt, end_dt)
-
             if filename_base is not None:
                 filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
             else:

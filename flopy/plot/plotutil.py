@@ -14,7 +14,7 @@ bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
 
 
-def _plot_array_helper(plotarray, model, axes=None,
+def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
                        names=None, filenames=None, fignum=None,
                        mflay=None, **kwargs):
     try:
@@ -142,7 +142,7 @@ def _plot_array_helper(plotarray, model, axes=None,
     #mm = map.ModelMap(ax=axes[0], model=model) #sr=sr)
     for idx, k in enumerate(range(i0, i1)):
         fig = plt.figure(num=fignum[idx])
-        mm = map.ModelMap(ax=axes[idx], model=model, layer=k)
+        mm = map.ModelMap(ax=axes[idx], model=model, sr=sr, layer=k)
         if pcolor:
             cm = mm.plot_array(plotarray[k], masked_values=masked_values,
                                ax=axes[idx], **kwargs)
@@ -173,10 +173,10 @@ def _plot_array_helper(plotarray, model, axes=None,
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
             fig.savefig(filenames[idx], dpi=dpi)
-            plt.close(fignum[idx])
             print('    created...{}'.format(os.path.basename(filenames[idx])))
         #--there will be nothing to return when done
         axes = None
+        plt.close("all")
     return axes
 
 

@@ -64,7 +64,7 @@ class ModelMap(object):
                 self.ax = plt.gca()
                 self.ax.set_aspect('equal')
             except:
-                self.ax = plt.subplot(1, 1, 1, aspect='equal')
+                self.ax = plt.subplot(1, 1, 1, aspect='equal',axisbg="white")
         else:
             self.ax = ax
         if extent is not None:

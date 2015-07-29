@@ -90,20 +90,15 @@ class LayerFile(object):
         self.model = None
         self.dis = None
         self.sr = None
-        self.tr = None
         if 'model' in kwargs.keys():
             self.model = kwargs.pop('model')
             self.sr = self.model.dis.sr
-            self.tr = self.model.dis.tr
             self.dis = self.model.dis
         if 'dis' in kwargs.keys():
             self.dis = kwargs.pop('dis')
             self.sr = self.dis.sr
-            self.tr = self.dis.tr
         if 'sr' in kwargs.keys():
             self.sr = kwargs.pop('sr')
-        if 'tr' in kwargs.keys():
-            self.tr = kwargs.pop('tr')
 
         if len(kwargs.keys()) > 0:
             args = ','.join(kwargs.keys())
@@ -116,8 +111,6 @@ class LayerFile(object):
         #--we can make a generic sr if needed
         if self.sr is None:
             self.sr = flopy.utils.SpatialReference(np.ones(self.ncol), np.ones(self.nrow), 0)
-        if self.tr is None:
-            self.tr = flopy.utils.reference.temporalreference_from_binary_headers(self.recordarray, self.verbose)
         return
 
     def to_shapefile(self, filename, kstpkper=None, totim=None, mflay=None, attrib_name='lf_data'):
@@ -263,7 +256,7 @@ class LayerFile(object):
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()
         import flopy.plot.plotutil as pu
-        return pu._plot_array_helper(plotarray, self.model, axes,
+        return pu._plot_array_helper(plotarray, model=self.model, sr=self.sr, axes=axes,
                                      filenames=filenames, 
                                      mflay=mflay, **kwargs)
 

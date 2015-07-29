@@ -369,6 +369,9 @@ class TemporalReference(object):
             print("temporalReference warning: not dealing with steady state yet")
         return
 
+
+    def totim_to_datetime(self,totim):
+        return self.start + pd.to_timedelta(totim,unit=self.unit)
     def __repr__(self):
         s = "TemporalReference:start_datetime:" + str(self.start)
         s += ", nper:{0:G}\n".format(self.perlen.shape[0])

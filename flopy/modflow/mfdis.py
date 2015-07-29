@@ -92,8 +92,7 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=11, 
-                 start_datetime=None, xul=None, yul=None, rotation=0.0):
+                 unitnumber=11, xul=None, yul=None, rotation=0.0):
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
@@ -133,8 +132,6 @@ class ModflowDis(Package):
 
         self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni, xul=xul,
                                              yul=yul, rotation=rotation)
-        self.tr = reference.TemporalReference(self.perlen.array, self.steady.array, self.nstp.array,
-                                              self.tsmult.array, self.itmuni, start_datetime=start_datetime)
 
     def checklayerthickness(self):
         """

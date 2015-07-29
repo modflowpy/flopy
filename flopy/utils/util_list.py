@@ -10,6 +10,7 @@ from __future__ import division, print_function
 import os
 import warnings
 import numpy as np
+from flopy.utils import reference
 
 
 class mflist(object):
@@ -59,7 +60,7 @@ class mflist(object):
         try:
             self.sr = self.model.dis.sr
         except:
-            pass
+            self.sr = None
         assert isinstance(dtype, np.dtype)
         self.__dtype = dtype
         self.__vtype = {}
@@ -359,16 +360,8 @@ class mflist(object):
                 itmp = -1
                 kper_vtype = int
 
-            if self.model.dis is not None:
-                start_dt = self.model.dis.tr.stressperiod_start[kper]\
-                           .to_datetime().strftime("%d-%m-%Y")
-                end_dt = self.model.dis.tr.stressperiod_end[kper]\
-                             .to_datetime().strftime("%d-%m-%Y")
-                f.write(" {0:9d} {1:9d} # stress period {2:d}:{3:s} to {4:s}\n"
-                        .format(itmp,0, kper,start_dt,end_dt))
-            else:
-                f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
-                        .format(itmp,0, kper))
+            f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
+                    .format(itmp,0, kper))
 
             if (kper_vtype == np.recarray):
                 name = f.name
@@ -642,6 +635,8 @@ class mflist(object):
         >>> ml.wel.to_shapefile('test_hk.shp', kper=1)
         """
 
+        if self.sr is None:
+            raise Exception("mflist.to_shapefile: SpatialReference not set")
         import flopy.utils.flopy_io as fio
         arrays = self.to_array(kper)
         array_dict = {}
