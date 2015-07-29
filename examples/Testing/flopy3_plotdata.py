@@ -15,13 +15,19 @@ top = fb.dis.top
 
 fb.dis.top.plot(grid=True, colorbar=True)
 fb.dis.botm.plot(grid=True, colorbar=True)
-#plt.show()
-
 
 fb.dis.plot()
 plt.show()
 
 fb.dis.plot()
+plt.show()
+
+
+fig = plt.figure(figsize=(8, 8))
+ax = fig.add_subplot(1,2,1, aspect='equal')
+fb.dis.top.plot(grid=True, axes=ax,  colorbar=True)
+ax = fig.add_subplot(1,2,2, aspect='equal')
+fb.dis.botm.plot(grid=True, axes=ax, colorbar=True)
 plt.show()
 
 print('this is the end my friend')
