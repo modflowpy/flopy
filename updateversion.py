@@ -13,12 +13,12 @@ def update_version(utag=False, major=False, minor=False):
     
     if major:
         vmajor = int(vmajor) + 1
-        vminor = 1
-        vfeature = 1
+        vminor = 0
+        vfeature = 0
     elif minor:
         vmajor = int(vmajor)
         vminor = int(vminor) + 1
-        vfeature = 1
+        vfeature = 0
     else:
         vmajor = int(vmajor)
         vminor = int(vminor)
