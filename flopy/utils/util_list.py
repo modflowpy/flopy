@@ -56,7 +56,10 @@ class mflist(object):
 
     def __init__(self, model, dtype, data=None):
         self.model = model
-        self.sr = self.model.dis.sr
+        try:
+            self.sr = self.model.dis.sr
+        except:
+            pass
         assert isinstance(dtype, np.dtype)
         self.__dtype = dtype
         self.__vtype = {}
@@ -531,6 +534,9 @@ class mflist(object):
                 Boolean used to determine if a color bar will be added to
                 the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
                 (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
             contour : bool
                 Boolean used to determine if matplotlib.pyplot.contour
                 plot will be plotted. (default is False)

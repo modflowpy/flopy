@@ -571,15 +571,13 @@ class BaseModel(object):
                 caxs = p.plot(initial_fig=ifig,
                               filename_base=fileb, file_extension=fext,
                               kper=kper, mflay=mflay)
+                #--unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
                     for c in caxs:
-                        if isinstance(c, list):
-                            for cc in c:
-                                axes.append(cc)
-                        else:
-                            axes.append(c)
+                        axes.append(c)
                 else:
                     axes.append(caxs)
+                #--update next active figure number
                 ifig = len(axes) + 1
         else:
             for pon in SelPackList:
@@ -590,15 +588,13 @@ class BaseModel(object):
                         caxs = p.plot(initial_fig=ifig,
                                       filename_base=fileb, file_extension=fext,
                                       kper=kper, mflay=mflay)
+                        #--unroll nested lists of axes into a single list of axes
                         if isinstance(caxs, list):
                             for c in caxs:
-                                if isinstance(c, list):
-                                    for cc in c:
-                                        axes.append(cc)
-                                else:
-                                    axes.append(c)
+                                axes.append(c)
                         else:
                             axes.append(caxs)
+                        #--update next active figure number
                         ifig = len(axes) + 1
                         break
         if self.verbose:
@@ -862,9 +858,15 @@ class Package(object):
                                            fignum=fignum, colorbar=True))
             else:
                 pass
+
+            #--unroll nested lists os axes into a single list of axes
             if isinstance(caxs, list):
                 for c in caxs:
-                    axes.append(c)
+                    if isinstance(c, list):
+                        for cc in c:
+                            axes.append(cc)
+                    else:
+                        axes.append(c)
             else:
                 axes.append(caxs)
 

@@ -10,32 +10,37 @@ import pandas as pd
 
 def temporalreference_from_binary_headers(recordarray, verbose=False):
 
-    ukper = np.unique(recordarray["kper"])
+    ukper = np.unique(recordarray['kper'])
     totim = []
     nstp = []
     tsmult = []
     for uk in ukper:
-        uk_recarray = recordarray[recordarray["kper"] == uk]
-        us = np.unique(uk_recarray["pertim"])
+        uk_recarray = recordarray[recordarray['kper'] == uk]
+        #--what is tsmult used for?? Is it necessary for anything??
+        #  no pertim in ucn file
         tm = 1.0
-        if us.shape[0] > 1:
-            tm = (us[1] / us[0]) - 1.0
-
-        t = uk_recarray["totim"].max()
-        n = uk_recarray["kstp"].max()
+        try:
+            us = np.unique(uk_recarray['pertim'])
+            if us.shape[0] > 1:
+                tm = (us[1] / us[0]) - 1.0
+        except:
+            pass
+        t = uk_recarray['totim'].max()
+        n = uk_recarray['kstp'].max()
         totim.append(t)
         nstp.append(n)
         tsmult.append(tm)
-    totim = np.array(totim,dtype=np.float32)
-    nstp = np.array(nstp,dtype=np.int)
-    tsmults = np.array(tsmult,dtype=np.float32)
+    totim = np.array(totim, dtype=np.float32)
+    nstp = np.array(nstp, dtype=np.int)
+    tsmults = np.array(tsmult, dtype=np.float32)
     perlen = [totim[0]]
     perlen.extend(list(totim[1:] - totim[:-1]))
-    perlen = np.array(perlen,dtype=np.float32)
+    perlen = np.array(perlen, dtype=np.float32)
     if verbose:
         print('LayerFile._build_tr(): assuming time units of days...')
+    #should this be tsmults instead of tsmult??
     tr = TemporalReference(np.array(perlen), np.zeros_like(nstp),
-                                   nstp, tsmult, 4)
+                           nstp, tsmult, 4)
     return tr
 
 def spatialreference_from_gridspc_file(filename, lenuni=0):

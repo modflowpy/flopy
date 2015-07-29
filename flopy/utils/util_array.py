@@ -321,6 +321,9 @@ class util_3d(object):
                 Boolean used to determine if a color bar will be added to
                 the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
                 (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
             contour : bool
                 Boolean used to determine if matplotlib.pyplot.contour
                 plot will be plotted. (default is False)
@@ -650,6 +653,9 @@ class transient_2d(object):
                 Boolean used to determine if a color bar will be added to
                 the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
                 (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
             contour : bool
                 Boolean used to determine if matplotlib.pyplot.contour
                 plot will be plotted. (default is False)
@@ -998,6 +1004,9 @@ class util_2d(object):
                 Boolean used to determine if a color bar will be added to
                 the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
                 (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
             contour : bool
                 Boolean used to determine if matplotlib.pyplot.contour
                 plot will be plotted. (default is False)
@@ -1255,7 +1264,8 @@ class util_2d(object):
     
     @staticmethod
     def load_txt(shape, file_in, dtype, fmtin):
-        """load a (possibly wrapped format) array from a file 
+        """
+        load a (possibly wrapped format) array from a file
         (self.__value) and casts to the proper type (self.dtype)
         made static to support the load functionality 
         this routine now supports fixed format arrays where the numbers
