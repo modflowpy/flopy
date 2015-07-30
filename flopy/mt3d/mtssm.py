@@ -20,7 +20,7 @@ class SsmPackage(object):
 
 class Mt3dSsm(Package):
     '''
-    Sink & Source Mixing package class\n
+    Sink & Source Mixing package class
     '''
     def __init__(self, model, crch = None, cevt = None,
                  stress_period_data = None, dtype = None,
@@ -117,15 +117,16 @@ class Mt3dSsm(Package):
 
             self.dtype = self.get_default_dtype(ncomp)
   
-        self.stress_period_data = mflist(self.parent.mf, self.dtype, 
-                                         stress_period_data)
-        
+        self.stress_period_data = mflist(self, model=self.parent.mf,
+                                         data=stress_period_data)
+
         #Add self to parent and return
         self.parent.add_package(self)
         return
 
     def from_package(self,package,ncomp_aux_names):
-        """read the point source and sink info from a package
+        """
+        read the point source and sink info from a package
         ncomp_aux_names (list): the aux variable names in the package
         that are the component concentrations
         """
@@ -197,7 +198,7 @@ class Mt3dSsm(Package):
                     f_ssm.write(self.cevt[kper].get_file_entry())
                 '''
 
-            self.stress_period_data.write_transient(f_ssm, single_per = kper)
+            self.stress_period_data.write_transient(f_ssm, single_per=kper)
 
         f_ssm.close()
         return

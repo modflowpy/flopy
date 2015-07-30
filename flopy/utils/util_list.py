@@ -19,14 +19,9 @@ class mflist(object):
 
     Parameters
     ----------
-    model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
-        this package will be added.
-    dtype : np.dtype
-        a numpy dtype describing the columns of the list data
-    name : str
-        Unique name for package stress_period_data. Identical to the package
-        name.
+    package : package object
+        The package object (of type :class:`flopy.mbase.Package`) to which
+        this mflist will be added.
     data : varies
         the data of the transient list (optional). (the default is None)
 
@@ -55,14 +50,18 @@ class mflist(object):
 
     """
 
-    def __init__(self, model, dtype, data=None):
-        self.model = model
+    def __init__(self, package, data=None, model=None):
+        self.package = package
+        if model is None:
+            self.model = package.parent
+        else:
+            self.model = model
         try:
             self.sr = self.model.dis.sr
         except:
             self.sr = None
-        assert isinstance(dtype, np.dtype)
-        self.__dtype = dtype
+        assert isinstance(self.package.dtype, np.dtype)
+        self.__dtype = self.package.dtype
         self.__vtype = {}
         self.__data = {}
         if data is not None:
@@ -488,7 +487,7 @@ class mflist(object):
                 values.append(v)
         return values
 
-    def plot(self, pack, key=None, names=None, kper=0,
+    def plot(self, key=None, names=None, kper=0,
              filename_base=None, file_extension=None, mflay=None,
              **kwargs):
         """
@@ -497,8 +496,6 @@ class mflist(object):
 
         Parameters
         ----------
-        pack : Package object
-            flopy package object
         key : str
             mflist dictionary key. (default is None)
         names : list
@@ -580,19 +577,19 @@ class mflist(object):
                 i0 = 0
                 i1 = self.model.nlay
             #--build filenames
-            pn = pack.name[0].upper()
+            pn = self.package.name[0].upper()
             filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
                                                                   kper+1, k+1, fext) for k in range(i0, i1)]
         if names is None:
             if key is None:
-                names = ['{} stress period: {} layer: {}'.format(pack.name[0], kper+1, k+1)
+                names = ['{} location stress period: {} layer: {}'.format(self.package.name[0], kper+1, k+1)
                          for k in range(self.model.nlay)]
             else:
-                names = ['{} {} stress period: {} layer: {}'.format(pack.name[0], key, kper+1, k+1)
+                names = ['{} {} stress period: {} layer: {}'.format(self.package.name[0], key, kper+1, k+1)
                          for k in range(self.model.nlay)]
 
         if key is None:
-            axes = pu._plot_bc_helper(pack, kper,
+            axes = pu._plot_bc_helper(self.package, kper,
                                       names=names, filenames=filenames,
                                       mflay=mflay, **kwargs)
         else:

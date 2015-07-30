@@ -839,7 +839,7 @@ class Package(object):
 
                 fignum = list(range(ifig, ifig+inc))
                 ifig = fignum[-1] + 1
-                caxs.append(value.plot(self, key, names, kper,
+                caxs.append(value.plot(key, names, kper,
                                        filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=True))
 
