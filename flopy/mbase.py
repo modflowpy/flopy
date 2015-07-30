@@ -519,10 +519,12 @@ class BaseModel(object):
                 all layers will be included. (default is None)
             kper : int
                 MODFLOW zero-based stress period number to return. (default is zero)
+            key : str
+                mflist dictionary key. (default is None)
 
         Returns
         ----------
-        out : list
+        axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis are returned.
 
@@ -561,6 +563,11 @@ class BaseModel(object):
         else:
             fext = 'png'
 
+        if 'key' in kwargs:
+            key = kwargs.pop('key')
+        else:
+            key = None
+
         if self.verbose:
             print('\nPlotting Packages')
 
@@ -570,7 +577,7 @@ class BaseModel(object):
             for p in self.packagelist:
                 caxs = p.plot(initial_fig=ifig,
                               filename_base=fileb, file_extension=fext,
-                              kper=kper, mflay=mflay)
+                              kper=kper, mflay=mflay, key=key)
                 #--unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
                     for c in caxs:
@@ -587,7 +594,7 @@ class BaseModel(object):
                             print('   Plotting Package: ', p.name[0])
                         caxs = p.plot(initial_fig=ifig,
                                       filename_base=fileb, file_extension=fext,
-                                      kper=kper, mflay=mflay)
+                                      kper=kper, mflay=mflay, key=key)
                         #--unroll nested lists of axes into a single list of axes
                         if isinstance(caxs, list):
                             for c in caxs:
@@ -757,10 +764,12 @@ class Package(object):
                 all layers will be included. (default is None)
             kper : int
                 MODFLOW zero-based stress period number to return. (default is zero)
+            key : str
+                mflist dictionary key. (default is None)
 
         Returns
         ----------
-        out : list
+        axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis are returned.
 
@@ -800,6 +809,11 @@ class Package(object):
         else:
             fext = 'png'
 
+        if 'key' in kwargs:
+            key = kwargs.pop('key')
+        else:
+            key = None
+
         if 'initial_fig' in kwargs:
             ifig = int(kwargs.pop('initial_fig'))
         else:
@@ -809,7 +823,6 @@ class Package(object):
         if mflay is not None:
             inc = 1
 
-        key = None
 
         axes = []
         for item, value in self.__dict__.items():
@@ -817,8 +830,13 @@ class Package(object):
             if isinstance(value, utils.mflist):
                 if self.parent.verbose:
                     print('plotting {} package mflist instance: {}'.format(self.name[0], item))
-                names = ['{} location stress period {} layer {}'.format(self.name[0], kper+1, k+1)
-                         for k in range(self.parent.nlay)]
+                if key is None:
+                    names = ['{} location stress period {} layer {}'.format(self.name[0], kper+1, k+1)
+                             for k in range(self.parent.nlay)]
+                else:
+                    names = ['{} {} data stress period {} layer {}'.format(self.name[0], key, kper+1, k+1)
+                             for k in range(self.parent.nlay)]
+
                 fignum = list(range(ifig, ifig+inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(self, key, names, kper,

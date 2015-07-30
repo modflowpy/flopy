@@ -488,7 +488,7 @@ class mflist(object):
                 values.append(v)
         return values
 
-    def plot(self, pack, key, names, kper,
+    def plot(self, pack, key=None, names=None, kper=0,
              filename_base=None, file_extension=None, mflay=None,
              **kwargs):
         """
@@ -500,9 +500,9 @@ class mflist(object):
         pack : Package object
             flopy package object
         key : str
-            mflist dictionary key
+            mflist dictionary key. (default is None)
         names : list
-            List of names for figure titles
+            List of names for figure titles. (default is None)
         kper : int
             MODFLOW zero-based stress period number to return. (default is zero)
         filename_base : str
@@ -558,7 +558,7 @@ class mflist(object):
         --------
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
-        >>> ml.wel.plot(kper=1)
+        >>> ml.wel.stress_period_data.plot(ml.wel, kper=1)
 
         """
 
@@ -583,6 +583,14 @@ class mflist(object):
             pn = pack.name[0].upper()
             filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
                                                                   kper+1, k+1, fext) for k in range(i0, i1)]
+        if names is None:
+            if key is None:
+                names = ['{} stress period: {} layer: {}'.format(pack.name[0], kper+1, k+1)
+                         for k in range(self.model.nlay)]
+            else:
+                names = ['{} {} stress period: {} layer: {}'.format(pack.name[0], key, kper+1, k+1)
+                         for k in range(self.model.nlay)]
+
         if key is None:
             axes = pu._plot_bc_helper(pack, kper,
                                       names=names, filenames=filenames,
@@ -600,8 +608,7 @@ class mflist(object):
                 p += '\n'
                 raise Exception(p)
 
-            names = ['{} stress period: {} layer: {}'.format(key, kper+1, k+1) for k in range(arr.shape[0])]
-            axes = pu._plot_array_helper(arr, pack.parent.dis.sr,
+            axes = pu._plot_array_helper(arr, model=self.model,
                                          names=names, filenames=filenames,
                                          mflay=mflay, **kwargs)
         return axes
