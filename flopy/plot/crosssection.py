@@ -7,7 +7,7 @@ from .plotutil import bc_color_dict
 
 class ModelCrossSection(object):
     """
-    Class to create a map of the model.
+    Class to create a cross section of the model.
 
     Parameters
     ----------
@@ -623,7 +623,7 @@ class ModelCrossSection(object):
         
         # Select correct specific discharge direction
         if self.direction == 'x':
-            u = -qx[:, :, :]
+            u = qx[:, :, :]
             u2 = -qy[:, :, :]
             v = qz[:, :, :]
         elif self.direction == 'y':
@@ -642,7 +642,7 @@ class ModelCrossSection(object):
         if nlay == 1:
             x = []
             z = []
-            for k in range(1):
+            for k in range(nlay):
                 for i in range(self.xcentergrid.shape[1]):
                     x.append(self.xcentergrid[k, i])
                     z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k+1, i]))
@@ -842,7 +842,7 @@ class ModelCrossSection(object):
                             zp = vp
                     zcentergrid.append(zp)
         else:
-            for k in range(0, self.zpts.shape[0], 2):
+            for k in range(0, self.zpts.shape[0] - 1):
                 nz += 1
                 nx = 0
                 for i in range(0, self.xpts.shape[0], 2):
