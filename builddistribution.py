@@ -33,6 +33,7 @@ def build_distribution(upd=False, utag=False, install=False,
 
 if __name__ == "__main__":    
     uver = False
+    install = False
     utag = False
     register = False
     winbuild = False
