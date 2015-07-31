@@ -107,8 +107,8 @@ class LayerFile(object):
         #read through the file and build the pointer index
         self._build_index()
 
-        #--now that we read the data and know nrow and ncol,
-        #--we can make a generic sr if needed
+        # now that we read the data and know nrow and ncol,
+        # we can make a generic sr if needed
         if self.sr is None:
             self.sr = flopy.utils.SpatialReference(np.ones(self.ncol), np.ones(self.nrow), 0)
         return
@@ -251,7 +251,7 @@ class LayerFile(object):
             filenames = []
             [filenames.append('{}_Layer{}.{}'.format(filename_base, k+1, fext)) for k in range(i0, i1)]
 
-        #--make sure we have a (lay,row,col) shape plotarray
+        # make sure we have a (lay,row,col) shape plotarray
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
                                                 totim=totim, mflay=mflay)
                                                 .transpose()).transpose()

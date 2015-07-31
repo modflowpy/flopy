@@ -403,8 +403,8 @@ class Modflow(BaseModel):
                     ml.external_binflag.append("binary"
                                                in item.filetype.lower())
 
-        #--pop binary output keys and any external file units that are now
-        #--internal
+        # pop binary output keys and any external file units that are now
+        # internal
         for key in ml.pop_key_list:
             try:
                 ml.remove_external(unit=key)
@@ -414,7 +414,7 @@ class Modflow(BaseModel):
                     sys.stdout.write('Warning: external file unit " +\
                         "{} does not exist in ext_unit_dict.\n'.format(key))
 
-        #--write message indicating packages that were successfully loaded
+        # write message indicating packages that were successfully loaded
         if ml.verbose:
             print(1 * '\n')
             s = '   The following {0} packages were successfully loaded.'\
@@ -430,5 +430,5 @@ class Modflow(BaseModel):
                     print('      ' + os.path.basename(fname))
                 print('\n')
 
-        #--return model object
+        # return model object
         return ml

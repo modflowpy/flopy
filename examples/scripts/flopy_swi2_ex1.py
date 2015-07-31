@@ -56,12 +56,12 @@ delc = 1.
 ibound = np.ones((nrow, ncol), np.int)
 ibound[0, -1] = -1
 
-#--create initial zeta surface
+# create initial zeta surface
 z = np.zeros((nrow, ncol), np.float)
 z[0, 16:24] = np.arange(-2.5, -40, -5)
 z[0, 24:] = -40
 z = [z]
-#--create isource for SWI2
+# create isource for SWI2
 isource = np.ones((nrow, ncol), np.int)
 isource[0, 0] = 2
 
@@ -73,9 +73,9 @@ for idx in xrange(49, 200, 50):
     ocdict[key] = []  
 
 
-#--create flopy modflow object
+# create flopy modflow object
 ml = mf.Modflow(modelname, version='mf2005', exe_name=exe_name)
-#--create flopy modflow package objects
+# create flopy modflow package objects
 discret = mf.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol,
                         delr=delr, delc=delc,
                         top=0, botm=[-40.0],
@@ -87,16 +87,16 @@ swi = mf.ModflowSwi2(ml, npln=1, istrat=1, toeslope=0.2, tipslope=0.2, nu=[0, 0.
                      zeta=z, ssz=0.2, isource=isource, nsolver=1)
 oc = mf.ModflowOc(ml, stress_period_data=ocdict)
 pcg = mf.ModflowPcg(ml)
-#--create model files
+# create model files
 ml.write_input()
-#--run the model
+# run the model
 m = ml.run_model(silent=False)
-#--read model heads
+# read model heads
 headfile = '{}.hds'.format(modelname)
 hdobj = fu.HeadFile(headfile)
 head = hdobj.get_alldata()
 head = np.array(head)
-#--read model zeta
+# read model zeta
 zetafile = '{}.zta'.format(modelname)
 zobj = fu.CellBudgetFile(zetafile)
 zkstpkper = zobj.get_kstpkper()
@@ -157,13 +157,13 @@ for i in xrange(4):
             ipos = jdx
     ax.text(x[ipos], -37.75, '{0} days'.format(((i + 1) * 100)), size=5, ha='left', va='center')
 
-#--fake items for labels    
+# fake items for labels
 ax.plot([-100., -100], [-100., -100], 'k', label='Analytical solution')
 ax.plot([-100., -100], [-100., -100], 'bo', markersize=3, markeredgecolor='blue', markerfacecolor='None', label='SWI2')
-#--legend
+# legend
 leg = ax.legend(loc='upper right', numpoints=1)
 leg._drawFrame = False
-#--axes
+# axes
 ax.set_xlim(0, 250)
 ax.set_ylim(-40, 0)
 ax.set_yticks(np.arange(-40, 1, 10))

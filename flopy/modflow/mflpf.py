@@ -347,13 +347,13 @@ class ModflowLpf(Package):
             t = line.strip().split()
             wetfct, iwetit, ihdwet = float(t[0]), int(t[1]), int(t[2])
 
-        #--parameters data
+        # parameters data
         par_types = []
         if nplpf > 0:
             par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
             #print parm_dict
 
-        #--non-parameter data
+        # non-parameter data
         transient = not model.get_package('DIS').steady.all()
         hk = [0] * nlay
         hani = [0] * nlay
@@ -432,7 +432,7 @@ class ModflowLpf(Package):
                                  ext_unit_dict)
                 wetdry[k] = t
 
-        #--create instance of lpf class
+        # create instance of lpf class
         lpf = ModflowLpf(model, ilpfcb=ilpfcb, laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet, hdry=hdry, iwdflg=iwetdry,
                          wetfct=wetfct, iwetit=iwetit, ihdwet=ihdwet,

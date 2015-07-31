@@ -58,7 +58,7 @@ def test_binaryfile_reference():
     import flopy
     import flopy.modflow as fmf
 
-    #--make the model
+    # make the model
     ml = fmf.Modflow(exe_name='mf2005', model_ws='data')
     perlen = np.arange(1,20,1)
     nstp = np.flipud(perlen) + 3
@@ -104,7 +104,7 @@ def test_mflist_reference():
 
     #model_ws = os.path.join('..', 'data', 'freyberg')
     #ml = fmf.Modflow.load('freyberg.nam', model_ws=model_ws)
-    #--make the model
+    # make the model
     ml = fmf.Modflow()
     perlen = np.arange(1,20,1)
     nstp = np.flipud(perlen) + 3

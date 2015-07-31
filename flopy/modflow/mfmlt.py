@@ -154,11 +154,11 @@ class ModflowMlt(Package):
                 if 'function' in t[1].lower() or 'expression' in t[1].lower():
                     readArray = False
                     kwrd = t[1].lower()
-            #--load data
+            # load data
             if readArray:
                 t = util_2d.load(f, model, (nrow, ncol), np.float32, mltnam,
                                  ext_unit_dict)
-                #--add unit number to list of external files in ext_unit_dict to remove.
+                # add unit number to list of external files in ext_unit_dict to remove.
                 if t.locat is not None:
                     model.add_pop_key_list(t.locat)
             else:
@@ -167,7 +167,7 @@ class ModflowMlt(Package):
                 t = ModflowMlt.mult_function(mult_dict, line)
             mult_dict[mltnam] = t
 
-        #--create mlt dictionary
+        # create mlt dictionary
         mlt = ModflowMlt(model, mult_dict=mult_dict)
 
         return mlt

@@ -28,12 +28,12 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
     import flopy.plot.map as map
     
 
-    #--reshape 2d arrays to 3d for convenience
+    # reshape 2d arrays to 3d for convenience
     if len(plotarray.shape) == 2:
         plotarray = plotarray.reshape((1, plotarray.shape[0],
                                        plotarray.shape[1]))
 
-    #--parse keyword arguments
+    # parse keyword arguments
     if 'figsize' in kwargs:
         figsize = kwargs.pop('figsize')
     else:
@@ -117,7 +117,7 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
         if not isinstance(fignum, list):
             fignum = [fignum]
         assert len(fignum) == (i1 - i0)
-        #--check for existing figures
+        # check for existing figures
         f0 = fignum[0]
         for i in plt.get_fignums():
             if i >= f0:
@@ -127,7 +127,7 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
             fignum[idx] += finc
     else:
         #fignum = np.arange(i0, i1)
-        #--check for existing figures
+        # check for existing figures
         f0 = 0
         for i in plt.get_fignums():
             if i >= f0:
@@ -140,7 +140,7 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
         if not isinstance(axes, list):
             axes = [axes]
         assert len(axes) == plotarray.shape[0]
-    #--prepare some axis objects for use
+    # prepare some axis objects for use
     else:
         axes = []
         for idx, k in enumerate(range(i0, i1)):
@@ -188,7 +188,7 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
             fig = plt.figure(num=fignum[idx])
             fig.savefig(filenames[idx], dpi=dpi)
             print('    created...{}'.format(os.path.basename(filenames[idx])))
-        #--there will be nothing to return when done
+        # there will be nothing to return when done
         axes = None
         plt.close('all')
     return axes
@@ -206,12 +206,12 @@ def _plot_bc_helper(package, kper,
 
     import flopy.plot.map as map
 
-    #--reshape 2d arrays to 3d for convenience
+    # reshape 2d arrays to 3d for convenience
     ftype = package.name[0]
 
     nlay = package.parent.nlay
 
-    #--parse keyword arguments
+    # parse keyword arguments
     if 'figsize' in kwargs:
         figsize = kwargs.pop('figsize')
     else:
@@ -258,7 +258,7 @@ def _plot_bc_helper(package, kper,
         if not isinstance(fignum, list):
             fignum = [fignum]
         assert len(fignum) == (i1 - i0)
-        #--check for existing figures
+        # check for existing figures
         f0 = fignum[0]
         for i in plt.get_fignums():
             if i >= f0:
@@ -268,7 +268,7 @@ def _plot_bc_helper(package, kper,
             fignum[idx] += finc
     else:
         #fignum = np.arange(i0, i1)
-        #--check for existing figures
+        # check for existing figures
         f0 = 0
         for i in plt.get_fignums():
             if i >= f0:
@@ -280,7 +280,7 @@ def _plot_bc_helper(package, kper,
         if not isinstance(axes, list):
             axes = [axes]
         assert len(axes) == plotarray.shape[0]
-    #--prepare some axis objects for use
+    # prepare some axis objects for use
     else:
         axes = []
         for idx, k in enumerate(range(i0, i1)):
@@ -320,7 +320,7 @@ def _plot_bc_helper(package, kper,
             fig.savefig(filenames[idx], dpi=dpi)
             plt.close(fignum[idx])
             print('    created...{}'.format(os.path.basename(filenames[idx])))
-        #--there will be nothing to return when done
+        # there will be nothing to return when done
         axes = None
         plt.close('all')
     return axes
@@ -727,20 +727,20 @@ def findrowcolumn(pt, xedge, yedge):
 
     '''
 
-    #--make sure xedge and yedge are numpy arrays
+    # make sure xedge and yedge are numpy arrays
     if not isinstance(xedge, np.ndarray):
         xedge = np.array(xedge)
     if not isinstance(yedge, np.ndarray):
         yedge = np.array(yedge)
 
-    #--find column
+    # find column
     jcol = -100
     for jdx, xmf in enumerate(xedge):
         if xmf > pt[0]:
             jcol = jdx - 1
             break
 
-    #--find row
+    # find row
     irow = -100
     for jdx, ymf in enumerate(yedge):
         if ymf < pt[1]:
@@ -791,13 +791,13 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
 
     small_value = 1.0e-1
 
-    #--make sure xedge and yedge are numpy arrays
+    # make sure xedge and yedge are numpy arrays
     if not isinstance(xedge, np.ndarray):
         xedge = np.array(xedge)
     if not isinstance(yedge, np.ndarray):
         yedge = np.array(yedge)
 
-    #--build list of points along current line
+    # build list of points along current line
     pts = []
     npts = len(ptsin)
     dlen = 0.
@@ -809,27 +809,27 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
         a = x1 - x0
         b = y1 - y0
         c = math.sqrt(math.pow(a, 2.) + math.pow(b, 2.))
-        #--find cells with (x0, y0) and (x1, y1)
+        # find cells with (x0, y0) and (x1, y1)
         irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
         irow1, jcol1 = findrowcolumn((x1, y1), xedge, yedge)
-        #--determine direction to go in the x- and y-directions
+        # determine direction to go in the x- and y-directions
         jx = 0
         incx = abs(small_value * a / c)
         iy = 0
         incy = -abs(small_value * b / c)
         if a == 0.:
             incx = 0.
-        #--go to the right
+        # go to the right
         elif a > 0.:
             jx = 1
             incx *= -1.
         if b == 0.:
             incy = 0.
-        #--go down
+        # go down
         elif b < 0.:
             iy = 1
             incy *= -1.
-        #--process data
+        # process data
         if irow0 >= 0 and jcol0 >= 0:
             iadd = True
             if idx > 1 and returnvertices: 
@@ -918,7 +918,7 @@ def cell_value_points(pts, xedge, yedge, vdata):
 
     """
 
-    #--make sure xedge and yedge are numpy arrays
+    # make sure xedge and yedge are numpy arrays
     if not isinstance(xedge, np.ndarray):
         xedge = np.array(xedge)
     if not isinstance(yedge, np.ndarray):
@@ -928,7 +928,7 @@ def cell_value_points(pts, xedge, yedge, vdata):
 
     vcell = []
     for idx, [xt, yt, dlen] in enumerate(pts):
-        #--find the modflow cell containing point
+        # find the modflow cell containing point
         irow, jcol = findrowcolumn((xt, yt), xedge, yedge)
         if irow >= 0 and jcol >= 0:
             if np.isnan(vdata[irow, jcol]):

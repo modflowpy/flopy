@@ -119,18 +119,18 @@ class ModflowSwr1(Package):
         if model.verbose:
             sys.stdout.write('loading swr1 process file...\n')
 
-        #--todo: everything
+        # todo: everything
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
 
         print('   Warning: load method not completed. default swr1 object created.')
 
-        #--close open file
+        # close open file
         f.close()
 
-        #--create swr1 object instance
+        # create swr1 object instance
         swr1 = ModflowSwr1(model)
 
-        #--return swr object
+        # return swr object
         return swr1

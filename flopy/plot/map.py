@@ -84,7 +84,7 @@ class ModelMap(object):
         else:
             self._extent = None
         
-        #--why is this non-default color scale used?? 
+        # why is this non-default color scale used??
         #  This should be passed as a kwarg by the user to the indivudual plotting method.
         #self.cmap = plotutil.viridis
 

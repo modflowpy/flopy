@@ -5,7 +5,7 @@ import numpy as np
 import flopy
 from flopy.utils import mflist
 
-#--instance testing
+# instance testing
 #override the default data type
 dtype = np.dtype([("k",int),("i",np.int),("j",np.int),\
                   ("stage",np.float32),("cond",np.float32),("rbot",np.float32),\

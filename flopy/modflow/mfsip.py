@@ -84,7 +84,7 @@ class ModflowSip(Package):
         Write the package input file.
 
         """
-        #--Open file for writing
+        # Open file for writing
         f = open(self.fn_path, 'w')
         f.write('{:10d}{:10d}\n'.format(self.mxiter, self.nparm))
         f.write('{:10.3f}{:10.3f}{:10d}{:10.3f}{:10d}\n'.format(self.accl, self.hclose, self.ipcalc, self.wseed, self.iprsip))
@@ -132,7 +132,7 @@ class ModflowSip(Package):
 
         print('   Warning: load method not completed. default sip object created.')
 
-        #--close the open file
+        # close the open file
         f.close()
 
         sip = ModflowSip(model)

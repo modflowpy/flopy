@@ -35,19 +35,19 @@ class ModflowGmg(Package):
         # Open file for writing
         f_gmg = open(self.fn_path, 'w')
         f_gmg.write('%s\n' % self.heading)        
-        #--dataset 0
+        # dataset 0
         f_gmg.write('{} {} {} {}\n'\
              .format(self.rclose, self.iiter, self.hclose, self.mxiter))        
-        #--dataset 1
+        # dataset 1
         f_gmg.write('{} {} {} {}\n'\
              .format(self.damp, self.iadamp, self.ioutgmg, self.iunitmhc))
-        #--dataset 2
+        # dataset 2
         f_gmg.write('{} {} '.format(self.ism, self.isc))
         if self.iadamp == 2:
             f_gmg.write('{} {} {}'\
                  .format(self.dup, self.dlow, self.chglimit))
         f_gmg.write('\n')
-        #--dataset 3
+        # dataset 3
         f_gmg.write('{}\n'.format(self.relax))
         f_gmg.close()
 
@@ -126,10 +126,10 @@ class ModflowGmg(Package):
         t = line.strip().split()
         relax = float(t[0])
 
-        #--close the open file
+        # close the open file
         f.close()
 
-        #--create the gmg object
+        # create the gmg object
         gmg = ModflowGmg(model, mxiter=mxiter, iiter=iiter, iadamp=iadamp,
                          hclose=hclose, rclose=rclose, relax=relax,
                          ioutgmg=ioutgmg, iunitmhc=iunitmhc,

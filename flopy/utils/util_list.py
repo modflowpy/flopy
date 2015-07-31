@@ -282,7 +282,8 @@ class mflist(object):
 
     def __setitem__(self, kper, data):
         if (kper in list(self.__data.keys())):
-            print('removing existing data for kper={}'.format(kper))
+            if self.model.verbose:
+                print('removing existing data for kper={}'.format(kper))
             self.data.pop(kper)
         # If data is a list, then all we can do is try to cast it to
         # an ndarray, then cast again to a recarray
@@ -576,7 +577,7 @@ class mflist(object):
             else:
                 i0 = 0
                 i1 = self.model.nlay
-            #--build filenames
+            # build filenames
             pn = self.package.name[0].upper()
             filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
                                                                   kper+1, k+1, fext) for k in range(i0, i1)]
@@ -695,7 +696,7 @@ class mflist(object):
                     arr[rec['k'], rec['i'], rec['j']] += rec[name]
                     if name != 'cond' and name != 'flux':
                         cnt[rec['k'], rec['i'], rec['j']] += 1.
-                #--average keys that should not be added
+                # average keys that should not be added
                 if name != 'cond' and name != 'flux':
                     idx = cnt > 0.
                     arr[idx] /= cnt[idx]

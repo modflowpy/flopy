@@ -154,7 +154,7 @@ class ModpathBas(Package):
                     lc = util_2d(self.parent,(nlay,),\
                                  np.int,flow_package.laytyp.get_value(),\
                                  name='bas - laytype', locat=self.unit_number[0])
-        #--need to reset lc fmtin
+        # need to reset lc fmtin
         lc.set_fmtin('(40I2)')
         f_bas.write(lc.string)
         # from modpath bas--uses keyword array types

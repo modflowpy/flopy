@@ -8,26 +8,26 @@ from updateversion import update_version
 def build_distribution(upd=False, utag=False, install=False, 
                        reg=False, winbuild=False, 
                        major=False, minor=False):
-    #--determine if the version needs to be updated
+    # determine if the version needs to be updated
     if upd:
         update_version(utag, major, minor)
     
-    #--install the source in site_packages
+    # install the source in site_packages
     if install:
         subprocess.call(['python', 'setup.py', 'install'])
     
-    #--create the source distribution
+    # create the source distribution
     subprocess.call(['python', 'setup.py', 'sdist', '--format=zip'])
     
-    #--create 32-bit and 64-bit windows installers
+    # create 32-bit and 64-bit windows installers
     if winbuild:
         if 'windows' in platform.system().lower():
-            #--32-bit
+            # 32-bit
             subprocess.call(['python', 'setup.py', 'build', '--plat-name=win', 'bdist_wininst'])    
-            #--64-bit
+            # 64-bit
             subprocess.call(['python', 'setup.py', 'build', '--plat-name=win-amd64', 'bdist_wininst'])
     
-    #--now register the package with PyPI
+    # now register the package with PyPI
     if reg:
         subprocess.call(['python', 'setup.py', 'register'])
 

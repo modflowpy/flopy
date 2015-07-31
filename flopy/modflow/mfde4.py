@@ -206,12 +206,12 @@ class ModflowDe4(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-        #--read dataset 0 -- header
+        # read dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
-        #--read dataset 1
+        # read dataset 1
         ifrfm = model.get_ifrefm()
         if model.version != 'mf2k':
             ifrfm = True

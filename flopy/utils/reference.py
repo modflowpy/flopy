@@ -16,7 +16,7 @@ def temporalreference_from_binary_headers(recordarray, verbose=False):
     tsmult = []
     for uk in ukper:
         uk_recarray = recordarray[recordarray['kper'] == uk]
-        #--what is tsmult used for?? Is it necessary for anything??
+        # what is tsmult used for?? Is it necessary for anything??
         #  no pertim in ucn file
         tm = 1.0
         try:
@@ -334,12 +334,12 @@ class TemporalReference(object):
         if itmuni == 0:
             print("temporalReference warning: time units (itmuni) undefined, assuming days")
         self.unit = self.itmuni_daterange[itmuni]
-        #--work out stress period lengths,starts and ends
+        # work out stress period lengths,starts and ends
         self.stressperiod_deltas = pd.to_timedelta(perlen, unit=self.unit)
         self.stressperiod_end = self.start + np.cumsum(self.stressperiod_deltas)
         self.stressperiod_start = self.stressperiod_end - self.stressperiod_deltas
 
-        #--work out time step lengths - not very elegant
+        # work out time step lengths - not very elegant
         offsets = []
         idt = 0
         self.kperkstp_loc = {}

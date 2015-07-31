@@ -45,10 +45,10 @@ class ModflowPcgn(Package):
         self.mcnvg = mcnvg
         self.rate_c = rate_c
         self.ipunit = ipunit
-        #--error trapping
+        # error trapping
         if self.ifill < 0 or self.ifill > 1:
             raise TypeError('PCGN: ifill must be 0 or 1 - an ifill value of {0} was specified'.format( self.ifill ))
-        #--add package
+        # add package
         self.parent.add_package(self)
 
 
@@ -111,7 +111,7 @@ class ModflowPcgn(Package):
 
         print('   Warning: load method not completed. default pcgn object created.')
 
-        #--close the open file
+        # close the open file
         f.close()
 
         pcgn = ModflowPcgn(model)

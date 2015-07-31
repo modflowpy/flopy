@@ -11,7 +11,7 @@
 # uses FLOPY3, modified from FLOPY2 tutorial 2
 # 
 # Kolja Rotzoll (kolja@usgs.gov), 1/15/2015
-#------------------------------------------------------
+# ----------------------------------------------------
 import os
 import sys
 import numpy as np
@@ -31,11 +31,11 @@ if not os.path.exists(workspace):
     os.makedirs(workspace)
 
 
-#--flopy objects
+# flopy objects
 modelname = 'Oahu_01'
 mf = flopy.modflow.Modflow(modelname, exe_name='mf2005', model_ws=workspace)
 
-#--model domain and grid definition
+# model domain and grid definition
 ztop = 30.  # top of layer (ft rel to msl)
 botm = -1000.  # bottom of layer (ft rel to msl)
 nlay = 1  # number of layers (z)
@@ -46,7 +46,7 @@ delc = delr  # column width of cell, in ft
 Lx = delr * ncol  # length of x model domain, in ft
 Ly = delc * nrow  # length of y model domain, in ft
 
-#--define the stress periods
+# define the stress periods
 nper = 1
 ts = 1  # length of time step, in days
 nstp = 1000  # number of time steps
@@ -56,7 +56,7 @@ dis = flopy.modflow.ModflowDis(mf, nlay, nrow, ncol, delr=delr, delc=delc,
                                top=ztop, botm=botm, nper=nper,
                                perlen=perlen, nstp=nstp, steady=steady)
 
-#--hydraulic parameters (lpf or bcf)
+# hydraulic parameters (lpf or bcf)
 hk = 1500.  # horizontal K
 sy = 0.05  # specific yield
 ss = 1.e-5  # specific storage
@@ -67,7 +67,7 @@ lpf = flopy.modflow.ModflowLpf(mf, hk=hk, sy=sy, ss=ss, laytyp=laytyp, layavg=la
 laycon = 2  # 0 = confined, 1 = unconfined T varies,
 # 2 = convertible T const, 3 = convertible T varies
 
-#--water/land interface (now replaced with coarse Oahu coastline)
+# water/land interface (now replaced with coarse Oahu coastline)
 polyg = [(6, 13), (3, 6), (6, 6), (9, 3), (12, 8), (14, 9), (16, 13), (13, 14), (11, 13),
          (6, 13)]  # referenced to row/col
 px, py = zip(*polyg)
@@ -76,7 +76,7 @@ mask = Image.new('L', (ncol, nrow), 0)
 ImageDraw.Draw(mask).polygon(polyg, outline=1, fill=1)
 index = np.array(mask)
 
-#--BAS package
+# BAS package
 ibound = np.ones((nlay, nrow, ncol), dtype=np.int32)  # active cells
 h_start = np.zeros((nrow, ncol), dtype=float)
 peak = 15  # maximum expected water level
@@ -85,7 +85,7 @@ h_start[:, :][index == 0] = 0  # starting heads over ocean
 #print h_start
 bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=h_start)
 
-#--general head boundary
+# general head boundary
 nghb = ncol * nrow - np.sum(index)
 lrchc = np.zeros((nghb, 5))
 lrchc[:, 0] = 0
@@ -96,7 +96,7 @@ lrchc[:, 4] = hk * 10
 #print lrchc
 ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0: lrchc})
 
-#--recharge & withdrawal
+# recharge & withdrawal
 Recharge = 600 * 133680.56  # Total recharge over the island, in ft^3/d
 nrech = np.sum(index)
 lrcq = np.zeros((nrech, 4))
@@ -108,7 +108,7 @@ lrcq = np.vstack((lrcq, [0, 8, 7, -90 * 133680], [0, 10, 9, -80 * 133680]))  # a
 #print lrcq
 wel = flopy.modflow.ModflowWel(mf, stress_period_data={0: lrcq})
 
-#--horizontal flow barrier
+# horizontal flow barrier
 nhfb = 12
 lrcrch = np.zeros((nhfb, 6))
 lrcrch[:, 0] = 0  # layer
@@ -120,7 +120,7 @@ lrcrch[:, 5] = 0.000001  # hydrologic characteristics
 #print lrcrch
 hfb = flopy.modflow.ModflowHfb(mf, hfb_data=lrcrch)
 
-#--SWI input
+# SWI input
 z1 = np.zeros((nrow, ncol))
 z1[index == 1] = peak * (-40)  # 50% salinity from starting head
 z = array([z1])  # zeta interfaces
@@ -132,7 +132,7 @@ iso[:, :][index == 0] = -2  # ocean (ghb)
 swi = flopy.modflow.ModflowSwi2(mf, nsrf=1, istrat=1, toeslope=0.04, tipslope=0.04,
                                 nu=[0, 0.025], zeta=z, ssz=0.05, isource=iso, nsolver=1)
 
-#--output control & solver
+# output control & solver
 spd = {(0, 0): ['print head'],
        (0, 1): [],
        (0, 249): ['print head'],
@@ -147,9 +147,9 @@ oc = flopy.modflow.ModflowOc88(mf, save_head_every=100,
                                item2=[[0, 1, 0, 0]], item3=[[0, 1, 0, 0]])
 pcg = flopy.modflow.ModflowPcg(mf, hclose=1.0e-4, rclose=5.0e-0)  # pre-conjugate gradient solver
 #de4 = flopy.modflow.ModflowDe4(mf, itmx=1, hclose=1e-5)  		 # direct solver
-#----------------------------------------------------------------------
+# --------------------------------------------------------------------
 
-#--write the model input files
+# write the model input files
 mf.write_input()
 
 print('\n\nfinished write...\n')
