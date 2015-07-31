@@ -13,6 +13,8 @@ class ModelMap(object):
 
     Parameters
     ----------
+    sr : flopy.utils.reference.SpatialReference
+        The spatial reference class (Default is None)
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
         If there is not a current axis then a new one will be created.
@@ -34,9 +36,19 @@ class ModelMap(object):
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
 
+    Notes
+    -----
+    ModelMap must know the position and rotation of the grid in order to make
+    the plot.  This information is contained in the SpatialReference class
+    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
+    If dis is None, then it looks for sr in model.dis.  If all of these
+    arguments are none, then it uses xul, yul, and rotation.  If none of these
+    arguments are provided, then it puts the lower-left-hand corner of the
+    grid at (0, 0).
+
     """
-    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0, extent=None,
-                 xul=None, yul=None, rotation=None):
+    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
+                 extent=None, xul=None, yul=None, rotation=None):
         self.model = model
         self.layer = layer
         self.dis = dis
@@ -64,7 +76,7 @@ class ModelMap(object):
                 self.ax = plt.gca()
                 self.ax.set_aspect('equal')
             except:
-                self.ax = plt.subplot(1, 1, 1, aspect='equal',axisbg="white")
+                self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg="white")
         else:
             self.ax = ax
         if extent is not None:
