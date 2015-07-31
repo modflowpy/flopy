@@ -5,43 +5,43 @@ Module spatial and temporal referencing for flopy model objects
 
 from datetime import datetime
 import numpy as np
-import pandas as pd
+#import pandas as pd
 #from flopy.utils.util_array import util_2d
 
-def temporalreference_from_binary_headers(recordarray, verbose=False):
-
-    ukper = np.unique(recordarray['kper'])
-    totim = []
-    nstp = []
-    tsmult = []
-    for uk in ukper:
-        uk_recarray = recordarray[recordarray['kper'] == uk]
-        # what is tsmult used for?? Is it necessary for anything??
-        #  no pertim in ucn file
-        tm = 1.0
-        try:
-            us = np.unique(uk_recarray['pertim'])
-            if us.shape[0] > 1:
-                tm = (us[1] / us[0]) - 1.0
-        except:
-            pass
-        t = uk_recarray['totim'].max()
-        n = uk_recarray['kstp'].max()
-        totim.append(t)
-        nstp.append(n)
-        tsmult.append(tm)
-    totim = np.array(totim, dtype=np.float32)
-    nstp = np.array(nstp, dtype=np.int)
-    tsmults = np.array(tsmult, dtype=np.float32)
-    perlen = [totim[0]]
-    perlen.extend(list(totim[1:] - totim[:-1]))
-    perlen = np.array(perlen, dtype=np.float32)
-    if verbose:
-        print('LayerFile._build_tr(): assuming time units of days...')
-    #should this be tsmults instead of tsmult??
-    tr = TemporalReference(np.array(perlen), np.zeros_like(nstp),
-                           nstp, tsmult, 4)
-    return tr
+# def temporalreference_from_binary_headers(recordarray, verbose=False):
+#
+#     ukper = np.unique(recordarray['kper'])
+#     totim = []
+#     nstp = []
+#     tsmult = []
+#     for uk in ukper:
+#         uk_recarray = recordarray[recordarray['kper'] == uk]
+#         # what is tsmult used for?? Is it necessary for anything??
+#         #  no pertim in ucn file
+#         tm = 1.0
+#         try:
+#             us = np.unique(uk_recarray['pertim'])
+#             if us.shape[0] > 1:
+#                 tm = (us[1] / us[0]) - 1.0
+#         except:
+#             pass
+#         t = uk_recarray['totim'].max()
+#         n = uk_recarray['kstp'].max()
+#         totim.append(t)
+#         nstp.append(n)
+#         tsmult.append(tm)
+#     totim = np.array(totim, dtype=np.float32)
+#     nstp = np.array(nstp, dtype=np.int)
+#     tsmults = np.array(tsmult, dtype=np.float32)
+#     perlen = [totim[0]]
+#     perlen.extend(list(totim[1:] - totim[:-1]))
+#     perlen = np.array(perlen, dtype=np.float32)
+#     if verbose:
+#         print('LayerFile._build_tr(): assuming time units of days...')
+#     #should this be tsmults instead of tsmult??
+#     tr = TemporalReference(np.array(perlen), np.zeros_like(nstp),
+#                            nstp, tsmult, 4)
+#     return tr
 
 def spatialreference_from_gridspc_file(filename, lenuni=0):
     f = open(filename,'r')
@@ -300,87 +300,87 @@ class SpatialReference(object):
         return pts
 
 
-class TemporalReference(object):
-
-    def __init__(self, perlen, steady, nstp, tsmult, itmuni, start_datetime=None):
-        """
-        :param perlen: stress period length array
-        :param steady: array-like boolean steady-state flag array
-        :param nstp: array of number of time steps per stress period
-        :param tsmult: array of time step length multiplier per stress period
-        :param itmuni: time unit
-        :param start_datetime: datetime instance
-        :return: none
-
-        stressperiod_start: date_range for start of stress periods
-        stressperiod_end: date_range for end of stress periods
-        stressperiod_deltas: timeoffset range for stress periods
-
-        timestep_start: date_range for start of time steps
-        timestep_end: date_range for end of time steps
-        timestep_delta: timeoffset range for time steps
-
-        kperkstp_loc: dict keyed on (kper,kstp) stores the index pos in the timestep ranges
-
-        """
-        self.itmuni_daterange = {1: 's', 2: 'm', 3: 'h', 4: 'd', 5: 'y'}
-        if start_datetime is None:
-            self.start = datetime(1970, 1, 1)
-            self.assumed = True
-        else:
-            assert isinstance(start_datetime, datetime)
-            self.start = start_datetime
-            self.assumed = False
-        if itmuni == 0:
-            print("temporalReference warning: time units (itmuni) undefined, assuming days")
-        self.unit = self.itmuni_daterange[itmuni]
-        # work out stress period lengths,starts and ends
-        self.stressperiod_deltas = pd.to_timedelta(perlen, unit=self.unit)
-        self.stressperiod_end = self.start + np.cumsum(self.stressperiod_deltas)
-        self.stressperiod_start = self.stressperiod_end - self.stressperiod_deltas
-
-        # work out time step lengths - not very elegant
-        offsets = []
-        idt = 0
-        self.kperkstp_loc = {}
-        for kper, (plen, nts, tmult) in enumerate(zip(perlen, nstp, tsmult)):
-            if tmult != 1.0:
-                dt1 = plen * ((tmult - 1.)/((tmult**nts) - 1.))
-            else:
-                dt1 = float(plen) / float(nts)
-            offsets.append(dt1)
-            self.kperkstp_loc[(kper, 0)] = idt
-            idt += 1
-            for its in range(nts-1):
-                offsets.append(offsets[-1] * tmult)
-                self.kperkstp_loc[(kper, its + 1)] = idt
-                idt += 1
-        self.timestep_deltas = pd.to_timedelta(offsets, unit=self.unit)
-        self.timestep_end = self.start + np.cumsum(self.timestep_deltas)
-        self.timestep_start = self.timestep_end - self.timestep_deltas
-
-        self.perlen = perlen
-        self.steady = steady
-        self.nstp = nstp
-        self.tsmult = tsmult
-
-        if True in steady:
-            #raise NotImplementedError("temporalReference: not dealing with steady state yet")
-            print("temporalReference warning: not dealing with steady state yet")
-        return
-
-
-    def totim_to_datetime(self,totim):
-        return self.start + pd.to_timedelta(totim,unit=self.unit)
-    def __repr__(self):
-        s = "TemporalReference:start_datetime:" + str(self.start)
-        s += ", nper:{0:G}\n".format(self.perlen.shape[0])
-        s += "perlen:" + str(self.perlen) + '\n'
-        s += "nstp:" + str(self.nstp) + '\n'
-        s += "steady:" + str(self.steady) + '\n'
-        s += "tsmult:" + str(self.tsmult) + '\n'
-
-        return s
-
-    def get_datetimes_from_oc(self,oc):
-        raise NotImplementedError()
+# class TemporalReference(object):
+#
+#     def __init__(self, perlen, steady, nstp, tsmult, itmuni, start_datetime=None):
+#         """
+#         :param perlen: stress period length array
+#         :param steady: array-like boolean steady-state flag array
+#         :param nstp: array of number of time steps per stress period
+#         :param tsmult: array of time step length multiplier per stress period
+#         :param itmuni: time unit
+#         :param start_datetime: datetime instance
+#         :return: none
+#
+#         stressperiod_start: date_range for start of stress periods
+#         stressperiod_end: date_range for end of stress periods
+#         stressperiod_deltas: timeoffset range for stress periods
+#
+#         timestep_start: date_range for start of time steps
+#         timestep_end: date_range for end of time steps
+#         timestep_delta: timeoffset range for time steps
+#
+#         kperkstp_loc: dict keyed on (kper,kstp) stores the index pos in the timestep ranges
+#
+#         """
+#         self.itmuni_daterange = {1: 's', 2: 'm', 3: 'h', 4: 'd', 5: 'y'}
+#         if start_datetime is None:
+#             self.start = datetime(1970, 1, 1)
+#             self.assumed = True
+#         else:
+#             assert isinstance(start_datetime, datetime)
+#             self.start = start_datetime
+#             self.assumed = False
+#         if itmuni == 0:
+#             print("temporalReference warning: time units (itmuni) undefined, assuming days")
+#         self.unit = self.itmuni_daterange[itmuni]
+#         # work out stress period lengths,starts and ends
+#         self.stressperiod_deltas = pd.to_timedelta(perlen, unit=self.unit)
+#         self.stressperiod_end = self.start + np.cumsum(self.stressperiod_deltas)
+#         self.stressperiod_start = self.stressperiod_end - self.stressperiod_deltas
+#
+#         # work out time step lengths - not very elegant
+#         offsets = []
+#         idt = 0
+#         self.kperkstp_loc = {}
+#         for kper, (plen, nts, tmult) in enumerate(zip(perlen, nstp, tsmult)):
+#             if tmult != 1.0:
+#                 dt1 = plen * ((tmult - 1.)/((tmult**nts) - 1.))
+#             else:
+#                 dt1 = float(plen) / float(nts)
+#             offsets.append(dt1)
+#             self.kperkstp_loc[(kper, 0)] = idt
+#             idt += 1
+#             for its in range(nts-1):
+#                 offsets.append(offsets[-1] * tmult)
+#                 self.kperkstp_loc[(kper, its + 1)] = idt
+#                 idt += 1
+#         self.timestep_deltas = pd.to_timedelta(offsets, unit=self.unit)
+#         self.timestep_end = self.start + np.cumsum(self.timestep_deltas)
+#         self.timestep_start = self.timestep_end - self.timestep_deltas
+#
+#         self.perlen = perlen
+#         self.steady = steady
+#         self.nstp = nstp
+#         self.tsmult = tsmult
+#
+#         if True in steady:
+#             #raise NotImplementedError("temporalReference: not dealing with steady state yet")
+#             print("temporalReference warning: not dealing with steady state yet")
+#         return
+#
+#
+#     def totim_to_datetime(self,totim):
+#         return self.start + pd.to_timedelta(totim,unit=self.unit)
+#     def __repr__(self):
+#         s = "TemporalReference:start_datetime:" + str(self.start)
+#         s += ", nper:{0:G}\n".format(self.perlen.shape[0])
+#         s += "perlen:" + str(self.perlen) + '\n'
+#         s += "nstp:" + str(self.nstp) + '\n'
+#         s += "steady:" + str(self.steady) + '\n'
+#         s += "tsmult:" + str(self.tsmult) + '\n'
+#
+#         return s
+#
+#     def get_datetimes_from_oc(self,oc):
+#         raise NotImplementedError()

@@ -27,4 +27,4 @@ from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
 from .modpathfile import PathlineFile, EndpointFile
 from .binaryswrfile import SwrObs, SwrFile
 from .binaryhydmodfile import HydmodObs
-from .reference import SpatialReference, TemporalReference
+from .reference import SpatialReference #, TemporalReference
