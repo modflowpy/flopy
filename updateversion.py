@@ -28,7 +28,7 @@ def update_version(utag=False, major=False, minor=False):
     version = '.'.join(version_type)
 
     b = subprocess.Popen(("git", "describe", "--match", "build"), stdout = subprocess.PIPE).communicate()[0]
-    build = b.strip().split('-')[1]
+    build = int(b.strip().split('-')[1]) + 1
     
     print('Updating version:')
     print('  ', __version__, '->', version)
@@ -41,12 +41,14 @@ def update_version(utag=False, major=False, minor=False):
     f.write("__build__='{0}.{1}'\n".format(version, build))
     f.close()
 
+    # commit version number change to github
+    cmdtag = 'git commit ./flopy/version.py -m "version number update"'
+    os.system(cmdtag)
+    cmdtag = 'git push'
+    os.system(cmdtag)
+
     # update version tag
     if utag:
-        cmdtag = 'git commit ./flopy/version.py -m "version number update"'
-        os.system(cmdtag)
-        cmdtag = 'git push'
-        os.system(cmdtag)
         cmdtag = 'git tag -a {0} -m "Version {0}"'.format(version)
         os.system(cmdtag)
         cmdtag = 'git push --tags'
