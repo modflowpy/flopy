@@ -618,7 +618,7 @@ class ModelCrossSection(object):
         qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
                                                           delc, sat_thk)
         
-        if qz == None:
+        if qz is None:
             qz = np.zeros((qx.shape), dtype=np.float)
         
         # Select correct specific discharge direction
