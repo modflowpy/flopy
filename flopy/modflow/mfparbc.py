@@ -73,7 +73,7 @@ class ModflowParBc(object):
 
         """
         nitems = len(dt.names)
-        #--read parameter data
+        # read parameter data
         if npar > 0:
             bc_parms = {}
             for idx in range(npar):
@@ -97,7 +97,7 @@ class ModflowParBc(object):
                         timeVarying = True
                 pinst = {}
                 for inst in range(numinst):
-                    #--read instance name
+                    # read instance name
                     if timeVarying:
                         line = f.readline()
                         t = line.strip().split()
@@ -112,7 +112,7 @@ class ModflowParBc(object):
                         for jdx in range(nitems):
                             #if jdx < 3:
                             if issubclass(dt[jdx].type, np.integer):
-                                #--conversion to zero-based occurs in package load method in mbase.
+                                # conversion to zero-based occurs in package load method in mbase.
                                 bnd.append(int(t[jdx]))
                             else:
                                 bnd.append(float(t[jdx]))
@@ -149,7 +149,7 @@ class ModflowParBc(object):
 
 
         """
-        #--read parameter data
+        # read parameter data
         if npar > 0:
             bc_parms = {}
             for idx in range(npar):
@@ -169,7 +169,7 @@ class ModflowParBc(object):
                         timeVarying = True
                 pinst = {}
                 for inst in range(numinst):
-                    #--read instance name
+                    # read instance name
                     if timeVarying:
                         line = f.readline()
                         t = line.strip().split()
@@ -261,12 +261,12 @@ class ModflowParBc(object):
                 else:
                     mult_save = np.copy(mult)
                     za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
-                    #--build a multiplier for all of the izones
+                    # build a multiplier for all of the izones
                     mult = np.zeros(shape, dtype=dtype)
                     for iz in izones:
                         filtarr = za == iz
                         mult[filtarr] += np.copy(mult_save[filtarr])
-                    #--calculate parameter value for this instance
+                    # calculate parameter value for this instance
                     t = pv * mult
                 data += t
 

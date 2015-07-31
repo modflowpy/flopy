@@ -33,7 +33,7 @@ def update_version(utag=False, major=False, minor=False):
     print('Updating version:')
     print('  ', __version__, '->', version)
     
-    #--write new version file
+    # write new version file
     f = open(os.path.normpath('flopy/version.py'), 'w')
     f.write('#flopy version file automatically created using...{0}\n'.format(os.path.basename(__file__)))
     f.write('#            created on......{0}\n'.format(datetime.datetime.now().strftime("%B %d, %Y %H:%M:%S")))

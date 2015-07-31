@@ -75,11 +75,11 @@ nstp = [1000, 120, 180]
 save_head = [200, 60, 60]
 steady=True
 
-#--dis data
+# dis data
 delr, delc = 50.0, 50.0
 botm = np.array([-10., -30., -50.])
 
-#--oc data
+# oc data
 savewords = []
 for i in xrange(0, nper):
     icnt = 0
@@ -104,23 +104,23 @@ for i in xrange(0, nper):
             
 modelname = 'swiex4_2d_2layer'
 
-#--bas data
-#--ibound - active except for the corners
+# bas data
+# ibound - active except for the corners
 ibound = np.ones((nlay, nrow, ncol), dtype= np.int)
 ibound[:, 0, 0] = 0
 ibound[:, 0, -1] = 0
 ibound[:, -1, 0] = 0
 ibound[:, -1, -1] = 0
-#--initial head data
+# initial head data
 ihead = np.zeros((nlay, nrow, ncol), dtype=np.float)
 
-#--lpf data
+# lpf data
 laytyp=0
 hk=10.
 vka=0.2
 
-#--boundary condition data
-#--ghb data
+# boundary condition data
+# ghb data
 colcell, rowcell = np.meshgrid(np.arange(0, ncol), np.arange(0, nrow))
 index = np.zeros((nrow, ncol), dtype=np.int)
 index[:, :10] = 1
@@ -134,16 +134,16 @@ lrchc[:, 1] = rowcell[index == 1]
 lrchc[:, 2] = colcell[index == 1]
 lrchc[:, 3] = 0.
 lrchc[:, 4] = 50.0 * 50.0 / 40.0
-#--create ghb dictionary
+# create ghb dictionary
 ghb_data = {0:lrchc}
 
-#--recharge data
+# recharge data
 rch = np.zeros((nrow, ncol), dtype=np.float)
 rch[index == 0] = 0.0004
-#--create recharge dictionary
+# create recharge dictionary
 rch_data = {0: rch}
 
-#--well data
+# well data
 nwells = 2
 lrcq = np.zeros((nwells, 4))
 lrcq[0, :] = np.array((0, 30, 35, 0))
@@ -153,11 +153,11 @@ lrcqw[0, 3] = -250
 lrcqsw = lrcq.copy()
 lrcqsw[0, 3] = -250.
 lrcqsw[1, 3] = -25.
-#--create well dictionary
+# create well dictionary
 base_well_data = {0:lrcq, 1:lrcqw}
 swwells_well_data = {0:lrcq, 1:lrcqw, 2:lrcqsw}
     
-#--swi2 data
+# swi2 data
 adaptive = False
 nadptmx = 10
 nadptmn = 1
@@ -173,7 +173,7 @@ iso[0, :, :][index == 0] = 1
 iso[0, :, :][index == 1] = -2
 iso[1, 30, 35] = 2
 ssz=0.2
-#--swi2 observations
+# swi2 observations
 obsnam = ['layer1_', 'layer2_']
 obslrc=[[1, 31, 36], [2, 31, 36]]
 nobs = len(obsnam)
@@ -197,12 +197,12 @@ if not skipRuns:
                          nobs=nobs, iswiobs=iswiobs, obsnam=obsnam, obslrc=obslrc)
     oc = mf.ModflowOc88(ml, words=savewords)
     pcg = mf.ModflowPcg(ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
-    #--create model files
+    # create model files
     ml.write_input()
-    #--run the model
+    # run the model
     m = ml.run_model(silent=False)
 
-#--model with saltwater wells
+# model with saltwater wells
 modelname2 = 'swiex4_s2'
 if not skipRuns:
     ml2 = mf.Modflow(modelname2, version='mf2005', exe_name=exe_name, model_ws=workspace)
@@ -221,32 +221,32 @@ if not skipRuns:
                          nobs=nobs, iswiobs=iswiobs, obsnam=obsnam, obslrc=obslrc)
     oc = mf.ModflowOc88(ml2, words=savewords)
     pcg = mf.ModflowPcg(ml2, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
-    #--create model files
+    # create model files
     ml2.write_input()
-    #--run the model
+    # run the model
     m = ml2.run_model(silent=False)
 
 # Load the simulation 1 `ZETA` data and `ZETA` observations.
-#--read base model zeta
+# read base model zeta
 zfile = fu.CellBudgetFile(os.path.join(ml.model_ws, modelname+'.zta'))
 kstpkper = zfile.get_kstpkper()
 zeta = []
 for kk in kstpkper:
     zeta.append(zfile.get_data(kstpkper=kk, text='ZETASRF  1')[0])
 zeta = np.array(zeta)
-#--read swi obs
+# read swi obs
 zobs = np.genfromtxt(os.path.join(ml.model_ws, modelname+'.zobs'), names=True)
 
 
 # Load the simulation 2 `ZETA` data and `ZETA` observations.
-#--read saltwater well model zeta
+# read saltwater well model zeta
 zfile2 = fu.CellBudgetFile(os.path.join(ml2.model_ws, modelname2+'.zta'))
 kstpkper = zfile2.get_kstpkper()
 zeta2 = []
 for kk in kstpkper:
     zeta2.append(zfile2.get_data(kstpkper=kk, text='ZETASRF  1')[0])
 zeta2 = np.array(zeta2)
-#--read swi obs
+# read swi obs
 zobs2 = np.genfromtxt(os.path.join(ml2.model_ws, modelname2+'.zobs'), names=True)
 
 
@@ -260,11 +260,11 @@ years = [40, 80, 120, 160, 200, 6, 12, 18, 24, 30]
 
 # Define figure dimensions and colors used for plotting `ZETA` surfaces
 
-#--figure dimensions
+# figure dimensions
 fwid, fhgt = 8.00, 5.50
 flft, frgt, fbot, ftop = 0.125, 0.95, 0.125, 0.925
 
-#--line color definition
+# line color definition
 icolor = 5
 colormap = plt.cm.jet  #winter
 cc = []
@@ -278,66 +278,66 @@ for idx in cr:
 plt.rcParams.update({'legend.fontsize': 6, 'legend.frameon' : False})
 fig = plt.figure(figsize=(fwid, fhgt), facecolor='w')
 fig.subplots_adjust(wspace=0.25, hspace=0.25, left=flft, right=frgt, bottom=fbot, top=ftop)
-#--first plot
+# first plot
 ax = fig.add_subplot(2, 2, 1)
-#--axes limits
+# axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
 for idx in xrange(5):
-    #--layer 1
+    # layer 1
     ax.plot(xcell, zeta[idx, 0, 30, :], drawstyle='steps-mid', 
             linewidth=0.5, color=cc[idx], label='{:2d} years'.format(years[idx]))
-    #--layer 2
+    # layer 2
     ax.plot(xcell, zeta[idx, 1, 30, :], drawstyle='steps-mid',
             linewidth=0.5, color=cc[idx], label='_None')
 ax.plot([-1500, 1500], [-30, -30], color='k', linewidth=1.0)
-#--legend
+# legend
 plt.legend(loc='lower left')
-#--axes labels and text
+# axes labels and text
 ax.set_xlabel('Horizontal distance, in meters')
 ax.set_ylabel('Elevation, in meters')
 ax.text(0.025, .55, 'Layer 1', transform=ax.transAxes, va='center', ha='left', size='7')
 ax.text(0.025, .45, 'Layer 2', transform=ax.transAxes, va='center', ha='left', size='7')
 ax.text(0.975, .1, 'Recharge conditions', transform=ax.transAxes, va='center', ha='right', size='8')
 
-#--second plot
+# second plot
 ax = fig.add_subplot(2, 2, 2)
-#--axes limits
+# axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
 for idx in xrange(5, len(years)):
-    #--layer 1
+    # layer 1
     ax.plot(xcell, zeta[idx, 0, 30, :], drawstyle='steps-mid', 
             linewidth=0.5, color=cc[idx-5], label='{:2d} years'.format(years[idx]))
-    #--layer 2
+    # layer 2
     ax.plot(xcell, zeta[idx, 1, 30, :], drawstyle='steps-mid',
             linewidth=0.5, color=cc[idx-5], label='_None')
 ax.plot([-1500, 1500], [-30, -30], color='k', linewidth=1.0)
-#--legend
+# legend
 plt.legend(loc='lower left')
-#--axes labels and text
+# axes labels and text
 ax.set_xlabel('Horizontal distance, in meters')
 ax.set_ylabel('Elevation, in meters')
 ax.text(0.025, .55, 'Layer 1', transform=ax.transAxes, va='center', ha='left', size='7')
 ax.text(0.025, .45, 'Layer 2', transform=ax.transAxes, va='center', ha='left', size='7')
 ax.text(0.975, .1, 'Freshwater well withdrawal', transform=ax.transAxes, va='center', ha='right', size='8')
 
-#--third plot
+# third plot
 ax = fig.add_subplot(2, 2, 3)
-#--axes limits
+# axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
 for idx in xrange(5, len(years)):
-    #--layer 1
+    # layer 1
     ax.plot(xcell, zeta2[idx, 0, 30, :], drawstyle='steps-mid', 
             linewidth=0.5, color=cc[idx-5], label='{:2d} years'.format(years[idx]))
-    #--layer 2
+    # layer 2
     ax.plot(xcell, zeta2[idx, 1, 30, :], drawstyle='steps-mid',
             linewidth=0.5, color=cc[idx-5], label='_None')
 ax.plot([-1500, 1500], [-30, -30], color='k', linewidth=1.0)
-#--legend
+# legend
 plt.legend(loc='lower left')
-#--axes labels and text
+# axes labels and text
 ax.set_xlabel('Horizontal distance, in meters')
 ax.set_ylabel('Elevation, in meters')
 ax.text(0.025, .55, 'Layer 1', transform=ax.transAxes, va='center', ha='left', size='7')
@@ -345,9 +345,9 @@ ax.text(0.025, .45, 'Layer 2', transform=ax.transAxes, va='center', ha='left', s
 ax.text(0.975, .1, 'Freshwater and saltwater\nwell withdrawals', transform=ax.transAxes,
         va='center', ha='right', size='8')
 
-#--fourth plot
+# fourth plot
 ax = fig.add_subplot(2, 2, 4)
-#--axes limits
+# axes limits
 ax.set_xlim(0, 30)
 ax.set_ylim(-50, -10)
 t = zobs['TOTIM'][999:] / 365 - 200.
@@ -361,9 +361,9 @@ for i in xrange(len(t)):
 ax.plot(t, tz2, linestyle='solid', color='r', linewidth=0.75, label='Freshwater well')
 ax.plot(t, tz3, linestyle='dotted', color='r', linewidth=0.75, label='Freshwater and saltwater well')
 ax.plot([0, 30], [-30, -30], 'k', linewidth=1.0, label='_None')
-#--legend
+# legend
 leg = plt.legend(loc='lower right', numpoints=1)
-#--axes labels and text
+# axes labels and text
 ax.set_xlabel('Time, in years')
 ax.set_ylabel('Elevation, in meters')
 ax.text(0.025, .55, 'Layer 1', transform=ax.transAxes, va='center', ha='left', size='7')

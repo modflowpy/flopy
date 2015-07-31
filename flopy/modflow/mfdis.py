@@ -519,11 +519,11 @@ class ModflowDis(Package):
             tsmult.append(a3)
             steady.append(a4)
 
-        #--create dis object instance
+        # create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd, 
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
                          lenuni)
-        #--return dis object instance
+        # return dis object instance
         return dis
 
 

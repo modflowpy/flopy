@@ -152,7 +152,7 @@ class ModflowOc88(Package):
         self.chedfm = chedfm
         self.cddnfm = cddnfm
 
-        #--using words
+        # using words
         if words is not None:
 
             hflag,dflag = False,False
@@ -164,12 +164,12 @@ class ModflowOc88(Package):
             self.words = []
             self.compact = compact
 
-            #--first try for simple 1-d list
+            # first try for simple 1-d list
             try:
                 for w in words:
                     self.words.append(w.upper())
 
-                #--build a list of word output options
+                # build a list of word output options
                 word_list = []
 
                 if save_head_every is None:
@@ -197,7 +197,7 @@ class ModflowOc88(Package):
 
 
 
-            #--try for a 2-d list
+            # try for a 2-d list
             except:
                 word_list = []
                 self.words = []
@@ -222,7 +222,7 @@ class ModflowOc88(Package):
                     word_list.append('\n')
                 self.word_list = (word_list)
 
-        #--numeric codes
+        # numeric codes
         else:
             self.words = None
             #dummy, self.item2 = self.assign_layer_row_column_data(item2, 4, zerobase=False)  # misuse of this function - zerobase needs to be False
@@ -265,7 +265,7 @@ class ModflowOc88(Package):
         f_oc.write('%s\n' % self.heading)
         nstp = self.parent.get_package('DIS').nstp
                 
-        #--words option
+        # words option
         if self.words is not None:            
            
             f_oc.write('HEAD PRINT FORMAT {0:3.0f}\n'\
@@ -289,7 +289,7 @@ class ModflowOc88(Package):
             for i in self.word_list:
                 f_oc.write(i)
         
-        #--numeric codes option     
+        # numeric codes option
         else:                                  
             f_oc.write('%3i%3i%5i%5i\n' % \
                       (self.ihedfm, self.iddnfm, self.unit_number[1],\
@@ -469,7 +469,7 @@ class ModflowOc88(Package):
         if len(wordrec) > 3:
             words.append(wordrec)
 
-        #--reset unit numbers
+        # reset unit numbers
         unitnumber=[14, 51, 52, 53]
         if ihedun > 0:
             model.add_pop_key_list(ihedun)
@@ -478,7 +478,7 @@ class ModflowOc88(Package):
             model.add_pop_key_list(iddnun)
             #unitnumber[2] = iddnun
 
-        #--create instance of oc class
+        # create instance of oc class
         oc = ModflowOc88(model, ihedfm=ihedfm, iddnfm=iddnfm,
                  extension=['oc','hds','ddn','cbc'],
                  unitnumber=unitnumber, words=words, compact=compact,

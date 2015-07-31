@@ -185,7 +185,7 @@ class ModflowRch(Package):
         except:
             pass
 
-        #--dataset 3 and 4 - parameters data
+        # dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
             pak_parms = mfparbc.loadarray(f, npar, model.verbose)

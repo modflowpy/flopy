@@ -202,7 +202,7 @@ class ModflowPar(object):
 
 
         """
-        #--read parameter data
+        # read parameter data
         if npar > 0:
             parm_dict = {}
             par_types = []
@@ -234,7 +234,7 @@ class ModflowPar(object):
                             break
 
                     clusters.append([lay, mltarr, zonarr, iarr])
-                #--add parnam to parm_dict
+                # add parnam to parm_dict
                 parm_dict[parnam] = {'partyp':partyp, 'parval':parval, 'nclu':nclu, 'clusters':clusters}
 
         return par_types, parm_dict
@@ -312,14 +312,14 @@ class ModflowPar(object):
                         else:
                             mult_save = np.copy(mult)
                             za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
-                            #--build a multiplier for all of the izones
+                            # build a multiplier for all of the izones
                             mult = np.zeros(shape, dtype=dtype)
                             for iz in izones:
                                 filtarr = za == iz
                                 mult[filtarr] += np.copy(mult_save[filtarr])
-                            #--calculate parameter value for this cluster
+                            # calculate parameter value for this cluster
                             cluster_data = pv * mult
-                        #--add data
+                        # add data
                         data += cluster_data
 
         return data

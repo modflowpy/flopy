@@ -58,7 +58,7 @@ class Modpath(BaseModel):
     def __repr__( self ):
         return 'Modpath model'
 
-    #--function to encapsulate next_ext_unit attribute
+    # function to encapsulate next_ext_unit attribute
     def next_ext_unit(self):
         self.__next_ext_unit += 1
         return self.__next_ext_unit

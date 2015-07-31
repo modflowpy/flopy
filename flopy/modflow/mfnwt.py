@@ -325,7 +325,7 @@ class ModflowNwt(Package):
 
         print('  ...load method not completed. default nwt file created.')
 
-        #--close the open file
+        # close the open file
         f.close()
 
         nwt = ModflowNwt(model)

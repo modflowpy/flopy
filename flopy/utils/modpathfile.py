@@ -48,9 +48,9 @@ class PathlineFile():
         self.dtype, self.outdtype = self._get_dtypes()
         self._build_index()
         self._data = np.loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
-        #--set number of particle ids
+        # set number of particle ids
         self.nid = self._data['particleid'].max()
-        #--convert layer, row, and column indices; particle id and group; and
+        # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         self._data['k'] -= 1
         self._data['i'] -= 1
@@ -58,7 +58,7 @@ class PathlineFile():
         self._data['particleid'] -= 1
         self._data['particlegroup'] -= 1
         self._data['linesegmentindex'] -= 1
-        #--close the input file
+        # close the input file
         self.file.close()
         return
         
@@ -250,9 +250,9 @@ class EndpointFile():
         self.dtype, self.outdtype = self._get_dtypes()
         self._build_index()
         self._data = np.loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
-        #--set number of particle ids
+        # set number of particle ids
         self.nid = self._data['particleid'].max()
-        #--convert layer, row, and column indices; particle id and group; and
+        # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         self._data['k0'] -= 1
         self._data['i0'] -= 1
@@ -262,7 +262,7 @@ class EndpointFile():
         self._data['j'] -= 1
         self._data['particleid'] -= 1
         self._data['particlegroup'] -= 1
-        #--close the input file
+        # close the input file
         self.file.close()
         return
 

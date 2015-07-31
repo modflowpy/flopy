@@ -7,7 +7,7 @@ from setuptools import setup
 
 from flopy import __version__, __name__, __author__
 
-#--trap someone trying to install flopy with something other
+# trap someone trying to install flopy with something other
 #  than python 2 or 3
 if not sys.version_info[0] in [2, 3]:
     print('Sorry, Flopy not supported in your Python version')

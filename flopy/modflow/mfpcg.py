@@ -242,10 +242,10 @@ class ModflowPcg(Package):
             if damp < 0.:
                 dampt = float(line[70:80].strip())
 
-        #--close the open file
+        # close the open file
         f.close()
 
-        #--create instance of pcg class
+        # create instance of pcg class
         pcg = ModflowPcg(model, mxiter=mxiter, iter1=iter1, npcond=npcond, ihcofadd=ihcofadd,\
                          hclose=hclose, rclose=rclose, relax=relax, nbpol=nbpol,\
                          iprpcg=iprpcg, mutpcg=mutpcg, damp=damp, dampt=dampt)

@@ -350,18 +350,18 @@ class ModelCrossSection(object):
             v = vpts[k, :]
             y1 = zpts[k, :]
             y2 = zpts[k+1, :]
-            #--make sure y1 is not below y2
+            # make sure y1 is not below y2
             idx = y1 < y2
             y1[idx] = y2[idx]
-            #--make sure v is not below y2
+            # make sure v is not below y2
             idx = v < y2
             v[idx] = y2[idx]
-            #--make sure v is not above y1
+            # make sure v is not above y1
             idx = v > y1
             v[idx] = y1[idx]
-            #--set y2 to v
+            # set y2 to v
             y2 = v
-            #--mask cells
+            # mask cells
             y1[idxmk] = np.nan
             y2[idxmk] = np.nan
             plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[0],
@@ -459,7 +459,7 @@ class ModelCrossSection(object):
                                                  color_ch])
         bounds=[0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        #--mask active cells
+        # mask active cells
         patches = self.plot_array(plotarray, masked_values=[0], head=head,
                                     cmap=cmap, norm=norm, **kwargs)
         return patches

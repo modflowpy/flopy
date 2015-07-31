@@ -59,19 +59,19 @@ class SwrObs(SwrBinaryStatements):
         # initialize class information
         self.skip = False
         self.verbose = verbose
-        #--open binary head file
+        # open binary head file
         self.file = open(filename, 'rb')
-        #--NOBS
+        # NOBS
         self.nobs = self.read_integer()
         self.v = np.empty((self.nobs), dtype='float')
         self.v.fill(1.0E+32)
-        #--read obsnames
+        # read obsnames
         obsnames = []
         for idx in range(0, self.nobs):
             cid = self.read_obs_text()
             obsnames.append(cid)
         self.obsnames = np.array(obsnames)
-        #--set position
+        # set position
         self.datastart = self.file.tell()
         #get times
         self.times = self.time_list()
@@ -153,7 +153,7 @@ class SwrObs(SwrBinaryStatements):
         if idx != -1 and idx < self.nobs:
             # --find offset to position
             ilen = self.get_point_offset(idx)
-            #--get data
+            # get data
             for time_data in self.times:
                 self.file.seek(int(time_data[1]) + ilen)
                 v = self.read_real()
@@ -179,9 +179,9 @@ class SwrObs(SwrBinaryStatements):
 class SwrFile(SwrBinaryStatements):
     def __init__(self, swrtype, filename, verbose=False):
         # --swrtype =  0 = stage record
-        #--swrtype = -1 = reach group record
-        #--swrtype = -2 = reach group connection velocity record
-        #--swrtype >  0 = aq-reach exchange record type = nlay
+        # swrtype = -1 = reach group record
+        # swrtype = -2 = reach group connection velocity record
+        # swrtype >  0 = aq-reach exchange record type = nlay
         self.file = open(filename, 'rb')
         self.type = None
         try:
@@ -225,7 +225,7 @@ class SwrFile(SwrBinaryStatements):
             self.connectivity = self.read_connectivity()
             if self.verbose == True:
                 print(self.connectivity)
-        #--initialize reachlayers and nqaqentries for qaq data
+        # initialize reachlayers and nqaqentries for qaq data
         if self.type == 'qaq':
             self.reachlayers = np.zeros((self.nrecord), np.int)
             self.nqaqentries = 0
@@ -360,9 +360,9 @@ class SwrFile(SwrBinaryStatements):
                 else:
                     return 0.0, 0.0, 0, 0, 0, False, self.null_record
         except:
-            #--pass a scalar of target totim - 
-            #--returns either a match or the first
-            #--record that exceeds target totim
+            # pass a scalar of target totim -
+            # returns either a match or the first
+            # record that exceeds target totim
             try:
                 ttotim = float(args[0])
                 while True:
@@ -373,7 +373,7 @@ class SwrFile(SwrBinaryStatements):
                     else:
                         return 0.0, 0.0, 0, 0, 0, False, self.null_record
             except:
-                #--get the last successful record
+                # get the last successful record
                 previous = next(self)
                 while True:
                     this_record = next(self)
@@ -478,7 +478,7 @@ class SwrFile(SwrBinaryStatements):
             v = divmod(float(idx), 100.)
             if v[1] == 0.0:
                 sys.stdout.write('.')
-            #--get current position
+            # get current position
             current_position = self.file.tell()
             totim, dt, kper, kstp, swrstp, success, r = next(self)
             if success == True:
@@ -509,13 +509,13 @@ class SwrFile(SwrBinaryStatements):
         if self.type == 'qaq':
             sys.stdout.write('MFBinaryClass::get_point_offset can not be used to extract QAQ data')
             sys.exit(1)
-        #--stage and reach group terms
+        # stage and reach group terms
         elif self.type == 'stage' or self.type == 'reachgroup':
             idx = (rec_num - 1) * self.items
             lpos1 = self.file.tell() + idx * SwrBinaryStatements.realbyte
             self.file.seek(lpos1)
             point_offset = self.file.tell() - lpos0
-        #--connection flux and velocity terms
+        # connection flux and velocity terms
         elif self.type == 'qm':
             frec = -999
             for i in range(0, self.nrecord):
@@ -551,7 +551,7 @@ class SwrFile(SwrBinaryStatements):
             if self.type == 'qm':
                 sys.stdout.write('connected to reach {0}'.format(iconn))
             sys.stdout.write('\n')
-        #--get data
+        # get data
         if len(self.times) > 0:
             for time_data in self.times:
                 totim = time_data[0]
@@ -560,18 +560,18 @@ class SwrFile(SwrBinaryStatements):
                 kstp = time_data[3]
                 swrstp = time_data[4]
                 success = True
-                #--get data
+                # get data
                 if self.dataAvailable == True:
                     self.file.seek(int(time_data[5]) + ilen)
                     r = self.read_items()
                 else:
                     r = np.empty((self.items), np.float)
                     r.fill(self.missingData)
-                #--push the data to the data structure
+                # push the data to the data structure
                 this_entry = np.array([totim, dt, kper, kstp, swrstp, success])
-                #--update this_entry and current gage_record    
+                # update this_entry and current gage_record
                 this_entry = np.hstack((this_entry, r))
                 gage_record = np.vstack((gage_record, this_entry))
-        #--delete first empty entry and return gage_record
+        # delete first empty entry and return gage_record
         gage_record = np.delete(gage_record, 0, axis=0)  #delete the first 'zeros' element
         return gage_record

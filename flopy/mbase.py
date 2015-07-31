@@ -335,7 +335,7 @@ class BaseModel(object):
         # --reset the model workspace
         self.model_ws = new_pth
         sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
-        #--reset the paths for each package
+        # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
@@ -432,7 +432,7 @@ class BaseModel(object):
                         break
         if self.verbose:
             print(' ')
-        #--write name file
+        # write name file
         self.write_name_file()
         #os.chdir(org_dir)
         return
@@ -541,7 +541,7 @@ class BaseModel(object):
         >>> ml.plot()
 
         """
-        #--valid keyword arguments
+        # valid keyword arguments
         if 'kper' in kwargs:
             kper = int(kwargs.pop('kper'))
         else:
@@ -578,13 +578,13 @@ class BaseModel(object):
                 caxs = p.plot(initial_fig=ifig,
                               filename_base=fileb, file_extension=fext,
                               kper=kper, mflay=mflay, key=key)
-                #--unroll nested lists of axes into a single list of axes
+                # unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
                     for c in caxs:
                         axes.append(c)
                 else:
                     axes.append(caxs)
-                #--update next active figure number
+                # update next active figure number
                 ifig = len(axes) + 1
         else:
             for pon in SelPackList:
@@ -595,13 +595,13 @@ class BaseModel(object):
                         caxs = p.plot(initial_fig=ifig,
                                       filename_base=fileb, file_extension=fext,
                                       kper=kper, mflay=mflay, key=key)
-                        #--unroll nested lists of axes into a single list of axes
+                        # unroll nested lists of axes into a single list of axes
                         if isinstance(caxs, list):
                             for c in caxs:
                                 axes.append(c)
                         else:
                             axes.append(caxs)
-                        #--update next active figure number
+                        # update next active figure number
                         ifig = len(axes) + 1
                         break
         if self.verbose:
@@ -787,7 +787,7 @@ class Package(object):
 
         """
 
-        #--valid keyword arguments
+        # valid keyword arguments
         if 'kper' in kwargs:
             kper = kwargs.pop('kper')
         else:
@@ -877,7 +877,7 @@ class Package(object):
             else:
                 pass
 
-            #--unroll nested lists os axes into a single list of axes
+            # unroll nested lists os axes into a single list of axes
             if isinstance(caxs, list):
                 for c in caxs:
                     if isinstance(c, list):
@@ -961,7 +961,7 @@ class Package(object):
             line = f.readline()
             if line[0] != '#':
                 break
-        #--check for parameters
+        # check for parameters
         nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
@@ -996,7 +996,7 @@ class Package(object):
                     it += 1
                 it += 1
 
-        #--set partype
+        # set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
         if 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
@@ -1004,7 +1004,7 @@ class Package(object):
             specify = False
             ipos = f.tell()
             line = f.readline()
-            #--test for specify keyword if a NWT well file - This is a temporary hack
+            # test for specify keyword if a NWT well file - This is a temporary hack
             if 'specify' in line.lower():
                 specify = True
                 t = line.strip().split()
@@ -1019,7 +1019,7 @@ class Package(object):
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(pack_type).lower():
             partype = ['shead', 'ehead']
 
-        #--read parameter data
+        # read parameter data
         if nppak > 0:
             dt = pack_type.get_empty(1, aux_names=aux_names).dtype
             pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
@@ -1079,7 +1079,7 @@ class Package(object):
                             t.append(line[istart:istop])
                         current[ibnd] = tuple(t[:len(current.dtype.names)])
 
-                #--convert indices to zero-based
+                # convert indices to zero-based
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1
@@ -1107,7 +1107,7 @@ class Package(object):
 
                 par_current = pack_type.get_empty(par_dict['nlst'], aux_names=aux_names)
 
-                #-- get appropriate parval
+                #  get appropriate parval
                 if model.mfpar.pval is None:
                     parval = np.float(par_dict['parval'])
                 else:
@@ -1116,7 +1116,7 @@ class Package(object):
                     except:
                         parval = np.float(par_dict['parval'])
 
-                #--fill current parameter data (par_current)
+                # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 

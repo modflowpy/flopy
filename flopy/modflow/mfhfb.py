@@ -239,7 +239,7 @@ class ModflowHfb(Package):
         nphfb = int(t[0])
         mxfb = int(t[1])
         nhfbnp = int(t[2])
-        #--check for no-print suppressor
+        # check for no-print suppressor
         options = []
         aux_names = []
         if len(t) > 2:
@@ -254,11 +254,11 @@ class ModflowHfb(Package):
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 it += 1
-        #--data set 2 and 3
+        # data set 2 and 3
         if nphfb > 0:
             dt = ModflowHfb.get_empty(1).dtype
             pak_parms = mfparbc.load(f, nphfb, dt, model.verbose)
-        #--data set 4
+        # data set 4
         bnd_output = None
         if nhfbnp > 0:
             specified = ModflowHfb.get_empty(nhfbnp)
@@ -269,7 +269,7 @@ class ModflowHfb(Package):
                 t = line.strip().split()
                 specified[ibnd] = tuple(t[:len(specified.dtype.names)])
 
-            #--convert indices to zero-based
+            # convert indices to zero-based
             specified['k'] -= 1
             specified['irow1'] -= 1
             specified['icol1'] -= 1
@@ -295,7 +295,7 @@ class ModflowHfb(Package):
 
                 par_current = ModflowHfb.get_empty(par_dict['nlst'])
 
-                #--
+                #
                 if model.mfpar.pval is None:
                     parval = np.float(par_dict['parval'])
                 else:
@@ -304,11 +304,11 @@ class ModflowHfb(Package):
                     except:
                         parval = np.float(par_dict['parval'])
 
-                #--fill current parameter data (par_current)
+                # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 
-                #--convert indices to zero-based
+                # convert indices to zero-based
                 par_current['k'] -= 1
                 par_current['irow1'] -= 1
                 par_current['icol1'] -= 1

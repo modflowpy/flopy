@@ -50,7 +50,7 @@ class ModelMap(object):
             #print("warning: the model arg to model map is deprecated")
             self.sr = copy.deepcopy(model.dis.sr)
     
-        #--model map override spatial reference settings
+        # model map override spatial reference settings
         if xul is not None:
             self.sr.xul = xul
         if yul is not None:
@@ -72,7 +72,7 @@ class ModelMap(object):
         else:
             self._extent = None
         
-        #--why is this non-default color scale used?? 
+        # why is this non-default color scale used??
         #  This should be passed as a kwarg by the user to the indivudual plotting method.
         #self.cmap = plotutil.viridis
 
