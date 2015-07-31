@@ -262,7 +262,7 @@ for k in xrange(0, nlay_swt):
         kv[k, 0, i] = kvb * f
         ss[k, 0, i] = ssb * f
         ssz[k, 0, i] = sszb * f
-#--wells and ssm data
+# wells and ssm data
 itype = mt3.Mt3dSsm.itype_dict()
 nwell = 1
 for k in xrange(0, nlay_swt):
@@ -290,10 +290,10 @@ for ip in xrange(0, nper):
     well_data[ip] = welllist.copy()
     ssm_data[ip] = ssmlist
 
-#--Define model name for SEAWAT model
+# Define model name for SEAWAT model
 modelname = 'swi2ex5_swt'
 swtexe_name = 'swt_v4'
-#--Create the MODFLOW model structure
+# Create the MODFLOW model structure
 if not skipRuns:
     ml = mf.Modflow(modelname, version='mf2005', exe_name=swtexe_name, model_ws=dirs[1])
     discret = mf.ModflowDis(ml, nrow=nrow, ncol=ncol, nlay=nlay_swt, delr=delr, delc=delc,
@@ -305,7 +305,7 @@ if not skipRuns:
     oc = mf.ModflowOc88(ml, save_head_every=365)
     pcg = mf.ModflowPcg(ml, hclose=1.0e-5, rclose=3.0e-3, mxiter=100, iter1=50)
     ml.write_input()
-    #--Create the basic MT3DMS model structure
+    # Create the basic MT3DMS model structure
     mt = mt3.Mt3dms(modelname, 'nam_mt3dms', ml, model_ws=dirs[1])  # Coupled to modflow model 'mf'
     adv = mt3.Mt3dAdv(mt, mixelm=-1,
                       percel=0.5,
@@ -326,17 +326,17 @@ if not skipRuns:
     gcg = mt3.Mt3dGcg(mt, mxiter=1, iter1=50, isolve=1, cclose=1e-7)
     ssm = mt3.Mt3dSsm(mt, stress_period_data=ssm_data)
     mt.write_input()
-    #--Create the SEAWAT model structure
+    # Create the SEAWAT model structure
     mswt = swt.Seawat(modelname, 'nam_swt', ml, mt, 
                       exe_name=swtexe_name, model_ws=dirs[1])  # Coupled to modflow model mf and mt3dms model mt
     vdf = swt.SeawatVdf(mswt, iwtable=0, densemin=0, densemax=0, denseref=1000., denseslp=0.7143, firstdt=1e-3)
     mswt.write_input()
-    #--Run SEAWAT
+    # Run SEAWAT
     m = mswt.run_model(silent=False)
 
-#--plot the results
+# plot the results
 timprs
-#--read seawat model data
+# read seawat model data
 ucnfile = os.path.join(dirs[1], 'MT3D001.UCN')
 uobj = fu.UcnFile(ucnfile)
 times = uobj.get_times()
@@ -348,8 +348,8 @@ for idx, tt in enumerate(times):
         for jcol in xrange(0, ncol):
             conc[idx, ilay, jcol] = c[ilay, 0, jcol]
 
-#--spatial data
-#--swi2
+# spatial data
+# swi2
 bot = np.zeros((1, ncol, nlay), np.float)
 dz = 100. / float(nlay - 1)
 zall = -np.arange(0, 100 + dz, dz)
@@ -359,7 +359,7 @@ tb = np.append(tb, -120.)
 for k in xrange(0, nlay):
     for i in xrange(0, ncol):
         bot[0, i, k] = tb[k]
-#--seawat
+# seawat
 swt_dz = 120. / nlay_swt
 swt_tb = np.zeros((nlay_swt), np.float)
 zc = -swt_dz / 2.0
@@ -381,12 +381,12 @@ inc = 1.0e-3
 
 xsf = plt.figure(figsize=(fwid, fhgt), facecolor='w')
 xsf.subplots_adjust(wspace=0.25, hspace=0.25, left=flft, right=frgt, bottom=fbot, top=ftop)
-#--withdrawal and recovery titles
+# withdrawal and recovery titles
 ax = xsf.add_subplot(4, 2, 1)
 ax.text(0.0, 1.03, 'Withdrawal', transform=ax.transAxes, va='bottom', ha='left', size='8')
 ax = xsf.add_subplot(4, 2, 2)
 ax.text(0.0, 1.03, 'Recovery', transform=ax.transAxes, va='bottom', ha='left', size='8')
-#--dummy items for legend
+# dummy items for legend
 ax = xsf.add_subplot(4, 2, 1)
 ax.plot([-1, -1], [-1, -1], 'bo', markersize=3, markeredgecolor='blue', markerfacecolor='None', label='SWI2 interface')
 ax.plot([-1, -1], [-1, -1], color='k', linewidth=0.75, linestyle='solid', label='SEAWAT 50% seawater')
@@ -394,7 +394,7 @@ ax.plot([-1, -1], [-1, -1], marker='s', color='k', linewidth=0, linestyle='none'
         markerfacecolor='0.75', label='SEAWAT 5-95% seawater')
 leg = ax.legend(loc='upper left', numpoints=1, ncol=1, labelspacing=0.5, borderaxespad=1, handlelength=3)
 leg._drawFrame = False
-#--data items
+# data items
 for itime in xrange(0, nswi_times):
     zb = np.zeros((ncol), np.float)
     zs = np.zeros((ncol), np.float)
@@ -415,29 +415,29 @@ for itime in xrange(0, nswi_times):
         ic = itime - ndecay
         isp = ( ic * 2 ) + 2
         ax = xsf.add_subplot(4, 2, isp)
-    #--figure title
+    # figure title
     ax.text(-0.15, 1.025, cfig[itime], transform=ax.transAxes, va='center', ha='center', size='8')
 
-    #--swi2
+    # swi2
     ax.plot(x, zs, 'bo', markersize=3, markeredgecolor='blue', markerfacecolor='None', label='_None')
 
-    #--seawat
+    # seawat
     sc = ax.contour(X, Z, conc[itime, :, :], levels=[17.5], colors='k', linestyles='solid', linewidths=0.75, zorder=30)
     cc = ax.contourf(X, Z, conc[itime, :, :], levels=[0.0, 1.75, 33.250], colors=['w', '0.75', 'w'])
-    #--set graph limits
+    # set graph limits
     ax.set_xlim(0, 500)
     ax.set_ylim(-100, -65)
     if itime < ndecay:
         ax.set_ylabel('Elevation, in meters')
 
 
-#--x labels
+# x labels
 ax = xsf.add_subplot(4, 2, 7)
 ax.set_xlabel('Horizontal distance, in meters')
 ax = xsf.add_subplot(4, 2, 8)
 ax.set_xlabel('Horizontal distance, in meters')
 
-#--simulation time titles
+# simulation time titles
 for itime in range(0, nswi_times):
     if itime < ndecay:
         ic = itime

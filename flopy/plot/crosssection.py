@@ -1,13 +1,13 @@
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
 from . import plotutil
-from .plotutil import bc_color_dict, rotate
-
+from .plotutil import bc_color_dict
 
 class ModelCrossSection(object):
     """
-    Class to create a map of the model.
+    Class to create a cross section of the model.
 
     Parameters
     ----------
@@ -45,9 +45,10 @@ class ModelCrossSection(object):
                 raise Exception('Cannot find discretization package')
             else:
                 self.dis = model.get_package('DIS')
+                self.sr = copy.deepcopy(self.dis.sr)
         else:
             self.dis = dis
-            
+            self.sr = copy.deepcopy(dis.sr)
         if line == None:
             s = 'line must be specified.'
             raise Exception(s)
@@ -80,32 +81,25 @@ class ModelCrossSection(object):
 
         # Set origin and rotation
         if xul is None:
-            self.xul = 0.
+            self.sr.xul = 0.
         else:
-            self.xul = xul
+            self.sr.xul = xul
         if yul is None:
-            self.yul = 0
+            self.sr.yul = 0
         else:
-            self.yul = yul
-        self.rotation = -rotation * np.pi / 180.
+            self.sr.yul = yul
+        self.sr.rotation = rotation
 
-        # Create edge arrays and meshgrid for pcolormesh
-        self.xedge = self.get_xedge_array()
-        self.yedge = self.get_yedge_array()
-
-        # Create x and y center arrays and meshgrid of centers
-        self.xcenter = self.get_xcenter_array()
-        self.ycenter = self.get_ycenter_array()
                                                          
         onkey = list(line.keys())[0]                      
         if 'row' in linekeys:
             self.direction = 'x'
-            pts = [(self.xedge[0]+0.1, self.ycenter[int(line[onkey])]-0.1), 
-                   (self.xedge[-1]-0.1, self.ycenter[int(line[onkey])]+0.1)]
+            pts = [(self.sr.xedge[0]+0.1, self.sr.ycenter[int(line[onkey])]-0.1),
+                   (self.sr.xedge[-1]-0.1, self.sr.ycenter[int(line[onkey])]+0.1)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            pts = [(self.xcenter[int(line[onkey])]+0.1, self.yedge[0]-0.1), 
-                   (self.xcenter[int(line[onkey])]-0.1, self.yedge[-1]+0.1)]
+            pts = [(self.sr.xcenter[int(line[onkey])]+0.1, self.sr.yedge[0]-0.1),
+                   (self.sr.xcenter[int(line[onkey])]-0.1, self.sr.yedge[-1]+0.1)]
         else:
             self.direction = 'xy'
             verts = line[onkey]
@@ -116,9 +110,9 @@ class ModelCrossSection(object):
                 yp.append(v2)
             xp, yp = np.array(xp), np.array(yp)
             # remove offset and rotation from line
-            xp -= self.xul
-            yp -= self.yul
-            xp, yp = rotate(xp, yp, -self.rotation, 0, self.yedge[0])
+            xp -= self.sr.xul
+            yp -= self.sr.yul
+            xp, yp = self.sr.rotate(xp, yp, -self.sr.rotation, 0, self.sr.yedge[0])
             pts = []
             for xt, yt in zip(xp, yp):
                 pts.append((xt, yt))
@@ -126,8 +120,8 @@ class ModelCrossSection(object):
         self.pts = np.array(pts)
             
         # get points along the line
-        self.xpts = plotutil.line_intersect_grid(self.pts, self.xedge,
-                                                 self.yedge)
+        self.xpts = plotutil.line_intersect_grid(self.pts, self.sr.xedge,
+                                                 self.sr.yedge)
         if len(self.xpts) < 2:
             s = 'cross-section cannot be created\n.'
             s += '   less than 2 points intersect the model grid\n'
@@ -152,8 +146,8 @@ class ModelCrossSection(object):
         
         zpts = []
         for k in range(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge,
+            zpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge,
                                                    self.elev[k, :, :]))
         self.zpts = np.array(zpts)
         
@@ -235,8 +229,8 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
             
@@ -256,12 +250,12 @@ class ModelCrossSection(object):
 
     def plot_surface(self, a, masked_values=None, **kwargs):
         """
-        Plot a three-dimensional array as lines.
+        Plot a two- or three-dimensional array as line(s).
 
         Parameters
         ----------
         a : numpy.ndarray
-            Three-dimensional array to plot.
+            Two- or three-dimensional array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
         **kwargs : dictionary
@@ -280,9 +274,16 @@ class ModelCrossSection(object):
         plotarray = a
 
         vpts = []
-        for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge,
+        if len(plotarray.shape) == 2:
+            nlay = 1
+            plotarray = np.reshape(plotarray, (1, plotarray.shape[0], plotarray.shape[1]))
+        elif len(plotarray.shape) == 3:
+            nlay = plotarray.shape[0]
+        else:
+            raise Exception('plot_array array must be a 2D or 3D array')
+        for k in range(nlay):
+            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
         
@@ -297,7 +298,7 @@ class ModelCrossSection(object):
 
 
     def plot_fill_between(self, a, colors=['blue', 'red'],
-                            masked_values=None, **kwargs):
+                          masked_values=None, head=None, **kwargs):
         """
         Plot a three-dimensional array as lines.
 
@@ -307,6 +308,10 @@ class ModelCrossSection(object):
             Three-dimensional array to plot.
         masked_values : iterable of floats, ints
             Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
         **kwargs : dictionary
             keyword arguments passed to matplotlib.pyplot.plot
 
@@ -324,11 +329,16 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.ma.array(vpts, mask=False)
-        
+
+        if isinstance(head, np.ndarray):
+            zpts = self.set_zpts(head)
+        else:
+            zpts = self.zpts
+
         if masked_values is not None:
             for mval in masked_values:
                 vpts = np.ma.masked_equal(vpts, mval)
@@ -338,20 +348,20 @@ class ModelCrossSection(object):
         for k in range(self.dis.nlay):
             idxmk = idxm[k, :]
             v = vpts[k, :]
-            y1 = self.zpts[k, :]
-            y2 = self.zpts[k+1, :]
-            #--make sure y1 is not below y2
+            y1 = zpts[k, :]
+            y2 = zpts[k+1, :]
+            # make sure y1 is not below y2
             idx = y1 < y2
             y1[idx] = y2[idx]
-            #--make sure v is not below y2
+            # make sure v is not below y2
             idx = v < y2
             v[idx] = y2[idx]
-            #--make sure v is not above y1
+            # make sure v is not above y1
             idx = v > y1
             v[idx] = y1[idx]
-            #--set y2 to v
+            # set y2 to v
             y2 = v
-            #--mask cells
+            # mask cells
             y1[idxmk] = np.nan
             y2[idxmk] = np.nan
             plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[0],
@@ -389,8 +399,8 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
         vpts = vpts[:, ::2]
@@ -449,7 +459,7 @@ class ModelCrossSection(object):
                                                  color_ch])
         bounds=[0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        #--mask active cells
+        # mask active cells
         patches = self.plot_array(plotarray, masked_values=[0], head=head,
                                     cmap=cmap, norm=norm, **kwargs)
         return patches
@@ -608,12 +618,12 @@ class ModelCrossSection(object):
         qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
                                                           delc, sat_thk)
         
-        if qz == None:
+        if qz is None:
             qz = np.zeros((qx.shape), dtype=np.float)
         
         # Select correct specific discharge direction
         if self.direction == 'x':
-            u = -qx[:, :, :]
+            u = qx[:, :, :]
             u2 = -qy[:, :, :]
             v = qz[:, :, :]
         elif self.direction == 'y':
@@ -632,7 +642,7 @@ class ModelCrossSection(object):
         if nlay == 1:
             x = []
             z = []
-            for k in range(1):
+            for k in range(nlay):
                 for i in range(self.xcentergrid.shape[1]):
                     x.append(self.xcentergrid[k, i])
                     z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k+1, i]))
@@ -646,12 +656,12 @@ class ModelCrossSection(object):
         u2pts = []
         vpts = []
         for k in range(self.dis.nlay):
-            upts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge, u[k, :, :]))
-            u2pts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                    self.yedge, u2[k, :, :]))
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge, v[k, :, :]))
+            upts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge, u[k, :, :]))
+            u2pts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                    self.sr.yedge, u2[k, :, :]))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge, v[k, :, :]))
         upts = np.array(upts)
         u2pts = np.array(u2pts)
         vpts = np.array(vpts)
@@ -788,8 +798,8 @@ class ModelCrossSection(object):
                 v = vs[k, :, :]
                 idx =  v < e
                 e[idx] = v[idx] 
-            zpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge, e))
+            zpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge, e))
         return np.array(zpts)
         
     def set_zcentergrid(self, vs):
@@ -813,8 +823,8 @@ class ModelCrossSection(object):
                 e = vs[k, :, :]
             else:
                 e = self.elev[k, :, :]
-            vpts.append(plotutil.cell_value_points(self.xpts, self.xedge,
-                                                   self.yedge, e))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                   self.sr.yedge, e))
         vpts = np.array(vpts)
 
         zcentergrid = []
@@ -832,7 +842,7 @@ class ModelCrossSection(object):
                             zp = vp
                     zcentergrid.append(zp)
         else:
-            for k in range(0, self.zpts.shape[0], 2):
+            for k in range(0, self.zpts.shape[0] - 1):
                 nz += 1
                 nx = 0
                 for i in range(0, self.xpts.shape[0], 2):
@@ -845,46 +855,6 @@ class ModelCrossSection(object):
                     zcentergrid.append(zp)
         return np.array(zcentergrid).reshape((nz, nx)) 
 
-    def get_xcenter_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every column in the grid.
-
-        """
-        x = np.add.accumulate(self.dis.delr.array) - 0.5 * self.dis.delr.array
-        return x
-
-    def get_ycenter_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every row in the grid.
-
-        """
-        Ly = np.add.reduce(self.dis.delc.array)
-        y = Ly - (np.add.accumulate(self.dis.delc.array) - 0.5 *
-                   self.dis.delc.array)
-        return y
-
-    def get_xedge_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid.  Array is of size (ncol + 1)
-
-        """
-        xedge = np.concatenate(([0.], np.add.accumulate(self.dis.delr.array)))
-        return xedge
-
-    def get_yedge_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid.  Array is of size (nrow + 1)
-
-        """
-        length_y = np.add.reduce(self.dis.delc.array)
-        yedge = np.concatenate(([length_y], length_y -
-                             np.add.accumulate(self.dis.delc.array)))
-        return yedge
-
     def get_extent(self):
         """
         Get the extent of the rotated and offset grid
@@ -894,7 +864,7 @@ class ModelCrossSection(object):
         """
         xmin = self.xpts[0][2]
         xmax = self.xpts[-1][2]
-        
+
         ymin = self.zpts.min()
         ymax = self.zpts.max()
 

@@ -72,11 +72,11 @@ class ModflowSor(Package):
 
         print('   Warning: load method not completed. default sor object created.')
 
-        #--close the open file
+        # close the open file
         f.close()
 
-        #--create sor object
+        # create sor object
         sor = ModflowSor(model)
 
-        #--return sor object
+        # return sor object
         return sor

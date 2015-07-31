@@ -10,6 +10,7 @@ from __future__ import division, print_function
 import os
 import warnings
 import numpy as np
+from flopy.utils import reference
 
 
 class mflist(object):
@@ -18,11 +19,9 @@ class mflist(object):
 
     Parameters
     ----------
-    model : model object
-        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
-        this package will be added.
-    dtype : np.dtype
-        a numpy dtype describing the columns of the list data
+    package : package object
+        The package object (of type :class:`flopy.mbase.Package`) to which
+        this mflist will be added.
     data : varies
         the data of the transient list (optional). (the default is None)
 
@@ -51,10 +50,18 @@ class mflist(object):
 
     """
 
-    def __init__(self, model, dtype, data=None):
-        self.model = model
-        assert isinstance(dtype, np.dtype)
-        self.__dtype = dtype
+    def __init__(self, package, data=None, model=None):
+        self.package = package
+        if model is None:
+            self.model = package.parent
+        else:
+            self.model = model
+        try:
+            self.sr = self.model.dis.sr
+        except:
+            self.sr = None
+        assert isinstance(self.package.dtype, np.dtype)
+        self.__dtype = self.package.dtype
         self.__vtype = {}
         self.__data = {}
         if data is not None:
@@ -275,7 +282,8 @@ class mflist(object):
 
     def __setitem__(self, kper, data):
         if (kper in list(self.__data.keys())):
-            print('removing existing data for kper={}'.format(kper))
+            if self.model.verbose:
+                print('removing existing data for kper={}'.format(kper))
             self.data.pop(kper)
         # If data is a list, then all we can do is try to cast it to
         # an ndarray, then cast again to a recarray
@@ -352,8 +360,8 @@ class mflist(object):
                 itmp = -1
                 kper_vtype = int
 
-            f.write(" {0:9d} {1:9d} # stress period {2:d}\n".format(itmp,
-                                                                    0, kper))
+            f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
+                    .format(itmp,0, kper))
 
             if (kper_vtype == np.recarray):
                 name = f.name
@@ -433,7 +441,8 @@ class mflist(object):
         return kper
 
     def get_indices(self):
-        """a helper function for plotting - get all unique indices
+        """
+            a helper function for plotting - get all unique indices
         """
         names = self.dtype.names
         lnames = []
@@ -479,6 +488,218 @@ class mflist(object):
                 values.append(v)
         return values
 
+    def plot(self, key=None, names=None, kper=0,
+             filename_base=None, file_extension=None, mflay=None,
+             **kwargs):
+        """
+        Plot stress period boundary condition (mflist) data for a specified
+        stress period
 
+        Parameters
+        ----------
+        key : str
+            mflist dictionary key. (default is None)
+        names : list
+            List of names for figure titles. (default is None)
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is zero)
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
 
+        Returns
+        ----------
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
 
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.wel.stress_period_data.plot(ml.wel, kper=1)
+
+        """
+
+        import flopy.plot.plotutil as pu
+
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0+1 >= self.model.nlay:
+                    i0 = self.model.nlay - 1
+                i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = self.model.nlay
+            # build filenames
+            pn = self.package.name[0].upper()
+            filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
+                                                                  kper+1, k+1, fext) for k in range(i0, i1)]
+        if names is None:
+            if key is None:
+                names = ['{} location stress period: {} layer: {}'.format(self.package.name[0], kper+1, k+1)
+                         for k in range(self.model.nlay)]
+            else:
+                names = ['{} {} stress period: {} layer: {}'.format(self.package.name[0], key, kper+1, k+1)
+                         for k in range(self.model.nlay)]
+
+        if key is None:
+            axes = pu._plot_bc_helper(self.package, kper,
+                                      names=names, filenames=filenames,
+                                      mflay=mflay, **kwargs)
+        else:
+            arr_dict = self.to_array(kper)
+
+            try:
+                arr = arr_dict[key]
+            except:
+                p = 'Cannot find key to plot\n'
+                p += '  Provided key={}\n  Available keys='.format(key)
+                for name, arr in arr_dict.items():
+                    p += '{}, '.format(name)
+                p += '\n'
+                raise Exception(p)
+
+            axes = pu._plot_array_helper(arr, model=self.model,
+                                         names=names, filenames=filenames,
+                                         mflay=mflay, **kwargs)
+        return axes
+
+    def to_shapefile(self, filename, kper=0):
+        """
+        Export stress period boundary condition (mflist) data for a specified
+        stress period
+
+        Parameters
+        ----------
+        filename : str
+            Shapefile name to write
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is zero)
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.wel.to_shapefile('test_hk.shp', kper=1)
+        """
+
+        if self.sr is None:
+            raise Exception("mflist.to_shapefile: SpatialReference not set")
+        import flopy.utils.flopy_io as fio
+        arrays = self.to_array(kper)
+        array_dict = {}
+        for name, array in arrays.items():
+            for k in range(array.shape[0]):
+                aname = name+"{0:03d}_{1:02d}".format(kper, k)
+                array_dict[aname] = array[k]
+        fio.write_grid_shapefile(filename, self.sr, array_dict)
+
+    def to_array(self, kper=0):
+        """
+        Convert stress period boundary condition (mflist) data for a
+        specified stress period to a 3-D numpy array
+
+        Parameters
+        ----------
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is zero)
+
+        Returns
+        ----------
+        out : dict of numpy.ndarrays
+            Dictionary of 3-D numpy arrays containing the stress period data for
+            a selected stress period. The dictonary keys are the mflist dtype
+            names for the stress period data ('cond', 'flux', 'bhead', etc.).
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> v = ml.wel.stress_period_data.to_array(kper=1)
+
+        """
+        i0 = 3
+        if 'inode' in self.dtype.names:
+            raise NotImplementedError()
+        arrays = {}
+        for name in self.dtype.names[i0:]:
+            arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
+            arrays[name] = arr.copy()
+        if kper in self.data.keys():
+            sarr = self.data[kper]
+            for name, arr in arrays.items():
+                cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol), dtype=np.float)
+                for rec in sarr:
+                    arr[rec['k'], rec['i'], rec['j']] += rec[name]
+                    if name != 'cond' and name != 'flux':
+                        cnt[rec['k'], rec['i'], rec['j']] += 1.
+                # average keys that should not be added
+                if name != 'cond' and name != 'flux':
+                    idx = cnt > 0.
+                    arr[idx] /= cnt[idx]
+                arrays[name] = arr
+
+        return arrays

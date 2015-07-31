@@ -190,7 +190,7 @@ class ModflowEvt(Package):
         except:
             pass
 
-        #--dataset 3 and 4 - parameters data
+        # dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
             pak_parms = mfparbc.loadarray(f, npar, model.verbose)
@@ -267,9 +267,9 @@ class ModflowEvt(Package):
                     current_ievt = t
                 ievt[iper] = current_ievt
 
-        #--create evt object
+        # create evt object
         evt = ModflowEvt(model, nevtop=nevtop, ipakcb=ipakcb, 
                          surf=surf, evtr=evtr, exdp=exdp, ievt=ievt)
 
-        #--return evt object
+        # return evt object
         return evt

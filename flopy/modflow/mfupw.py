@@ -170,12 +170,12 @@ class ModflowUpw(Package):
         if iwetdry > 0:
             raise Exception('LAYWET should be 0 for UPW')
 
-        #--get parameters
+        # get parameters
         par_types = []
         if npupw > 0:
             par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
 
-        #--get arrays
+        # get arrays
         transient = not model.get_package('DIS').steady.all()
         hk = [0] * nlay
         hani = [0] * nlay
@@ -243,14 +243,14 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb', parm_dict, findlayer=k)
                 vkcb[k] = t
 
-        #--create upw object
+        # create upw object
         upw = ModflowUpw(model, iupwcb=iupwcb, iphdry=iphdry, hdry=hdry,
                          noparcheck=noparcheck,
                          laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet,
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb)
 
-        #--return upw object
+        # return upw object
         return upw
 
     def plot(self):

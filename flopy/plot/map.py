@@ -1,10 +1,11 @@
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
 from . import plotutil
-from .plotutil import bc_color_dict, rotate
+from .plotutil import bc_color_dict
 
-from flopy.utils import util_2d,util_3d,transient_2d
+from flopy.utils import util_2d, util_3d, transient_2d
 
 class ModelMap(object):
     """
@@ -12,8 +13,11 @@ class ModelMap(object):
 
     Parameters
     ----------
+    sr : flopy.utils.reference.SpatialReference
+        The spatial reference class (Default is None)
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
+        If there is not a current axis then a new one will be created.
     model : flopy.modflow object
         flopy model object. (Default is None)
     dis : flopy.modflow.ModflowDis object
@@ -32,159 +36,65 @@ class ModelMap(object):
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
 
-    """
-    def __init__(self, ax=None, model=None, dis=None, layer=0, xul=None,
-                 yul=None, rotation=0., extent=None):
-        self.ml = model
-        self.layer = layer
-        if dis is None:
-            if model is None:
-                raise Exception('Cannot find discretization package')
-            else:
-                self.dis = model.get_package('DIS')
-        else:
-            self.dis = dis
+    Notes
+    -----
+    ModelMap must know the position and rotation of the grid in order to make
+    the plot.  This information is contained in the SpatialReference class
+    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
+    If dis is None, then it looks for sr in model.dis.  If all of these
+    arguments are none, then it uses xul, yul, and rotation.  If none of these
+    arguments are provided, then it puts the lower-left-hand corner of the
+    grid at (0, 0).
 
-        if self.layer < 0 or self.layer > self.dis.nlay - 1:
-            s = 'Not a valid layer: {}.  Must be between 0 and {}.'.format(
-                self.layer, self.dis.nlay - 1)
-            raise Exception(s)
+    """
+    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
+                 extent=None, xul=None, yul=None, rotation=None):
+        self.model = model
+        self.layer = layer
+        self.dis = dis
+        self.sr = None
+        if sr is not None:
+            self.sr = copy.deepcopy(sr)
+        elif dis is not None:
+            #print("warning: the dis arg to model map is deprecated")
+            self.sr = copy.deepcopy(dis.sr)
+        elif model is not None:
+            #print("warning: the model arg to model map is deprecated")
+            self.sr = copy.deepcopy(model.dis.sr)
+    
+        # model map override spatial reference settings
+        if xul is not None:
+            self.sr.xul = xul
+        if yul is not None:
+            self.sr.yul = yul
+        if rotation is not None:
+            self.sr.rotation = rotation
+        
 
         if ax is None:
-            self.ax = plt.gca()
+            try:
+                self.ax = plt.gca()
+                self.ax.set_aspect('equal')
+            except:
+                self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg="white")
         else:
             self.ax = ax
-
-        # Set origin and rotation
-        if xul is None:
-            self.xul = 0.
+        if extent is not None:
+            self._extent = extent
         else:
-            self.xul = xul
-        if yul is None:
-            self.yul = np.add.reduce(self.dis.delc.array)
-        else:
-            self.yul = yul
-        self.rotation = -rotation * np.pi / 180.
-
-        # Create edge arrays and meshgrid for pcolormesh
-        self.xedge = self.get_xedge_array()
-        self.yedge = self.get_yedge_array()
-        self.xgrid, self.ygrid = np.meshgrid(self.xedge, self.yedge)
-        self.xgrid, self.ygrid = rotate(self.xgrid, self.ygrid, self.rotation,
-                                        0, self.yedge[0])
-        self.xgrid += self.xul
-        self.ygrid += self.yul - self.yedge[0]
-
-        # Create x and y center arrays and meshgrid of centers
-        self.xcenter = self.get_xcenter_array()
-        self.ycenter = self.get_ycenter_array()
-        self.xcentergrid, self.ycentergrid = np.meshgrid(self.xcenter,
-                                                         self.ycenter)
-        self.xcentergrid, self.ycentergrid = rotate(self.xcentergrid,
-                                                    self.ycentergrid,
-                                                    self.rotation,
-                                                    0, self.yedge[0])
-        self.xcentergrid += self.xul
-        self.ycentergrid += self.yul - self.yedge[0]
-
-        # Create model extent
-        if extent is None:
-            self.extent = self.get_extent()
-        else:
-            self.extent = extent
-
-        # Set axis limits
-        self.ax.set_xlim(self.extent[0], self.extent[1])
-        self.ax.set_ylim(self.extent[2], self.extent[3])
+            self._extent = None
+        
+        # why is this non-default color scale used??
+        #  This should be passed as a kwarg by the user to the indivudual plotting method.
+        #self.cmap = plotutil.viridis
 
         return
 
-    def write_grid_shapefile(self, filename, package_names=None,array_dict=None):
-        """
-        Write a shapefile for the model grid.  If package_names is not none,
-        then search through the requested packages looking for arrays that can
-        be added to the shapefile as attributes
-
-        Parameters
-        ----------
-        filename : string
-            name of the shapefile to write
-        package_names : (optional) list of package names (e.g. ["dis","lpf"])
-            packages to scrap arrays out of for adding to shapefile
-        array_dict : (optional) dict of {name:2D array} pairs
-           additional 2D arrays to add as attributes to the grid shapefile
-
-
-        Returns
-        -------
-        None
-
-        """
-
-        try:
-            import shapefile
-        except Exception as e:
-            raise Exception("ModelMap.write_grid_shapefile(): error " +
-                            "importing shapefile - need to install pyshp")
-
-        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-        wr.field("row", "N", 10, 0)
-        wr.field("column", "N", 10, 0)
-
-        arrays = []
-        if array_dict is not None:
-            for name,array in array_dict.items():
-                assert array.shape == (self.ml.nrow,self.ml.ncol)
-                wr.field(name,"N",20,12)
-                arrays.append(array)
-
-        if package_names is not None:
-            if not isinstance(package_names, list):
-                package_names = [package_names]
-            for pname in package_names:
-                pak = self.ml.get_package(pname)
-                if pak is not None:
-                    attrs = dir(pak)
-                    for attr in attrs:
-                        a = pak.__getattribute__(attr)
-                        if isinstance(a, util_2d) and a.shape == (self.ml.nrow,
-                                                                  self.ml.ncol):
-                            name = a.name.lower()
-                            wr.field(name, 'N', 20, 12)
-                            arrays.append(a.array)
-                        elif isinstance(a, util_3d):
-                            for i,u2d in enumerate(a):
-                                name = u2d.name.lower().replace(' ','_')
-                                if "_layer" in name:
-                                    name = name.replace("_layer", '')
-                                else:
-                                    name += '_{0:d}'.format(i+1)
-                                wr.field(name, 'N', 20, 12)
-                                arrays.append(u2d.array)
-                        elif isinstance(a,transient_2d):
-                            kpers = list(a.transient_2ds.keys())
-                            kpers.sort()
-                            for kper in kpers:
-                                u2d = a.transient_2ds[kper]
-                                name = u2d.name.lower() + "_{0:d}".format(kper+1)
-                                wr.field(name, 'N', 20, 12)
-                                arrays.append(u2d.array)
-
-        for i in range(self.ml.nrow):
-            for j in range(self.ml.ncol):
-                pts = []
-                pts.append([self.xgrid[i, j], self.ygrid[i, j]])
-                pts.append([self.xgrid[i, j], self.ygrid[i+1, j]])
-                pts.append([self.xgrid[i, j+1], self.ygrid[i+1, j]])
-                pts.append([self.xgrid[i, j+1], self.ygrid[i, j]])
-                pts.append([self.xgrid[i, j], self.ygrid[i, j]])
-                wr.poly(parts=[pts])
-                rec = [i+1, j+1]
-                for array in arrays:
-                    rec.append(array[i, j])
-                wr.record(*rec)
-        wr.save(filename)
-
+    @property
+    def extent(self):
+        if self._extent is None:
+            self._extent = self.sr.get_extent()
+        return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
         """
@@ -203,7 +113,6 @@ class ModelMap(object):
         Returns
         -------
         quadmesh : matplotlib.collections.QuadMesh
-
         """
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
@@ -214,8 +123,14 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        quadmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, plotarray,
-                                      **kwargs)
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
+                                 **kwargs)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
         return quadmesh
 
     def contour_array(self, a, masked_values=None, **kwargs):
@@ -246,9 +161,56 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
-        contour_set = self.ax.contour(self.xcentergrid, self.ycentergrid,
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        if 'colors' in kwargs.keys():
+            if 'cmap' in kwargs.keys():
+                cmap = kwargs.pop('cmap')
+            cmap = None
+        contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
                                       plotarray, **kwargs)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+
         return contour_set
+
+    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
+        """
+        Make a plot of inactive cells.  If not specified, then pull ibound from the
+        self.ml
+
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+        color_noflow : string
+            (Default is 'black')
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if ibound is None:
+            bas = self.model.get_package('BAS6')
+            ibound = bas.ibound
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        plotarray[idx1] = 1
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        return quadmesh
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                     **kwargs):
@@ -270,8 +232,13 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
         if ibound is None:
-            bas = self.ml.get_package('BAS6')
+            bas = self.model.get_package('BAS6')
             ibound = bas.ibound
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -309,6 +276,9 @@ class ModelMap(object):
 
         lc = self.get_grid_line_collection(**kwargs)
         ax.add_collection(lc)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+
         return lc
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
@@ -334,13 +304,18 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
         # Find package to plot
         if package is not None:
             p = package
-        elif self.ml is not None:
+        elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
-            p = self.ml.get_package(ftype)
+            p = self.model.get_package(ftype)
         else:
             raise Exception('Cannot find package to plot')
 
@@ -353,9 +328,9 @@ class ModelMap(object):
         # Return if mflist is None
         if mflist is None:
             return None
-
+        nlay = self.model.nlay
         # Plot the list locations
-        plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)
+        plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
         idx = [mflist['k'], mflist['i'], mflist['j']]
         plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
@@ -367,7 +342,7 @@ class ModelMap(object):
         else:
             c = color
         cmap = matplotlib.colors.ListedColormap(['0', c])
-        bounds=[0, 1, 2]
+        bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return quadmesh
@@ -393,7 +368,7 @@ class ModelMap(object):
         patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
         return patch_collection
 
-    def plot_discharge(self, frf, fff, flf=None, head=None, istep=1, jstep=1,
+    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1, jstep=1,
                        **kwargs):
         """
         Use quiver to plot vectors.
@@ -422,22 +397,28 @@ class ModelMap(object):
             Vectors of specific discharge.
 
         """
-
         # Calculate specific discharge
-        delr = self.dis.delr.array
-        delc = self.dis.delc.array
-        top = self.dis.top.array
-        botm = self.dis.botm.array
+        # make sure dis is defined
+        if dis is None:
+            if self.model is not None:
+                dis = self.model.dis
+            else:
+                print("ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
+                return
+        delr = dis.delr.array
+        delc = dis.delc.array
+        top = dis.top.array
+        botm = dis.botm.array
         nlay, nrow, ncol = botm.shape
         laytyp = None
         hnoflo = 999.
         hdry = 999.
-        if self.ml is not None:
-            lpf = self.ml.get_package('LPF')
+        if self.model is not None:
+            lpf = self.model.get_package('LPF')
             if lpf is not None:
                 laytyp = lpf.laytyp.array
                 hdry = lpf.hdry
-            bas = self.ml.get_package('BAS6')
+            bas = self.model.get_package('BAS6')
             if bas is not None:
                 hnoflo = bas.hnoflo
 
@@ -454,18 +435,173 @@ class ModelMap(object):
                                                           delc, sat_thk)
 
         # Select correct slice and step
-        x = self.xcentergrid[::istep, ::jstep]
-        y = self.ycentergrid[::istep, ::jstep]
+        x = self.sr.xcentergrid[::istep, ::jstep]
+        y = self.sr.ycentergrid[::istep, ::jstep]
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
         u = u[::istep, ::jstep]
         v = v[::istep, ::jstep]
 
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
         # Rotate and plot
-        urot, vrot = rotate(u, v, self.rotation)
-        quiver = self.ax.quiver(x, y, urot, vrot, **kwargs)
+        urot, vrot = self.sr.rotate(u, v, self.sr.rotation)
+        quiver = ax.quiver(x, y, urot, vrot, **kwargs)
 
         return quiver
+
+    def plot_pathline(self, pl, **kwargs):
+        """
+        Plot the MODPATH pathlines.
+
+        Parameters
+        ----------
+        pl : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
+            modpathfile PathlineFile get_data() or get_alldata()
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            'k', and 'particleid'.
+
+        kwargs : layer, ax, colors.  The remaining kwargs are passed
+            into the LineCollection constructor. If layer='all',
+            pathlines are output for all layers
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+        from matplotlib.collections import LineCollection
+        #make sure pathlines is a list
+        if isinstance(pl, np.ndarray):
+            pl = [pl]
+        
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if 'colors' not in kwargs:
+            kwargs['colors'] = '0.5'
+
+        linecol = []
+        for p in pl:
+            vlc = []
+            #rotate data
+            x0r, y0r = self.sr.rotate(p['x'], p['y'], self.sr.rotation, 0., self.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
+            #build polyline array
+            arr = np.vstack((x0r, y0r)).T
+            #select based on layer
+            if kon >= 0:
+                arr = np.ma.masked_where((p['k'] != kon), arr)
+            #append line to linecol if there is some unmasked segment
+            if not arr.mask.all():
+                linecol.append(arr)
+        #create line collection
+        lc = None
+        if len(linecol) > 0:
+            lc = LineCollection(linecol, **kwargs)
+            ax.add_collection(lc)
+        return lc
+
+
+    def plot_endpoint(self, ep, **kwargs):
+        """
+        Plot the MODPATH endpoints.
+
+        Parameters
+        ----------
+        ep : rec array
+            rec array is data returned from modpathfile EndpointFile
+            get_data() or get_alldata() methods. Data in rec array
+            is 'x', 'y', 'z', 'time', 'k', and 'particleid'.
+
+        kwargs : layer, ax, c, s, colorbar, colorbar_label, shrink. The
+            remaining kwargs are passed into the matplotlib scatter
+            method. If layer='all', endpoints are output for all layers.
+            If colorbar is True a colorbar will be added to the plot.
+            If colorbar_label is passed in and colorbar is True then
+            colorbar_label will be passed to the colorbar set_label()
+            method. If shrink is passed in and colorbar is True then
+            the colorbar size will be set using shrink.
+
+        Returns
+        -------
+        sp : matplotlib.pyplot.scatter
+
+        """
+
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        #scatter kwargs that users may redefine
+        if 'c' not in kwargs:
+            c = ep['time']
+        else:
+            c = np.empty((ep.shape[0]), dtype="S30")
+            c.fill(kwargs.pop('c'))
+
+        if 's' not in kwargs:
+            s = 50.
+        else:
+            s = float(kwargs.pop('s'))**2.
+
+        #colorbar kwargs
+        createcb = False
+        if 'colorbar' in kwargs:
+            createcb = kwargs.pop('colorbar')
+
+        colorbar_label = 'Endpoint Time'
+        if 'colorbar_label' in kwargs:
+            colorbar_label = kwargs.pop('colorbar_label')
+
+        shrink = 1.
+        if 'shrink' in kwargs:
+            shrink = float(kwargs.pop('shrink'))
+
+        #rotate data
+        x0r, y0r = self.sr.rotate(ep['x'], ep['y'], self.sr.rotation, 0., self.sr.yedge[0])
+        x0r += self.sr.xul
+        y0r += self.sr.yul - self.sr.yedge[0]
+        #build array to plot
+        arr = np.vstack((x0r, y0r)).T
+        #select based on layer
+        if kon >= 0:
+            c = np.ma.masked_where((ep['k'] != kon), c)
+        #plot the end point data
+        sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        #add a colorbar for endpoint times
+        if createcb:
+            cb = plt.colorbar(sp, shrink=shrink)
+            cb.set_label(colorbar_label)
+        return sp
 
 
     def get_grid_line_collection(self, **kwargs):
@@ -474,119 +610,38 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
-        xmin = self.xedge[0]
-        xmax = self.xedge[-1]
-        ymin = self.yedge[-1]
-        ymax = self.yedge[0]
+        xmin = self.sr.xedge[0]
+        xmax = self.sr.xedge[-1]
+        ymin = self.sr.yedge[-1]
+        ymax = self.sr.yedge[0]
         linecol = []
         # Vertical lines
-        for j in range(self.dis.ncol + 1):
-            x0 = self.xedge[j]
+        for j in range(self.sr.ncol + 1):
+            x0 = self.sr.xedge[j]
             x1 = x0
             y0 = ymin
             y1 = ymax
-            x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
+            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
+            x1r += self.sr.xul
+            y1r += self.sr.yul - self.sr.yedge[0]
             linecol.append(((x0r, y0r), (x1r, y1r)))
 
         #horizontal lines
-        for i in range(self.dis.nrow + 1):
+        for i in range(self.sr.nrow + 1):
             x0 = xmin
             x1 = xmax
-            y0 = self.yedge[i]
+            y0 = self.sr.yedge[i]
             y1 = y0
-            x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
+            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
+            x1r += self.sr.xul
+            y1r += self.sr.yul - self.sr.yedge[0]
             linecol.append(((x0r, y0r), (x1r, y1r)))
 
         lc = LineCollection(linecol, **kwargs)
         return lc
-
-    def get_xcenter_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every column in the grid.
-
-        """
-        x = np.add.accumulate(self.dis.delr.array) - 0.5 * self.dis.delr.array
-        return x
-
-    def get_ycenter_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every row in the grid.
-
-        """
-        Ly = np.add.reduce(self.dis.delc.array)
-        y = Ly - (np.add.accumulate(self.dis.delc.array) - 0.5 *
-                   self.dis.delc.array)
-        return y
-
-    def get_xedge_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid.  Array is of size (ncol + 1)
-
-        """
-        xedge = np.concatenate(([0.], np.add.accumulate(self.dis.delr.array)))
-        return xedge
-
-    def get_yedge_array(self):
-        """
-        Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid.  Array is of size (nrow + 1)
-
-        """
-        length_y = np.add.reduce(self.dis.delc.array)
-        yedge = np.concatenate(([length_y], length_y -
-                             np.add.accumulate(self.dis.delc.array)))
-        return yedge
-
-    def get_extent(self):
-        """
-        Get the extent of the rotated and offset grid
-
-        Return (xmin, xmax, ymin, ymax)
-
-        """
-        x0 = self.xedge[0]
-        x1 = self.xedge[-1]
-        y0 = self.yedge[0]
-        y1 = self.yedge[-1]
-
-        # upper left point
-        x0r, y0r = rotate(x0, y0, self.rotation, 0, self.yedge[0])
-        x0r += self.xul
-        y0r += self.yul - self.yedge[0]
-
-        # upper right point
-        x1r, y1r = rotate(x1, y0, self.rotation, 0, self.yedge[0])
-        x1r += self.xul
-        y1r += self.yul - self.yedge[0]
-
-        # lower right point
-        x2r, y2r = rotate(x1, y1, self.rotation, 0, self.yedge[0])
-        x2r += self.xul
-        y2r += self.yul - self.yedge[0]
-
-        # lower left point
-        x3r, y3r = rotate(x0, y1, self.rotation, 0, self.yedge[0])
-        x3r += self.xul
-        y3r += self.yul - self.yedge[0]
-
-        xmin = min(x0r, x1r, x2r, x3r)
-        xmax = max(x0r, x1r, x2r, x3r)
-        ymin = min(y0r, y1r, y2r, y3r)
-        ymax = max(y0r, y1r, y2r, y3r)
-
-        return (xmin, xmax, ymin, ymax)
-
-

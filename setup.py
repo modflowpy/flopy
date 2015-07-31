@@ -7,15 +7,13 @@ from setuptools import setup
 
 from flopy import __version__, __name__, __author__
 
-#--trap someone trying to install flopy with something other
+# trap someone trying to install flopy with something other
 #  than python 2 or 3
 if not sys.version_info[0] in [2, 3]:
     print('Sorry, Flopy not supported in your Python version')
     print('  Supported versions: 2 and 3')
     print('  Your version of Python: {}'.format(sys.version_info[0]))
     sys.exit(1) # return non-zero value for failure
-
-reqs = [line.strip() for line in open('requirements.txt')]
 
 long_description = ''
  
@@ -33,9 +31,7 @@ setup(name=__name__,
       url='https://github.com/modflowpy/flopy/',
       license='New BSD',
       platforms='Windows, Mac OS-X',
-      install_requires=reqs,
+      install_requires=['numpy>=1.9', 'matplotlib>=1.4'],
       packages=['flopy', 'flopy.modflow', 'flopy.modpath', 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot'],
-      package_data={'': ['requirements.txt']},
-      include_package_data=True,
       # use this version ID if .svn data cannot be found
       version=__version__ )

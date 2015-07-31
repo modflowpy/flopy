@@ -78,10 +78,10 @@ class ModflowRch(Package):
         self.nrchop = nrchop
         self.ipakcb = ipakcb
         self.rech = transient_2d(model, (nrow, ncol), np.float32,
-                                 rech, name = "rech_")
+                                 rech, name = 'rech_')
         if self.nrchop == 2:
             self.irch = transient_2d(model, (nrow, ncol), np.int,
-                                     irch+1, name = "irch_")  # irch+1, as irch is zero based
+                                     irch+1, name = 'irch_')  # irch+1, as irch is zero based
         else:
             self.irch = None
         self.np = 0
@@ -111,7 +111,7 @@ class ModflowRch(Package):
                 inirch, file_entry_irch = self.irch.get_kper_entry(kper)
             else:
                 inirch = -1
-            f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech, 
+            f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech,
                         inirch, "Stress period " + str(kper + 1)))
             if (inrech >= 0):
                 f_rch.write(file_entry_rech)
@@ -185,7 +185,7 @@ class ModflowRch(Package):
         except:
             pass
 
-        #--dataset 3 and 4 - parameters data
+        # dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
             pak_parms = mfparbc.loadarray(f, npar, model.verbose)

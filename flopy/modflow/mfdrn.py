@@ -108,7 +108,7 @@ class ModflowDrn(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
+        self.stress_period_data = mflist(self, stress_period_data)
         self.parent.add_package(self)
 
     def __repr__(self):

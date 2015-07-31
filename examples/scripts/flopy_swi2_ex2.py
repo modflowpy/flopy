@@ -59,7 +59,7 @@ if cleanFiles:
             os.rmdir(d)
     sys.exit(1)
 
-#--make working directories
+# make working directories
 for d in dirs:
     if not os.path.exists(d):
         os.mkdir(d)
@@ -67,7 +67,7 @@ for d in dirs:
 modelname = 'swiex2'
 mf_name = 'mf2005'
 
-#--problem data
+# problem data
 nper = 1
 perlen = 2000
 nstp = 1000
@@ -78,7 +78,7 @@ x = np.arange(0.5 * delr, ncol * delr, delr)
 xedge = np.linspace(0, float(ncol) * delr, len(x) + 1)
 ibound = np.ones((nrow, ncol), np.int)
 ibound[0, 0] = -1
-#--swi2 data
+# swi2 data
 z0 = np.zeros((nlay, nrow, ncol), np.float)
 z1 = np.zeros((nlay, nrow, ncol), np.float)
 z0[0, 0, 30:38] = np.arange(-2.5, -40, -5)
@@ -92,7 +92,7 @@ ssz = 0.2
 isource = np.ones((nrow, ncol), 'int')
 isource[0, 0] = 2
 
-#--stratified model
+# stratified model
 modelname = 'swiex2_strat'
 print 'creating...', modelname
 ml = mf.Modflow(modelname, version='mf2005', exe_name=mf_name, model_ws=dirs[0])
@@ -105,17 +105,17 @@ swi = mf.ModflowSwi2(ml, nsrf=nsurf, istrat=1, toeslope=0.2, tipslope=0.2, nu=[0
 oc = mf.ModflowOc88(ml, save_head_every=1000)
 pcg = mf.ModflowPcg(ml)
 ml.write_input()
-#--run stratified model
+# run stratified model
 if not skipRuns:
     m = ml.run_model(silent=False)
-#--read stratified results
+# read stratified results
 zetafile = os.path.join(dirs[0], '{}.zta'.format(modelname))
 zobj = fu.CellBudgetFile(zetafile)
 zkstpkper = zobj.get_kstpkper()
 zeta = zobj.get_data(kstpkper=zkstpkper[-1], text='      ZETASRF  1')[0]
 zeta2 = zobj.get_data(kstpkper=zkstpkper[-1], text='      ZETASRF  2')[0]
 #
-#--vd model
+# vd model
 modelname = 'swiex2_vd'
 print 'creating...', modelname
 ml = mf.Modflow(modelname, version='mf2005', exe_name=mf_name, model_ws=dirs[0])
@@ -128,17 +128,17 @@ swi = mf.ModflowSwi2(ml, nsrf=nsurf, istrat=0, toeslope=0.2, tipslope=0.2, nu=[0
 oc = mf.ModflowOc88(ml, save_head_every=1000)
 pcg = mf.ModflowPcg(ml)
 ml.write_input()
-#--run vd model
+# run vd model
 if not skipRuns:
     m = ml.run_model(silent=False)
-#--read vd model data
+# read vd model data
 zetafile = os.path.join(dirs[0], '{}.zta'.format(modelname))
 zobj = fu.CellBudgetFile(zetafile)
 zkstpkper = zobj.get_kstpkper()
 zetavd = zobj.get_data(kstpkper=zkstpkper[-1], text='      ZETASRF  1')[0]
 zetavd2 = zobj.get_data(kstpkper=zkstpkper[-1], text='      ZETASRF  2')[0]
 #
-#--seawat model
+# seawat model
 swtexe_name = 'swt_v4'
 modelname = 'swiex2_swt'
 print 'creating...', modelname
@@ -168,10 +168,10 @@ for ilay in range(0, swt_nlay):
     zcell -= swt_delz
 #swt_X, swt_Z = np.meshgrid(swt_x, swt_botm)
 swt_X, swt_Z = np.meshgrid(swt_x, swt_z)
-#--mt3d
-#--mt3d boundary array set to all active
+# mt3d
+# mt3d boundary array set to all active
 icbund = np.ones((swt_nlay, swt_nrow, swt_ncol), np.int)
-#--create initial concentrations for MT3D
+# create initial concentrations for MT3D
 sconc = np.ones((swt_nlay, swt_nrow, swt_ncol), np.float)
 sconcp = np.zeros((swt_nlay, swt_ncol), np.float)
 xsb = 110
@@ -187,7 +187,7 @@ for ilay in range(0, swt_nlay):
     xsb += swt_delz
     xbf += swt_delz
 
-#--ssm data
+# ssm data
 itype = mt3.Mt3dSsm.itype_dict()
 ssm_data = {0: [0, 0, 0, 35., itype['BAS6']]}
 
@@ -195,7 +195,7 @@ ssm_data = {0: [0, 0, 0, 35., itype['BAS6']]}
 #mt3d print times
 timprs = (np.arange(5) + 1) * 2000.
 nprs = len(timprs)
-#--MODFLOW files
+# MODFLOW files
 ml = []
 ml = mf.Modflow(modelname, version='mf2005', exe_name=swtexe_name, model_ws=dirs[1])
 discret = mf.ModflowDis(ml, nrow=swt_nrow, ncol=swt_ncol, nlay=swt_nlay,
@@ -206,7 +206,7 @@ lpf = mf.ModflowLpf(ml, hk=2.0, vka=2.0, ss=0.0, sy=0.0, laytyp=0, layavg=0)
 oc = mf.ModflowOc88(ml, save_head_every=1, item2=[[0, 1, 0, 0]])
 pcg = mf.ModflowPcg(ml)
 ml.write_input()
-#--Create the basic MT3DMS model structure
+# Create the basic MT3DMS model structure
 mt = mt3.Mt3dms(modelname, 'nam_mt3dms', modflowmodel=ml, 
                 model_ws=dirs[1])  # Coupled to modflow model 'mf'
 adv = mt3.Mt3dAdv(mt, mixelm=-1,  #-1 is TVD
@@ -233,10 +233,10 @@ mswtf = swt.Seawat(modelname, 'nam_swt', modflowmodel=ml, mt3dmsmodel=mt,
                    exe_name=swtexe_name, model_ws=dirs[1])  # Coupled to modflow model mf and mt3dms model mt
 vdf = swt.SeawatVdf(mswtf, nswtcpl=1, iwtable=0, densemin=0, densemax=0, denseref=1000., denseslp=25., firstdt=1.0e-03)
 mswtf.write_input()
-#--run seawat model
+# run seawat model
 if not skipRuns:
     m = mswtf.run_model(silent=False)
-#--read seawat model data
+# read seawat model data
 ucnfile = os.path.join(dirs[1], 'MT3D001.UCN')
 uobj = fu.UcnFile(ucnfile)
 times = uobj.get_times()
@@ -249,7 +249,7 @@ for icol in range(0, swt_ncol):
     for ilay in range(0, swt_nlay):
         conc[ilay, icol] = c[ilay, 0, icol]
 #
-#--figure
+# figure
 fwid = 7.0  #6.50
 fhgt = 4.5  #6.75
 flft = 0.125
@@ -260,7 +260,7 @@ ftop = 0.925
 print 'creating  cross-section figure...'
 xsf = plt.figure(figsize=(fwid, fhgt), facecolor='w')
 xsf.subplots_adjust(wspace=0.25, hspace=0.25, left=flft, right=frgt, bottom=fbot, top=ftop)
-#--plot initial conditions
+# plot initial conditions
 ax = xsf.add_subplot(3, 1, 1)
 ax.text(-0.075, 1.05, 'A', transform=ax.transAxes, va='center', ha='center', size='8')
 #text(.975, .1, '(a)', transform = ax.transAxes, va = 'center', ha = 'center')
@@ -273,7 +273,7 @@ ax.text(50, -20, 'salt', va='center', ha='center')
 ax.text(150, -20, 'brackish', va='center', ha='center')
 ax.text(250, -20, 'fresh', va='center', ha='center')
 ax.set_ylabel('Elevation, in meters')
-#--plot stratified swi2 and seawat results
+# plot stratified swi2 and seawat results
 ax = xsf.add_subplot(3, 1, 2)
 ax.text(-0.075, 1.05, 'B', transform=ax.transAxes, va='center', ha='center', size='8')
 #
@@ -283,15 +283,15 @@ ax.plot(x[p], zp[p], 'b', linewidth=1.5, drawstyle='steps-mid')
 zp = zeta2[0, 0, :]
 p = (zp < 0.0) & (zp > -40.)
 ax.plot(x[p], zp[p], 'b', linewidth=1.5, drawstyle='steps-mid')
-#--seawat data
+# seawat data
 cc = ax.contour(swt_X, swt_Z, conc, levels=[0.25, 0.75], colors='k', linestyles='solid', linewidths=0.75, zorder=101)
-#--fake figures
+# fake figures
 ax.plot([-100., -100], [-100., -100], 'b', linewidth=1.5, label='SWI2')
 ax.plot([-100., -100], [-100., -100], 'k', linewidth=0.75, label='SEAWAT')
-#--legend
+# legend
 leg = ax.legend(loc='lower left', numpoints=1)
 leg._drawFrame = False
-#--axes
+# axes
 ax.set_xlim(0, 300)
 ax.set_ylim(-40, 0)
 ax.set_yticks(np.arange(-40, 1, 10))
@@ -307,13 +307,13 @@ dr = zetavd[0, 0, :]
 ax.plot(x, dr, 'r', linewidth=0.75, drawstyle='steps-mid')
 dr = zetavd2[0, 0, :]
 ax.plot(x, dr, 'r', linewidth=0.75, drawstyle='steps-mid')
-#--fake figures
+# fake figures
 ax.plot([-100., -100], [-100., -100], 'b', linewidth=1.5, label='SWI2 stratified option')
 ax.plot([-100., -100], [-100., -100], 'r', linewidth=0.75, label='SWI2 continuous option')
-#--legend
+# legend
 leg = ax.legend(loc='lower left', numpoints=1)
 leg._drawFrame = False
-#--axes
+# axes
 ax.set_xlim(0, 300)
 ax.set_ylim(-40, 0)
 ax.set_yticks(np.arange(-40, 1, 10))

@@ -119,6 +119,7 @@ class Modflow(BaseModel):
         self.external_units = []
         self.external_binflag = []
         self.external = False
+        self.verbose = verbose
         self.load = load
         # the starting external data unit number
         self.__next_ext_unit = 1000
@@ -322,6 +323,7 @@ class Modflow(BaseModel):
             if item.filetype.lower() == "dis":
                 dis = item
                 dis_key = key
+                break
         try:
             pck = dis.package.load(dis.filename, ml,
                                    ext_unit_dict=ext_unit_dict)
@@ -330,10 +332,10 @@ class Modflow(BaseModel):
                 sys.stdout.write('   {:4s} package load...success\n'
                                  .format(pck.name[0]))
             ext_unit_dict.pop(dis_key)
-        except:
+        except Exception as e:
             s = 'Could not read discretization package: {}. Stopping...'\
                 .format(os.path.basename(dis.filename))
-            raise Exception(s)
+            raise Exception(s + " " + str(e))
 
         if load_only is None:
             load_only = []
@@ -401,8 +403,8 @@ class Modflow(BaseModel):
                     ml.external_binflag.append("binary"
                                                in item.filetype.lower())
 
-        #--pop binary output keys and any external file units that are now
-        #--internal
+        # pop binary output keys and any external file units that are now
+        # internal
         for key in ml.pop_key_list:
             try:
                 ml.remove_external(unit=key)
@@ -412,7 +414,7 @@ class Modflow(BaseModel):
                     sys.stdout.write('Warning: external file unit " +\
                         "{} does not exist in ext_unit_dict.\n'.format(key))
 
-        #--write message indicating packages that were successfully loaded
+        # write message indicating packages that were successfully loaded
         if ml.verbose:
             print(1 * '\n')
             s = '   The following {0} packages were successfully loaded.'\
@@ -428,5 +430,5 @@ class Modflow(BaseModel):
                     print('      ' + os.path.basename(fname))
                 print('\n')
 
-        #--return model object
+        # return model object
         return ml

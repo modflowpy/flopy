@@ -88,7 +88,6 @@ class ModflowWel(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> lrcq = {0:[[2, 3, 4, -100.]], 1:[[2, 3, 4, -100.]]}
-    >>>                              #periods
     >>> wel = flopy.modflow.ModflowWel(m, stress_period_data=lrcq)
 
     """
@@ -122,7 +121,7 @@ class ModflowWel(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
+        self.stress_period_data = mflist(self, stress_period_data)
 
     def __repr__(self):
         return 'Well package class'

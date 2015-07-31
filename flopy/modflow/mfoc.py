@@ -203,7 +203,7 @@ class ModflowOc(Package):
         f_oc = open(self.fn_path, 'w')
         f_oc.write('{}\n'.format(self.heading))
 
-        #--write options
+        # write options
 
         f_oc.write('HEAD PRINT FORMAT {0:3.0f}\n'\
                    .format(self.ihedfm))            
@@ -229,7 +229,10 @@ class ModflowOc(Package):
                        .format(self.unit_number[4]))
 
         if self.compact:
-            f_oc.write('COMPACT BUDGET FILES')
+            f_oc.write('COMPACT BUDGET FILES\n')
+        
+        # add a line separator between header and stress
+        #  period data
         f_oc.write('\n')
 
 
@@ -263,7 +266,7 @@ class ModflowOc(Package):
                     f_oc.write('\n')
                     ddnref = ''
 
-        #--close oc file
+        # close oc file
         f_oc.close()
 
     @staticmethod
@@ -344,7 +347,7 @@ class ModflowOc(Package):
             filename = f
             f = open(filename, 'r')
 
-        #--read header
+        # read header
         ipos = f.tell()
         while True:
             line = f.readline()
@@ -361,10 +364,10 @@ class ModflowOc(Package):
                 except:
                     f.seek(ipos)
                     pass
-                #--exit so the remaining data can be read 
+                # exit so the remaining data can be read
                 #  from the file based on numericformat
                 break
-            #--set pointer to current position in the OC file    
+            # set pointer to current position in the OC file
             ipos = f.tell()
                  
         
@@ -377,16 +380,16 @@ class ModflowOc(Package):
                     lnlst = line.strip().split()
                     incode, ihddfl = int(lnlst[0]), int(lnlst[1])
                     ibudfl, icbcfl = int(lnlst[2]), int(lnlst[3])
-                    #--new print and save flags are needed if incode is not 
+                    # new print and save flags are needed if incode is not
                     #  less than 0.
                     if incode >= 0:
                         lines = []
-                    #--use print options from the last time step
+                    # use print options from the last time step
                     else:
                         if len(lines) > 0:
                             stress_period_data[(iperoc, itsoc)] = list(lines)
                         continue
-                    #--set print and save budget flags
+                    # set print and save budget flags
                     if ibudfl != 0:
                         lines.append('PRINT BUDGET')
                     if icbcfl != 0:
@@ -494,13 +497,13 @@ class ModflowOc(Package):
                 elif 'PERIOD' in lnlst[0].upper():
                     if len(lines) > 0:
                         if iperoc > 0:
-                            #--create period step tuple
+                            # create period step tuple
                             kperkstp = (iperoc-1, itsoc-1)
-                            #--save data
+                            # save data
                             stress_period_data[kperkstp] = lines
-                        #--reset lines
+                        # reset lines
                         lines = []
-                    #--turn off oc if required
+                    # turn off oc if required
                     if iperoc > 0:
                         if itsoc==nstp[iperoc-1]:
                             iperoc1 = iperoc + 1
@@ -510,10 +513,13 @@ class ModflowOc(Package):
                             itsoc1 = itsoc + 1
                     else:
                         iperoc1, itsoc1 = iperoc, itsoc 
-                    #--update iperoc and itsoc
+                    # update iperoc and itsoc
                     iperoc = int(lnlst[1])
                     itsoc = int(lnlst[3])
-                    #--add a empty list if necessary
+                    # do not used data that exceeds nper
+                    if iperoc > nper:
+                        break
+                    # add a empty list if necessary
                     iempty = False
                     if iperoc != iperoc1:
                         iempty = True
@@ -535,11 +541,11 @@ class ModflowOc(Package):
     
             #store the last record in word
             if len(lines) > 0:
-                #--create period step tuple
+                # create period step tuple
                 kperkstp = (iperoc-1, itsoc-1)
-                #--save data
+                # save data
                 stress_period_data[kperkstp] = lines
-                #--add a empty list if necessary
+                # add a empty list if necessary
                 iempty = False
                 if iperoc != iperoc1:
                     iempty = True
@@ -550,7 +556,7 @@ class ModflowOc(Package):
                     kperkstp = (iperoc1-1, itsoc1-1)
                     stress_period_data[kperkstp] = []
                     
-        #--reset unit numbers
+        # reset unit numbers
         unitnumber=[14, 51, 52, 53]
         if ihedun > 0:
             model.add_pop_key_list(ihedun)
@@ -562,7 +568,7 @@ class ModflowOc(Package):
                 cboufm = True
                 
 
-        #--create instance of oc class
+        # create instance of oc class
         oc = ModflowOc(model, ihedfm=ihedfm, iddnfm=iddnfm,
                  chedfm=chedfm, cddnfm=cddnfm, cboufm=cboufm,
                  compact=compact,

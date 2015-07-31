@@ -76,7 +76,7 @@ class Mt3dms(BaseModel):
         else:
             return 1
     
-    #--function to encapsulate next_ext_unit attribute
+    # function to encapsulate next_ext_unit attribute
     def next_ext_unit(self):
         self.__next_ext_unit += 1
         return self.__next_ext_unit

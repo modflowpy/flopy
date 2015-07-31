@@ -460,16 +460,16 @@ class ModflowUzf1(Package):
             line = f.readline()
             if line[0] != '#':
                 break
-        #--dataset 1
+        # dataset 1
 
-        #--todo: everything
+        # todo: everything
         print('   Warning: load method not completed. default uzf object created.')
 
-        #--close the file
+        # close the file
         f.close()
 
-        #--create uzf object
+        # create uzf object
         uzf = ModflowUzf1(model)
 
-        #--return default uzf object
+        # return default uzf object
         return uzf

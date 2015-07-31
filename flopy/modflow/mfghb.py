@@ -112,7 +112,7 @@ class ModflowGhb(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        self.stress_period_data = mflist(model, self.dtype, stress_period_data)
+        self.stress_period_data = mflist(self, stress_period_data)
 
     def __repr__(self):
         return 'GHB package class'
@@ -202,6 +202,6 @@ class ModflowGhb(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading gmg package file...\n')
+            sys.stdout.write('loading ghb package file...\n')
 
         return Package.load(model, ModflowGhb, f, nper)

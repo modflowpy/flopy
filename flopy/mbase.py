@@ -5,6 +5,7 @@ mbase module
 
 """
 
+from __future__ import print_function
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 import sys
@@ -334,7 +335,7 @@ class BaseModel(object):
         # --reset the model workspace
         self.model_ws = new_pth
         sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
-        #--reset the paths for each package
+        # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
@@ -431,7 +432,7 @@ class BaseModel(object):
                         break
         if self.verbose:
             print(' ')
-        #--write name file
+        # write name file
         self.write_name_file()
         #os.chdir(org_dir)
         return
@@ -493,6 +494,119 @@ class BaseModel(object):
         """
         if key not in self.pop_key_list:
             self.pop_key_list.append(key)
+
+
+    def plot(self, SelPackList=None, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        model input data
+
+        Parameters
+        ----------
+        SelPackList : bool or list
+            List of of packages to plot. If SelPackList=None all packages
+            are plotted. (default is None)
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is zero)
+            key : str
+                mflist dictionary key. (default is None)
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.plot()
+
+        """
+        # valid keyword arguments
+        if 'kper' in kwargs:
+            kper = int(kwargs.pop('kper'))
+        else:
+            kper = 0
+
+        if 'mflay' in kwargs:
+            mflay = kwargs.pop('mflay')
+        else:
+            mflay = None
+
+        if 'filename_base' in kwargs:
+            fileb = kwargs.pop('filename_base')
+        else:
+            fileb = None
+
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+
+        if 'key' in kwargs:
+            key = kwargs.pop('key')
+        else:
+            key = None
+
+        if self.verbose:
+            print('\nPlotting Packages')
+
+        axes = []
+        ifig = 0
+        if SelPackList is None:
+            for p in self.packagelist:
+                caxs = p.plot(initial_fig=ifig,
+                              filename_base=fileb, file_extension=fext,
+                              kper=kper, mflay=mflay, key=key)
+                # unroll nested lists of axes into a single list of axes
+                if isinstance(caxs, list):
+                    for c in caxs:
+                        axes.append(c)
+                else:
+                    axes.append(caxs)
+                # update next active figure number
+                ifig = len(axes) + 1
+        else:
+            for pon in SelPackList:
+                for i, p in enumerate(self.packagelist):
+                    if pon in p.name:
+                        if self.verbose:
+                            print('   Plotting Package: ', p.name[0])
+                        caxs = p.plot(initial_fig=ifig,
+                                      filename_base=fileb, file_extension=fext,
+                                      kper=kper, mflay=mflay, key=key)
+                        # unroll nested lists of axes into a single list of axes
+                        if isinstance(caxs, list):
+                            for c in caxs:
+                                axes.append(c)
+                        else:
+                            axes.append(caxs)
+                        # update next active figure number
+                        ifig = len(axes) + 1
+                        break
+        if self.verbose:
+            print(' ')
+        return axes
 
 
 class Package(object):
@@ -630,6 +744,190 @@ class Package(object):
         newdtype = np.dtype(newdtype)
         return newdtype
 
+    def plot(self, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        package input data
+
+        Parameters
+        ----------
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is zero)
+            key : str
+                mflist dictionary key. (default is None)
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.dis.plot()
+
+        """
+
+        # valid keyword arguments
+        if 'kper' in kwargs:
+            kper = kwargs.pop('kper')
+        else:
+            kper = 0
+
+        if 'filename_base' in kwargs:
+            fileb = kwargs.pop('filename_base')
+        else:
+            fileb = None
+
+        if 'mflay' in kwargs:
+            mflay = kwargs.pop('mflay')
+        else:
+            mflay = None
+
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+
+        if 'key' in kwargs:
+            key = kwargs.pop('key')
+        else:
+            key = None
+
+        if 'initial_fig' in kwargs:
+            ifig = int(kwargs.pop('initial_fig'))
+        else:
+            ifig = 0
+
+        inc = self.parent.nlay
+        if mflay is not None:
+            inc = 1
+
+
+        axes = []
+        for item, value in self.__dict__.items():
+            caxs = []
+            if isinstance(value, utils.mflist):
+                if self.parent.verbose:
+                    print('plotting {} package mflist instance: {}'.format(self.name[0], item))
+                if key is None:
+                    names = ['{} location stress period {} layer {}'.format(self.name[0], kper+1, k+1)
+                             for k in range(self.parent.nlay)]
+                else:
+                    names = ['{} {} data stress period {} layer {}'.format(self.name[0], key, kper+1, k+1)
+                             for k in range(self.parent.nlay)]
+
+                fignum = list(range(ifig, ifig+inc))
+                ifig = fignum[-1] + 1
+                caxs.append(value.plot(key, names, kper,
+                                       filename_base=fileb, file_extension=fext, mflay=mflay,
+                                       fignum=fignum, colorbar=True))
+
+            elif isinstance(value, utils.util_3d):
+                if self.parent.verbose:
+                    print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                fignum = list(range(ifig, ifig+inc))
+                ifig = fignum[-1] + 1
+                caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
+                                       fignum=fignum, colorbar=True))
+            elif isinstance(value, utils.util_2d):
+                if len(value.shape) == 2:
+                    if self.parent.verbose:
+                        print('plotting {} package util_2d instance: {}'.format(self.name[0], item))
+                    fignum = list(range(ifig, ifig+1))
+                    ifig = fignum[-1] + 1
+                    caxs.append(value.plot(filename_base=fileb, file_extension=fext,
+                                           fignum=fignum, colorbar=True))
+            elif isinstance(value, utils.transient_2d):
+                if self.parent.verbose:
+                    print('plotting {} package transient_2d instance: {}'.format(self.name[0], item))
+                fignum = list(range(ifig, ifig+inc))
+                ifig = fignum[-1] + 1
+                caxs.append(value.plot(filename_base=fileb, file_extension=fext, kper=kper,
+                                       fignum=fignum, colorbar=True))
+            elif isinstance(value, list):
+                for v in value:
+                    if isinstance(v, utils.util_3d):
+                        if self.parent.verbose:
+                            print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                        fignum = list(range(ifig, ifig+inc))
+                        ifig = fignum[-1] + 1
+                        caxs.append(v.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
+                                           fignum=fignum, colorbar=True))
+            else:
+                pass
+
+            # unroll nested lists os axes into a single list of axes
+            if isinstance(caxs, list):
+                for c in caxs:
+                    if isinstance(c, list):
+                        for cc in c:
+                            axes.append(cc)
+                    else:
+                        axes.append(c)
+            else:
+                axes.append(caxs)
+
+        return axes
+
+
+    def to_shapefile(self, filename, **kwargs):
+        """
+        Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).  Adds an
+            attribute for each layer in each data array
+
+        Parameters
+        ----------
+        filename : str
+            Shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.lpf.to_shapefile('test_hk.shp')
+        """
+
+        s = 'to_shapefile() method not implemented for {} Package'.format(self.name)
+        raise Exception(s)
+
+    #     try:
+    #         if isinstance(self.stress_period_data, utils.mflist):
+    #             self.stress_period_data.to_shapefile(*args, **kwargs)
+    #     except:
+    #         pass
+
+
     def webdoc(self):
         if self.parent.version == 'mf2k':
             wb.open('http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
@@ -663,7 +961,7 @@ class Package(object):
             line = f.readline()
             if line[0] != '#':
                 break
-        #--check for parameters
+        # check for parameters
         nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
@@ -698,7 +996,7 @@ class Package(object):
                     it += 1
                 it += 1
 
-        #--set partype
+        # set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
         if 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
@@ -706,10 +1004,9 @@ class Package(object):
             specify = False
             ipos = f.tell()
             line = f.readline()
-            #--test for specify keyword if a NWT well file - This is a temporary hack
+            # test for specify keyword if a NWT well file - This is a temporary hack
             if 'specify' in line.lower():
                 specify = True
-                line = f.readline()  #ditch line -- possibly save for NWT output
                 t = line.strip().split()
                 phiramp = np.float32(t[1])
                 try:
@@ -722,7 +1019,7 @@ class Package(object):
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(pack_type).lower():
             partype = ['shead', 'ehead']
 
-        #--read parameter data
+        # read parameter data
         if nppak > 0:
             dt = pack_type.get_empty(1, aux_names=aux_names).dtype
             pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
@@ -782,7 +1079,7 @@ class Package(object):
                             t.append(line[istart:istop])
                         current[ibnd] = tuple(t[:len(current.dtype.names)])
 
-                #--convert indices to zero-based
+                # convert indices to zero-based
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1
@@ -805,16 +1102,12 @@ class Package(object):
                         iname = 'static'
                 except:
                     pass
-                #print pname, iname
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
-                #print par_dict
-                #print data_dict
 
                 par_current = pack_type.get_empty(par_dict['nlst'], aux_names=aux_names)
 
-                #--
-                #parval = np.float(par_dict['parval'])
+                #  get appropriate parval
                 if model.mfpar.pval is None:
                     parval = np.float(par_dict['parval'])
                 else:
@@ -823,7 +1116,7 @@ class Package(object):
                     except:
                         parval = np.float(par_dict['parval'])
 
-                #--fill current parameter data (par_current)
+                # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 
@@ -842,11 +1135,8 @@ class Package(object):
 
             if bnd_output is None:
                 stress_period_data[iper] = itmp
-                #print 'crap'
             else:
                 stress_period_data[iper] = bnd_output
-                #print bnd_output.shape
-                #print bnd_output   
 
         pak = pack_type(model, ipakcb=ipakcb,
                         stress_period_data=stress_period_data, \

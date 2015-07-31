@@ -201,7 +201,7 @@ class ModflowPks(Package):
 
         print('   Warning: load method not completed. default pks object created.')
 
-        #--close the open file
+        # close the open file
         f.close()
 
         pks = ModflowPks(model)

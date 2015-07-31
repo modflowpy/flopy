@@ -141,7 +141,7 @@ class Mt3dBtn(Package):
 
     """
     'Basic transport package class\n'
-    #--changed default ncomp to None and raise error if len(sconc) != ncomp - relieves sconc assignement problems
+    # changed default ncomp to None and raise error if len(sconc) != ncomp - relieves sconc assignement problems
     def __init__(self, model, ncomp=1, mcomp=1, tunit='D', lunit='M',
                  munit='KG', prsity=0.30, icbund=1, sconc=0.0,
                  cinact=1e30, thkmin=0.01, ifmtcn=0, ifmtnp=0, 
@@ -177,7 +177,7 @@ class Mt3dBtn(Package):
                                 icbund, name='icbund',
                                 locat=self.unit_number[0])
         # Starting concentrations
-        #--some defense
+        # some defense
         #
         self.ncomp = ncomp
         self.sconc = []
@@ -276,7 +276,7 @@ class Mt3dBtn(Package):
                 lc = util_2d(self.parent, (nlay,),
                              np.int, flow_package.laytyp.get_value(),
                              name='btn - laytype', locat=self.unit_number[0])
-        #--need to reset lc fmtin
+        # need to reset lc fmtin
         lc.set_fmtin('(40I2)')
         f_btn.write(lc.string)        
         delr = util_2d(self.parent, (ncol,),
