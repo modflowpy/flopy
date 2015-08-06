@@ -130,8 +130,8 @@ class ModflowOc(Package):
     def __init__(self, model,\
                  ihedfm=0, iddnfm=0, chedfm=None, cddnfm=None,\
                  cboufm=None, compact=True,\
-                 stress_period_data={(0,0):['save head']},\
-                 extension=['oc','hds','ddn','cbc'],\
+                 stress_period_data={(0, 0): ['save head']},\
+                 extension=['oc', 'hds', 'ddn', 'cbc'],\
                  unitnumber=[14, 51, 52, 53]):
 
         """

@@ -262,9 +262,9 @@ class util_3d(object):
         self.util_2ds = self.build_2d_instances()
 
 
-    def __setitem__(self,k,value):
+    def __setitem__(self, k, value):
         if isinstance(k,int):
-            assert k in range(0,self.shape[0]),"util_3d error: k not in range nlay"
+            assert k in range(0, self.shape[0]), "util_3d error: k not in range nlay"
             self.util_2ds[k] = new_u2d(self.util_2ds[k],value)
         else:
             raise NotImplementedError("util_3d doesn't support setitem indices"+str(k))

@@ -7,7 +7,9 @@ ml = flopy.modflow.Modflow.load('freyberg.nam', version='mf2005', verbose=True, 
 fb = os.path.join('data', 'ml')
 ml.plot(filename_base=fb)
 
-ml.plot()
-plt.show()
+#ml.plot()
+#plt.show()
+
+binobj = ml.load_results()
 
 print('then end my friend')

@@ -262,6 +262,59 @@ class Modflow(BaseModel):
         f_nam.close()
         return
 
+    def load_results(self, **kwargs):
+
+        # remove model if passed as a kwarg
+        if 'model' in kwargs:
+            kwargs.pop('model')
+
+
+        hext = 'hds'
+        dext = 'ddn'
+        cext = 'cbc'
+
+        savehead = False
+        saveddn = False
+        savebud = False
+
+        # check for oc
+        try:
+            oc = self.get_package('OC')
+            print(oc)
+            hext = oc.extension[1]
+            dext = oc.extension[2]
+            cext = oc.extension[3]
+            for k, lst in oc.stress_period_data.items():
+                for v in lst:
+                    if v.lower() == 'save head':
+                        savehead = True
+                    if v.lower() == 'save drawdown':
+                        saveddn = True
+                    if v.lower() == 'save budget':
+                        savebud = True
+        except:
+            pass
+
+        hpth = os.path.join(self.model_ws, '{}.{}'.format(self.get_name(), hext))
+        dpth = os.path.join(self.model_ws, '{}.{}'.format(self.get_name(), dext))
+        cpth = os.path.join(self.model_ws, '{}.{}'.format(self.get_name(), cext))
+
+        hdObj = None
+        ddObj = None
+        bdObj = None
+
+        if savehead and os.path.exists(hpth):
+            hdObj = flopy.utils.HeadFile(hpth, model=self, **kwargs)
+
+        if saveddn and os.path.exists(dpth):
+            ddObj = flopy.utils.HeadFile(dpth, model=self, **kwargs)
+
+        if savebud and os.path.exists(cpth):
+            bdObj = flopy.utils.CellBudgetFile(cpth, model=self, **kwargs)
+
+        return hdObj, ddObj, bdObj
+
+
     @staticmethod
     def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
              model_ws='.', load_only=None):
