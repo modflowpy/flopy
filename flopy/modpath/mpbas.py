@@ -83,8 +83,8 @@ class ModpathBas(Package):
         self.bud_label = bud_label
         self.def_iface = def_iface
         self.laytyp = laytyp
-        self.__ibound = util_3d(model, (nlay, nrow, ncol), np.int, ibound,
-                                name='ibound', locat=self.unit_number[0])
+        self.ibound = util_3d(model, (nlay, nrow, ncol), np.int, ibound,
+                              name='ibound', locat=self.unit_number[0])
         
         self.prsity = prsity
         self.prsityCB = prsityCB
@@ -93,29 +93,6 @@ class ModpathBas(Package):
         self.prsityCB = util_3d(model,(nlay,nrow,ncol),np.float32,\
                                 prsityCB,name='prsityCB',locat=self.unit_number[0])        
         self.parent.add_package(self)
-
-    def getibound(self):
-        """
-        Return the ibound array.
-
-        Returns
-        -------
-        ibound : numpy.ndarray (nlay, nrow, ncol)
-            ibound object.
-        """
-        return self.__ibound.array
-
-    def setibound(self, ibound):
-        """
-        Set the ibound array.
-        """
-        model = self.parent
-        nrow, ncol, nlay, nper = model.nrow_ncol_nlay_nper
-        self.__ibound = util_3d(model, (nlay, nrow, ncol), np.int, ibound,
-                                 name='ibound', locat=self.unit_number[0])
-        return
-
-    ibound = property(getibound, setibound)
 
     def write_file(self):
         """
@@ -158,7 +135,7 @@ class ModpathBas(Package):
         lc.set_fmtin('(40I2)')
         f_bas.write(lc.string)
         # from modpath bas--uses keyword array types
-        f_bas.write(self.__ibound.get_file_entry())
+        f_bas.write(self.ibound.get_file_entry())
         # from MT3D bas--uses integer array types
         #f_bas.write(self.ibound.get_file_entry())
         f_bas.write(self.prsity.get_file_entry())

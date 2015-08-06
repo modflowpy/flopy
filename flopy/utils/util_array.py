@@ -152,7 +152,13 @@ def u2d_like(model, other):
     u2d.model = model
     return u2d
 
-
+def new_u2d(old_util2d,value):
+    new_util2d = util_2d(old_util2d.model,old_util2d.shape,old_util2d.dtype,
+                         value,old_util2d.name,old_util2d.fmtin,
+                         old_util2d.cnstnt,old_util2d.iprn,
+                         old_util2d.ext_filename,old_util2d.locat,
+                         old_util2d.bin)
+    return new_util2d
 # class meta_interceptor(type):
 #     """
 #     meta class to catch existing instances of util_2d,
@@ -257,17 +263,12 @@ class util_3d(object):
 
 
     def __setitem__(self, k, value):
-        if np.isscalar(k):
+        if isinstance(k,int):
             assert k in range(0, self.shape[0]), "util_3d error: k not in range nlay"
-            old_util2d = self.util_2ds[k]
-            new_util2d = util_2d(old_util2d.model,old_util2d.shape,old_util2d.dtype,
-                                 value,old_util2d.name,old_util2d.fmtin,
-                                 old_util2d.cnstnt,old_util2d.iprn,
-                                 old_util2d.ext_filename,old_util2d.locat,
-                                 old_util2d.bin)
-            self.util_2ds[k] = new_util2d
+            self.util_2ds[k] = new_u2d(self.util_2ds[k],value)
         else:
-            raise NotImplementedError("util_3d doesn't support 3d slicing setting")
+            raise NotImplementedError("util_3d doesn't support setitem indices"+str(k))
+
 
     def to_shapefile(self, filename):
         """
@@ -402,6 +403,8 @@ class util_3d(object):
             return self.util_2ds[k]
         elif len(k) == 3:
             return self.array[k[0], k[1], k[2]]
+        else:
+            raise Exception("util_3d error: unsupported indices:"+str(k))
                     
     def get_file_entry(self):
         s = ''
@@ -1123,6 +1126,11 @@ class util_2d(object):
             return self.array - other.array
 
     def __getitem__(self, k):
+        # array = self.array.copy()
+        # array[:] = np.NaN
+        # array[k] = self.array[k]
+        # new_util2d = new_u2d(self,array)
+        # return new_u2d(self,array)
         if isinstance(k, int):
             # this explicit cast is to handle a bug in numpy versions < 1.6.2
             if self.dtype == np.float32:
