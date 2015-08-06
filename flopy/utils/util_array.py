@@ -256,6 +256,18 @@ class util_3d(object):
         self.util_2ds = self.build_2d_instances()
 
 
+    def __setitem__(self,k,value):
+        if np.isscalar(k):
+            assert k in range(0,self.shape[0]),"util_3d error: k not in range nlay"
+            old_util2d = self.util_2ds[k]
+            new_util2d = util_2d(old_util2d.model,old_util2d.shape,old_util2d.dtype,
+                                 value,old_util2d.name,old_util2d.fmtin,
+                                 old_util2d.cnstnt,old_util2d.iprn,
+                                 old_util2d.ext_filename,old_util2d.locat,
+                                 old_util2d.bin)
+            self.util_2ds[k] = new_util2d
+        else:
+            raise NotImplementedError("util_3d doesn't support 3d slicing setting")
     def to_shapefile(self, filename):
         """
         Export 3-D model data to shapefile (polygons).  Adds an
@@ -1127,7 +1139,7 @@ class util_2d(object):
 
     def __setitem__(self, k, value):
         """
-        his one is dangerous because it resets __value
+        this one is dangerous because it resets __value
         """
         a = self.array
         a[k] = value
