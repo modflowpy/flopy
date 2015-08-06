@@ -404,6 +404,12 @@ class BaseModel(object):
             input('Press Enter to continue...')
         return ([success, buff])
 
+    def load_results(self):
+
+        print('load_results not implemented')
+
+        return None
+
     def write_input(self, SelPackList=False):
         """
         Write the input.

@@ -256,9 +256,9 @@ class util_3d(object):
         self.util_2ds = self.build_2d_instances()
 
 
-    def __setitem__(self,k,value):
+    def __setitem__(self, k, value):
         if np.isscalar(k):
-            assert k in range(0,self.shape[0]),"util_3d error: k not in range nlay"
+            assert k in range(0, self.shape[0]), "util_3d error: k not in range nlay"
             old_util2d = self.util_2ds[k]
             new_util2d = util_2d(old_util2d.model,old_util2d.shape,old_util2d.dtype,
                                  value,old_util2d.name,old_util2d.fmtin,
@@ -268,6 +268,7 @@ class util_3d(object):
             self.util_2ds[k] = new_util2d
         else:
             raise NotImplementedError("util_3d doesn't support 3d slicing setting")
+
     def to_shapefile(self, filename):
         """
         Export 3-D model data to shapefile (polygons).  Adds an

@@ -107,11 +107,11 @@ class ModflowOc88(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> oc = flopy.modflow.ModflowOc(m, words=['head'], save_head_every=1)
+    >>> oc = flopy.modflow.ModflowOc88(m, words=['head'], save_head_every=1)
 
     """
-    def __init__(self, model, ihedfm=0, iddnfm=0, item2=[[0,1,0,1]], \
-                 item3=[[0,0,1,0]], extension=['oc','hds','ddn','cbc'],\
+    def __init__(self, model, ihedfm=0, iddnfm=0, item2=[[0, 1, 0, 1]], \
+                 item3=[[0,0,1,0]], extension=['oc', 'hds', 'ddn', 'cbc'],\
                  unitnumber=[14, 51, 52, 53], save_head_every=None,\
                  words=None, compact=False, chedfm=None, cddnfm=None):
 
