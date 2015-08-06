@@ -22,9 +22,9 @@ class ModflowRiv(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    irivcb : int
+    ipakcb : int
         is a flag and a unit number. (the default is 0).
-    layer_row_column_data : list of records
+    stress_period_data : list of records
         In its most general form, this is a triple list of river records  The
         innermost list is the layer, row, column, and flux rate for a single
         river.  Then for a stress period, there can be a list of rivers.  Then
