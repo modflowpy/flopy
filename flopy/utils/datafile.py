@@ -99,7 +99,6 @@ class LayerFile(object):
             self.sr = self.dis.sr
         if 'sr' in kwargs.keys():
             self.sr = kwargs.pop('sr')
-
         if len(kwargs.keys()) > 0:
             args = ','.join(kwargs.keys())
             raise Exception('LayerFile error: unrecognized kwargs: '+args)

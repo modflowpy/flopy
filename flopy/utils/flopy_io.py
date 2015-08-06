@@ -2,7 +2,7 @@
 Module for exporting and importing flopy model attributes
 """
 import numpy as np
-from flopy.utils import util_2d,util_3d,transient_2d
+from flopy.utils import util_2d,util_3d,transient_2d,mflist
 
 def results_to_netCDF(filename):
     raise NotImplementedError()
@@ -51,15 +51,15 @@ def write_grid_shapefile(filename, sr, array_dict,nan_val=-1.0e10):
         array = array_dict[name]
         if array.ndim == 3:
             assert array.shape[0] == 1
-            array = array[0,:,:]
+            array = array[0, :, :]
         assert array.shape == (sr.nrow, sr.ncol)
         array[np.where(np.isnan(array))] = nan_val
-        wr.field(name,"N",20,12)
+        wr.field(name,"N", 20, 12)
         arrays.append(array)
 
     for i in range(sr.nrow):
         for j in range(sr.ncol):
-            pts = sr.get_vertices(i,j)
+            pts = sr.get_vertices(i, j)
             wr.poly(parts=[pts])
             rec = [i+1, j+1]
             for array in arrays:
@@ -98,31 +98,40 @@ def model_attributes_to_shapfile(filename,ml,package_names=None,array_dict=None)
     if package_names is not None:
         if not isinstance(package_names, list):
             package_names = [package_names]
-        for pname in package_names:
-            pak = ml.get_package(pname)
-            if pak is not None:
-                attrs = dir(pak)
-                for attr in attrs:
-                    a = pak.__getattribute__(attr)
-                    if isinstance(a, util_2d) and a.shape == (ml.nrow,
-                                                              ml.ncol):
-                        name = a.name.lower()
-                        array_dict[name] = a.array
-                    elif isinstance(a, util_3d):
-                        for i,u2d in enumerate(a):
-                            name = u2d.name.lower().replace(' ','_')
-                            if "_layer" in name:
-                                name = name.replace("_layer", '')
-                            else:
-                                name += '_{0:d}'.format(i+1)
+    if package_names is None:
+        package_names = [pak.name[0] for pak in ml.packagelist]
 
-                            array_dict[name] = u2d.array
-                    elif isinstance(a,transient_2d):
-                        kpers = list(a.transient_2ds.keys())
-                        kpers.sort()
-                        for kper in kpers:
-                            u2d = a.transient_2ds[kper]
-                            name = u2d.name.lower() + "_{0:d}".format(kper+1)
-                            array_dict[name] = u2d.array
-
+    for pname in package_names:
+        pak = ml.get_package(pname)
+        if pak is not None:
+            attrs = dir(pak)
+            for attr in attrs:
+                a = pak.__getattribute__(attr)
+                if isinstance(a, util_2d) and a.shape == (ml.nrow,
+                                                          ml.ncol):
+                    name = a.name.lower()
+                    array_dict[name] = a.array
+                elif isinstance(a, util_3d):
+                    for i,u2d in enumerate(a):
+                        name = u2d.name.lower().replace(' ','_')
+                        if "_layer" in name:
+                            name = name.replace("_layer", '')
+                        else:
+                            name += '_{0:d}'.format(i+1)
+                        array_dict[name] = u2d.array
+                elif isinstance(a,transient_2d):
+                    kpers = list(a.transient_2ds.keys())
+                    kpers.sort()
+                    for kper in kpers:
+                        u2d = a.transient_2ds[kper]
+                        name = u2d.name.lower() + "_{0:d}".format(kper+1)
+                        array_dict[name] = u2d.array
+                elif isinstance(a,mflist):
+                    kpers = a.data.keys()
+                    for kper in kpers:
+                        arrays = a.to_array(kper)
+                        for name, array in arrays.items():
+                            for k in range(array.shape[0]):
+                                aname = name+"{0:03d}{1:02d}".format(kper, k)
+                                array_dict[aname] = array[k]
     write_grid_shapefile(filename,ml.dis.sr,array_dict)

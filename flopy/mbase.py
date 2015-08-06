@@ -608,6 +608,10 @@ class BaseModel(object):
             print(' ')
         return axes
 
+    def to_shapefile(self, filename,SelPackList=None, **kwargs):
+        import flopy.utils as fu
+        fu.model_attributes_to_shapfile(filename,self,package_names=SelPackList)
+
 
 class Package(object):
     """
@@ -918,15 +922,10 @@ class Package(object):
         >>> ml.lpf.to_shapefile('test_hk.shp')
         """
 
-        s = 'to_shapefile() method not implemented for {} Package'.format(self.name)
-        raise Exception(s)
-
-    #     try:
-    #         if isinstance(self.stress_period_data, utils.mflist):
-    #             self.stress_period_data.to_shapefile(*args, **kwargs)
-    #     except:
-    #         pass
-
+        #s = 'to_shapefile() method not implemented for {} Package'.format(self.name)
+        #raise Exception(s)
+        import flopy.utils as fu
+        fu.model_attributes_to_shapfile(filename,self.parent,package_names=self.name)
 
     def webdoc(self):
         if self.parent.version == 'mf2k':

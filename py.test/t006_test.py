@@ -35,6 +35,8 @@ def test_reference():
     ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0:[[1,1,1,5.9,1000.]]})
     oc = flopy.modflow.ModflowOc(mf)
     sms = flopy.modflow.ModflowPcg(mf)
+
+
     fig = plt.figure()
     ax = plt.subplot(111)
     ax.set_title("1")
@@ -136,13 +138,12 @@ def test_mflist_reference():
     ghb = fmf.ModflowGhb(ml, stress_period_data=ghb_dict)
 
     test = os.path.join('data', 'test3.shp')
-    ml.wel.stress_period_data.to_shapefile(test, kper=0)
+    ml.to_shapefile(test, kper=0)
     shp = shapefile.Reader(test)
-    assert len(shp.fields) == nlay + 3
     assert shp.numRecords == nrow * ncol
 
 
 if __name__ == '__main__':
     test_mflist_reference()
-    test_reference()
-    test_binaryfile_reference()
+    #test_reference()
+    #test_binaryfile_reference()
