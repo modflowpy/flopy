@@ -67,6 +67,11 @@ class mflist(object):
         if data is not None:
             self.__cast_data(data)
 
+    def get_empty(self, ncell=0):
+        d = np.zeros((ncell,len(self.dtype)),dtype=self.dtype)
+        d[:,:] = -1.0E+10
+        return d
+
     @property
     def data(self):
         return self.__data
@@ -268,8 +273,15 @@ class mflist(object):
         # If the data entry for kper is a string, 
         # return the corresponding recarray,
         # but don't reset the value in the data dict
-        assert kper in list(self.data.keys()), "mflist.__getitem__() kper " + \
-                                               str(kper) + " not in data.keys()"
+        #assert kper in list(self.data.keys()), "mflist.__getitem__() kper " + \
+        #                                       str(kper) + " not in data.keys()"
+        try:
+            kper = int(kper)
+        except Exception as e:
+            raise Exception("mflist error: _getitem__() passed invalid kper index:"
+                            + str(kper))
+        if kper not in list(self.data.keys()):
+            return self.get_empty()
         if (self.vtype[kper] == int):
             if (self.data[kper] == 0):
                 return self.get_empty()

@@ -322,8 +322,8 @@ class ModelMap(object):
         # Get the list data
         try:
             mflist = p.stress_period_data[kper]
-        except:
-            raise Exception('Not a list-style boundary package')
+        except Exception as e:
+            raise Exception('Not a list-style boundary package:'+str(e))
 
         # Return if mflist is None
         if mflist is None:
