@@ -420,7 +420,7 @@ class BaseModel(object):
 
         """
         # org_dir = os.getcwd()
-        #os.chdir(self.model_ws)
+        # os.chdir(self.model_ws)
         if self.verbose:
             print('\nWriting packages:')
         if SelPackList == False:
@@ -614,9 +614,34 @@ class BaseModel(object):
             print(' ')
         return axes
 
-    def to_shapefile(self, filename,SelPackList=None, **kwargs):
-        import flopy.utils as fu
-        fu.model_attributes_to_shapfile(filename,self,package_names=SelPackList)
+    def to_shapefile(self, filename, package_names=None, **kwargs):
+        """
+        Wrapper function for writing a shapefile for the model grid.  If package_names
+        is not None, then search through the requested packages looking for arrays
+        that can be added to the shapefile as attributes
+
+        Parameters
+        ----------
+        filename : string
+            name of the shapefile to write
+        package_names : list of package names (e.g. ["dis","lpf"])
+            Packages to export data arrays to shapefile. (default is None)
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> m.to_shapefile('model.shp', SelPackList)
+
+        """
+        from flopy.utils import model_attributes_to_shapefile
+
+        model_attributes_to_shapefile(filename, self, package_names=package_names, **kwargs)
 
 
 class Package(object):
@@ -833,7 +858,6 @@ class Package(object):
         if mflay is not None:
             inc = 1
 
-
         axes = []
         for item, value in self.__dict__.items():
             caxs = []
@@ -841,13 +865,13 @@ class Package(object):
                 if self.parent.verbose:
                     print('plotting {} package mflist instance: {}'.format(self.name[0], item))
                 if key is None:
-                    names = ['{} location stress period {} layer {}'.format(self.name[0], kper+1, k+1)
+                    names = ['{} location stress period {} layer {}'.format(self.name[0], kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
                 else:
-                    names = ['{} {} data stress period {} layer {}'.format(self.name[0], key, kper+1, k+1)
+                    names = ['{} {} data stress period {} layer {}'.format(self.name[0], key, kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
 
-                fignum = list(range(ifig, ifig+inc))
+                fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(key, names, kper,
                                        filename_base=fileb, file_extension=fext, mflay=mflay,
@@ -856,7 +880,7 @@ class Package(object):
             elif isinstance(value, utils.util_3d):
                 if self.parent.verbose:
                     print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
-                fignum = list(range(ifig, ifig+inc))
+                fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=True))
@@ -864,14 +888,14 @@ class Package(object):
                 if len(value.shape) == 2:
                     if self.parent.verbose:
                         print('plotting {} package util_2d instance: {}'.format(self.name[0], item))
-                    fignum = list(range(ifig, ifig+1))
+                    fignum = list(range(ifig, ifig + 1))
                     ifig = fignum[-1] + 1
                     caxs.append(value.plot(filename_base=fileb, file_extension=fext,
                                            fignum=fignum, colorbar=True))
             elif isinstance(value, utils.transient_2d):
                 if self.parent.verbose:
                     print('plotting {} package transient_2d instance: {}'.format(self.name[0], item))
-                fignum = list(range(ifig, ifig+inc))
+                fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(filename_base=fileb, file_extension=fext, kper=kper,
                                        fignum=fignum, colorbar=True))
@@ -880,7 +904,7 @@ class Package(object):
                     if isinstance(v, utils.util_3d):
                         if self.parent.verbose:
                             print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
-                        fignum = list(range(ifig, ifig+inc))
+                        fignum = list(range(ifig, ifig + inc))
                         ifig = fignum[-1] + 1
                         caxs.append(v.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
                                            fignum=fignum, colorbar=True))
@@ -901,7 +925,7 @@ class Package(object):
         return axes
 
 
-    def to_shapefile(self, filename, **kwargs):
+    def to_shapefile(self, filename):
         """
         Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).  Adds an
             attribute for each layer in each data array
@@ -928,10 +952,9 @@ class Package(object):
         >>> ml.lpf.to_shapefile('test_hk.shp')
         """
 
-        #s = 'to_shapefile() method not implemented for {} Package'.format(self.name)
-        #raise Exception(s)
-        import flopy.utils as fu
-        fu.model_attributes_to_shapfile(filename,self.parent,package_names=self.name)
+        from flopy.utils import model_attributes_to_shapefile
+
+        model_attributes_to_shapefile(filename, self.parent, package_names=self.name, **kwargs)
 
     def webdoc(self):
         if self.parent.version == 'mf2k':
@@ -970,7 +993,7 @@ class Package(object):
         nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
-            #assert int(t[1]) == 0,"Parameters are not supported"
+            # assert int(t[1]) == 0,"Parameters are not supported"
             nppak = np.int(t[1])
             mxl = 0
             if nppak > 0:
@@ -978,7 +1001,7 @@ class Package(object):
                 if model.verbose:
                     print('   Parameters detected. Number of parameters = ', nppak)
             line = f.readline()
-        #dataset 2a
+        # dataset 2a
         t = line.strip().split()
         ipakcb = 0
         try:
