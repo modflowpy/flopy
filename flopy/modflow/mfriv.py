@@ -24,31 +24,40 @@ class ModflowRiv(Package):
         this package will be added.
     ipakcb : int
         is a flag and a unit number. (the default is 0).
-    stress_period_data : list of records
-        In its most general form, this is a triple list of river records  The
-        innermost list is the layer, row, column, and flux rate for a single
-        river.  Then for a stress period, there can be a list of rivers.  Then
-        for a simulation, there can be a separate list for each stress period.
-        This gives the form of
-            lrcd = [
-                     [  #stress period 1
-                       [l1, r1, c1, stg1, cond1, rbot1],
-                       [l2, r2, c2, stg2, cond2, rbot2],
-                       [l3, r3, c3, stg3, cond3, rbot3],
-                       ],
-                     [  #stress period 2
-                       [l1, r1, c1, stg1, cond1, rbot1],
-                       [l2, r2, c2, stg2, cond2, rbot2],
-                       [l3, r3, c3, stg3, cond3, rbot3],
-                       ], ...
-                     [  #stress period kper
-                       [l1, r1, c1, stg1, cond1, rbot1],
-                       [l2, r2, c2, stg2, cond2, rbot2],
-                       [l3, r3, c3, stg3, cond3, rbot3],
-                       ],
-                    ]
-        Note that if there are not records in layer_row_column_Q, then the last
-        group of rivers will apply until the end of the simulation.
+    stress_period_data : list of boundaries or
+                         recarray of boundaries or
+                         dictionary of boundaries
+        Each river cell is defined through definition of
+        layer (int), row (int), column (int), stage (float), cond (float),
+        rbot (float).
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. This gives the form of
+            stress_period_data =
+            {0: [
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot]
+                ],
+            1:  [
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot]
+                ], ...
+            kper:
+                [
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot]
+                ]
+            }
+
+        Note that if the number of lists is smaller than the number of stress
+        periods, then the last list of rivers will apply until the end of the
+        simulation. Full details of all options to specify stress_period_data
+        can be found in the flopy3 boundaries Notebook in the basic
+        subdirectory of the examples directory.
     options : list of strings
         Package options. (default is None).
     naux : int
@@ -124,7 +133,6 @@ class ModflowRiv(Package):
         d[:, :] = -1.0E+10
         return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
-
     @staticmethod
     def get_default_dtype(structured=True):
         if structured:
@@ -138,7 +146,8 @@ class ModflowRiv(Package):
         return dtype
 
     def ncells(self):
-        # Returns the  maximum number of cells that have river (developed for MT3DMS SSM package)
+        # Return the  maximum number of cells that have river
+        # (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
     def write_file(self):
