@@ -59,9 +59,19 @@ class ModflowRch(Package):
     Examples
     --------
 
+    >>> #steady state
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> rch = flopy.modflow.ModflowRch(m, nrchop=3, rech=1.2e-4)
+
+    >>> #transient with time-varying recharge
+    >>> import flopy
+    >>> rech = {}
+    >>> rech[0] = 1.2e-4 #stress period 1 to 4
+    >>> rech[4] = 0.0 #stress period 5 and 6
+    >>> rech[6] = 1.2e-3 #stress preiod 7 to the end
+    >>> m = flopy.modflow.Modflow()
+    >>> rch = flopy.modflow.ModflowRch(m, nrchop=3, rech=rech)
 
     """
     def __init__(self, model, nrchop=3, ipakcb=0, rech=1e-3, irch=0,
@@ -78,10 +88,10 @@ class ModflowRch(Package):
         self.nrchop = nrchop
         self.ipakcb = ipakcb
         self.rech = transient_2d(model, (nrow, ncol), np.float32,
-                                 rech, name = "rech_")
+                                 rech, name = 'rech_')
         if self.nrchop == 2:
             self.irch = transient_2d(model, (nrow, ncol), np.int,
-                                     irch+1, name = "irch_")  # irch+1, as irch is zero based
+                                     irch+1, name = 'irch_')  # irch+1, as irch is zero based
         else:
             self.irch = None
         self.np = 0
@@ -111,7 +121,7 @@ class ModflowRch(Package):
                 inirch, file_entry_irch = self.irch.get_kper_entry(kper)
             else:
                 inirch = -1
-            f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech, 
+            f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech,
                         inirch, "Stress period " + str(kper + 1)))
             if (inrech >= 0):
                 f_rch.write(file_entry_rech)
@@ -185,7 +195,7 @@ class ModflowRch(Package):
         except:
             pass
 
-        #--dataset 3 and 4 - parameters data
+        # dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
             pak_parms = mfparbc.loadarray(f, npar, model.verbose)

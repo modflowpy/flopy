@@ -79,18 +79,18 @@ nrow = 1
 ncol = 200
 delr = 20.0
 delc = 1.
-#--well data
+# well data
 lrcQ1 = np.array([(0, 0, 199, 0.01), (2, 0, 199, 0.02)])
 lrcQ2 = np.array([(0, 0, 199, 0.01 * 0.5), (2, 0, 199, 0.02 * 0.5)])
-#--ghb data
+# ghb data
 lrchc = np.zeros((30, 5))
 lrchc[:, [0, 1, 3, 4]] = [0, 0, 0., 0.8 / 2.0]
 lrchc[:, 2] = np.arange(0, 30)
-#--swi2 data
+# swi2 data
 zini = np.hstack(( -9 * np.ones(24), np.arange(-9, -50, -0.5), -50 * np.ones(94)))[np.newaxis, :]
 iso = np.zeros((1, 200), dtype=np.int)
 iso[:, :30] = -2
-#--model objects
+# model objects
 ml = mf.Modflow(modelname, version='mf2005', exe_name=exe_name)
 discret = mf.ModflowDis(ml, nrow=nrow, ncol=ncol, nlay=3, delr=delr, delc=delc,
                         laycbd=[0, 0, 0], top=-9.0, botm=[-29, -30, -50],
@@ -103,9 +103,9 @@ swi = mf.ModflowSwi2(ml, nsrf=1, istrat=1, toeslope=0.01, tipslope=0.04, nu=[0, 
                      zeta=[zini, zini, zini], ssz=0.2, isource=iso, nsolver=1)
 oc = mf.ModflowOc88(ml, save_head_every=100)
 pcg = mf.ModflowPcg(ml)
-#--write the model files
+# write the model files
 ml.write_input()
-#--run the model
+# run the model
 m = ml.run_model(silent=True)
 
 headfile = '{}.hds'.format(modelname)
@@ -140,49 +140,49 @@ fig.subplots_adjust(wspace=0.25, hspace=0.25, left=flft, right=frgt, bottom=fbot
 
 ax = fig.add_subplot(311)
 ax.text(-0.075, 1.05, 'A', transform=ax.transAxes, va='center', ha='center', size='8')
-#--confining unit
+# confining unit
 ax.fill([-600, 3400, 3400, -600], [-29, -29, -30, -30], fc=[.8, .8, .8], ec=[.8, .8, .8])
-#--
+#
 z = np.copy(zini[0, :])
 zr = z.copy()
 p = (zr < -9.) & (zr > -50.0)
 ax.plot(x[p], zr[p], color=cc[0], linewidth=lw, drawstyle='steps-mid')
-#--
+#
 for i in range(5):
     zt = MergeData(ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge)
     dr = zt.copy()
     ax.plot(x, dr, color=cc[i + 1], linewidth=lw, drawstyle='steps-mid')
-#--Manufacture a legend bar
+# Manufacture a legend bar
 LegBar(ax, -200., -33.75, 0, 25, -2.5, 200, cc[0:6])
-#--axes
+# axes
 ax.set_ylim(-50, -9)
 ax.set_ylabel('Elevation, in meters')
 ax.set_xlim(-250., 2500.)
 
 ax = fig.add_subplot(312)
 ax.text(-0.075, 1.05, 'B', transform=ax.transAxes, va='center', ha='center', size='8')
-#--confining unit
+# confining unit
 ax.fill([-600, 3400, 3400, -600], [-29, -29, -30, -30], fc=[.8, .8, .8], ec=[.8, .8, .8])
-#--
+#
 for i in range(4, 10):
     zt = MergeData(ncol, [zeta[i, 0, 0, :], zeta[i, 1, 0, :], zeta[i, 2, 0, :]], zedge)
     dr = zt.copy()
     ax.plot(x, dr, color=cc[i + 1], linewidth=lw, drawstyle='steps-mid')
-#--Manufacture a legend bar
+# Manufacture a legend bar
 LegBar(ax, -200., -33.75, 1000, 25, -2.5, 200, cc[5:11])
-#--axes
+# axes
 ax.set_ylim(-50, -9)
 ax.set_ylabel('Elevation, in meters')
 ax.set_xlim(-250., 2500.)
 
 ax = fig.add_subplot(313)
 ax.text(-0.075, 1.05, 'C', transform=ax.transAxes, va='center', ha='center', size='8')
-#--confining unit
+# confining unit
 ax.fill([-600, 3400, 3400, -600], [-29, -29, -30, -30], fc=[.8, .8, .8], ec=[.8, .8, .8])
-#--
+#
 zt = MergeData(ncol, [zeta[4, 0, 0, :], zeta[4, 1, 0, :], zeta[4, 2, 0, :]], zedge)
 ax.plot(x, zt, marker='o', markersize=3, linewidth=0.0, markeredgecolor='blue', markerfacecolor='None')
-#--ghyben herzberg
+# ghyben herzberg
 zeta1 = -9 - 40. * (head[0, 0, :])
 gbh = np.empty(len(zeta1), np.float)
 gbho = np.empty(len(zeta1), np.float)
@@ -195,13 +195,13 @@ for idx, z1 in enumerate(zeta1):
         gbho[idx] = z1
 ax.plot(x, gbh, 'r')
 np.savetxt('Ghyben-Herzberg.out', gbho)
-#--fake figures    
+# fake figures
 ax.plot([-100., -100], [-100., -100], 'r', label='Ghyben-Herzberg')
 ax.plot([-100., -100], [-100., -100], 'bo', markersize=3, markeredgecolor='blue', markerfacecolor='None', label='SWI2')
-#--legend
+# legend
 leg = ax.legend(loc='lower left', numpoints=1)
 leg._drawFrame = False
-#--axes
+# axes
 ax.set_ylim(-50, -9)
 ax.set_xlabel('Horizontal distance, in meters')
 ax.set_ylabel('Elevation, in meters')

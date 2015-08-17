@@ -72,7 +72,9 @@ class ModflowPar(object):
             try:
                 self.zone = ModflowZon.load(zone.filename, model,
                                             ext_unit_dict=ext_unit_dict)
-                sys.stdout.write('   {} package load...success\n'.format(self.zone.name[0]))
+                if model.verbose:
+                    sys.stdout.write('   {} package load...success\n'\
+                              .format(self.zone.name[0]))
                 ext_unit_dict.pop(zone_key)
                 model.remove_package("ZONE")
             except BaseException as o:
@@ -115,7 +117,9 @@ class ModflowPar(object):
             try:
                 self.mult = ModflowMlt.load(mult.filename, model,
                                             ext_unit_dict=ext_unit_dict)
-                sys.stdout.write('   {} package load...success\n'.format(self.mult.name[0]))
+                if model.verbose:
+                    sys.stdout.write('   {} package load...success\n'\
+                              .format(self.mult.name[0]))
                 ext_unit_dict.pop(mult_key)
                 model.remove_package("MULT")
             except BaseException as o:
@@ -160,7 +164,9 @@ class ModflowPar(object):
             try:
                 self.pval = ModflowPval.load(pval.filename, model,
                                              ext_unit_dict=ext_unit_dict)
-                sys.stdout.write('   {} package load...success\n'.format(self.pval.name[0]))
+                if model.verbose:
+                    sys.stdout.write('   {} package load...success\n'\
+                              .format(self.pval.name[0]))
                 ext_unit_dict.pop(pval_key)
                 model.remove_package("PVAL")
             except BaseException as o:
@@ -196,7 +202,7 @@ class ModflowPar(object):
 
 
         """
-        #--read parameter data
+        # read parameter data
         if npar > 0:
             parm_dict = {}
             par_types = []
@@ -222,13 +228,13 @@ class ModflowPar(object):
                     for iv in t[3:]:
                         try:
                             iz = int(np.int(iv))
-                            if iz > 0:
+                            if iz != 0:
                                 iarr.append(iz)
                         except:
                             break
 
                     clusters.append([lay, mltarr, zonarr, iarr])
-                #--add parnam to parm_dict
+                # add parnam to parm_dict
                 parm_dict[parnam] = {'partyp':partyp, 'parval':parval, 'nclu':nclu, 'clusters':clusters}
 
         return par_types, parm_dict
@@ -306,14 +312,14 @@ class ModflowPar(object):
                         else:
                             mult_save = np.copy(mult)
                             za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
-                            #--build a multiplier for all of the izones
+                            # build a multiplier for all of the izones
                             mult = np.zeros(shape, dtype=dtype)
                             for iz in izones:
                                 filtarr = za == iz
                                 mult[filtarr] += np.copy(mult_save[filtarr])
-                            #--calculate parameter value for this cluster
+                            # calculate parameter value for this cluster
                             cluster_data = pv * mult
-                        #--add data
+                        # add data
                         data += cluster_data
 
         return data

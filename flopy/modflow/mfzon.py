@@ -151,10 +151,10 @@ class ModflowZon(Package):
                 zonnam = t[0].lower()
             if model.verbose:
                 sys.stdout.write('   reading data for "{:<10s}" zone\n'.format(zonnam))
-            #--load data
+            # load data
             t = util_2d.load(f, model, (nrow, ncol), np.int, zonnam,
                              ext_unit_dict)
-            #--add unit number to list of external files in ext_unit_dict to remove.
+            # add unit number to list of external files in ext_unit_dict to remove.
             if t.locat is not None:
                 model.add_pop_key_list(t.locat)
             zone_dict[zonnam] = t

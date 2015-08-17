@@ -5,6 +5,7 @@ mbase module
 
 """
 
+from __future__ import print_function
 import numpy as np
 from numpy.lib.recfunctions import stack_arrays
 import sys
@@ -17,8 +18,8 @@ from flopy import utils
 
 
 # Global variables
-iconst = 1 # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
-iprn = -1 # Printout flag. If >= 0 then array values read are printed in listing file.
+iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
+iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
 
 
 def is_exe(fpath):
@@ -66,8 +67,10 @@ class BaseModel(object):
         to the current working directory.
 
     """
+
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
-                 exe_name='mf2k.exe', model_ws=None):
+                 exe_name='mf2k.exe', model_ws=None,
+                 structured=True):
         """
         BaseModel init
         """
@@ -83,10 +86,11 @@ class BaseModel(object):
             try:
                 os.makedirs(model_ws)
             except:
-                #print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
+                # print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd()))
                 model_ws = os.getcwd()
-        self.model_ws= model_ws
+        self.model_ws = model_ws
+        self.structured = structured
         self.pop_key_list = []
         self.cl_params = ''
         return
@@ -102,7 +106,7 @@ class BaseModel(object):
         """
         self.exe_name = exe_name
         return
-        
+
     def add_package(self, p):
         """
         Add a package.
@@ -116,14 +120,14 @@ class BaseModel(object):
             if pp.allowDuplicates:
                 continue
             elif (isinstance(p, type(pp))):
-                print('****Warning -- two packages of the same type: ',type(p),type(pp))                 
+                print('****Warning -- two packages of the same type: ', type(p), type(pp))
                 print('replacing existing Package...')
                 self.packagelist[i] = p
-                return        
+                return
         if self.verbose:
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
-    
+
     def remove_package(self, pname):
         """
         Remove a package from this model
@@ -140,7 +144,7 @@ class BaseModel(object):
                     print('removing Package: ', pp.name)
                 self.packagelist.pop(i)
                 return
-        raise StopIteration('Package name '+pname+' not found in Package list')
+        raise StopIteration('Package name ' + pname + ' not found in Package list')
 
     def __getattr__(self, item):
         """
@@ -172,7 +176,7 @@ class BaseModel(object):
 
         """
         return self.external_path + prefix + '_' + str(num) + '.' + self.external_extension
-       
+
     def assign_external(self, num, prefix):
         """
         Assign external file
@@ -188,10 +192,10 @@ class BaseModel(object):
         fname = self.build_array_name(num, prefix)
         unit = (self.next_ext_unit())
         self.external_fnames.append(fname)
-        self.external_units.append(unit)       
-        self.external_binflag.append(False)        
+        self.external_units.append(unit)
+        self.external_binflag.append(False)
         return fname, unit
-    
+
     def add_external(self, fname, unit, binflag=False):
         """
         Assign an external array so that it will be listed as a DATA or
@@ -209,10 +213,10 @@ class BaseModel(object):
 
         """
         self.external_fnames.append(fname)
-        self.external_units.append(unit)        
+        self.external_units.append(unit)
         self.external_binflag.append(binflag)
         return
-    
+
     def remove_external(self, fname=None, unit=None):
         """
         Remove an external file from the model by specifying either the
@@ -240,7 +244,7 @@ class BaseModel(object):
                     self.external_binflag.pop(i)
         else:
             raise Exception(' either fname or unit must be passed to remove_external()')
-        return            
+        return
 
     def get_name_file_entries(self):
         """
@@ -256,11 +260,11 @@ class BaseModel(object):
                 if p.unit_number[i] == 0:
                     continue
                 s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                             p.unit_number[i],
-                                                             p.file_name[i],
-                                                             p.extra[i]))
+                                                               p.unit_number[i],
+                                                               p.file_name[i],
+                                                               p.extra[i]))
         return s
-                
+
     def get_package(self, name):
         """
         Get a package.
@@ -280,7 +284,7 @@ class BaseModel(object):
             if (pp.name[0].upper() == name.upper()):
                 return pp
         return None
-   
+
     def get_package_list(self):
         """
         Get a list of all the package names.
@@ -299,7 +303,7 @@ class BaseModel(object):
         for pp in (self.packagelist):
             val.append(pp.name[0].upper())
         return val
-    
+
     def change_model_ws(self, new_pth=None):
         """
         Change the model work space.
@@ -325,18 +329,18 @@ class BaseModel(object):
                 sys.stdout.write('\ncreating model workspace...\n   {}\n'.format(new_pth))
                 os.makedirs(new_pth)
             except:
-                #print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
+                # print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd()))
                 new_pth = os.getcwd()
-        #--reset the model workspace
+        # --reset the model workspace
         self.model_ws = new_pth
         sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
-        #--reset the paths for each package
+        # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
         return None
-    
+
     def run_model(self, silent=False, pause=False, report=False):
         """
         This method will run the model using subprocess.Popen.
@@ -347,8 +351,9 @@ class BaseModel(object):
             Echo run information to screen (default is True).
         pause : boolean, optional
             Pause upon completion (the default is False).
-        report : string, optional
-            Name of file to store stdout. (default is None).
+        report : boolean, optional
+            Save stdout lines to a list (buff) which is returned 
+            by the method . (the default is False).
 
         Returns
         -------
@@ -364,6 +369,7 @@ class BaseModel(object):
         exe = which(self.exe_name)
         if exe is None:
             import platform
+
             if platform.system() in 'Windows':
                 if not self.exe_name.lower().endswith('.exe'):
                     exe = which(self.exe_name + '.exe')
@@ -373,7 +379,7 @@ class BaseModel(object):
         else:
             if not silent:
                 s = 'FloPy is using the following executable to run the model: {}'.format(exe)
-                print (s)
+                print(s)
 
         if not os.path.isfile(os.path.join(self.model_ws, self.namefile)):
             s = 'The namefile for this model does not exists: {}'.format(self.namefile)
@@ -382,22 +388,28 @@ class BaseModel(object):
         proc = sp.Popen([self.exe_name, self.namefile],
                         stdout=sp.PIPE, cwd=self.model_ws)
         while True:
-          line = proc.stdout.readline()
-          c = line.decode('utf-8')
-          if c != '':
-            if 'normal termination of simulation' in c.lower():
-                success = True
-            c = c.rstrip('\r\n')
-            if not silent:
-                print('{}'.format(c))
-            if report == True:
-                buff.append(c)
-          else:
-            break
+            line = proc.stdout.readline()
+            c = line.decode('utf-8')
+            if c != '':
+                if 'normal termination of simulation' in c.lower():
+                    success = True
+                c = c.rstrip('\r\n')
+                if not silent:
+                    print('{}'.format(c))
+                if report == True:
+                    buff.append(c)
+            else:
+                break
         if pause == True:
             input('Press Enter to continue...')
         return ([success, buff])
-        
+
+    def load_results(self):
+
+        print('load_results not implemented')
+
+        return None
+
     def write_input(self, SelPackList=False):
         """
         Write the input.
@@ -407,12 +419,12 @@ class BaseModel(object):
         SelPackList : False or list of packages
 
         """
-        #org_dir = os.getcwd()
-        #os.chdir(self.model_ws)
+        # org_dir = os.getcwd()
+        # os.chdir(self.model_ws)
         if self.verbose:
             print('\nWriting packages:')
         if SelPackList == False:
-            for p in self.packagelist:            
+            for p in self.packagelist:
                 if self.verbose:
                     print('   Package: ', p.name[0])
                 p.write_file()
@@ -426,11 +438,11 @@ class BaseModel(object):
                         break
         if self.verbose:
             print(' ')
-        #--write name file
+        # write name file
         self.write_name_file()
         #os.chdir(org_dir)
         return
-    
+
     def write_name_file(self):
         """
         Every Package needs its own writenamefile function
@@ -466,7 +478,7 @@ class BaseModel(object):
             for i in range(len(p.extension)):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
-    
+
     name = property(get_name, set_name)
 
     def add_pop_key_list(self, key):
@@ -490,18 +502,161 @@ class BaseModel(object):
             self.pop_key_list.append(key)
 
 
+    def plot(self, SelPackList=None, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        model input data
+
+        Parameters
+        ----------
+        SelPackList : bool or list
+            List of of packages to plot. If SelPackList=None all packages
+            are plotted. (default is None)
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is zero)
+            key : str
+                mflist dictionary key. (default is None)
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.plot()
+
+        """
+        # valid keyword arguments
+        if 'kper' in kwargs:
+            kper = int(kwargs.pop('kper'))
+        else:
+            kper = 0
+
+        if 'mflay' in kwargs:
+            mflay = kwargs.pop('mflay')
+        else:
+            mflay = None
+
+        if 'filename_base' in kwargs:
+            fileb = kwargs.pop('filename_base')
+        else:
+            fileb = None
+
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+
+        if 'key' in kwargs:
+            key = kwargs.pop('key')
+        else:
+            key = None
+
+        if self.verbose:
+            print('\nPlotting Packages')
+
+        axes = []
+        ifig = 0
+        if SelPackList is None:
+            for p in self.packagelist:
+                caxs = p.plot(initial_fig=ifig,
+                              filename_base=fileb, file_extension=fext,
+                              kper=kper, mflay=mflay, key=key)
+                # unroll nested lists of axes into a single list of axes
+                if isinstance(caxs, list):
+                    for c in caxs:
+                        axes.append(c)
+                else:
+                    axes.append(caxs)
+                # update next active figure number
+                ifig = len(axes) + 1
+        else:
+            for pon in SelPackList:
+                for i, p in enumerate(self.packagelist):
+                    if pon in p.name:
+                        if self.verbose:
+                            print('   Plotting Package: ', p.name[0])
+                        caxs = p.plot(initial_fig=ifig,
+                                      filename_base=fileb, file_extension=fext,
+                                      kper=kper, mflay=mflay, key=key)
+                        # unroll nested lists of axes into a single list of axes
+                        if isinstance(caxs, list):
+                            for c in caxs:
+                                axes.append(c)
+                        else:
+                            axes.append(caxs)
+                        # update next active figure number
+                        ifig = len(axes) + 1
+                        break
+        if self.verbose:
+            print(' ')
+        return axes
+
+    def to_shapefile(self, filename, package_names=None, **kwargs):
+        """
+        Wrapper function for writing a shapefile for the model grid.  If package_names
+        is not None, then search through the requested packages looking for arrays
+        that can be added to the shapefile as attributes
+
+        Parameters
+        ----------
+        filename : string
+            name of the shapefile to write
+        package_names : list of package names (e.g. ["dis","lpf"])
+            Packages to export data arrays to shapefile. (default is None)
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> m.to_shapefile('model.shp', SelPackList)
+
+        """
+        from flopy.utils import model_attributes_to_shapefile
+
+        model_attributes_to_shapefile(filename, self, package_names=package_names, **kwargs)
+
+
 class Package(object):
     """
     Base package class from which most other packages are derived.
 
     """
-    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1, extra='', 
+
+    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1, extra='',
                  allowDuplicates=False):
         """
         Package init
 
         """
-        self.parent = parent # To be able to access the parent modflow object's attributes
+        self.parent = parent  # To be able to access the parent modflow object's attributes
         if (not isinstance(extension, list)):
             extension = [extension]
         self.extension = []
@@ -524,7 +679,7 @@ class Package(object):
         self.url = 'index.html'
         self.allowDuplicates = allowDuplicates
 
-        self.acceptable_dtypes = [int,np.float32,str]
+        self.acceptable_dtypes = [int, np.float32, str]
         return
 
     def __repr__(self):
@@ -534,27 +689,29 @@ class Package(object):
             if not (attr in exclude_attributes):
                 if (isinstance(value, list)):
                     if (len(value) == 1):
-                        #s = s + ' %s = %s (list)\n' % (attr, str(value[0]))
-                        s = s + ' {0:s} = {1:s}\n'.format(attr,str(value[0]))
+                        # s = s + ' %s = %s (list)\n' % (attr, str(value[0]))
+                        s = s + ' {0:s} = {1:s}\n'.format(attr, str(value[0]))
                     else:
-                        #s = s + ' %s (list, items = %d)\n' % (attr, len(value))
-                        s = s + ' {0:s} (list, items = {1:d}\n'.format(attr,len(value))
+                        # s = s + ' %s (list, items = %d)\n' % (attr, len(value))
+                        s = s + ' {0:s} (list, items = {1:d}\n'.format(attr, len(value))
                 elif (isinstance(value, np.ndarray)):
-                    #s = s + ' %s (array, shape = %s)\n' % (attr, value.shape.__str__()[1:-1] )
-                    s = s + ' {0:s} (array, shape = {1:s}\n'.fomrat(attr,value.shape__str__()[1:-1])
+                    # s = s + ' %s (array, shape = %s)\n' % (attr, value.shape.__str__()[1:-1] )
+                    s = s + ' {0:s} (array, shape = {1:s}\n'.fomrat(attr, value.shape__str__()[1:-1])
                 else:
-                    #s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
-                    s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr,str(value),str(type(value))[7:-2])
+                    # s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
+                    s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr, str(value), str(type(value))[7:-2])
         return s
 
     def __getitem__(self, item):
-        if not isinstance(item,list) and not isinstance(item,tuple):
-            assert item in list(self.stress_period_data.data.keys()),"package.__getitem__() kper "+str(item)+" not in data.keys()"
+        if not isinstance(item, list) and not isinstance(item, tuple):
+            assert item in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                item) + " not in data.keys()"
             return self.stress_period_data[item]
 
         if item[1] not in self.dtype.names:
-            raise Exception ("package.__getitem(): item \'"+item+"\' not in dtype names "+str(self.dtype.names))
-        assert item[0] in list(self.stress_period_data.data.keys()),"package.__getitem__() kper "+str(item[0])+" not in data.keys()"
+            raise Exception("package.__getitem(): item \'" + item + "\' not in dtype names " + str(self.dtype.names))
+        assert item[0] in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+            item[0]) + " not in data.keys()"
         if self.stress_period_data.vtype[item[0]] == np.recarray:
             return self.stress_period_data[item[0]][item[1]]
 
@@ -604,23 +761,200 @@ class Package(object):
                                                       fmtin=vo.fmtin,
                                                       locat=vo.locat))
                     value = new_list
-        
+
         super(Package, self).__setattr__(key, value)
 
 
     @staticmethod
-    def add_to_dtype(dtype,field_names,field_types):
-        if not isinstance(field_names,list):
+    def add_to_dtype(dtype, field_names, field_types):
+        if not isinstance(field_names, list):
             field_names = [field_names]
-        if not isinstance(field_types,list):
+        if not isinstance(field_types, list):
             field_types = [field_types] * len(field_names)
         newdtypes = [dtype]
-        for field_name,field_type in zip(field_names,field_types):
-            tempdtype = np.dtype([(field_name,field_type)])
+        for field_name, field_type in zip(field_names, field_types):
+            tempdtype = np.dtype([(field_name, field_type)])
             newdtypes.append(tempdtype)
         newdtype = sum((dtype.descr for dtype in newdtypes), [])
         newdtype = np.dtype(newdtype)
         return newdtype
+
+    def plot(self, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        package input data
+
+        Parameters
+        ----------
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is zero)
+            key : str
+                mflist dictionary key. (default is None)
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.dis.plot()
+
+        """
+
+        # valid keyword arguments
+        if 'kper' in kwargs:
+            kper = kwargs.pop('kper')
+        else:
+            kper = 0
+
+        if 'filename_base' in kwargs:
+            fileb = kwargs.pop('filename_base')
+        else:
+            fileb = None
+
+        if 'mflay' in kwargs:
+            mflay = kwargs.pop('mflay')
+        else:
+            mflay = None
+
+        if 'file_extension' in kwargs:
+            fext = kwargs.pop('file_extension')
+            fext = fext.replace('.', '')
+        else:
+            fext = 'png'
+
+        if 'key' in kwargs:
+            key = kwargs.pop('key')
+        else:
+            key = None
+
+        if 'initial_fig' in kwargs:
+            ifig = int(kwargs.pop('initial_fig'))
+        else:
+            ifig = 0
+
+        inc = self.parent.nlay
+        if mflay is not None:
+            inc = 1
+
+        axes = []
+        for item, value in self.__dict__.items():
+            caxs = []
+            if isinstance(value, utils.mflist):
+                if self.parent.verbose:
+                    print('plotting {} package mflist instance: {}'.format(self.name[0], item))
+                if key is None:
+                    names = ['{} location stress period {} layer {}'.format(self.name[0], kper + 1, k + 1)
+                             for k in range(self.parent.nlay)]
+                else:
+                    names = ['{} {} data stress period {} layer {}'.format(self.name[0], key, kper + 1, k + 1)
+                             for k in range(self.parent.nlay)]
+
+                fignum = list(range(ifig, ifig + inc))
+                ifig = fignum[-1] + 1
+                caxs.append(value.plot(key, names, kper,
+                                       filename_base=fileb, file_extension=fext, mflay=mflay,
+                                       fignum=fignum, colorbar=True))
+
+            elif isinstance(value, utils.util_3d):
+                if self.parent.verbose:
+                    print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                fignum = list(range(ifig, ifig + inc))
+                ifig = fignum[-1] + 1
+                caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
+                                       fignum=fignum, colorbar=True))
+            elif isinstance(value, utils.util_2d):
+                if len(value.shape) == 2:
+                    if self.parent.verbose:
+                        print('plotting {} package util_2d instance: {}'.format(self.name[0], item))
+                    fignum = list(range(ifig, ifig + 1))
+                    ifig = fignum[-1] + 1
+                    caxs.append(value.plot(filename_base=fileb, file_extension=fext,
+                                           fignum=fignum, colorbar=True))
+            elif isinstance(value, utils.transient_2d):
+                if self.parent.verbose:
+                    print('plotting {} package transient_2d instance: {}'.format(self.name[0], item))
+                fignum = list(range(ifig, ifig + inc))
+                ifig = fignum[-1] + 1
+                caxs.append(value.plot(filename_base=fileb, file_extension=fext, kper=kper,
+                                       fignum=fignum, colorbar=True))
+            elif isinstance(value, list):
+                for v in value:
+                    if isinstance(v, utils.util_3d):
+                        if self.parent.verbose:
+                            print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                        fignum = list(range(ifig, ifig + inc))
+                        ifig = fignum[-1] + 1
+                        caxs.append(v.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
+                                           fignum=fignum, colorbar=True))
+            else:
+                pass
+
+            # unroll nested lists os axes into a single list of axes
+            if isinstance(caxs, list):
+                for c in caxs:
+                    if isinstance(c, list):
+                        for cc in c:
+                            axes.append(cc)
+                    else:
+                        axes.append(c)
+            else:
+                axes.append(caxs)
+
+        return axes
+
+
+    def to_shapefile(self, filename):
+        """
+        Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).  Adds an
+            attribute for each layer in each data array
+
+        Parameters
+        ----------
+        filename : str
+            Shapefile name to write
+
+        Returns
+        ----------
+        None
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+        >>> import flopy
+        >>> ml = flopy.modflow.Modflow.load('test.nam')
+        >>> ml.lpf.to_shapefile('test_hk.shp')
+        """
+
+        from flopy.utils import model_attributes_to_shapefile
+
+        model_attributes_to_shapefile(filename, self.parent, package_names=self.name, **kwargs)
 
     def webdoc(self):
         if self.parent.version == 'mf2k':
@@ -650,16 +984,16 @@ class Package(object):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
-        #--check for parameters
+        # check for parameters
         nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
-            #assert int(t[1]) == 0,"Parameters are not supported"
+            # assert int(t[1]) == 0,"Parameters are not supported"
             nppak = np.int(t[1])
             mxl = 0
             if nppak > 0:
@@ -667,7 +1001,7 @@ class Package(object):
                 if model.verbose:
                     print('   Parameters detected. Number of parameters = ', nppak)
             line = f.readline()
-        #dataset 2a
+        # dataset 2a
         t = line.strip().split()
         ipakcb = 0
         try:
@@ -685,12 +1019,12 @@ class Package(object):
                 if toption.lower() is 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
-                    options.append(' '.join(t[it:it+2]))
-                    aux_names.append(t[it+1].lower())
+                    options.append(' '.join(t[it:it + 2]))
+                    aux_names.append(t[it + 1].lower())
                     it += 1
                 it += 1
-        
-        #--set partype
+
+        # set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
         if 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
@@ -698,10 +1032,9 @@ class Package(object):
             specify = False
             ipos = f.tell()
             line = f.readline()
-            #--test for specify keyword if a NWT well file - This is a temporary hack
+            # test for specify keyword if a NWT well file - This is a temporary hack
             if 'specify' in line.lower():
                 specify = True
-                line = f.readline() #ditch line -- possibly save for NWT output
                 t = line.strip().split()
                 phiramp = np.float32(t[1])
                 try:
@@ -714,7 +1047,7 @@ class Package(object):
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(pack_type).lower():
             partype = ['shead', 'ehead']
 
-        #--read parameter data
+        # read parameter data
         if nppak > 0:
             dt = pack_type.get_empty(1, aux_names=aux_names).dtype
             pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
@@ -722,14 +1055,14 @@ class Package(object):
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        
-        
+
+
         #read data for every stress period
         bnd_output = None
         stress_period_data = {}
         for iper in range(nper):
             if model.verbose:
-                print("   loading "+str(pack_type)+" for kper {0:5d}".format(iper+1))
+                print("   loading " + str(pack_type) + " for kper {0:5d}".format(iper + 1))
             line = f.readline()
             if line == '':
                 break
@@ -740,7 +1073,7 @@ class Package(object):
                 itmpp = int(t[1])
             except:
                 pass
-            
+
             if itmp == 0:
                 bnd_output = None
                 current = pack_type.get_empty(itmp, aux_names=aux_names)
@@ -750,18 +1083,18 @@ class Package(object):
                     line = f.readline()
                     if "open/close" in line.lower():
                         #raise NotImplementedError("load() method does not support \'open/close\'")
-                        oc_filename = os.path.join(model.model_ws,line.strip().split()[1])
-                        assert os.path.exists(oc_filename),"Package.load() error: open/close filename " +\
-                                                           oc_filename + " not found"
+                        oc_filename = os.path.join(model.model_ws, line.strip().split()[1])
+                        assert os.path.exists(oc_filename), "Package.load() error: open/close filename " + \
+                                                            oc_filename + " not found"
                         try:
-                            current = np.genfromtxt(oc_filename,dtype=current.dtype)
+                            current = np.genfromtxt(oc_filename, dtype=current.dtype)
                             current = current.view(np.recarray)
                         except Exception as e:
-                            raise Exception("Package.load() error loading open/close file " + oc_filename +\
+                            raise Exception("Package.load() error loading open/close file " + oc_filename + \
                                             " :" + str(e))
-                        assert current.shape[0] == itmp,"Package.load() error: open/close rec array from file " +\
-                                                     oc_filename + " shape (" + str(current.shape) + \
-                                                     ") does not match itmp: {0:d}".format(itmp)
+                        assert current.shape[0] == itmp, "Package.load() error: open/close rec array from file " + \
+                                                         oc_filename + " shape (" + str(current.shape) + \
+                                                         ") does not match itmp: {0:d}".format(itmp)
                         break
                     try:
                         t = line.strip().split()
@@ -774,7 +1107,7 @@ class Package(object):
                             t.append(line[istart:istop])
                         current[ibnd] = tuple(t[:len(current.dtype.names)])
 
-                #--convert indices to zero-based
+                # convert indices to zero-based
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1
@@ -797,16 +1130,12 @@ class Package(object):
                         iname = 'static'
                 except:
                     pass
-                #print pname, iname
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
-                #print par_dict
-                #print data_dict
-                
-                par_current = pack_type.get_empty(par_dict['nlst'],aux_names=aux_names)
-                
-                #--
-                #parval = np.float(par_dict['parval'])
+
+                par_current = pack_type.get_empty(par_dict['nlst'], aux_names=aux_names)
+
+                #  get appropriate parval
                 if model.mfpar.pval is None:
                     parval = np.float(par_dict['parval'])
                 else:
@@ -815,33 +1144,30 @@ class Package(object):
                     except:
                         parval = np.float(par_dict['parval'])
 
-                #--fill current parameter data (par_current)
+                # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
-                    
+
                 par_current['k'] -= 1
                 par_current['i'] -= 1
                 par_current['j'] -= 1
 
                 for ptype in partype:
                     par_current[ptype] *= parval
-                 
+
                 if bnd_output is None:
                     bnd_output = np.recarray.copy(par_current)
                 else:
-                    bnd_output = stack_arrays((bnd_output, par_current), 
+                    bnd_output = stack_arrays((bnd_output, par_current),
                                               asrecarray=True, usemask=False)
-                     
+
             if bnd_output is None:
                 stress_period_data[iper] = itmp
-                #print 'crap'
-            else: 
+            else:
                 stress_period_data[iper] = bnd_output
-                #print bnd_output.shape
-                #print bnd_output   
-                
+
         pak = pack_type(model, ipakcb=ipakcb,
-                        stress_period_data=stress_period_data,\
-                        dtype=pack_type.get_empty(0,aux_names=aux_names).dtype,\
+                        stress_period_data=stress_period_data, \
+                        dtype=pack_type.get_empty(0, aux_names=aux_names).dtype, \
                         options=options)
         return pak

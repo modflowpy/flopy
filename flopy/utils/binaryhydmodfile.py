@@ -47,7 +47,7 @@ class HydmodObs(HydmodBinaryStatements):
         self.verbose = verbose
         # --open binary head file
         self.file = open(filename, 'rb')
-        #--NHYDTOT,ITMUNI
+        # NHYDTOT,ITMUNI
         self.nhydtot = self.read_integer()
         self.itmuni = self.read_integer()
         if self.nhydtot < 0:
@@ -56,7 +56,7 @@ class HydmodObs(HydmodBinaryStatements):
         self.v = np.empty((self.nhydtot), dtype='float')
         self.v.fill(1.0E+32)
         ctime = self.read_hyd_text(nchar=4)
-        #--read HYDLBL
+        # read HYDLBL
         hydlbl = []
         #hydid = []
         for idx in range(0, self.nhydtot):
@@ -66,7 +66,7 @@ class HydmodObs(HydmodBinaryStatements):
         if self.verbose == True:
             print(self.hydlbl)
         if not slurp:
-            #--set position
+            # set position
             self.datastart = self.file.tell()
             #get times
             self.times = self.time_list()

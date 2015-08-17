@@ -12,6 +12,7 @@ import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_list import mflist
 
+
 class ModflowRiv(Package):
     """
     MODFLOW River Package Class.
@@ -21,33 +22,42 @@ class ModflowRiv(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    irivcb : int
+    ipakcb : int
         is a flag and a unit number. (the default is 0).
-    layer_row_column_data : list of records
-        In its most general form, this is a triple list of river records  The
-        innermost list is the layer, row, column, and flux rate for a single
-        river.  Then for a stress period, there can be a list of rivers.  Then
-        for a simulation, there can be a separate list for each stress period.
-        This gives the form of
-            lrcd = [
-                     [  #stress period 1
-                       [l1, r1, c1, stg1, cond1, rbot1],
-                       [l2, r2, c2, stg2, cond2, rbot2],
-                       [l3, r3, c3, stg3, cond3, rbot3],
-                       ],
-                     [  #stress period 2
-                       [l1, r1, c1, stg1, cond1, rbot1],
-                       [l2, r2, c2, stg2, cond2, rbot2],
-                       [l3, r3, c3, stg3, cond3, rbot3],
-                       ], ...
-                     [  #stress period kper
-                       [l1, r1, c1, stg1, cond1, rbot1],
-                       [l2, r2, c2, stg2, cond2, rbot2],
-                       [l3, r3, c3, stg3, cond3, rbot3],
-                       ],
-                    ]
-        Note that if there are not records in layer_row_column_Q, then the last
-        group of rivers will apply until the end of the simulation.
+    stress_period_data : list of boundaries or
+                         recarray of boundaries or
+                         dictionary of boundaries
+        Each river cell is defined through definition of
+        layer (int), row (int), column (int), stage (float), cond (float),
+        rbot (float).
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. This gives the form of
+            stress_period_data =
+            {0: [
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot]
+                ],
+            1:  [
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot]
+                ], ...
+            kper:
+                [
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot],
+                [lay, row, col, stage, cond, rbot]
+                ]
+            }
+
+        Note that if the number of lists is smaller than the number of stress
+        periods, then the last list of rivers will apply until the end of the
+        simulation. Full details of all options to specify stress_period_data
+        can be found in the flopy3 boundaries Notebook in the basic
+        subdirectory of the examples directory.
     options : list of strings
         Package options. (default is None).
     naux : int
@@ -79,13 +89,15 @@ class ModflowRiv(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 15.6, 1050., -4]]]  #this river boundary will be
-    >>>                                        #applied to all stress periods
-    >>> riv = flopy.modflow.ModflowRiv(m, layer_row_column_data=lrcd)
+    >>> lrcd = {}
+    >>> lrcd[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this river boundary will be
+    >>>                                         #applied to all stress periods
+    >>> riv = flopy.modflow.ModflowRiv(m, stress_period_data=lrcd)
 
     """
-    def __init__(self, model, ipakcb=0, stress_period_data=None,dtype=None,
-                 extension ='riv', unitnumber=18, options=None,**kwargs):
+
+    def __init__(self, model, ipakcb=0, stress_period_data=None, dtype=None,
+                 extension='riv', unitnumber=18, options=None, **kwargs):
         """
         Package constructor.
 
@@ -103,33 +115,39 @@ class ModflowRiv(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype()
-        self.stress_period_data = mflist(model,self.dtype,stress_period_data)
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+        #self.stress_period_data = mflist(model, self.dtype, stress_period_data)
+        self.stress_period_data = mflist(self, stress_period_data)
         self.parent.add_package(self)
 
-    def __repr__( self ):
+    def __repr__(self):
         return 'River class'
 
     @staticmethod
-    def get_empty(ncells=0,aux_names=None):
-        #get an empty recarray that correponds to dtype
-        dtype = ModflowRiv.get_default_dtype()
+    def get_empty(ncells=0, aux_names=None, structured=True):
+        # get an empty recarray that correponds to dtype
+        dtype = ModflowRiv.get_default_dtype(structured=structured)
         if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype,aux_names,np.float32)
-        d = np.zeros((ncells,len(dtype)),dtype=dtype)
-        d[:,:] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(),dtype=dtype)
-
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        d = np.zeros((ncells, len(dtype)), dtype=dtype)
+        d[:, :] = -1.0E+10
+        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
-    def get_default_dtype():
-        dtype = np.dtype([("k",np.int),("i",np.int),\
-                         ("j",np.int),("stage",np.float32),\
-                        ("cond",np.float32),("rbot",np.float32)])
+    def get_default_dtype(structured=True):
+        if structured:
+            dtype = np.dtype([("k", np.int), ("i", np.int),
+                              ("j", np.int), ("stage", np.float32),
+                              ("cond", np.float32), ("rbot", np.float32)])
+        else:
+            dtype = np.dtype([("node", np.int), ("stage", np.float32),
+                              ("cond", np.float32), ("rbot", np.float32)])
+
         return dtype
 
-    def ncells( self):
-        # Returns the  maximum number of cells that have river (developed for MT3DMS SSM package)
+    def ncells(self):
+        # Return the  maximum number of cells that have river
+        # (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
     def write_file(self):
@@ -147,11 +165,11 @@ class ModflowRiv(Package):
         self.stress_period_data.write_transient(f_riv)
         f_riv.close()
 
-    def add_record(self,kper,index,values):
+    def add_record(self, kper, index, values):
         try:
-            self.stress_period_data.add_record(kper,index,values)
+            self.stress_period_data.add_record(kper, index, values)
         except Exception as e:
-            raise Exception("mfriv error adding record to list: "+str(e))
+            raise Exception("mfriv error adding record to list: " + str(e))
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):

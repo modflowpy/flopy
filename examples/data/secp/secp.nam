@@ -1,0 +1,20 @@
+# MF2005 NAME file
+#
+# Output Files
+LIST       1001 secp.lst
+DATA(BINARY) 30 secp.hds REPLACE
+#
+# Global Input Files
+DIS          19 secp.dis
+ZONE         20 secp.zon
+MULT         21 secp.mlt
+#
+# Flow Process Input Files
+BAS6          3 secp.ba6
+LPF           4 secp.lpf
+OC           15 secp.oc
+RCH          16 secp.rch
+RIV           8 secp.riv
+WEL           9 secp.wel
+CHD          13 secp.chd
+GMG          14 secp.gmg
