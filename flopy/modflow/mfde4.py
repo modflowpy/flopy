@@ -106,7 +106,7 @@ class ModflowDe4(Package):
 
     """
     def __init__(self, model, itmx=50, mxup=0, mxlow=0, mxbw=0,
-                 ifreq=3, mutd4=0, accl=1, hclose=1e-5, iprd4=1, 
+                 ifreq=3, mutd4=0, accl=1., hclose=1e-5, iprd4=1, 
                  extension='de4', unitnumber=28):
         """
         Package constructor.
@@ -161,7 +161,7 @@ class ModflowDe4(Package):
             f.write('\n')
             f.write('{0:10d}'.format(self.ifreq))
             f.write('{0:10d}'.format(self.mutd4))
-            f.write('{0:10d}'.format(self.accl))
+            f.write('{0:9.4e} '.format(self.accl))
             f.write('{0:9.4e} '.format(self.hclose))
             f.write('{0:10d}'.format(self.iprd4))
             f.write('\n')
@@ -226,7 +226,7 @@ class ModflowDe4(Package):
             t = line.strip().split()
             ifreq = int(t[0])
             mutd4 = int(t[1])
-            accl = int(t[2])
+            accl = float(t[2])
             hclose = float(t[3])
             iprd4 = int(t[4])
         else:
@@ -237,7 +237,7 @@ class ModflowDe4(Package):
             line = f.readline()
             ifreq = int(line[0:10].strip())
             mutd4 = int(line[10:20].strip())
-            accl = int(line[20:30].strip())
+            accl = float(line[20:30].strip())
             hclose = float(line[30:40].strip())
             iprd4 = int(line[40:50].strip())
             
