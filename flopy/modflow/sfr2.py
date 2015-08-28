@@ -382,7 +382,7 @@ class ModflowSfr2(Package):
                 for j in range(numtab):
                     segnum, numval, iunit = next(f).strip().split()
                     tabfiles_dict[segnum] = {'numval': numval, 'inuit': iunit}
-        return reach_data
+
         return ModflowSfr2(model, nstrm=nstrm, const=const, dleak=dleak, istcb1=istcb1, istcb2=istcb2,
                           isfropt=isfropt, nstrail=nstrail, isuzn=isuzn, nsfrsets=nsfrsets, irtflg=irtflg,
                           numtim=numtim, weight=weight, flwtol=flwtol,
