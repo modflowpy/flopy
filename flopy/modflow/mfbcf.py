@@ -110,6 +110,8 @@ class ModflowBcf(Package):
         self.wetdry = util_3d(model, (nlay,nrow,ncol), np.float32, wetdry,
                               'WETDRY', locat=self.unit_number[0])
         self.parent.add_package(self)
+        return
+
     def write_file(self):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
