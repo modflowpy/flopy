@@ -148,6 +148,7 @@ class Modflow(BaseModel):
             "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
+            "bcf6": flopy.modflow.ModflowBcf,
             "lpf": flopy.modflow.ModflowLpf,
             "hfb6": flopy.modflow.ModflowHfb,
             "chd": flopy.modflow.ModflowChd,
@@ -165,6 +166,7 @@ class Modflow(BaseModel):
             "pks": flopy.modflow.ModflowPks,
             "sip": flopy.modflow.ModflowSip,
             "sor": flopy.modflow.ModflowSor,
+            "de4": flopy.modflow.ModflowDe4,
             "oc": flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,
             "upw": flopy.modflow.ModflowUpw
