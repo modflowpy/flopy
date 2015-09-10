@@ -1505,7 +1505,12 @@ class util_2d(object):
                     #            the relative path. Trace through code to
                     #            determine why it isn't
                     if os.path.basename(value) == value:
-                        value = os.path.join(self.model.model_ws, value)
+                        # Start JCB edit: if user has set external_path, try that, else use model_ws.
+                        if self.model.external_path is not None:
+                            value = os.path.join(self.model.external_path, value)
+                        else:
+                            value = os.path.join(self.model.model_ws, value)
+                        # End JCB edit
                     assert os.path.exists(value), 'could not find file: ' + str(value)
                     #assert os.path.exists(value), \
                     #    'could not find file: ' + str(value)
@@ -1514,6 +1519,12 @@ class util_2d(object):
                 try:
                     value = float(value)
                 except:
+                    # Start JCB edit: if user has set external_path, try that, else use model_ws.
+                    if self.model.external_path is not None:
+                        value = os.path.join(self.model.external_path, value)
+                    else:
+                        value = os.path.join(self.model.model_ws, value)
+                    # End JCB edit
                     assert os.path.exists(
                         os.path.join(self.model.model_ws,value)), \
                         'could not find file: ' + str(value)
