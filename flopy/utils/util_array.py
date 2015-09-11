@@ -968,7 +968,7 @@ class util_2d(object):
         self.py_desc = self.fort_2_py(self.fmtin)  
 
         # some defense
-        if dtype not in [np.int, np.float32, np.bool]:
+        if dtype not in [np.int, np.int32, np.float32, np.bool]:
             raise Exception('util_2d:unsupported dtype: ' + str(dtype))
         if self.model.external_path != None and name == None \
             and ext_filename == None:
