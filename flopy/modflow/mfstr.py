@@ -22,57 +22,119 @@ class ModflowStr(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
+    mxacts : int
+        Maximum number of stream reaches that will be in use during any stress
+        period. (default is 0)
+    nss : int
+        Number of stream segments. (default is 0)
+    ntrib : int
+        The number of stream tributaries that can connect to one segment. The
+        program is currently dimensioned so that NTRIB cannot exceed 10.
+        (default is 0)
+    ndiv : int
+        A flag, which when positive, specifies that diversions from segments
+        are to be simulated. (default is 0)
+    icalc : int
+        A flag, which when positive, specifies that stream stages in reaches
+        are to be calculated. (default is 0)
+    const : float
+        Constant value used in calculating stream stage in reaches whenever
+        ICALC is greater than 0. This constant is 1.486 for flow units of
+        cubic feet per second and 1.0 for units of cubic meters per second.
+        The constant must be multiplied by 86,400 when using time units of
+        days in the simulation. If ICALC is 0, const can be any real value.
+        (default is 86400.)
     ipakcb : int
-        is a flag and a unit number. (the default is 0).
-    stress_period_data : list of boundaries or
-                         recarray of boundaries or
-                         dictionary of boundaries
-        Each river cell is defined through definition of
-        layer (int), row (int), column (int), stage (float), cond (float),
-        rbot (float).
+        is a flag and a unit number. (default is 0)
+    dtype : numpy dtype
+        is the dtype for dataset 6 data in stress_period_data dictionary.
+        (default is None)
+    stress_period_data : dictionary of boundaries
+        Each dictionary contains a list of str data for a stress period.
+
+        Each stress period in the dictionary data contains data for
+        datasets 6, 8, 9, and 10.
+
+        Data for dataset 6 can be an integer (-1 or 0), a list of lists,
+        a numpy array, or a numpy recarry. If dataset 6 contains an integer
+        a -1 denotes data from the previous stress period will be reused
+        and a 0 indicates there are no str reaches for this stress period.
+
+        Otherwise dataset 6 data should contain mxacts or fewer rows of data
+        containing data for each reach. Reach data are specified through
+        definition of layer (int), row (int), column (int), segment number
+        (int), sequential reach number (int), flow entering a segment (float),
+        stream stage (float), streambed hydraulic conductance (float),
+        streambed bottom elevation (float), streambed top elevation (float),
+        auxiliary variable data for auxiliary variables defined in options
+        (float).
+
+        If icalc=0 is used for str dataset 8 should be None for each stress
+        period. If data are specified for dataset 6 for a given stress period
+        and icalc>0, then dataset 8 data should be a numpy array or list of
+        lists with a shape of (itmp, 3).
+
+        If ntrib=0, str dataset 9 should be None for each stress period.
+        If data are specified for dataset 6 for a given stress period and
+        ntrib>0, then dataset 9 data should be a numpy array or list of
+        lists with a shape of (nss, ntrib).
+
+        If ndiv=0, str dataset 10 should be None for each stress period.
+        If data are specified for dataset 6 for a given stress period and
+        ntrib>0, then dataset 10 data should be a numpy array or list of
+        lists with a shape of (nss).
+
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. This gives the form of
+        period. For example, if mxacts=3, nss=2, icalc=0, ntrib=1, and ndiv=1
+        this gives the form of
             stress_period_data =
             {0: [
-                [lay, row, col, stage, cond, rbot],
-                [lay, row, col, stage, cond, rbot],
-                [lay, row, col, stage, cond, rbot]
+                [[lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
+                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
+                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop]],
+                [[width, slope, rough],
+                 [width, slope, rough],
+                 [width, slope, rough]],
+                [[itrib],
+                 [itib]],
+                [[iupseg],
+                 [iupseg]]
                 ],
             1:  [
-                [lay, row, col, stage, cond, rbot],
-                [lay, row, col, stage, cond, rbot],
-                [lay, row, col, stage, cond, rbot]
+                [[lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
+                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
+                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop]],
+                [[width, slope, rough],
+                 [width, slope, rough],
+                 [width, slope, rough]],
+                [[itrib],
+                 [itib]],
+                [[iupseg],
+                 [iupseg]]
                 ], ...
             kper:
                 [
-                [lay, row, col, stage, cond, rbot],
-                [lay, row, col, stage, cond, rbot],
-                [lay, row, col, stage, cond, rbot]
+                [[lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
+                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
+                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop]],
+                [[width, slope, rough],
+                 [width, slope, rough],
+                 [width, slope, rough]],
+                [[itrib],
+                 [itib]],
+                [[iupseg],
+                 [iupseg]]
                 ]
             }
 
-        Note that if the number of lists is smaller than the number of stress
-        periods, then the last list of rivers will apply until the end of the
-        simulation. Full details of all options to specify stress_period_data
-        can be found in the flopy3 boundaries Notebook in the basic
-        subdirectory of the examples directory.
     options : list of strings
         Package options. (default is None).
-    naux : int
-        number of auxiliary variables
     extension : string
-        Filename extension (default is 'riv')
+        Filename extension (default is 'str')
     unitnumber : int
-        File unit number (default is 18).
-
-    Attributes
-    ----------
-    mxactr : int
-        Maximum number of river cells for a stress period.  This is calculated
-        automatically by FloPy based on the information in
-        layer_row_column_data.
+        File unit number (default is 118).
 
     Methods
     -------
@@ -89,16 +151,16 @@ class ModflowStr(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcd = {}
-    >>> lrcd[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this river boundary will be
+    >>> strd = {}
+    >>> strd[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this river boundary will be
     >>>                                         #applied to all stress periods
     >>> str8 = flopy.modflow.ModflowStr(m, stress_period_data=lrcd)
 
     """
 
-    def __init__(self, model, mxacts=0, nss=0, const=86400., ipakcb=0,
-                 stress_period_data=None, dtype=None,
-                 ds8=None, ds9=None, ds10=None,
+    def __init__(self, model, mxacts=0, nss=0, ntrib=0, ndiv=0, icalc=0,
+                 const=86400., ipakcb=0,
+                 dtype=None, stress_period_data=None,
                  extension='str', unitnumber=118, options=None, **kwargs):
         """
         Package constructor.
@@ -110,43 +172,65 @@ class ModflowStr(Package):
         self.url = 'str.htm'
         self.mxacts = mxacts
         self.nss = nss
+        self.icalc = icalc
+        self.ntrib = ntrib
+        self.ndiv = ndiv
         self.const = const
         self.ipakcb = ipakcb
-        self.icalc = 0
-        if ds8 is not None:
-            for key, val in ds8.items():
-                if val is not None:
-                    self.icalc = 1
-                    break
-        self.ntrib = 0
-        if ds9 is not None:
-            for key, val in ds9.items():
-                if val is not None:
-                    self.ntrib = val.shape[1]
-                    break
-        self.ndiv = 0
-        if ds10 is not None:
-            for key, val in ds10.items():
-                if val is not None:
-                    self.ndiv = 1
-                    break
-
-        # parameters are not supported
-        self.npstr = 0
 
         if options is None:
             options = []
         self.options = options
 
+        # parameters are not supported
+        self.npstr = 0
+
+        # determine dtype for dataset 6
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+            auxnames = []
+            if len(options) > 0:
+                auxnames = []
+                it = 0
+                while True:
+                    if 'aux' in options[it].lower():
+                        aux_names.append(options[it + 1].lower())
+                        it += 1
+                    it += 1
+                    if it > len(options):
+                        break
+            if len(auxnames) < 1:
+                auxnames = None
+            d = self.get_empty(1, aux_names=auxnames, structured=self.parent.structured)
+            self.dtype = d.dtype
+
+        # convert stress_period_data for dataset 6 to a recarray if necessary
+        if stress_period_data is not None:
+            for key, val in stress_period_data.items():
+                d = val[0]
+                if isinstance(d, list):
+                    d = np.array(d)
+                if isinstance(d, np.recarray):
+                    assert d.dtype == self.dtype, 'ModflowStr error: recarray dtype: ' + \
+                                                   str(d.dtype) + ' does not match ' + \
+                                                   'self dtype: ' + str(self.dtype)
+                elif isinstance(d, np.ndarray):
+                    val[0] = np.core.records.fromarrays(d.transpose(),
+                                                        dtype=self.dtype)
+                elif isinstance(d, int):
+                    if model.verbose:
+                        if d < 0:
+                            print('   reusing str data from previous stress period')
+                        elif d == 0:
+                            print('   no str data for stress period {}'.format(key))
+                else:
+                    raise Exception('ModflowStr error: unsupported data type: ' +
+                                    str(type(d)) + ' at kper ' +
+                                    '{0:d}'.format(key))
+
 
         self.stress_period_data = stress_period_data
-        self.ds8 = ds8
-        self.ds9 = ds9
-        self.ds10 = ds10
 
         self.parent.add_package(self)
 
@@ -210,6 +294,9 @@ class ModflowStr(Package):
 
         nrow, ncol, nlay, nper = self.parent.get_nrow_ncol_nlay_nper()
 
+        kpers = list(self.stress_period_data.keys())
+        kpers.sort()
+
         if self.parent.bas6.ifrefm:
             fmt6 = ['{:5d} ', '{:5d} ', '{:5d} ', '{:5d} ', '{:5d} ',
                     '{:15.7f} ', '{:15.7f} ', '{:15.7f} ', '{:15.7f} ', '{:15.7f} ']
@@ -222,15 +309,22 @@ class ModflowStr(Package):
             fmt9 = '{:5d}'
 
         for iper in range(nper):
-            if isinstance(self.stress_period_data[iper], int):
-                itmp = self.stress_period_data[iper]
+            if iper not in kpers:
+                if iper == 0:
+                    itmp = 0
+                else:
+                    itmp = -1
             else:
-                itmp = self.stress_period_data[iper].shape[0]
-            line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0, 0, iper+1)
+                tdata = self.stress_period_data[iper]
+                if isinstance(tdata[0], int):
+                    itmp = tdata[0]
+                else:
+                    itmp = tdata[0].shape[0]
+            line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0, 0, iper)
             f_str.write(line)
             if itmp > 0:
                 # dataset 6
-                for line in self.stress_period_data[iper]:
+                for line in tdata[0]:
                     line['k'] += 1
                     line['i'] += 1
                     line['j'] += 1
@@ -242,29 +336,23 @@ class ModflowStr(Package):
                     f_str.write('\n')
                 # dataset 8
                 if self.icalc > 0:
-                    for line in self.ds8[iper]:
+                    for line in tdata[1]:
                         for v in line:
                             f_str.write(fmt8.format(v))
                         f_str.write('\n')
                 # dataset 9
                 if self.ntrib > 0:
-                    for line in self.ds9[iper]:
+                    for line in tdata[2]:
                         for v in line:
                             f_str.write(fmt9.format(v))
                         f_str.write('\n')
                 # dataset 10
                 if self.ndiv > 0:
-                    for v in self.ds10[iper]:
+                    for v in tdata[3]:
                         f_str.write('{:10d}\n'.format(v[0]))
 
         # close the str file
         f_str.close()
-
-    def add_record(self, kper, index, values):
-        try:
-            self.stress_period_data.add_record(kper, index, values)
-        except Exception as e:
-            raise Exception("mfriv error adding record to list: " + str(e))
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
@@ -374,9 +462,6 @@ class ModflowStr(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         stress_period_data = {}
-        ds8 = {}
-        ds9 = {}
-        ds10 = {}
         for iper in range(nper):
             if model.verbose:
                 print("   loading " + str(ModflowStr) + " for kper {0:5d}".format(iper + 1))
@@ -565,18 +650,13 @@ class ModflowStr(Package):
 
 
             if bnd_output is None:
-                stress_period_data[iper] = itmp
-                ds8[iper] = itmp
-                ds9[iper] = itmp
-                ds10[iper] = itmp
+                stress_period_data[iper] = [itmp, itmp, itmp, itmp]
             else:
-                stress_period_data[iper] = bnd_output
-                ds8[iper] = rch_data
-                ds9[iper] = seg_data
-                ds10[iper] = useg_data
+                stress_period_data[iper] = [bnd_output, rch_data, seg_data, useg_data]
 
 
-        strpak =  ModflowStr(model, mxacts=mxacts, nss=nss, const=const, ipakcb=ipakcb,
-                             stress_period_data=stress_period_data, ds8=ds8,
-                             ds9=ds9, ds10=ds10, options=options)
+        strpak = ModflowStr(model, mxacts=mxacts, nss=nss,
+                            ntrib=ntrib, ndiv=ndiv, icalc=icalc,
+                            const=const, ipakcb=ipakcb,
+                            stress_period_data=stress_period_data, options=options)
         return strpak
