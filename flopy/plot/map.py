@@ -200,7 +200,7 @@ class ModelMap(object):
 
         if ibound is None:
             bas = self.model.get_package('BAS6')
-            ibound = bas.ibound
+            ibound = bas.ibound.array
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -239,7 +239,7 @@ class ModelMap(object):
 
         if ibound is None:
             bas = self.model.get_package('BAS6')
-            ibound = bas.ibound
+            ibound = bas.ibound.array
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
         idx2 = (ibound < 0)
@@ -321,7 +321,10 @@ class ModelMap(object):
 
         # Get the list data
         try:
-            mflist = p.stress_period_data[kper]
+            if ftype.upper() == 'STR':
+                mflist = p.stress_period_data[kper][0]
+            else:
+                mflist = p.stress_period_data[kper]
         except Exception as e:
             raise Exception('Not a list-style boundary package:'+str(e))
 

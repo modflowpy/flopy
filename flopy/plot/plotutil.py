@@ -12,7 +12,8 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
-                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
+                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy',
+                 'STR': 'purple'}
 
 
 def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
@@ -176,7 +177,7 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
 
         if inactive:
             try:
-                ib = model.bas6.getibound()
+                ib = model.bas6.ibound.array
                 mm.plot_inactive(ibound=ib, ax=axes[idx])
             except:
                 pass
