@@ -247,7 +247,7 @@ class ModelMap(object):
         plotarray[idx2] = 2
         plotarray = np.ma.masked_equal(plotarray, 0)
         cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_ch])
-        bounds=[0, 1, 2, 3]
+        bounds = [0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return quadmesh
@@ -281,7 +281,8 @@ class ModelMap(object):
 
         return lc
 
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None, plotAll=False,
+                **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
@@ -296,6 +297,10 @@ class ModelMap(object):
             Stress period to plot
         color : string
             matplotlib color string. (Default is None)
+        plotAll : bool
+            Boolean used to specify that boundary condition locations for all
+            layers will be plotted on the current ModelMap layer.
+            (Default is False)
         **kwargs : dictionary
             keyword arguments passed to matplotlib.collections.PatchCollection
 
@@ -321,10 +326,7 @@ class ModelMap(object):
 
         # Get the list data
         try:
-            if ftype.upper() == 'STR':
-                mflist = p.stress_period_data[kper][0]
-            else:
-                mflist = p.stress_period_data[kper]
+            mflist = p.stress_period_data[kper]
         except Exception as e:
             raise Exception('Not a list-style boundary package:'+str(e))
 
@@ -334,8 +336,17 @@ class ModelMap(object):
         nlay = self.model.nlay
         # Plot the list locations
         plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
-        idx = [mflist['k'], mflist['i'], mflist['j']]
-        plotarray[idx] = 1
+        if plotAll:
+            idx = [mflist['i'], mflist['j']]
+            #plotarray[:, idx] = 1
+            pa = np.zeros((self.sr.nrow, self.sr.ncol), dtype=np.int)
+            pa[idx] = 1
+            for k in range(nlay):
+                plotarray[k, :, :] = pa.copy()
+        else:
+            idx = [mflist['k'], mflist['i'], mflist['j']]
+
+            plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
             if ftype in bc_color_dict:
@@ -372,7 +383,7 @@ class ModelMap(object):
         return patch_collection
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1, jstep=1,
-                       **kwargs):
+                       normalize=False, **kwargs):
         """
         Use quiver to plot vectors.
 
@@ -442,6 +453,13 @@ class ModelMap(object):
         y = self.sr.ycentergrid[::istep, ::jstep]
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u**2. + v**2.)
+            vmag[vmag == 0.] = 1.
+            u /= vmag
+            v /= vmag
+        # apply step
         u = u[::istep, ::jstep]
         v = v[::istep, ::jstep]
 

@@ -46,86 +46,106 @@ class ModflowStr(Package):
         (default is 86400.)
     ipakcb : int
         is a flag and a unit number. (default is 0)
-    dtype : numpy dtype
-        is the dtype for dataset 6 data in stress_period_data dictionary.
+    dtype : tuple, list, or numpy array of numpy dtypes
+        is a tuple, list, or numpy array containing the dtype for
+        datasets 6 and 8 and the dtype for datasets 9 and 10 data in
+        stress_period_data and segment_data dictionaries.
         (default is None)
-    stress_period_data : dictionary of boundaries
-        Each dictionary contains a list of str data for a stress period.
+    stress_period_data : dictionary of reach data
+        Each dictionary contains a list of str reach data for a stress period.
 
         Each stress period in the dictionary data contains data for
-        datasets 6, 8, 9, and 10.
+        datasets 6 and 8.
 
-        Data for dataset 6 can be an integer (-1 or 0), a list of lists,
-        a numpy array, or a numpy recarry. If dataset 6 contains an integer
-        a -1 denotes data from the previous stress period will be reused
-        and a 0 indicates there are no str reaches for this stress period.
+        The value for stress period data for a stress period can be an integer
+        (-1 or 0), a list of lists, a numpy array, or a numpy recarry. If
+        stress period data for a stress period contains an integer, a -1 denotes
+        data from the previous stress period will be reused and a 0 indicates
+        there are no str reaches for this stress period.
 
-        Otherwise dataset 6 data should contain mxacts or fewer rows of data
-        containing data for each reach. Reach data are specified through
-        definition of layer (int), row (int), column (int), segment number
-        (int), sequential reach number (int), flow entering a segment (float),
-        stream stage (float), streambed hydraulic conductance (float),
-        streambed bottom elevation (float), streambed top elevation (float),
-        auxiliary variable data for auxiliary variables defined in options
-        (float).
+        Otherwise stress period data for a stress period should contain mxacts
+        or fewer rows of data containing data for each reach. Reach data are
+        specified through definition of layer (int), row (int), column (int),
+        segment number (int), sequential reach number (int), flow entering a
+        segment (float), stream stage (float), streambed hydraulic conductance
+        (float), streambed bottom elevation (float), streambed top elevation
+        (float), stream width (float), stream slope (float), roughness
+        coefficient (float), and auxiliary variable data for auxiliary variables
+        defined in options (float).
 
-        If icalc=0 is used for str dataset 8 should be None for each stress
-        period. If data are specified for dataset 6 for a given stress period
-        and icalc>0, then dataset 8 data should be a numpy array or list of
-        lists with a shape of (itmp, 3).
-
-        If ntrib=0, str dataset 9 should be None for each stress period.
-        If data are specified for dataset 6 for a given stress period and
-        ntrib>0, then dataset 9 data should be a numpy array or list of
-        lists with a shape of (nss, ntrib).
-
-        If ndiv=0, str dataset 10 should be None for each stress period.
-        If data are specified for dataset 6 for a given stress period and
-        ntrib>0, then dataset 10 data should be a numpy array or list of
-        lists with a shape of (nss).
+        If icalc=0 is specified, stream width, stream slope, and roughness
+        coefficients, are not used and can be any value for each stress period.
+        If data are specified for dataset 6 for a given stress period and icalc>0,
+        then stream width, stream slope, and roughness coefficients should be
+        appropriately set.
 
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. For example, if mxacts=3, nss=2, icalc=0, ntrib=1, and ndiv=1
-        this gives the form of
+        period. For example, if mxacts=3 this gives the form of
             stress_period_data =
             {0: [
-                [[lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
-                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
-                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop]],
-                [[width, slope, rough],
-                 [width, slope, rough],
-                 [width, slope, rough]],
-                [[itrib],
-                 [itib]],
-                [[iupseg],
-                 [iupseg]]
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough],
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough],
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough]]
                 ],
             1:  [
-                [[lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
-                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
-                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop]],
-                [[width, slope, rough],
-                 [width, slope, rough],
-                 [width, slope, rough]],
-                [[itrib],
-                 [itib]],
-                [[iupseg],
-                 [iupseg]]
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough],
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough],
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough]]
                 ], ...
             kper:
                 [
-                [[lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
-                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop],
-                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop]],
-                [[width, slope, rough],
-                 [width, slope, rough],
-                 [width, slope, rough]],
-                [[itrib],
-                 [itib]],
-                [[iupseg],
-                 [iupseg]]
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough],
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough],
+                [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough]]
+                ]
+            }
+    segment_data : dictionary of str segment data
+        Each dictionary contains a list of segment str data for a stress period.
+
+        Each stress period in the dictionary data contains data for
+        datasets 9, and 10. Segment data for a stress period are ignored if
+        a integer value is specified for stress period data.
+
+        The value for segment data for a stress period can be an integer
+        (-1 or 0), a list of lists, a numpy array, or a numpy recarry. If
+        segment data for a stress period contains an integer, a -1 denotes
+        data from the previous stress period will be reused and a 0 indicates
+        there are no str segments for this stress period.
+
+        Otherwise stress period data for a stress period should contain nss
+        rows of data containing data for each segment. Segment data are
+        specified through definition of itrib (int) data for up to 10 tributaries
+        and iupseg (int) data.
+
+        If ntrib=0 is specified, itrib values are not used and can be any value
+        for each stress period. If data are specified for dataset 6 for a given
+        stress period and ntrib>0, then itrib data should be specified for columns
+        0:ntrib.
+
+        If ndiv=0 is specified, iupseg values are not used and can be any value
+        for each stress period. If data are specified for dataset 6 for a given
+        stress period and ndiv>0, then iupseg data should be specified for the
+        column in the dataset [10].
+
+        The simplest form is a dictionary with a lists of boundaries for each
+        stress period, where each list of boundaries itself is a list of
+        boundaries. Indices of the dictionary are the numbers of the stress
+        period. For example, if nss=2 and ntrib>0 and/or ndiv>0 this gives the form of
+            segment_data =
+            {0: [
+                [itrib1, itrib2, itrib3, itrib4, itrib5, itrib6, itrib7, itrib8, itrib9, itrib10, iupseg],
+                [itrib1, itrib2, itrib3, itrib4, itrib5, itrib6, itrib7, itrib8, itrib9, itrib10, iupseg],
+                ],
+            1:  [
+                [itrib1, itrib2, itrib3, itrib4, itrib5, itrib6, itrib7, itrib8, itrib9, itrib10, iupseg],
+                [itrib1, itrib2, itrib3, itrib4, itrib5, itrib6, itrib7, itrib8, itrib9, itrib10, iupseg],
+                ], ...
+            kper:
+                [
+                [itrib1, itrib2, itrib3, itrib4, itrib5, itrib6, itrib7, itrib8, itrib9, itrib10, iupseg],
+                [itrib1, itrib2, itrib3, itrib4, itrib5, itrib6, itrib7, itrib8, itrib9, itrib10, iupseg],
                 ]
             }
 
@@ -160,7 +180,7 @@ class ModflowStr(Package):
 
     def __init__(self, model, mxacts=0, nss=0, ntrib=0, ndiv=0, icalc=0,
                  const=86400., ipakcb=0,
-                 dtype=None, stress_period_data=None,
+                 dtype=None, stress_period_data=None, segment_data=None,
                  extension='str', unitnumber=118, options=None, **kwargs):
         """
         Package constructor.
@@ -178,6 +198,12 @@ class ModflowStr(Package):
         self.const = const
         self.ipakcb = ipakcb
 
+        # issue exception if ntrib is greater than 10
+        if ntrib > 10:
+            raise Exception('ModflowStr error: ntrib must be less that 10: ' +
+                            'specified value = {}'.format(ntrib))
+
+
         if options is None:
             options = []
         self.options = options
@@ -187,7 +213,8 @@ class ModflowStr(Package):
 
         # determine dtype for dataset 6
         if dtype is not None:
-            self.dtype = dtype
+            self.dtype = dtype[0]
+            self.dtype2 = dtype[1]
         else:
             auxnames = []
             if len(options) > 0:
@@ -202,13 +229,13 @@ class ModflowStr(Package):
                         break
             if len(auxnames) < 1:
                 auxnames = None
-            d = self.get_empty(1, aux_names=auxnames, structured=self.parent.structured)
+            d, d2 = self.get_empty(1, 1, aux_names=auxnames, structured=self.parent.structured)
             self.dtype = d.dtype
+            self.dtype2 = d2.dtype
 
-        # convert stress_period_data for dataset 6 to a recarray if necessary
+        # convert stress_period_data for datasets 6 and 8 to a recarray if necessary
         if stress_period_data is not None:
-            for key, val in stress_period_data.items():
-                d = val[0]
+            for key, d in stress_period_data.items():
                 if isinstance(d, list):
                     d = np.array(d)
                 if isinstance(d, np.recarray):
@@ -216,8 +243,7 @@ class ModflowStr(Package):
                                                    str(d.dtype) + ' does not match ' + \
                                                    'self dtype: ' + str(self.dtype)
                 elif isinstance(d, np.ndarray):
-                    val[0] = np.core.records.fromarrays(d.transpose(),
-                                                        dtype=self.dtype)
+                    d = np.core.records.fromarrays(d.transpose(), dtype=self.dtype)
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
@@ -228,9 +254,32 @@ class ModflowStr(Package):
                     raise Exception('ModflowStr error: unsupported data type: ' +
                                     str(type(d)) + ' at kper ' +
                                     '{0:d}'.format(key))
-
-
+        # add stress_period_data to package
         self.stress_period_data = stress_period_data
+
+        # convert segment_data for datasets 9 and 10 to a recarray if necessary
+        if segment_data is not None:
+            for key, d in segment_data.items():
+                if isinstance(d, list):
+                    d = np.array(d)
+                if isinstance(d, np.recarray):
+                    assert d.dtype == self.dtype2, 'ModflowStr error: recarray dtype: ' + \
+                                                    str(d.dtype) + ' does not match ' + \
+                                                   'self dtype: ' + str(self.dtype2)
+                elif isinstance(d, np.ndarray):
+                    d = np.core.records.fromarrays(d.transpose(), dtype=self.dtype2)
+                elif isinstance(d, int):
+                    if model.verbose:
+                        if d < 0:
+                            print('   reusing str segment data from previous stress period')
+                        elif d == 0:
+                            print('   no str segment data for stress period {}'.format(key))
+                else:
+                    raise Exception('ModflowStr error: unsupported data type: ' +
+                                    str(type(d)) + ' at kper ' +
+                                    '{0:d}'.format(key))
+        # add stress_period_data to package
+        self.segment_data = segment_data
 
         self.parent.add_package(self)
 
@@ -238,14 +287,17 @@ class ModflowStr(Package):
         return 'Stream class'
 
     @staticmethod
-    def get_empty(ncells=0, aux_names=None, structured=True):
+    def get_empty(ncells=0, nss=0, aux_names=None, structured=True):
         # get an empty recarray that correponds to dtype
-        dtype = ModflowStr.get_default_dtype(structured=structured)
+        dtype, dtype2 = ModflowStr.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((ncells, len(dtype)), dtype=dtype)
         d[:, :] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d2 = np.zeros((nss, len(dtype2)), dtype=dtype2)
+        d2[:, :] = 0
+        return (np.core.records.fromarrays(d.transpose(), dtype=dtype),
+                np.core.records.fromarrays(d2.transpose(), dtype=dtype2))
 
     @staticmethod
     def get_default_dtype(structured=True):
@@ -254,15 +306,25 @@ class ModflowStr(Package):
                               ("segment", np.int), ("reach", np.int),
                               ("flow", np.float32), ("stage", np.float32),
                               ("cond", np.float32), ("sbot", np.float32),
-                              ("stop", np.float32)])
+                              ("stop", np.float32),
+                              ("width", np.float32), ("slope", np.float32),
+                              ("rough", np.float32)])
         else:
             dtype = np.dtype([("node", np.int),
                               ("segment", np.int), ("reach", np.int),
                               ("flow", np.float32), ("stage", np.float32),
                               ("cond", np.float32), ("sbot", np.float32),
-                              ("stop", np.float32)])
+                              ("stop", np.float32),
+                              ("width", np.float32), ("slope", np.float32),
+                              ("rough", np.float32)])
 
-        return dtype
+        dtype2 = np.dtype([("itrib01", np.int), ("itrib02", np.int),
+                           ("itrib03", np.int), ("itrib04", np.int),
+                           ("itrib05", np.int), ("itrib06", np.int),
+                           ("itrib07", np.int), ("itrib08", np.int),
+                           ("itrib09", np.int), ("itrib10", np.int),
+                           ("iupseg", np.int)])
+        return dtype, dtype2
 
     def ncells(self):
         # Return the  maximum number of cells that have a stream
@@ -316,40 +378,41 @@ class ModflowStr(Package):
                     itmp = -1
             else:
                 tdata = self.stress_period_data[iper]
-                if isinstance(tdata[0], int):
-                    itmp = tdata[0]
+                sdata = self.segment_data[iper]
+                if isinstance(tdata, int):
+                    itmp = tdata
                 else:
-                    itmp = tdata[0].shape[0]
+                    itmp = tdata.shape[0]
             line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0, 0, iper)
             f_str.write(line)
             if itmp > 0:
                 # dataset 6
-                for line in tdata[0]:
+                for line in tdata:
                     line['k'] += 1
                     line['i'] += 1
                     line['j'] += 1
                     for idx, v in enumerate(line):
                         if idx < 10:
                             f_str.write(fmt6[idx].format(v))
-                        else:
+                        elif idx > 12:
                             f_str.write('{} '.format(v))
                     f_str.write('\n')
                 # dataset 8
                 if self.icalc > 0:
-                    for line in tdata[1]:
-                        for v in line:
-                            f_str.write(fmt8.format(v))
+                    for line in tdata:
+                        for idx in range(10, 13):
+                            f_str.write(fmt8.format(line[idx]))
                         f_str.write('\n')
                 # dataset 9
                 if self.ntrib > 0:
-                    for line in tdata[2]:
-                        for v in line:
-                            f_str.write(fmt9.format(v))
+                    for line in sdata:
+                        for idx in range(3):
+                            f_str.write(fmt9.format(line[idx]))
                         f_str.write('\n')
                 # dataset 10
                 if self.ndiv > 0:
-                    for v in tdata[3]:
-                        f_str.write('{:10d}\n'.format(v[0]))
+                    for line in sdata:
+                        f_str.write('{:10d}\n'.format(line[3]))
 
         # close the str file
         f_str.close()
@@ -462,6 +525,7 @@ class ModflowStr(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         stress_period_data = {}
+        segment_data = {}
         for iper in range(nper):
             if model.verbose:
                 print("   loading " + str(ModflowStr) + " for kper {0:5d}".format(iper + 1))
@@ -478,7 +542,8 @@ class ModflowStr(Package):
 
             if itmp == 0:
                 bnd_output = None
-                current = ModflowStr.get_empty(itmp, aux_names=aux_names)
+                seg_output = None
+                current, current_seg = ModflowStr.get_empty(itmp, nss, aux_names=aux_names)
             elif itmp > 0:
                 if npstr > 0:
                     partype = ['cond']
@@ -520,52 +585,44 @@ class ModflowStr(Package):
                 else:
                     if model.verbose:
                         print("   reading str dataset 6")
-                    current = ModflowStr.get_empty(itmp, aux_names=aux_names)
+                    current, current_seg = ModflowStr.get_empty(itmp, nss, aux_names=aux_names)
                     for ibnd in range(itmp):
                         line = f.readline()
-                        if "open/close" in line.lower():
-                            #raise NotImplementedError("load() method does not support \'open/close\'")
-                            oc_filename = os.path.join(model.model_ws, line.strip().split()[1])
-                            assert os.path.exists(oc_filename), "Package.load() error: open/close filename " + \
-                                                                oc_filename + " not found"
-                            try:
-                                current = np.genfromtxt(oc_filename, dtype=current.dtype)
-                                current = current.view(np.recarray)
-                            except Exception as e:
-                                raise Exception("Package.load() error loading open/close file " + oc_filename + \
-                                                " :" + str(e))
-                            assert current.shape[0] == itmp, "Package.load() error: open/close rec array from file " + \
-                                                             oc_filename + " shape (" + str(current.shape) + \
-                                                             ") does not match itmp: {0:d}".format(itmp)
-                            break
+                        t = []
                         try:
-                            t = line.strip().split()
-                            current[ibnd] = tuple(t[:len(current.dtype.names)])
+                            tt = line.strip().split()
+                            #current[ibnd] = tuple(t[:len(current.dtype.names)])
+                            for idx, v in enumerate(tt[:10]):
+                                t.append(v)
+                            for ivar in range(3):
+                                t.append(-1.0E+10)
+                            if len(aux_names) > 0:
+                                for idx, v in enumerate(t[10:]):
+                                    t.append(v)
                         except:
-                            t = []
                             ipos = [5, 5, 5, 5, 5, 15, 10, 10, 10, 10]
                             istart = 0
                             for ivar in range(len(ipos)):
                                 istop = istart + ipos(ivar)
                                 t.append(line[istart:istop])
                                 istart = istop + 1
+                            for ivar in range(3):
+                                t.append(-1.0E+10)
                             if len(aux_names) > 0:
                                 tt = line[istart:].strip().split()
                                 for ivar in len(aux_names):
                                     t.append(tt[ivar])
-                            current[ibnd] = tuple(t[:len(current.dtype.names)])
+                        current[ibnd] = tuple(t[:len(current.dtype.names)])
 
                 # convert indices to zero-based
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1
-                bnd_output = np.recarray.copy(current)
 
                 # read dataset 8
                 if icalc > 0:
                     if model.verbose:
                         print("   reading str dataset 8")
-                    tds8 = np.zeros((itmp, 3), dtype=np.float)
                     for ibnd in range(itmp):
                         line = f.readline()
                         try:
@@ -579,16 +636,17 @@ class ModflowStr(Package):
                                 istop = istart + ipos(ivar)
                                 v.append(float(line[istart:istop]))
                                 istart = istop + 1
-                        tds8[ibnd, :] = np.array(v)
-                    rch_data = tds8.copy()
-                else:
-                    rch_data = None
+                        ipos = 0
+                        for idx in range(10, 13):
+                            current[ibnd][idx] = v[ipos]
+                            ipos += 1
+
+                bnd_output = np.recarray.copy(current)
 
                 # read data set 9
                 if ntrib > 0:
                     if model.verbose:
                         print("   reading str dataset 9")
-                    tds9 = np.zeros((nss, ntrib), dtype=np.int)
                     for iseg in range(nss):
                         line = f.readline()
                         try:
@@ -602,16 +660,13 @@ class ModflowStr(Package):
                                 istop = istart + ipos
                                 v.append(float(line[istart:istop]))
                                 istart = istop + 1
-                        tds9[iseg, :] = np.array(v)
-                    seg_data = tds9.copy()
-                else:
-                    seg_data = None
+                        for idx in range(ntrib):
+                            current_seg[iseg][idx] = v[idx]
 
                 # read data set 10
                 if ndiv > 0:
                     if model.verbose:
                         print("   reading str dataset 10")
-                    tds10 = np.zeros((nss), dtype=np.int)
                     for iseg in range(nss):
                         line = f.readline()
                         try:
@@ -624,39 +679,27 @@ class ModflowStr(Package):
                                 istop = istart + ipos
                                 v = float(line[istart:istop])
                                 istart = istop + 1
-                        tds10[iseg] = np.array(v)
-                    useg_data = tds10.copy()
-                else:
-                    useg_data = None
+                        current_seg[iseg][10] = v
+
+                seg_output = np.recarray.copy(current_seg)
 
             else:
-                #bnd_output = np.recarray.copy(current)
                 bnd_output = -1
-                if icalc > 0:
-                    #rch_data = tds8.copy()
-                    rch_data = -1
-                else:
-                    rch_data = None
-                if ntrib > 0:
-                    #seg_data = tds9.copy()
-                    seg_data = -1
-                else:
-                    seg_data = None
-                if ndiv > 0:
-                    #useg_data = tds10.copy()
-                    useg_data = -1
-                else:
-                    useg_data = None
+                seg_output = -1
 
 
             if bnd_output is None:
-                stress_period_data[iper] = [itmp, itmp, itmp, itmp]
+                stress_period_data[iper] = itmp
+                segment_data[iper] = itmp
             else:
-                stress_period_data[iper] = [bnd_output, rch_data, seg_data, useg_data]
+                stress_period_data[iper] = bnd_output
+                segment_data[iper] = seg_output
 
 
         strpak = ModflowStr(model, mxacts=mxacts, nss=nss,
                             ntrib=ntrib, ndiv=ndiv, icalc=icalc,
                             const=const, ipakcb=ipakcb,
-                            stress_period_data=stress_period_data, options=options)
+                            stress_period_data=stress_period_data,
+                            segment_data=segment_data,
+                            options=options)
         return strpak
