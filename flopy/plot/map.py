@@ -430,6 +430,7 @@ class ModelMap(object):
             else:
                 print("ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
                 return
+        ib = self.model.bas6.ibound.array
         delr = dis.delr.array
         delc = dis.delc.array
         top = dis.top.array
@@ -478,6 +479,11 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
+        # mask discharge in inactive cells
+        idx = (ib[self.layer, ::istep, ::jstep] == 0)
+        u[idx] = np.nan
+        v[idx] = np.nan
 
         # Rotate and plot
         urot, vrot = self.sr.rotate(u, v, self.sr.rotation)

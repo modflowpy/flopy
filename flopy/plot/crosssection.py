@@ -599,6 +599,7 @@ class ModelCrossSection(object):
             pivot = 'middle'
 
         # Calculate specific discharge
+        ib = self.model.bas6.ibound.array
         delr = self.dis.delr.array
         delc = self.dis.delc.array
         top = self.dis.top.array
@@ -665,6 +666,7 @@ class ModelCrossSection(object):
         upts = []
         u2pts = []
         vpts = []
+        ibpts = []
         for k in range(self.dis.nlay):
             upts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
                                                    self.sr.yedge, u[k, :, :]))
@@ -672,10 +674,13 @@ class ModelCrossSection(object):
                                                     self.sr.yedge, u2[k, :, :]))
             vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
                                                    self.sr.yedge, v[k, :, :]))
+            ibpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
+                                                    self.sr.yedge, ib[k, :, :]))
         # convert upts, u2pts, and vpts to numpy arrays
         upts = np.array(upts)
         u2pts = np.array(u2pts)
         vpts = np.array(vpts)
+        ibpts = np.array(ibpts)
 
         # Select correct slice and apply step
         x = x[::kstep, ::hstep]
@@ -683,6 +688,7 @@ class ModelCrossSection(object):
         upts = upts[::kstep, ::hstep]
         u2pts = u2pts[::kstep, ::hstep]
         vpts = vpts[::kstep, ::hstep]
+        ibpts = ibpts[::kstep, ::hstep]
 
         # normalize
         if normalize:
@@ -699,6 +705,13 @@ class ModelCrossSection(object):
         # sides of a cell. Sample every other value for quiver
         upts = upts[0, ::2]
         vpts = vpts[0, ::2]
+        ibpts = ibpts[0, ::2]
+
+        # mask discharge in inactive cells
+        idx = (ibpts == 0)
+        upts[idx] = np.nan
+        vpts[idx] = np.nan
+
 
         # plot the vectors
         quiver = self.ax.quiver(x, z, upts, vpts, pivot=pivot, **kwargs)
