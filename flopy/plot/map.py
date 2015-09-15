@@ -402,6 +402,10 @@ class ModelMap(object):
             row frequency to plot. (Default is 1.)
         jstep : int
             column frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
         kwargs : dictionary
             Keyword arguments passed to plt.quiver()
 
@@ -411,6 +415,13 @@ class ModelMap(object):
             Vectors of specific discharge.
 
         """
+        # remove 'pivot' keyword argument
+        # by default the center of the arrow is plotted in the center of a cell
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
         # Calculate specific discharge
         # make sure dis is defined
         if dis is None:
@@ -448,20 +459,20 @@ class ModelMap(object):
         qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
                                                           delc, sat_thk)
 
-        # Select correct slice and step
-        x = self.sr.xcentergrid[::istep, ::jstep]
-        y = self.sr.ycentergrid[::istep, ::jstep]
+        # Select correct slice
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
+        # apply step
+        x = self.sr.xcentergrid[::istep, ::jstep]
+        y = self.sr.ycentergrid[::istep, ::jstep]
+        u = u[::istep, ::jstep]
+        v = v[::istep, ::jstep]
         # normalize
         if normalize:
             vmag = np.sqrt(u**2. + v**2.)
-            vmag[vmag == 0.] = 1.
-            u /= vmag
-            v /= vmag
-        # apply step
-        u = u[::istep, ::jstep]
-        v = v[::istep, ::jstep]
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -470,7 +481,7 @@ class ModelMap(object):
 
         # Rotate and plot
         urot, vrot = self.sr.rotate(u, v, self.sr.rotation)
-        quiver = ax.quiver(x, y, urot, vrot, **kwargs)
+        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
 
         return quiver
 

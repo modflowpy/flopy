@@ -448,7 +448,7 @@ class ModelCrossSection(object):
         """
         if ibound is None:
             bas = self.model.get_package('BAS6')
-            ibound = bas.ibound
+            ibound = bas.ibound.array
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
         idx2 = (ibound < 0)
@@ -558,7 +558,7 @@ class ModelCrossSection(object):
         return patches
 
     def plot_discharge(self, frf, fff, flf=None, head=None,
-                         kstep=1, hstep=1,
+                         kstep=1, hstep=1, normalize=False,
                          **kwargs):
         """
         Use quiver to plot vectors.
@@ -578,6 +578,10 @@ class ModelCrossSection(object):
             layer frequency to plot. (Default is 1.)
         hstep : int
             horizontal frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
         kwargs : dictionary
             Keyword arguments passed to plt.quiver()
 
@@ -587,6 +591,12 @@ class ModelCrossSection(object):
             Vectors
 
         """
+        # remove 'pivot' keyword argument
+        # by default the center of the arrow is plotted in the center of a cell
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
 
         # Calculate specific discharge
         delr = self.dis.delr.array
@@ -646,8 +656,8 @@ class ModelCrossSection(object):
                 for i in range(self.xcentergrid.shape[1]):
                     x.append(self.xcentergrid[k, i])
                     z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k+1, i]))
-            x = np.array(x).reshape((1,self.xcentergrid.shape[1]))
-            z = np.array(z).reshape((1,self.xcentergrid.shape[1]))
+            x = np.array(x).reshape((1, self.xcentergrid.shape[1]))
+            z = np.array(z).reshape((1, self.xcentergrid.shape[1]))
         else:
             x = self.xcentergrid
             z = zcentergrid
@@ -662,24 +672,36 @@ class ModelCrossSection(object):
                                                     self.sr.yedge, u2[k, :, :]))
             vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
                                                    self.sr.yedge, v[k, :, :]))
+        # convert upts, u2pts, and vpts to numpy arrays
         upts = np.array(upts)
         u2pts = np.array(u2pts)
         vpts = np.array(vpts)
-        
+
+        # Select correct slice and apply step
         x = x[::kstep, ::hstep]
         z = z[::kstep, ::hstep]
         upts = upts[::kstep, ::hstep]
         u2pts = u2pts[::kstep, ::hstep]
         vpts = vpts[::kstep, ::hstep]
-            
-        N = np.sqrt(upts**2. + u2pts**2. + vpts**2.)
-        idx = N > 0.
-        upts[idx] /= N[idx]
-        u2pts[idx] /= N[idx]
-        vpts[idx] /= N[idx]
-        
+
+        # normalize
+        if normalize:
+            if self.direction == 'xy':
+                vmag = np.sqrt(upts**2. + u2pts**2. + vpts**2.)
+            else:
+                vmag = np.sqrt(upts**2. + vpts**2.)
+            idx = vmag > 0.
+            upts[idx] /= vmag[idx]
+            u2pts[idx] /= vmag[idx]
+            vpts[idx] /= vmag[idx]
+
+        # upts and vpts has a value for the left and right
+        # sides of a cell. Sample every other value for quiver
+        upts = upts[0, ::2]
+        vpts = vpts[0, ::2]
+
         # plot the vectors
-        quiver = self.ax.quiver(x, z, upts, vpts, **kwargs)
+        quiver = self.ax.quiver(x, z, upts, vpts, pivot=pivot, **kwargs)
 
         return quiver
 
