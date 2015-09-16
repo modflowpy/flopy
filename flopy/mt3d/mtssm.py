@@ -58,8 +58,6 @@ class Mt3dSsm(Package):
         if isinstance(self.parent.btn.icbund, np.ndarray):
             self.__maxssm += (self.parent.btn.icbund < 0).sum()
         for p in self.__SsmPackages:
-            print('label', p.label)
-            print('instance', p.instance)
             if ((p.label == 'BAS6') and (p.instance != None)):
                 self.__maxssm += (p.instance.ibound.array < 0).sum()
             elif p.instance != None:

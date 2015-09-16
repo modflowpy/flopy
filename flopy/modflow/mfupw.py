@@ -34,7 +34,13 @@ class ModflowUpw(Package):
 
         self.hk = util_3d(model, (nlay, nrow, ncol), np.float32, hk, name='hk', locat=self.unit_number[0])
         self.hani = util_3d(model, (nlay, nrow, ncol), np.float32, hani, name='hani', locat=self.unit_number[0])
-        self.vka = util_3d(model, (nlay, nrow, ncol), np.float32, vka, name='vka', locat=self.unit_number[0])
+        keys = []
+        for k in range(nlay):
+            key = 'vka'
+            if self.layvka[k] != 0:
+                key = 'vani'
+            keys.append(key)
+        self.vka = util_3d(model, (nlay, nrow, ncol), np.float32, vka, name=keys, locat=self.unit_number[0])
         self.ss = util_3d(model, (nlay, nrow, ncol), np.float32, ss, name='ss', locat=self.unit_number[0])
         self.sy = util_3d(model, (nlay, nrow, ncol), np.float32, sy, name='sy', locat=self.unit_number[0])
         self.vkcb = util_3d(model, (nlay, nrow, ncol), np.float32, vkcb, name='vkcb', locat=self.unit_number[0])
@@ -211,11 +217,17 @@ class ModflowUpw(Package):
             if model.verbose:
                 print('   loading vka layer {0:3d}...'.format(k + 1))
             if 'vka' not in par_types and 'vani' not in par_types:
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, 'vka',
+                key = 'vka'
+                if layvka[k] != 0:
+                    key = 'vani'
+                t = util_2d.load(f, model, (nrow, ncol), np.float32, key,
                                  ext_unit_dict)
             else:
                 line = f.readline()
-                t = mfpar.parameter_fill(model, (nrow, ncol), 'vka', parm_dict, findlayer=k)
+                key = 'vka'
+                if 'vani' in par_types:
+                    key = 'vani'
+                t = mfpar.parameter_fill(model, (nrow, ncol), key, parm_dict, findlayer=k)
             vka[k] = t
             if transient:
                 if model.verbose:

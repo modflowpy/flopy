@@ -6,18 +6,18 @@ util_array module.  Contains the util_2d, util_3d and transient_2d classes.
 
 """
 from __future__ import division, print_function
-#from future.utils import with_metaclass
+# from future.utils import with_metaclass
 
 import os
 import shutil
 import copy
 import numpy as np
 import flopy.utils
+
 VERBOSE = False
 
 
-
-def decode_fortran_descriptor(fd):    
+def decode_fortran_descriptor(fd):
     # strip off any quotes around format string
     fd = fd.replace("'", "")
     fd = fd.replace('"', '')
@@ -32,7 +32,7 @@ def decode_fortran_descriptor(fd):
         decimal = int(raw[1])
     else:
         raw = [fd]
-        decimal=None
+        decimal = None
     fmts = ['I', 'G', 'E', 'F']
     raw = raw[0].upper()
     for fmt in fmts:
@@ -51,24 +51,27 @@ def decode_fortran_descriptor(fd):
             return npl, fmt, width, decimal
     raise Exception('Unrecognized format type: ' +
                     str(fd) + ' looking for: ' + str(fmts))
- 
+
+
 def build_fortran_desciptor(npl, fmt, width, decimal):
     fd = '(' + str(npl) + fmt + str(width)
     if decimal is not None:
         fd += '.' + str(decimal) + ')'
     else:
         fd += ')'
-    return fd   
+    return fd
+
 
 def build_python_descriptor(npl, fmt, width, decimal):
     if fmt.upper() == 'I':
         fmt = 'd'
     pd = '{0:' + str(width)
     if decimal is not None:
-        pd += '.' + str(decimal) + fmt+'}'
+        pd += '.' + str(decimal) + fmt + '}'
     else:
-        pd += fmt+'}'
+        pd += fmt + '}'
     return pd
+
 
 def read1d(f, a):
     """
@@ -86,34 +89,36 @@ def read1d(f, a):
     a[:] = np.array(values[0:a.shape[0]], dtype=a.dtype)
     return a
 
-def array2string(a, fmt_tup):
-        """
-        Converts a 1D or 2D array into a string
-        Input:
-            a: array
-            fmt_tup = (npl,fmt_str)
-            fmt_str: format string
-            npl: number of numbers per line
-        Output:
-            s: string representation of the array
-        """
 
-        aa = np.atleast_2d(a)
-        nr, nc = np.shape(aa)[0:2]
-        #print 'nr = %d, nc = %d\n' % (nr, nc)
-        npl = fmt_tup[0]
-        fmt_str = fmt_tup[1]
-        s = ''
-        for r in range(nr):
-            for c in range(nc):
-                # fix for numpy 1.6 bug
-                if aa.dtype == 'float32':
-                    s = s + (fmt_str.format(float(aa[r, c])))
-                else:
-                    s = s + (fmt_str.format(aa[r, c]))
-                if ((c + 1) % npl == 0) or (c == (nc - 1)):
-                    s += '\n'
-        return s
+def array2string(a, fmt_tup):
+    """
+    Converts a 1D or 2D array into a string
+    Input:
+        a: array
+        fmt_tup = (npl,fmt_str)
+        fmt_str: format string
+        npl: number of numbers per line
+    Output:
+        s: string representation of the array
+    """
+
+    aa = np.atleast_2d(a)
+    nr, nc = np.shape(aa)[0:2]
+    #print 'nr = %d, nc = %d\n' % (nr, nc)
+    npl = fmt_tup[0]
+    fmt_str = fmt_tup[1]
+    s = ''
+    for r in range(nr):
+        for c in range(nc):
+            # fix for numpy 1.6 bug
+            if aa.dtype == 'float32':
+                s = s + (fmt_str.format(float(aa[r, c])))
+            else:
+                s = s + (fmt_str.format(aa[r, c]))
+            if ((c + 1) % npl == 0) or (c == (nc - 1)):
+                s += '\n'
+    return s
+
 
 def cast2dict(value):
     """
@@ -139,6 +144,7 @@ def cast2dict(value):
 
     return rv
 
+
 def u3d_like(model, other):
     u3d = copy.deepcopy(other)
     u3d.model = model
@@ -147,18 +153,22 @@ def u3d_like(model, other):
 
     return u3d
 
+
 def u2d_like(model, other):
     u2d = copy.deepcopy(other)
     u2d.model = model
     return u2d
 
-def new_u2d(old_util2d,value):
-    new_util2d = util_2d(old_util2d.model,old_util2d.shape,old_util2d.dtype,
-                         value,old_util2d.name,old_util2d.fmtin,
-                         old_util2d.cnstnt,old_util2d.iprn,
-                         old_util2d.ext_filename,old_util2d.locat,
+
+def new_u2d(old_util2d, value):
+    new_util2d = util_2d(old_util2d.model, old_util2d.shape, old_util2d.dtype,
+                         value, old_util2d.name, old_util2d.fmtin,
+                         old_util2d.cnstnt, old_util2d.iprn,
+                         old_util2d.ext_filename, old_util2d.locat,
                          old_util2d.bin)
     return new_util2d
+
+
 # class meta_interceptor(type):
 #     """
 #     meta class to catch existing instances of util_2d,
@@ -237,37 +247,47 @@ class util_3d(object):
     """
 
     def __init__(self, model, shape, dtype, value, name,
-        fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
+                 fmtin=None, cnstnt=1.0, iprn=-1, locat=None, ext_unit_dict=None):
         """
         3-D wrapper from util_2d - shape must be 3-D
         """
-        if isinstance(value,util_3d):
+        if isinstance(value, util_3d):
             for attr in value.__dict__.items():
-                setattr(self,attr[0],attr[1])
+                setattr(self, attr[0], attr[1])
             return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
         self.model = model
         self.shape = shape
         self.dtype = dtype
         self.__value = value
-        self.name = name
-        self.name_base = name + ' Layer '
+        if isinstance(name, list):
+            self.name = name
+        else:
+            t = []
+            for k in range(shape[0]):
+                t.append(name)
+            self.name = t
+        self.name_base = []
+        for k in range(shape[0]):
+            self.name_base.append(self.name[k] + ' Layer ')
         self.fmtin = fmtin
         self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
         if model.external_path is not None:
-            self.ext_filename_base = os.path.join(
-                model.external_path, self.name_base.replace(' ', '_'))
+            self.ext_filename_base = []
+            for k in range(shape[0]):
+                self.ext_filename_base.append(os.path.join(model.external_path,
+                                                           self.name_base.replace(' ', '_')))
         self.util_2ds = self.build_2d_instances()
 
 
     def __setitem__(self, k, value):
-        if isinstance(k,int):
+        if isinstance(k, int):
             assert k in range(0, self.shape[0]), "util_3d error: k not in range nlay"
-            self.util_2ds[k] = new_u2d(self.util_2ds[k],value)
+            self.util_2ds[k] = new_u2d(self.util_2ds[k], value)
         else:
-            raise NotImplementedError("util_3d doesn't support setitem indices"+str(k))
+            raise NotImplementedError("util_3d doesn't support setitem indices" + str(k))
 
 
     def to_shapefile(self, filename):
@@ -298,6 +318,7 @@ class util_3d(object):
         """
 
         from flopy.utils.flopy_io import write_grid_shapefile
+
         array_dict = {}
         for ilay in range(self.model.nlay):
             u2d = self[ilay]
@@ -370,31 +391,31 @@ class util_3d(object):
         
         """
         import flopy.plot.plotutil as pu
-        
+
 
         if file_extension is not None:
             fext = file_extension
         else:
             fext = 'png'
-        
-        names = ['{} layer {}'.format(self.name, k+1) for k in range(self.shape[0])]
-        
+
+        names = ['{} layer {}'.format(self.name[k], k + 1) for k in range(self.shape[0])]
+
         filenames = None
         if filename_base is not None:
             if mflay is not None:
                 i0 = int(mflay)
-                if i0+1 >= self.shape[0]:
+                if i0 + 1 >= self.shape[0]:
                     i0 = self.shape[0] - 1
                 i1 = i0 + 1
             else:
                 i0 = 0
                 i1 = self.shape[0]
             # build filenames
-            filenames = ['{}_{}_Layer{}.{}'.format(filename_base, self.name,
-                                                   k+1, fext) for k in range(i0, i1)]
+            filenames = ['{}_{}_Layer{}.{}'.format(filename_base, self.name[k],
+                                                   k + 1, fext) for k in range(i0, i1)]
 
         return pu._plot_array_helper(self.array, self.model,
-                                     names=names, filenames=filenames, 
+                                     names=names, filenames=filenames,
                                      mflay=mflay, fignum=fignum, **kwargs)
 
 
@@ -404,8 +425,8 @@ class util_3d(object):
         elif len(k) == 3:
             return self.array[k[0], k[1], k[2]]
         else:
-            raise Exception("util_3d error: unsupported indices:"+str(k))
-                    
+            raise Exception("util_3d error: unsupported indices:" + str(k))
+
     def get_file_entry(self):
         s = ''
         for u2d in self.util_2ds:
@@ -422,40 +443,40 @@ class util_3d(object):
     def array(self):
         a = np.empty((self.shape), dtype=self.dtype)
         #for i,u2d in self.uds:
-        for i,u2d in enumerate(self.util_2ds):
+        for i, u2d in enumerate(self.util_2ds):
             a[i] = u2d.array
         return a
 
     def build_2d_instances(self):
-        u2ds = []        
+        u2ds = []
         # if value is not enumerable, then make a list of something
         if not isinstance(self.__value, list) \
-            and not isinstance(self.__value, np.ndarray):
+                and not isinstance(self.__value, np.ndarray):
             self.__value = [self.__value] * self.shape[0]
 
         # if this is a list or 1-D array with constant values per layer
         if isinstance(self.__value, list) \
-            or (isinstance(self.__value, np.ndarray)
-                and (self.__value.ndim == 1)):
-            
-            assert len(self.__value) == self.shape[0],\
-                'length of 3d enumerable:' + str(len(self.__value)) +\
+                or (isinstance(self.__value, np.ndarray)
+                    and (self.__value.ndim == 1)):
+
+            assert len(self.__value) == self.shape[0], \
+                'length of 3d enumerable:' + str(len(self.__value)) + \
                 ' != to shape[0]:' + str(self.shape[0])
-            
-            for i,item in enumerate(self.__value):  
+
+            for i, item in enumerate(self.__value):
                 if isinstance(item, util_2d):
                     u2ds.append(item)
                 else:
-                    name = self.name_base + str(i + 1)
+                    name = self.name_base[i] + str(i + 1)
                     ext_filename = None
                     if self.model.external_path is not None:
-                        ext_filename = self.ext_filename_base+str(i + 1) +\
-                                    '.ref'
+                        ext_filename = self.ext_filename_base[i] + str(i + 1) + \
+                                       '.ref'
                     u2d = util_2d(self.model, self.shape[1:], self.dtype, item,
-                        fmtin=self.fmtin, name=name, ext_filename=ext_filename,
-                        locat=self.locat)
+                                  fmtin=self.fmtin, name=name, ext_filename=ext_filename,
+                                  locat=self.locat)
                     u2ds.append(u2d)
-                                      
+
         elif isinstance(self.__value, np.ndarray):
             # if an array of shape nrow,ncol was passed, tile it out for each layer
             if self.__value.shape[0] != self.shape[0]:
@@ -463,19 +484,19 @@ class util_3d(object):
                     self.__value = [self.__value] * self.shape[0]
                 else:
                     raise Exception('value shape[0] != to self.shape[0] and' +
-                        'value.shape[[1,2]] != self.shape[[1,2]]' +
-                        str(self.__value.shape) + ' '+str(self.shape))
+                                    'value.shape[[1,2]] != self.shape[[1,2]]' +
+                                    str(self.__value.shape) + ' ' + str(self.shape))
             for i, a in enumerate(self.__value):
-                a = np.atleast_2d(a)                
+                a = np.atleast_2d(a)
                 ext_filename = None
-                name = self.name_base+str(i + 1)
+                name = self.name_base[i] + str(i + 1)
                 if self.model.external_path is not None:
-                    ext_filename = self.ext_filename_base+str(i+1) + '.ref'
+                    ext_filename = self.ext_filename_base[i] + str(i + 1) + '.ref'
                 u2d = util_2d(self.model, self.shape[1:], self.dtype, a,
-                    fmtin=self.fmtin, name=name, ext_filename=ext_filename,
-                    locat=self.locat)
+                              fmtin=self.fmtin, name=name, ext_filename=ext_filename,
+                              locat=self.locat)
                 u2ds.append(u2d)
-                
+
         else:
             raise Exception('util_array_3d: value attribute must be list ' +
                             ' or ndarray, not' + str(type(self.__value)))
@@ -499,17 +520,18 @@ class util_3d(object):
             new_u2ds = []
             for u2d in self.util_2ds:
                 new_u2ds.append(u2d * other)
-            return util_3d(self.model,self.shape,self.dtype,new_u2ds,
-                           self.name,self.fmtin,self.cnstnt,self.iprn,
+            return util_3d(self.model, self.shape, self.dtype, new_u2ds,
+                           self.name, self.fmtin, self.cnstnt, self.iprn,
                            self.locat)
-        elif isinstance(other,list):
+        elif isinstance(other, list):
             assert len(other) == self.shape[0]
             new_u2ds = []
             for i in range(self.shape[0]):
                 new_u2ds.append(u2d * other)
-            return util_3d(self.model,self.shape,self.dtype,new_u2ds,
-                           self.name,self.fmtin,self.cnstnt,self.iprn,
+            return util_3d(self.model, self.shape, self.dtype, new_u2ds,
+                           self.name, self.fmtin, self.cnstnt, self.iprn,
                            self.locat)
+
 
 #class transient_2d((with_metaclass(meta_interceptor, object))):
 class transient_2d(object):
@@ -580,16 +602,16 @@ class transient_2d(object):
     """
 
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
-        cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
+                 cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
 
-        if isinstance(value,transient_2d):
+        if isinstance(value, transient_2d):
             for attr in value.__dict__.items():
-                setattr(self,attr[0],attr[1])
+                setattr(self, attr[0], attr[1])
             return
 
         self.model = model
-        assert len(shape) == 2, "transient_2d error: shape arg must be " +\
-                                "length two (nrow, ncol), not " +\
+        assert len(shape) == 2, "transient_2d error: shape arg must be " + \
+                                "length two (nrow, ncol), not " + \
                                 str(shape)
         self.shape = shape
         self.dtype = dtype
@@ -638,6 +660,7 @@ class transient_2d(object):
         >>> ml.rch.rech.as_shapefile('test_rech.shp')
         """
         from flopy.utils.flopy_io import write_grid_shapefile
+
         array_dict = {}
         for kper in range(self.model.nper):
             u2d = self[kper]
@@ -709,12 +732,12 @@ class transient_2d(object):
         
         """
         import flopy.plot.plotutil as pu
-        
+
         if file_extension is not None:
             fext = file_extension
         else:
             fext = 'png'
-        
+
         if 'kper' in kwargs:
             kk = kwargs['kper']
             kwargs.pop('kper')
@@ -729,13 +752,13 @@ class transient_2d(object):
             except:
                 k0 = int(kk)
                 k1 = k0 + 1
-            # if kwargs['kper'] == 'all':
-            #     kwargs.pop('kper')
-            #     k0 = 0
-            #     k1 = self.model.nper
-            # else:
-            #     k0 = int(kwargs.pop('kper'))
-            #     k1 = k0 + 1
+                # if kwargs['kper'] == 'all':
+                #     kwargs.pop('kper')
+                #     k0 = 0
+                #     k1 = self.model.nper
+                # else:
+                #     k0 = int(kwargs.pop('kper'))
+                #     k1 = k0 + 1
         else:
             k0 = 0
             k1 = 1
@@ -750,11 +773,11 @@ class transient_2d(object):
 
         axes = []
         for idx, kper in enumerate(range(k0, k1)):
-            title = '{} stress period {:d}'.\
-                     format(self.name_base.replace('_', '').upper(),
-                            kper+1)
+            title = '{} stress period {:d}'. \
+                format(self.name_base.replace('_', '').upper(),
+                       kper + 1)
             if filename_base is not None:
-                filename = filename_base + '_{:05d}.{}'.format(kper+1, fext)
+                filename = filename_base + '_{:05d}.{}'.format(kper + 1, fext)
             else:
                 filename = None
             axes.append(pu._plot_array_helper(self[kper].array, self.model,
@@ -769,10 +792,10 @@ class transient_2d(object):
         elif kper < min(self.transient_2ds.keys()):
             return self.get_zero_2d(kper)
         else:
-            for i in range(kper,0,-1):
+            for i in range(kper, 0, -1):
                 if i in list(self.transient_2ds.keys()):
                     return self.transient_2ds[i]
-            raise Exception("transient_2d.__getitem__(): error:" +\
+            raise Exception("transient_2d.__getitem__(): error:" + \
                             " could find an entry before kper {0:d}".format(kper))
 
     def get_kper_entry(self, kper):
@@ -815,11 +838,11 @@ class transient_2d(object):
 
         # these are all for single entries - use the same util_2d for all kper
         # an array of shape (nrow,ncol)
-        elif isinstance(self.__value,np.ndarray):
+        elif isinstance(self.__value, np.ndarray):
             return {0: self.__get_2d_instance(0, self.__value)}
 
         # a filename
-        elif isinstance(self.__value,str):
+        elif isinstance(self.__value, str):
             return {0: self.__get_2d_instance(0, self.__value)}
 
         # a scalar
@@ -827,7 +850,7 @@ class transient_2d(object):
             return {0: self.__get_2d_instance(0, self.__value)}
 
         # lists aren't allowed
-        elif isinstance(self.__value,list):
+        elif isinstance(self.__value, list):
             raise Exception("transient_2d error: value cannot be a list " +
                             "anymore.  try a dict{kper,value}")
         else:
@@ -835,14 +858,14 @@ class transient_2d(object):
                             " recognized: " + str(type(self.__value)))
 
 
-    def __get_2d_instance(self,kper,arg):
+    def __get_2d_instance(self, kper, arg):
         """
         parse an argument into a util_2d instance
         """
         ext_filename = None
-        name = self.name_base+str(kper + 1)
+        name = self.name_base + str(kper + 1)
         if self.model.external_path != None:
-            ext_filename = self.ext_filename_base+str(kper)+'.ref'
+            ext_filename = self.ext_filename_base + str(kper) + '.ref'
         u2d = util_2d(self.model, self.shape, self.dtype, arg,
                       fmtin=self.fmtin, name=name,
                       ext_filename=ext_filename,
@@ -912,8 +935,8 @@ class util_2d(object):
     """
 
     def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
-        cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
-        ext_unit_dict=None):
+                 cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
+                 ext_unit_dict=None):
         """
         1d or 2-d array support with minimum of mem footprint.
         only creates arrays as needed, 
@@ -939,7 +962,7 @@ class util_2d(object):
         self.name = name
         self.locat = locat
         self.__value = self.parse_value(value)
-        self.__value_built = None        
+        self.__value_built = None
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
         self.ext_filename = None
@@ -947,8 +970,8 @@ class util_2d(object):
         if hasattr(model, 'use_existing'):
             self.use_existing = bool(model.use_existing)
         else:
-            self.use_existing = False            
-        # set fmtin
+            self.use_existing = False
+            # set fmtin
         if fmtin is not None:
             self.fmtin = fmtin
         else:
@@ -958,24 +981,24 @@ class util_2d(object):
                 if len(shape) == 1:
                     npl = self.shape[0]
                 else:
-                    npl = self.shape[1]                        
+                    npl = self.shape[1]
                 if self.dtype == np.int:
                     self.fmtin = '(' + str(npl) + 'I10) '
                 else:
                     self.fmtin = '(' + str(npl) + 'G15.6) '
-                    
+
         # get (npl,python_format_descriptor) from fmtin
-        self.py_desc = self.fort_2_py(self.fmtin)  
+        self.py_desc = self.fort_2_py(self.fmtin)
 
         # some defense
         if dtype not in [np.int, np.int32, np.float32, np.bool]:
             raise Exception('util_2d:unsupported dtype: ' + str(dtype))
         if self.model.external_path != None and name == None \
-            and ext_filename == None:
+                and ext_filename == None:
             raise Exception('util_2d: use external arrays requires either ' +
-               'name or ext_filename attribute')
+                            'name or ext_filename attribute')
         elif self.model.external_path != None and ext_filename == None \
-            and self.vtype not in [np.int, np.float32]:
+                and self.vtype not in [np.int, np.float32]:
             #self.ext_filename = self.model.external_path+name+'.ref'
             self.ext_filename = os.path.join(self.model.external_path,
                                              name + '.ref')
@@ -1047,20 +1070,21 @@ class util_2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.dis.top.plot()
         
-        """       
+        """
         import flopy.plot.plotutil as pu
+
         if title is None:
             title = self.name
-        
+
         if file_extension is not None:
             fext = file_extension
         else:
             fext = 'png'
-            
+
         filename = None
         if filename_base is not None:
             filename = '{}_{}.{}'.format(filename_base, self.name, fext)
-        
+
         return pu._plot_array_helper(self.array, self.model,
                                      names=title, filenames=filename,
                                      fignum=fignum, **kwargs)
@@ -1092,6 +1116,7 @@ class util_2d(object):
         >>> ml.dis.top.as_shapefile('test_top.shp')
         """
         from flopy.utils.flopy_io import write_grid_shapefile
+
         write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
 
     @staticmethod
@@ -1101,7 +1126,7 @@ class util_2d(object):
         elif dtype == np.float32:
             return "%15.6E"
         else:
-            raise Exception("util_2d.get_default_numpy_fmt(): unrecognized " +\
+            raise Exception("util_2d.get_default_numpy_fmt(): unrecognized " + \
                             "dtype, must be np.int or np.float32")
 
     def set_fmtin(self, fmtin):
@@ -1111,7 +1136,7 @@ class util_2d(object):
 
     def get_value(self):
         return self.__value
-    
+
     # overloads, tries to avoid creating arrays if possible
     def __add__(self, other):
         if self.vtype in [np.int, np.float32] and self.vtype == other.vtype:
@@ -1156,10 +1181,10 @@ class util_2d(object):
         self.__value = a
         if self.__value_built is not None:
             self.__value_built = None
-        
+
     def all(self):
         return self.array.all()
-    
+
     def __len__(self):
         return self.shape[0]
 
@@ -1169,51 +1194,51 @@ class util_2d(object):
     @property
     def vtype(self):
         return type(self.__value)
-    
+
     def get_file_entry(self):
         """
         this is the entry point for getting an
         input file entry for this object
         """
         # call get_file_array first in case we need to
-       #  get a new external unit number and reset self.locat
+        #  get a new external unit number and reset self.locat
         vstring = self.get_file_array()
         cr = self.get_control_record()
-        return cr+vstring
-    
+        return cr + vstring
+
 
     def get_file_array(self):
         """
         increments locat and update model instance if needed.
         if the value is a constant, or a string, or external, 
         return an empty string
-        """       
+        """
         # if the value is not a filename
         if self.vtype != str:
-            
+
             # if the ext_filename was passed, then we need
             #  to write an external array
             if self.ext_filename != None:
                 # if we need fixed format, reset self.locat and get a
-               #   new unit number
+                #   new unit number
                 if not self.model.free_format:
-                    self.locat = self.model.next_ext_unit() 
+                    self.locat = self.model.next_ext_unit()
                     if self.bin:
                         self.locat = -1 * np.abs(self.locat)
                         self.model.add_external(self.ext_filename,
-                            self.locat, binFlag=True)
+                                                self.locat, binFlag=True)
                     else:
                         self.model.add_external(self.ext_filename, self.locat)
                 # write external formatted or unformatted array
-                if not self.use_existing:    
+                if not self.use_existing:
                     if not self.bin:
                         f = open(self.ext_filename, 'w')
                         f.write(self.string)
                         f.close()
                     else:
-                        a = self.array.tofile(self.ext_filename)                    
+                        a = self.array.tofile(self.ext_filename)
                 return ''
-                
+
             # this internal array or constant
             else:
                 if self.vtype is np.ndarray:
@@ -1221,7 +1246,7 @@ class util_2d(object):
                 # if this is a constant, return a null string
                 else:
                     return ''
-        else:         
+        else:
             if os.path.exists(self.__value) and self.ext_filename is not None:
                 # if this is a free format model, then we can use the same
                 #  ext file over and over - no need to copy
@@ -1238,9 +1263,9 @@ class util_2d(object):
                     #  and reset locat
                     self.locat = self.model.next_ext_unit()
                     self.model.add_external(self.ext_filename, self.locat)
-                    
-                return '' 
-            # otherwise, we need to load the the value filename
+
+                return ''
+                # otherwise, we need to load the the value filename
             #  and return as a string
             else:
                 return self.string
@@ -1252,9 +1277,9 @@ class util_2d(object):
         """
         a = self.array
         # convert array to sting with specified format
-        a_string = array2string(a,self.py_desc)
+        a_string = array2string(a, self.py_desc)
         return a_string
-                                    
+
     @property
     def array(self):
         """
@@ -1263,7 +1288,7 @@ class util_2d(object):
         """
         if self.vtype == str:
             if self.__value_built is None:
-                file_in = open(self.__value,'r')
+                file_in = open(self.__value, 'r')
                 self.__value_built = \
                     util_2d.load_txt(self.shape, file_in, self.dtype,
                                      self.fmtin).astype(self.dtype)
@@ -1272,11 +1297,11 @@ class util_2d(object):
         elif self.vtype != np.ndarray:
             if self.__value_built is None:
                 self.__value_built = np.ones(self.shape, dtype=self.dtype) \
-                    * self.__value
+                                     * self.__value
             return self.__value_built
         else:
             return self.__value
-    
+
     @staticmethod
     def load_txt(shape, file_in, dtype, fmtin):
         """
@@ -1294,10 +1319,10 @@ class util_2d(object):
         data = np.zeros((nrow * ncol), dtype=dtype) + np.NaN
         d = 0
         if not hasattr(file_in, 'read'):
-            file_in = open(file_in,'r')
+            file_in = open(file_in, 'r')
         while True:
             line = file_in.readline()
-            if line in [None,''] or d == nrow*ncol:
+            if line in [None, ''] or d == nrow * ncol:
                 break
             if npl == 'free':
                 raw = line.strip('\n').split()
@@ -1321,13 +1346,13 @@ class util_2d(object):
                     data[d] = dtype(a)
                 except:
                     raise Exception('util_2d:unable to cast value: ' +
-                        str(a) + ' to type:' + str(dtype))
-                if d == (nrow*ncol)-1:
+                                    str(a) + ' to type:' + str(dtype))
+                if d == (nrow * ncol) - 1:
                     assert len(data) == (nrow * ncol)
                     data.resize(nrow, ncol)
-                    return(data) 
-                d += 1	
-#        file_in.close()
+                    return (data)
+                d += 1
+            #        file_in.close()
         if np.isnan(np.sum(data)):
             raise Exception("util_2d.load_txt() error: np.NaN in data array")
         data.resize(nrow, ncol)
@@ -1345,7 +1370,7 @@ class util_2d(object):
         """
 
         if fortran_format.upper() == '(FREE)' and python_format is None:
-            np.savetxt(file_out,data,util_2d.get_default_numpy_fmt(data.dtype),
+            np.savetxt(file_out, data, util_2d.get_default_numpy_fmt(data.dtype),
                        delimiter='')
             return
 
@@ -1366,7 +1391,7 @@ class util_2d(object):
                                 + '  python_format should be a list with\n'
                                 + '   [column_length, fmt]\n'
                                 + '    e.g., [10, {0:10.2e}]')
-        if ncol%column_length == 0:
+        if ncol % column_length == 0:
             lineReturnFlag = False
         else:
             lineReturnFlag = True
@@ -1375,10 +1400,10 @@ class util_2d(object):
             icol = 0
             for j in range(ncol):
                 try:
-                    file_out.write(output_fmt.format(data[i,j]))
+                    file_out.write(output_fmt.format(data[i, j]))
                 except:
-                    print('Value {0} at row,col [{1},{2}] can not be written'\
-                        .format(data[i, j], i, j))
+                    print('Value {0} at row,col [{1},{2}] can not be written' \
+                          .format(data[i, j], i, j))
                     raise Exception
                 if (j + 1) % column_length == 0.0 and j != 0:
                     file_out.write('\n')
@@ -1387,14 +1412,14 @@ class util_2d(object):
 
     @staticmethod
     def load_bin(shape, file_in, dtype, bintype=None):
-        nrow,ncol = shape
+        nrow, ncol = shape
         if bintype is not None:
             if dtype not in [np.int]:
                 header_dtype = BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
         else:
             header_data = None
-        data = np.fromfile(file_in,dtype=dtype,count=nrow*ncol)
+        data = np.fromfile(file_in, dtype=dtype, count=nrow * ncol)
         data.resize(nrow, ncol)
         return [header_data, data]
 
@@ -1413,7 +1438,7 @@ class util_2d(object):
     def get_control_record(self):
         """
         get the modflow control record
-        """      
+        """
         lay_space = '{0:>27s}'.format('')
         if self.model.free_format:
             if self.ext_filename is None:
@@ -1422,15 +1447,15 @@ class util_2d(object):
                 if self.vtype in [np.int, np.float32]:
                     # this explicit cast to float is to handle a
                     #- bug in versions of numpy < l.6.2
-                    if self.dtype == np.float32:                    
+                    if self.dtype == np.float32:
                         cr = 'CONSTANT ' + \
                              self.py_desc[1].format(float(self.__value))
                     else:
-                        cr = 'CONSTANT '+self.py_desc[1].format(self.__value)
+                        cr = 'CONSTANT ' + self.py_desc[1].format(self.__value)
                     cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
                                                         self.name)
                 else:
-                    cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n'\
+                    cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
                         .format(self.cnstnt, self.fmtin, self.iprn, self.name)
             else:
                 # need to check if ext_filename exists, if not, need to
@@ -1439,56 +1464,57 @@ class util_2d(object):
                 fr = os.path.relpath(f, self.model.model_ws)
                 #if self.locat is None:
                 cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(fr, self.cnstnt,
-                     self.fmtin.strip(), self.iprn, self.name)
+                                                                                          self.fmtin.strip(), self.iprn,
+                                                                                          self.name)
                 # else:
                 #     cr = 'EXTERNAL  {0:5d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(self.locat, self.cnstnt,
                 #          self.fmtin.strip(), self.iprn, self.name)
 
-        else:                       
+        else:
             # if value is a scalar and we don't want external array
             if self.vtype in [np.int, np.float32] and self.ext_filename is None:
                 locat = 0
                 # explicit cast for numpy bug in versions < 1.6.2
                 if self.dtype == np.float32:
-                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n'\
+                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n' \
                         .format(locat, float(self.__value),
                                 self.fmtin, self.iprn, self.name)
                 else:
-                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n'\
+                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n' \
                         .format(locat, self.__value, self.fmtin, self.iprn,
                                 self.name)
             else:
                 if self.ext_filename is None:
-                    assert self.locat != None,'util_2d:a non-constant value ' +\
-                    ' for an internal fixed-format requires LOCAT to be passed'
+                    assert self.locat != None, 'util_2d:a non-constant value ' + \
+                                               ' for an internal fixed-format requires LOCAT to be passed'
                 if self.dtype == np.int:
-                    cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n'\
+                    cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n' \
                         .format(self.locat, self.cnstnt, self.fmtin,
                                 self.iprn, self.name)
                 elif self.dtype == np.float32:
-                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n'\
+                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n' \
                         .format(self.locat, self.cnstnt, self.fmtin,
                                 self.iprn, self.name)
                 else:
                     raise Exception('util_2d: error generating fixed-format ' +
-                       ' control record,dtype must be np.int or np.float32')
-        return cr                                 
+                                    ' control record,dtype must be np.int or np.float32')
+        return cr
 
 
-    def fort_2_py(self,fd):
+    def fort_2_py(self, fd):
         """
         converts the fortran format descriptor
         into a tuple of npl and a python format specifier
 
         """
-        npl,fmt,width,decimal = decode_fortran_descriptor(fd)
+        npl, fmt, width, decimal = decode_fortran_descriptor(fd)
         if npl == 'free':
             if self.vtype == np.int:
                 return (self.shape[1], '{0:10.0f} ')
             else:
                 return (self.shape[1], '{0:15.6G} ')
         elif npl == 'binary':
-            return('binary', None)
+            return ('binary', None)
         else:
             pd = build_python_descriptor(npl, fmt, width, decimal)
             return (npl, pd)
@@ -1536,7 +1562,7 @@ class util_2d(object):
                     value = float(value)
                 except:
                     assert os.path.exists(
-                        os.path.join(self.model.model_ws,value)), \
+                        os.path.join(self.model.model_ws, value)), \
                         'could not find file: ' + str(value)
                     return value
         if np.isscalar(value):
@@ -1555,7 +1581,7 @@ class util_2d(object):
                     raise Exception('util_2d:could not cast ' +
                                     'scalar value to type "float": ' +
                                     str(value))
-            
+
         if isinstance(value, np.ndarray):
             if self.shape != value.shape:
                 raise Exception('util_2d:self.shape: ' + str(self.shape) +
@@ -1563,10 +1589,10 @@ class util_2d(object):
                                 str(value.shape))
             if self.dtype != value.dtype:
                 if VERBOSE:
-                    print('util_2d:warning - casting array of type: ' +\
-                          str(value.dtype)+' to type: '+str(self.dtype))
+                    print('util_2d:warning - casting array of type: ' + \
+                          str(value.dtype) + ' to type: ' + str(self.dtype))
             return value.astype(self.dtype)
-        
+
         else:
             raise Exception('util_2d:unsupported type in util_array: ' +
                             str(type(value)))
@@ -1580,7 +1606,7 @@ class util_2d(object):
         external and internal record types must be fully loaded
         if you are using fixed format record types,make sure 
         ext_unit_dict has been initialized from the NAM file
-        """     
+        """
 
         curr_unit = None
         if ext_unit_dict is not None:
@@ -1595,11 +1621,11 @@ class util_2d(object):
                                                current_unit=curr_unit,
                                                dtype=dtype,
                                                ext_unit_dict=ext_unit_dict)
-        
+
         if cr_dict['type'] == 'constant':
             u2d = util_2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
-                iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
-        
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+
         elif cr_dict['type'] == 'open/close':
             # clean up the filename a little
             fname = cr_dict['fname']
@@ -1608,10 +1634,10 @@ class util_2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
-            fname = os.path.join(model.model_ws,fname)
+            fname = os.path.join(model.model_ws, fname)
             #load_txt(shape, file_in, dtype, fmtin):
-            assert os.path.exists(fname),"util_2d.load() error: open/close " +\
-                "file " + str(fname) + " not found"
+            assert os.path.exists(fname), "util_2d.load() error: open/close " + \
+                                          "file " + str(fname) + " not found"
             f = open(fname, 'r')
             data = util_2d.load_txt(shape=shape,
                                     file_in=f,
@@ -1634,7 +1660,7 @@ class util_2d(object):
             assert cr_dict['nunit'] in list(ext_unit_dict.keys())
             if str('binary') not in str(cr_dict['fmtin'].lower()):
                 data = util_2d.load_txt(shape,
-                                    ext_unit_dict[cr_dict['nunit']].filehandle,
+                                        ext_unit_dict[cr_dict['nunit']].filehandle,
                                         dtype, cr_dict['fmtin'])
             else:
                 header_data, data = util_2d.load_bin(
@@ -1646,7 +1672,7 @@ class util_2d(object):
             # file list later
             model.pop_key_list.append(cr_dict['nunit'])
         return u2d
-            
+
 
     @staticmethod
     def parse_control_record(line, current_unit=None, dtype=np.float32,
@@ -1659,18 +1685,18 @@ class util_2d(object):
         free_fmt = ['open/close', 'internal', 'external', 'constant']
         raw = line.lower().strip().split()
         freefmt, cnstnt, fmtin, iprn, nunit = None, None, None, -1, None
-        fname = None 
+        fname = None
         isFloat = False
         if dtype == np.float or dtype == np.float32:
-            isFloat = True       
-        # if free format keywords
+            isFloat = True
+            # if free format keywords
         if str(raw[0]) in str(free_fmt):
             freefmt = raw[0]
             if raw[0] == 'constant':
-                if isFloat:                
+                if isFloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
-                    cnstnt = np.int(raw[1].lower())                   
+                    cnstnt = np.int(raw[1].lower())
             if raw[0] == 'internal':
                 if isFloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
@@ -1686,24 +1712,24 @@ class util_2d(object):
                     except:
                         pass
                 nunit = int(raw[1])
-                if isFloat:                
+                if isFloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
                 else:
-                    cnstnt = np.int(raw[2].lower())                   
+                    cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
             elif raw[0] == 'open/close':
                 fname = raw[1].strip()
-                if isFloat:                
+                if isFloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
                 else:
-                    cnstnt = np.int(raw[2].lower())                   
+                    cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
                 npl, fmt, width, decimal = None, None, None, None
         else:
             locat = np.int(line[0:10].strip())
-            if isFloat:                
+            if isFloat:
                 cnstnt = np.float(line[10:20].strip().lower().replace('d', 'e'))
             else:
                 cnstnt = np.int(line[10:20].strip())
@@ -1719,7 +1745,7 @@ class util_2d(object):
                 freefmt = 'constant'
             elif locat < 0:
                 freefmt = 'external'
-                nunit = np.int(locat) * -1    
+                nunit = np.int(locat) * -1
                 fmtin = '(binary)'
             elif locat > 0:
                 # if the unit number matches the current file, it's internal
@@ -1727,23 +1753,23 @@ class util_2d(object):
                     freefmt = 'internal'
                 else:
                     freefmt = 'external'
-                nunit = np.int(locat)                                                    
-        cr_dict = {}                                                 
+                nunit = np.int(locat)
+        cr_dict = {}
         cr_dict['type'] = freefmt
         cr_dict['cnstnt'] = cnstnt
-        cr_dict['nunit'] = nunit        
+        cr_dict['nunit'] = nunit
         cr_dict['iprn'] = iprn
         cr_dict['fmtin'] = fmtin
-        cr_dict['fname'] = fname           
+        cr_dict['fname'] = fname
         return cr_dict
 
     def __mul__(self, other):
         if np.isscalar(other):
             self.array
-            return util_2d(self.model,self.shape,self.dtype,
-                           self.__value_built * other,self.name,
-                           self.fmtin,self.cnstnt,self.iprn,self.ext_filename,
-                           self.locat,self.bin)
+            return util_2d(self.model, self.shape, self.dtype,
+                           self.__value_built * other, self.name,
+                           self.fmtin, self.cnstnt, self.iprn, self.ext_filename,
+                           self.locat, self.bin)
         else:
             raise NotImplementedError(
                 "util_2d.__mul__() not implemented for non-scalars")
