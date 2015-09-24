@@ -235,6 +235,44 @@ class SpatialReference(object):
 
         return (xmin, xmax, ymin, ymax)
 
+    def get_grid_lines(self):
+        """
+            get the grid lines as a list
+        """
+        xmin = self.xedge[0]
+        xmax = self.xedge[-1]
+        ymin = self.yedge[-1]
+        ymax = self.yedge[0]
+        lines = []
+        # Vertical lines
+        for j in range(self.ncol + 1):
+            x0 = self.xedge[j]
+            x1 = x0
+            y0 = ymin
+            y1 = ymax
+            x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
+            x0r += self.xul
+            y0r += self.yul - self.yedge[0]
+            x1r, y1r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
+            x1r += self.xul
+            y1r += self.yul - self.yedge[0]
+            lines.append([(x0r, y0r), (x1r, y1r)])
+
+        #horizontal lines
+        for i in range(self.nrow + 1):
+            x0 = xmin
+            x1 = xmax
+            y0 = self.yedge[i]
+            y1 = y0
+            x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
+            x0r += self.xul
+            y0r += self.yul - self.yedge[0]
+            x1r, y1r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
+            x1r += self.xul
+            y1r += self.yul - self.yedge[0]
+            lines.append([(x0r, y0r), (x1r, y1r)])
+        return lines
+
 
     def get_xcenter_array(self):
         """
