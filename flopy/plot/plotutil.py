@@ -12,7 +12,8 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
-                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy'}
+                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy',
+                 'STR': 'purple'}
 
 
 def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
@@ -176,7 +177,7 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
 
         if inactive:
             try:
-                ib = model.bas6.getibound()
+                ib = model.bas6.ibound.array
                 mm.plot_inactive(ibound=ib, ax=axes[idx])
             except:
                 pass
@@ -662,7 +663,8 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         for k in range(nlay):
             for j in range(ncol-1):
                 area = delc[:] * 0.5 * (sat_thk[k, :, j] + sat_thk[k, :, j + 1])
-                qx[k, :, j] = Qx[k, :, j] / area
+                idx = area > 0.
+                qx[k, idx, j] = Qx[k, idx, j] / area[idx]
 
         qx[:, :, 1:] = 0.5 * (qx[:, :, 0:ncol-1] + qx[:, :, 1:ncol])
         qx[:, :, 0] = 0.5 * qx[:, :, 0]
@@ -675,7 +677,8 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         for k in range(nlay):
             for i in range(nrow-1):
                 area = delr[:] * 0.5 * (sat_thk[k, i, :] + sat_thk[k, i + 1, :])
-                qy[k, i, :] = Qy[k, i, :] / area
+                idx = area > 0.
+                qy[k, i, idx] = Qy[k, i, idx] / area[idx]
 
         qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow-1, :] + qy[:, 1:nrow, :])
         qy[:, 0, :] = 0.5 * qy[:, 0, :]

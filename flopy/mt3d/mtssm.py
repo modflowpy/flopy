@@ -1,9 +1,6 @@
-import sys
-import copy
 import numpy as np
 import warnings
 from flopy.mbase import Package
-from flopy.utils import util_2d
 from flopy.utils.util_list import mflist
 from flopy.utils.util_array import transient_2d
 
@@ -22,9 +19,8 @@ class Mt3dSsm(Package):
     '''
     Sink & Source Mixing package class
     '''
-    def __init__(self, model, crch = None, cevt = None,
-                 stress_period_data = None, dtype = None,
-                 extension = 'ssm',
+    def __init__(self, model, crch=None, cevt=None, stress_period_data=None,
+                 dtype=None, extension = 'ssm',
                  **kwargs):
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
@@ -47,17 +43,27 @@ class Mt3dSsm(Package):
                                self.parent.mf.get_package(label),
                                (i < 6))) # First 6 need T/F flag in file line 1
 
-        self.__maxssm = 0
-        #if (self.parent.btn.icbund != None):
+        if dtype is not None:
+            self.dtype = dtype
+        else:
+
+            self.dtype = self.get_default_dtype(ncomp)
+
+        self.stress_period_data = mflist(self, model=self.parent.mf,
+                                                 data=stress_period_data)
+
+        self.__maxssm = np.sum(self.stress_period_data.data[0].itype == -1)
+        self.__maxssm += np.sum(self.stress_period_data.data[0].itype == -15)
+
         if isinstance(self.parent.btn.icbund, np.ndarray):
-            self.maxssm = (self.parent.btn.icbund < 0).sum()
+            self.__maxssm += (self.parent.btn.icbund < 0).sum()
         for p in self.__SsmPackages:
             if ((p.label == 'BAS6') and (p.instance != None)):
-                self.__maxssm += (p.instance.ibound < 0).sum()
+                self.__maxssm += (p.instance.ibound.array < 0).sum()
             elif p.instance != None:
                 self.__maxssm += p.instance.ncells()
-        
-        # Note: list is used for multi-species, NOT for stress periods!        
+
+        # Note: list is used for multi-species, NOT for stress periods!
         if (crch != None):
             self.crch = []
             t2d = transient_2d(model, (nrow, ncol), np.float32,
@@ -111,14 +117,6 @@ class Mt3dSsm(Package):
             raise Exception("SSM error: unrecognized kwargs: " +
                             ' '.join(list(kwargs.keys())))
 
-        if dtype is not None:
-            self.dtype = dtype
-        else:
-
-            self.dtype = self.get_default_dtype(ncomp)
-  
-        self.stress_period_data = mflist(self, model=self.parent.mf,
-                                         data=stress_period_data)
 
         #Add self to parent and return
         self.parent.add_package(self)

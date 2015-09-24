@@ -200,7 +200,7 @@ class ModelMap(object):
 
         if ibound is None:
             bas = self.model.get_package('BAS6')
-            ibound = bas.ibound
+            ibound = bas.ibound.array
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -239,7 +239,7 @@ class ModelMap(object):
 
         if ibound is None:
             bas = self.model.get_package('BAS6')
-            ibound = bas.ibound
+            ibound = bas.ibound.array
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
         idx2 = (ibound < 0)
@@ -247,7 +247,7 @@ class ModelMap(object):
         plotarray[idx2] = 2
         plotarray = np.ma.masked_equal(plotarray, 0)
         cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_ch])
-        bounds=[0, 1, 2, 3]
+        bounds = [0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
         return quadmesh
@@ -281,7 +281,8 @@ class ModelMap(object):
 
         return lc
 
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None, **kwargs):
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None, plotAll=False,
+                **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
@@ -296,6 +297,10 @@ class ModelMap(object):
             Stress period to plot
         color : string
             matplotlib color string. (Default is None)
+        plotAll : bool
+            Boolean used to specify that boundary condition locations for all
+            layers will be plotted on the current ModelMap layer.
+            (Default is False)
         **kwargs : dictionary
             keyword arguments passed to matplotlib.collections.PatchCollection
 
@@ -331,8 +336,17 @@ class ModelMap(object):
         nlay = self.model.nlay
         # Plot the list locations
         plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
-        idx = [mflist['k'], mflist['i'], mflist['j']]
-        plotarray[idx] = 1
+        if plotAll:
+            idx = [mflist['i'], mflist['j']]
+            #plotarray[:, idx] = 1
+            pa = np.zeros((self.sr.nrow, self.sr.ncol), dtype=np.int)
+            pa[idx] = 1
+            for k in range(nlay):
+                plotarray[k, :, :] = pa.copy()
+        else:
+            idx = [mflist['k'], mflist['i'], mflist['j']]
+
+            plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
             if ftype in bc_color_dict:
@@ -369,7 +383,7 @@ class ModelMap(object):
         return patch_collection
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1, jstep=1,
-                       **kwargs):
+                       normalize=False, **kwargs):
         """
         Use quiver to plot vectors.
 
@@ -388,6 +402,10 @@ class ModelMap(object):
             row frequency to plot. (Default is 1.)
         jstep : int
             column frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
         kwargs : dictionary
             Keyword arguments passed to plt.quiver()
 
@@ -397,6 +415,13 @@ class ModelMap(object):
             Vectors of specific discharge.
 
         """
+        # remove 'pivot' keyword argument
+        # by default the center of the arrow is plotted in the center of a cell
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
         # Calculate specific discharge
         # make sure dis is defined
         if dis is None:
@@ -405,6 +430,7 @@ class ModelMap(object):
             else:
                 print("ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
                 return
+        ib = self.model.bas6.ibound.array
         delr = dis.delr.array
         delc = dis.delc.array
         top = dis.top.array
@@ -434,22 +460,34 @@ class ModelMap(object):
         qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
                                                           delc, sat_thk)
 
-        # Select correct slice and step
-        x = self.sr.xcentergrid[::istep, ::jstep]
-        y = self.sr.ycentergrid[::istep, ::jstep]
+        # Select correct slice
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
+        # apply step
+        x = self.sr.xcentergrid[::istep, ::jstep]
+        y = self.sr.ycentergrid[::istep, ::jstep]
         u = u[::istep, ::jstep]
         v = v[::istep, ::jstep]
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u**2. + v**2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
 
+        # mask discharge in inactive cells
+        idx = (ib[self.layer, ::istep, ::jstep] == 0)
+        u[idx] = np.nan
+        v[idx] = np.nan
+
         # Rotate and plot
         urot, vrot = self.sr.rotate(u, v, self.sr.rotation)
-        quiver = ax.quiver(x, y, urot, vrot, **kwargs)
+        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
 
         return quiver
 
@@ -610,38 +648,6 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
-        xmin = self.sr.xedge[0]
-        xmax = self.sr.xedge[-1]
-        ymin = self.sr.yedge[-1]
-        ymax = self.sr.yedge[0]
-        linecol = []
-        # Vertical lines
-        for j in range(self.sr.ncol + 1):
-            x0 = self.sr.xedge[j]
-            x1 = x0
-            y0 = ymin
-            y1 = ymax
-            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
-            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
-            x1r += self.sr.xul
-            y1r += self.sr.yul - self.sr.yedge[0]
-            linecol.append(((x0r, y0r), (x1r, y1r)))
 
-        #horizontal lines
-        for i in range(self.sr.nrow + 1):
-            x0 = xmin
-            x1 = xmax
-            y0 = self.sr.yedge[i]
-            y1 = y0
-            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
-            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
-            x1r += self.sr.xul
-            y1r += self.sr.yul - self.sr.yedge[0]
-            linecol.append(((x0r, y0r), (x1r, y1r)))
-
-        lc = LineCollection(linecol, **kwargs)
+        lc = LineCollection(self.sr.get_grid_lines(), **kwargs)
         return lc

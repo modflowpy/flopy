@@ -17,6 +17,7 @@ class ModflowGlobal(Package):
     ModflowGlobal Package class
 
     """
+
     def __init__(self, model, extension='glo'):
         Package.__init__(self, model, extension, 'GLOBAL', 1)
         return
@@ -34,6 +35,7 @@ class ModflowList(Package):
     ModflowList Package class
 
     """
+
     def __init__(self, model, extension='list', unitnumber=2):
         Package.__init__(self, model, extension, 'LIST', unitnumber)
         return
@@ -109,7 +111,7 @@ class Modflow(BaseModel):
             self.glo = ModflowGlobal(self)
         self.lst = ModflowList(self, unitnumber=listunit)
         # -- check if unstructured is specified for something
-        #    other than mfusg is specified
+        # other than mfusg is specified
         if not self.structured:
             assert 'mfusg' in self.version, 'structured=False can only be specified for mfusg models'
 
@@ -124,13 +126,13 @@ class Modflow(BaseModel):
         # the starting external data unit number
         self.__next_ext_unit = 1000
         if external_path is not None:
-            assert model_ws == '.', "ERROR: external cannot be used " +\
-                "with model_ws"
+            assert model_ws == '.', "ERROR: external cannot be used " + \
+                                    "with model_ws"
 
             #external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
                 print("Note: external_path " + str(external_path) +
-                    " already exists")
+                      " already exists")
             #assert os.path.exists(external_path),'external_path does not exist'
             else:
                 os.mkdir(external_path)
@@ -148,6 +150,7 @@ class Modflow(BaseModel):
             "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
+            "bcf6": flopy.modflow.ModflowBcf,
             "lpf": flopy.modflow.ModflowLpf,
             "hfb6": flopy.modflow.ModflowHfb,
             "chd": flopy.modflow.ModflowChd,
@@ -158,6 +161,7 @@ class Modflow(BaseModel):
             "ghb": flopy.modflow.ModflowGhb,
             "gmg": flopy.modflow.ModflowGmg,
             "riv": flopy.modflow.ModflowRiv,
+            "str": flopy.modflow.ModflowStr,
             "swi2": flopy.modflow.ModflowSwi2,
             "pcg": flopy.modflow.ModflowPcg,
             "pcgn": flopy.modflow.ModflowPcgn,
@@ -166,10 +170,11 @@ class Modflow(BaseModel):
             "sfr": flopy.modflow.ModflowSfr2,
             "sip": flopy.modflow.ModflowSip,
             "sor": flopy.modflow.ModflowSor,
+            "de4": flopy.modflow.ModflowDe4,
             "oc": flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,
             "upw": flopy.modflow.ModflowUpw
-            }
+        }
         return
 
     def __repr__(self):
@@ -197,12 +202,14 @@ class Modflow(BaseModel):
             return self.dis.nrow
         else:
             return 0
+
     @property
     def ncol(self):
         if (self.dis):
             return self.dis.ncol
         else:
             return 0
+
     @property
     def nper(self):
         if (self.dis):
@@ -217,6 +224,7 @@ class Modflow(BaseModel):
             return dis.nrow, dis.ncol, dis.nlay, dis.nper
         else:
             return 0, 0, 0, 0
+
     # Property has no setter, so read-only
     nrow_ncol_nlay_nper = property(get_nrow_ncol_nlay_nper)
 
@@ -237,7 +245,7 @@ class Modflow(BaseModel):
 
         for i in range(len(self.lst.extension)):
             self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
-    
+
     # Property must be redeclared to override basemodels setter method
     name = property(BaseModel.get_name, set_name)
 
@@ -247,13 +255,13 @@ class Modflow(BaseModel):
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
-        f_nam.write('%s\n' % (self.heading) )
+        f_nam.write('%s\n' % (self.heading))
         if self.version == 'mf2k':
             f_nam.write('{:12s} {:3d} {}\n'.format(self.glo.name[0], self.glo.unit_number[0], self.glo.file_name[0]))
         f_nam.write('{:12s} {:3d} {}\n'.format(self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]))
         f_nam.write('{}'.format(self.get_name_file_entries()))
         for u, f, b in zip(self.external_units, self.external_fnames, self.external_binflag):
-            if u == 0: 
+            if u == 0:
                 continue
             fr = os.path.relpath(f, self.model_ws)
             if b:
@@ -268,7 +276,6 @@ class Modflow(BaseModel):
         # remove model if passed as a kwarg
         if 'model' in kwargs:
             kwargs.pop('model')
-
 
         hext = 'hds'
         dext = 'ddn'
@@ -342,13 +349,13 @@ class Modflow(BaseModel):
         >>> ml = flopy.modflow.Modflow.load(f)
 
         """
-        modelname = os.path.basename(f).split('.')[0]
+        modelname = '.'.join(os.path.basename(f).split('.')[:-1])
 
-        #if model_ws is None:
+        # if model_ws is None:
         #    model_ws = os.path.dirname(f)
         if verbose:
             sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
-                             format(modelname, 50*'-'))
+                             format(modelname, 50 * '-'))
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
 
@@ -368,7 +375,7 @@ class Modflow(BaseModel):
 
         if ml.verbose:
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.
-                format(50*'-', ext_unit_dict, 50*'-'))
+                  format(50 * '-', ext_unit_dict, 50 * '-'))
 
         # load dis
         dis = None
@@ -387,24 +394,24 @@ class Modflow(BaseModel):
                                  .format(pck.name[0]))
             ext_unit_dict.pop(dis_key)
         except Exception as e:
-            s = 'Could not read discretization package: {}. Stopping...'\
+            s = 'Could not read discretization package: {}. Stopping...' \
                 .format(os.path.basename(dis.filename))
             raise Exception(s + " " + str(e))
 
         if load_only is None:
             load_only = []
-            for key,item in ext_unit_dict.items():
+            for key, item in ext_unit_dict.items():
                 load_only.append(item.filetype)
         else:
-            if not isinstance(load_only,list):
+            if not isinstance(load_only, list):
                 load_only = [load_only]
             not_found = []
-            for i,filetype in enumerate(load_only):
+            for i, filetype in enumerate(load_only):
                 filetype = filetype.upper()
                 if filetype != 'DIS':
                     load_only[i] = filetype
                     found = False
-                    for key,item in ext_unit_dict.items():
+                    for key, item in ext_unit_dict.items():
                         if item.filetype == filetype:
                             found = True
                             break
@@ -412,7 +419,7 @@ class Modflow(BaseModel):
                         not_found.append(filetype)
             if len(not_found) > 0:
                 raise Exception("the following load_only entries were not found "
-                                "in the ext_unit_dict: " +','.join(not_found))
+                                "in the ext_unit_dict: " + ','.join(not_found))
 
 
         # zone, mult, pval
@@ -450,7 +457,7 @@ class Modflow(BaseModel):
                 if ml.verbose:
                     sys.stdout.write('   {} file load...skipped\n      {}\n'
                                      .format(item.filetype,
-                                         os.path.basename(item.filename)))
+                                             os.path.basename(item.filename)))
                 if key not in ml.pop_key_list:
                     ml.external_fnames.append(item.filename)
                     ml.external_units.append(key)
@@ -471,7 +478,7 @@ class Modflow(BaseModel):
         # write message indicating packages that were successfully loaded
         if ml.verbose:
             print(1 * '\n')
-            s = '   The following {0} packages were successfully loaded.'\
+            s = '   The following {0} packages were successfully loaded.' \
                 .format(len(files_succesfully_loaded))
             print(s)
             for fname in files_succesfully_loaded:

@@ -10,6 +10,7 @@ from .mfghb import ModflowGhb
 from .mfpbc import ModflowPbc
 from .mfrch import ModflowRch
 from .mfriv import ModflowRiv
+from .mfstr import ModflowStr
 from .mfwel import ModflowWel
 from .mfpval import ModflowPval
 from .mfoc88 import ModflowOc88
