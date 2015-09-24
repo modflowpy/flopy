@@ -37,4 +37,5 @@ from .mfgmg import ModflowGmg
 from .mfsms import ModflowSms
 from .mfbct import ModflowBct
 from .mfhfb import ModflowHfb
+from .mfsfr2 import ModflowSfr2
 from .mfaddoutsidefile import mfaddoutsidefile
