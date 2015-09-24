@@ -293,10 +293,18 @@ class SpatialReference(object):
         pts = []
         xgrid, ygrid = self.xgrid, self.ygrid
         pts.append([xgrid[i, j], ygrid[i, j]])
-        pts.append([xgrid[i, j], ygrid[i+1, j]])
-        pts.append([xgrid[i, j+1], ygrid[i+1, j]])
-        pts.append([xgrid[i, j+1], ygrid[i, j]])
+        pts.append([xgrid[i+1, j], ygrid[i+1, j]])
+        pts.append([xgrid[i+1, j+1], ygrid[i+1, j+1]])
+        pts.append([xgrid[i, j+1], ygrid[i, j+1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
+
+        # pts.append([xgrid[i-1, j-1], ygrid[i-1, j-1]])
+        # pts.append([xgrid[i, j-1], ygrid[i, j-1]])
+        # pts.append([xgrid[i, j], ygrid[i, j]])
+        # pts.append([xgrid[i-1, j], ygrid[i-1, j]])
+        # pts.append([xgrid[i-1, j-1], ygrid[i-1, j-1]])
+
+
         return pts
 
 
