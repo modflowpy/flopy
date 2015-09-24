@@ -13,7 +13,7 @@ def grid_attributes_from_shapefile():
     raise NotImplementedError()
 
 
-def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e10):
+def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     """
     Write a grid shapefile array_dict attributes.
     Parameters
