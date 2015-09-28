@@ -322,7 +322,7 @@ class util_3d(object):
         array_dict = {}
         for ilay in range(self.model.nlay):
             u2d = self[ilay]
-            array_dict[u2d.name] = u2d.array
+            array_dict['{}_L{:02d}'.format(u2d.name, ilay+1)] = u2d.array
         write_grid_shapefile(filename, self.model.dis.sr,
                              array_dict)
 
