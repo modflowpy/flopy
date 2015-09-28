@@ -648,38 +648,6 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
-        xmin = self.sr.xedge[0]
-        xmax = self.sr.xedge[-1]
-        ymin = self.sr.yedge[-1]
-        ymax = self.sr.yedge[0]
-        linecol = []
-        # Vertical lines
-        for j in range(self.sr.ncol + 1):
-            x0 = self.sr.xedge[j]
-            x1 = x0
-            y0 = ymin
-            y1 = ymax
-            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
-            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
-            x1r += self.sr.xul
-            y1r += self.sr.yul - self.sr.yedge[0]
-            linecol.append(((x0r, y0r), (x1r, y1r)))
 
-        #horizontal lines
-        for i in range(self.sr.nrow + 1):
-            x0 = xmin
-            x1 = xmax
-            y0 = self.sr.yedge[i]
-            y1 = y0
-            x0r, y0r = self.sr.rotate(x0, y0, self.sr.rotation, 0, self.sr.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
-            x1r, y1r = self.sr.rotate(x1, y1, self.sr.rotation, 0, self.sr.yedge[0])
-            x1r += self.sr.xul
-            y1r += self.sr.yul - self.sr.yedge[0]
-            linecol.append(((x0r, y0r), (x1r, y1r)))
-
-        lc = LineCollection(linecol, **kwargs)
+        lc = LineCollection(self.sr.get_grid_lines(), **kwargs)
         return lc

@@ -4,6 +4,7 @@ abstract classes that should not be directly accessed.
 
 """
 from __future__ import print_function
+import os
 import numpy as np
 import flopy.utils
 
@@ -68,6 +69,7 @@ class LayerFile(object):
 
     """
     def __init__(self, filename, precision, verbose, kwargs):
+        assert os.path.exists(filename),"datafile error: datafile not found:"+str(filename)
         self.filename = filename
         self.precision = precision
         self.verbose = verbose

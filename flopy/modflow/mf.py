@@ -348,7 +348,7 @@ class Modflow(BaseModel):
         >>> ml = flopy.modflow.Modflow.load(f)
 
         """
-        modelname = os.path.basename(f).split('.')[0]
+        modelname = '.'.join(os.path.basename(f).split('.')[:-1])
 
         # if model_ws is None:
         #    model_ws = os.path.dirname(f)
