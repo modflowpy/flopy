@@ -13,6 +13,7 @@ import shutil
 import copy
 import numpy as np
 import flopy.utils
+from flopy.utils.binaryfile import BinaryHeader
 
 VERBOSE = False
 
@@ -107,6 +108,10 @@ def array2string(a, fmt_tup):
     #print 'nr = %d, nc = %d\n' % (nr, nc)
     npl = fmt_tup[0]
     fmt_str = fmt_tup[1]
+    # hack for binary - no fmt given
+    if fmt_str == None:
+        fmt_str = '{0:15.6G}'
+        npl = aa.shape[1]
     s = ''
     for r in range(nr):
         for c in range(nc):
@@ -1642,9 +1647,15 @@ class util_2d(object):
             assert os.path.exists(fname), "util_2d.load() error: open/close " + \
                                           "file " + str(fname) + " not found"
             f = open(fname, 'r')
-            data = util_2d.load_txt(shape=shape,
+            if str('binary') not in str(cr_dict['fmtin'].lower()):
+                data = util_2d.load_txt(shape=shape,
                                     file_in=f,
                                     dtype=dtype, fmtin=cr_dict['fmtin'])
+            else:
+                # hack - adding bintype='Head'
+                # need better way to detect if this is a head file from previous run
+                header_data, data = util_2d.load_bin(
+                    shape, f, dtype, bintype='Head')
             f.close()
             # u2d = util_2d(model, shape, dtype, fname, name=name,
             #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
