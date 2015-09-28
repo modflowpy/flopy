@@ -13,15 +13,44 @@ def grid_attributes_from_shapefile():
     raise NotImplementedError()
 
 
-def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e10):
+def write_gridlines_shapefile(filename,sr):
+    """
+    Write a polyline shapefile of the grid lines - a lightweight alternative to polygons
+    Parameters
+    ----------
+    filename : string
+        name of the shapefile to write
+    sr : spatial reference
+
+    Returns
+    -------
+    None
+
+    """
+    try:
+        import shapefile
+    except Exception as e:
+        raise Exception("io.to_shapefile(): error " +
+                        "importing shapefile - try pip install pyshp")
+
+    wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+    wr.field("number","N",20,0)
+    for i,line in enumerate(sr.get_grid_lines()):
+        wr.poly([line])
+        wr.record(i)
+    wr.save(filename)
+
+
+
+
+def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     """
     Write a grid shapefile array_dict attributes.
     Parameters
     ----------
     filename : string
         name of the shapefile to write
-    ml : flopy.mbase
-        model instance
+    sr : spatial reference instance
     package_names : (optional) list of package names (e.g. ["dis","lpf"])
         packages to scrap arrays out of for adding to shapefile
     array_dict : (optional) dict of {name:2D array} pairs
