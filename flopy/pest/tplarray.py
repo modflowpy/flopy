@@ -17,17 +17,23 @@ class Util2dTpl(object):
         return
 
     def get_file_entry(self):
-        cr = 'INTERNAL 1.0 (FREE) -1\n'
-        astring = ''
-        icount = 0
-        for i in range(self.chararray.shape[0]):
-            for j in range(self.chararray.shape[1]):
-                icount += 1
-                astring += ' {0:>15s}'.format(self.chararray[i, j])
-                if icount == 10:
-                    astring += '\n'
-                    icount = 0
-        return cr + astring
+
+        au = np.unique(self.chararray)
+        if au.shape[0] == 1:
+            file_entry = 'CONSTANT {0:>15s}\n'.format(au[0])
+        else:
+            cr = 'INTERNAL 1.0 (FREE) -1\n'
+            astring = ''
+            icount = 0
+            for i in range(self.chararray.shape[0]):
+                for j in range(self.chararray.shape[1]):
+                    icount += 1
+                    astring += ' {0:>15s}'.format(self.chararray[i, j])
+                    if icount == 10:
+                        astring += '\n'
+                        icount = 0
+            file_entry = cr + astring
+        return file_entry
 
 
 if __name__ == '__main__':
