@@ -96,9 +96,10 @@ if __name__ == '__main__':
                                  parvals, transform, zonearray)
 
 
-    parzones = [1]
-    parvals = [0.001]
+    parzones = [1, 2]
+    parvals = [0.001, 0.0005]
     zonearray = np.ones((3, 20, 14), dtype=int)
+    zonearray[1] = 2
     plistvk = zonearray2params(mfpackage, 'vka', parzones, lbound, ubound,
                                  parvals, transform, zonearray)
 
