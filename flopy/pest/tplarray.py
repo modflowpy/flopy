@@ -1,4 +1,6 @@
+from __future__ import print_function
 import numpy as np
+
 
 class Util3dTpl(object):
     def __init__(self, basearray):
