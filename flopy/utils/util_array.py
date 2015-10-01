@@ -12,7 +12,6 @@ import os
 import shutil
 import copy
 import numpy as np
-import flopy.utils
 
 VERBOSE = False
 
@@ -317,12 +316,13 @@ class util_3d(object):
         >>> ml.lpf.hk.to_shapefile('test_hk.shp')
         """
 
-        from flopy.utils.flopy_io import write_grid_shapefile
+        from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
 
         array_dict = {}
         for ilay in range(self.model.nlay):
             u2d = self[ilay]
-            array_dict['{}_L{:02d}'.format(u2d.name, ilay+1)] = u2d.array
+            name = '{}_{:03d}'.format(shape_attr_name(u2d.name), ilay+1)
+            array_dict[name] = u2d.array
         write_grid_shapefile(filename, self.model.dis.sr,
                              array_dict)
 
@@ -659,12 +659,13 @@ class transient_2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.rch.rech.as_shapefile('test_rech.shp')
         """
-        from flopy.utils.flopy_io import write_grid_shapefile
+        from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
 
         array_dict = {}
         for kper in range(self.model.nper):
             u2d = self[kper]
-            array_dict[u2d.name] = u2d.array
+            name = '{}_{:03d}'.format(shape_attr_name(u2d.name), kper+1)
+            array_dict[name] = u2d.array
         write_grid_shapefile(filename, self.model.dis.sr, array_dict)
 
 
@@ -1115,9 +1116,9 @@ class util_2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.dis.top.as_shapefile('test_top.shp')
         """
-        from flopy.utils.flopy_io import write_grid_shapefile
-
-        write_grid_shapefile(filename, self.model.dis.sr, {self.name: self.array})
+        from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
+        name = shape_attr_name(self.name, keep_layer=True)
+        write_grid_shapefile(filename, self.model.dis.sr, {name: self.array})
 
     @staticmethod
     def get_default_numpy_fmt(dtype):

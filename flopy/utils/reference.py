@@ -145,12 +145,14 @@ class SpatialReference(object):
 
     @property
     def xgrid(self):
-        self._set_xygrid()
+        if self._xgrid is None:
+            self._set_xygrid()
         return self._xgrid
 
     @property
     def ygrid(self):
-        self._set_xygrid()
+        if self._ygrid is None:
+            self._set_xygrid()
         return self._ygrid
 
     @property
@@ -163,12 +165,14 @@ class SpatialReference(object):
 
     @property
     def ycentergrid(self):
-        self._set_xycentergrid()
+        if self._ycentergrid is None:
+            self._set_xycentergrid()
         return self._ycentergrid
 
     @property
     def xcentergrid(self):
-        self._set_xycentergrid()
+        if self._xcentergrid is None:
+            self._set_xycentergrid()
         return self._xcentergrid
 
     def _set_xycentergrid(self):

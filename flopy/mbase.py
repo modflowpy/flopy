@@ -925,7 +925,7 @@ class Package(object):
         return axes
 
 
-    def to_shapefile(self, filename):
+    def to_shapefile(self, filename, **kwargs):
         """
         Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).  Adds an
             attribute for each layer in each data array
