@@ -4,7 +4,7 @@ import numpy as np
 
 class Util3dTpl(object):
     def __init__(self, basearray):
-        self.chararray = np.array(basearray, dtype='|S16')
+        self.chararray = np.array(basearray, dtype='str')
         return
 
     def __getitem__(self, k):
