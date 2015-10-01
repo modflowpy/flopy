@@ -11,7 +11,7 @@ class Params(object):
 
         parameters
         __________
-        parstyle = either 'constant', 'listrc', 'refarray'
+        partype = 'hk', 'vkz', ... must be the name of an array within a package
         mfpackage = 'LPF', 'BAS6', ...
 
         :return:
