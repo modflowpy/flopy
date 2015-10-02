@@ -240,6 +240,7 @@ class ModflowSfr2(Package):
         self.dataset_5 = dataset_5
 
         #-input format checks:
+        assert isfropt in [0, 1, 2, 3, 4, 5]
         '''
         lossTypes = ['NONE', 'THIEM', 'SKIN', 'GENERAL', 'SPECIFYcwc']
         for i in range(mnwmax):
@@ -324,7 +325,7 @@ class ModflowSfr2(Package):
                           ('fdpth', np.float32), 
                           ('awdth', np.float32), 
                           ('bwdth', np.float32),
-                          ('hcond1', np.float32), 
+                          ('hcond1', np.float32),
                           ('thickm1', np.float32), 
                           ('elevup1', np.float32), 
                           ('width1', np.float32), 
@@ -392,25 +393,11 @@ class ModflowSfr2(Package):
             """
             tabfiles, numtab, maxval = line.strip().split()
             numtab, maxval = int(numtab), int(maxval)
-            line = next(f)
-        # NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ISTCB1  ISTCB2
-        # [ISFROPT] [NSTRAIL] [ISUZN] [NSFRSETS] [IRTFLG] [NUMTIM] [WEIGHT] [FLWTOL]
-        '''
-        item1cvalues = [0,0,0,0,0,0,0,0, \
-                        0,10,1,30,1, 2, 0.75, 0.0001]
-        tmp = [s for s in line.strip().split() if s.isnumeric()]
-        nvars = len(tmp)
-        item1cvalues[:nvars] = tmp
-        item1cvalues = list(map(float, item1cvalues))
-        '''
-        item1cvalues = _get_dataset(line, [0, 0, 0, 0, 0, 0, 0, 0, \
-                                           0, 10, 1, 30, 1, 2, 0.75, 0.0001])
-        nstrm, nss, nsfrpar, nparseg = map(int, item1cvalues[0:4])
-        if reachinput:
-            nstrm = abs(nstrm) # see explanation for dataset 1c in online guide
-        const, dleak = item1cvalues[4:6]
-        istcb1, istcb2, isfropt, nstrail, isuzn, nsfrsets, irtflg, numtim = map(int, item1cvalues[6:14])
-        weight, flwtol = item1cvalues[14:]
+
+        # item 1c
+        nstrm, nss, nsfrpar, nparseg, const, dleak, istcb1, istcb2, \
+        isfropt, nstrail, isuzn, nsfrsets, \
+        irtflg, numtim, weight, flwtol, option = parse_1c(next(f), reachinput=reachinput, transroute=transroute)
 
         # item 2
         # set column names, dtypes
@@ -437,6 +424,7 @@ class ModflowSfr2(Package):
         channel_geometry_data = {}
         channel_flow_data = {}
         dataset_5 = {}
+        aux_variables = {}  # not sure where the auxillary variables are supposed to go
         for i in range(0, nper):
             # Dataset 5
             dataset_5[i] = _get_dataset(next(f), [1, 0, 0, 0])
@@ -452,13 +440,15 @@ class ModflowSfr2(Package):
                 #               ('thts1', float), ('thti1', float), ('eps1', float), ('uhc1', float),
                 #               ('hcond2', float), ('thickm2', float), ('elevup2', float), ('width2', float), ('depth2', float),
                 #               ('thts2', float), ('thti2', float), ('eps2', float), ('uhc2', float)])
-                current = ModflowSfr2.get_empty_segment_data(nsegments=itmp)
-
+                current = ModflowSfr2.get_empty_segment_data(nsegments=itmp, aux_names=option)
+                current_aux = {} # container to hold any auxillary variables
                 current_6d = {} # these could also be implemented as structured arrays with a column for segment number
                 current_6e = {}
                 for j in range(itmp):
 
-                    dataset_6a = parse_6a(next(f))
+                    dataset_6a = parse_6a(next(f), option)
+                    current_aux[j] = dataset_6a[-1]
+                    dataset_6a = dataset_6a[:-1] # drop xyz
                     icalc = dataset_6a[1]
                     dataset_6b = parse_6bc(next(f), icalc, nstrm, isfropt, reachinput, per=i)
                     dataset_6c = parse_6bc(next(f), icalc, nstrm, isfropt, reachinput, per=i)
@@ -483,6 +473,7 @@ class ModflowSfr2(Package):
                         current_6e[j] = dataset_6e
 
                 segment_data[i] = current
+                aux_variables[i] = current_aux
                 if len(current_6d) > 0:
                     channel_geometry_data[i] = current_6d
                 if len(current_6e) > 0:
@@ -497,16 +488,16 @@ class ModflowSfr2(Package):
                 continue
 
         return ModflowSfr2(model, nstrm=nstrm, nss=nss, nsfrpar=nsfrpar, nparseg=nparseg, const=const, dleak=dleak, istcb1=istcb1, istcb2=istcb2,
-                          isfropt=isfropt, nstrail=nstrail, isuzn=isuzn, nsfrsets=nsfrsets, irtflg=irtflg,
-                          numtim=numtim, weight=weight, flwtol=flwtol,
-                          reach_data=reach_data,
-                          segment_data=segment_data,
-                          dataset_5=dataset_5,
-                          channel_geometry_data=channel_geometry_data,
-                          channel_flow_data=channel_flow_data,
-                          reachinput=reachinput, transroute=transroute,
-                          tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
-                          )
+                           isfropt=isfropt, nstrail=nstrail, isuzn=isuzn, nsfrsets=nsfrsets, irtflg=irtflg,
+                           numtim=numtim, weight=weight, flwtol=flwtol,
+                           reach_data=reach_data,
+                           segment_data=segment_data,
+                           dataset_5=dataset_5,
+                           channel_geometry_data=channel_geometry_data,
+                           channel_flow_data=channel_flow_data,
+                           reachinput=reachinput, transroute=transroute,
+                           tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
+                           )
 
     def _write_1c(self, f_sfr):
 
@@ -727,6 +718,13 @@ class ModflowSfr2(Package):
                 continue
         f_sfr.close()
 
+def _isnumeric(str):
+    try:
+        float(str)
+        return True
+    except:
+        return False
+
 def _markitzero(recarray, inds):
     """subtracts 1 from columns specified in inds argument, to convert from 1 to 0-based indexing
     """
@@ -745,13 +743,13 @@ def _get_dataset(line, dataset):
     # interpret number supplied with decimal points as floats, rest as ints
     # this could be a bad idea (vs. explicitly formatting values for each dataset)
     for i, s in enumerate(line.strip().split()):
-        if s.isnumeric():
-            dataset[i] = int(s)
-        else:
-            try:
-                dataset[i] = float(s)
-            except:
-                break
+        try:
+            n = float(s)
+        except:
+            break
+        if s.strip('-').isnumeric(): # no decimal
+            n = int(s)
+        dataset[i] = n
     return dataset
 
 def _fmt_string(array):
@@ -761,7 +759,7 @@ def _fmt_string(array):
         if (vtype == 'i'):
             fmt_string += '{:.0f} '
         elif (vtype == 'f'):
-            fmt_string += '{:.6f} '
+            fmt_string += '{:.8f} '
         elif (vtype == 'o'):
             fmt_string += '{} '
         elif (vtype == 's'):
@@ -780,7 +778,7 @@ def _fmt_string_list(array):
         if (vtype == 'i'):
             fmt_string += ['{:.0f}']
         elif (vtype == 'f'):
-            fmt_string += ['{:.6f}']
+            fmt_string += ['{:.8f}']
         elif (vtype == 'o'):
             fmt_string += ['{}']
         elif (vtype == 's'):
@@ -792,8 +790,8 @@ def _fmt_string_list(array):
                             "in dtype:" + vtype)
     return fmt_string
 
-def parse_6a(line):
-    """Parse Data Set 6a for SFR2 package.
+def parse_1c(line, reachinput, transroute):
+    """Parse Data Set 1c for SFR2 package.
     See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
 
     Parameters
@@ -806,8 +804,71 @@ def parse_6a(line):
         a list of length 13 containing all variables for Data Set 6a
     """
     na = 0
-    #line = [s for s in line.strip().split() if s.isnumeric()]
-    line = _get_dataset(line, [0] * len(line.strip().split()))
+    #line = _get_dataset(line, [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 30, 1, 2, 0.75, 0.0001, []])
+    line = line.strip().split()
+
+    nstrm = int(line.pop(0))
+    nss = int(line.pop(0))
+    nsfrpar = int(line.pop(0))
+    nparseg = int(line.pop(0))
+    const = float(line.pop(0))
+    dleak = float(line.pop(0))
+    istcb1 = int(line.pop(0))
+    istcb2 = int(line.pop(0))
+
+    isfropt, nstrail, isuzn, nsfrsets = na, na, na, na
+    if reachinput:
+        nstrm = abs(nstrm) # see explanation for dataset 1c in online guide
+        isfropt = int(line.pop(0))
+        if isfropt > 1:
+            isfropt = int(line.pop(0))
+            nstrail = int(line.pop(0))
+            isuzn = int(line.pop(0))
+            nsfrsets = int(line.pop(0))
+    if nstrm < 0:
+        isfropt = int(line.pop(0))
+        nstrail = int(line.pop(0))
+        isuzn = int(line.pop(0))
+        nsfrsets = int(line.pop(0))
+
+    irtflg, numtim, weight, flwtol = na, na, na, na
+    if nstrm < 0 or transroute:
+        irtflg = int(line.pop(0))
+        if irtflg > 0:
+            numtim = int(line.pop(0))
+            weight = int(line.pop(0))
+            flwtol = int(line.pop(0))
+
+    # auxillary variables (MODFLOW-LGR)
+    option = [line[i] for i in np.arange(1, len(line)) if 'aux' in line[i-1].lower()]
+
+    return nstrm, nss, nsfrpar, nparseg, const, dleak, istcb1, istcb2, \
+           isfropt, nstrail, isuzn, nsfrsets, irtflg, numtim, weight, flwtol, option
+
+def parse_6a(line, option):
+    """Parse Data Set 6a for SFR2 package.
+    See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
+
+    Parameters
+    ----------
+    line : str
+        line read from SFR package input file
+
+    Returns
+    -------
+        a list of length 13 containing all variables for Data Set 6a
+    """
+    line = line.strip().split()
+
+    xyz = []
+    # handle any aux variables at end of line
+    for i, s in enumerate(line):
+        if s.lower() in option:
+            xyz.append(s.lower())
+
+    na = 0
+    nvalues = sum([_isnumeric(s) for s in line])
+    #line = _get_dataset(line, [0] * nvalues)
 
     nseg = int(line.pop(0))
     icalc = int(line.pop(0))
@@ -837,7 +898,7 @@ def parse_6a(line):
     if icalc == 3:
         cdpth, fdpth, awdth, bwdth = map(float, line)
     return nseg, icalc, outseg, iupseg, iprior, nstrpts, flow, runoff, etsw, \
-           pptsw, roughch, roughbk, cdpth, fdpth, awdth, bwdth
+           pptsw, roughch, roughbk, cdpth, fdpth, awdth, bwdth, xyz
 
 
 def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
@@ -855,8 +916,8 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     """
     na = 0
     #line = [s for s in line.strip().split() if s.isnumeric()]
-    #line = list(map(float, line.strip().split()))
-    line = _get_dataset(line, [0] * len(line.strip().split()))
+    nvalues = sum([_isnumeric(s) for s in line.strip().split()])
+    line = _get_dataset(line, [0] * nvalues)
 
     hcond, thickm, elevup, width, depth, thts, thti, eps, uhc = [0.0] * 9
 
