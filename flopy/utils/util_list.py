@@ -623,7 +623,7 @@ class mflist(object):
                                          mflay=mflay, **kwargs)
         return axes
 
-    def to_shapefile(self, filename, kper=0):
+    def to_shapefile(self, filename, kper=None):
         """
         Export stress period boundary condition (mflist) data for a specified
         stress period
@@ -633,7 +633,7 @@ class mflist(object):
         filename : str
             Shapefile name to write
         kper : int
-            MODFLOW zero-based stress period number to return. (default is zero)
+            MODFLOW zero-based stress period number to return. (default is None)
 
         Returns
         ----------
@@ -655,12 +655,20 @@ class mflist(object):
         if self.sr is None:
             raise Exception("mflist.to_shapefile: SpatialReference not set")
         import flopy.utils.flopy_io as fio
-        arrays = self.to_array(kper)
+        if kper is None:
+            keys = self.data.keys()
+            keys.sort()
+        else:
+            keys = [kper]
         array_dict = {}
-        for name, array in arrays.items():
-            for k in range(array.shape[0]):
-                aname = name+"{0:03d}_{1:02d}".format(kper, k)
-                array_dict[aname] = array[k]
+        for kk in keys:
+            arrays = self.to_array(kk)
+            for name, array in arrays.items():
+                for k in range(array.shape[0]):
+                    #aname = name+"{0:03d}_{1:02d}".format(kk, k)
+                    n = fio.shape_attr_name(name, length=4)
+                    aname = "{}{:03d}{:03d}".format(n, k+1, int(kk)+1)
+                    array_dict[aname] = array[k]
         fio.write_grid_shapefile(filename, self.sr, array_dict)
 
     def to_array(self, kper=0):

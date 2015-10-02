@@ -729,11 +729,14 @@ class Package(object):
                                       fmtin=old_value.fmtin,
                                       locat=old_value.locat)
             elif isinstance(old_value, utils.util_3d):
-                value = utils.util_3d(self.parent, old_value.shape,
-                                      old_value.dtype, value,
-                                      name=old_value.name_base,
-                                      fmtin=old_value.fmtin,
-                                      locat=old_value.locat)
+                try:
+                    value = utils.util_3d(self.parent, old_value.shape,
+                                          old_value.dtype, value,
+                                          name=old_value.name_base,
+                                          fmtin=old_value.fmtin,
+                                          locat=old_value.locat)
+                except:
+                    pass
             elif isinstance(old_value, utils.transient_2d):
                 value = utils.transient_2d(self.parent, old_value.shape,
                                            old_value.dtype, value,
@@ -925,7 +928,7 @@ class Package(object):
         return axes
 
 
-    def to_shapefile(self, filename):
+    def to_shapefile(self, filename, **kwargs):
         """
         Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).  Adds an
             attribute for each layer in each data array
