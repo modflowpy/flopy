@@ -393,11 +393,12 @@ class ModflowSfr2(Package):
             """
             tabfiles, numtab, maxval = line.strip().split()
             numtab, maxval = int(numtab), int(maxval)
+            line = next(f)
 
         # item 1c
         nstrm, nss, nsfrpar, nparseg, const, dleak, istcb1, istcb2, \
         isfropt, nstrail, isuzn, nsfrsets, \
-        irtflg, numtim, weight, flwtol, option = parse_1c(next(f), reachinput=reachinput, transroute=transroute)
+        irtflg, numtim, weight, flwtol, option = parse_1c(line, reachinput=reachinput, transroute=transroute)
 
         # item 2
         # set column names, dtypes
@@ -508,15 +509,46 @@ class ModflowSfr2(Package):
                             self.const, self.dleak, self.istcb1, self.istcb2))
         if self.reachinput:
             self.nstrm = abs(self.nstrm) # see explanation for dataset 1c in online guide
-        if self.nstrm < 0:
             f_sfr.write('{:.0f} '.format(self.isfropt))
-        if self.isfropt > 1:
-            f_sfr.write('{:.0f} {:.0f} {:.0f} '.format(self.nstrail, self.isuzn, self.nsfrsets))
+            if self.isfropt > 1:
+                f_sfr.write('{:.0f} {:.0f} {:.0f} '.format(self.nstrail,
+                                                           self.isuzn,
+                                                           self.nsfrsets))
         if self.nstrm < 0:
+            f_sfr.write('{:.0f} {:.0f} {:.0f} {:.0f} '.format(self.isfropt,
+                                                              self.nstrail,
+                                                              self.isuzn,
+                                                              self.nsfrsets))
+        if self.nstrm < 0 or self.transroute:
             f_sfr.write('{:.0f} '.format(self.irtflag))
-        if self.irtflag < 0:
-            f_sfr.write('{:.0f} {:.8f} {:.8f} '.format(self.numtim, self.weight, self.flwtol))
+            if self.irtflag < 0:
+                f_sfr.write('{:.0f} {:.8f} {:.8f} '.format(self.numtim,
+                                                           self.weight,
+                                                           self.flwtol))
         f_sfr.write('\n')
+        '''
+        isfropt, nstrail, isuzn, nsfrsets = na, na, na, na
+        if reachinput:
+            nstrm = abs(nstrm) # see explanation for dataset 1c in online guide
+            isfropt = int(line.pop(0))
+            if isfropt > 1:
+                nstrail = int(line.pop(0))
+                isuzn = int(line.pop(0))
+                nsfrsets = int(line.pop(0))
+        if nstrm < 0:
+            isfropt = int(line.pop(0))
+            nstrail = int(line.pop(0))
+            isuzn = int(line.pop(0))
+            nsfrsets = int(line.pop(0))
+
+        irtflg, numtim, weight, flwtol = na, na, na, na
+        if nstrm < 0 or transroute:
+            irtflg = int(line.pop(0))
+            if irtflg > 0:
+                numtim = int(line.pop(0))
+                weight = int(line.pop(0))
+                flwtol = int(line.pop(0))
+        '''
 
     def _write_reach_data(self, f_sfr):
 
@@ -563,6 +595,36 @@ class ModflowSfr2(Package):
             f_sfr.write(' '.join(fmts[12:16]).format(cdpth, fdpth, awdth, bwdth) + ' ')
         f_sfr.write('\n')
 
+        '''
+        nseg = int(line.pop(0))
+        icalc = int(line.pop(0))
+        outseg = int(line.pop(0))
+        iupseg = int(line.pop(0))
+        iprior = na
+        nstrpts = na
+
+        if iupseg !=0:
+            iprior = int(line.pop(0))
+        if icalc == 4:
+            nstrpts = int(line.pop(0))
+
+        flow = float(line.pop(0))
+        runoff = float(line.pop(0))
+        etsw = float(line.pop(0))
+        pptsw = float(line.pop(0))
+        roughch = na
+        roughbk = na
+
+        if icalc in [1, 2]:
+            roughch = float(line.pop(0))
+        if icalc == 2:
+            roughbk = float(line.pop(0))
+
+        cdpth, fdpth, awdth, bwdth = na, na, na, na
+        if icalc == 3:
+            cdpth, fdpth, awdth, bwdth = map(float, line)
+        '''
+
         self._write_6bc(i, j, f_sfr, cols=['hcond1', 'thickm1', 'elevup1', 'width1', 'depth1', 'thts1', 'thti1',
                                            'eps1', 'uhc1'])
         self._write_6bc(i, j, f_sfr, cols=['hcond2', 'thickm2', 'elevup2', 'width2', 'depth2', 'thts2', 'thti2',
@@ -581,7 +643,8 @@ class ModflowSfr2(Package):
             f_sfr.write(fmts[0].format(hcond) + ' ')
 
             if i == 0:
-                f_sfr.write(' '.join(fmts[1:8]).format(thickm, elevup, width, depth, thts, thti, eps) + ' ')
+                f_sfr.write(' '.join(fmts[1:4]).format(thickm, elevup, width) + ' ')
+                f_sfr.write(' '.join(fmts[5:8]).format(thts, thti, eps) + ' ')
                 if self.isfropt == 5:
                     f_sfr.write(fmts[8].format(uhc) + ' ')
         elif self.isfropt in [0, 4, 5] and icalc >= 2:
@@ -590,10 +653,10 @@ class ModflowSfr2(Package):
             if self.isfropt in [4, 5] and i > 0 and icalc == 2:
                 pass
             else:
-                f_sfr.write(' '.join(fmts[1:3]).format(thickm, elevup))
+                f_sfr.write(' '.join(fmts[1:3]).format(thickm, elevup) + ' ')
 
                 if self.isfropt in [4, 5] and icalc == 2 and i == 0:
-                    f_sfr.write(' '.join(fmts[3:6]).format(thts, thti, eps))
+                    f_sfr.write(' '.join(fmts[3:6]).format(thts, thti, eps) + ' ')
 
                     if self.isfropt == 5:
                         f_sfr.write(fmts[8].format(uhc) + ' ')
@@ -821,7 +884,6 @@ def parse_1c(line, reachinput, transroute):
         nstrm = abs(nstrm) # see explanation for dataset 1c in online guide
         isfropt = int(line.pop(0))
         if isfropt > 1:
-            isfropt = int(line.pop(0))
             nstrail = int(line.pop(0))
             isuzn = int(line.pop(0))
             nsfrsets = int(line.pop(0))
@@ -921,7 +983,7 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
 
     hcond, thickm, elevup, width, depth, thts, thti, eps, uhc = [0.0] * 9
 
-    if isfropt in [0, 4, 5] and icalc <=0:
+    if isfropt in [0, 4, 5] and icalc <= 0:
         hcond = line.pop(0)
         thickm = line.pop(0)
         elevup = line.pop(0)
@@ -932,7 +994,7 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         if per == 0:
             thickm = line.pop(0)
             elevup = line.pop(0)
-            width = line.pop(0)
+            width = line.pop(0) # depth is not read if icalc == 1; see table in online guide
             thts = _pop_item(line)
             thti = _pop_item(line)
             eps = _pop_item(line)
@@ -946,11 +1008,13 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
             thickm = line.pop(0)
             elevup = line.pop(0)
             if isfropt in [4, 5] and icalc == 2 and per == 0:
-                thts = line.pop(0)
-                thti = line.pop(0)
-                eps = line.pop(0)
+                # table in online guide suggests that the following items should be present in this case
+                # but in the example
+                thts = _pop_item(line)
+                thti = _pop_item(line)
+                eps = _pop_item(line)
                 if isfropt == 5:
-                    uhc = line.pop(0)
+                    uhc = _pop_item(line)
             else:
                 pass
     elif isfropt == 1 and icalc <= 1:
