@@ -61,7 +61,7 @@ class TemplateWriter(object):
                 raise Exception(msg)
             pakarray = getattr(paktpl, p.type.lower())
             if not isinstance(pakarray, tplarray.Util3dTpl):
-                tpla = tplarray.Util3dTpl(pakarray.array)
+                tpla = tplarray.Util3dTpl(pakarray.array, p.type.lower())
                 setattr(paktpl, p.type.lower(), tpla)
 
             # Fill the template array with the string name
