@@ -3,17 +3,36 @@ import numpy as np
 
 
 class Util3dTpl(object):
+    """
+    Class to define a three-dimensional template array for use with parameter
+    estimation.
+
+    Parameters
+    ----------
+    basearray : A Numpy ndarray.
+    partype : The parameter type.  This will be written to the control record
+        as a comment.
+    """
     def __init__(self, basearray, partype):
         self.chararray = np.array(basearray, dtype='str')
         self.partype = partype
-
         return
 
     def __getitem__(self, k):
         return Util2dTpl(self.chararray[k], self.partype)
 
-class Util2dTpl(object):
 
+class Util2dTpl(object):
+    """
+    Class to define a two-dimensional template array for use with parameter
+    estimation.
+
+    Parameters
+    ----------
+    chararray : A Numpy ndarray of dtype 'str'.
+    partype : The parameter type.  This will be written to the control record
+        as a comment.
+    """
     def __init__(self, chararray, partype):
         self.chararray = chararray
         self.partype = partype
@@ -21,13 +40,18 @@ class Util2dTpl(object):
         return
 
     def get_file_entry(self):
+        """
+        Convert the array into a string.
 
+        Returns
+        -------
+        file_entry : str
+        """
         au = np.unique(self.chararray)
         if au.shape[0] == 1:
-            file_entry = 'CONSTANT {0:>15s}\n'.format(au[0])
-            return 'CONSTANT {0}    #{1}\n'.format(au[0], self.partype)
+            file_entry = 'CONSTANT {0}    #{1}\n'.format(au[0], self.partype)
         else:
-            cr = 'INTERNAL 1.0 (FREE) -1      #{1}\n'.format(au[0], self.partype)
+            cr = 'INTERNAL {0} (FREE) -1      #{1}\n'.format(1.0, self.partype)
             astring = ''
             icount = 0
             for i in range(self.chararray.shape[0]):
@@ -40,9 +64,3 @@ class Util2dTpl(object):
             file_entry = cr + astring
         return file_entry
 
-
-if __name__ == '__main__':
-
-    hk = np.ones((10, 10, 10), dtype=np.float32)
-    u3dtpl = Util3dTpl(hk, 'hk')
-    print(u3dtpl[1].get_file_entry())
