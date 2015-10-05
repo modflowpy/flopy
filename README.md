@@ -143,6 +143,10 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 + An overview of the *FloPy<sub>3</sub>* [map and cross-section plotting capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
 + An overview of the *FloPy<sub>3</sub>*  [model input and output data `plot()` method capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_PlotArrayExample.ipynb)
 
+#### Parameter Estimation examples
+
++ An overview of the *FloPy<sub>3</sub>* [parameter estimation capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_PEST.ipynb).
+
 #### Additional MODFLOW examples
 
 + Example problems from the 2015 2nd edition of [Applied Groundwater Modeling](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt (https://github.com/Applied-Groundwater-Modeling-2nd-Ed)
