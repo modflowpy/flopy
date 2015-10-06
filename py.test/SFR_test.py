@@ -5,7 +5,7 @@ import numpy as np
 import flopy
 
 
-path = '../data/'
+path = '../examples/data/mf2005_test/'
 
 def test_sfr(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
 
@@ -30,7 +30,7 @@ def test_sfr(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
 
     return m, sfr
 
-m, sfr = test_sfr('test1ss.nam', 'test1ss.sfr', path+'test-run')
+m, sfr = test_sfr('test1ss.nam', 'test1ss.sfr', path)
 '''
 assert len(sfr.dataset_5) == 1
 assert sfr.segment_data[0].shape == (8,)
@@ -45,23 +45,23 @@ assert len(sfr.channel_geometry_data[0]) == 2
 assert list(sfr.channel_geometry_data[0].keys()) == [6, 7]
 assert sfr.channel_geometry_data[0][6][0] == [0.0,  10.,  80.,  100.,  150.,  170.,  240.,  250.]
 '''
-m, sfr = test_sfr('test1tr.nam', 'test1tr.sfr', path+'test-run')
+m, sfr = test_sfr('test1tr.nam', 'test1tr.sfr', path)
 
 #assert list(sfr.dataset_5.keys()) == [0, 1]
 
-m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC1.sfr', path+'test-run')
+m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC1.sfr', path)
 
 assert list(sfr.dataset_5.keys()) == list(range(0, 50))
 
-m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path+'test-run')
+m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
 
 assert sfr.channel_geometry_data[0][0] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
                                            [6.0, 4.5, 3.5, 0.0, 0.3, 3.5, 4.5, 6.0]]
 
-m, sfr = test_sfr('testsfr2.nam', 'testsfr2.sfr', path+'test-run')
+m, sfr = test_sfr('testsfr2.nam', 'testsfr2.sfr', path)
 
 assert round(sum(sfr.segment_data[49][0]), 7) == 3.9700007
 
-m, sfr = test_sfr('UZFtest2.nam', 'UZFtest2.sfr', path+'test-run')
+m, sfr = test_sfr('UZFtest2.nam', 'UZFtest2.sfr', path)
 
 j=2

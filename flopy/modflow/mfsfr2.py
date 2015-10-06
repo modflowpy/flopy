@@ -822,7 +822,7 @@ def _fmt_string(array):
         if (vtype == 'i'):
             fmt_string += '{:.0f} '
         elif (vtype == 'f'):
-            fmt_string += '{:.8f} '
+            fmt_string += '{} '
         elif (vtype == 'o'):
             fmt_string += '{} '
         elif (vtype == 's'):
