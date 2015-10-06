@@ -1,5 +1,4 @@
-# from numpy import empty, zeros, ones, where
-import os
+
 import numpy as np
 from flopy.mbase import Package
 
@@ -807,11 +806,12 @@ def _get_dataset(line, dataset):
     # this could be a bad idea (vs. explicitly formatting values for each dataset)
     for i, s in enumerate(line.strip().split()):
         try:
-            n = float(s)
-        except:
-            break
-        if s.strip('-').isnumeric(): # no decimal
             n = int(s)
+        except:
+            try: 
+                n = float(s)
+            except:
+                break
         dataset[i] = n
     return dataset
 
