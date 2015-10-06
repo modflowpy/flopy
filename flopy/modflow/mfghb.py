@@ -202,6 +202,6 @@ class ModflowGhb(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading gmg package file...\n')
+            sys.stdout.write('loading ghb package file...\n')
 
         return Package.load(model, ModflowGhb, f, nper)
