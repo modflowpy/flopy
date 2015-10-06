@@ -10,7 +10,7 @@ path = '../data/'
 def test_sfr(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
 
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=True)
-    sfr = flopy.modflow.ModflowSfr2.load(os.path.join(model_ws, sfrfile), m)
+    sfr = m.get_package('SFR2')
 
     if not os.path.exists(outfolder):
         os.makedirs(outfolder)
