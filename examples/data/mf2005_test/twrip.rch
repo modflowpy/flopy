@@ -1,0 +1,9 @@
+PARAMETER  2
+         1         0    NRCHOP,IRCHBD
+RCH1  RCH  3.0E-8  1
+NONE  RCHZONES  1
+RCH2  RCH  3.0E-8  1
+NONE  RCHZONES  2
+         2              INRECH
+RCH1
+RCH2

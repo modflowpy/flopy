@@ -495,8 +495,12 @@ class ModflowDis(Package):
         if model.verbose:
             print('   loading botm...')
         ncbd=laycbd.sum()
-        botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
-                            'botm', ext_unit_dict)
+        if nlay > 1:
+            botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
+                                'botm', ext_unit_dict)
+        else:
+            botm = util_2d.load(f, model, (nrow, ncol), np.float32, 'botm',
+                           ext_unit_dict)
         #dataset 7 -- stress period info
         if model.verbose:
             print('   loading stress period data...')

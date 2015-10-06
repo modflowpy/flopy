@@ -1,0 +1,8 @@
+  0  1.E30  0  0.0  0  0       Item 1:  IBCFBD HDRY IWDFLG WETFCT IWETIT IHDWET
+  1  0  0                      Item 2:  Ltype
+CONSTANT        1.             Item 3:  TRPY
+CONSTANT     .001              Item 6:  HY-1
+CONSTANT     2.E-8             Item 8: VHY/THICK-1
+CONSTANT       .01             Item 5:  T-2
+CONSTANT     1.E-8             Item 8: VHY/THICK-2
+CONSTANT       .02             Item 5:  T-3

@@ -1,0 +1,23 @@
+# Name file for hypothetical test simulation
+# Test of SFR2 Package; revised to define specified inflows through tabular
+# input files and to use key-word options.
+#
+list            12  testsfr2_tab.lst
+dis             13  testsfr2_tab.dis
+ghb             15  testsfr2_tab.ghb
+bas6            41  testsfr2_tab.bs6
+lpf             42  testsfr2_tab.lpf
+pcg             43  testsfr2_tab.pcg
+oc              44  testsfr2_tab.oc
+#sfr             45  testsfr2_tab_ICALC1.sfr
+sfr             45  testsfr2_tab_ICALC2.sfr
+gage            46  testsfr2_tab.gag
+data            83  testsfr2_tab.gg1
+data            84  testsfr2_tab.gg2
+data            85  testsfr2_tab.gg3
+data            86  testsfr2_tab.gg4
+data            87  testsfr2_tab.gg5
+data            88  testsfr2_tab.gg6
+data            89  testsfr2_tab.gg7
+data            90  testsfr2_tab.gg8
+data            55  testsfr2_tab.tab

@@ -1,0 +1,13 @@
+# L1b2k problem modified to read lake bathymetry information from an
+# external text file.
+LIST  1 l1b2k_bath.lst
+BAS6  7 l1b2k_bath.ba6
+BCF6 10 l1b2k_bath.bc6
+EVT  11 l1b2k_bath.evt
+RCH  12 l1b2k_bath.rch
+SIP  13 l1b2k_bath.sip
+OC   17 l1b2k_bath.oc
+LAK  16 l1b2k_bath.lak
+DIS  14 l1b2k_bath.dis
+FHB  21 l1b2k_bath.fhb
+DATA 22 lak1b_bath.txt

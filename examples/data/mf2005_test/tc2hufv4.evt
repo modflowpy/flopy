@@ -1,0 +1,9 @@
+PARAMETER    1    1                                   NPEVT NEVTC
+         1         0                                  NEVTOP IEVTCB
+ETM  EVT  4.0e-4   1                                  PARNAM PARTYP B NCLU
+NONE  RCHETM   2                                      Mult_arr_name Zone_arr_name [zone numbers]
+         1         1         1                        INSURF INEVTR INEXDP (stress period 1)
+         0     1000.(10f5.0)                    20    SURF array  
+ETM   20                                              Name of active parameter
+         0      950.(10f5.0)                    20    EXDP array
+         0        0.(10f5.0)                    -1       evtr  

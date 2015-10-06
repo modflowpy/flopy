@@ -1,0 +1,16 @@
+         4         4         0         0
+         1         0         0         0                    per 1, step 1
+         0         0         0         0
+         1         1         1         0                    per 1, step 2
+         1         0         1         0
+         1         0         0         0                    per 2, step 1
+         0         0         0         0
+         1         1         1         0                    per 2, step 2
+         1         0         1         0
+         1         0         0         0                    per 3, step 1
+         0         0         0         0
+        -1         0         0         0                    per 3, step 2
+        -1         0         0         0                    per 3, step 3
+        -1         0         0         0                    per 3, step 4
+         1         1         1         0                    per 3, step 5
+         1         0         1         0

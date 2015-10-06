@@ -1,0 +1,19 @@
+# NAME file for test case HUF Package TC2 Variant 4 without Parameter
+# Estimation.
+#
+# Files for this variant
+list             2   tc2hufv4.lst
+huf2            11   tc2hufv4.huf
+DATA            90   tc2hufv4.hds
+
+#Common files
+bas6             8   tc2hufv4.bas
+dis              9   tc2hufv4.dis
+wel             12   tc2hufv4.wel
+drn             13   tc2hufv4.drn
+evt             15   tc2hufv4.evt
+ghb             17   tc2hufv4.ghb
+rch             18   tc2hufv4.rch
+oc              22   tc2hufv4.oc
+pcg             23   tc2hufv4.pcg
+zone            39   tc2hufv4.zon

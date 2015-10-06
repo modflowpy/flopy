@@ -1,0 +1,25 @@
+# LPF Package input file for hypothetical test simulation
+# Test of SFR2 Package
+0 -999  0  
+1
+0
+1
+0
+0
+CONSTANT 8.0e-4
+CONSTANT 6.0e-6
+CONSTANT 0.0
+CONSTANT 0.2
+
+
+
+
+
+
+
+
+
+
+
+
+

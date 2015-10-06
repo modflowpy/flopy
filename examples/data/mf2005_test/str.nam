@@ -1,0 +1,8 @@
+# Example problem from USGS OFR 88-729 
+LIST  7 str.lst
+BAS6  8 str.ba6
+SIP  13 str.sip
+OC   14 str.oc
+str  15 str.str
+BCF6  9 str.bc6
+DIS  10 str.dis

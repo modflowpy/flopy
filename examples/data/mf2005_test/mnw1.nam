@@ -1,0 +1,18 @@
+# Main output file
+LIST   7 mnw1.lst
+#
+# Input files
+DIS    8 mnw1.dis
+BAS6   9 mnw1.bas
+BCF6  10 mnw1.bcf
+MNW1  75 mnw1.mnw
+DRN   77 mnw1.drn
+RCH   72 mnw1.rch
+PCG   74 mnw1.pcg
+CHD   76 mnw1.chd
+OC    71 mnw1.oc
+#
+# Binary output files
+DATA(BINARY)  89  mnw1.ufh       REPLACE
+DATA(BINARY)  90  mnw1.cbc       REPLACE
+

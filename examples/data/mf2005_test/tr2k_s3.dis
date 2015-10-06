@@ -1,0 +1,39 @@
+  3  10  10  31  4  0  NLAY,NROW,NCOL,NPER,ITMUNI,LENUNI
+0 0 0
+CONSTANT   1000.  DELR
+CONSTANT   2000.  DELC
+CONSTANT   0.0    TOP
+CONSTANT  -100.0  BOT layer  1
+CONSTANT  -150.0  BOT layer  2
+CONSTANT  -250.0  BOT layer  3
+     1.0         1 1.0  SS  Steady state solution
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr
+   365.3         6 1.3  TR  PERLEN,NSTP,TSMULT,Ss/tr

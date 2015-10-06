@@ -1,0 +1,9 @@
+#Example problem for Flow and Head Boundary Package, Version 1  (FHB1)         
+#From USGS Open-File Report 97-571                                             
+NO OPTIONS
+INTERNAL          1 (20I4)    3  IBOUND layer   1
+   1   1   1   1   1   1   1   1   1   1
+   1   1   1   1   1   1   1   1   1   1
+   1   1   1   1   1   1   1   1   1   1
+ 0.000E+00  HNOFLO
+CONSTANT   0.000000E+00  Initial Head layer   1

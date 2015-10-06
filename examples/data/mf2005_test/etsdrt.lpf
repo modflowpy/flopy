@@ -1,0 +1,11 @@
+# LPF file for etsdrt test case
+  0  0  1                Item 1: ILPFCB HDRY NPLPF
+ 1                       Item 2: LAYTYP
+ 0                       Item 3: LAYAVG
+ 1.0                     Item 4: CHANI
+ 0                       Item 5: LAYVKA
+ 0                       Item 6: LAYWET
+HydCond  HK  5.0E-2  1   Item 8: PARNAM PARTYP Parval NCLU
+ 1  NONE  ALL            Item 9: Layer Mltarr Zonarr [IZ]
+-1                       Item 10: HK layer 1 print code
+constant 1.0E-2          Item 12: VKA, layer 1
