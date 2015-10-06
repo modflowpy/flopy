@@ -1,0 +1,16 @@
+#Test problem from USGS Techniques and Methods 6 A-16.  Cells 1,10,14 and
+#  3,6,12 given a large transmissivity, and HFB is used to cause the
+#  transmissivity to be essentially the same as before.
+#  For layer 1, K is .001.  The barrier width will represent half a cell
+#  (2500 ft), so HYDCHR=.001/2500.
+#  For layer 3, K is .0002, so HYDCHR is .0002/2500.
+         0         0         8
+         1        10        14        10        15      4E-7
+         1        10        13        10        14      4E-7
+         1        10        14        11        14      4E-7
+         1         9        14        10        14      4E-7
+         3         6        12         6        13      8E-8
+         3         6        11         6        12      8E-8
+         3         6        12         7        12      8E-8
+         3         5        12         6        12      8E-8
+         0

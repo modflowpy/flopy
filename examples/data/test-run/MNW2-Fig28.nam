@@ -1,0 +1,16 @@
+# MNW2 Sample Problem for Documentation
+#   Pumping with constraints
+LIST   14 MNW2-Fig28.lst
+DIS    15 MNW2-Fig28.dis
+BAS6   18 MNW2-Fig28.bas
+OC     19 MNW2-Fig28.oc
+LPF    20 MNW2-Fig28.lpf
+RCH    21 MNW2-Fig28.rch
+PCG    22 MNW2-Fig28.pcg
+MNW2   23 MNW2-Fig28.mnw2
+MNWI   79 MNW2-Fig28.mnwi
+WEL    80 MNW2-Fig28.wel
+DATA   81 MNW2-Fig28.qsu
+DATA   82 MNW2-Fig28.byn
+DATA   45 MNW2-Fig28.wlA
+DATA   33 MNW2-Fig28.fhd

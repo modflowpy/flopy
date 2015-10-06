@@ -1,0 +1,99 @@
+# GHB Package input file for hypothetical test simulation
+# Test of SFR2 Package
+7   -1                             MXACTB  IGHBCB
+7    0                             ITMP     NP -- STRESS PERIOD  1
+1   1    100   75.   4.1E-0       
+1   2    100   75.   4.1E-0
+1   3    100   75.   4.1E-0
+1   4    100   75.   4.1E-0
+1   5    100   75.   4.1E-0
+1   6    100   75.   4.1E-0
+1   7    100   75.   4.1E-0
+-1   0                             ITMP     NP -- STRESS PERIOD  2 
+-1   0                             ITMP     NP -- STRESS PERIOD  3 
+-1   0                             ITMP     NP -- STRESS PERIOD  4 
+-1   0                             ITMP     NP -- STRESS PERIOD  5 
+-1   0                             ITMP     NP -- STRESS PERIOD  6 
+-1   0                             ITMP     NP -- STRESS PERIOD  7 
+-1   0                             ITMP     NP -- STRESS PERIOD  8 
+-1   0                             ITMP     NP -- STRESS PERIOD  9 
+-1   0                             ITMP     NP -- STRESS PERIOD  10
+-1   0                             ITMP     NP -- STRESS PERIOD  11
+-1   0                             ITMP     NP -- STRESS PERIOD  12
+-1   0                             ITMP     NP -- STRESS PERIOD  13
+-1   0                             ITMP     NP -- STRESS PERIOD  14
+-1   0                             ITMP     NP -- STRESS PERIOD  15
+-1   0                             ITMP     NP -- STRESS PERIOD  16
+-1   0                             ITMP     NP -- STRESS PERIOD  17
+-1   0                             ITMP     NP -- STRESS PERIOD  18
+-1   0                             ITMP     NP -- STRESS PERIOD  19
+-1   0                             ITMP     NP -- STRESS PERIOD  20
+-1   0                             ITMP     NP -- STRESS PERIOD  21
+-1   0                             ITMP     NP -- STRESS PERIOD  22
+-1   0                             ITMP     NP -- STRESS PERIOD  23
+-1   0                             ITMP     NP -- STRESS PERIOD  24
+-1   0                             ITMP     NP -- STRESS PERIOD  25
+-1   0                             ITMP     NP -- STRESS PERIOD  26
+-1   0                             ITMP     NP -- STRESS PERIOD  27
+-1   0                             ITMP     NP -- STRESS PERIOD  28
+-1   0                             ITMP     NP -- STRESS PERIOD  29
+-1   0                             ITMP     NP -- STRESS PERIOD  30
+-1   0                             ITMP     NP -- STRESS PERIOD  31
+-1   0                             ITMP     NP -- STRESS PERIOD  32
+-1   0                             ITMP     NP -- STRESS PERIOD  33
+-1   0                             ITMP     NP -- STRESS PERIOD  34
+-1   0                             ITMP     NP -- STRESS PERIOD  35
+-1   0                             ITMP     NP -- STRESS PERIOD  36
+-1   0                             ITMP     NP -- STRESS PERIOD  37
+-1   0                             ITMP     NP -- STRESS PERIOD  38
+-1   0                             ITMP     NP -- STRESS PERIOD  39
+-1   0                             ITMP     NP -- STRESS PERIOD  40
+-1   0                             ITMP     NP -- STRESS PERIOD  41
+-1   0                             ITMP     NP -- STRESS PERIOD  42
+-1   0                             ITMP     NP -- STRESS PERIOD  43
+-1   0                             ITMP     NP -- STRESS PERIOD  44
+-1   0                             ITMP     NP -- STRESS PERIOD  45
+-1   0                             ITMP     NP -- STRESS PERIOD  46
+-1   0                             ITMP     NP -- STRESS PERIOD  47
+-1   0                             ITMP     NP -- STRESS PERIOD  48
+-1   0                             ITMP     NP -- STRESS PERIOD  49
+-1   0                             ITMP     NP -- STRESS PERIOD  50
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+# PCG file for ets1, drt1, and etsdrt test cases
+#
+ 60  8  1                     Item 1: MXITER ITER1 NPCOND
+1.E-4  80.  1.  2  1  0  1.0  Item 2: HCLOSE RCLOSE RELAX NBPOL IPRPCG MUTPCG DAMP
+
+
+
+   60      8       1                                Item 1: MXITER ITER1 NPCOND
+  0.0001  80.0     1.     2      0       2     1.0  Item 2
+ HCLOSE  RCLOSE  RELAX  NBPOL  IPRPCG  MUTPCG  damp

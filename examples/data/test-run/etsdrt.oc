@@ -1,0 +1,4 @@
+# OC file for ets1, drt1, and etsdrt test cases
+head print format 8
+period 1 step 1
+  print head

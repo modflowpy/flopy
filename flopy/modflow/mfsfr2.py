@@ -808,7 +808,7 @@ def _get_dataset(line, dataset):
         try:
             n = int(s)
         except:
-            try: 
+            try:
                 n = float(s)
             except:
                 break

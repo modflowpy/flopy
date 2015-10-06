@@ -1,0 +1,25 @@
+#  LPF Package input data for example problem
+0  1.00E+30    5 ILPFCB,HDRY,NPLPF
+ 1 0 0
+ 0 0 0
+ 1. 1. 1.
+ 0 0 0
+ 0 0 0
+HK1 HK  1.0E-3 1
+1 NONE ALL
+HK2 HK  1.0E-4 1
+2 NONE ALL
+HK3 HK  2.0E-4 1
+3 NONE ALL
+VKCB1 VKCB 1.0 1
+1 MULT1 ALL
+VKCB2 VKCB 0.5 1
+2 MULT1 ALL
+0                        HK layer   1
+CONSTANT   1.0           VK layer   1
+0                        VKCB layer 1
+0                        HK layer   2
+CONSTANT   1.0           VK layer   2
+0                        VKCB layer 2
+0                        HK  ayer   3
+CONSTANT   1.0           VK layer   3
