@@ -101,6 +101,15 @@ class SpatialReference(object):
         self.ncol = self.delr.shape[0]
 
         self.lenuni = lenuni
+
+        self.set_spatialreference(xul, yul, rotation)
+
+
+    def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
+        """
+            set spatial reference - can be called from model instance
+        """
+
         # Set origin and rotation
         if xul is None:
             self.xul = 0.
@@ -136,12 +145,14 @@ class SpatialReference(object):
 
     @property
     def xgrid(self):
-        self._set_xygrid()
+        if self._xgrid is None:
+            self._set_xygrid()
         return self._xgrid
 
     @property
     def ygrid(self):
-        self._set_xygrid()
+        if self._ygrid is None:
+            self._set_xygrid()
         return self._ygrid
 
     @property
@@ -154,12 +165,14 @@ class SpatialReference(object):
 
     @property
     def ycentergrid(self):
-        self._set_xycentergrid()
+        if self._ycentergrid is None:
+            self._set_xycentergrid()
         return self._ycentergrid
 
     @property
     def xcentergrid(self):
-        self._set_xycentergrid()
+        if self._xcentergrid is None:
+            self._set_xycentergrid()
         return self._xcentergrid
 
     def _set_xycentergrid(self):
@@ -318,7 +331,7 @@ class SpatialReference(object):
     def write_gridSpec(self, filename):
         f = open(filename,'w')
         f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
-        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul,self.yul,self.rotation))
+        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))
         for c in self.delc:
             f.write("{0:15.6E} ".format(c))
         f.write('\n')

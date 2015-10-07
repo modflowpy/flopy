@@ -249,6 +249,63 @@ class ModflowLpf(Package):
         f_lpf.close()
         return
 
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check lpf package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.lpf.check()
+        """
+        if f is not None:
+            if isinstance(f, str):
+                pth = os.path.join(self.parent.model_ws, f)
+                f = open(pth, 'w', 0)
+
+        txt = '\n{} ERRORS:\n'.format(self.name[0])
+        t = ''
+        t1 = ''
+        if self.hk.array.min() < 0:
+            t = '{}  Negative horizontal hydraulic conductivities specified.\n'.format(t)
+
+        if len(t) < 1:
+            t = '  None\n'
+        # add header to level 0 text
+        txt += t
+
+        if level == 1:
+            txt += '\n  DETAILED SUMMARY OF {} ERRORS\n'.format(self.name[0])
+            if len(t1) < 1:
+                t1 = '    None\n'
+            txt += t1
+
+        if f is not None:
+            f.write('{}\n'.format(txt))
+
+        if verbose:
+            print(txt)
+
     @staticmethod
     def load(f, model, ext_unit_dict=None):
         """

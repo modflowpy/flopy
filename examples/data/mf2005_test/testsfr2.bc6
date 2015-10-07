@@ -1,0 +1,8 @@
+         0      -99.         0       0.0         0         0   
+01                                          item 2: ltype, laycon
+CONSTANT       1.                           item 3:  TRPY anisotropy
+CONSTANT       0.20                         item 4:  Specific Yield (layer 1)
+CONSTANT       1.0e-4                       item 5:  Horizontal K
+CONSTANT       5.0e-5                       item 9:  Saturated vertical K
+
+

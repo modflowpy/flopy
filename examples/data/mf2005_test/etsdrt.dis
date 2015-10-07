@@ -1,0 +1,8 @@
+# DIS file for ets1, drt1, and etsdrt test cases.  Units: Days, Feet
+ 1 11 11 1 4 1       Item 1: NLAY NROW NCOL NPER ITMUNI LENUNI
+ 0                   Item 2: LAYCBD
+constant  100.0      Item 3: DELR
+constant  100.0      Item 4: DELC
+constant  100.0      Item 5: Top
+constant    0.0      Item 6: BOTM, layer 1
+ 0.0   1  1.0  SS    Item 7: PERLEN NSTP TSMULT SS/TR, period 1

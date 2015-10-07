@@ -9,6 +9,26 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 
 If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like to suggest an improvement or enhancement, please submit a new Issue through the Github Issue tracker toward the upper-right corner of this page.
 
+## FloPy<sub>3</sub> Supported Packages
+### MODFLOW
+| Package                        | Supported               | Load                    |
+| ------------------------------ |:-----------------------:|:-----------------------:|
+| Basic (BAS6)                   | :white_check_mark:      | :white_check_mark:      |
+| Discretization (DIS)           | :white_check_mark:      | :white_check_mark:      |
+| Layer Property Flow (LPF)      | :white_check_mark:      | :white_check_mark:      |
+| Block Centerd Flow (BCF)       | :white_check_mark:      | :white_check_mark:      |
+| Upstream Weighted (UPW)        | :white_check_mark:      | :white_check_mark:      |
+| Well (WEL)                     | :white_check_mark:      | :white_check_mark:      |
+| Multi-Node Well 1 (MNW1)       | :white_circle:          | :red_circle:            |
+| Multi-Node Well 2 (MNW1)       | :white_circle:          | :red_circle:            |
+| Subsidence (SUB)               | :red_circle:            | :red_circle:            |
+
+### MODPATH
+
+### MT3DMS
+
+### SEAWAT
+
 ## FloPy<sub>3</sub> Changes
 
 ### Version 3.2.2
@@ -142,6 +162,10 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of the *FloPy<sub>3</sub>* [map and cross-section plotting capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
 + An overview of the *FloPy<sub>3</sub>*  [model input and output data `plot()` method capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_PlotArrayExample.ipynb)
+
+#### Parameter Estimation examples
+
++ An overview of the *FloPy<sub>3</sub>* [parameter estimation capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_PEST.ipynb).
 
 #### Additional MODFLOW examples
 

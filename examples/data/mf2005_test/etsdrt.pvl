@@ -1,0 +1,6 @@
+# PVAL file for etsdrt test case
+4
+ETS-Max     0.01
+DRT-Cond    2.0
+Recharge    1.E-3
+HydCond     5.E-2

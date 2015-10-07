@@ -1,0 +1,7 @@
+# RCH file for etsdrt test case
+parameter 1              Item 1: NPRCH
+1  0                     Item 2: NRCHOP IRCHCB
+recharge  rch  1.e-3  1  Item 3: PARNAM PARTYP PARVAL NCLU
+none      all            Item 4: MLTARR ZONARR [IZ]
+ 1                       Item 5: INRECH, stress period 1
+recharge                 Item 7: Pname

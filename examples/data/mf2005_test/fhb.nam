@@ -1,0 +1,9 @@
+LIST  7 fhb.lst
+BAS6  8 fhb.ba6
+DIS  10 fhb.dis
+BCF6 11 fhb.bc6
+SIP  19 fhb.sip
+OC   22 fhb.oc
+fhb  31 fhb.fhb
+DATA(BINARY)  41 fhb.hds replace
+DATA(BINARY)  44 fhb.cbc replace

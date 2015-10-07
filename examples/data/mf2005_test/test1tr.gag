@@ -1,0 +1,10 @@
+9             NUMGAGE (number of gaging stations)
+1   4   83 4  Stream Segment & Reach #; Output file for Gage 1; Output option
+2   3   84 1  Stream Segment & Reach #; Output file for Gage 2; Output option
+3   5   85 1  Stream Segment & Reach #; Output file for Gage 3; Output option
+4   3   86 1  Stream Segment & Reach #; Output file for Gage 4; Output option
+5   4   87 4  Stream Segment & Reach #; Output file for Gage 5; Output option
+6   5   88 1  Stream Segment & Reach #; Output file for Gage 6; Output option
+7   3   89 4  Stream Segment & Reach #; Output file for Gage 7; Output option
+8   6   90 4  Stream Segment & Reach #; Output file for Gage 8; Output option
+3   1   91 5  Stream Segment & Reach #; Output file for Gage 9; Output option

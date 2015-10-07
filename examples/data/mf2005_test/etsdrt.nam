@@ -1,0 +1,15 @@
+# NAME file for etsdrt test case
+list    12  etsdrt.lst
+#
+# Global input files
+dis     21  etsdrt.dis
+#
+# Flow process input files
+bas6    31  etsdrt.bas
+oc      32  etsdrt.oc
+lpf     33  etsdrt.lpf
+drt     34  etsdrt.drt
+rch     36  etsdrt.rch
+ets     37  etsdrt.ets
+pcg     39  etsdrt.pcg
+pval    45  etsdrt.pvl

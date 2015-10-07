@@ -1,0 +1,23 @@
+        34  1.00E+30         0  ISS,IBCFCB,HDRY,IWDFLG,WETFCT,IWETIT,IHDWET
+ 1 1 1 1
+ 0 0 0 0
+1. 1. 1. 1.
+0 0 0 0
+0 0 0 0
+CONSTANT   4.000E+00  HK layer  1
+CONSTANT   4.000E-01  VK layer  1
+CONSTANT   1.400E-06  Ss layer  1
+CONSTANT   3.000E-01  Sy layer  1
+CONSTANT   4.000E+00  HK layer  2
+CONSTANT   4.000E-01  VK layer  2
+CONSTANT   1.400E-06  Ss layer  2
+CONSTANT   3.000E-01  Sy layer  2
+CONSTANT   1.000E-02  HK layer  3
+CONSTANT   1.000E-02  VK layer  3
+CONSTANT   1.400E-06  Ss layer  3
+CONSTANT   3.000E-01  Sy layer  3
+CONSTANT   4.000E+00  HK layer  4
+CONSTANT   4.000E-01  VK layer  4
+CONSTANT   1.400E-06  Ss layer  4
+CONSTANT   3.000E-01  Sy layer  4
+
