@@ -28,7 +28,7 @@ class Modpath(BaseModel):
     'Modpath base class'
     def __init__(self, modelname='modpathtest', simfile_ext='mpsim', namefile_ext='mpnam',
                  exe_name='mp6.exe', modflowmodel=None, 
-                 dis_file = None, head_file = None, budget_file = None, 
+                 dis_file = None, dis_unit=87, head_file = None, budget_file = None, 
                  model_ws=None, external_path=None, verbose=False,
                  load=True, listunit=7):
         BaseModel.__init__(self, modelname, simfile_ext, exe_name, model_ws=model_ws)
@@ -38,6 +38,7 @@ class Modpath(BaseModel):
         self.mpnamefile = '{}.{}'.format(self.get_name(), namefile_ext)
         self.mpbas_file = '{}.mpbas'.format(modelname)
         self.dis_file = dis_file
+        self.dis_unit = dis_unit
         self.head_file = head_file
         self.budget_file = budget_file
         self.__sim = None
@@ -81,7 +82,7 @@ class Modpath(BaseModel):
         if self.mpbas_file is not None:
             f_nam.write('%s %3i %s\n' % ('MPBAS', 86, self.mpbas_file))        
         if self.dis_file is not None:
-            f_nam.write('%s %3i %s\n' % ('DIS', 87, self.dis_file))        
+            f_nam.write('%s %3i %s\n' % ('DIS', self.dis_unit, self.dis_file))        
         if self.head_file is not None:
             f_nam.write('%s %3i %s\n' % ('HEAD', 88, self.head_file))        
         if self.budget_file is not None:
