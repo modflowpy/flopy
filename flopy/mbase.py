@@ -502,6 +502,43 @@ class BaseModel(object):
             self.pop_key_list.append(key)
 
 
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+        if f is not None:
+            if isinstance(f, str):
+                pth = os.path.join(self.model_ws, f)
+                f = open(pth, 'w', 0)
+        for p in self.packagelist:
+            p.check(f=f, verbose=verbose, level=level)
+
+
     def plot(self, SelPackList=None, **kwargs):
         """
         Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
@@ -781,6 +818,48 @@ class Package(object):
         newdtype = sum((dtype.descr for dtype in newdtypes), [])
         newdtype = np.dtype(newdtype)
         return newdtype
+
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.dis.check()
+        """
+        if f is not None:
+            if isinstance(f, str):
+                pth = os.path.join(self.parent.model_ws, f)
+                f = open(pth, 'w', 0)
+
+        txt = 'check method not implemented for {} Package.'.format(self.name[0])
+        if f is not None:
+            f.write('{}\n'.format(txt))
+        if verbose:
+            print(txt)
+
 
     def plot(self, **kwargs):
         """
