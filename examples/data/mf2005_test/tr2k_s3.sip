@@ -1,0 +1,2 @@
+       120         5  MXITER  NPARM
+  1.00E+00  1.00E-05         1  0.00E+00         1 ACCL HCLOSE IPCALC WSEED IPRSIP

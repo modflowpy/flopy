@@ -150,18 +150,18 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                     array_dict[name] = a.array
                 elif isinstance(a, util_3d):
                     for i, u2d in enumerate(a):
-                        name = u2d.name.lower().replace(' ', '_')
-                        if "_layer" in name:
-                            name = name.replace("_layer", '')
-                        else:
-                            name += '_{0:d}'.format(i + 1)
+                        #name = u2d.name.lower().replace(' ', '_')
+                        name = shape_attr_name(u2d.name)
+                        name += '_{:03d}'.format(i + 1)
                         array_dict[name] = u2d.array
                 elif isinstance(a, transient_2d):
                     kpers = list(a.transient_2ds.keys())
                     kpers.sort()
                     for kper in kpers:
                         u2d = a.transient_2ds[kper]
-                        name = u2d.name.lower() + "_{0:d}".format(kper + 1)
+                        #name = u2d.name.lower() + "_{0:03d}".format(kper + 1)
+                        name = shape_attr_name(u2d.name)
+                        name = "{}_{:03d}".format(name, kper + 1)
                         array_dict[name] = u2d.array
                 elif isinstance(a, mflist):
                     kpers = a.data.keys()
@@ -169,18 +169,65 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                         arrays = a.to_array(kper)
                         for name, array in arrays.items():
                             for k in range(array.shape[0]):
-                                aname = name + "{0:03d}{1:02d}".format(kper, k)
+                                #aname = name + "{0:03d}{1:02d}".format(kper, k)
+                                name = shape_attr_name(name, length=4)
+                                aname = "{}{:03d}{:03d}".format(name, k+1, kper+1)
                                 array_dict[aname] = array[k]
                 elif isinstance(a, list):
                     for v in a:
                         if isinstance(v, util_3d):
                             for i, u2d in enumerate(v):
-                                name = u2d.name.lower().replace(' ', '_')
-                                if "_layer" in name:
-                                    name = name.replace("_layer", '')
-                                else:
-                                    name += '_{0:d}'.format(i + 1)
+                                #name = u2d.name.lower().replace(' ', '_')
+                                name = shape_attr_name(u2d.name)
+                                name += '_{:03d}'.format(i + 1)
                                 array_dict[name] = u2d.array
 
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.dis.sr, array_dict)
+
+def shape_attr_name(name, length=6, keep_layer=False):
+    """
+    Function for to format an array name to a maximum of 10 characters to conform
+    with ESRI shapefile maximum attribute name length
+
+    Parameters
+    ----------
+    name : string
+        data array name
+    length : int
+        maximum length of string to return. Value passed to function is overridden
+        and set to 10 if keep_layer=True. (default is 6)
+    keep_layer : bool
+        Boolean that determines if layer number in name should be retained.
+        (default is False)
+
+
+    Returns
+    -------
+    String
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> name = flopy.utils.shape_attr_name('averylongstring')
+    >>> name
+    >>> 'averyl'
+
+    """
+    # replace spaces with "_"
+    n = name.lower().replace(' ', '_')
+    # exclude "_layer_X" portion of string
+    if keep_layer:
+        length = 10
+        n = n.replace('_layer', '_')
+    else:
+        try:
+            idx = n.index('_layer')
+            n = n[:idx]
+        except:
+            pass
+
+    if len(n) > length:
+        n = n[:length]
+    return n

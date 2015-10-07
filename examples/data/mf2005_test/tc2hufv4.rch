@@ -1,0 +1,17 @@
+PARAMETER  1  1          NPRCH NRCHC
+         1         0     NRCHOP IRCHBD
+RCH  RCH  3.1E-4   1     PARNAM PARTYP B NCLU
+NONE  RCHETM       1     Mult_arr_name, Zone_arr_name, Zone numbers
+         1         0     INRECH INIRICH for stress period 0
+RCH   20                 Name of active parameter
+
+
+
+
+
+
+
+        -1         0     INRECH INIRICH for stress period 1
+        -1         0     INRECH INIRICH for stress period 2
+        -1         0     INRECH INIRICH for stress period 3
+        -1         0     INRECH INIRICH for stress period 4

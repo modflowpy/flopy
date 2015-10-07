@@ -1,0 +1,8 @@
+LIST  7 restest.lst
+BAS6  8 restest.ba6
+BCF6 11 restest.bc6
+GHB  17 restest.ghb
+SIP  19 restest.sip
+OC   22 restest.oc
+RES  27 restest.res
+DIS  10 restest.dis

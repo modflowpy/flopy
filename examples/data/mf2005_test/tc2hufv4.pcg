@@ -1,0 +1,4 @@
+       250         8         1    MXITER,ITER1,NPCOND
+  000.0001    80.000        1.         2        00         1      1.00
+ HCLOSE,      RCLOSE,    RELAX,    NBPOL,     IPRPCG,   MUTPCG    damp
+

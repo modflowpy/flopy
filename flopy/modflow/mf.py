@@ -167,6 +167,7 @@ class Modflow(BaseModel):
             "pcgn": flopy.modflow.ModflowPcgn,
             "nwt": flopy.modflow.ModflowNwt,
             "pks": flopy.modflow.ModflowPks,
+            "sfr": flopy.modflow.ModflowSfr2,
             "sip": flopy.modflow.ModflowSip,
             "sor": flopy.modflow.ModflowSor,
             "de4": flopy.modflow.ModflowDe4,

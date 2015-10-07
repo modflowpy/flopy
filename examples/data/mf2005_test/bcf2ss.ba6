@@ -1,0 +1,8 @@
+#Valley aquifer with 2 sand layers separated by silt.  Stress period 1 is natur
+# conditions.  Stress period 2 adds wells.                                     
+NO OPTIONS
+CONSTANT          0  IBOUND layer   1
+CONSTANT          1  IBOUND layer   2
+    999.99  HNOFLO
+CONSTANT   0.000000E+00  Initial Head layer   1
+CONSTANT   0.000000E+00  Initial Head layer   2

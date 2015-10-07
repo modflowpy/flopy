@@ -1,0 +1,6 @@
+# DRT file for drt1 and etsdrt test cases
+1  0  1  1  returnflow    Item 1: MXADRT IDRTCB NPDRT MXL
+DRT-Cond   drt  2.0  1    Item 2: PARNAM PARTYP PARVAL NLST
+1 5 8 60.0 1.0 1 7 3 0.4  Item 3: LAY ROW COL ELEV Condfact LayR RowR ColR Rfprop
+0  1                      Item 4: ITMP NP, stress period 1
+DRT-Cond                  Item 6: Pname

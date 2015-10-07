@@ -1,0 +1,8 @@
+ 0  90.0  0  0.0  0  0  Item 1: IBCFCB HDRY IWDFLG WETFCT IWETIT IHDWET
+01 00                   Item 2: Ltype
+ CONSTANT    1.0        Item 3: TRPY
+ CONSTANT    0.05       Item 4: S, layer 1 (Specific Yield)
+ CONSTANT     60.       Item 6: K, layer 1
+ CONSTANT  .20E-03      Item 7: VCONT, layer 1
+ CONSTANT  1.0E-04      Item 4: S, layer 2
+ CONSTANT   15000.      Item 5: T, layer 2

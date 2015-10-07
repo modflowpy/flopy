@@ -1,0 +1,11 @@
+LIST   2 twrip.lst
+BAS6   3 twrip.ba6
+LPF   11 twrip.lpf
+WEL   12 twrip.wel
+DRN   13 twrip.drn
+RCH   18 twrip.rch
+SIP   19 twrip.sip
+OC    22 twrip.oc
+MULT   8 twrip.mlt
+ZONE   9 twrip.zon
+DIS   10 twrip.dis

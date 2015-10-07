@@ -1,0 +1,14 @@
+LIST                  2 tr2k_s3.lst
+BAS6                  1 tr2k_s3.ba6
+DIS                  10 tr2k_s3.dis
+BCF6                 11 tr2k_s3.bc6
+WEL                  12 tr2k_s3.wel
+SIP                  13 tr2k_s3.sip
+OC                   15 tr2k_s3.oc
+SUB                  19 tr2k_s3.sub
+#
+# Binary output files
+DATA(BINARY)         21 tr2k_s3.hed REPLACE
+DATA(BINARY)         22 tr2k_s3.ddn REPLACE
+DATA(BINARY)         41 tr2k_s3.sbs REPLACE
+DATA(BINARY)         42 tr2k_s3.cmp REPLACE

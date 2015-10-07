@@ -1,0 +1,12 @@
+LIST  1 l1a2k.lst
+BAS6  7 l1a2k.ba6
+BCF6 10 l1a2k.bc6
+EVT  11 l1a2k.evt
+RCH  12 l1a2k.rch
+SIP  13 l1a2k.sip
+OC   17 l1a2k.oc
+LAK  16 l1a2k.lak
+DIS  14 l1a2k.dis
+FHB  21 l1a2k.fhb
+GAGE 33 l1a2k.gag
+DATA 37 l1a2k.got
