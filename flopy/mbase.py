@@ -860,6 +860,34 @@ class Package(object):
         if verbose:
             print(txt)
 
+    def level1_arraylist(self, idx, v, name, txt):
+        """
+
+        :param idx:
+        :param v:
+        :param txt:
+        :param name:
+        :return:
+        """
+        ndim = v.ndim
+        if ndim == 3:
+            kon = -1
+            for [k, i, j] in idx:
+                if k > kon:
+                    kon = k
+                    txt += '    {:>10s}{:>10s}{:>10s}{:>15s}\n'.format('layer', 'row', 'column',
+                                                                       name[k].lower().replace(' layer ', ''))
+                txt += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k+1, i+1, j+1, v[k, i, j])
+        elif ndim == 2:
+            txt += '    {:>10s}{:>10s}{:>15s}\n'.format('row', 'column',
+                                                        name[0].lower().replace(' layer ', ''))
+            for [i, j] in idx:
+                txt += '    {:10d}{:10d}{:15.7g}\n'.format(i+1, j+1, v[i, j])
+        elif ndim == 1:
+            txt += '    {:>10s}{:>15s}\n'.format('number', name[0])
+            for i in idx:
+                txt += '    {:10d}{:15.7g}\n'.format(i+1, v[i])
+        return txt
 
     def plot(self, **kwargs):
         """

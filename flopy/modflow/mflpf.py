@@ -235,7 +235,7 @@ class ModflowLpf(Package):
         transient = not self.parent.get_package('DIS').steady.all()
         for k in range(nlay):
             f_lpf.write(self.hk[k].get_file_entry())
-            if self.chani[k] < 0:
+            if self.chani[k] < 1:
                 f_lpf.write(self.hani[k].get_file_entry())
             f_lpf.write(self.vka[k].get_file_entry())
             if transient == True:
@@ -283,36 +283,121 @@ class ModflowLpf(Package):
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, 'w', 0)
 
-        txt = '\n{} ERRORS:\n'.format(self.name[0])
+        errors = False
+        txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.name[0])
         t = ''
         t1 = ''
         inactive = self.parent.bas6.ibound.array == 0
+        # hk errors
         d = self.hk.array
         d[inactive] = 0.
         if d.min() < 0:
-            t = '{}  Negative horizontal hydraulic conductivities specified.\n'.format(t)
+            errors = True
+            t = '{}  ERROR: Negative horizontal hydraulic conductivity specified.\n'.format(t)
             if level > 0:
-                t1 += '    {:>10s}{:>10s}{:>10s}{:>15s}\n'.format('layer', 'row', 'column', 'thickness')
                 idx = np.column_stack(np.where(d < 0.))
-                for [k, i, j] in idx:
-                    t1 += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k+1, i+1, j+1, d[k, i, j])
+                t1 = self.level1_arraylist(idx, d, self.hk.name, t1)
+        else:
+            t = '{}  Specified horizontal hydraulic conductivity is OK.\n'.format(t)
+        # hani errors
+        d = self.hani.array
+        name = self.hk.name
+        d[inactive] = 0.
+        # exclude layers without horizontal anisotropy
+        use_array = False
+        for k in range(d.shape[0]):
+            if self.chani[k] > 0:
+                d[k, :, :] = 1
+            else:
+                use_array = True
+        if d.min() < 0:
+            errors = True
+            t = '{}  ERROR: Negative horizontal hydraulic conductivity ratio specified.\n'.format(t)
+            if level > 0:
+                idx = np.column_stack(np.where(d < 0.))
+                t1 = self.level1_arraylist(idx, d, self.hani.name, t1)
+        else:
+            if use_array:
+                t = '{}  Specified horizontal hydraulic conductivity ratio is OK.\n'.format(t)
+        # vka errors
+        d = self.vka.array
+        d[inactive] = 1.
+        if d.min() <= 0:
+            errors = True
+            t = '{}  ERROR: Negative or zero vertical hydraulic conductivity specified.\n'.format(t)
+            if level > 0:
+                idx = np.column_stack(np.where(d <= 0.))
+                t1 = self.level1_arraylist(idx, d, self.vka.name, t1)
+        else:
+            t = '{}  Specified vertical hydraulic conductivity is OK.\n'.format(t)
+        # vkcb errors
+        d = self.vkcb.array
+        d[inactive] = 1.
+        # exclude layers without vertical confining beds
+        use_array = False
+        for k in range(d.shape[0]):
+            if self.parent.get_package('DIS').laycbd[k] == 0:
+                d[k, :, :] = 1
+            else:
+                use_array = True
+        if d.min() < 0:
+            errors = True
+            t = '{}  ERROR: Negative or zero quasi-3D confining bed vertical ' +\
+                'hydraulic conductivity specified.\n'.format(t)
+            if level > 0:
+                idx = np.column_stack(np.where(d <= 0.))
+                t1 = self.level1_arraylist(idx, d, self.vkcb.name, t1)
+        else:
+            if use_array:
+                t = '{}  Specified quasi-3D confining bed vertical hydraulic conductivity is OK.\n'.format(t)
+        # storage errors
+        transient = not self.parent.get_package('DIS').steady.all()
+        if transient:
+            # Ss errors
+            d = self.ss.array
+            d[inactive] = 1.
+            if d.min() < 0:
+                errors = True
+                t = '{}  ERROR: Negative specific storage specified.\n'.format(t)
+                if level > 0:
+                    idx = np.column_stack(np.where(d < 0.))
+                    t1 = self.level1_arraylist(idx, d, self.ss.name, t1)
+            else:
+                t = '{}  Specified specific storage is OK.\n'.format(t)
+            # Sy errors
+            d = self.sy.array
+            d[inactive] = 1.
+            # exclude non-convertible layers from error checking
+            use_array = False
+            for k in range(d.shape[0]):
+                if self.laytyp[k] == 0:
+                    d[k, :, :] = 1
+                else:
+                    use_array = True
+            if d.min() < 0:
+                errors = True
+                t = '{}  ERROR: Negative specific yield specified.\n'.format(t)
+                if level > 0:
+                    idx = np.column_stack(np.where(d < 0.))
+                    t1 = self.level1_arraylist(idx, d, self.sy.name, t1)
+            else:
+                if use_array:
+                    t = '{}  Specified specific yield is OK.\n'.format(t)
 
-
-
-        if len(t) < 1:
-            t = '  None\n'
         # add header to level 0 text
         txt += t
 
         if level > 0:
-            txt += '\n  DETAILED SUMMARY OF {} ERRORS\n'.format(self.name[0])
-            if len(t1) < 1:
-                t1 = '    None\n'
-            txt += t1
+            if errors:
+                txt += '\n  DETAILED SUMMARY OF {} ERRORS:\n'.format(self.name[0])
+                # add level 1 header to level 1 text
+                txt += t1
 
+        # write errors to summary file
         if f is not None:
             f.write('{}\n'.format(txt))
 
+        # write errors to stdout
         if verbose:
             print(txt)
 
