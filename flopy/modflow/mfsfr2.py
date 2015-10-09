@@ -1,4 +1,6 @@
+__author__ = 'aleaf'
 
+import os
 import numpy as np
 from flopy.mbase import Package
 
@@ -499,6 +501,44 @@ class ModflowSfr2(Package):
                            tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
                            )
 
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check sfr2 package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.sfr2.check()
+        """
+        chk = check(self, verbose=verbose, level=level)
+
+        if f is not None:
+            if isinstance(f, str):
+                pth = os.path.join(self.parent.model_ws, f)
+                f = open(pth, 'w', 0)
+            f.write('{}\n'.format(chk.txt))
+        f.close()
+
     def _write_1c(self, f_sfr):
 
         # NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ISTCB1  ISTCB2
@@ -593,36 +633,6 @@ class ModflowSfr2(Package):
         if icalc == 3:
             f_sfr.write(' '.join(fmts[12:16]).format(cdpth, fdpth, awdth, bwdth) + ' ')
         f_sfr.write('\n')
-
-        '''
-        nseg = int(line.pop(0))
-        icalc = int(line.pop(0))
-        outseg = int(line.pop(0))
-        iupseg = int(line.pop(0))
-        iprior = na
-        nstrpts = na
-
-        if iupseg !=0:
-            iprior = int(line.pop(0))
-        if icalc == 4:
-            nstrpts = int(line.pop(0))
-
-        flow = float(line.pop(0))
-        runoff = float(line.pop(0))
-        etsw = float(line.pop(0))
-        pptsw = float(line.pop(0))
-        roughch = na
-        roughbk = na
-
-        if icalc in [1, 2]:
-            roughch = float(line.pop(0))
-        if icalc == 2:
-            roughbk = float(line.pop(0))
-
-        cdpth, fdpth, awdth, bwdth = na, na, na, na
-        if icalc == 3:
-            cdpth, fdpth, awdth, bwdth = map(float, line)
-        '''
 
         self._write_6bc(i, j, f_sfr, cols=['hcond1', 'thickm1', 'elevup1', 'width1', 'depth1', 'thts1', 'thti1',
                                            'eps1', 'uhc1'])
@@ -779,6 +789,76 @@ class ModflowSfr2(Package):
             else:
                 continue
         f_sfr.close()
+
+
+class check:
+    """
+    Daniel Feinstein's top 10 SFR problems:
+    1) cell gaps btw adjacent reaches in a single segment
+    2) cell gaps btw routed segments. possibly because of re-entry problems at domain edge
+    3) adjacent reaches with STOP sloping the wrong way
+    4) routed segments with end/start sloping the wrong way
+    5) STOP>TOP1 violations, i.e.,floaters
+    6) STOP<<TOP1 violations, i.e., exaggerated incisions
+    7) segments that end within one diagonal cell distance from another segment, inviting linkage
+    8) circular routing of segments
+    9) multiple reaches with non-zero conductance in a single cell
+    10) reaches in inactive cells
+    """
+
+    def __init__(self, sfrpackage, verbose=True, level=1):
+        self.sfr = sfrpackage
+        self.reach_data = sfrpackage.reach_data
+        self.segment_data = sfrpackage.segment_data
+        self.verbose = verbose
+        self.level = level
+
+        self.txt = '\n{} ERRORS:\n'.format(self.sfr.name[0])
+
+    def numbering(self):
+        """checks for continuity in segment and reach numbering
+        """
+
+        def _check_numbering(n, numbers, level=1, datatype='reach'):
+
+            txt = ''
+            num_range = np.arange(1, n+1)
+            if not np.array_equal(num_range, numbers):
+                txt += 'Invalid {} numbering\n'.format(datatype)
+                if level == 1:
+                    gaps = num_range[np.diff(numbers) != 1] + 1
+                    if len(gaps) > 0:
+                        gapstr = ' '.join(map(str, gaps))
+                        txt += 'Gaps in numbering at positions {}\n'.format(gapstr)
+            return txt
+
+        headertxt = 'Checking for continuity in segment and reach numbering...\n'
+        txt = ''
+        if self.verbose:
+            print(headertxt)
+        # check segment numbering
+        txt += _check_numbering(self.sfr.nss,
+                                self.segment_data[0]['nseg'],
+                                level=self.level,
+                                datatype='segment')
+
+        # check reach numbering
+        for segment in np.arange(1, self.sfr.nss+1):
+            reaches = self.reach_data.ireach[self.reach_data.iseg == segment]
+            nreaches = len(reaches)
+            t = _check_numbering(len(reaches),
+                                 reaches,
+                                 level=self.level,
+                                 datatype='reach')
+            if len(t) > 0:
+                txt += 'Segment {} has {}'.format(t)
+
+        if len(txt) == 0:
+            txt += 'passed.'
+        if self.verbose:
+            print(txt)
+        self.txt += headertxt + txt + '\n'
+
 
 def _isnumeric(str):
     try:
@@ -961,7 +1041,6 @@ def parse_6a(line, option):
         cdpth, fdpth, awdth, bwdth = map(float, line)
     return nseg, icalc, outseg, iupseg, iprior, nstrpts, flow, runoff, etsw, \
            pptsw, roughch, roughbk, cdpth, fdpth, awdth, bwdth, xyz
-
 
 def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     """Parse Data Set 6b for SFR2 package.
