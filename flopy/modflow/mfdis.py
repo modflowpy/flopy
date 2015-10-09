@@ -11,7 +11,8 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d,util_3d,reference
+from flopy.utils import util_2d, util_3d, reference
+
 
 class ModflowDis(Package):
     """
@@ -110,20 +111,20 @@ class ModflowDis(Package):
         self.laycbd[-1] = 0  # bottom layer must be zero
         self.delr = util_2d(model, (self.ncol,), np.float32, delr, name='delr',
                             locat=self.unit_number[0])
-        self.delc = util_2d(model,(self.nrow,), np.float32, delc, name='delc',
+        self.delc = util_2d(model, (self.nrow,), np.float32, delc, name='delc',
                             locat=self.unit_number[0])
-        self.top = util_2d(model, (self.nrow,self.ncol), np.float32,
-                           top,name='model_top', locat=self.unit_number[0])
-        self.botm = util_3d(model, (self.nlay+sum(self.laycbd),
-                                    self.nrow,self.ncol), np.float32, botm,
-                                    'botm', locat=self.unit_number[0])
+        self.top = util_2d(model, (self.nrow, self.ncol), np.float32,
+                           top, name='model_top', locat=self.unit_number[0])
+        self.botm = util_3d(model, (self.nlay + sum(self.laycbd),
+                                    self.nrow, self.ncol), np.float32, botm,
+                            'botm', locat=self.unit_number[0])
         self.perlen = util_2d(model, (self.nper,), np.float32, perlen,
                               name='perlen')
         self.nstp = util_2d(model, (self.nper,), np.int, nstp, name='nstp')
         self.tsmult = util_2d(model, (self.nper,), np.float32, tsmult,
                               name='tsmult')
         self.steady = util_2d(model, (self.nper,), np.bool,
-                              steady,name='steady')
+                              steady, name='steady')
         self.itmuni = int(itmuni)
         self.lenuni = int(lenuni)
         self.parent.add_package(self)
@@ -132,6 +133,9 @@ class ModflowDis(Package):
 
         self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni, xul=xul,
                                              yul=yul, rotation=rotation)
+
+        # calculate layer thicknesses
+        self.__calculate_thickness()
 
     def checklayerthickness(self):
         """
@@ -204,22 +208,22 @@ class ModflowDis(Package):
         v : list of tuples containing the layer (k), row (i), 
             and column (j) for each node in the input list
         """
-        if not isinstance( nodes, list ):
+        if not isinstance(nodes, list):
             nodes = [nodes]
         nrc = self.nrow * self.ncol
         v = []
         for node in nodes:
-            k  = int( node / nrc )
+            k = int(node / nrc)
             if ( k * nrc ) < node:
                 k += 1
-            ij = int( node - ( k - 1 ) * nrc )
-            i  = int( ij / self.ncol )
+            ij = int(node - ( k - 1 ) * nrc)
+            i = int(ij / self.ncol)
             if ( i * self.ncol ) < ij:
                 i += 1
             j = ij - ( i - 1 ) * self.ncol
             v.append((k, i, j))
         return v
-        
+
     def get_node(self, lrc_list):
         """
         Get node number from a list of MODFLOW layer, row, column tuples.
@@ -229,18 +233,18 @@ class ModflowDis(Package):
         v : list of MODFLOW nodes for each layer (k), row (i), 
             and column (j) tuple in the input list
         """
-        if not isinstance( lrc_list, list ):
+        if not isinstance(lrc_list, list):
             lrc_list = [lrc_list]
         nrc = self.nrow * self.ncol
         v = []
-        for [k,i,j] in lrc_list:
-            node = int( ( ( k - 1 ) * nrc ) + ( ( i - 1 ) * self.ncol ) + j  )
+        for [k, i, j] in lrc_list:
+            node = int(( ( k - 1 ) * nrc ) + ( ( i - 1 ) * self.ncol ) + j)
             v.append(node)
         return v
 
-    def read_from_cnf(self, cnf_file_name, n_per_line = 0):
+    def read_from_cnf(self, cnf_file_name, n_per_line=0):
         """
-        Read discretization informatio from an MT3D configuration file.
+        Read discretization information from an MT3D configuration file.
 
         """
 
@@ -302,15 +306,15 @@ class ModflowDis(Package):
             self.nrow = cnf_nrow
             self.ncol = cnf_ncol
 
-            self.delr = util_2d(model, (self.ncol,), np.float32, cnf_delr, 
+            self.delr = util_2d(model, (self.ncol,), np.float32, cnf_delr,
                                 name='delr', locat=self.unit_number[0])
-            self.delc = util_2d(model, (self.nrow,), np.float32, cnf_delc, 
+            self.delc = util_2d(model, (self.nrow,), np.float32, cnf_delc,
                                 name='delc', locat=self.unit_number[0])
-            self.top = util_2d(model, (self.nrow,self.ncol), np.float32,
-                                       cnf_top, name='model_top', 
-                                       locat = self.unit_number[0])
+            self.top = util_2d(model, (self.nrow, self.ncol), np.float32,
+                               cnf_top, name='model_top',
+                               locat=self.unit_number[0])
 
-            cnf_botm = np.empty((self.nlay + sum(self.laycbd),self.nrow, 
+            cnf_botm = np.empty((self.nlay + sum(self.laycbd), self.nrow,
                                  self.ncol))
 
             # First model layer
@@ -321,8 +325,8 @@ class ModflowDis(Package):
 
             self.botm = util_3d(model, (self.nlay + sum(self.laycbd),
                                         self.nrow, self.ncol), np.float32,
-                                        cnf_botm, 'botm', 
-                                        locat = self.unit_number[0])
+                                cnf_botm, 'botm',
+                                locat=self.unit_number[0])
 
     def gettop(self):
         """
@@ -347,7 +351,16 @@ class ModflowDis(Package):
         if k is None:
             return self.botm.array
         else:
-            return self.botm.array[k,:,:]
+            return self.botm.array[k, :, :]
+
+    def __calculate_thickness(self):
+        thk = []
+        thk.append(self.top - self.botm[0])
+        for k in range(1, self.nlay + sum(self.laycbd)):
+            thk.append(self.botm[k - 1] - self.botm[k])
+        self.__thickness = util_3d(self.parent, (self.nlay + sum(self.laycbd),
+                                                 self.nrow, self.ncol),
+                                   np.float32, thk, name='thickness')
 
     @property
     def thickness(self):
@@ -359,13 +372,6 @@ class ModflowDis(Package):
         thickness : util3d array of floats (nlay, nrow, ncol)
 
         """
-        thk = []
-        thk.append(self.top - self.botm[0])
-        for k in range(1,self.nlay):
-            thk.append(self.botm[k-1] - self.botm[k])
-        self.__thickness = util_3d(self.parent, (self.nlay, self.nrow,
-                                                 self.ncol), np.float32, thk,
-                                                 name='thickness')
         return self.__thickness
 
     def write_file(self):
@@ -378,11 +384,11 @@ class ModflowDis(Package):
         # Item 0: heading        
         f_dis.write('{0:s}\n'.format(self.heading))
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI        
-        f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n'\
-            .format(self.nlay, self.nrow, self.ncol, self.nper, self.itmuni,
-                    self.lenuni))
+        f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n' \
+                    .format(self.nlay, self.nrow, self.ncol, self.nper, self.itmuni,
+                            self.lenuni))
         # Item 2: LAYCBD
-        for l in range(0, self.nlay):            
+        for l in range(0, self.nlay):
             f_dis.write('{0:3d}'.format(self.laycbd[l]))
         f_dis.write('\n')
         # Item 3: DELR
@@ -395,15 +401,85 @@ class ModflowDis(Package):
         f_dis.write(self.botm.get_file_entry())
 
         # Item 6: NPER, NSTP, TSMULT, Ss/tr
-        for t in range(self.nper):           
+        for t in range(self.nper):
             f_dis.write('{0:14f}{1:14d}{2:10f} '.format(self.perlen[t],
                                                         self.nstp[t],
                                                         self.tsmult[t]))
-            if self.steady[t]:                
+            if self.steady[t]:
                 f_dis.write(' {0:3s}\n'.format('SS'))
-            else:                
+            else:
                 f_dis.write(' {0:3s}\n'.format('TR'))
         f_dis.close()
+
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check dis package data for zero and negative thicknesses.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.dis.check()
+        """
+        if f is not None:
+            if isinstance(f, str):
+                pth = os.path.join(self.parent.model_ws, f)
+                f = open(pth, 'w', 0)
+
+        errors = False
+        txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.name[0])
+        t = ''
+        t1 = ''
+        inactive = self.parent.bas6.ibound.array == 0
+        # thickness errors
+        d = self.thickness.array
+        d[inactive] = 1.
+        if d.min() <= 0:
+            errors = True
+            t = '{}  ERROR: Negative or zero cell thickness specified.\n'.format(t)
+            if level > 0:
+                idx = np.column_stack(np.where(d <= 0.))
+                t1 = self.level1_arraylist(idx, d, self.thickness.name, t1)
+        else:
+            t = '{}  Specified cell thickness is OK.\n'.format(t)
+
+        # add header to level 0 text
+        txt += t
+
+        if level > 0:
+            if errors:
+                txt += '\n  DETAILED SUMMARY OF {} ERRORS:\n'.format(self.name[0])
+                # add level 1 header to level 1 text
+                txt += t1
+
+        # write errors to summary file
+        if f is not None:
+            f.write('{}\n'.format(txt))
+
+        # write errors to stdout
+        if verbose:
+            print(txt)
+
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
@@ -460,9 +536,9 @@ class ModflowDis(Package):
         # dataset 2 -- laycbd
         if model.verbose:
             print('   Loading dis package with:\n      ' + \
-                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol,nper))
+                  '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(nlay, nrow, ncol, nper))
             print('   loading laycbd...')
-        laycbd = np.empty( (nlay), dtype=np.int)
+        laycbd = np.empty((nlay), dtype=np.int)
         d = 0
         while True:
             line = f.readline()
@@ -474,33 +550,33 @@ class ModflowDis(Package):
                     break
             if d == nlay:
                 break
-        #dataset 3 -- delr
+        # dataset 3 -- delr
         if model.verbose:
             print('   loading delr...')
         delr = util_2d.load(f, model, (1, ncol), np.float32, 'delr',
                             ext_unit_dict)
-        delr = delr.array.reshape( (ncol) )
+        delr = delr.array.reshape((ncol))
         #dataset 4 -- delc
         if model.verbose:
             print('   loading delc...')
         delc = util_2d.load(f, model, (1, nrow), np.float32, 'delc',
                             ext_unit_dict)
-        delc = delc.array.reshape( (nrow) )
+        delc = delc.array.reshape((nrow))
         #dataset 5 -- top
         if model.verbose:
             print('   loading top...')
-        top = util_2d.load(f, model, (nrow,ncol), np.float32, 'top',
+        top = util_2d.load(f, model, (nrow, ncol), np.float32, 'top',
                            ext_unit_dict)
         #dataset 6 -- botm
         if model.verbose:
             print('   loading botm...')
-        ncbd=laycbd.sum()
+        ncbd = laycbd.sum()
         if nlay > 1:
-            botm = util_3d.load(f, model, (nlay+ncbd,nrow,ncol), np.float32,
+            botm = util_3d.load(f, model, (nlay + ncbd, nrow, ncol), np.float32,
                                 'botm', ext_unit_dict)
         else:
-            botm = util_2d.load(f, model, (nrow, ncol), np.float32, 'botm',
-                           ext_unit_dict)
+            botm = util_3d.load(f, model, (nlay, nrow, ncol), np.float32, 'botm',
+                                ext_unit_dict)
         #dataset 7 -- stress period info
         if model.verbose:
             print('   loading stress period data...')
@@ -524,7 +600,7 @@ class ModflowDis(Package):
             steady.append(a4)
 
         # create dis object instance
-        dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd, 
+        dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
                          lenuni)
         # return dis object instance

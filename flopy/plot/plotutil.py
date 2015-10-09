@@ -307,7 +307,7 @@ def _plot_bc_helper(package, kper,
 
         if inactive:
             try:
-                ib = package.parent.bas6.getibound()
+                ib = package.parent.bas6.ibound.array
                 mm.plot_inactive(ibound=ib, ax=axes[idx])
             except:
                 pass

@@ -977,15 +977,17 @@ class Package(object):
                 if key is None:
                     names = ['{} location stress period {} layer {}'.format(self.name[0], kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
+                    colorbar = False
                 else:
                     names = ['{} {} data stress period {} layer {}'.format(self.name[0], key, kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
+                    colorbar = True
 
                 fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(key, names, kper,
                                        filename_base=fileb, file_extension=fext, mflay=mflay,
-                                       fignum=fignum, colorbar=True))
+                                       fignum=fignum, colorbar=colorbar))
 
             elif isinstance(value, utils.util_3d):
                 if self.parent.verbose:

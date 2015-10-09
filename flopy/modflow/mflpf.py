@@ -190,7 +190,10 @@ class ModflowLpf(Package):
             keys.append(key)
         self.vka = util_3d(model, (nlay, nrow, ncol), np.float32, vka,
                            name=keys, locat=self.unit_number[0])
-        self.ss = util_3d(model, (nlay, nrow, ncol), np.float32, ss, name='ss',
+        tag = 'ss'
+        if storagecoefficient:
+            tag = 'storage'
+        self.ss = util_3d(model, (nlay, nrow, ncol), np.float32, ss, name=tag,
                           locat=self.unit_number[0])
         self.sy = util_3d(model, (nlay, nrow, ncol), np.float32, sy, name='sy',
                           locat=self.unit_number[0])
