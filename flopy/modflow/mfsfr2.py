@@ -1,5 +1,7 @@
 __author__ = 'aleaf'
 
+import sys
+sys.path.insert(0, '..')
 import os
 import numpy as np
 from flopy.mbase import Package
@@ -198,8 +200,8 @@ class ModflowSfr2(Package):
         self.transroute = transroute
         self.tabfiles = tabfiles
         self.tabfiles_dict = tabfiles_dict
-        self.numtab = len(tabfiles_dict)
-        self.maxval = np.max([tb['numval'] for tb in tabfiles_dict.values()]) if len(tabfiles_dict) > 0 else 0
+        self.numtab = 0 if not tabfiles else len(tabfiles_dict)
+        self.maxval = np.max([tb['numval'] for tb in tabfiles_dict.values()]) if self.numtab > 0 else 0
 
         # Dataset 1c. ----------------------------------------------------------------------
         self.nstrm = nstrm # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
@@ -403,9 +405,6 @@ class ModflowSfr2(Package):
 
         # item 2
         # set column names, dtypes
-        #names = [('krch', int), ('irch', int), ('jrch', int), ('iseg', int), ('ireach', int), ('rchlen', float),
-        #         ('strtop', float), ('slope', float), ('strthick', float), ('strhc1', float),
-        #         ('thts', int), ('thti', float), ('eps', float), ('uhc', float)]
         names = ModflowSfr2.get_default_reach_dtype().descr
 
         lines = []
@@ -433,15 +432,6 @@ class ModflowSfr2(Package):
             itmp = dataset_5[i][0]
             if itmp > 0:
                 # Item 6
-                #current = np.recarray((itmp,),
-                #        dtype=[('nseg', int), ('icalc', float), ('outseg', int), ('iupseg', int),
-                #               ('iprior', int), ('nstrpts', int), ('flow', float), ('runoff', float),
-                #               ('etsw', float), ('pptsw', float), ('roughch', float), ('roughbk', float),
-                #               ('cdpth', float), ('fdpth', float), ('awdth', float), ('bwdth', float),
-                #               ('hcond1', float), ('thickm1', float), ('elevup1', float), ('width1', float), ('depth1', float),
-                #               ('thts1', float), ('thti1', float), ('eps1', float), ('uhc1', float),
-                #               ('hcond2', float), ('thickm2', float), ('elevup2', float), ('width2', float), ('depth2', float),
-                #               ('thts2', float), ('thti2', float), ('eps2', float), ('uhc2', float)])
                 current = ModflowSfr2.get_empty_segment_data(nsegments=itmp, aux_names=option)
                 current_aux = {} # container to hold any auxillary variables
                 current_6d = {} # these could also be implemented as structured arrays with a column for segment number
@@ -501,7 +491,7 @@ class ModflowSfr2(Package):
                            tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
                            )
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, max_routing_levels=1000):
         """
         Check sfr2 package data for common errors.
 
@@ -531,13 +521,86 @@ class ModflowSfr2(Package):
         >>> m.sfr2.check()
         """
         chk = check(self, verbose=verbose, level=level)
+        chk.numbering()
+        chk.routing()
 
         if f is not None:
             if isinstance(f, str):
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, 'w', 0)
             f.write('{}\n'.format(chk.txt))
-        f.close()
+            f.close()
+
+    def get_outlets(self, level=0, verbose=True):
+        """Traces all routing connections from each headwater to the outlet.
+        """
+        txt = ''
+        segments = self.segment_data[0].nseg
+        outsegs = self.segment_data[0].outseg
+        all_outsegs = np.vstack([segments, outsegs])
+        max_outseg = all_outsegs[-1].max()
+        knt = 1
+        while max_outseg > 0:
+
+            nextlevel = np.array([outsegs[s-1] if s > 0 and s < 999999 else 0
+                                  for s in all_outsegs[-1]])
+
+            all_outsegs = np.vstack([all_outsegs, nextlevel])
+            max_outseg = nextlevel.max()
+            if max_outseg == 0:
+                break
+            knt += 1
+            if knt > self.nss:
+                # subset outsegs map to only include rows with outseg number > 0 in last column
+                circular_segs = all_outsegs.T[all_outsegs[-1] > 0]
+
+                # only retain one instance of each outseg number at iteration 1000
+                vals = [] # append outseg values to vals after they've appeared once
+                mask = [(True, vals.append(v))[0]
+                        if v not in vals
+                        else False for v in circular_segs[-1]]
+                circular_segs = circular_segs[np.array(mask)]
+
+                # cull the circular segments array to remove duplicate instances of routing circles
+                circles = []
+                duplicates = []
+                for i in range(np.shape(circular_segs)[0]):
+                    # find where values in the row equal the last value;
+                    # record the index of the second to last instance of last value
+                    repeat_start_ind = np.where(circular_segs[i] == circular_segs[i, -1])[0][-2:][0]
+                    # use that index to slice out the repeated segment sequence
+                    circular_seq = circular_segs[i, repeat_start_ind:].tolist()
+                    # keep track of unique sequences of repeated segments
+                    if set(circular_seq) not in circles:
+                        circles.append(set(circular_seq))
+                        duplicates.append(False)
+                    else:
+                        duplicates.append(True)
+                circular_segs = circular_segs[~np.array(duplicates), :]
+
+                txt += '{0} instances where an outlet was not found after {1} consecutive segments!\n' \
+                       .format(len(circular_segs), self.nss)
+                if level == 1:
+                    txt += '\n'.join([' '.join(map(str, row)) for row in circular_segs]) + '\n'
+                else:
+                    f = 'circular_routing.csv'
+                    np.savetxt(f, circular_segs, fmt='%d', delimiter=',', header=txt)
+                    txt += 'See {} for details.'.format(f)
+                if verbose:
+                    print(txt)
+                break
+
+        # the array of segment sequence is useful for other other operations,
+        # such as plotting elevation profiles
+        self.outsegs = all_outsegs
+
+        # create a dictionary listing outlets associated with each segment
+        # outlet is the last value in each row of outseg array that is != 0 or 999999
+        self.outlets = {i + 1: r[(r != 0) & (r != 999999)][-1]
+                        if len(r[(r != 0) & (r != 999999)]) > 0
+                        else i+1
+                        for i, r in enumerate(all_outsegs.T)}
+        return txt
 
     def _write_1c(self, f_sfr):
 
@@ -812,14 +875,25 @@ class check:
         self.segment_data = sfrpackage.segment_data
         self.verbose = verbose
         self.level = level
-
+        self.passed = []
+        self.failed = []
         self.txt = '\n{} ERRORS:\n'.format(self.sfr.name[0])
+
+    def _txt_footer(self, headertxt, txt, testname):
+        if len(txt) == 0:
+            txt += 'passed.'
+            self.passed.append(testname)
+        else:
+            self.failed.append(testname)
+        if self.verbose:
+            print(txt)
+        self.txt += headertxt + txt + '\n'
 
     def numbering(self):
         """checks for continuity in segment and reach numbering
         """
 
-        def _check_numbering(n, numbers, level=1, datatype='reach'):
+        def _check_numbers(n, numbers, level=1, datatype='reach'):
 
             txt = ''
             num_range = np.arange(1, n+1)
@@ -833,32 +907,37 @@ class check:
             return txt
 
         headertxt = 'Checking for continuity in segment and reach numbering...\n'
-        txt = ''
         if self.verbose:
-            print(headertxt)
+            print(headertxt.strip())
+        txt = ''
         # check segment numbering
-        txt += _check_numbering(self.sfr.nss,
-                                self.segment_data[0]['nseg'],
-                                level=self.level,
-                                datatype='segment')
+        txt += _check_numbers(self.sfr.nss,
+                              self.segment_data[0]['nseg'],
+                              level=self.level,
+                              datatype='segment')
 
         # check reach numbering
         for segment in np.arange(1, self.sfr.nss+1):
             reaches = self.reach_data.ireach[self.reach_data.iseg == segment]
-            nreaches = len(reaches)
-            t = _check_numbering(len(reaches),
-                                 reaches,
-                                 level=self.level,
-                                 datatype='reach')
+            t = _check_numbers(len(reaches),
+                               reaches,
+                               level=self.level,
+                               datatype='reach')
             if len(t) > 0:
-                txt += 'Segment {} has {}'.format(t)
+                txt += 'Segment {} has {}'.format(segment, t)
 
-        if len(txt) == 0:
-            txt += 'passed.'
+        self._txt_footer(headertxt, txt, 'continuity in segment and reach numbering')
+
+    def routing(self):
+        """checks for breaks in routing and does comprehensive check for circular routing
+        """
+        headertxt = 'Checking for circular routing...\n'
+        txt = ''
         if self.verbose:
-            print(txt)
-        self.txt += headertxt + txt + '\n'
+            print(headertxt.strip())
 
+        txt += self.sfr.get_outlets(verbose=False)
+        self._txt_footer(headertxt, txt, 'circular routing')
 
 def _isnumeric(str):
     try:
