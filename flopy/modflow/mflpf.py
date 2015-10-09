@@ -286,15 +286,25 @@ class ModflowLpf(Package):
         txt = '\n{} ERRORS:\n'.format(self.name[0])
         t = ''
         t1 = ''
-        if self.hk.array.min() < 0:
+        inactive = self.parent.bas6.ibound.array == 0
+        d = self.hk.array
+        d[inactive] = 0.
+        if d.min() < 0:
             t = '{}  Negative horizontal hydraulic conductivities specified.\n'.format(t)
+            if level > 0:
+                t1 += '    {:>10s}{:>10s}{:>10s}{:>15s}\n'.format('layer', 'row', 'column', 'thickness')
+                idx = np.column_stack(np.where(d < 0.))
+                for [k, i, j] in idx:
+                    t1 += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k+1, i+1, j+1, d[k, i, j])
+
+
 
         if len(t) < 1:
             t = '  None\n'
         # add header to level 0 text
         txt += t
 
-        if level == 1:
+        if level > 0:
             txt += '\n  DETAILED SUMMARY OF {} ERRORS\n'.format(self.name[0])
             if len(t1) < 1:
                 t1 = '    None\n'
