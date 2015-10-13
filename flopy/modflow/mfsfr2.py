@@ -4,6 +4,7 @@ import sys
 sys.path.insert(0, '..')
 import os
 import numpy as np
+from numpy.lib import recfunctions
 from flopy.mbase import Package
 
 
@@ -119,8 +120,13 @@ class ModflowSfr2(Package):
         transient streamflow routing. A value of 0.00003 cubic meters per second has been used successfully in test
         simulations (and would need to be converted to whatever units are being used in the particular simulation).
         (default is 0.0001; for MODFLOW-2005 simulations only when irtflg > 0)
-    reach_data :
-    segment_data :
+    reach_data : recarray
+        Numpy record array of length equal to nstrm, with columns for each variable entered in item 2
+        (see SFR package input instructions). In following flopy convention, layer, row, column and node number
+        (for unstructured grids) are zero-based; segment and reach are one-based.
+    segment_data : recarray
+        Numpy record array of length equal to nss, with columns for each variable entered in items 6a, 6b and 6c
+        (see SFR package input instructions). Segment numbers are one-based.
     itmp : list of integers (len = NPER)
         For each stress period, an integer value for reusing or reading stream segment data that can change each
         stress period. If ITMP = 0 then all stream segment data are defined by Item 4 (NSFRPAR > 0; number of stream
@@ -229,10 +235,13 @@ class ModflowSfr2(Package):
         self.flwtol = flwtol # streamflow tolerance for convergence of the kinematic wave equation
 
         # Dataset 2. -----------------------------------------------------------------------
-        # columns:  KRCH IRCH JRCH ISEG IREACH RCHLEN {STRTOP} {SLOPE} {STRTHICK} {STRHC1}
-        #           {THTS} {THTI} {EPS} {UHC}
-
         self.reach_data = reach_data
+        # assign node numbers if there are none (structured grid)
+        if self.reach_data.node.max() == 0 and 'DIS' in self.parent.get_package_list():
+            # first make kij list
+            lrc = self.reach_data[['krch', 'irch', 'jrch']]
+            lrc = (lrc.view((int, len(lrc.dtype.names))) + 1).tolist()
+            self.reach_data['node'] = self.parent.dis.get_node(lrc)
 
         # Datasets 4 and 6. -----------------------------------------------------------------------
         self.segment_data = segment_data
@@ -244,16 +253,7 @@ class ModflowSfr2(Package):
 
         #-input format checks:
         assert isfropt in [0, 1, 2, 3, 4, 5]
-        '''
-        lossTypes = ['NONE', 'THIEM', 'SKIN', 'GENERAL', 'SPECIFYcwc']
-        for i in range(mnwmax):
-            assert len(self.wellid[i].split(' ')) == 1, 'WELLID (%s) must not contain spaces' % self.wellid[i]
-            assert self.losstype[
-                       i] in lossTypes, 'LOSSTYPE (%s) must be one of the following: NONE, THIEM, SKIN, GENERAL, or SPECIFYcwc' % \
-                                        self.losstype[i]
-        assert self.itmp[0] >= 0, 'ITMP must be greater than or equal to zero for the first time step.'
-        assert self.itmp.max() <= self.mnwmax, 'ITMP cannot exceed maximum number of wells to be simulated.'
-        '''
+
         self.parent.add_package(self)
 
     def __repr__(self):
@@ -282,33 +282,35 @@ class ModflowSfr2(Package):
     @staticmethod
     def get_default_reach_dtype(structured=True):
         if structured:
-            return np.dtype([('krch', np.int),
-                              ('irch', np.int), 
-                              ('jrch', np.int), 
-                              ('iseg', np.int), 
-                              ('ireach', np.int), 
-                              ('rchlen', np.float32),
-                              ('strtop', np.float32), 
-                              ('slope', np.float32), 
-                              ('strthick', np.float32), 
-                              ('strhc1', np.float32),
-                              ('thts', np.int), 
-                              ('thti', np.float32), 
-                              ('eps', np.float32), 
-                              ('uhc', np.float32)])
+            # include node column for structured grids (useful for indexing)
+            return np.dtype([('node', np.int),
+                             ('krch', np.int),
+                             ('irch', np.int),
+                             ('jrch', np.int),
+                             ('iseg', np.int),
+                             ('ireach', np.int),
+                             ('rchlen', np.float32),
+                             ('strtop', np.float32),
+                             ('slope', np.float32),
+                             ('strthick', np.float32),
+                             ('strhc1', np.float32),
+                             ('thts', np.int),
+                             ('thti', np.float32),
+                             ('eps', np.float32),
+                             ('uhc', np.float32)])
         else:
             return np.dtype([('node', np.int)
-                              ('iseg', np.int), 
-                              ('ireach', np.int), 
-                              ('rchlen', np.float32),
-                              ('strtop', np.float32), 
-                              ('slope', np.float32), 
-                              ('strthick', np.float32), 
-                              ('strhc1', np.float32),
-                              ('thts', np.int), 
-                              ('thti', np.float32), 
-                              ('eps', np.float32), 
-                              ('uhc', np.float32)])        
+                             ('iseg', np.int),
+                             ('ireach', np.int),
+                             ('rchlen', np.float32),
+                             ('strtop', np.float32),
+                             ('slope', np.float32),
+                             ('strthick', np.float32),
+                             ('strhc1', np.float32),
+                             ('thts', np.int),
+                             ('thti', np.float32),
+                             ('eps', np.float32),
+                             ('uhc', np.float32)])
 
     @staticmethod
     def get_default_segment_dtype():
@@ -354,6 +356,7 @@ class ModflowSfr2(Package):
         tabfiles_dict = {}
         transroute = False
         reachinput = False
+        structured = model.structured
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
@@ -405,22 +408,27 @@ class ModflowSfr2(Package):
 
         # item 2
         # set column names, dtypes
-        names = ModflowSfr2.get_default_reach_dtype().descr
+        names = _get_item2_names(nstrm, reachinput, isfropt, structured)
+        dtypes = [d for d in ModflowSfr2.get_default_reach_dtype().descr
+                   if d[0] in names]
 
         lines = []
         for i in range(abs(nstrm)):
             ireach = tuple(map(float, next(f).strip().split()))
             lines.append(ireach)
-        ncols = len(lines[0])
-        reach_data = np.array(lines, dtype=names[:ncols])
-        reach_data = reach_data.view(np.recarray)
+
+        tmp = np.array(lines, dtype=dtypes)
+        # initialize full reach_data array with all possible columns
+        reach_data = ModflowSfr2.get_empty_reach_data(len(lines))
+        for n in names:
+            reach_data[n] = tmp[n] # not sure if there's a way to assign multiple columns
 
         # zero-based convention
-        _markitzero(reach_data, ['krch', 'irch', 'jrch', 'node'])
+        inds = ['krch', 'irch', 'jrch'] if structured else ['node']
+        _markitzero(reach_data, inds)
 
         # items 3 and 4 are skipped (parameters not supported)
         # item 5
-
         segment_data = {}
         channel_geometry_data = {}
         channel_flow_data = {}
@@ -456,16 +464,16 @@ class ModflowSfr2(Package):
                             for k in range(2):
                                 dataset_6d.append(_get_dataset(next(f), [0.0] * 8))
                                 #dataset_6d.append(list(map(float, next(f).strip().split())))
-                            current_6d[j] = dataset_6d
+                            current_6d[j+1] = dataset_6d
                     if icalc == 4:
                         nstrpts = dataset_6a[5]
                         dataset_6e = []
                         for k in range(3):
                             dataset_6e.append(_get_dataset(next(f), [0.0] * nstrpts))
-                        current_6e[j] = dataset_6e
+                        current_6e[j+1] = dataset_6e
 
                 segment_data[i] = current
-                aux_variables[i] = current_aux
+                aux_variables[j+1] = current_aux
                 if len(current_6d) > 0:
                     channel_geometry_data[i] = current_6d
                 if len(current_6e) > 0:
@@ -491,7 +499,7 @@ class ModflowSfr2(Package):
                            tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
                            )
 
-    def check(self, f=None, verbose=True, level=1, max_routing_levels=1000):
+    def check(self, f=None, verbose=True, level=1):
         """
         Check sfr2 package data for common errors.
 
@@ -523,11 +531,12 @@ class ModflowSfr2(Package):
         chk = check(self, verbose=verbose, level=level)
         chk.numbering()
         chk.routing()
+        chk.overlapping_conductance()
 
         if f is not None:
             if isinstance(f, str):
                 pth = os.path.join(self.parent.model_ws, f)
-                f = open(pth, 'w', 0)
+                f = open(pth, 'w')
             f.write('{}\n'.format(chk.txt))
             f.close()
 
@@ -602,6 +611,54 @@ class ModflowSfr2(Package):
                         for i, r in enumerate(all_outsegs.T)}
         return txt
 
+    def _interpolate_to_reaches(self, segvar1, segvar2, per=0):
+        """Interpolate values in datasets 6b and 6c to each reach in stream segment
+
+        Parameters
+        ----------
+        segvar1 : str
+            Column/variable name in segment_data array for representing start of segment
+            (e.g. hcond1 for hydraulic conductivity)
+            For segments with icalc=2 (specified channel geometry); if width1 is given,
+            the eigth distance point (XCPT8) from dataset 6d will be used as the stream width.
+            For icalc=3, an abitrary width of 5 is assigned.
+            For icalc=4, the mean value for width given in item 6e is used.
+        segvar2 : str
+            Column/variable name in segment_data array for representing start of segment
+            (e.g. hcond2 for hydraulic conductivity)
+        per : int
+            Stress period with segment data to interpolate
+
+        Returns
+        -------
+        reach_values : 1D array
+            One dimmensional array of interpolated values of same length as reach_data array.
+            For example, hcond1 and hcond2 could be entered as inputs to get values for the
+            strhc1 (hydraulic conductivity) column in reach_data.
+
+        """
+        reach_data = self.reach_data
+        segment_data = self.segment_data[per]
+        channel_geometry_data = self.channel_geometry_data[per]
+        channel_flow_data = self.channel_flow_data[per]
+        reach_values = []
+        for seg in segment_data.nseg:
+            reaches = reach_data[reach_data.iseg == seg]
+            dist = np.cumsum(reaches.rchlen) - 0.5 * reaches.rchlen
+            icalc = segment_data.icalc[segment_data.nseg == seg]
+            if 'width' in segvar1 and icalc == 2: # get width from channel cross section length
+                reach_values += list(np.ones(len(reaches)) * channel_geometry_data[seg][0][-1])
+            elif 'width' in segvar1 and icalc == 3: # assign arbitrary width since width is based on flow
+                reach_values += list(np.ones(len(reaches)) * 5)
+            elif 'width' in segvar1 and icalc == 4: # assume width to be mean from streamflow width/flow table
+                reach_values += list(np.ones(len(reaches)) * np.mean(channel_flow_data[seg][2]))
+            else:
+                fp = [segment_data[segment_data['nseg'] == seg][segvar1][0],
+                      segment_data[segment_data['nseg'] == seg][segvar2][0]]
+                xp = [dist[0], dist[-1]]
+                reach_values += np.interp(dist, xp, fp).tolist()
+        return np.array(reach_values)
+
     def _write_1c(self, f_sfr):
 
         # NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ISTCB1  ISTCB2
@@ -658,12 +715,15 @@ class ModflowSfr2(Package):
         assert isinstance(self.reach_data, np.recarray), "mflist.__tofile() data arg " + \
                                               "not a recarray"
 
+        # decide which columns to write
+        columns = self._get_item2_names()
+
         # Add one to the kij indices
         names = self.reach_data.dtype.names
         lnames = []
         [lnames.append(name.lower()) for name in names]
         # --make copy of data for multiple calls
-        d = np.recarray.copy(self.reach_data)
+        d = np.recarray.copy(self.reach_data[columns])
         for idx in ['krch', 'irch', 'jrch', 'node']:
             if (idx in lnames):
                 d[idx] += 1
@@ -893,19 +953,6 @@ class check:
         """checks for continuity in segment and reach numbering
         """
 
-        def _check_numbers(n, numbers, level=1, datatype='reach'):
-
-            txt = ''
-            num_range = np.arange(1, n+1)
-            if not np.array_equal(num_range, numbers):
-                txt += 'Invalid {} numbering\n'.format(datatype)
-                if level == 1:
-                    gaps = num_range[np.diff(numbers) != 1] + 1
-                    if len(gaps) > 0:
-                        gapstr = ' '.join(map(str, gaps))
-                        txt += 'Gaps in numbering at positions {}\n'.format(gapstr)
-            return txt
-
         headertxt = 'Checking for continuity in segment and reach numbering...\n'
         if self.verbose:
             print(headertxt.strip())
@@ -938,6 +985,92 @@ class check:
 
         txt += self.sfr.get_outlets(verbose=False)
         self._txt_footer(headertxt, txt, 'circular routing')
+
+    def overlapping_conductance(self, tol=1e-6):
+        """checks for multiple SFR reaches in one cell; and whether more than one reach has Cond > 0
+        """
+        headertxt = 'Checking for model cells with multiple non-zero SFR conductances...\n'
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+
+        # make nreach vectors of each conductance parameter
+        reach_data = self.reach_data.copy()
+
+        K = reach_data.strhc1
+        if K.max() == 0:
+            K = self.sfr._interpolate_to_reaches('hcond1', 'hcond2')
+        b = reach_data.strthick
+        if b.max() == 0:
+            b = self.sfr._interpolate_to_reaches('thickm1', 'thickm2')
+        L = reach_data.rchlen
+        w = self.sfr._interpolate_to_reaches('width1', 'width2')
+
+        # Calculate SFR conductance for each reach
+        Cond = K * w * L / b
+
+        shared_cells = _get_duplicates(reach_data.node)
+
+        nodes_with_multiple_conductance = set()
+        for node in shared_cells:
+
+            # select the collocated reaches for this cell
+            conductances = Cond[reach_data.node == node].copy()
+            conductances.sort()
+
+            # list nodes with multiple non-zero SFR reach conductances
+            if conductances[0] / conductances[-1] > tol:
+                nodes_with_multiple_conductance.update({node})
+
+        if len(nodes_with_multiple_conductance) > 0:
+            txt += '{} model cells with multiple non-zero SFR conductances found.\n' \
+                   'This may lead to circular routing between collocated reaches.\n'\
+                    .format(len(nodes_with_multiple_conductance))
+            if self.level == 1:
+                txt += 'Nodes with overlapping conductances:\n'
+                cols = [c for c in reach_data.dtype.names if c in \
+                       ['node', 'krch', 'irch', 'jrch', 'iseg', 'ireach', 'rchlen']]
+                txt += ' '.join(cols + ['width', 'strthick', 'strhc1', 'conductance']) + '\n'
+                has_multiple = np.array([True if n in nodes_with_multiple_conductance
+                                         else False for n in reach_data.node])
+                shared_info = recfunctions.append_fields(reach_data[['node', 'krch', 'irch', 'jrch', 'iseg', 'ireach', 'rchlen']],
+                                                         names=['width', 'strthick', 'strhc1', 'conductance'],
+                                                         data=[w, b, K, Cond])
+                shared_info = shared_info[has_multiple]
+
+                #shared_info = shared_info.view((int, len(shared_info.dtype.names))).copy()
+                #shared_info = np.column_stack((shared_info, w, b, K, Cond))
+                txt += '\n'.join([' '.join(map(str, r)) for r in shared_info.tolist()])
+
+        self._txt_footer(headertxt, txt, 'overlapping conductance')
+
+
+def _check_numbers(n, numbers, level=1, datatype='reach'):
+    """Check that a sequence of numbers is consecutive
+    (that the sequence is equal to the range from 1 to n+1, where n is the expected length of the sequence).
+
+    Parameters
+    ----------
+    n : int
+        Expected length of the sequence (i.e. number of stream segments)
+    numbers : array
+        Sequence of numbers (i.e. 'nseg' column from the segment_data array)
+    level : int
+        Check method analysis level. If level=0, summary checks are
+        performed. If level=1, full checks are performed.
+    datatype : str, optional
+        Only used for reporting.
+    """
+    txt = ''
+    num_range = np.arange(1, n+1)
+    if not np.array_equal(num_range, numbers):
+        txt += 'Invalid {} numbering\n'.format(datatype)
+        if level == 1:
+            gaps = num_range[np.diff(numbers) != 1] + 1
+            if len(gaps) > 0:
+                gapstr = ' '.join(map(str, gaps))
+                txt += 'Gaps in numbering at positions {}\n'.format(gapstr)
+    return txt
 
 def _isnumeric(str):
     try:
@@ -973,6 +1106,42 @@ def _get_dataset(line, dataset):
                 break
         dataset[i] = n
     return dataset
+
+def _get_duplicates(a):
+    """Returns duplcate values in an array, similar to pandas .duplicated() method
+    http://stackoverflow.com/questions/11528078/determining-duplicate-values-in-an-array
+    """
+    s = np.sort(a, axis=None)
+    return s[s[1:] == s[:-1]]
+
+def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
+    """Determine which variables should be in item 2, based on model grid type,
+    reachinput specification, and isfropt.
+
+    Returns
+    -------
+    names : list of str
+        List of names (same as variables in SFR Package input instructions) of columns
+        to assign (upon load) or retain (upon write) in reach_data array.
+
+    Note
+    ----
+    Lowercase is used for all variable names.
+    """
+    names = []
+    if structured:
+        names += ['krch', 'irch', 'jrch']
+    else:
+        names += ['node']
+    names += ['iseg', 'ireach', 'rchlen']
+    if nstrm < 0 or reachinput:
+        if isfropt in [1, 2, 3]:
+            names += ['strtop', 'slope', 'strthick', 'strhc1']
+            if isfropt in [2, 3]:
+                names += ['thts', 'thti', 'eps']
+                if isfropt == 3:
+                    names += ['uhc']
+    return names
 
 def _fmt_string(array):
     fmt_string = ''
