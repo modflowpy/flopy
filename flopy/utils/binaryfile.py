@@ -19,7 +19,7 @@ class BinaryHeader():
 
     Parameters
     ----------
-        bintype is the type of file being opened (head and unc file currently supported)
+        bintype is the type of file being opened (head and ucn file currently supported)
         precision is the precision of the floating point data in the file
     """
     def __init__(self, bintype=None, precision='single'):
