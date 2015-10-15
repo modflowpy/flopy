@@ -4,13 +4,16 @@ import os
 import numpy as np
 import flopy
 
+# pytest changes the directory to flopy3
+path = ''
+if os.path.split(os.getcwd())[-1] == 'py.test':
+    path += '../'
+path += 'examples/data/mf2005_test/'
 
-path = '../examples/data/mf2005_test/'
-
-def test_sfr(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
+def sfr_test(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
 
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=True)
-    sfr = m.get_package('SFR2')
+    sfr = m.sfr2
 
     if not os.path.exists(outfolder):
         os.makedirs(outfolder)
@@ -30,7 +33,7 @@ def test_sfr(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
 
     return m, sfr
 
-m, sfr = test_sfr('test1ss.nam', 'test1ss.sfr', path)
+m, sfr = sfr_test('test1ss.nam', 'test1ss.sfr', path)
 '''
 assert len(sfr.dataset_5) == 1
 assert sfr.segment_data[0].shape == (8,)
@@ -45,23 +48,23 @@ assert len(sfr.channel_geometry_data[0]) == 2
 assert list(sfr.channel_geometry_data[0].keys()) == [6, 7]
 assert sfr.channel_geometry_data[0][6][0] == [0.0,  10.,  80.,  100.,  150.,  170.,  240.,  250.]
 '''
-m, sfr = test_sfr('test1tr.nam', 'test1tr.sfr', path)
+m, sfr = sfr_test('test1tr.nam', 'test1tr.sfr', path)
 
 #assert list(sfr.dataset_5.keys()) == [0, 1]
 
-m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC1.sfr', path)
+m, sfr = sfr_test('testsfr2_tab.nam', 'testsfr2_tab_ICALC1.sfr', path)
 
 assert list(sfr.dataset_5.keys()) == list(range(0, 50))
 
-m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
+m, sfr = sfr_test('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
 
-assert sfr.channel_geometry_data[0][0] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
+assert sfr.channel_geometry_data[0][1] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
                                            [6.0, 4.5, 3.5, 0.0, 0.3, 3.5, 4.5, 6.0]]
 
-m, sfr = test_sfr('testsfr2.nam', 'testsfr2.sfr', path)
+m, sfr = sfr_test('testsfr2.nam', 'testsfr2.sfr', path)
 
 assert round(sum(sfr.segment_data[49][0]), 7) == 3.9700007
 
-m, sfr = test_sfr('UZFtest2.nam', 'UZFtest2.sfr', path)
+m, sfr = sfr_test('UZFtest2.nam', 'UZFtest2.sfr', path)
 
 j=2

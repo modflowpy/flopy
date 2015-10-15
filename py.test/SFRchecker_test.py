@@ -10,6 +10,11 @@ import flopy
 from flopy.modflow.mfsfr2 import check
 
 path = '../examples/data/mf2005_test/'
+# pytest changes the directory to flopy3
+path = ''
+if os.path.split(os.getcwd())[-1] == 'py.test':
+    path += '../'
+path += 'examples/data/mf2005_test/'
 
 m = flopy.modflow.Modflow.load('test1tr.nam', model_ws=path, verbose=True)
 
@@ -46,7 +51,7 @@ assert 'continuity in segment and reach numbering' in chk.failed
 chk.routing()
 assert 'circular routing' in chk.failed
 
-path = 'written_sfr'
+checker_output_path = 'written_sfr'
 if not os.path.isdir(path):
     os.makedirs(path)
 mfpath = '../examples/data/mf2005_test/'
@@ -77,7 +82,7 @@ passed = {}
 failed = {}
 
 for i, case in test_cases.items():
-    chk = sfr_checker_test(case['mfnam'], model_ws=mfpath, checker_output_path=path)
+    chk = sfr_checker_test(case['mfnam'], model_ws=path, checker_output_path=checker_output_path)
     passed[i] = chk.passed
     failed[i] = chk.failed
 assert 'overlapping conductance' in failed[1]
