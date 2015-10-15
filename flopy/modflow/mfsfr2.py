@@ -359,7 +359,7 @@ class ModflowSfr2(Package):
                          ('bwdth', np.float32),
                          ('hcond1', np.float32),
                          ('thickm1', np.float32),
-                         ('elevup1', np.float32),
+                         ('elevup', np.float32),
                          ('width1', np.float32),
                          ('depth1', np.float32),
                          ('thts1', np.float32),
@@ -368,7 +368,7 @@ class ModflowSfr2(Package):
                          ('uhc1', np.float32),
                          ('hcond2', np.float32),
                          ('thickm2', np.float32),
-                         ('elevup2', np.float32),
+                         ('elevdn', np.float32),
                          ('width2', np.float32),
                          ('depth2', np.float32),
                          ('thts2', np.float32),
@@ -560,6 +560,7 @@ class ModflowSfr2(Package):
         chk.numbering()
         chk.routing()
         chk.overlapping_conductance()
+        chk.elevations()
         chk.slope()
 
         if f is not None:
@@ -780,25 +781,25 @@ class ModflowSfr2(Package):
             f_sfr.write(' '.join(fmts[12:16]).format(cdpth, fdpth, awdth, bwdth) + ' ')
         f_sfr.write('\n')
 
-        self._write_6bc(i, j, f_sfr, cols=['hcond1', 'thickm1', 'elevup1', 'width1', 'depth1', 'thts1', 'thti1',
+        self._write_6bc(i, j, f_sfr, cols=['hcond1', 'thickm1', 'elevup', 'width1', 'depth1', 'thts1', 'thti1',
                                            'eps1', 'uhc1'])
-        self._write_6bc(i, j, f_sfr, cols=['hcond2', 'thickm2', 'elevup2', 'width2', 'depth2', 'thts2', 'thti2',
+        self._write_6bc(i, j, f_sfr, cols=['hcond2', 'thickm2', 'elevdn', 'width2', 'depth2', 'thts2', 'thti2',
                                            'eps2', 'uhc2'])
 
     def _write_6bc(self, i, j, f_sfr, cols=[]):
 
         icalc = self.segment_data[i][j][1]
         fmts = _fmt_string_list(self.segment_data[i][cols][j])
-        hcond, thickm, elevup, width, depth, thts, thti, eps, uhc = self.segment_data[i][cols][j]
+        hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = self.segment_data[i][cols][j]
 
         if self.isfropt in [0, 4, 5] and icalc <= 0:
-            f_sfr.write(' '.join(fmts[0:5]).format(hcond, thickm, elevup, width, depth) + ' ')
+            f_sfr.write(' '.join(fmts[0:5]).format(hcond, thickm, elevupdn, width, depth) + ' ')
 
         elif self.isfropt in [0, 4, 5] and icalc == 1:
             f_sfr.write(fmts[0].format(hcond) + ' ')
 
             if i == 0:
-                f_sfr.write(' '.join(fmts[1:4]).format(thickm, elevup, width) + ' ')
+                f_sfr.write(' '.join(fmts[1:4]).format(thickm, elevupdn, width) + ' ')
                 f_sfr.write(' '.join(fmts[5:8]).format(thts, thti, eps) + ' ')
                 if self.isfropt == 5:
                     f_sfr.write(fmts[8].format(uhc) + ' ')
@@ -808,7 +809,7 @@ class ModflowSfr2(Package):
             if self.isfropt in [4, 5] and i > 0 and icalc == 2:
                 pass
             else:
-                f_sfr.write(' '.join(fmts[1:3]).format(thickm, elevup) + ' ')
+                f_sfr.write(' '.join(fmts[1:3]).format(thickm, elevupdn) + ' ')
 
                 if self.isfropt in [4, 5] and icalc == 2 and i == 0:
                     f_sfr.write(' '.join(fmts[3:6]).format(thts, thti, eps) + ' ')
@@ -1123,7 +1124,8 @@ class check:
 
                 # next check for rises between segments
                 outseg_elevup = np.array([segment_data.elevup[o - 1] for o in segment_data.outseg])
-                backwards_connections = (outseg_elevup - segment_data.elevdn) > 0
+                backwards_connections = ((outseg_elevup - segment_data.elevdn) > 0) & \
+                                        (segment_data.outseg != 0)
                 if np.any(backwards_connections):
                     backwards_info = segment_data[['nseg', 'outseg', 'elevdn']]
                     recfunctions.append_fields(backwards_info, names='outseg_elevup', data=outseg_elevup)
@@ -1137,7 +1139,7 @@ class check:
                 if len(txt) > 0:
                     passed = False
         else:
-            txt += 'Segment elevup and elevdn not specified for nstrm={} and isfropt={}' \
+            txt += 'Segment elevup and elevdn not specified for nstrm={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.isfropt)
             passed = True
         self._txt_footer(headertxt, txt, 'segment elevations')
@@ -1169,11 +1171,10 @@ class check:
                     txt += 'Elevation rises:\n'
                     txt += _print_rec_array(backwards_info)
                 txt += '\n'
+            if len(txt) > 0:
                 passed = False
-            else:
-                passed = True
         else:
-            txt += 'Reach strtop not specified for nstrm={}, reachinput={} and isfropt={}' \
+            txt += 'Reach strtop not specified for nstrm={}, reachinput={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt)
             passed = True
         self._txt_footer(headertxt, txt, 'reach elevations', passed)
@@ -1201,12 +1202,9 @@ class check:
                     txt += 'Layer bottom violations:\n'
                     txt += _print_rec_array(below_info)
                 txt += '\n'
-                passed = False
-            else:
-                passed = True
 
             # check streambed elevations in relation to model top
-            tops = self.sfr.parent.dis.botm.array[k, i, j]
+            tops = self.sfr.parent.dis.botm.array[i, j]
             recfunctions.append_fields(reach_data, names='modeltop', data=tops)
             above_model_top = reach_data.strtop > tops
             if np.any(above_model_top):
@@ -1216,20 +1214,65 @@ class check:
                     .format(len(below_info))
                 if self.level == 1:
                     txt += 'Model top violations:\n'
-                    txt += _print_rec_array(below_info)
+                    txt += _print_rec_array(above_info)
                 txt += '\n'
+            if len(txt) > 0:
                 passed = False
-            else:
-                passed = True
-
         else:
-            txt += 'Reach strtop, strthick not specified for nstrm={}, reachinput={} and isfropt={}' \
+            txt += 'Reach strtop, strthick not specified for nstrm={}, reachinput={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt)
             passed = True
         self._txt_footer(headertxt, txt, 'reach elevations vs. grid elevations', passed)
 
         # In cases where segment end elevations/thicknesses are used,
-        # do these need to be checked for consistency with grid?
+        # do these need to be checked for consistency with layer bottoms?
+
+        headertxt = 'Checking segment_data for inconsistencies between segment end elevations and the model grid...\n'
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+
+        if self.sfr.nstrm > 0 or self.sfr.nstrm < 0 and self.sfr.isfropt == 0:
+            reach_data = self.reach_data
+            if self.sfr.isfropt in [4, 5] and self.sfr.icalc in [0, 3, 4]:
+                pers = sorted(self.sfr.dataset_5.keys())
+            else:
+                pers = [0]
+            for per in pers:
+                segment_data = self.segment_data[per]
+
+                # enforce consecutive increasing segment numbers (for indexing)
+                segment_data.sort(order='nseg')
+                t = _check_numbers(len(segment_data), segment_data.nseg, level=1, datatype='Segment')
+                if len(t) > 0:
+                    raise Exception('Elevation check requires consecutive segment numbering.')
+
+            first_reaches = reach_data[reach_data.ireach == 1].copy()
+            last_reaches = reach_data[np.append((np.diff(reach_data.iseg) == 1), True)].copy()
+            segment_ends = recfunctions.stack_arrays([first_reaches, last_reaches],
+                                                     asrecarray=True, usemask=False)
+            segment_ends['strtop'] = np.append(segment_data.elevup, segment_data.elevdn)
+            i, j = segment_ends.irch, segment_ends.jrch
+            tops = self.sfr.parent.dis.top.array[i, j]
+            recfunctions.append_fields(segment_ends, names='modeltop', data=tops)
+            above_model_top = (tops - segment_ends.strtop) < 0
+            if np.any(above_model_top):
+                above_info = segment_ends[['krch', 'irch', 'jrch', 'iseg', 'strtop',
+                                             'modeltop', 'reachID']][above_model_top]
+                txt += '{} reaches encountered with streambed above model top.\n' \
+                    .format(len(below_info))
+                if self.level == 1:
+                    txt += 'Model top violations:\n'
+                    txt += _print_rec_array(above_info)
+                txt += '\n'
+            if len(txt) > 0:
+                passed = False
+        else:
+            txt += 'Segment elevup and elevdn not specified for nstrm={} and isfropt={}\n' \
+                .format(self.sfr.nstrm, self.sfr.isfropt)
+            passed = True
+        self._txt_footer(headertxt, txt, 'segment elevations', passed)
+
 
     def slope(self, minimum_slope=1e-4):
         """Checks that streambed slopes are greater than or equal to a specified minimum value.
@@ -1555,19 +1598,19 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     nvalues = sum([_isnumeric(s) for s in line.strip().split()])
     line = _get_dataset(line, [0] * nvalues)
 
-    hcond, thickm, elevup, width, depth, thts, thti, eps, uhc = [0.0] * 9
+    hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = [0.0] * 9
 
     if isfropt in [0, 4, 5] and icalc <= 0:
         hcond = line.pop(0)
         thickm = line.pop(0)
-        elevup = line.pop(0)
+        elevupdn = line.pop(0)
         width = line.pop(0)
         depth = line.pop(0)
     elif isfropt in [0, 4, 5] and icalc == 1:
         hcond = line.pop(0)
         if per == 0:
             thickm = line.pop(0)
-            elevup = line.pop(0)
+            elevupdn = line.pop(0)
             width = line.pop(0)  # depth is not read if icalc == 1; see table in online guide
             thts = _pop_item(line)
             thti = _pop_item(line)
@@ -1580,7 +1623,7 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
             pass
         else:
             thickm = line.pop(0)
-            elevup = line.pop(0)
+            elevupdn = line.pop(0)
             if isfropt in [4, 5] and icalc == 2 and per == 0:
                 # table in online guide suggests that the following items should be present in this case
                 # but in the example
@@ -1604,4 +1647,4 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
                 depth = line.pop(0)
     else:
         pass
-    return hcond, thickm, elevup, width, depth, thts, thti, eps, uhc
+    return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc
