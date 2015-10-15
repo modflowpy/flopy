@@ -4,6 +4,8 @@ util_list module.  Contains the mflist class.
  from the individual packages.  The end-user should not need to
  instantiate this class directly.
 
+    some more info
+
 """
 from __future__ import division, print_function
 

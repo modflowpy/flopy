@@ -1413,10 +1413,11 @@ class util_2d(object):
 
     @staticmethod
     def load_bin(shape, file_in, dtype, bintype=None):
+        import flopy.utils.binaryfile as bf
         nrow, ncol = shape
         if bintype is not None:
             if dtype not in [np.int]:
-                header_dtype = BinaryHeader.set_dtype(bintype=bintype)
+                header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
         else:
             header_data = None
@@ -1639,17 +1640,19 @@ class util_2d(object):
             #load_txt(shape, file_in, dtype, fmtin):
             assert os.path.exists(fname), "util_2d.load() error: open/close " + \
                                           "file " + str(fname) + " not found"
-            f = open(fname, 'r')
-            data = util_2d.load_txt(shape=shape,
-                                    file_in=f,
-                                    dtype=dtype, fmtin=cr_dict['fmtin'])
+            if str('binary') not in str(cr_dict['fmtin'].lower()):
+                f = open(fname, 'r')
+                data = util_2d.load_txt(shape=shape,
+                                        file_in=f,
+                                        dtype=dtype, fmtin=cr_dict['fmtin'])
+            else:
+                f = open(fname, 'rb')
+                header_data, data = util_2d.load_bin(shape, f, dtype, bintype='Head')
             f.close()
-            # u2d = util_2d(model, shape, dtype, fname, name=name,
-            #               iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-            #               ext_filename=fname)
+            data *= cr_dict['cnstnt']
             u2d = util_2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-                          ext_filename=fname)
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+
 
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
@@ -1665,7 +1668,8 @@ class util_2d(object):
                                         dtype, cr_dict['fmtin'])
             else:
                 header_data, data = util_2d.load_bin(
-                    shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype)
+                    shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
+                    bintype='Head')
             data *= cr_dict['cnstnt']
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])

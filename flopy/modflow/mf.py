@@ -349,7 +349,11 @@ class Modflow(BaseModel):
         >>> ml = flopy.modflow.Modflow.load(f)
 
         """
-        modelname = '.'.join(os.path.basename(f).split('.')[:-1])
+        # test if name file is passed with extension (i.e., is a valid file)
+        if os.path.isfile(os.path.join(model_ws, f)):
+            modelname = f.rpartition('.')[0]
+        else:
+            modelname = f
 
         # if model_ws is None:
         #    model_ws = os.path.dirname(f)
@@ -369,7 +373,7 @@ class Modflow(BaseModel):
                                                     ml.mfnam_packages,
                                                     verbose=verbose)
         except Exception as e:
-            print("error loading namfile entries from file")
+            print("error loading name file entries from file")
             print(str(e))
             return None
 
