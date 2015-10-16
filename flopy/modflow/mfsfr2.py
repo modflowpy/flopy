@@ -748,13 +748,13 @@ class ModflowSfr2(Package):
 
 
         # Add one to the kij indices
-        names = self.reach_data.dtype.names
-        lnames = []
-        [lnames.append(name.lower()) for name in names]
+        #names = self.reach_data.dtype.names
+        #lnames = []
+        #[lnames.append(name.lower()) for name in names]
         # --make copy of data for multiple calls
         d = np.recarray.copy(self.reach_data[columns])
         for idx in ['krch', 'irch', 'jrch', 'node']:
-            if (idx in lnames):
+            if (idx in columns):
                 d[idx] += 1
         formats = _fmt_string(d)[:-1] + '\n'
         for i in range(len(d)):
@@ -918,18 +918,18 @@ class ModflowSfr2(Package):
                     # write datasets 6a, 6b and 6c
                     self._write_segment_data(i, j, f_sfr)
 
-                    icalc = self.segment_data[i][j][1]
+                    icalc = self.segment_data[i].icalc[j]
                     if icalc == 2:
                         if i == 0 or self.nstrm > 0 and not self.reachinput:  # or isfropt <= 1:
                             for k in range(2):
-                                for d in self.channel_geometry_data[i][j][k]:
+                                for d in self.channel_geometry_data[i][j+1][k]:
                                     f_sfr.write('{:.2f} '.format(d))
                                 f_sfr.write('\n')
 
                     if icalc == 4:
                         #nstrpts = self.segment_data[i][j][5]
                         for k in range(3):
-                            for d in self.channel_flow_data[i][j][k]:
+                            for d in self.channel_flow_data[i][j+1][k]:
                                 f_sfr.write('{:.2f} '.format(d))
                             f_sfr.write('\n')
             if self.tabfiles and i == 0:
