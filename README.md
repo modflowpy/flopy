@@ -165,8 +165,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Newton (NWT)                                   | Supported            | Not supported        | Not supported        |
 | Output Control (OC)                            | Supported            | Supported            | Not supported        |
 | Periodic Boundary Condition (PBC)              | Supported            | Not supported        | Not supported        |
-| Precond. Conjugate Gradient (PCG)              | Supported            | Supported            | Not supported        |
-| Precond. Conjugate Gradient Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
+| Preconditioned Conjugate Gradient (PCG)              | Supported            | Supported            | Not supported        |
+| Precondonditioned Conjugate Gradient <br />Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
 | Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
 | Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
 | River (RIV)                                    | Supported            | Supported            | Not supported        |
@@ -180,8 +180,7 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Seawater Intrusion (SWI2)                      | Supported            | Supported            | Not supported        |
 | Surface-Water Routing (SWR)                    | Not supported        | Not supported        | Not supported        |
 | Subsidence (SUB)                               | Not supported        | Not supported        | Not supported        |
-| Subsidence and Aquifer-System Compaction (SWT) | Not supported        | Not supported        | Not supported        |
-| Subsidence and Aquifer-System Compaction (SWT) | Not supported        | Not supported        | Not supported        |
+| Subsidence and Aquifer-System <br />Compaction (SWT) | Not supported        | Not supported        | Not supported        |
 | Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
 | Upstream Weighted (UPW)                        | Supported            | Supported            | Not supported        |
 | Unzaturated Zone Flow (UZF)                    | Supported            | Not supported        | Not supported        |
