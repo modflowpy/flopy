@@ -860,6 +860,34 @@ class Package(object):
         if verbose:
             print(txt)
 
+    def level1_arraylist(self, idx, v, name, txt):
+        """
+
+        :param idx:
+        :param v:
+        :param txt:
+        :param name:
+        :return:
+        """
+        ndim = v.ndim
+        if ndim == 3:
+            kon = -1
+            for [k, i, j] in idx:
+                if k > kon:
+                    kon = k
+                    txt += '    {:>10s}{:>10s}{:>10s}{:>15s}\n'.format('layer', 'row', 'column',
+                                                                       name[k].lower().replace(' layer ', ''))
+                txt += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k+1, i+1, j+1, v[k, i, j])
+        elif ndim == 2:
+            txt += '    {:>10s}{:>10s}{:>15s}\n'.format('row', 'column',
+                                                        name[0].lower().replace(' layer ', ''))
+            for [i, j] in idx:
+                txt += '    {:10d}{:10d}{:15.7g}\n'.format(i+1, j+1, v[i, j])
+        elif ndim == 1:
+            txt += '    {:>10s}{:>15s}\n'.format('number', name[0])
+            for i in idx:
+                txt += '    {:10d}{:15.7g}\n'.format(i+1, v[i])
+        return txt
 
     def plot(self, **kwargs):
         """
@@ -949,15 +977,17 @@ class Package(object):
                 if key is None:
                     names = ['{} location stress period {} layer {}'.format(self.name[0], kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
+                    colorbar = False
                 else:
                     names = ['{} {} data stress period {} layer {}'.format(self.name[0], key, kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
+                    colorbar = True
 
                 fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(key, names, kper,
                                        filename_base=fileb, file_extension=fext, mflay=mflay,
-                                       fignum=fignum, colorbar=True))
+                                       fignum=fignum, colorbar=colorbar))
 
             elif isinstance(value, utils.util_3d):
                 if self.parent.verbose:
