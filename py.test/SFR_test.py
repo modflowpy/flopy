@@ -4,8 +4,12 @@ import os
 import numpy as np
 import flopy
 
-
-path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+# pytest changes the directory to flopy3
+path = ''
+if os.path.split(os.getcwd())[-1] == 'py.test':
+    path += '../'
+path += 'examples/data/mf2005_test/'
+#path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
 
