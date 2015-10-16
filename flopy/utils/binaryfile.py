@@ -725,7 +725,7 @@ class CellBudgetFile(object):
         ----------
         record : a single data record
             The structure of the returned object depends on the structure of
-            the data in the cbb file.
+            the data in the cbb file. Compact list data are returned as
 
             If full3D is True, then this method will return a numpy masked
             array of size (nlay, nrow, ncol) for those list-style
@@ -782,13 +782,13 @@ class CellBudgetFile(object):
                                                                         nrow,
                                                                         ncol)
                 else:
-                    s += 'a dictionary of size ' + str(nlist)
+                    s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
                 print(s)
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 return self.create3D(data, nlay, nrow, ncol)
             else:
-                return dict(zip(data['node'], data['q']))
+                return data.view(np.recarray)
 
         # imeth 3
         elif imeth == 3:
@@ -800,11 +800,11 @@ class CellBudgetFile(object):
                                                                         nrow,
                                                                         ncol)
                 else:
-                    s += 'a list of two 2D arrays.  '
-                    s += 'The first is an integer layer array of shape  ' + str(
-                                                            (nrow, ncol))
-                    s += 'The second is real data array of shape  ' + str(
-                                                        (nrow, ncol) )
+                    s += 'a list of two 2D numpy arrays.  '
+                    s += 'The first is an integer layer array of shape  ' + \
+                         str((nrow, ncol))
+                    s += 'The second is real data array of shape  ' + \
+                         str((nrow, ncol))
                 print(s)
             if full3D:
                 out = np.ma.zeros((nlay, nrow, ncol), dtype=np.float32)
@@ -818,7 +818,7 @@ class CellBudgetFile(object):
         # imeth 4
         elif imeth == 4:
             if verbose:
-                s += 'a 2d array of shape ' + str((nrow, ncol))
+                s += 'a 2d numpy array of shape ' + str((nrow, ncol))
                 print(s)
             return binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
 
@@ -829,7 +829,7 @@ class CellBudgetFile(object):
             l = [('node', np.int32), ('q', self.realtype)]
             for i in range(naux):
                 auxname = binaryread(self.file, str, charlen=16)
-                l.append( (auxname, self.realtype))
+                l.append((auxname, self.realtype))
             dtype = np.dtype(l)                
             nlist = binaryread(self.file, np.int32)
             data = binaryread(self.file, dtype, shape=(nlist,))
@@ -840,9 +840,9 @@ class CellBudgetFile(object):
                 return self.create3D(data, nlay, nrow, ncol)
             else:
                 if verbose:
-                    s += 'a dictionary of size ' + str(nlist)
+                    s += 'a numpy recarray of size (' + str(nlist) + ', {})'.format(2+naux)
                     print(s)
-                return dict(zip(data['node'], data['q']))
+                return data.view(np.recarray)
 
         # should not reach this point
         return

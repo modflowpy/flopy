@@ -5,9 +5,9 @@ import numpy as np
 import flopy
 
 
-path = '../examples/data/mf2005_test/'
+path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
-def test_sfr(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
+def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
 
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=True)
     sfr = m.get_package('SFR2')
@@ -30,38 +30,27 @@ def test_sfr(mfnam, sfrfile, model_ws, outfolder='written_sfr'):
 
     return m, sfr
 
-m, sfr = test_sfr('test1ss.nam', 'test1ss.sfr', path)
-'''
-assert len(sfr.dataset_5) == 1
-assert sfr.segment_data[0].shape == (8,)
-assert sfr.reach_data.shape == (36,)
-assert len(sfr.reach_data[0]) == 6
-assert len(sfr.channel_flow_data) == 1
-assert len(sfr.channel_flow_data[0]) == 1
-assert len(sfr.channel_flow_data[0][0]) == 3
-assert len(sfr.channel_flow_data[0][0][0]) == 11
-# would be good to test for floats here
-assert len(sfr.channel_geometry_data[0]) == 2
-assert list(sfr.channel_geometry_data[0].keys()) == [6, 7]
-assert sfr.channel_geometry_data[0][6][0] == [0.0,  10.,  80.,  100.,  150.,  170.,  240.,  250.]
-'''
-m, sfr = test_sfr('test1tr.nam', 'test1tr.sfr', path)
+def test_sfr():
+    m, sfr = sfr_process('test1ss.nam', 'test1ss.sfr', path)
 
-#assert list(sfr.dataset_5.keys()) == [0, 1]
+    m, sfr = sfr_process('test1tr.nam', 'test1tr.sfr', path)
+    
+    #assert list(sfr.dataset_5.keys()) == [0, 1]
+    
+    m, sfr = sfr_process('testsfr2_tab.nam', 'testsfr2_tab_ICALC1.sfr', path)
+    
+    assert list(sfr.dataset_5.keys()) == list(range(0, 50))
+    
+    m, sfr = sfr_process('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
+    
+    assert sfr.channel_geometry_data[0][0] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
+                                               [6.0, 4.5, 3.5, 0.0, 0.3, 3.5, 4.5, 6.0]]
+    
+    m, sfr = sfr_process('testsfr2.nam', 'testsfr2.sfr', path)
+    
+    assert round(sum(sfr.segment_data[49][0]), 7) == 3.9700007
+    
+    m, sfr = sfr_process('UZFtest2.nam', 'UZFtest2.sfr', path)
 
-m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC1.sfr', path)
-
-assert list(sfr.dataset_5.keys()) == list(range(0, 50))
-
-m, sfr = test_sfr('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
-
-assert sfr.channel_geometry_data[0][0] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
-                                           [6.0, 4.5, 3.5, 0.0, 0.3, 3.5, 4.5, 6.0]]
-
-m, sfr = test_sfr('testsfr2.nam', 'testsfr2.sfr', path)
-
-assert round(sum(sfr.segment_data[49][0]), 7) == 3.9700007
-
-m, sfr = test_sfr('UZFtest2.nam', 'UZFtest2.sfr', path)
-
-j=2
+if __name__ == '__main__':
+    test_sfr()
