@@ -361,9 +361,9 @@ class ModflowDis(Package):
         """
         thk = []
         thk.append(self.top - self.botm[0])
-        for k in range(1,self.nlay):
+        for k in range(1,self.nlay+sum(self.laycbd)):
             thk.append(self.botm[k-1] - self.botm[k])
-        self.__thickness = util_3d(self.parent, (self.nlay, self.nrow,
+        self.__thickness = util_3d(self.parent, (self.nlay + sum(self.laycbd), self.nrow,
                                                  self.ncol), np.float32, thk,
                                                  name='thickness')
         return self.__thickness
