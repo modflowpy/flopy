@@ -742,7 +742,10 @@ class ModflowSfr2(Package):
                                                          "not a recarray"
 
         # decide which columns to write
-        columns = self._get_item2_names()
+        #columns = self._get_item2_names()
+        columns = _get_item2_names(self.nstrm, self.reachinput, self.isfropt,
+                                   structured=self.parent.structured)
+
 
         # Add one to the kij indices
         names = self.reach_data.dtype.names
