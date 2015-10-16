@@ -43,7 +43,7 @@ def test_sfr():
     
     m, sfr = sfr_process('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
     
-    assert sfr.channel_geometry_data[0][0] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
+    assert sfr.channel_geometry_data[0][1] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
                                                [6.0, 4.5, 3.5, 0.0, 0.3, 3.5, 4.5, 6.0]]
     
     m, sfr = sfr_process('testsfr2.nam', 'testsfr2.sfr', path)
