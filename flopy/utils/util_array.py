@@ -106,6 +106,10 @@ def array2string(a, fmt_tup):
     #print 'nr = %d, nc = %d\n' % (nr, nc)
     npl = fmt_tup[0]
     fmt_str = fmt_tup[1]
+    # hack for binary - no fmt given
+    if fmt_str == None:
+        fmt_str = '{0:15.6G}'
+        npl = aa.shape[1]
     s = ''
     for r in range(nr):
         for c in range(nc):
@@ -268,7 +272,10 @@ class util_3d(object):
             self.name = t
         self.name_base = []
         for k in range(shape[0]):
-            self.name_base.append(self.name[k] + ' Layer ')
+            if 'Layer' not in self.name[k]:
+                self.name_base.append(self.name[k] + ' Layer ')
+            else:
+                self.name_base.append(self.name[k])
         self.fmtin = fmtin
         self.cnstnt = cnstnt
         self.iprn = iprn
@@ -277,7 +284,7 @@ class util_3d(object):
             self.ext_filename_base = []
             for k in range(shape[0]):
                 self.ext_filename_base.append(os.path.join(model.external_path,
-                                                           self.name_base.replace(' ', '_')))
+                                                           self.name_base[k].replace(' ', '_')))
         self.util_2ds = self.build_2d_instances()
 
 
