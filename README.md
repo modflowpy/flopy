@@ -165,8 +165,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Newton (NWT)                                   | Supported            | Not supported        | Not supported        |
 | Output Control (OC)                            | Supported            | Supported            | Not supported        |
 | Periodic Boundary Condition (PBC)              | Supported            | Not supported        | Not supported        |
-| Preconditioned Conjugate Gradient (PCG)              | Supported            | Supported            | Not supported        |
-| Precondonditioned Conjugate Gradient <br />Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
+| Preconditioned Conjugate <br />Gradient (PCG)              | Supported            | Supported            | Not supported        |
+| Precondonditioned Conjugate <br />Gradient Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
 | Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
 | Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
 | River (RIV)                                    | Supported            | Supported            | Not supported        |
