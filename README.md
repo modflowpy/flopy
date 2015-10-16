@@ -7,77 +7,9 @@
 
 *FloPy<sub>3</sub>* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
 
-For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users  Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed at the bottom of this page in the MODFLOW Resources section.
+For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users  Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
-If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like to suggest an improvement or enhancement, please submit a new Issue through the Github Issue tracker toward the upper-right corner of this page.
-
-## FloPy<sub>3</sub> Supported Packages
-### MODFLOW
-| Package                        | Creation and Write      | Load Available          | Template Creation       |
-| ------------------------------ | ----------------------- | ----------------------- | ----------------------- |
-| Basic (BAS6)                   | Supported               | Supported               | Not supported           |
-| Discretization (DIS)           | Supported               | Supported               | Not supported           |
-| Layer Property Flow (LPF)      | Supported               | Supported               | Supported               |
-| Block Centered Flow (BCF)      | Supported               | Supported               | Not supported           |
-| Upstream Weighted (UPW)        | Supported               | Supported               | Not supported           |
-| Well (WEL)                     | Supported               | Supported               | Not supported           |
-| Multi-Node Well 1 (MNW1)       | Limited support         | Not supported           | Not supported           |
-| Multi-Node Well 2 (MNW1)       | Limited support         | Not supported           | Not supported           |
-| Subsidence (SUB)               | Not supported           | Not supported           | Not supported           |
-
-### MODPATH
-
-### MT3DMS
-
-### SEAWAT
-
-## Installation
-
-**Python versions:**
-
-*FloPy<sub>3</sub>* requires **Python** 2.7 or **Python** 3.3 (or higher)
-
-
-**Dependencies:**
-
-*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the flopy.plot submodule require **Pyshp** 1.2 (or higher).
-
-
-**For base Python distributions:**
-
-To install *FloPy<sub>3</sub>* type:
-
-    pip install flopy
-
-To update *FloPy<sub>3</sub>* type:
-
-    pip install flopy --upgrade
-
-To uninstall *FloPy<sub>3</sub>* type:
-
-    pip uninstall flopy
-
-**Installing from the git repository:**
-
-***Current Version of FloPy<sub>3</sub>:***
-
-To install the current version of *FloPy<sub>3</sub>* from the git repository type:
-
-    pip install https://github.com/modflowpy/flopy/zipball/master
-    
-To update your version of *FloPy<sub>3</sub>* with the current version from the git repository type:
-
-    pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
-
-***Development version of FloPy<sub>3</sub>:***
-
-To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
-
-    pip install https://github.com/modflowpy/flopy/zipball/develop
-    
-To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
-
-    pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
+If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like to suggest an improvement or enhancement, please submit a new Issue through the Github Issue tracker toward the upper-right corner of this page. Pull requests will only be accepted on the develop branch of the repository.
 
 
 Documentation
@@ -150,12 +82,140 @@ A few simple *FloPy<sub>3</sub>* tutorials are available at:
 + [http://modflowpy.github.io/flopydoc/tutorials.html](http://modflowpy.github.io/flopydoc/tutorials.html)
 
 
-### MODFLOW Resources
+## Installation
 
-+ [MODFLOW and Related Programs](http://water.usgs.gov/ogw/modflow/)
-+ [Online guide for MODFLOW-2000](http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/index.html)
-+ [Online guide for MODFLOW-2005](http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/)
-+ [Online guide for MODFLOW-NWT](http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/)
+**Python versions:**
+
+*FloPy<sub>3</sub>* requires **Python** 2.7 or **Python** 3.3 (or higher)
+
+
+**Dependencies:**
+
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the flopy.plot submodule require **Pyshp** 1.2 (or higher).
+
+
+**For base Python distributions:**
+
+To install *FloPy<sub>3</sub>* type:
+
+    pip install flopy
+
+To update *FloPy<sub>3</sub>* type:
+
+    pip install flopy --upgrade
+
+To uninstall *FloPy<sub>3</sub>* type:
+
+    pip uninstall flopy
+
+**Installing from the git repository:**
+
+***Current Version of FloPy<sub>3</sub>:***
+
+To install the current version of *FloPy<sub>3</sub>* from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/master
+    
+To update your version of *FloPy<sub>3</sub>* with the current version from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
+
+***Development version of FloPy<sub>3</sub>:***
+
+To install the bleeding edge version of *FloPy<sub>3</sub>* from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/develop
+    
+To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from the git repository type:
+
+    pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
+
+
+## FloPy<sub>3</sub> Supported Packages
+### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT
+| Package                                        | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
+| Basic (BAS6)                                   | Supported            | Supported            | Not supported        |
+| Block Centered Flow (BCF)                      | Supported            | Supported            | Not supported        |
+| Direct Solver (DE4)                            | Supported            | Supported            | Not supported        |
+| Discretization (DIS)                           | Supported            | Supported            | Not supported        |
+| Drain (DRN)                                    | Supported            | Supported            | Not supported        |
+| Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
+| Drain Return (DRT)                             | Not supported        | Not supported        | Not supported        |
+| Evapotranspiration (EVT)                       | Supported            | Supported            | Not supported        |
+| Evapotranspiration Segments (ETS)              | Not supported        | Not supported        | Not supported        |
+| Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
+| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
+| General Head Boundary (GHB)                    | Supported            | Supported            | Not supported        |
+| General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
+| Geometric Multi-Grid (GMG)                     | Supported            | Supported            | Not supported        |
+| Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
+| Horizontal Flow Barrier (HFB)                  | Supported            | Supported            | Not supported        |
+| HYDMOD (HYD)                                   | Not supported        | Not supported        | Not supported        |
+| Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
+| Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
+| Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
+| Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
+| Link-AMG (LMG)                                 | Not supported        | Not supported        | Not supported        |
+| MODFLOW Link-MT3DMS (LMT)                      | Supported            | Not supported        | Not supported        |
+| Multipler (MULT)                               | Not supported        | Supported            | Not supported        |
+| Multi-Node Well 1 (MNW1)                       | Limited support      | Not supported        | Not supported        |
+| Multi-Node Well 2 (MNW1)                       | Limited support      | Not supported        | Not supported        |
+| Multi-Node Well Information (MNWI)             | Limited support      | Not supported        | Not supported        |
+| Newton (NWT)                                   | Supported            | Not supported        | Not supported        |
+| Output Control (OC)                            | Supported            | Supported            | Not supported        |
+| Periodic Boundary Condition (PBC)              | Supported            | Not supported        | Not supported        |
+| Precond. Conjugate Gradient (PCG)              | Supported            | Supported            | Not supported        |
+| Precond. Conjugate Gradient Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
+| Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
+| Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
+| River (RIV)                                    | Supported            | Supported            | Not supported        |
+| River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
+| Streamflow Routing (SFR2)                      | Supported            | Supported            | Not supported        |
+| Strongly Implicit Procedure (SIP)              | Supported            | Not supported        | Not supported        |
+| Slice-successive Overrelaxation (SOR)          | Supported            | Not supported        | Not supported        |
+| Stream (STR)                                   | Supported            | Supported            | Not supported        |
+| Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
+| Seawater Intrusion (SWI)                       | Supported            | Not supported        | Not supported        |
+| Seawater Intrusion (SWI2)                      | Supported            | Supported            | Not supported        |
+| Surface-Water Routing (SWR)                    | Not supported        | Not supported        | Not supported        |
+| Subsidence (SUB)                               | Not supported        | Not supported        | Not supported        |
+| Subsidence and Aquifer-System Compaction (SWT) | Not supported        | Not supported        | Not supported        |
+| Subsidence and Aquifer-System Compaction (SWT) | Not supported        | Not supported        | Not supported        |
+| Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
+| Upstream Weighted (UPW)                        | Supported            | Supported            | Not supported        |
+| Unzaturated Zone Flow (UZF)                    | Supported            | Not supported        | Not supported        |
+| Well (WEL)                                     | Supported            | Supported            | Not supported        |
+| Zone (ZONE)                                    | Not supported        | Supported            | Not supported        |
+
+### MODFLOW-USG
+| Package                                      | Creation and Write   | Load Available       | Template Creation    |
+| -------------------------------------------- | -------------------- | -------------------- | -------------------- |
+| Sparse Matrix Solver (SMS)                   | Supported            | Not supported        | Not supported        |
+
+### MODPATH
+| Package                                  | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------- | -------------------- | -------------------- | -------------------- |
+| MODPATH Basic (MPBAS)                    | Supported            | Not supported        | Not supported        |
+| MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
+
+### MT3DMS
+| Package                                  | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------- | -------------------- | -------------------- | -------------------- |
+| Advection (ADV)                          | Supported            | Not supported        | Not supported        |
+| Basic Transport (BTN)                    | Supported            | Not supported        | Not supported        |
+| Dispersion (DSP)                         | Supported            | Not supported        | Not supported        |
+| Generalized Conjugate Gradient (GCG)     | Supported            | Not supported        | Not supported        |
+| PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
+| Reaction (RCT)                           | Supported            | Not supported        | Not supported        |
+| Sink and Source Mixing (SSM)             | Supported            | Not supported        | Not supported        |
+| Transport Observation (TOB)              | Supported            | Not supported        | Not supported        |
+
+### SEAWAT
+| Package                                  | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------- | -------------------- | -------------------- | -------------------- |
+| Variable Density Flow (VDF)              | Supported            | Not supported        | Not supported        |
+| Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
 
 
 --------------------------------
@@ -164,6 +224,7 @@ A few simple *FloPy<sub>3</sub>* tutorials are available at:
 
 ### Version 3.2.3
 * `flopy.utils.CellBudgetFile` returns a numpy recarray for list based budget data. Previously a dictionary with the `node` number and `q` were returned. The recarray will return the `node` number, `q`, and the `aux` variables for list based budget data.
+* Added support for the SEAWAT viscosity (VSC) package.
 
 ### Version 3.2.2
 * *FloPy<sub>3</sub>* now supports some simple plotting capabilities for two- and three-dimensional model input data array classes  and transient two-dimensional stress period input data using the `.plot()` methods associated with the data array classes (`util_2d`, `util_3d`, and `transient_2d`). The model results reader classes (`HeadFile`, `UcnFile`, and `CellBudgetFile`) have also been extended to include a `.plot()` method that can be used to create simple plots of model output data. See the notebook [flopy3_PlotArrayExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_PlotArrayExample.ipynb).
@@ -209,3 +270,12 @@ A few simple *FloPy<sub>3</sub>* tutorials are available at:
 * *load()* methods have been developed for all of the standard MODFLOW packages and a few less used packages (*e.g.* SWI2).
 
 * MODFLOW parameter support has been added to the `load()` methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the `load()` methods. MODFLOW parameters are not supported in `write()` methods.  
+
+--------------------------------
+
+### MODFLOW Resources
+
++ [MODFLOW and Related Programs](http://water.usgs.gov/ogw/modflow/)
++ [Online guide for MODFLOW-2000](http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/index.html)
++ [Online guide for MODFLOW-2005](http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/)
++ [Online guide for MODFLOW-NWT](http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/)
