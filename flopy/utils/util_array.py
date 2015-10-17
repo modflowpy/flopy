@@ -295,6 +295,9 @@ class util_3d(object):
         else:
             raise NotImplementedError("util_3d doesn't support setitem indices" + str(k))
 
+    def export(self,f):
+        from flopy import export
+        return export.utils.util3d_helper(f,self)
 
     def to_shapefile(self, filename):
         """
@@ -1096,6 +1099,11 @@ class util_2d(object):
         return pu._plot_array_helper(self.array, self.model,
                                      names=title, filenames=filename,
                                      fignum=fignum, **kwargs)
+
+
+    def export(self,f):
+        from flopy import export
+        return export.utils.util2d_helper(f,self)
 
 
     def to_shapefile(self, filename):

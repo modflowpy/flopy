@@ -1,91 +1,14 @@
 """
-Module spatial and temporal referencing for flopy model objects
+Module spatial referencing for flopy model objects
 
 """
-
-from datetime import datetime
 import numpy as np
-#import pandas as pd
-#from flopy.utils.util_array import util_2d
 
-# def temporalreference_from_binary_headers(recordarray, verbose=False):
-#
-#     ukper = np.unique(recordarray['kper'])
-#     totim = []
-#     nstp = []
-#     tsmult = []
-#     for uk in ukper:
-#         uk_recarray = recordarray[recordarray['kper'] == uk]
-#         # what is tsmult used for?? Is it necessary for anything??
-#         #  no pertim in ucn file
-#         tm = 1.0
-#         try:
-#             us = np.unique(uk_recarray['pertim'])
-#             if us.shape[0] > 1:
-#                 tm = (us[1] / us[0]) - 1.0
-#         except:
-#             pass
-#         t = uk_recarray['totim'].max()
-#         n = uk_recarray['kstp'].max()
-#         totim.append(t)
-#         nstp.append(n)
-#         tsmult.append(tm)
-#     totim = np.array(totim, dtype=np.float32)
-#     nstp = np.array(nstp, dtype=np.int)
-#     tsmults = np.array(tsmult, dtype=np.float32)
-#     perlen = [totim[0]]
-#     perlen.extend(list(totim[1:] - totim[:-1]))
-#     perlen = np.array(perlen, dtype=np.float32)
-#     if verbose:
-#         print('LayerFile._build_tr(): assuming time units of days...')
-#     #should this be tsmults instead of tsmult??
-#     tr = TemporalReference(np.array(perlen), np.zeros_like(nstp),
-#                            nstp, tsmult, 4)
-#     return tr
-
-def spatialreference_from_gridspc_file(filename, lenuni=0):
-    f = open(filename,'r')
-    lines = f.readlines()
-    raw = f.readline().strip().split()
-    nrow = int(raw[0])
-    ncol = int(raw[1])
-    raw = f.readline().strip().split()
-    xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
-    delr = []
-    j = 0
-    while j < ncol:
-        raw = f.readline().strip().split()
-        for r in raw:
-            if '*' in r:
-                rraw = r.split('*')
-                for n in range(int(rraw[0])):
-                    delr.append(int(rraw[1]))
-                    j += 1
-            else:
-                delr.append(int(r))
-                j += 1
-
-    delc = []
-    i = 0
-    while i < nrow:
-        raw = f.readline().strip().split()
-        for r in raw:
-            if '*' in r:
-                rraw = r.split('*')
-                for n in range(int(rraw[0])):
-                    delc.append(int(rraw[1]))
-                    i += 1
-            else:
-                delc.append(int(r))
-                i += 1
-
-    f.close()
-    return SpatialReference(np.array(delr), np.array(delc),
-                            lenuni, xul=xul, yul=yul, rotation=rot)
 
 class SpatialReference(object):
 
-    def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0):
+    def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0,
+                 epsg_str="EPSG:4326"):
         """
             delr: delr array
             delc: delc array
@@ -101,9 +24,48 @@ class SpatialReference(object):
         self.ncol = self.delr.shape[0]
 
         self.lenuni = lenuni
-
+        self.epsg_str = epsg_str
         self.set_spatialreference(xul, yul, rotation)
 
+
+    @classmethod
+    def from_gridspec(cls,gridspec_file,lenuni=0):
+        f = open(filename,'r')
+        lines = f.readlines()
+        raw = f.readline().strip().split()
+        nrow = int(raw[0])
+        ncol = int(raw[1])
+        raw = f.readline().strip().split()
+        xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
+        delr = []
+        j = 0
+        while j < ncol:
+            raw = f.readline().strip().split()
+            for r in raw:
+                if '*' in r:
+                    rraw = r.split('*')
+                    for n in range(int(rraw[0])):
+                        delr.append(int(rraw[1]))
+                        j += 1
+                else:
+                    delr.append(int(r))
+                    j += 1
+        delc = []
+        i = 0
+        while i < nrow:
+            raw = f.readline().strip().split()
+            for r in raw:
+                if '*' in r:
+                    rraw = r.split('*')
+                    for n in range(int(rraw[0])):
+                        delc.append(int(rraw[1]))
+                        i += 1
+                else:
+                    delc.append(int(r))
+                    i += 1
+        f.close()
+        return cls(np.array(delr), np.array(delc),
+                   lenuni, xul=xul, yul=yul, rotation=rot)
 
     def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
         """
