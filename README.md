@@ -201,8 +201,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 ### MT3DMS
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
-| Advection (ADV)                          | Supported            | Not supported        | Not supported        |
-| Basic Transport (BTN)                    | Supported            | Not supported        | Not supported        |
+| Advection (ADV)                          | Supported            | Supported            | Not supported        |
+| Basic Transport (BTN)                    | Supported            | Supported            | Not supported        |
 | Dispersion (DSP)                         | Supported            | Not supported        | Not supported        |
 | Generalized Conjugate Gradient (GCG)     | Supported            | Not supported        | Not supported        |
 | PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
@@ -213,7 +213,7 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 ### SEAWAT
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
-| Variable Density Flow (VDF)              | Supported            | Not supported        | Not supported        |
+| Variable Density Flow (VDF)              | Supported            | Supported            | Not supported        |
 | Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
 
 
