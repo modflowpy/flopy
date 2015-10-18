@@ -809,6 +809,18 @@ class transient_2d(object):
             raise Exception("transient_2d.__getitem__(): error:" + \
                             " could find an entry before kper {0:d}".format(kper))
 
+    @property
+    def array(self):
+        arr = np.zeros((self.model.dis.nper,self.shape[0],self.shape[1]),dtype=self.dtype)
+        for kper in range(self.model.dis.nper):
+            u2d = self[kper]
+            arr[kper,:,:] = u2d.array
+        return arr
+
+    def export(self,f):
+        from flopy import export
+        return export.utils.transient2d_helper(f,self)
+
     def get_kper_entry(self, kper):
         """
         get the file entry info for a given kper
@@ -867,7 +879,6 @@ class transient_2d(object):
         else:
             raise Exception("transient_2d error: value type not " +
                             " recognized: " + str(type(self.__value)))
-
 
     def __get_2d_instance(self, kper, arg):
         """
