@@ -114,8 +114,9 @@ def parsenamefile(namfilename, packages, verbose=True):
         is stored in the ext_unit_dict dictionary keyed by unit number
     """
     # add the .nam extension to namfilename if missing
-    if namfilename[-4:].lower() != '.nam':
-        namfilename += '.nam'
+    if not os.path.isfile(namfilename):
+        if namfilename[-4:].lower() != '.nam':
+            namfilename += '.nam'
     
     # initiate the ext_unit_dict dictionary
     ext_unit_dict = dict()

@@ -726,16 +726,12 @@ class Package(object):
             if not (attr in exclude_attributes):
                 if (isinstance(value, list)):
                     if (len(value) == 1):
-                        # s = s + ' %s = %s (list)\n' % (attr, str(value[0]))
                         s = s + ' {0:s} = {1:s}\n'.format(attr, str(value[0]))
                     else:
-                        # s = s + ' %s (list, items = %d)\n' % (attr, len(value))
                         s = s + ' {0:s} (list, items = {1:d}\n'.format(attr, len(value))
                 elif (isinstance(value, np.ndarray)):
-                    # s = s + ' %s (array, shape = %s)\n' % (attr, value.shape.__str__()[1:-1] )
-                    s = s + ' {0:s} (array, shape = {1:s}\n'.format(attr, value.shape__str__()[1:-1])
+                    s = s + ' {0:s} (array, shape = {1:s})\n'.format(attr, value.shape.__str__()[1:-1])
                 else:
-                    # s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
                     s = s + ' {0:s} = {1:s} ({2:s})\n'.format(attr, str(value), str(type(value))[7:-2])
         return s
 

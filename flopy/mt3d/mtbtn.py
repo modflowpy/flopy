@@ -10,7 +10,7 @@ User's Manual.
 import numpy as np
 # from numpy import empty,array
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import util_2d, util_3d, read1d
 
 
 class Mt3dBtn(Package):
@@ -376,7 +376,9 @@ class Mt3dBtn(Package):
 
         a5 = f.readline().strip().split()
 
-        a6 = f.readline().strip().split()
+        # a6 = f.readline().strip().split()
+        laycon = np.empty((nlay), np.int)
+        laycon = read1d(f, laycon)
 
         delr = util_2d.load(f, model, (ncol, 1), np.float32, 'delr',
                             ext_unit_dict)

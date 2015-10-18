@@ -1,3 +1,4 @@
+import sys
 from flopy.mbase import Package
 
 class Mt3dAdv(Package):
@@ -132,7 +133,7 @@ class Mt3dAdv(Package):
         The MMOC solution is selected at cells where the Relative
         Concentration Gradient is less than or equal to DCHMOC.
     extension : string
-        Filename extension (default is 'vdf')
+        Filename extension (default is 'adv')
     unitnumber : int
         File unit number (default is 32).
 
@@ -270,6 +271,7 @@ class Mt3dAdv(Package):
         if mixelm == 1 or mixelm == 2 or mixelm == 3:
             if model.verbose:
                 print('   loading ITRACK, WD...')
+            line = f.readline()
             itrack = int(line[0:10])
             wd = float(line[11:20])
             if model.verbose:
@@ -286,6 +288,7 @@ class Mt3dAdv(Package):
         if mixelm == 1 or mixelm == 3:
             if model.verbose:
                 print('   loading DCEPS, NPLANE, NPL, NPH, NPMIN, NPMAX...')
+            line = f.readline()
             dceps = float(line[0:10])
             nplane = int(line[11:20])
             npl = int(line[21:30])
@@ -307,6 +310,7 @@ class Mt3dAdv(Package):
         if mixelm == 2 or mixelm == 3:
             if model.verbose:
                 print('   loading INTERP, NLSINK, NPSINK...')
+            line = f.readline()
             interp = int(line[0:10])
             nlsink = int(line[11:20])
             npsink = int(line[21:30])
@@ -320,6 +324,7 @@ class Mt3dAdv(Package):
         if mixelm == 3:
             if model.verbose:
                 print('   loading DCHMOC...')
+            line = f.readline()
             dchmoc = float(line[0:10])
             if model.verbose:
                 print('   DCHMOC {}'.format(dchmoc))
