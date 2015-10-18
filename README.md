@@ -203,8 +203,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Advection (ADV)                          | Supported            | Supported            | Not supported        |
 | Basic Transport (BTN)                    | Supported            | Supported            | Not supported        |
-| Dispersion (DSP)                         | Supported            | Not supported        | Not supported        |
-| Generalized Conjugate Gradient (GCG)     | Supported            | Not supported        | Not supported        |
+| Dispersion (DSP)                         | Supported            | Supported            | Not supported        |
+| Generalized Conjugate Gradient (GCG)     | Supported            | Supported            | Not supported        |
 | PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
 | Reaction (RCT)                           | Supported            | Not supported        | Not supported        |
 | Sink and Source Mixing (SSM)             | Supported            | Not supported        | Not supported        |

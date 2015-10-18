@@ -376,7 +376,6 @@ class Mt3dBtn(Package):
 
         a5 = f.readline().strip().split()
 
-        # a6 = f.readline().strip().split()
         laycon = np.empty((nlay), np.int)
         laycon = read1d(f, laycon)
 
@@ -441,8 +440,8 @@ class Mt3dBtn(Package):
                       lunit=lunit, munit=munit, prsity=prsity, icbund=icbund,
                       sconc=sconc, cinact=cinact, thkmin=thkmin,
                       ifmtcn=ifmtcn, ifmtnp=ifmtnp, ifmtrf=ifmtrf,
-                      ifmtdp=ifmtdp, savucn=savucn, nprs=nprs, \
-                      timprs=timprs, obs=obs, nprobs=nprobs, chkmas=chkmas, \
-                      nprmas=nprmas, dt0=dt0, mxstrn=mxstrn, ttsmult=ttsmult, \
+                      ifmtdp=ifmtdp, savucn=savucn, nprs=nprs,
+                      timprs=timprs, obs=obs, nprobs=nprobs, chkmas=chkmas,
+                      nprmas=nprmas, dt0=dt0, mxstrn=mxstrn, ttsmult=ttsmult,
                       ttsmax=ttsmax)
         return btn
