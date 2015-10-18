@@ -736,7 +736,7 @@ class Package(object):
                     s = s + ' {0:s} (array, shape = {1:s}\n'.format(attr, value.shape__str__()[1:-1])
                 else:
                     # s = s + ' %s = %s (%s)\n' % (attr, str(value), str(type(value))[7:-2])
-                    s = s + ' {0:s} = {1:s} ({2:s}\n'.format(attr, str(value), str(type(value))[7:-2])
+                    s = s + ' {0:s} = {1:s} ({2:s})\n'.format(attr, str(value), str(type(value))[7:-2])
         return s
 
     def __getitem__(self, item):

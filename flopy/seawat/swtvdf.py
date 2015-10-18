@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_3d
+from flopy.utils import util_2d, util_3d
 
 
 class SeawatVdf(Package):
@@ -14,9 +14,9 @@ class SeawatVdf(Package):
     """
     def __init__(self, model, mtdnconc=1, mfnadvfd=1, nswtcpl=1, iwtable=1,
                  densemin=1.000, densemax=1.025, dnscrit=1e-2, denseref=1.000,
-                 denseslp=.025, crhoref=0, firstdt=0.001, indense=0, dense=1.000,
-                 nsrhoeos=1, drhodprhd=4.46e-3, prhdref=0., extension='vdf',
-                 **kwargs):
+                 denseslp=.025, crhoref=0, firstdt=0.001, indense=0,
+                 dense=1.000, nsrhoeos=1, drhodprhd=4.46e-3, prhdref=0.,
+                 extension='vdf', **kwargs):
 
         Package.__init__(self, model, extension, 'VDF', 37)
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
@@ -94,7 +94,7 @@ class SeawatVdf(Package):
         return
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -105,6 +105,9 @@ class SeawatVdf(Package):
         model : model object
             The model object (of type :class:`flopy.seawat.swt.Seawat`) to
             which this package will be added.
+        nper : int
+            The number of stress periods.  If nper is None, then nper will be
+            obtained from the model object. (default is None).
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
             or older style array control records, then `f` should be a file
