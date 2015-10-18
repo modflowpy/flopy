@@ -1,6 +1,5 @@
 from __future__ import print_function
-import tplarray
-
+import flopy.pest.tplarray as tplarray
 
 class TemplateWriter(object):
     """
