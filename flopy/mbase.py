@@ -805,6 +805,15 @@ class Package(object):
         super(Package, self).__setattr__(key, value)
 
 
+    def export(self,f):
+        from flopy import export
+        return export.utils.mflist_helper(f,self.stress_period_data)
+        try:
+            from flopy import export
+            return export.utils.mflist_helper(f,self.stress_period_data)
+        except:
+            pass
+
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
         if not isinstance(field_names, list):

@@ -1,12 +1,39 @@
 import os
 import numpy as np
-from flopy.utils import util_2d, util_3d, transient_2d
+from flopy.utils import util_2d, util_3d, transient_2d,mflist
 
 from . import NetCdf
 
 
 NC_UNITS_FORMAT = {"hk":"{0}/{1}","sy":"","ss":"1/{0}","rech":"{0}/{1}"}
 NC_PRECISION_TYPE = {np.float32:"f4",np.int:"i4"}
+
+
+def mflist_helper(f,mfl):
+    assert isinstance(mfl,mflist)\
+                      ,"mflist_helper only helps mflist instances"
+
+    if isinstance(f,str) and f.lower().endswith(".nc"):
+        f = NetCdf(f,mfl.model)
+
+    if isinstance(f,NetCdf):
+        base_name = mfl.package.name[0].lower()
+        m4d = mfl.masked_4D_arrays
+        for name,array in mfl.masked_4D_arrays.items():
+            var_name = base_name + '_' + name
+            units = None
+            if var_name in NC_UNITS_FORMAT:
+                units = NC_UNITS_FORMAT[var_name].format(f.grid_units,f.time_units)
+            precision_str = NC_PRECISION_TYPE[mfl.dtype[name].type]
+            attribs = {"long_name":"flopy.mflist instance of {0}".format(var_name)}
+            if units is not None:
+                attribs["units"] = units
+            var = f.create_variable(var_name,attribs,precision_str=precision_str,dimensions=("time","layer","y","x"))
+            var[:] = array
+        return f
+    else:
+        raise NotImplementedError("transient2d_helper only for netcdf (*.nc) ")
+
 
 def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
     assert isinstance(t2d,transient_2d)\
@@ -23,12 +50,14 @@ def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
         array[array<=min_valid] = f.fillvalue
         array[array>=max_valid] = f.fillvalue
 
-        units = ''
+        units = None
         name = t2d.name_base.replace('_','')
         if name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[name].format(f.grid_units,f.time_units)
         precision_str = NC_PRECISION_TYPE[t2d.dtype]
-        attribs = {"long_name":"flopy.util_3d instance of {0}".format(name)}
+        attribs = {"long_name":"flopy.transient_2d instance of {0}".format(name)}
+        if units is not None:
+            attribs["units"] = units
         var = f.create_variable(name,attribs,precision_str=precision_str,dimensions=("layer","y","x"))
         var[:] = array
         return f
@@ -51,7 +80,7 @@ def util3d_helper(f,u3d,min_valid=-1.0e+9, max_valid=1.0e+9):
         array[array<=min_valid] = f.fillvalue
         array[array>=max_valid] = f.fillvalue
 
-        units = ''
+        units = None
         name = u3d.name[0].split()[0]
         if name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[name].format(f.grid_units,f.time_units)
@@ -59,6 +88,8 @@ def util3d_helper(f,u3d,min_valid=-1.0e+9, max_valid=1.0e+9):
         precision_str = NC_PRECISION_TYPE[u3d.dtype]
 
         attribs = {"long_name":"flopy.util_3d instance of {0}".format(name)}
+        if units is not None:
+            attribs["units"] = units
         var = f.create_variable(name,attribs,precision_str=precision_str,dimensions=("layer","y","x"))
         var[:] = array
         return f
@@ -86,13 +117,15 @@ def util2d_helper(f,u2d,min_valid=-1.0e+9, max_valid=1.0e+9):
         array[array<=min_valid] = f.fillvalue
         array[array>=max_valid] = f.fillvalue
 
-        units = ''
+        units = None
         if u2d.name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[u2d.name].format(f.grid_units,f.time_units)
 
         precision_str = NC_PRECISION_TYPE[u2d.dtype]
 
         attribs = {"long_name":"flopy.util_2d instance of {0}".format(u2d.name)}
+        if units is not None:
+            attribs["units"] = units
         var = f.create_variable(u2d.name,attribs,precision_str=precision_str,dimensions=("y","x"))
         var[:] = array
         return f
