@@ -61,7 +61,9 @@ class mflist(object):
                 self.model = package.parent
             else:
                 self.model = model
+            self.package = package
             return
+        
         self.package = package
         if model is None:
             self.model = package.parent
