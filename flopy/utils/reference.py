@@ -84,6 +84,63 @@ def spatialreference_from_gridspc_file(filename, lenuni=0):
                             lenuni, xul=xul, yul=yul, rotation=rot)
 
 class SpatialReference(object):
+    """
+    a simple class to locate the model grid in x-y space
+
+    Parameters
+    ----------
+
+    delr : util_2d
+        the model discretization delr vector
+
+    delc : util_2d
+        the model discretization delc vector
+
+    lenuni : int
+        the length units flag from the discretization package
+
+    xul : float
+        the x coordinate of the upper left corner of the grid
+
+    yul : float
+        the y coordinate of the upper left corner of the grid
+
+    rotation : float
+        the counter-clockwise rotation (in degrees) of the grid
+
+    Attributes
+    ----------
+    xedge : ndarray
+        array of column edges
+
+    yedge : ndarray
+        array of row edges
+
+    xgrid : ndarray
+        numpy meshgrid of xedges
+
+    ygrid : ndarray
+        numpy meshgrid of yedges
+
+    xcenter : ndarray
+        array of column centers
+
+    ycenter : ndarray
+        array of row centers
+
+    xcentergrid : ndarray
+        numpy meshgrid of column centers
+
+    ycentergrid : ndarray
+        numpy meshgrid of row centers
+
+    Note:
+    ----
+
+    xul and yul can be explicitly (re)set after SpatialReference instantiation, but only before
+    any of the other attributes and methods are accessed
+        
+    """
 
     def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0):
         """
@@ -329,6 +386,8 @@ class SpatialReference(object):
 
 
     def write_gridSpec(self, filename):
+        """ write a PEST-style grid specification file
+        """
         f = open(filename,'w')
         f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
         f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))
