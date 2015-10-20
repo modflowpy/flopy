@@ -257,6 +257,7 @@ class util_3d(object):
         if isinstance(value, util_3d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
+            self.model = model
             return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
         self.model = model
@@ -617,6 +618,7 @@ class transient_2d(object):
         if isinstance(value, transient_2d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
+            self.model = model
             return
 
         self.model = model
@@ -803,11 +805,11 @@ class transient_2d(object):
         elif kper < min(self.transient_2ds.keys()):
             return self.get_zero_2d(kper)
         else:
-            for i in range(kper, 0, -1):
+            for i in range(kper, -1, -1):
                 if i in list(self.transient_2ds.keys()):
                     return self.transient_2ds[i]
             raise Exception("transient_2d.__getitem__(): error:" + \
-                            " could find an entry before kper {0:d}".format(kper))
+                            " could not find an entry before kper {0:d}".format(kper))
 
     @property
     def array(self):
@@ -976,6 +978,7 @@ class util_2d(object):
         if isinstance(value, util_2d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
+            self.model = model
             return
         self.model = model
         self.shape = shape

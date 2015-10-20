@@ -53,6 +53,15 @@ class mflist(object):
     """
 
     def __init__(self, package, data=None, model=None):
+
+        if isinstance(data, mflist):
+            for attr in data.__dict__.items():
+                setattr(self, attr[0], attr[1])
+            if model is None:
+                self.model = package.parent
+            else:
+                self.model = model
+            return
         self.package = package
         if model is None:
             self.model = package.parent

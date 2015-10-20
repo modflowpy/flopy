@@ -58,7 +58,7 @@ def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
         attribs = {"long_name":"flopy.transient_2d instance of {0}".format(name)}
         if units is not None:
             attribs["units"] = units
-        var = f.create_variable(name,attribs,precision_str=precision_str,dimensions=("layer","y","x"))
+        var = f.create_variable(name,attribs,precision_str=precision_str,dimensions=("time","layer","y","x"))
         var[:] = array
         return f
 
