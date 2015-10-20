@@ -1,4 +1,5 @@
 import os
+import copy
 import numpy as np
 from datetime import datetime
 
@@ -8,12 +9,90 @@ ITMUNI = {0:"undefined",1:"seconds",2:"minutes",3:"hours",4:"days",5:"years"}
 LENUNI = {0:"undefined",1:"feet",2:"meters",3:"centimeters"}
 PRECISION_STRS = ["f4","f8","i4"]
 
+
+class Logger(object):
+    """ a basic class for logging events during the linear analysis calculations
+        if filename is passed, then an file handle is opened
+    Args:
+        filename (bool or string): if string, it is the log file to write
+            if a bool, then log is written to the screen
+        echo (bool): a flag to force screen output
+    Attributes:
+        items (dict) : tracks when something is started.  If a log entry is
+            not in items, then it is treated as a new entry with the string
+            being the key and the datetime as the value.  If a log entry is
+            in items, then the end time and delta time are written and
+            the item is popped from the keys
+
+    """
+    def __init__(self,filename, echo=False):
+        self.items = {}
+        self.echo = bool(echo)
+        if filename == True:
+            self.echo = True
+            self.filename = None
+        elif filename:
+            self.f = open(filename, 'w', 0) #unbuffered
+            self.t = datetime.now()
+            self.log("opening " + str(filename) + " for logging")
+        else:
+            self.filename = None
+
+
+    def log(self,phrase):
+        """log something that happened
+        Args:
+            phrase (str) : the thing that happened
+        Returns:
+            None
+        Raises:
+            None
+        """
+        pass
+        t = datetime.now()
+        if phrase in self.items.keys():
+            s = str(t) + ' finished: ' + str(phrase) + ", took: " + \
+                str(t - self.items[phrase]) + '\n'
+            if self.echo:
+                print(s,)
+            if self.filename:
+                self.f.write(s)
+            self.items.pop(phrase)
+        else:
+            s = str(t) + ' starting: ' + str(phrase) + '\n'
+            if self.echo:
+                print(s,)
+            if self.filename:
+                self.f.write(s)
+            self.items[phrase] = copy.deepcopy(t)
+
+    def warn(self,message):
+        """write a warning to the log file
+        Args:
+            message (str) : the warning text
+        Returns:
+            None
+        Raises:
+            None
+        """
+        s = str(datetime.now()) + " WARNING: " + message + '\n'
+        if self.echo:
+            print(s,)
+        if self.filename:
+            self.f.write(s)
+
+
 class NetCdf(object):
 
-    def __init__(self,output_filename,ml):
+    def __init__(self,output_filename,ml,time_values=None,verbose=None):
 
         assert output_filename.lower().endswith(".nc")
+        if verbose is None:
+            verbose = ml.verbose
+        self.logger = Logger(verbose)
+        self.log = self.logger.log
         if os.path.exists(output_filename):
+            self.logger.warn("removing existing nc file: "+output_filename)
             os.remove(output_filename)
         self.output_filename = output_filename
 
@@ -31,9 +110,20 @@ class NetCdf(object):
 
         self.time_units = ITMUNI[self.ml.dis.itmuni]
 
+        # this gives us confidence that every NetCdf instance has the same attributes
+        self.log("initializing attributes")
         self._initialize_attributes()
+        self.log("initializing attributes")
+
+        # if time_values were passed, lets get things going
+        if time_values is not None:
+            self.log("time_values != None, initializing file")
+            self.initialize_file(time_values=time_values)
+            self.log("time_values != None, initializing file")
+
 
     def write(self):
+        self.log("writing nc file")
         assert self.nc is not None,"netcdf.write() error: nc file not initialized"
 
         # write any new attributes that have been set since initializing the file
@@ -42,10 +132,11 @@ class NetCdf(object):
                 if self.nc.attributes.get(k) is not None:
                     self.nc.setncattr(k,v)
             except Exception as e:
-                print"warning - error setting attribute: " + k
+                self.logger.warn('error setting global attribute {0}'.format(k))
 
         self.nc.sync()
         self.nc.close()
+        self.log("writing nc file")
 
 
     def _initialize_attributes(self):
@@ -106,17 +197,20 @@ class NetCdf(object):
             raise Exception("nc file already initialized")
 
         if self.grid_crs is None:
+            self.log("initializing geometry")
             self.initialize_geometry()
-
+            self.log("initializing geometry")
         try:
             import netCDF4
         except Exception as e:
+            self.logger.warn("error importing netCDF module")
             raise Exception("NetCdf error importing netCDF4 module:\n" + str(e))
 
         # open the file for writing
         self.nc = netCDF4.Dataset(self.output_filename, "w")
 
         # write some attributes
+        self.log("setting standard attributes")
         self.nc.setncattr("Conventions", "CF-1.6")
         self.nc.setncattr("date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
         self.nc.setncattr("geospatial_vertical_positive",   "up")
@@ -134,10 +228,11 @@ class NetCdf(object):
             try:
                 self.nc.setself.ncattr(k, v)
             except:
-                pass
+                self.logger.warn("error setting global attribute {0}".format(k))
         self.global_attributes = {}
-
+        self.log("setting standard attributes")
         # spatial dimensions
+
         self.nc.createDimension('x', self.shape[2])
         self.nc.createDimension('y', self.shape[1])
         self.nc.createDimension('layer', self.shape[0])
@@ -174,12 +269,11 @@ class NetCdf(object):
         lon[:] = self.xs
 
         # Elevation
-
         attribs = {"units":"meters","standard_name":"elevation",
                    "long_name":"elevation","axis":"Z",
                    "valid_min":min_vertical,"valid_max":max_vertical,
                    "positive":"down"}
-        elev = self.create_variable("elevation",attribs,dimensions=("x","y"))
+        elev = self.create_variable("elevation",attribs,dimensions=("layer","x","y"))
         elev[:] = self.zs
 
         # layer
@@ -229,7 +323,7 @@ class NetCdf(object):
 
     def create_variable(self, name, attributes, precision_str='f4',
                         dimensions=("time", "layer", "x", "y")):
-
+        self.log("creating variable: " + str(name))
         assert precision_str in PRECISION_STRS,\
             "netcdf.create_variable() error: precision string {0} not in {1}".\
                 format(precision_str,PRECISION_STRS)
@@ -262,7 +356,9 @@ class NetCdf(object):
             try:
                 var.setncattr(k, v)
             except:
-                pass
+                self.logger.warn("error setting attribute" +\
+                                 "{0} for variable {1}".format(k,name))
+        self.log("creating variable: " + str(name))
         return var
 
 
