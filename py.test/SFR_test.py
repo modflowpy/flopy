@@ -4,16 +4,11 @@ import os
 import numpy as np
 import flopy
 
-# pytest changes the directory to flopy3
-path = ''
-if os.path.split(os.getcwd())[-1] == 'py.test':
-    path += '../'
-path += 'examples/data/mf2005_test/'
-#path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
 
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=True)
+    m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
     sfr = m.get_package('SFR2')
 
     if not os.path.exists(outfolder):
@@ -21,6 +16,7 @@ def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
     outpath = os.path.join(outfolder, sfrfile)
     sfr.write(outpath)
 
+    m.remove_package('SFR2')
     sfr2 = flopy.modflow.ModflowSfr2.load(outpath, m)
 
     assert np.all(sfr2.reach_data == sfr.reach_data)
