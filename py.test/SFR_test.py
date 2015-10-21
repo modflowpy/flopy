@@ -4,8 +4,12 @@ import os
 import numpy as np
 import flopy
 
-
-path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+# pytest changes the directory to flopy3
+path = ''
+if os.path.split(os.getcwd())[-1] == 'py.test':
+    path += '../'
+path += 'examples/data/mf2005_test/'
+#path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
 
@@ -43,7 +47,7 @@ def test_sfr():
     
     m, sfr = sfr_process('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
     
-    assert sfr.channel_geometry_data[0][0] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
+    assert sfr.channel_geometry_data[0][1] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
                                                [6.0, 4.5, 3.5, 0.0, 0.3, 3.5, 4.5, 6.0]]
     
     m, sfr = sfr_process('testsfr2.nam', 'testsfr2.sfr', path)

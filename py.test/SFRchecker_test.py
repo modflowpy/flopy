@@ -9,7 +9,6 @@ import os
 import flopy
 from flopy.modflow.mfsfr2 import check
 
-path = '../examples/data/mf2005_test/'
 # pytest changes the directory to flopy3
 path = ''
 if os.path.split(os.getcwd())[-1] == 'py.test':
