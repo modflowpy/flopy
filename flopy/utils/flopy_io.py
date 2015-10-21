@@ -5,14 +5,6 @@ import numpy as np
 from flopy.utils import util_2d, util_3d, transient_2d, mflist
 
 
-def results_to_netCDF(filename):
-    raise NotImplementedError()
-
-
-def grid_attributes_from_shapefile():
-    raise NotImplementedError()
-
-
 def write_gridlines_shapefile(filename,sr):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative to polygons

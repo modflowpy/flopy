@@ -53,6 +53,17 @@ class mflist(object):
     """
 
     def __init__(self, package, data=None, model=None):
+
+        if isinstance(data, mflist):
+            for attr in data.__dict__.items():
+                setattr(self, attr[0], attr[1])
+            if model is None:
+                self.model = package.parent
+            else:
+                self.model = model
+            self.package = package
+            return
+        
         self.package = package
         if model is None:
             self.model = package.parent
@@ -73,6 +84,10 @@ class mflist(object):
         d = np.zeros((ncell,len(self.dtype)),dtype=self.dtype)
         d[:,:] = -1.0E+10
         return d
+
+    def export(self,f):
+        from flopy import export
+        return export.utils.mflist_helper(f,self)
 
     @property
     def data(self):
@@ -395,9 +410,7 @@ class mflist(object):
                                               "not a recarray"
 
         # Add one to the kij indices
-        names = self.dtype.names
-        lnames = []
-        [lnames.append(name.lower()) for name in names]
+        lnames = [name.lower() for name in self.dtype.names]
         # --make copy of data for multiple calls
         d = np.recarray.copy(data)
         for idx in ['k', 'i', 'j', 'node']:
@@ -673,7 +686,7 @@ class mflist(object):
                     array_dict[aname] = array[k]
         fio.write_grid_shapefile(filename, self.sr, array_dict)
 
-    def to_array(self, kper=0):
+    def to_array(self, kper=0,mask=False):
         """
         Convert stress period boundary condition (mflist) data for a
         specified stress period to a 3-D numpy array
@@ -682,7 +695,8 @@ class mflist(object):
         ----------
         kper : int
             MODFLOW zero-based stress period number to return. (default is zero)
-
+        mask : boolean
+            return array with np.NaN instead of zero
         Returns
         ----------
         out : dict of numpy.ndarrays
@@ -716,12 +730,32 @@ class mflist(object):
                 cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol), dtype=np.float)
                 for rec in sarr:
                     arr[rec['k'], rec['i'], rec['j']] += rec[name]
-                    if name != 'cond' and name != 'flux':
-                        cnt[rec['k'], rec['i'], rec['j']] += 1.
+                    cnt[rec['k'], rec['i'], rec['j']] += 1.
                 # average keys that should not be added
                 if name != 'cond' and name != 'flux':
                     idx = cnt > 0.
                     arr[idx] /= cnt[idx]
+                if mask:
+                    arr[cnt == 0] = np.NaN
                 arrays[name] = arr
-
+        elif mask:
+            for name, arr in arrays.items():
+                arrays[name][:] = np.NaN
         return arrays
+
+    @property
+    def masked_4D_arrays(self):
+        #get the first kper
+        arrays = self.to_array(kper=0,mask=True)
+
+        # initialize these big arrays
+        m4ds = {}
+        for name,array in arrays.items():
+            m4d = np.zeros((self.model.nper,self.model.nlay,self.model.nrow,self.model.ncol))
+            m4d[0,:,:,:] = array
+            m4ds[name] = m4d
+        for kper in range(1,self.model.nper):
+            arrays = self.to_array(kper=kper,mask=True)
+            for name,array in arrays.items():
+                m4ds[name][kper,:,:,:] = array
+        return m4ds

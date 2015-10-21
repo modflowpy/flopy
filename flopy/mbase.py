@@ -95,6 +95,11 @@ class BaseModel(object):
         self.cl_params = ''
         return
 
+    def export(self,f):
+        for pak in self.packagelist:
+           f = pak.export(f)
+        return f
+
     def set_exename(self, exe_name):
         """
         Set the name of the executable.
@@ -801,6 +806,28 @@ class Package(object):
         super(Package, self).__setattr__(key, value)
 
 
+    def export(self,f):
+        from flopy import export
+        from flopy.utils import util_2d,util_3d,transient_2d,mflist
+
+        attrs = dir(self)
+        for attr in attrs:
+            if '__' in attr:
+                continue
+            a = self.__getattribute__(attr)
+            if isinstance(a, util_2d) and len(a.shape) == 2:
+                f = export.utils.util2d_helper(f,a)
+            elif isinstance(a, util_3d):
+                f = export.utils.util3d_helper(f,a)
+            elif isinstance(a, transient_2d):
+                f = export.utils.transient2d_helper(f,a)
+            elif isinstance(a, mflist):
+                f = export.utils.mflist_helper(f,a)
+            elif isinstance(a, list):
+                for v in a:
+                    if isinstance(v, util_3d):
+                        f = export.utils.util3d_helper(f,a)
+        return f
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
         if not isinstance(field_names, list):

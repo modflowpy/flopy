@@ -373,9 +373,10 @@ class Modflow(BaseModel):
                                                     ml.mfnam_packages,
                                                     verbose=verbose)
         except Exception as e:
-            print("error loading name file entries from file")
-            print(str(e))
-            return None
+            #print("error loading name file entries from file")
+            #print(str(e))
+            #return None
+            raise Exception("error loading name file entries from file:\n" + str(e))
 
         if ml.verbose:
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.

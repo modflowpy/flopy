@@ -14,6 +14,9 @@ from flopy.mbase import Package
 from flopy.utils import util_2d, util_3d, reference
 
 
+ITMUNI = {"u":0,"s":1,"m":2,"h":3,"d":4,"y":5}
+LENUNI = {"u":0,"f":1,"m":2,"c":3}
+
 class ModflowDis(Package):
     """
     MODFLOW Discretization Package Class.
@@ -93,7 +96,8 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=11, xul=None, yul=None, rotation=0.0):
+                 unitnumber=11, xul=None, yul=None, rotation=0.0,
+                 start_datetime="1/1/1970"):
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
@@ -125,15 +129,23 @@ class ModflowDis(Package):
                               name='tsmult')
         self.steady = util_2d(model, (self.nper,), np.bool,
                               steady, name='steady')
-        self.itmuni = int(itmuni)
-        self.lenuni = int(lenuni)
+
+        try:
+            self.itmuni = int(itmuni)
+        except:
+            self.itmuni = ITMUNI[itmuni.lower()[0]]
+        try:
+            self.lenuni = int(lenuni)
+        except:
+            self.lenuni = LENUNI[lenuni.lower()[0]]
+
         self.parent.add_package(self)
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
 
         self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni, xul=xul,
                                              yul=yul, rotation=rotation)
-
+        self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
 
@@ -161,6 +173,16 @@ class ModflowDis(Package):
         for c in range(self.ncol):
             vol[:, :, c] *= self.delr[c]
         return vol
+
+    @property
+    def zcentroids(self):
+        z = np.empty((self.nlay, self.nrow, self.ncol))
+        z[0,:,:] = (self.top[:, :] + self.botm[0, :, :]) / 2.
+
+        for l in range(1,self.nlay):
+            z[l, :, :] = (self.botm[l - 1, :, :] + self.botm[l, :, :]) / 2.
+        return z
+
 
     def get_node_coordinates(self):
         """
