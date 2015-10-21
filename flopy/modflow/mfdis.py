@@ -14,6 +14,9 @@ from flopy.mbase import Package
 from flopy.utils import util_2d, util_3d, reference
 
 
+ITMUNI = {"u":0,"s":1,"m":2,"h":3,"d":4,"y":5}
+LENUNI = {"u":0,"f":1,"m":2,"c":3}
+
 class ModflowDis(Package):
     """
     MODFLOW Discretization Package Class.
@@ -126,8 +129,16 @@ class ModflowDis(Package):
                               name='tsmult')
         self.steady = util_2d(model, (self.nper,), np.bool,
                               steady, name='steady')
-        self.itmuni = int(itmuni)
-        self.lenuni = int(lenuni)
+
+        try:
+            self.itmuni = int(itmuni)
+        except:
+            self.itmuni = ITMUNI[itmuni.lower()[0]]
+        try:
+            self.lenuni = int(lenuni)
+        except:
+            self.lenuni = LENUNI[lenuni.lower()[0]]
+
         self.parent.add_package(self)
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}

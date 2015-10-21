@@ -410,9 +410,7 @@ class mflist(object):
                                               "not a recarray"
 
         # Add one to the kij indices
-        names = self.dtype.names
-        lnames = []
-        [lnames.append(name.lower()) for name in names]
+        lnames = [name.lower() for name in self.dtype.names]
         # --make copy of data for multiple calls
         d = np.recarray.copy(data)
         for idx in ['k', 'i', 'j', 'node']:

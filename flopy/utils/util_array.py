@@ -258,6 +258,11 @@ class util_3d(object):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
             self.model = model
+            for i,u2d in enumerate(self.util_2ds):
+                self.util_2ds[i] = util_2d(model,u2d.shape,u2d.dtype,
+                                           u2d.array,name=u2d.name,
+                                           fmtin=u2d.fmtin,)
+
             return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
         self.model = model
@@ -1614,6 +1619,10 @@ class util_2d(object):
                                     str(value))
 
         if isinstance(value, np.ndarray):
+            # if value is 3d, but dimension 1 is only length 1,
+            # then drop the first dimension
+            if len(value.shape) == 3 and value.shape[0] == 1:
+                value = value[0]
             if self.shape != value.shape:
                 raise Exception('util_2d:self.shape: ' + str(self.shape) +
                                 ' does not match value.shape: ' +
