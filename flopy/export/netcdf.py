@@ -13,11 +13,13 @@ PRECISION_STRS = ["f4","f8","i4"]
 class Logger(object):
     """ a basic class for logging events during the linear analysis calculations
         if filename is passed, then an file handle is opened
-    Args:
+    Parameters:
+    ----------
         filename (bool or string): if string, it is the log file to write
             if a bool, then log is written to the screen
         echo (bool): a flag to force screen output
     Attributes:
+    ----------
         items (dict) : tracks when something is started.  If a log entry is
             not in items, then it is treated as a new entry with the string
             being the key and the datetime as the value.  If a log entry is
@@ -41,12 +43,9 @@ class Logger(object):
 
     def log(self,phrase):
         """log something that happened
-        Args:
+        Parameters:
+        ----------
             phrase (str) : the thing that happened
-        Returns:
-            None
-        Raises:
-            None
         """
         pass
         t = datetime.now()
@@ -68,12 +67,10 @@ class Logger(object):
 
     def warn(self,message):
         """write a warning to the log file
-        Args:
+        Parameters:
+        ----------
             message (str) : the warning text
-        Returns:
-            None
-        Raises:
-            None
+
         """
         s = str(datetime.now()) + " WARNING: " + message + '\n'
         if self.echo:
@@ -83,6 +80,33 @@ class Logger(object):
 
 
 class NetCdf(object):
+    """ support for writing a netCDF4 compliant file from a flopy model
+     Parameters:
+     ----------
+        output_filename (str) : the name of the .nc file to write
+
+        ml : flopy model instance
+
+        time_values : the entires for the time dimension
+            if not None, the constructor will initialize
+            the file.  If None, the perlen array of ModflowDis
+             will be used
+
+        verbose : if True, stdout is verbose.  If str, then a log file
+            is written to the verbose file
+
+    Note:
+    ----
+        this class relies heavily on the ModflowDis object,
+        including these attributes:
+                    lenuni
+                    itmuni
+                    epsg_str
+                    start_datetime
+                    sr (SpatialReference)
+        make sure these attributes have meaningful values
+
+    """
 
     def __init__(self,output_filename,ml,time_values=None,verbose=None):
 
@@ -123,6 +147,7 @@ class NetCdf(object):
 
 
     def write(self):
+        """ write the nc object to disk"""
         self.log("writing nc file")
         assert self.nc is not None,"netcdf.write() error: nc file not initialized"
 
@@ -140,7 +165,9 @@ class NetCdf(object):
 
 
     def _initialize_attributes(self):
-
+        """ private method to initial the attributes
+            of the NetCdf instance
+        """
         assert "nc" not in self.__dict__.keys(),\
             "NetCdf._initialize_attributes() error: nc attribute already set"
 
@@ -169,7 +196,9 @@ class NetCdf(object):
 
 
     def initialize_geometry(self):
-
+        """ initialize the geometric information
+            needed for the netcdf file
+        """
         try:
             from pyproj import Proj, transform
         except Exception as e:
@@ -192,7 +221,17 @@ class NetCdf(object):
         self.xs, self.ys = transform(self.grid_crs,nc_crs,xs,ys)
 
     def initialize_file(self,time_values=None):
+        """ initialize the netcdf instance, including global attributes,
+            dimensions, and grid information
 
+        Parameters:
+        ----------
+
+            time_values : list of times to use as time dimension
+                entries.  If none, then use the times in
+                self.model.dis.perlen and self.start_datetime
+
+        """
         if self.nc is not None:
             raise Exception("nc file already initialized")
 
@@ -323,6 +362,31 @@ class NetCdf(object):
 
     def create_variable(self, name, attributes, precision_str='f4',
                         dimensions=("time", "layer", "x", "y")):
+        """ create a new variable in the netcdf object
+
+        Parameters:
+        ----------
+            name (str) : the name of the variable
+
+            attributes (dict) : attributes to add to the new variable
+
+            precision_str (str) : netcdf-compliant string. e.g. f4
+
+            dimensions (tuple) : which dimensions the variable applies to
+                default : ("time","layer","x","y")
+
+        Returns:
+        -------
+            nc variable
+
+        Raises:
+        ------
+            AssertionError if precision_str not right
+            AssertionError if variable name already in netcdf object
+            AssertionError if one of more dimensions do not exist
+
+        """
+
         self.log("creating variable: " + str(name))
         assert precision_str in PRECISION_STRS,\
             "netcdf.create_variable() error: precision string {0} not in {1}".\

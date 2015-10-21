@@ -19,6 +19,14 @@ def datafile_helper(f,df):
 
 
 def mflist_helper(f,mfl):
+    """ export helper for mflist instances
+
+    Parameters:
+    -----------
+        f : string (filename) or existing export instance type (NetCdf only for now)
+        mfl : mflist instance
+
+    """
     assert isinstance(mfl,mflist)\
                       ,"mflist_helper only helps mflist instances"
 
@@ -59,6 +67,17 @@ def mflist_helper(f,mfl):
 
 
 def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
+    """ export helper for transient_2d instances
+
+    Parameters:
+    -----------
+        f : string (filename) or existing export instance type (NetCdf only for now)
+        t2d : transient_2d instance
+        min_valid : minimum valid value
+        max_valid : maximum valid value
+
+    """
+
     assert isinstance(t2d,transient_2d)\
                       ,"transient2d_helper only helps transient_2d instances"
 
@@ -104,6 +123,17 @@ def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
 
 
 def util3d_helper(f,u3d,min_valid=-1.0e+9, max_valid=1.0e+9):
+    """ export helper for transient_2d instances
+
+    Parameters:
+    -----------
+        f : string (filename) or existing export instance type (NetCdf only for now)
+        u3d : util_3d instance
+        min_valid : minimum valid value
+        max_valid : maximum valid value
+
+    """
+
     assert isinstance(u3d,util_3d),"util3d_helper only helps util_3d instances"
     assert len(u3d.shape) == 3,"util3d_helper only supports 3D arrays"
 
@@ -159,7 +189,16 @@ def util3d_helper(f,u3d,min_valid=-1.0e+9, max_valid=1.0e+9):
 
 
 def util2d_helper(f,u2d,min_valid=-1.0e+9, max_valid=1.0e+9):
+    """ export helper for util_2d instances
 
+    Parameters:
+    ----------
+        f : string (filename) or existing export instance type (NetCdf only for now)
+        u2d : util_2d instance
+        min_valid : minimum valid value
+        max_valid : maximum valid value
+
+    """
     assert isinstance(u2d,util_2d),"util2d_helper only helps util_2d instances"
 
     assert len(u2d.shape) == 2,"util2d_helper only supports 2D arrays"
