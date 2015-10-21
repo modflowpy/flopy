@@ -4,12 +4,11 @@ import os
 import numpy as np
 import flopy
 
-
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
 
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=True)
+    m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
     sfr = m.get_package('SFR2')
 
     if not os.path.exists(outfolder):
@@ -17,6 +16,7 @@ def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
     outpath = os.path.join(outfolder, sfrfile)
     sfr.write(outpath)
 
+    m.remove_package('SFR2')
     sfr2 = flopy.modflow.ModflowSfr2.load(outpath, m)
 
     assert np.all(sfr2.reach_data == sfr.reach_data)
@@ -43,7 +43,7 @@ def test_sfr():
     
     m, sfr = sfr_process('testsfr2_tab.nam', 'testsfr2_tab_ICALC2.sfr', path)
     
-    assert sfr.channel_geometry_data[0][0] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
+    assert sfr.channel_geometry_data[0][1] == [[0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0],
                                                [6.0, 4.5, 3.5, 0.0, 0.3, 3.5, 4.5, 6.0]]
     
     m, sfr = sfr_process('testsfr2.nam', 'testsfr2.sfr', path)
