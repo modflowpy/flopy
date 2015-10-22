@@ -14,7 +14,7 @@ def load_check_sfr(mfnam, model_ws, checker_output_path):
     #print('Testing {}\n'.format(mfnam) + '='*100)
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws)
     m.change_model_ws(checker_output_path)
-    checker_outfile = '{}_SFRcheck.txt'.format(m.get_name())
+    checker_outfile = 'SFRcheck_{}.txt'.format(m.get_name())
     
     return m.sfr2.check(checker_outfile, level=1)
 
