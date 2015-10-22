@@ -135,8 +135,12 @@ class Mt3dSsm(Package):
     >>> ssm = flopy.mt3d.Mt3dSsm(m, stress_period_data=ssm_data)
 
     """
+    unitnumber = 34
     def __init__(self, model, crch=None, cevt=None, stress_period_data=None,
-                 dtype=None, extension = 'ssm', unitnumber=34, **kwargs):
+                 dtype=None, extension = 'ssm', unitnumber=None, **kwargs):
+
+        if unitnumber is None:
+            unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'SSM', unitnumber)
 
         deprecated_kwargs = ['criv', 'cghb', 'cibd', 'cchd', 'cpbc', 'cwel'] 
@@ -148,7 +152,7 @@ class Mt3dSsm(Package):
                 
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         # ncomp > 1 support
-        ncomp = self.parent.get_ncomp()
+        ncomp = model.ncomp
 
         self.__SsmPackages = []
         for i, label in enumerate(SsmLabels):
@@ -364,7 +368,7 @@ class Mt3dSsm(Package):
         if nper is None:
             dum, dum, dum, nper = model.mf.nrow_ncol_nlay_nper
         if ncomp is None:
-            ncomp = model.get_ncomp()
+            ncomp = model.ncomp
 
         # dtype
         dtype = Mt3dSsm.get_default_dtype(ncomp)

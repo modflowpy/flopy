@@ -13,3 +13,7 @@ def test_modflow_load():
         m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
         assert m, 'Could not load namefile {}'.format(namfile)
     return
+
+
+if __name__ == '__main__':
+    test_modflow_load()

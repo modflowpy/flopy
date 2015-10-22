@@ -4,13 +4,16 @@ class Mt3dPhc(Package):
     '''
     PHC package class for PHT3D
     '''
+    unitnumber = 38
     def __init__(self, model, os=2, temp=25, asbin=0, eps_aqu=0, eps_ph=0, 
                  scr_output=1, cb_offset=0, smse=['pH', 'pe'], mine=[], ie=[],
                  surf=[], mobkin=[], minkin=[], surfkin=[], imobkin=[], 
-                 extension='phc'):
+                 extension='phc', unitnumber=None):
         #Call ancestor's init to set self.parent, extension, name and 
         #unit number
-        Package.__init__(self, model, extension, 'PHC', 38) 
+        if unitnumber is None:
+            unitnumber = self.unitnumber
+        Package.__init__(self, model, extension, 'PHC', unitnumber)
         self.os = os
         self.temp = temp
         self.asbin = asbin

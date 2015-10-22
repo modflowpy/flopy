@@ -69,9 +69,12 @@ class Mt3dGcg(Package):
     >>> gcg = flopy.mt3d.Mt3dGcg(m)
 
     """
+    unitnumber = 35
     def __init__(self, model, mxiter=1, iter1=50, isolve=3, ncrs=0,
                  accl=1, cclose=1e-5, iprgcg=0, extension='gcg',
-                 unitnumber=35):
+                 unitnumber=None):
+        if unitnumber is None:
+            unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'GCG', unitnumber)
         self.mxiter = mxiter
         self.iter1 = iter1
