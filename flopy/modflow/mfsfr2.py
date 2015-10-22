@@ -660,6 +660,52 @@ class ModflowSfr2(Package):
         reach_data.outreach[last_reaches] = first_reaches.reachID[segment_data.outseg - 1]
         self.reach_data['outreach'] = reach_data.outreach
 
+    def get_upsegs(self):
+        """From segment_data, returns nested dict of all upstream segments by segemnt,
+        by stress period.
+
+        Returns
+        -------
+        all_upsegs : dict
+            Nested dictionary of form {stress period: {segment: [list of upsegs]}}
+            
+        Note:
+        This method will not work if there are instances of circular routing.
+        """
+        all_upsegs = {}
+        for per in range(self.nper):
+            if per > 0 > self.dataset_5[per][0]:  # skip stress periods where seg data not defined
+                continue
+            segment_data = self.segment_data[per]
+
+            # make a list of adjacent upsegments keyed to outseg list in Mat2
+            upsegs = {o: segment_data.nseg[segment_data.outseg == o].tolist()
+                      for o in np.unique(segment_data.outseg)}
+
+            outsegs = [k for k in list(upsegs.keys()) if k > 0] # exclude 0, which is the outlet designator
+
+            # for each outseg key, for each upseg, check for more upsegs, append until headwaters has been reached
+            for outseg in outsegs:
+
+                up = True
+                upsegslist = upsegs[outseg]
+                while up:
+                    added_upsegs = []
+                    for us in upsegslist:
+                        if us in outsegs:
+                            added_upsegs += upsegs[us]
+                    if len(added_upsegs) == 0:
+                        up = False
+                        break
+                    else:
+                        upsegslist = added_upsegs
+                        upsegs[outseg] += added_upsegs
+
+            # the above algorithm is recursive, so lower order streams get duplicated many times
+            # use a set to get unique upsegs
+            all_upsegs[per] = {u: list(set(upsegs[u])) for u in outsegs}
+        return all_upsegs
+
     def _interpolate_to_reaches(self, segvar1, segvar2, per=0):
         """Interpolate values in datasets 6b and 6c to each reach in stream segment
 
