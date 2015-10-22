@@ -87,7 +87,7 @@ class SpatialReference(object):
 
     @classmethod
     def from_gridspec(cls,gridspec_file,lenuni=0):
-        f = open(filename,'r')
+        f = open(gridspec_file,'r')
         lines = f.readlines()
         raw = f.readline().strip().split()
         nrow = int(raw[0])
@@ -309,7 +309,7 @@ class SpatialReference(object):
     def get_xcenter_array(self):
         """
         Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every column in the grid.
+        coordinate for every column in the grid in model space - not offset or rotated.
 
         """
         x = np.add.accumulate(self.delr) - 0.5 * self.delr
@@ -318,7 +318,7 @@ class SpatialReference(object):
     def get_ycenter_array(self):
         """
         Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every row in the grid.
+        coordinate for every row in the grid in model space - not offset of rotated.
 
         """
         Ly = np.add.reduce(self.delc)
@@ -329,7 +329,8 @@ class SpatialReference(object):
     def get_xedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid.  Array is of size (ncol + 1)
+        coordinates for every column in the grid in model space - not offset or rotated.
+          Array is of size (ncol + 1)
 
         """
         xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
@@ -338,7 +339,8 @@ class SpatialReference(object):
     def get_yedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid.  Array is of size (nrow + 1)
+        coordinates for every row in the grid in model space - not offset or rotated.
+          Array is of size (nrow + 1)
 
         """
         length_y = np.add.reduce(self.delc)
