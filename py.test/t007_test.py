@@ -4,7 +4,7 @@ def test_netcdf():
     import os
     import flopy
 
-    model_ws = os.path.join("..", "examples", "freyberg")
+    model_ws = os.path.join("..", "examples", "data", "freyberg")
     nam = "freyberg"
 
     ml = flopy.modflow.Modflow.load(nam,model_ws=model_ws)
