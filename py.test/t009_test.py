@@ -6,7 +6,7 @@ import flopy
 
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
-def sfr_process(mfnam, sfrfile, model_ws, outfolder='data'):
+def sfr_process(mfnam, sfrfile, model_ws, outfolder='temp'):
 
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
     sfr = m.get_package('SFR2')

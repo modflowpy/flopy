@@ -1,9 +1,9 @@
 # Test instantiation of flopy classes
 
-def test_modflow():
+def test_modflow_unstructured():
     import flopy
     mf = flopy.modflow.Modflow(version='mfusg', structured=False,
-                               model_ws='data/')
+                               model_ws='temp/')
     dis = flopy.modflow.ModflowDis(mf)
     bas = flopy.modflow.ModflowBas(mf)
     lpf = flopy.modflow.ModflowLpf(mf)
