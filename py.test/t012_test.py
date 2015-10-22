@@ -31,6 +31,6 @@ def test_mf2000_HSSTest():
     return
 
 if __name__ == '__main__':
-    #test_mf2005_p07()
-    #test_mf2000_p07()
-    test_mf2000_HSSTest()
+    test_mf2005_p07()
+    test_mf2000_p07()
+    #test_mf2000_HSSTest()
