@@ -43,6 +43,7 @@ class Modpath(BaseModel):
         self.budget_file = budget_file
         self.__sim = None
         self.free_format = False
+        self.array_format = 'modflow'
         self.external_path = external_path
         self.external = False
         self.external_fnames = []

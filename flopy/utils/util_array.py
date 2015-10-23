@@ -261,7 +261,7 @@ class util_3d(object):
             for i,u2d in enumerate(self.util_2ds):
                 self.util_2ds[i] = util_2d(model,u2d.shape,u2d.dtype,
                                            u2d.array,name=u2d.name,
-                                           fmtin=u2d.fmtin,)
+                                           fmtin=u2d.fmtin,locat=locat)
 
             return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
@@ -1657,10 +1657,16 @@ class util_2d(object):
                     curr_unit = cunit
                     break
 
+        # Allows for special MT3D array reader
+        array_format = None
+        if hasattr(model, 'array_format'):
+            array_format = model.array_format
+
         cr_dict = util_2d.parse_control_record(f_handle.readline(),
                                                current_unit=curr_unit,
                                                dtype=dtype,
-                                               ext_unit_dict=ext_unit_dict)
+                                               ext_unit_dict=ext_unit_dict,
+                                               array_format=array_format)
 
         if cr_dict['type'] == 'constant':
             u2d = util_2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
@@ -1687,14 +1693,20 @@ class util_2d(object):
                 f = open(fname, 'rb')
                 header_data, data = util_2d.load_bin(shape, f, dtype, bintype='Head')
             f.close()
-            data *= cr_dict['cnstnt']
+            factor = cr_dict['cnstnt']
+            if factor == 0:
+                factor = 1
+            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
 
 
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
-            data *= cr_dict['cnstnt']
+            factor = cr_dict['cnstnt']
+            if factor == 0:
+                factor = 1
+            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
 
@@ -1708,7 +1720,10 @@ class util_2d(object):
                 header_data, data = util_2d.load_bin(
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
                     bintype='Head')
-            data *= cr_dict['cnstnt']
+            factor = cr_dict['cnstnt']
+            if factor == 0:
+                factor = 1
+            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
             # track this unit number so we can remove it from the external
@@ -1719,7 +1734,7 @@ class util_2d(object):
 
     @staticmethod
     def parse_control_record(line, current_unit=None, dtype=np.float32,
-                             ext_unit_dict=None):
+                             ext_unit_dict=None, array_format=None):
         """
         parses a control record when reading an existing file
         rectifies fixed to free format
@@ -1776,14 +1791,15 @@ class util_2d(object):
                 cnstnt = np.float(line[10:20].strip().lower().replace('d', 'e'))
             else:
                 cnstnt = np.int(line[10:20].strip())
+                if cnstnt == 0:
+                    cnstnt = 1
             if locat != 0:
                 fmtin = line[20:40].strip()
                 iprn = np.int(line[40:50].strip())
-            #locat = int(raw[0])        
+            #locat = int(raw[0])
             #cnstnt = float(raw[1])
             #fmtin = raw[2].strip()
             #iprn = int(raw[3])
-
             if locat == 0:
                 freefmt = 'constant'
             elif locat < 0:
@@ -1797,6 +1813,21 @@ class util_2d(object):
                 else:
                     freefmt = 'external'
                 nunit = np.int(locat)
+
+            # Reset for special MT3D control flags
+            if array_format == 'mt3d':
+                if locat == 100:
+                    freefmt = 'internal'
+                    nunit = current_unit
+                elif locat == 101:
+                    raise NotImplementedError('MT3D block format not supported...')
+                elif locat == 102:
+                    raise NotImplementedError('MT3D zonal format not supported...')
+                elif locat == 103:
+                    freefmt = 'internal'
+                    nunit = current_unit
+                    fmtin = '(free)'
+
         cr_dict = {}
         cr_dict['type'] = freefmt
         cr_dict['cnstnt'] = cnstnt

@@ -89,10 +89,9 @@ class Mt3dGcg(Package):
     def write_file(self):
         # Open file for writing
         f_gcg = open(self.fn_path, 'w')
-        f_gcg.write('{} {} {} {}\n' %
-                    (self.mxiter, self.iter1, self.isolve, self.ncrs))
-        f_gcg.write('{} {} {}\n' %
-                   (self.accl, self.cclose, self.iprgcg))
+        f_gcg.write('{} {} {} {}\n'.format(self.mxiter, self.iter1,
+                                           self.isolve, self.ncrs))
+        f_gcg.write('{} {} {}\n'.format(self.accl, self.cclose, self.iprgcg))
         f_gcg.close()
         return
 

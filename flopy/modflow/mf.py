@@ -117,6 +117,7 @@ class Modflow(BaseModel):
 
         # external option stuff
         self.free_format = True
+        self.array_format = 'modflow'
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []

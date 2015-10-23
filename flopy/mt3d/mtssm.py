@@ -136,8 +136,9 @@ class Mt3dSsm(Package):
 
     """
     unitnumber = 34
-    def __init__(self, model, crch=None, cevt=None, stress_period_data=None,
-                 dtype=None, extension = 'ssm', unitnumber=None, **kwargs):
+    def __init__(self, model, crch=None, cevt=None, mxss=None,
+                 modflowmodel=None, stress_period_data=None, dtype=None,
+                 extension='ssm', unitnumber=None, **kwargs):
 
         if unitnumber is None:
             unitnumber = self.unitnumber
@@ -149,35 +150,48 @@ class Mt3dSsm(Package):
                 warnings.warn("Deprecation Warning: Keyword argument '" + key +
                               "' no longer supported. Use " +
                               "'stress_period_data' instead.")
-                
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
-        # ncomp > 1 support
+
+        # Set dimensions
+        nrow = model.nrow
+        ncol = model.ncol
+        nlay = model.nlay
         ncomp = model.ncomp
 
         self.__SsmPackages = []
-        for i, label in enumerate(SsmLabels):
-            self.__SsmPackages.append(SsmPackage(label, 
-                               self.parent.mf.get_package(label),
-                               (i < 6))) # First 6 need T/F flag in file line 1
+        if modflowmodel is not None:
+            for i, label in enumerate(SsmLabels):
+                self.__SsmPackages.append(SsmPackage(label,
+                                   modflowmodel.get_package(label),
+                                   (i < 6))) # First 6 need T/F flag in file line 1
 
         if dtype is not None:
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(ncomp)
 
-        self.stress_period_data = mflist(self, model=self.parent.mf,
+        self.stress_period_data = mflist(self, model=model,
                                                  data=stress_period_data)
 
-        self.__maxssm = np.sum(self.stress_period_data.data[0].itype == -1)
-        self.__maxssm += np.sum(self.stress_period_data.data[0].itype == -15)
+        if mxss is None and modflowmodel is None:
+            warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
+                          'None.  Cannot calculate max number of sources ' +
+                          'and sinks.  Estimating from stress_period_data. ')
 
-        if isinstance(self.parent.btn.icbund, np.ndarray):
-            self.__maxssm += (self.parent.btn.icbund < 0).sum()
-        for p in self.__SsmPackages:
-            if ((p.label == 'BAS6') and (p.instance != None)):
-                self.__maxssm += (p.instance.ibound.array < 0).sum()
-            elif p.instance != None:
-                self.__maxssm += p.instance.ncells()
+        if mxss is None:
+            # Need to calculate max number of sources and sinks
+            self.mxss = np.sum(self.stress_period_data.data[0].itype == -1)
+            self.mxss += np.sum(self.stress_period_data.data[0].itype == -15)
+
+            if isinstance(self.parent.btn.icbund, np.ndarray):
+                self.mxss += (self.parent.btn.icbund < 0).sum()
+
+            for p in self.__SsmPackages:
+                if ((p.label == 'BAS6') and (p.instance != None)):
+                    self.mxss += (p.instance.ibound.array < 0).sum()
+                elif p.instance != None:
+                    self.mxss += p.instance.ncells()
+        else:
+            self.mxss = mxss
 
         # Note: list is used for multi-species, NOT for stress periods!
         if crch is not None:
@@ -238,7 +252,7 @@ class Mt3dSsm(Package):
         self.parent.add_package(self)
         return
 
-    def from_package(self,package,ncomp_aux_names):
+    def from_package(self, package, ncomp_aux_names):
         """
         read the point source and sink info from a package
         ncomp_aux_names (list): the aux variable names in the package
@@ -262,6 +276,10 @@ class Mt3dSsm(Package):
 
     @staticmethod
     def get_default_dtype(ncomp=1):
+        """
+        Construct a dtype for the recarray containing the list of sources
+        and sinks
+        """
         type_list = [("k", np.int), ("i", np.int), ("j", np.int),
                      ("css", np.float32), ("itype", np.int)]
         if ncomp > 1:
@@ -272,7 +290,10 @@ class Mt3dSsm(Package):
         return dtype
 
     def write_file(self):
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
+        """
+        Write the SSM file
+
+        """
 
         # Open file for writing
         f_ssm = open(self.fn_path, 'w')
@@ -280,37 +301,30 @@ class Mt3dSsm(Package):
             if p.needTFstr:
                 f_ssm.write(p.TFstr)
         f_ssm.write(' F F F F\n')
-        f_ssm.write('%10d\n' % (self.__maxssm))
+        f_ssm.write('{:10d}\n'.format(self.mxss))
         
         # Loop through each stress period and write ssm information
+        nper = self.parent.nper
         for kper in range(nper):
             if f_ssm.closed == True:
                 f_ssm = open(f_ssm.name,'a')
+
             # Distributed sources and sinks (Recharge and Evapotranspiration)
             if self.crch is not None:
                 for c, t2d in enumerate(self.crch):
                     incrch, file_entry = t2d.get_kper_entry(kper)
                     if (c == 0):
-                        f_ssm.write('%10i\n' % (incrch))
+                        f_ssm.write('{:10i}\n'.format(incrch))
                     f_ssm.write(file_entry)
 
             if (self.cevt != None):
                 for c, t2d in enumerate(self.cevt):
                     incevt, file_entry = t2d.get_kper_entry(kper)
                     if (c == 0):
-                        f_ssm.write('%10i\n' % (incevt))
+                        f_ssm.write('{:10i}\n'.format(incevt))
                     f_ssm.write(file_entry)
-                
-                '''
-                if (kper < len(self.cevt)):
-                    incevt = 1
-                else:
-                    incevt = -1
-                f_ssm.write('%10i\n' % (incevt))
-                if (kper < len(self.cevt)):
-                    f_ssm.write(self.cevt[kper].get_file_entry())
-                '''
 
+            # List of sources
             self.stress_period_data.write_transient(f_ssm, single_per=kper)
 
         f_ssm.close()
@@ -360,13 +374,13 @@ class Mt3dSsm(Package):
 
         # Set dimensions if necessary
         if nlay is None:
-            dum, dum, nlay, dum = model.mf.nrow_ncol_nlay_nper
+            nlay = model.nlay
         if nrow is None:
-            nrow, dum, dum, dum = model.mf.nrow_ncol_nlay_nper
+            nrow = model.nrow
         if ncol is None:
-            dum, ncol, dum, dum = model.mf.nrow_ncol_nlay_nper
+            ncol = model.ncol
         if nper is None:
-            dum, dum, dum, nper = model.mf.nrow_ncol_nlay_nper
+            nper = model.nper
         if ncomp is None:
             ncomp = model.ncomp
 
@@ -379,7 +393,7 @@ class Mt3dSsm(Package):
             if line[0] != '#':
                 break
 
-        # Item D1: FWEL, FDRN, FRCH, FEVT, FRIV, FGHB - line already read above
+        # Item D1: Dummy input line - line already read above
         if model.verbose:
             print('   loading FWEL, FDRN, FRCH, FEVT, FRIV, FGHB, (FNEW(n), n=1,4)...')
         fwel = line[0:2]
@@ -404,14 +418,19 @@ class Mt3dSsm(Package):
             print('   FNEW3 {}'.format(fnew3))
             print('   FNEW4 {}'.format(fnew4))
 
-        # Item D2: MXSS
+        # Item D2: MXSS, ISSGOUT
         mxss = None
         if model.verbose:
-            print('   loading MXSS...')
+            print('   loading MXSS, ISSGOUT...')
         line = f.readline()
         mxss = int(line[0:10])
+        try:
+            issgout = int(line[10:20])
+        except:
+            issgout = 0
         if model.verbose:
             print('   MXSS {}'.format(mxss))
+            print('   ISSGOUT {}'.format(issgout))
 
 
         crch = None
@@ -470,7 +489,7 @@ class Mt3dSsm(Package):
             # Item D8: KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)
             if model.verbose:
                 print('   loading KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)...')
-            current = None
+            current = 0
             if nss > 0:
                 current = np.empty((nss), dtype=dtype)
                 for ibnd in range(nss):
@@ -490,11 +509,11 @@ class Mt3dSsm(Package):
                 current['k'] -= 1
                 current['i'] -= 1
                 current['j'] -= 1
-            current = current.view(np.recarray)
+                current = current.view(np.recarray)
             stress_period_data[iper] = current
 
-        # Construct and return adv package
-        ssm = Mt3dSsm(model, crch=crch, cevt=cevt,
+        # Construct and return ssm package
+        ssm = Mt3dSsm(model, crch=crch, cevt=cevt, mxss=mxss,
                       stress_period_data=stress_period_data)
         return ssm
 
