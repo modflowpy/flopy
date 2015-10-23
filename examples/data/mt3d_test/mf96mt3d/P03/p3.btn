@@ -1,0 +1,26 @@
+MT3DMS Benchmark Test Problem #3
+2D Advection-Dispersion in a Uniform Flow Field with Continuous Source
+         1        31        46         1         1         1  !NLAY,NROW,NCOL,NPER,NCOMP,MCOMP
+ DAY  M UNDF                                          !TUNIT,LUNIT,MUNIT
+ T T T F T F F F F F                                  !ADV,DSP,SSM,RCT,GCG,...
+ 0                                                    !LAYCON
+         0       10.                                  !DELR
+         0       10.                                  !DELC
+         0       10.                                  !HTOP
+         0       10.                                  !DZ
+         0       .30                                  !PRSITY
+         0         1                                  !ICBUND-LAY1
+         0        0.                                  !SCONC-LAY1
+   -999.00        0.                                  !CINACT, Thkmin
+         4         2         5         4         T    !IFMTCN,IFMTNP,IFMTRF,IFMTDP,SAVUCN
+        14                                            !NPRS
+       25.       50.       75.      100.      125.      150.      175.      200.
+      225.      250.      275.      300.      325.      350.
+         4         1                                  !NOBS,NPROBS
+         1        16        16                        !KOBS,IOBS,JOBS
+         1        16        18
+         1        18        16
+         1        16        31
+         T         1                                  !CHKMAS,NPRMAS
+    365.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0      1000        1.         0               !DT0 MXSTRN,TTSMULT,TTSMAX

@@ -1,0 +1,1562 @@
+ LISTING FILE: p7.m3d
+                         UNIT  16
+# Transport package input files                                                                                                                                                                         
+
+ OPENING p7.btn
+ FILE TYPE:BTN   UNIT   1
+
+ OPENING p7.adv
+ FILE TYPE:ADV   UNIT   2
+
+ OPENING p7.dsp
+ FILE TYPE:DSP   UNIT   3
+
+ OPENING p7.ssm
+ FILE TYPE:SSM   UNIT   4
+
+ OPENING p7.gcg
+ FILE TYPE:GCG   UNIT   9
+# Transport observation input file                                                                                                                                                                      
+
+ OPENING p7.tob
+ FILE TYPE:TOB   UNIT  12
+# Flow-Transport Link input file                                                                                                                                                                        
+
+ OPENING p7.ftl
+ FILE TYPE:FTL   UNIT  10
+# Uncomment the following lines to override                                                                                                                                                             
+# the default names of optional MT3DMS output files                                                                                                                                                     
+# mt3d001.ucn, mt3d001.obs, mt3d001.mas, mt3d.cnf.                                                                                                                                                      
+# The unit numbers for these files are preset in the                                                                                                                                                    
+# MT3DMS code.                                                                                                                                                                                          
+# data(binary) 201 species1.ucn                                                                                                                                                                         
+# data         401 species1.obs                                                                                                                                                                         
+# data         601 species1.mas                                                                                                                                                                         
+# data         17  model_a.cnf                                                                                                                                                                          
+
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              +                                                                     +
+                              +                               MT3DMS                                +
+                              +             A Modular 3D Multi-Species Transport Model              +
+                              +    For Simulation of Advection, Dispersion and Chemical Reactions   +
+                              +                of Contaminants in Groundwater Systems               +
+                              +                                                                     +
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ----- 
+ | M T | 3D TRANSPORT IN UNIFORM FLOW FIELD WITH CONTINUOUS POINT SOURCE                 
+ | 3 D | (REFER TO SECTION 7.7 OF MT3DMS MANUAL)                                         
+  ----- 
+ THE TRANSPORT MODEL CONSISTS OF     8 LAYER(S)   15 ROW(S)   21 COLUMN(S)
+ NUMBER OF STRESS PERIOD(S) FOR TRANSPORT SIMULATION =    1
+ NUMBER OF ALL COMPONENTS INCLUDED IN SIMULATION =    1
+ NUMBER OF MOBILE COMPONENTS INCLUDED IN SIMULATION =    1
+ UNIT FOR TIME IS  DAY;  UNIT FOR LENGTH IS   FT;  UNIT FOR MASS IS   LB
+ OPTIONAL PACKAGES INCLUDED IN CURRENT SIMULATION:
+  o ADV   ON UNIT  2
+  o DSP   ON UNIT  3
+  o SSM   ON UNIT  4
+  o GCG   ON UNIT  9
+  o TOB   ON UNIT 12
+
+ BTN5 -- BASIC TRANSPORT PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  1
+      38187 ELEMENTS OF THE  X ARRAY USED BY THE BTN PACKAGE
+       2528 ELEMENTS OF THE IX ARRAY USED BY THE BTN PACKAGE
+
+ FMI5 -- FLOW MODEL INTERFACE PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT 10
+ FLOW MODEL IS STEADY-STATE
+ FLOW MODEL CONTAINS CONSTANT-HEAD CELLS
+
+ ADV5 -- ADVECTION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  2
+ ADVECTION IS SOLVED WITH THE ULTIMATE SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM =  1.00    
+          0 ELEMENTS OF THE  X ARRAY USED BY THE ADV PACKAGE
+          0 ELEMENTS OF THE IX ARRAY USED BY THE ADV PACKAGE
+
+ DSP5 -- DISPERSION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  3
+      27736 ELEMENTS OF THE  X ARRAY USED BY THE DSP PACKAGE
+          0 ELEMENTS OF THE IX ARRAY USED BY THE DSP PACKAGE
+
+ SSM5 -- SINK & SOURCE MIXING PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  4
+ HEADER LINE OF THE SSM PACKAGE INPUT FILE:
+  T F F F F F      FWEL,FDRN,FRCH,FEVT,FRIV,FGHB                                                                                                                                                         
+ MAJOR STRESS COMPONENTS PRESENT IN THE FLOW MODEL:
+  o WELL [WEL]
+ MAXIMUM NUMBER OF POINT SINKS/SOURCES =    1000
+      13000 ELEMENTS OF THE  X ARRAY USED BY THE SSM PACKAGE
+          0 ELEMENTS OF THE IX ARRAY BY THE SSM PACKAGE
+
+ GCG5 -- GENERALIZED CONJUGATE GRADIENT SOLVER PACKAGE, VERSION 5, FEBRUARY 2010 INPUT READ FROM UNIT  9
+ MAXIMUM OF    1 OUTER ITERATIONS
+        AND  200 INNER ITERATIONS ALLOWED FOR CLOSURE
+ THE PRECONDITIONING TYPE SELECTED IS MODIFIED INCOMPLETE CHOLESKY (MIC).
+ DISPERSION CROSS TERMS LUMPED INTO RIGHT-HAND-SIDE
+      55640 ELEMENTS OF THE  X ARRAY USED BY THE GCG PACKAGE
+        600 ELEMENTS OF THE IX ARRAY USED BY THE GCG PACKAGE
+
+ TOB5 -- TRANSPORT OBSERVATION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT 12
+#                                                                                                                                                                                                       
+# TOB package input file                                                                                                                                                                                
+#                                                                                                                                                                                                       
+ MAXIMUM NUMBER OF CONC OBSERVATION WELLS =    100
+ MAXIMUM NUMBER OF MASS-FLUX OBSERVATIONS =     10
+ MAXIMUM NUMBER OF CELLS IN A FLUX OBJECT =    200
+       6100 ELEMENTS OF THE  X ARRAY USED BY THE TOB PACKAGE
+        800 ELEMENTS OF THE IX ARRAY USED BY THE TOB PACKAGE
+
+ ..........................................
+ ELEMENTS OF THE  X ARRAY USED =    140664
+ ELEMENTS OF THE IX ARRAY USED =      3929
+ ..........................................
+
+ LAYER NUMBER  AQUIFER TYPE
+ ------------  ------------
+       1            0
+       2            0
+       3            0
+       4            0
+       5            0
+       6            0
+       7            0
+       8            0
+                                       WIDTH ALONG ROWS (DELR)  =   10.00000    
+                                       WIDTH ALONG COLS (DELC)  =   10.00000    
+                                       TOP ELEV. OF 1ST LAYER   =   80.00000    
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  1
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  2
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  3
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  4
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  5
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  6
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  7
+                                       CELL THICKNESS (DZ)      =   10.00000     FOR LAYER  8
+                                       POROSITY                 =  0.2000000     FOR LAYER  1
+                                       POROSITY                 =  0.2000000     FOR LAYER  2
+                                       POROSITY                 =  0.2000000     FOR LAYER  3
+                                       POROSITY                 =  0.2000000     FOR LAYER  4
+                                       POROSITY                 =  0.2000000     FOR LAYER  5
+                                       POROSITY                 =  0.2000000     FOR LAYER  6
+                                       POROSITY                 =  0.2000000     FOR LAYER  7
+                                       POROSITY                 =  0.2000000     FOR LAYER  8
+                                       CONCN. BOUNDARY ARRAY    =              1 FOR LAYER  1
+                                       CONCN. BOUNDARY ARRAY    =              1 FOR LAYER  2
+                                       CONCN. BOUNDARY ARRAY    =              1 FOR LAYER  3
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  4 READ ON UNIT  1 USING FORMAT: "(21i2)              "
+                     ------------------------------------------------------------------------------------------
+
+       1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+ ........................................................................
+   1   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   2   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   3   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   4   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   5   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   6   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   7   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   8   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   9   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  10   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  11   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  12   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  13   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  14   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  15   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  5 READ ON UNIT  1 USING FORMAT: "(21i2)              "
+                     ------------------------------------------------------------------------------------------
+
+       1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+ ........................................................................
+   1   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   2   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   3   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   4   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   5   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   6   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   7   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   8   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   9   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  10   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  11   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  12   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  13   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  14   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  15   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  6 READ ON UNIT  1 USING FORMAT: "(21i2)              "
+                     ------------------------------------------------------------------------------------------
+
+       1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+ ........................................................................
+   1   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   2   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   3   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   4   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   5   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   6   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   7   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   8   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   9   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  10   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  11   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  12   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  13   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  14   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  15   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  7 READ ON UNIT  1 USING FORMAT: "(21i2)              "
+                     ------------------------------------------------------------------------------------------
+
+       1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+ ........................................................................
+   1   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   2   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   3   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   4   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   5   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   6   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   7   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   8   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+   9   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  10   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  11   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  12   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  13   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  14   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  15   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+                                       CONCN. BOUNDARY ARRAY    =              1 FOR LAYER  8
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  1
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  2
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  3
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  4
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  5
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  6
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  7
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  8
+
+ VALUE INDICATING INACTIVE CONCENTRATION CELLS =   -111.1100    
+ MINIMUM SATURATED THICKNESS [THKMIN] ALLOWED =  0.0000 OF TOTAL CELL THICKNESS
+
+
+ OUTPUT CONTROL OPTIONS
+ ----------------------
+
+ PRINT CELL CONCENTRATION USING FORMAT CODE:    1
+ PRINT PARTICLE NUMBER IN EACH CELL USING FORMAT CODE:    2
+ PRINT RETARDATION FACTOR USING FORMAT CODE:    0
+ DO NOT PRINT DISPERSION COEFFICIENT
+ SAVE DISSOLVED PHASE CONCENTRATIONS IN UNFORMATTED FILES [MT3Dnnn.UCN]
+  FOR EACH SPECIES ON UNITS 201 AND ABOVE
+
+ NUMBER OF TIMES AT WHICH SIMULATION RESULTS ARE SAVED =    6
+ TOTAL ELAPSED TIMES AT WHICH SIMULATION RESULTS ARE SAVED: 
+    10.500       25.000       50.000       200.00       250.00       300.00    
+
+ NUMBER OF OBSERVATION POINTS =   10
+ SAVE CONCENTRATIONS AT OBSERVATION POINTS IN FILES [MT3Dnnn.OBS]
+  FOR EACH SPECIES ON UNITS 401 AND ABOVE, EVERY  1 TRANSPORT STEPS
+ LOCATION OF OBSERVATION POINTS
+ ..............................
+ NUMBER  LAYER   ROW   COLUMN
+   1        7      8      3
+   2        6      8      3
+   3        5      8      3
+   4        5      8      5
+   5        4      8      5
+   6        5      9      5
+   7        5     10      5
+   8        7      8      4
+   9        7      9      3
+  10        7      9      4
+
+ SAVE ONE-LINE SUMMARY OF MASS BUDGETS IN FILES [MT3Dnnn.MAS]
+  FOR EACH SPECIES ON UNITS 601 AND ABOVE, EVERY  1 TRANSPORT STEPS
+
+ MAXIMUM LENGTH ALONG THE X (J) AXIS =   210.0000    
+ MAXIMUM LENGTH ALONG THE Y (I) AXIS =   150.0000    
+ MAXIMUM LENGTH ALONG THE Z (K) AXIS =   80.00000    
+
+
+ ADVECTION SOLUTION OPTIONS
+ --------------------------
+
+ ADVECTION IS SOLVED WITH THE ULTIMATE SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM =  1.00    
+
+
+ DISPERSION INPUT PARAMETERS
+ ---------------------------
+
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  1
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  2
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  3
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  4
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  5
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  6
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  7
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  8
+                                       H. TRANS./LONG. DISP.    =  0.3000000    
+                                       V. TRANS./LONG. DISP.    =  0.3000000    
+                                       DIFFUSION COEFFICIENT    =   0.000000    
+
+
+
+                                               SOLUTION BY THE GENERALIZED CONJUGATE GRADIENT METHOD
+                                               -----------------------------------------------------
+                                     MAXIMUM OUTER ITERATIONS ALLOWED FOR CLOSURE =        1
+                                     MAXIMUM INNER ITERATIONS ALLOWED FOR CLOSURE =      200
+                                                    PRECONDITIONING TYPE SELECTED =    3
+                                                           ACCELERATION PARAMETER =     1.0000    
+                                       CONCENTRATION CHANGE CRITERION FOR CLOSURE =    0.10000E-05
+                                       GCG CONCENTRATION CHANGE PRINTOUT INTERVAL =      999
+
+
+ TRANSPORT OBSERVATION INPUT DATA
+ --------------------------------
+
+ NUMBER OF CONCENTRATION OBSERVATION WELLS:     5
+    MULTIPLIER FOR OBSERVED CONCENTRATIONS:    1.000    
+    OPTION FOR CALCULATING RESIDUAL ERRORS:     1
+         OPTION FOR LOGARITHMIC CONVERSION:     0
+ OPTION FOR INTERPOLATING CALCULATED CONC.:     1
+
+ OBS_NAME     LAYER  ROW  COL. SPECIES  OBS_TIME   ROW_OFFSET  COL_OFFSET    WEIGHT      OBS_CONC
+ ...................................................................................................
+ ow1            -3    8    3      1      10.50      0.2500      0.2500       1.000       0.50000    
+   @Layer   5  Proportion=  0.3000    
+   @Layer   6  Proportion=  0.3000    
+   @Layer   7  Proportion=  0.4000    
+ ow2a            5    8    5      1      10.50       0.000       0.000       1.000       0.10000E-02
+ ow2b            4    8    5      1      10.50       0.000       0.000      0.5000       0.10000E-04
+ ow3             5    9    5      1     -2.000       0.000       0.000      -1.000        0.0000    
+ ow4             5   10    5      1      10.50       0.000       0.000       1.000       0.10000E-04
+
+            NUMBER OF MASS FLUX OBJECTS:     3
+    MULTIPLIER FOR OBSERVED MASS FLUXES:    1.000    
+ OPTION FOR CALCULATING RESIDUAL ERRORS:     1
+
+           MASS FLUX OBJECT NO.:     1
+    NUMBER OF OBSERVATION TIMES:     2
+ NUMBER OF MODEL CELLS INCLUDED:     1
+       TYPE OF MASS FLUX OBJECT: WELL           
+
+ OBS_NAME    SPECIES  OBS_TIME     WEIGHT       OBS_FLUX
+ .......................................................
+ WELLFLUX_t1     1      10.50       1.000        50.000    
+ WELLFLUX_t2     1      50.00       1.000        50.000    
+ @Layer:   7; Row:    8; Column:    3; Fraction:   1.000
+
+           MASS FLUX OBJECT NO.:     2
+    NUMBER OF OBSERVATION TIMES:     3
+ NUMBER OF MODEL CELLS INCLUDED:    60
+       TYPE OF MASS FLUX OBJECT: CONSTANT HEAD  
+
+ OBS_NAME    SPECIES  OBS_TIME     WEIGHT       OBS_FLUX
+ .......................................................
+ CHDFLUX1_t1     1      0.000      -1.000        0.0000    
+ CHDFLUX1_t2     1      25.00      -1.000        0.0000    
+ CHDFLUX1_t3     1      50.00      -1.000        0.0000    
+ @Layer:   1; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   1; Row:   15; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   2; Row:   15; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   3; Row:   15; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   4; Row:   15; Column:   21; Fraction:   1.000
+
+           MASS FLUX OBJECT NO.:     3
+    NUMBER OF OBSERVATION TIMES:     2
+ NUMBER OF MODEL CELLS INCLUDED:    60
+       TYPE OF MASS FLUX OBJECT: CONSTANT HEAD  
+
+ OBS_NAME    SPECIES  OBS_TIME     WEIGHT       OBS_FLUX
+ .......................................................
+ CHFLUX2_t1      1      10.50      -1.000        0.0000    
+ CHFLUX2_t2      1      50.00      -1.000        0.0000    
+ @Layer:   5; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   5; Row:   15; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   6; Row:   15; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   7; Row:   15; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    1; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    2; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    3; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    4; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    5; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    6; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    7; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    8; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:    9; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:   10; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:   11; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:   12; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:   13; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:   14; Column:   21; Fraction:   1.000
+ @Layer:   8; Row:   15; Column:   21; Fraction:   1.000
+
+
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                                       STRESS PERIOD NO.  001
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+ LENGTH OF CURRENT STRESS PERIOD =   50.00000    
+ NUMBER OF TIME STEPS FOR CURRENT STRESS PERIOD =    1
+ TIME STEP MULTIPLIER USED IN FLOW SOLUTION =   1.000000    
+
+ ***Type of Transport Simulation is TRANSIENT
+
+ USER-SPECIFIED TRANSPORT STEPSIZE =   0.000000     DAY
+ MAXIMUM NUMBER OF TRANSPORT STEPS ALLOWED  IN ONE FLOW TIME STEP =     10000
+ MULTIPLIER FOR SUCCESSIVE TRANSPORT STEPS  [USED IN IMPLICIT SCHEMES] =     1.000
+ MAXIMUM TRANSPORT STEP SIZE  [USED IN IMPLICIT SCHEMES] =   3.500000     DAY
+
+       NO    LAYER   ROW   COLUMN   CONCENTRATION       TYPE            COMPONENT
+       1       7       8       3       100.0000         WELL                1
+
+
+                                          ================================================
+                                                         TIME STEP NO.  001
+                                          ================================================
+
+ FROM TIME =   0.0000     TO    50.000    
+
+
+                    "THKSAT          " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QXX             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QYY             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QZZ             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+ MAXIMUM STEPSIZE DURING WHICH ANY PARTICLE CANNOT MOVE MORE THAN ONE CELL
+ =  19.90    (WHEN MIN. R.F.=1)  AT K=   7, I=   8, J=   4
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE ADVECTION TERM
+ (FOR PURE FINITE-DIFFERENCE OPTION, MIXELM=0) 
+ =  19.51    (WHEN MIN. R.F.=1)  AT K=   7, I=   8, J=   3
+
+                    "CNH             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "WEL             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+
+ TOTAL NUMBER OF POINT SOURCES/SINKS PRESENT IN THE FLOW MODEL =   241
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE SINK & SOURCE TERM
+ =  20.00    (WHEN MIN. R.F.=1)  AT K=   1, I=  15, J=   1
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE DISPERSION TERM
+ =  6.219    (WHEN MIN. R.F.=1)  AT K=   7, I=   8, J=   3
+
+
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   1 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   2 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   3 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    3
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   10.50000     DAY
+ .....................................................................
+
+                     CONCENTRATIONS   IN LAYER  1 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   4.055E-14  4.942E-14  5.595E-14  5.162E-14  3.766E-14  2.221E-14  1.084E-14  4.494E-15  1.626E-15  5.263E-16  1.553E-16
+       4.247E-17  1.088E-17  2.640E-18  6.106E-19  1.357E-19  2.912E-20  6.060E-21  1.226E-21  2.396E-22  3.425E-23
+   2   3.905E-13  4.902E-13  5.693E-13  5.246E-13  3.745E-13  2.138E-13  1.005E-13  4.013E-14  1.398E-14  4.360E-15  1.242E-15
+       3.283E-16  8.152E-17  1.920E-17  4.321E-18  9.366E-19  1.963E-19  3.995E-20  7.912E-21  1.517E-21  2.174E-22
+   3   3.749E-12  4.859E-12  5.801E-12  5.331E-12  3.714E-12  2.046E-12  9.253E-13  3.551E-13  1.191E-13  3.580E-14  9.851E-15
+       2.520E-15  6.071E-16  1.390E-16  3.051E-17  6.460E-18  1.324E-18  2.639E-19  5.126E-20  9.656E-21  1.394E-21
+   4   3.226E-11  4.340E-11  5.349E-11  4.893E-11  3.312E-11  1.751E-11  7.579E-12  2.785E-12  8.959E-13  2.589E-13  6.865E-14
+       1.697E-14  3.959E-15  8.805E-16  1.882E-16  3.887E-17  7.785E-18  1.517E-18  2.886E-19  5.335E-20  7.749E-21
+   5   2.401E-10  3.374E-10  4.318E-10  3.922E-10  2.564E-10  1.294E-10  5.327E-11  1.865E-11  5.733E-12  1.588E-12  4.048E-13
+       9.647E-14  2.177E-14  4.698E-15  9.764E-16  1.964E-16  3.837E-17  7.305E-18  1.359E-18  2.462E-19  3.593E-20
+   6   1.461E-09  2.161E-09  2.891E-09  2.598E-09  1.629E-09  7.792E-10  3.033E-10  1.007E-10  2.945E-11  7.794E-12  1.906E-12
+       4.372E-13  9.533E-14  1.995E-14  4.027E-15  7.880E-16  1.500E-16  2.787E-17  5.066E-18  8.986E-19  1.316E-19
+   7   6.559E-09  1.029E-08  1.451E-08  1.284E-08  7.666E-09  3.448E-09  1.261E-09  3.949E-10  1.095E-10  2.764E-11  6.475E-12
+       1.430E-12  3.015E-13  6.116E-14  1.199E-14  2.284E-15  4.238E-16  7.687E-17  1.366E-17  2.374E-18  3.486E-19
+   8   1.700E-08  2.846E-08  4.257E-08  3.689E-08  2.085E-08  8.783E-09  3.013E-09  8.895E-10  2.345E-10  5.661E-11  1.277E-11
+       2.730E-12  5.597E-13  1.107E-13  2.120E-14  3.953E-15  7.195E-16  1.282E-16  2.241E-17  3.839E-18  5.656E-19
+   9   6.559E-09  1.029E-08  1.450E-08  1.283E-08  7.654E-09  3.433E-09  1.253E-09  3.926E-10  1.093E-10  2.778E-11  6.565E-12
+       1.464E-12  3.116E-13  6.384E-14  1.265E-14  2.433E-15  4.560E-16  8.352E-17  1.498E-17  2.628E-18  3.918E-19
+  10   1.461E-09  2.159E-09  2.886E-09  2.588E-09  1.616E-09  7.684E-10  2.983E-10  9.928E-11  2.933E-11  7.882E-12  1.964E-12
+       4.598E-13  1.024E-13  2.185E-14  4.503E-15  8.994E-16  1.748E-16  3.312E-17  6.139E-18  1.111E-18  1.677E-19
+  11   2.387E-10  3.346E-10  4.272E-10  3.865E-10  2.510E-10  1.257E-10  5.164E-11  1.821E-11  5.693E-12  1.616E-12  4.243E-13
+       1.044E-13  2.434E-14  5.422E-15  1.163E-15  2.413E-16  4.864E-17  9.552E-18  1.832E-18  3.421E-19  5.230E-20
+  12   3.145E-11  4.219E-11  5.194E-11  4.732E-11  3.179E-11  1.669E-11  7.225E-12  2.689E-12  8.870E-13  2.654E-13  7.326E-14
+       1.891E-14  4.615E-15  1.073E-15  2.395E-16  5.160E-17  1.078E-17  2.193E-18  4.349E-19  8.384E-20  1.297E-20
+  13   3.539E-12  4.579E-12  5.478E-12  5.023E-12  3.478E-12  1.905E-12  8.656E-13  3.387E-13  1.175E-13  3.694E-14  1.070E-14
+       2.893E-15  7.377E-16  1.789E-16  4.155E-17  9.293E-18  2.011E-18  4.231E-19  8.671E-20  1.724E-20  2.699E-21
+  14   3.535E-13  4.439E-13  5.191E-13  4.788E-13  3.407E-13  1.940E-13  9.216E-14  3.780E-14  1.375E-14  4.529E-15  1.373E-15
+       3.880E-16  1.032E-16  2.608E-17  6.298E-18  1.462E-18  3.277E-19  7.126E-20  1.508E-20  3.090E-21  4.890E-22
+  15   3.496E-14  4.270E-14  4.894E-14  4.539E-14  3.315E-14  1.961E-14  9.731E-15  4.181E-15  1.595E-15  5.510E-16  1.751E-16
+       5.178E-17  1.440E-17  3.798E-18  9.558E-19  2.308E-19  5.375E-20  1.212E-20  2.654E-21  5.616E-22  8.987E-23
+
+                     CONCENTRATIONS   IN LAYER  2 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   3.323E-13  4.172E-13  4.845E-13  4.464E-13  3.187E-13  1.819E-13  8.552E-14  3.413E-14  1.189E-14  3.708E-15  1.056E-15
+       2.792E-16  6.931E-17  1.632E-17  3.674E-18  7.963E-19  1.669E-19  3.396E-20  6.727E-21  1.290E-21  1.848E-22
+   2   3.449E-12  4.481E-12  5.360E-12  4.925E-12  3.426E-12  1.882E-12  8.486E-13  3.246E-13  1.085E-13  3.250E-14  8.910E-15
+       2.272E-15  5.452E-16  1.244E-16  2.722E-17  5.743E-18  1.174E-18  2.331E-19  4.513E-20  8.475E-21  1.218E-21
+   3   3.565E-11  4.811E-11  5.944E-11  5.436E-11  3.671E-11  1.936E-11  8.346E-12  3.055E-12  9.788E-13  2.817E-13  7.438E-14
+       1.831E-14  4.254E-15  9.423E-16  2.006E-16  4.127E-17  8.234E-18  1.599E-18  3.029E-19  5.579E-20  8.068E-21
+   4   3.319E-10  4.681E-10  6.009E-10  5.455E-10  3.556E-10  1.788E-10  7.329E-11  2.555E-11  7.815E-12  2.154E-12  5.464E-13
+       1.296E-13  2.910E-14  6.250E-15  1.293E-15  2.589E-16  5.034E-17  9.541E-18  1.766E-18  3.186E-19  4.631E-20
+   5   2.687E-09  3.994E-09  5.363E-09  4.815E-09  3.009E-09  1.432E-09  5.544E-10  1.829E-10  5.319E-11  1.399E-11  3.399E-12
+       7.751E-13  1.680E-13  3.494E-14  7.011E-15  1.364E-15  2.581E-16  4.765E-17  8.608E-18  1.518E-18  2.215E-19
+   6   1.790E-08  2.829E-08  4.010E-08  3.543E-08  2.105E-08  9.400E-09  3.411E-09  1.059E-09  2.911E-10  7.280E-11  1.690E-11
+       3.698E-12  7.730E-13  1.554E-13  3.020E-14  5.700E-15  1.048E-15  1.884E-16  3.317E-17  5.712E-18  8.352E-19
+   7   8.842E-08  1.502E-07  2.273E-07  1.963E-07  1.097E-07  4.555E-08  1.537E-08  4.459E-09  1.154E-09  2.736E-10  6.058E-11
+       1.273E-11  2.564E-12  4.979E-13  9.369E-14  1.715E-14  3.066E-15  5.363E-16  9.206E-17  1.549E-17  2.268E-18
+   8   2.524E-07  4.650E-07  7.601E-07  6.359E-07  3.313E-07  1.269E-07  3.965E-08  1.074E-08  2.619E-09  5.900E-10  1.252E-10
+       2.537E-11  4.945E-12  9.322E-13  1.707E-13  3.050E-14  5.329E-15  9.132E-16  1.538E-16  2.544E-17  3.734E-18
+   9   8.842E-08  1.502E-07  2.273E-07  1.962E-07  1.097E-07  4.546E-08  1.533E-08  4.455E-09  1.158E-09  2.762E-10  6.164E-11
+       1.306E-11  2.652E-12  5.197E-13  9.869E-14  1.823E-14  3.287E-15  5.801E-16  1.004E-16  1.704E-17  2.531E-18
+  10   1.790E-08  2.828E-08  4.007E-08  3.537E-08  2.097E-08  9.339E-09  3.388E-09  1.056E-09  2.933E-10  7.442E-11  1.758E-11
+       3.918E-12  8.336E-13  1.707E-13  3.381E-14  6.500E-15  1.217E-15  2.227E-16  3.990E-17  6.992E-18  1.053E-18
+  11   2.679E-09  3.976E-09  5.334E-09  4.780E-09  2.977E-09  1.412E-09  5.472E-10  1.821E-10  5.386E-11  1.451E-11  3.624E-12
+       8.511E-13  1.899E-13  4.064E-14  8.393E-15  1.680E-15  3.271E-16  6.210E-17  1.153E-17  2.088E-18  3.185E-19
+  12   3.265E-10  4.602E-10  5.910E-10  5.358E-10  3.481E-10  1.744E-10  7.177E-11  2.537E-11  7.959E-12  2.269E-12  5.980E-13
+       1.477E-13  3.458E-14  7.732E-15  1.663E-15  3.462E-16  7.000E-17  1.378E-17  2.650E-18  4.962E-19  7.666E-20
+  13   3.427E-11  4.630E-11  5.745E-11  5.256E-11  3.541E-11  1.864E-11  8.098E-12  3.026E-12  1.003E-12  3.014E-13  8.361E-14
+       2.169E-14  5.317E-15  1.242E-15  2.782E-16  6.015E-17  1.261E-17  2.573E-18  5.118E-19  9.898E-20  1.548E-20
+  14   3.214E-12  4.194E-12  5.062E-12  4.667E-12  3.246E-12  1.786E-12  8.152E-13  3.206E-13  1.118E-13  3.533E-14  1.029E-14
+       2.796E-15  7.165E-16  1.746E-16  4.073E-17  9.147E-18  1.987E-18  4.194E-19  8.625E-20  1.721E-20  2.722E-21
+  15   2.987E-13  3.773E-13  4.446E-13  4.127E-13  2.958E-13  1.697E-13  8.129E-14  3.362E-14  1.234E-14  4.101E-15  1.255E-15
+       3.577E-16  9.601E-17  2.446E-17  5.954E-18  1.393E-18  3.146E-19  6.887E-20  1.467E-20  3.026E-21  4.841E-22
+
+                     CONCENTRATIONS   IN LAYER  3 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   2.670E-12  3.460E-12  4.130E-12  3.795E-12  2.645E-12  1.457E-12  6.589E-13  2.529E-13  8.484E-14  2.551E-14  7.022E-15
+       1.797E-15  4.331E-16  9.921E-17  2.178E-17  4.614E-18  9.464E-19  1.887E-19  3.666E-20  6.910E-21  9.973E-22
+   2   2.982E-11  4.022E-11  4.969E-11  4.545E-11  3.069E-11  1.619E-11  6.981E-12  2.556E-12  8.193E-13  2.359E-13  6.231E-14
+       1.535E-14  3.567E-15  7.904E-16  1.684E-16  3.465E-17  6.917E-18  1.344E-18  2.547E-19  4.693E-20  6.787E-21
+   3   3.318E-10  4.680E-10  6.008E-10  5.454E-10  3.555E-10  1.787E-10  7.327E-11  2.554E-11  7.812E-12  2.153E-12  5.461E-13
+       1.295E-13  2.908E-14  6.246E-15  1.292E-15  2.587E-16  5.030E-17  9.531E-18  1.764E-18  3.182E-19  4.625E-20
+   4   3.343E-09  4.971E-09  6.678E-09  5.996E-09  3.746E-09  1.782E-09  6.895E-10  2.274E-10  6.607E-11  1.737E-11  4.217E-12
+       9.608E-13  2.081E-13  4.325E-14  8.673E-15  1.686E-15  3.187E-16  5.881E-17  1.062E-17  1.870E-18  2.728E-19
+   5   2.949E-08  4.668E-08  6.624E-08  5.851E-08  3.473E-08  1.549E-08  5.612E-09  1.739E-09  4.774E-10  1.192E-10  2.762E-11
+       6.032E-12  1.259E-12  2.525E-13  4.898E-14  9.225E-15  1.693E-15  3.036E-16  5.333E-17  9.164E-18  1.339E-18
+   6   2.157E-07  3.676E-07  5.577E-07  4.811E-07  2.683E-07  1.110E-07  3.732E-08  1.079E-08  2.780E-09  6.562E-10  1.446E-10
+       3.026E-11  6.066E-12  1.172E-12  2.196E-13  4.000E-14  7.113E-15  1.238E-15  2.113E-16  3.538E-17  5.173E-18
+   7   1.179E-06  2.194E-06  3.616E-06  3.016E-06  1.559E-06  5.912E-07  1.825E-07  4.879E-08  1.174E-08  2.610E-09  5.467E-10
+       1.093E-10  2.102E-11  3.908E-12  7.059E-13  1.243E-13  2.141E-14  3.617E-15  6.003E-16  9.790E-17  1.432E-17
+   8   3.741E-06  7.703E-06  1.406E-05  1.118E-05  5.279E-06  1.813E-06  5.104E-07  1.258E-07  2.827E-08  5.933E-09  1.185E-09
+       2.270E-10  4.198E-11  7.536E-12  1.319E-12  2.256E-13  3.785E-14  6.242E-15  1.014E-15  1.621E-16  2.372E-17
+   9   1.179E-06  2.194E-06  3.616E-06  3.016E-06  1.559E-06  5.908E-07  1.825E-07  4.886E-08  1.180E-08  2.636E-09  5.551E-10
+       1.117E-10  2.163E-11  4.051E-12  7.370E-13  1.307E-13  2.269E-14  3.859E-15  6.451E-16  1.060E-16  1.570E-17
+  10   2.157E-07  3.675E-07  5.575E-07  4.809E-07  2.680E-07  1.108E-07  3.730E-08  1.083E-08  2.816E-09  6.727E-10  1.504E-10
+       3.192E-11  6.497E-12  1.276E-12  2.428E-13  4.494E-14  8.118E-15  1.435E-15  2.486E-16  4.223E-17  6.349E-18
+  11   2.945E-08  4.658E-08  6.608E-08  5.834E-08  3.459E-08  1.542E-08  5.603E-09  1.752E-09  4.884E-10  1.245E-10  2.956E-11
+       6.623E-12  1.416E-12  2.913E-13  5.795E-14  1.119E-14  2.106E-15  3.869E-16  6.959E-17  1.224E-17  1.866E-18
+  12   3.310E-09  4.925E-09  6.626E-09  5.949E-09  3.714E-09  1.766E-09  6.874E-10  2.299E-10  6.838E-11  1.853E-11  4.660E-12
+       1.101E-12  2.474E-13  5.322E-14  1.105E-14  2.225E-15  4.355E-16  8.312E-17  1.551E-17  2.824E-18  4.363E-19
+  13   3.235E-10  4.578E-10  5.905E-10  5.370E-10  3.502E-10  1.763E-10  7.292E-11  2.593E-11  8.189E-12  2.350E-12  6.240E-13
+       1.553E-13  3.659E-14  8.236E-15  1.782E-15  3.732E-16  7.590E-17  1.503E-17  2.906E-18  5.472E-19  8.561E-20
+  14   2.847E-11  3.865E-11  4.820E-11  4.427E-11  2.997E-11  1.586E-11  6.933E-12  2.608E-12  8.703E-13  2.636E-13  7.366E-14
+       1.925E-14  4.753E-15  1.118E-15  2.522E-16  5.488E-17  1.158E-17  2.376E-18  4.754E-19  9.248E-20  1.464E-20
+  15   2.486E-12  3.251E-12  3.936E-12  3.646E-12  2.554E-12  1.417E-12  6.530E-13  2.595E-13  9.146E-14  2.922E-14  8.605E-15
+       2.365E-15  6.128E-16  1.510E-16  3.558E-17  8.073E-18  1.771E-18  3.773E-19  7.829E-20  1.577E-20  2.527E-21
+
+                     CONCENTRATIONS   IN LAYER  4 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   1.850E-11  2.487E-11  3.064E-11  2.803E-11  1.898E-11  1.004E-11  4.348E-12  1.599E-12  5.148E-13  1.489E-13  3.953E-14
+       9.783E-15  2.285E-15  5.089E-16  1.089E-16  2.252E-17  4.517E-18  8.817E-19  1.679E-19  3.109E-20  4.516E-21
+   2   2.232E-10  3.146E-10  4.036E-10  3.664E-10  2.390E-10  1.202E-10  4.933E-11  1.721E-11  5.271E-12  1.455E-12  3.694E-13
+       8.771E-14  1.972E-14  4.241E-15  8.786E-16  1.761E-16  3.430E-17  6.510E-18  1.207E-18  2.180E-19  3.169E-20
+   3   2.688E-09  3.995E-09  5.364E-09  4.816E-09  3.010E-09  1.432E-09  5.546E-10  1.830E-10  5.322E-11  1.400E-11  3.402E-12
+       7.757E-13  1.681E-13  3.497E-14  7.019E-15  1.365E-15  2.584E-16  4.773E-17  8.622E-18  1.521E-18  2.219E-19
+   4   2.951E-08  4.669E-08  6.626E-08  5.853E-08  3.474E-08  1.550E-08  5.615E-09  1.740E-09  4.778E-10  1.193E-10  2.764E-11
+       6.039E-12  1.260E-12  2.529E-13  4.906E-14  9.242E-15  1.696E-15  3.043E-16  5.346E-17  9.188E-18  1.343E-18
+   5   2.859E-07  4.876E-07  7.402E-07  6.385E-07  3.559E-07  1.472E-07  4.943E-08  1.427E-08  3.675E-09  8.664E-10  1.908E-10
+       3.987E-11  7.985E-12  1.542E-12  2.884E-13  5.248E-14  9.321E-15  1.620E-15  2.763E-16  4.620E-17  6.754E-18
+   6   2.317E-06  4.324E-06  7.142E-06  5.952E-06  3.071E-06  1.161E-06  3.574E-07  9.523E-08  2.283E-08  5.057E-09  1.056E-09
+       2.103E-10  4.029E-11  7.461E-12  1.342E-12  2.354E-13  4.038E-14  6.791E-15  1.122E-15  1.823E-16  2.662E-17
+   7   1.419E-05  2.951E-05  5.428E-05  4.302E-05  2.017E-05  6.857E-06  1.909E-06  4.650E-07  1.031E-07  2.139E-08  4.218E-09
+       7.979E-10  1.457E-10  2.581E-11  4.455E-12  7.519E-13  1.244E-13  2.023E-14  3.240E-15  5.111E-16  7.451E-17
+   8   5.092E-05  1.204E-04  2.545E-04  1.874E-04  7.794E-05  2.341E-05  5.834E-06  1.294E-06  2.657E-07  5.168E-08  9.620E-09
+       1.727E-09  3.009E-10  5.111E-11  8.492E-12  1.385E-12  2.221E-13  3.510E-14  5.478E-15  8.442E-16  1.228E-16
+   9   1.419E-05  2.951E-05  5.428E-05  4.302E-05  2.016E-05  6.857E-06  1.909E-06  4.656E-07  1.035E-07  2.150E-08  4.253E-09
+       8.071E-10  1.479E-10  2.631E-11  4.562E-12  7.735E-13  1.286E-13  2.101E-14  3.381E-15  5.359E-16  7.895E-17
+  10   2.317E-06  4.324E-06  7.141E-06  5.952E-06  3.071E-06  1.161E-06  3.578E-07  9.566E-08  2.307E-08  5.150E-09  1.084E-09
+       2.181E-10  4.221E-11  7.905E-12  1.438E-12  2.552E-13  4.427E-14  7.531E-15  1.259E-15  2.067E-16  3.092E-17
+  11   2.857E-07  4.871E-07  7.397E-07  6.381E-07  3.557E-07  1.471E-07  4.956E-08  1.441E-08  3.754E-09  8.989E-10  2.015E-10
+       4.286E-11  8.747E-12  1.722E-12  3.287E-13  6.101E-14  1.105E-14  1.959E-15  3.404E-16  5.799E-17  8.805E-18
+  12   2.936E-08  4.651E-08  6.609E-08  5.841E-08  3.468E-08  1.549E-08  5.642E-09  1.769E-09  4.949E-10  1.266E-10  3.018E-11
+       6.790E-12  1.457E-12  3.009E-13  6.011E-14  1.166E-14  2.202E-15  4.062E-16  7.336E-17  1.296E-17  1.996E-18
+  13   2.652E-09  3.955E-09  5.332E-09  4.795E-09  3.000E-09  1.431E-09  5.586E-10  1.875E-10  5.602E-11  1.525E-11  3.853E-12
+       9.150E-13  2.065E-13  4.463E-14  9.310E-15  1.883E-15  3.702E-16  7.100E-17  1.331E-17  2.435E-18  3.801E-19
+  14   2.175E-10  3.087E-10  3.989E-10  3.634E-10  2.376E-10  1.200E-10  4.984E-11  1.780E-11  5.647E-12  1.629E-12  4.347E-13
+       1.087E-13  2.576E-14  5.830E-15  1.268E-15  2.669E-16  5.455E-17  1.086E-17  2.111E-18  3.996E-19  6.317E-20
+  15   1.775E-11  2.409E-11  3.003E-11  2.764E-11  1.880E-11  1.001E-11  4.408E-12  1.671E-12  5.626E-13  1.719E-13  4.849E-14
+       1.279E-14  3.188E-15  7.568E-16  1.723E-16  3.783E-17  8.049E-18  1.666E-18  3.363E-19  6.602E-20  1.057E-20
+
+                     CONCENTRATIONS   IN LAYER  5 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   1.043E-10  1.464E-10  1.871E-10  1.700E-10  1.112E-10  5.622E-11  2.319E-11  8.134E-12  2.506E-12  6.958E-13  1.778E-13
+       4.250E-14  9.617E-15  2.081E-15  4.339E-16  8.754E-17  1.716E-17  3.277E-18  6.116E-19  1.112E-19  1.623E-20
+   2   1.367E-09  2.028E-09  2.720E-09  2.443E-09  1.529E-09  7.286E-10  2.826E-10  9.346E-11  2.724E-11  7.184E-12  1.750E-12
+       4.002E-13  8.697E-14  1.814E-14  3.651E-15  7.124E-16  1.352E-16  2.505E-17  4.541E-18  8.033E-19  1.173E-19
+   3   1.792E-08  2.832E-08  4.014E-08  3.546E-08  2.107E-08  9.412E-09  3.416E-09  1.061E-09  2.917E-10  7.298E-11  1.695E-11
+       3.710E-12  7.759E-13  1.560E-13  3.034E-14  5.730E-15  1.054E-15  1.896E-16  3.340E-17  5.755E-18  8.416E-19
+   4   2.159E-07  3.678E-07  5.581E-07  4.815E-07  2.686E-07  1.112E-07  3.738E-08  1.080E-08  2.786E-09  6.577E-10  1.450E-10
+       3.036E-11  6.088E-12  1.177E-12  2.206E-13  4.021E-14  7.154E-15  1.246E-15  2.129E-16  3.565E-17  5.215E-18
+   5   2.318E-06  4.325E-06  7.144E-06  5.955E-06  3.073E-06  1.162E-06  3.576E-07  9.532E-08  2.286E-08  5.064E-09  1.057E-09
+       2.107E-10  4.037E-11  7.480E-12  1.346E-12  2.362E-13  4.053E-14  6.819E-15  1.127E-15  1.832E-16  2.676E-17
+   6   2.109E-05  4.392E-05  8.091E-05  6.409E-05  3.000E-05  1.018E-05  2.828E-06  6.874E-07  1.521E-07  3.148E-08  6.193E-09
+       1.169E-09  2.128E-10  3.761E-11  6.475E-12  1.090E-12  1.799E-13  2.917E-14  4.659E-15  7.329E-16  1.068E-16
+   7   1.471E-04  3.507E-04  7.468E-04  5.478E-04  2.263E-04  6.738E-05  1.662E-05  3.647E-06  7.412E-07  1.426E-07  2.624E-08
+       4.657E-09  8.017E-10  1.345E-10  2.207E-11  3.553E-12  5.625E-13  8.777E-14  1.352E-14  2.057E-15  2.979E-16
+   8   6.105E-04  1.719E-03  4.471E-03  2.909E-03  1.021E-03  2.594E-04  5.610E-05  1.111E-05  2.073E-06  3.693E-07  6.342E-08
+       1.057E-08  1.720E-09  2.742E-10  4.297E-11  6.633E-12  1.011E-12  1.524E-13  2.275E-14  3.364E-15  4.820E-16
+   9   1.471E-04  3.507E-04  7.468E-04  5.478E-04  2.263E-04  6.737E-05  1.662E-05  3.646E-06  7.409E-07  1.425E-07  2.623E-08
+       4.654E-09  8.010E-10  1.344E-10  2.205E-11  3.551E-12  5.626E-13  8.785E-14  1.355E-14  2.064E-15  2.994E-16
+  10   2.109E-05  4.392E-05  8.090E-05  6.409E-05  3.000E-05  1.018E-05  2.829E-06  6.881E-07  1.525E-07  3.161E-08  6.236E-09
+       1.180E-09  2.157E-10  3.826E-11  6.614E-12  1.118E-12  1.854E-13  3.022E-14  4.851E-15  7.673E-16  1.131E-16
+  11   2.318E-06  4.325E-06  7.143E-06  5.955E-06  3.073E-06  1.162E-06  3.581E-07  9.574E-08  2.309E-08  5.153E-09  1.084E-09
+       2.182E-10  4.223E-11  7.910E-12  1.440E-12  2.555E-13  4.435E-14  7.550E-15  1.263E-15  2.076E-16  3.109E-17
+  12   2.155E-07  3.675E-07  5.579E-07  4.814E-07  2.686E-07  1.112E-07  3.750E-08  1.091E-08  2.846E-09  6.823E-10  1.531E-10
+       3.261E-11  6.664E-12  1.314E-12  2.512E-13  4.672E-14  8.480E-15  1.506E-15  2.624E-16  4.482E-17  6.813E-18
+  13   1.782E-08  2.824E-08  4.010E-08  3.545E-08  2.107E-08  9.419E-09  3.437E-09  1.079E-09  3.025E-10  7.755E-11  1.852E-11
+       4.175E-12  8.977E-13  1.858E-13  3.721E-14  7.237E-15  1.371E-15  2.537E-16  4.597E-17  8.149E-18  1.257E-18
+  14   1.353E-09  2.017E-09  2.714E-09  2.440E-09  1.528E-09  7.298E-10  2.855E-10  9.603E-11  2.875E-11  7.846E-12  1.987E-12
+       4.732E-13  1.071E-13  2.322E-14  4.859E-15  9.859E-16  1.946E-16  3.746E-17  7.051E-18  1.296E-18  2.026E-19
+  15   1.025E-10  1.448E-10  1.862E-10  1.696E-10  1.112E-10  5.639E-11  2.354E-11  8.458E-12  2.701E-12  7.842E-13  2.107E-13
+       5.308E-14  1.267E-14  2.888E-15  6.330E-16  1.342E-16  2.763E-17  5.543E-18  1.086E-18  2.072E-19  3.287E-20
+
+                     CONCENTRATIONS   IN LAYER  6 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   4.329E-10  6.379E-10  8.507E-10  7.649E-10  4.810E-10  2.309E-10  9.028E-11  3.011E-11  8.856E-12  2.358E-12  5.801E-13
+       1.340E-13  2.940E-14  6.191E-15  1.259E-15  2.480E-16  4.756E-17  8.902E-18  1.630E-18  2.914E-19  4.273E-20
+   2   6.182E-09  9.732E-09  1.375E-08  1.216E-08  7.245E-09  3.248E-09  1.184E-09  3.695E-10  1.022E-10  2.570E-11  6.004E-12
+       1.322E-12  2.781E-13  5.628E-14  1.101E-14  2.093E-15  3.877E-16  7.020E-17  1.245E-17  2.161E-18  3.164E-19
+   3   8.868E-08  1.506E-07  2.278E-07  1.967E-07  1.100E-07  4.570E-08  1.543E-08  4.480E-09  1.161E-09  2.755E-10  6.106E-11
+       1.285E-11  2.590E-12  5.037E-13  9.492E-14  1.740E-14  3.116E-15  5.460E-16  9.388E-17  1.583E-17  2.318E-18
+   4   1.182E-06  2.198E-06  3.621E-06  3.021E-06  1.562E-06  5.927E-07  1.831E-07  4.899E-08  1.180E-08  2.625E-09  5.505E-10
+       1.102E-10  2.122E-11  3.950E-12  7.144E-13  1.260E-13  2.174E-14  3.678E-15  6.116E-16  9.994E-17  1.462E-17
+   5   1.421E-05  2.954E-05  5.433E-05  4.307E-05  2.019E-05  6.869E-06  1.913E-06  4.663E-07  1.035E-07  2.148E-08  4.241E-09
+       8.028E-10  1.467E-10  2.602E-11  4.497E-12  7.601E-13  1.260E-13  2.051E-14  3.290E-15  5.198E-16  7.582E-17
+   6   1.472E-04  3.509E-04  7.471E-04  5.481E-04  2.265E-04  6.744E-05  1.664E-05  3.653E-06  7.427E-07  1.430E-07  2.633E-08
+       4.675E-09  8.054E-10  1.352E-10  2.221E-11  3.578E-12  5.671E-13  8.858E-14  1.366E-14  2.081E-15  3.014E-16
+   7   1.194E-03  3.386E-03  8.858E-03  5.741E-03  2.004E-03  5.056E-04  1.085E-04  2.135E-05  3.953E-06  6.985E-07  1.190E-07
+       1.966E-08  3.170E-09  5.006E-10  7.769E-11  1.188E-11  1.793E-12  2.676E-13  3.956E-14  5.796E-15  8.269E-16
+   8   5.922E-03  2.103E-02  7.523E-02  3.937E-02  1.085E-02  2.224E-03  4.147E-04  7.262E-05  1.215E-05  1.963E-06  3.088E-07
+       4.755E-08  7.194E-09  1.073E-09  1.581E-10  2.306E-11  3.335E-12  4.789E-13  6.831E-14  9.692E-15  1.364E-15
+   9   1.194E-03  3.387E-03  8.858E-03  5.741E-03  2.004E-03  5.056E-04  1.085E-04  2.135E-05  3.952E-06  6.985E-07  1.190E-07
+       1.966E-08  3.170E-09  5.006E-10  7.769E-11  1.188E-11  1.793E-12  2.676E-13  3.956E-14  5.796E-15  8.270E-16
+  10   1.472E-04  3.510E-04  7.471E-04  5.481E-04  2.265E-04  6.743E-05  1.664E-05  3.652E-06  7.425E-07  1.429E-07  2.631E-08
+       4.672E-09  8.047E-10  1.351E-10  2.219E-11  3.577E-12  5.673E-13  8.868E-14  1.369E-14  2.088E-15  3.031E-16
+  11   1.421E-05  2.954E-05  5.433E-05  4.307E-05  2.019E-05  6.868E-06  1.914E-06  4.669E-07  1.038E-07  2.159E-08  4.273E-09
+       8.116E-10  1.489E-10  2.652E-11  4.605E-12  7.820E-13  1.303E-13  2.133E-14  3.441E-15  5.469E-16  8.076E-17
+  12   1.181E-06  2.198E-06  3.621E-06  3.021E-06  1.562E-06  5.928E-07  1.834E-07  4.923E-08  1.193E-08  2.675E-09  5.657E-10
+       1.144E-10  2.226E-11  4.193E-12  7.676E-13  1.371E-13  2.395E-14  4.103E-15  6.909E-16  1.144E-16  1.717E-17
+  13   8.860E-08  1.505E-07  2.278E-07  1.967E-07  1.100E-07  4.572E-08  1.549E-08  4.529E-09  1.188E-09  2.864E-10  6.467E-11
+       1.386E-11  2.850E-12  5.657E-13  1.089E-13  2.039E-14  3.729E-15  6.673E-16  1.172E-16  2.017E-17  3.075E-18
+  14   6.169E-09  9.724E-09  1.375E-08  1.216E-08  7.246E-09  3.253E-09  1.193E-09  3.767E-10  1.062E-10  2.741E-11  6.591E-12
+       1.496E-12  3.242E-13  6.760E-14  1.364E-14  2.674E-15  5.106E-16  9.530E-17  1.742E-17  3.114E-18  4.819E-19
+  15   4.311E-10  6.367E-10  8.502E-10  7.648E-10  4.812E-10  2.315E-10  9.137E-11  3.104E-11  9.392E-12  2.592E-12  6.640E-13
+       1.600E-13  3.665E-14  8.044E-15  1.703E-15  3.497E-16  6.988E-17  1.362E-17  2.597E-18  4.831E-19  7.591E-20
+
+                     CONCENTRATIONS   IN LAYER  7 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   1.048E-09  1.624E-09  2.267E-09  2.011E-09  1.212E-09  5.517E-10  2.047E-10  6.510E-11  1.837E-11  4.717E-12  1.125E-12
+       2.532E-13  5.436E-14  1.123E-14  2.244E-15  4.356E-16  8.243E-17  1.525E-17  2.763E-18  4.896E-19  7.217E-20
+   2   1.624E-08  2.725E-08  4.083E-08  3.537E-08  1.996E-08  8.390E-09  2.873E-09  8.471E-10  2.230E-10  5.381E-11  1.213E-11
+       2.595E-12  5.321E-13  1.053E-13  2.019E-14  3.768E-15  6.867E-16  1.225E-16  2.146E-17  3.683E-18  5.416E-19
+   3   2.549E-07  4.686E-07  7.650E-07  6.404E-07  3.341E-07  1.283E-07  4.017E-08  1.091E-08  2.670E-09  6.036E-10  1.286E-10
+       2.615E-11  5.118E-12  9.690E-13  1.783E-13  3.200E-14  5.619E-15  9.679E-16  1.639E-16  2.726E-17  4.005E-18
+   4   3.768E-06  7.745E-06  1.412E-05  1.123E-05  5.312E-06  1.828E-06  5.157E-07  1.275E-07  2.873E-08  6.050E-09  1.212E-09
+       2.331E-10  4.328E-11  7.803E-12  1.371E-12  2.358E-13  3.975E-14  6.589E-15  1.076E-15  1.730E-16  2.535E-17
+   5   5.118E-05  1.208E-04  2.551E-04  1.879E-04  7.826E-05  2.354E-05  5.880E-06  1.307E-06  2.691E-07  5.249E-08  9.802E-09
+       1.766E-09  3.088E-10  5.266E-11  8.788E-12  1.439E-12  2.319E-13  3.684E-14  5.779E-15  8.953E-16  1.304E-16
+   6   6.124E-04  1.723E-03  4.476E-03  2.914E-03  1.024E-03  2.603E-04  5.640E-05  1.119E-05  2.093E-06  3.737E-07  6.435E-08
+       1.076E-08  1.757E-09  2.811E-10  4.421E-11  6.852E-12  1.049E-12  1.588E-13  2.382E-14  3.540E-15  5.083E-16
+   7   5.932E-03  2.105E-02  7.525E-02  3.939E-02  1.086E-02  2.228E-03  4.159E-04  7.293E-05  1.222E-05  1.978E-06  3.118E-07
+       4.812E-08  7.298E-09  1.091E-09  1.613E-10  2.360E-11  3.424E-12  4.932E-13  7.061E-14  1.005E-14  1.417E-15
+   8   3.692E-02  0.183       1.16      0.383      7.175E-02  1.177E-02  1.845E-03  2.800E-04  4.152E-05  6.050E-06  8.698E-07
+       1.237E-07  1.746E-08  2.448E-09  3.413E-10  4.740E-11  6.559E-12  9.052E-13  1.246E-13  1.713E-14  2.378E-15
+   9   5.933E-03  2.105E-02  7.524E-02  3.939E-02  1.086E-02  2.228E-03  4.159E-04  7.292E-05  1.222E-05  1.978E-06  3.118E-07
+       4.812E-08  7.298E-09  1.091E-09  1.613E-10  2.360E-11  3.424E-12  4.932E-13  7.060E-14  1.005E-14  1.417E-15
+  10   6.125E-04  1.723E-03  4.476E-03  2.914E-03  1.024E-03  2.603E-04  5.639E-05  1.119E-05  2.092E-06  3.737E-07  6.435E-08
+       1.076E-08  1.757E-09  2.810E-10  4.419E-11  6.850E-12  1.049E-12  1.588E-13  2.381E-14  3.539E-15  5.082E-16
+  11   5.118E-05  1.208E-04  2.551E-04  1.879E-04  7.825E-05  2.354E-05  5.879E-06  1.307E-06  2.691E-07  5.250E-08  9.807E-09
+       1.768E-09  3.093E-10  5.278E-11  8.817E-12  1.446E-12  2.334E-13  3.714E-14  5.838E-15  9.066E-16  1.326E-16
+  12   3.768E-06  7.746E-06  1.412E-05  1.123E-05  5.311E-06  1.828E-06  5.161E-07  1.278E-07  2.885E-08  6.094E-09  1.226E-09
+       2.368E-10  4.420E-11  8.016E-12  1.418E-12  2.454E-13  4.168E-14  6.961E-15  1.145E-15  1.857E-16  2.764E-17
+  13   2.549E-07  4.687E-07  7.650E-07  6.404E-07  3.342E-07  1.283E-07  4.027E-08  1.099E-08  2.707E-09  6.180E-10  1.330E-10
+       2.739E-11  5.430E-12  1.042E-12  1.946E-13  3.545E-14  6.320E-15  1.105E-15  1.901E-16  3.211E-17  4.861E-18
+  14   1.624E-08  2.725E-08  4.083E-08  3.537E-08  1.996E-08  8.401E-09  2.889E-09  8.592E-10  2.294E-10  5.638E-11  1.298E-11
+       2.837E-12  5.948E-13  1.204E-13  2.366E-14  4.524E-15  8.447E-16  1.544E-16  2.770E-17  4.871E-18  7.490E-19
+  15   1.047E-09  1.624E-09  2.267E-09  2.011E-09  1.212E-09  5.534E-10  2.069E-10  6.677E-11  1.927E-11  5.092E-12  1.255E-12
+       2.922E-13  6.491E-14  1.386E-14  2.867E-15  5.762E-16  1.128E-16  2.160E-17  4.050E-18  7.423E-19  1.160E-19
+
+                     CONCENTRATIONS   IN LAYER  8 AT END OF TRANSPORT STEP    3, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   5.341E-10  7.801E-10  1.033E-09  9.295E-10  5.873E-10  2.832E-10  1.115E-10  3.754E-11  1.120E-11  3.033E-12  7.607E-13
+       1.792E-13  4.012E-14  8.612E-15  1.784E-15  3.584E-16  7.002E-17  1.335E-17  2.489E-18  4.527E-19  6.774E-20
+   2   7.513E-09  1.171E-08  1.641E-08  1.454E-08  8.724E-09  3.941E-09  1.450E-09  4.579E-10  1.286E-10  3.292E-11  7.840E-12
+       1.761E-12  3.773E-13  7.781E-14  1.551E-14  3.004E-15  5.665E-16  1.044E-16  1.884E-17  3.324E-18  4.962E-19
+   3   1.062E-07  1.783E-07  2.672E-07  2.315E-07  1.306E-07  5.478E-08  1.872E-08  5.510E-09  1.451E-09  3.505E-10  7.915E-11
+       1.695E-11  3.481E-12  6.894E-13  1.323E-13  2.469E-14  4.498E-15  8.016E-16  1.401E-16  2.399E-17  3.580E-18
+   4   1.393E-06  2.559E-06  4.170E-06  3.494E-06  1.826E-06  7.013E-07  2.196E-07  5.965E-08  1.460E-08  3.304E-09  7.040E-10
+       1.433E-10  2.807E-11  5.315E-12  9.776E-13  1.753E-13  3.073E-14  5.282E-15  8.917E-16  1.479E-16  2.202E-17
+   5   1.649E-05  3.380E-05  6.136E-05  4.893E-05  2.322E-05  8.011E-06  2.265E-06  5.605E-07  1.263E-07  2.658E-08  5.321E-09
+       1.022E-09  1.895E-10  3.410E-11  5.978E-12  1.024E-12  1.721E-13  2.841E-14  4.616E-15  7.385E-16  1.093E-16
+   6   1.680E-04  3.943E-04  8.268E-04  6.112E-04  2.560E-04  7.745E-05  1.942E-05  4.326E-06  8.909E-07  1.736E-07  3.236E-08
+       5.812E-09  1.012E-09  1.718E-10  2.851E-11  4.641E-12  7.428E-13  1.171E-13  1.823E-14  2.803E-15  4.081E-16
+   7   1.340E-03  3.735E-03  9.591E-03  6.278E-03  2.226E-03  5.716E-04  1.248E-04  2.490E-05  4.675E-06  8.374E-07  1.445E-07
+       2.417E-08  3.944E-09  6.300E-10  9.884E-11  1.527E-11  2.328E-12  3.507E-13  5.230E-14  7.727E-15  1.106E-15
+   8   6.532E-03  2.276E-02  7.954E-02  4.217E-02  1.183E-02  2.476E-03  4.692E-04  8.345E-05  1.417E-05  2.324E-06  3.706E-07
+       5.783E-08  8.861E-09  1.338E-09  1.994E-10  2.942E-11  4.299E-12  6.234E-13  8.978E-14  1.285E-14  1.815E-15
+   9   1.340E-03  3.735E-03  9.591E-03  6.278E-03  2.226E-03  5.716E-04  1.248E-04  2.490E-05  4.675E-06  8.373E-07  1.445E-07
+       2.417E-08  3.944E-09  6.300E-10  9.884E-11  1.527E-11  2.328E-12  3.507E-13  5.230E-14  7.727E-15  1.106E-15
+  10   1.680E-04  3.943E-04  8.268E-04  6.112E-04  2.560E-04  7.744E-05  1.942E-05  4.326E-06  8.908E-07  1.736E-07  3.236E-08
+       5.812E-09  1.012E-09  1.718E-10  2.851E-11  4.641E-12  7.428E-13  1.171E-13  1.823E-14  2.802E-15  4.081E-16
+  11   1.649E-05  3.380E-05  6.136E-05  4.893E-05  2.322E-05  8.010E-06  2.265E-06  5.605E-07  1.263E-07  2.657E-08  5.319E-09
+       1.021E-09  1.894E-10  3.407E-11  5.973E-12  1.024E-12  1.720E-13  2.840E-14  4.617E-15  7.392E-16  1.095E-16
+  12   1.393E-06  2.559E-06  4.170E-06  3.495E-06  1.826E-06  7.018E-07  2.200E-07  5.987E-08  1.469E-08  3.335E-09  7.128E-10
+       1.456E-10  2.862E-11  5.442E-12  1.005E-12  1.810E-13  3.189E-14  5.506E-15  9.339E-16  1.556E-16  2.342E-17
+  13   1.062E-07  1.783E-07  2.672E-07  2.315E-07  1.307E-07  5.493E-08  1.884E-08  5.578E-09  1.481E-09  3.612E-10  8.243E-11
+       1.784E-11  3.702E-12  7.414E-13  1.439E-13  2.717E-14  5.005E-15  9.022E-16  1.595E-16  2.762E-17  4.222E-18
+  14   7.511E-09  1.171E-08  1.641E-08  1.455E-08  8.739E-09  3.964E-09  1.470E-09  4.697E-10  1.339E-10  3.494E-11  8.489E-12
+       1.946E-12  4.254E-13  8.942E-14  1.818E-14  3.591E-15  6.906E-16  1.297E-16  2.386E-17  4.291E-18  6.655E-19
+  15   5.338E-10  7.801E-10  1.033E-09  9.305E-10  5.895E-10  2.863E-10  1.141E-10  3.920E-11  1.198E-11  3.341E-12  8.643E-13
+       2.102E-13  4.856E-14  1.074E-14  2.291E-15  4.737E-16  9.525E-17  1.868E-17  3.582E-18  6.699E-19  1.055E-19
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    3, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.6711608E-12
+                                                WELLS:    525.0001                    0.000000    
+                                MASS STORAGE (SOLUTE):    0.000000                   -524.9999    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    525.0001       LB          -524.9999       LB
+
+                                                          NET (IN - OUT):   0.1831055E-03
+                                                   DISCREPANCY (PERCENT):   0.3487723E-04
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   4 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   5 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   6 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   7 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   8 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    8
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   25.00000     DAY
+ .....................................................................
+
+                     CONCENTRATIONS   IN LAYER  1 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   5.624E-12  7.413E-12  9.113E-12  9.568E-12  8.562E-12  6.351E-12  3.992E-12  2.163E-12  1.029E-12  4.362E-13  1.673E-13
+       5.878E-14  1.913E-14  5.819E-15  1.669E-15  4.543E-16  1.181E-16  2.949E-17  7.099E-18  1.642E-18  2.955E-19
+   2   4.277E-11  5.746E-11  7.210E-11  7.621E-11  6.783E-11  4.941E-11  3.024E-11  1.587E-11  7.286E-12  2.976E-12  1.099E-12
+       3.719E-13  1.166E-13  3.420E-14  9.469E-15  2.492E-15  6.273E-16  1.519E-16  3.550E-17  8.010E-18  1.432E-18
+   3   3.266E-10  4.475E-10  5.738E-10  6.104E-10  5.397E-10  3.857E-10  2.296E-10  1.167E-10  5.169E-11  2.035E-11  7.242E-12
+       2.361E-12  7.141E-13  2.024E-13  5.419E-14  1.382E-14  3.376E-15  7.942E-16  1.811E-16  3.992E-17  7.106E-18
+   4   2.212E-09  3.101E-09  4.073E-09  4.361E-09  3.824E-09  2.673E-09  1.544E-09  7.568E-10  3.226E-10  1.221E-10  4.175E-11
+       1.309E-11  3.813E-12  1.042E-12  2.697E-13  6.656E-14  1.577E-14  3.611E-15  8.027E-16  1.729E-16  3.066E-17
+   5   1.282E-08  1.844E-08  2.490E-08  2.683E-08  2.328E-08  1.586E-08  8.854E-09  4.174E-09  1.706E-09  6.186E-10  2.027E-10
+       6.100E-11  1.708E-11  4.496E-12  1.123E-12  2.683E-13  6.169E-14  1.375E-14  2.980E-15  6.286E-16  1.110E-16
+   6   6.019E-08  8.907E-08  1.242E-07  1.345E-07  1.152E-07  7.622E-08  4.096E-08  1.850E-08  7.226E-09  2.503E-09  7.844E-10
+       2.261E-10  6.078E-11  1.541E-11  3.715E-12  8.592E-13  1.921E-13  4.171E-14  8.837E-15  1.825E-15  3.215E-16
+   7   2.071E-07  3.166E-07  4.578E-07  4.976E-07  4.190E-07  2.683E-07  1.383E-07  5.968E-08  2.223E-08  7.347E-09  2.200E-09
+       6.079E-10  1.571E-10  3.840E-11  8.959E-12  2.015E-12  4.391E-13  9.323E-14  1.935E-14  3.919E-15  6.883E-16
+   8   4.194E-07  6.624E-07  9.942E-07  1.082E-06  8.938E-07  5.533E-07  2.741E-07  1.133E-07  4.044E-08  1.283E-08  3.700E-09
+       9.880E-10  2.477E-10  5.897E-11  1.346E-11  2.970E-12  6.367E-13  1.333E-13  2.729E-14  5.459E-15  9.571E-16
+   9   2.071E-07  3.166E-07  4.578E-07  4.976E-07  4.190E-07  2.683E-07  1.383E-07  5.966E-08  2.223E-08  7.347E-09  2.201E-09
+       6.086E-10  1.575E-10  3.854E-11  9.008E-12  2.029E-12  4.430E-13  9.421E-14  1.958E-14  3.974E-15  7.000E-16
+  10   6.018E-08  8.906E-08  1.242E-07  1.345E-07  1.151E-07  7.618E-08  4.093E-08  1.848E-08  7.222E-09  2.503E-09  7.853E-10
+       2.268E-10  6.113E-11  1.554E-11  3.762E-12  8.731E-13  1.960E-13  4.272E-14  9.084E-15  1.883E-15  3.337E-16
+  11   1.282E-08  1.843E-08  2.489E-08  2.680E-08  2.325E-08  1.584E-08  8.839E-09  4.167E-09  1.704E-09  6.185E-10  2.031E-10
+       6.133E-11  1.724E-11  4.563E-12  1.147E-12  2.756E-13  6.379E-14  1.431E-14  3.122E-15  6.624E-16  1.181E-16
+  12   2.208E-09  3.094E-09  4.064E-09  4.351E-09  3.815E-09  2.666E-09  1.539E-09  7.547E-10  3.220E-10  1.221E-10  4.188E-11
+       1.320E-11  3.868E-12  1.065E-12  2.779E-13  6.924E-14  1.656E-14  3.828E-15  8.591E-16  1.868E-16  3.358E-17
+  13   3.251E-10  4.454E-10  5.711E-10  6.076E-10  5.372E-10  3.838E-10  2.285E-10  1.162E-10  5.153E-11  2.035E-11  7.275E-12
+       2.388E-12  7.282E-13  2.084E-13  5.645E-14  1.457E-14  3.605E-15  8.594E-16  1.984E-16  4.431E-17  8.035E-18
+  14   4.239E-11  5.695E-11  7.149E-11  7.561E-11  6.730E-11  4.903E-11  3.001E-11  1.577E-11  7.254E-12  2.976E-12  1.106E-12
+       3.773E-13  1.196E-13  3.552E-14  9.975E-15  2.666E-15  6.821E-16  1.679E-16  3.993E-17  9.156E-18  1.676E-18
+  15   5.542E-12  7.304E-12  8.988E-12  9.446E-12  8.460E-12  6.279E-12  3.949E-12  2.144E-12  1.023E-12  4.361E-13  1.686E-13
+       5.989E-14  1.975E-14  6.103E-15  1.781E-15  4.940E-16  1.310E-16  3.340E-17  8.212E-18  1.940E-18  3.591E-19
+
+                     CONCENTRATIONS   IN LAYER  2 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   3.639E-11  4.888E-11  6.134E-11  6.484E-11  5.771E-11  4.204E-11  2.573E-11  1.350E-11  6.199E-12  2.533E-12  9.353E-13
+       3.165E-13  9.923E-14  2.912E-14  8.063E-15  2.123E-15  5.345E-16  1.294E-16  3.027E-17  6.831E-18  1.222E-18
+   2   2.947E-10  4.046E-10  5.197E-10  5.532E-10  4.888E-10  3.487E-10  2.071E-10  1.049E-10  4.632E-11  1.817E-11  6.441E-12
+       2.092E-12  6.302E-13  1.779E-13  4.746E-14  1.206E-14  2.935E-15  6.881E-16  1.564E-16  3.437E-17  6.111E-18
+   3   2.392E-09  3.360E-09  4.425E-09  4.741E-09  4.154E-09  2.897E-09  1.668E-09  8.147E-10  3.458E-10  1.303E-10  4.434E-11
+       1.384E-11  4.010E-12  1.091E-12  2.809E-13  6.901E-14  1.628E-14  3.711E-15  8.215E-16  1.763E-16  3.122E-17
+   4   1.729E-08  2.493E-08  3.378E-08  3.641E-08  3.156E-08  2.145E-08  1.192E-08  5.595E-09  2.275E-09  8.202E-10  2.672E-10
+       7.993E-11  2.224E-11  5.820E-12  1.445E-12  3.431E-13  7.849E-14  1.740E-14  3.752E-15  7.878E-16  1.390E-16
+   5   1.074E-07  1.595E-07  2.234E-07  2.421E-07  2.069E-07  1.364E-07  7.294E-08  3.273E-08  1.270E-08  4.366E-09  1.357E-09
+       3.881E-10  1.035E-10  2.601E-11  6.223E-12  1.428E-12  3.171E-13  6.835E-14  1.439E-14  2.952E-15  5.191E-16
+   6   5.420E-07  8.335E-07  1.213E-06  1.320E-06  1.108E-06  7.053E-07  3.608E-07  1.542E-07  5.682E-08  1.856E-08  5.491E-09
+       1.498E-09  3.822E-10  9.227E-11  2.127E-11  4.730E-12  1.019E-12  2.143E-13  4.402E-14  8.827E-15  1.546E-15
+   7   2.013E-06  3.221E-06  4.901E-06  5.339E-06  4.381E-06  2.678E-06  1.305E-06  5.286E-07  1.845E-07  5.712E-08  1.607E-08
+       4.183E-09  1.023E-09  2.374E-10  5.299E-11  1.144E-11  2.405E-12  4.936E-13  9.910E-14  1.945E-14  3.393E-15
+   8   4.378E-06  7.307E-06  1.167E-05  1.268E-05  1.012E-05  5.924E-06  2.749E-06  1.058E-06  3.509E-07  1.036E-07  2.792E-08
+       6.995E-09  1.654E-09  3.737E-10  8.149E-11  1.726E-11  3.565E-12  7.197E-13  1.423E-13  2.752E-14  4.787E-15
+   9   2.013E-06  3.221E-06  4.901E-06  5.339E-06  4.381E-06  2.677E-06  1.304E-06  5.285E-07  1.845E-07  5.714E-08  1.608E-08
+       4.188E-09  1.025E-09  2.382E-10  5.322E-11  1.150E-11  2.421E-12  4.975E-13  1.000E-13  1.966E-14  3.438E-15
+  10   5.420E-07  8.335E-07  1.213E-06  1.320E-06  1.108E-06  7.052E-07  3.607E-07  1.541E-07  5.683E-08  1.857E-08  5.500E-09
+       1.503E-09  3.842E-10  9.298E-11  2.149E-11  4.793E-12  1.036E-12  2.184E-13  4.499E-14  9.050E-15  1.594E-15
+  11   1.073E-07  1.595E-07  2.233E-07  2.420E-07  2.068E-07  1.364E-07  7.289E-08  3.272E-08  1.270E-08  4.370E-09  1.361E-09
+       3.903E-10  1.044E-10  2.637E-11  6.339E-12  1.462E-12  3.262E-13  7.068E-14  1.495E-14  3.083E-15  5.467E-16
+  12   1.727E-08  2.490E-08  3.374E-08  3.637E-08  3.152E-08  2.142E-08  1.191E-08  5.590E-09  2.275E-09  8.217E-10  2.685E-10
+       8.065E-11  2.256E-11  5.942E-12  1.486E-12  3.556E-13  8.195E-14  1.831E-14  3.979E-15  8.414E-16  1.502E-16
+  13   2.385E-09  3.351E-09  4.414E-09  4.730E-09  4.144E-09  2.891E-09  1.664E-09  8.135E-10  3.459E-10  1.306E-10  4.465E-11
+       1.402E-11  4.092E-12  1.123E-12  2.920E-13  7.250E-14  1.729E-14  3.984E-15  8.915E-16  1.934E-16  3.480E-17
+  14   2.930E-10  4.024E-10  5.172E-10  5.508E-10  4.869E-10  3.474E-10  2.064E-10  1.047E-10  4.632E-11  1.824E-11  6.503E-12
+       2.128E-12  6.474E-13  1.848E-13  4.993E-14  1.286E-14  3.175E-15  7.553E-16  1.741E-16  3.881E-17  7.047E-18
+  15   3.604E-11  4.843E-11  6.084E-11  6.438E-11  5.734E-11  4.180E-11  2.560E-11  1.346E-11  6.199E-12  2.546E-12  9.473E-13
+       3.237E-13  1.027E-13  3.057E-14  8.600E-15  2.303E-15  5.903E-16  1.456E-16  3.469E-17  7.969E-18  1.462E-18
+
+                     CONCENTRATIONS   IN LAYER  3 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   2.330E-10  3.193E-10  4.092E-10  4.353E-10  3.849E-10  2.751E-10  1.639E-10  8.330E-11  3.692E-11  1.455E-11  5.179E-12
+       1.690E-12  5.115E-13  1.451E-13  3.889E-14  9.925E-15  2.427E-15  5.716E-16  1.305E-16  2.879E-17  5.126E-18
+   2   2.005E-09  2.816E-09  3.707E-09  3.972E-09  3.480E-09  2.428E-09  1.398E-09  6.832E-10  2.901E-10  1.094E-10  3.724E-11
+       1.163E-11  3.373E-12  9.180E-13  2.366E-13  5.817E-14  1.373E-14  3.133E-15  6.940E-16  1.491E-16  2.639E-17
+   3   1.728E-08  2.492E-08  3.376E-08  3.640E-08  3.154E-08  2.144E-08  1.192E-08  5.592E-09  2.274E-09  8.197E-10  2.670E-10
+       7.986E-11  2.222E-11  5.813E-12  1.443E-12  3.426E-13  7.836E-14  1.737E-14  3.745E-15  7.862E-16  1.387E-16
+   4   1.332E-07  1.979E-07  2.773E-07  3.006E-07  2.569E-07  1.693E-07  9.045E-08  4.057E-08  1.572E-08  5.400E-09  1.677E-09
+       4.791E-10  1.276E-10  3.204E-11  7.654E-12  1.755E-12  3.891E-13  8.379E-14  1.762E-14  3.611E-15  6.349E-16
+   5   8.859E-07  1.364E-06  1.988E-06  2.163E-06  1.815E-06  1.154E-06  5.894E-07  2.514E-07  9.243E-08  3.011E-08  8.883E-09
+       2.416E-09  6.146E-10  1.479E-10  3.399E-11  7.537E-12  1.620E-12  3.396E-13  6.956E-14  1.391E-14  2.435E-15
+   6   4.818E-06  7.735E-06  1.181E-05  1.287E-05  1.054E-05  6.423E-06  3.116E-06  1.256E-06  4.359E-07  1.341E-07  3.746E-08
+       9.683E-09  2.350E-09  5.417E-10  1.201E-10  2.576E-11  5.383E-12  1.098E-12  2.190E-13  4.270E-14  7.436E-15
+   7   1.938E-05  3.267E-05  5.278E-05  5.729E-05  4.548E-05  2.635E-05  1.207E-05  4.573E-06  1.491E-06  4.318E-07  1.141E-07
+       2.801E-08  6.494E-09  1.441E-09  3.089E-10  6.441E-11  1.309E-11  2.601E-12  5.058E-13  9.629E-14  1.668E-14
+   8   4.561E-05  8.126E-05  1.401E-04  1.503E-04  1.146E-04  6.288E-05  2.710E-05  9.650E-06  2.963E-06  8.126E-07  2.045E-07
+       4.816E-08  1.079E-08  2.329E-09  4.878E-10  9.953E-11  1.983E-11  3.864E-12  7.382E-13  1.382E-13  2.386E-14
+   9   1.938E-05  3.267E-05  5.278E-05  5.729E-05  4.548E-05  2.635E-05  1.207E-05  4.573E-06  1.491E-06  4.319E-07  1.141E-07
+       2.804E-08  6.503E-09  1.444E-09  3.098E-10  6.462E-11  1.315E-11  2.614E-12  5.088E-13  9.696E-14  1.683E-14
+  10   4.818E-06  7.735E-06  1.181E-05  1.287E-05  1.054E-05  6.423E-06  3.116E-06  1.256E-06  4.360E-07  1.342E-07  3.751E-08
+       9.706E-09  2.359E-09  5.447E-10  1.210E-10  2.600E-11  5.442E-12  1.112E-12  2.223E-13  4.345E-14  7.598E-15
+  11   8.858E-07  1.364E-06  1.988E-06  2.163E-06  1.815E-06  1.154E-06  5.893E-07  2.514E-07  9.246E-08  3.015E-08  8.907E-09
+       2.428E-09  6.193E-10  1.495E-10  3.448E-11  7.672E-12  1.655E-12  3.481E-13  7.157E-14  1.437E-14  2.533E-15
+  12   1.331E-07  1.978E-07  2.772E-07  3.004E-07  2.568E-07  1.692E-07  9.042E-08  4.057E-08  1.574E-08  5.413E-09  1.685E-09
+       4.829E-10  1.292E-10  3.260E-11  7.833E-12  1.806E-12  4.028E-13  8.725E-14  1.845E-14  3.804E-15  6.754E-16
+  13   1.725E-08  2.488E-08  3.372E-08  3.636E-08  3.151E-08  2.142E-08  1.191E-08  5.592E-09  2.277E-09  8.226E-10  2.689E-10
+       8.083E-11  2.263E-11  5.963E-12  1.492E-12  3.574E-13  8.242E-14  1.843E-14  4.008E-15  8.480E-16  1.516E-16
+  14   1.998E-09  2.807E-09  3.698E-09  3.964E-09  3.474E-09  2.424E-09  1.397E-09  6.832E-10  2.907E-10  1.099E-10  3.762E-11
+       1.183E-11  3.458E-12  9.504E-13  2.476E-13  6.157E-14  1.471E-14  3.395E-15  7.609E-16  1.653E-16  2.982E-17
+  15   2.317E-10  3.175E-10  4.074E-10  4.338E-10  3.838E-10  2.745E-10  1.636E-10  8.330E-11  3.703E-11  1.465E-11  5.252E-12
+       1.729E-12  5.288E-13  1.518E-13  4.126E-14  1.069E-14  2.654E-15  6.352E-16  1.472E-16  3.298E-17  6.009E-18
+
+                     CONCENTRATIONS   IN LAYER  4 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   1.276E-09  1.787E-09  2.346E-09  2.511E-09  2.203E-09  1.541E-09  8.905E-10  4.371E-10  1.866E-10  7.073E-11  2.423E-11
+       7.613E-12  2.222E-12  6.086E-13  1.579E-13  3.906E-14  9.278E-15  2.129E-15  4.745E-16  1.025E-16  1.818E-17
+   2   1.170E-08  1.685E-08  2.282E-08  2.459E-08  2.132E-08  1.450E-08  8.069E-09  3.791E-09  1.544E-09  5.575E-10  1.819E-10
+       5.453E-11  1.520E-11  3.986E-12  9.920E-13  2.360E-13  5.410E-14  1.202E-14  2.597E-15  5.462E-16  9.640E-17
+   3   1.074E-07  1.596E-07  2.235E-07  2.422E-07  2.070E-07  1.365E-07  7.299E-08  3.276E-08  1.271E-08  4.370E-09  1.359E-09
+       3.886E-10  1.036E-10  2.606E-11  6.234E-12  1.431E-12  3.177E-13  6.851E-14  1.442E-14  2.960E-15  5.205E-16
+   4   8.867E-07  1.365E-06  1.989E-06  2.165E-06  1.817E-06  1.155E-06  5.900E-07  2.516E-07  9.254E-08  3.015E-08  8.898E-09
+       2.421E-09  6.160E-10  1.483E-10  3.408E-11  7.560E-12  1.625E-12  3.408E-13  6.983E-14  1.397E-14  2.445E-15
+   5   6.359E-06  1.022E-05  1.561E-05  1.701E-05  1.393E-05  8.482E-06  4.111E-06  1.655E-06  5.736E-07  1.762E-07  4.915E-08
+       1.268E-08  3.073E-09  7.071E-10  1.566E-10  3.354E-11  6.997E-12  1.425E-12  2.838E-13  5.526E-14  9.620E-15
+   6   3.755E-05  6.351E-05  1.029E-04  1.117E-04  8.851E-05  5.115E-05  2.334E-05  8.806E-06  2.856E-06  8.230E-07  2.161E-07
+       5.277E-08  1.216E-08  2.686E-09  5.728E-10  1.188E-10  2.404E-11  4.750E-12  9.189E-13  1.740E-13  3.011E-14
+   7   1.654E-04  2.977E-04  5.190E-04  5.560E-04  4.213E-04  2.287E-04  9.734E-05  3.413E-05  1.030E-05  2.774E-06  6.849E-07
+       1.583E-07  3.489E-08  7.414E-09  1.530E-09  3.075E-10  6.033E-11  1.158E-11  2.178E-12  4.018E-13  6.902E-14
+   8   4.278E-04  8.298E-04  1.586E-03  1.654E-03  1.175E-03  5.943E-04  2.345E-04  7.623E-05  2.143E-05  5.420E-06  1.269E-06
+       2.811E-07  5.990E-08  1.238E-08  2.487E-09  4.875E-10  9.345E-11  1.755E-11  3.235E-12  5.858E-13  1.001E-13
+   9   1.654E-04  2.977E-04  5.190E-04  5.560E-04  4.213E-04  2.287E-04  9.733E-05  3.413E-05  1.030E-05  2.774E-06  6.850E-07
+       1.583E-07  3.490E-08  7.419E-09  1.531E-09  3.079E-10  6.043E-11  1.160E-11  2.184E-12  4.030E-13  6.930E-14
+  10   3.756E-05  6.351E-05  1.029E-04  1.117E-04  8.851E-05  5.115E-05  2.334E-05  8.805E-06  2.856E-06  8.232E-07  2.163E-07
+       5.284E-08  1.219E-08  2.693E-09  5.749E-10  1.194E-10  2.417E-11  4.783E-12  9.265E-13  1.757E-13  3.047E-14
+  11   6.359E-06  1.022E-05  1.561E-05  1.701E-05  1.393E-05  8.481E-06  4.111E-06  1.655E-06  5.738E-07  1.764E-07  4.923E-08
+       1.272E-08  3.087E-09  7.119E-10  1.579E-10  3.390E-11  7.087E-12  1.447E-12  2.889E-13  5.640E-14  9.868E-15
+  12   8.865E-07  1.365E-06  1.989E-06  2.165E-06  1.817E-06  1.155E-06  5.900E-07  2.517E-07  9.261E-08  3.021E-08  8.928E-09
+       2.435E-09  6.214E-10  1.501E-10  3.463E-11  7.712E-12  1.665E-12  3.503E-13  7.208E-14  1.448E-14  2.555E-15
+  13   1.073E-07  1.595E-07  2.234E-07  2.421E-07  2.070E-07  1.365E-07  7.299E-08  3.278E-08  1.273E-08  4.384E-09  1.367E-09
+       3.923E-10  1.051E-10  2.657E-11  6.395E-12  1.477E-12  3.300E-13  7.161E-14  1.516E-14  3.132E-15  5.569E-16
+  14   1.168E-08  1.683E-08  2.279E-08  2.458E-08  2.131E-08  1.449E-08  8.069E-09  3.794E-09  1.547E-09  5.602E-10  1.835E-10
+       5.529E-11  1.552E-11  4.100E-12  1.029E-12  2.471E-13  5.714E-14  1.281E-14  2.794E-15  5.927E-16  1.061E-16
+  15   1.272E-09  1.782E-09  2.341E-09  2.508E-09  2.200E-09  1.540E-09  8.906E-10  4.377E-10  1.873E-10  7.125E-11  2.454E-11
+       7.765E-12  2.286E-12  6.327E-13  1.660E-13  4.158E-14  1.000E-14  2.324E-15  5.245E-16  1.147E-16  2.074E-17
+
+                     CONCENTRATIONS   IN LAYER  5 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   5.647E-09  8.104E-09  1.093E-08  1.177E-08  1.022E-08  6.973E-09  3.901E-09  1.844E-09  7.562E-10  2.752E-10  9.055E-11
+       2.737E-11  7.697E-12  2.036E-12  5.112E-13  1.227E-13  2.836E-14  6.352E-15  1.383E-15  2.931E-16  5.182E-17
+   2   5.531E-08  8.203E-08  1.147E-07  1.242E-07  1.063E-07  7.018E-08  3.760E-08  1.693E-08  6.588E-09  2.273E-09  7.096E-10
+       2.038E-10  5.458E-11  1.378E-11  3.313E-12  7.638E-13  1.703E-13  3.688E-14  7.795E-15  1.606E-15  2.827E-16
+   3   5.434E-07  8.355E-07  1.216E-06  1.323E-06  1.111E-06  7.071E-07  3.618E-07  1.547E-07  5.704E-08  1.864E-08  5.518E-09
+       1.506E-09  3.846E-10  9.292E-11  2.143E-11  4.770E-12  1.029E-12  2.164E-13  4.449E-14  8.930E-15  1.565E-15
+   4   4.829E-06  7.751E-06  1.183E-05  1.289E-05  1.056E-05  6.438E-06  3.125E-06  1.260E-06  4.375E-07  1.347E-07  3.765E-08
+       9.737E-09  2.365E-09  5.456E-10  1.211E-10  2.599E-11  5.435E-12  1.109E-12  2.215E-13  4.323E-14  7.530E-15
+   5   3.760E-05  6.358E-05  1.030E-04  1.118E-04  8.861E-05  5.122E-05  2.338E-05  8.821E-06  2.862E-06  8.251E-07  2.168E-07
+       5.295E-08  1.221E-08  2.698E-09  5.757E-10  1.195E-10  2.418E-11  4.782E-12  9.256E-13  1.754E-13  3.035E-14
+   6   2.436E-04  4.396E-04  7.679E-04  8.224E-04  6.223E-04  3.372E-04  1.432E-04  5.005E-05  1.506E-05  4.040E-06  9.937E-07
+       2.288E-07  5.027E-08  1.065E-08  2.191E-09  4.390E-10  8.587E-11  1.643E-11  3.080E-12  5.665E-13  9.722E-14
+   7   1.192E-03  2.337E-03  4.514E-03  4.697E-03  3.308E-03  1.658E-03  6.462E-04  2.071E-04  5.731E-05  1.425E-05  3.279E-06
+       7.156E-07  1.505E-07  3.068E-08  6.084E-09  1.177E-09  2.225E-10  4.121E-11  7.493E-12  1.339E-12  2.278E-13
+   8   3.466E-03  7.558E-03  1.679E-02  1.644E-02  1.043E-02  4.752E-03  1.680E-03  4.904E-04  1.248E-04  2.893E-05  6.309E-06
+       1.324E-06  2.689E-07  5.305E-08  1.020E-08  1.918E-09  3.530E-10  6.381E-11  1.134E-11  1.985E-12  3.354E-13
+   9   1.192E-03  2.337E-03  4.514E-03  4.697E-03  3.308E-03  1.658E-03  6.462E-04  2.071E-04  5.731E-05  1.425E-05  3.278E-06
+       7.155E-07  1.505E-07  3.068E-08  6.084E-09  1.177E-09  2.225E-10  4.122E-11  7.495E-12  1.339E-12  2.280E-13
+  10   2.437E-04  4.396E-04  7.679E-04  8.224E-04  6.223E-04  3.372E-04  1.431E-04  5.005E-05  1.506E-05  4.039E-06  9.938E-07
+       2.289E-07  5.029E-08  1.066E-08  2.193E-09  4.396E-10  8.601E-11  1.646E-11  3.088E-12  5.683E-13  9.763E-14
+  11   3.761E-05  6.358E-05  1.030E-04  1.118E-04  8.861E-05  5.121E-05  2.337E-05  8.820E-06  2.862E-06  8.252E-07  2.169E-07
+       5.302E-08  1.223E-08  2.705E-09  5.778E-10  1.200E-10  2.432E-11  4.816E-12  9.334E-13  1.772E-13  3.073E-14
+  12   4.829E-06  7.751E-06  1.183E-05  1.289E-05  1.056E-05  6.438E-06  3.125E-06  1.260E-06  4.376E-07  1.348E-07  3.771E-08
+       9.767E-09  2.376E-09  5.494E-10  1.222E-10  2.628E-11  5.508E-12  1.127E-12  2.256E-13  4.416E-14  7.732E-15
+  13   5.432E-07  8.354E-07  1.216E-06  1.322E-06  1.111E-06  7.071E-07  3.618E-07  1.547E-07  5.708E-08  1.867E-08  5.538E-09
+       1.515E-09  3.882E-10  9.411E-11  2.179E-11  4.870E-12  1.055E-12  2.228E-13  4.600E-14  9.275E-15  1.638E-15
+  14   5.527E-08  8.199E-08  1.146E-07  1.242E-07  1.063E-07  7.018E-08  3.761E-08  1.694E-08  6.599E-09  2.281E-09  7.140E-10
+       2.058E-10  5.538E-11  1.407E-11  3.402E-12  7.894E-13  1.772E-13  3.864E-14  8.217E-15  1.705E-15  3.034E-16
+  15   5.639E-09  8.096E-09  1.092E-08  1.176E-08  1.021E-08  6.973E-09  3.902E-09  1.846E-09  7.584E-10  2.767E-10  9.143E-11
+       2.779E-11  7.869E-12  2.099E-12  5.316E-13  1.289E-13  3.006E-14  6.801E-15  1.496E-15  3.197E-16  5.740E-17
+
+                     CONCENTRATIONS   IN LAYER  6 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   1.836E-08  2.706E-08  3.758E-08  4.067E-08  3.487E-08  2.317E-08  1.252E-08  5.689E-09  2.240E-09  7.823E-10  2.474E-10
+       7.204E-11  1.956E-11  5.011E-12  1.222E-12  2.855E-13  6.450E-14  1.415E-14  3.025E-15  6.305E-16  1.113E-16
+   2   1.923E-07  2.945E-07  4.269E-07  4.641E-07  3.904E-07  2.495E-07  1.283E-07  5.520E-08  2.050E-08  6.754E-09  2.017E-09
+       5.557E-10  1.432E-10  3.494E-11  8.135E-12  1.827E-12  3.975E-13  8.431E-14  1.748E-14  3.538E-15  6.210E-16
+   3   2.027E-06  3.241E-06  4.928E-06  5.369E-06  4.407E-06  2.695E-06  1.314E-06  5.332E-07  1.864E-07  5.780E-08  1.629E-08
+       4.248E-09  1.041E-09  2.422E-10  5.416E-11  1.172E-11  2.468E-12  5.077E-13  1.021E-13  2.009E-14  3.507E-15
+   4   1.949E-05  3.284E-05  5.301E-05  5.755E-05  4.570E-05  2.650E-05  1.215E-05  4.608E-06  1.504E-06  4.365E-07  1.155E-07
+       2.842E-08  6.602E-09  1.468E-09  3.153E-10  6.587E-11  1.342E-11  2.672E-12  5.208E-13  9.938E-14  1.723E-14
+   5   1.660E-04  2.988E-04  5.205E-04  5.577E-04  4.227E-04  2.296E-04  9.779E-05  3.433E-05  1.037E-05  2.797E-06  6.916E-07
+       1.601E-07  3.535E-08  7.523E-09  1.555E-09  3.131E-10  6.154E-11  1.183E-11  2.230E-12  4.123E-13  7.087E-14
+   6   1.195E-03  2.341E-03  4.521E-03  4.704E-03  3.314E-03  1.661E-03  6.480E-04  2.078E-04  5.756E-05  1.432E-05  3.299E-06
+       7.208E-07  1.517E-07  3.097E-08  6.149E-09  1.191E-09  2.254E-10  4.181E-11  7.612E-12  1.362E-12  2.319E-13
+   7   6.628E-03  1.459E-02  3.271E-02  3.188E-02  2.008E-02  9.077E-03  3.178E-03  9.174E-04  2.307E-04  5.280E-05  1.139E-05
+       2.367E-06  4.763E-07  9.311E-08  1.774E-08  3.302E-09  6.022E-10  1.078E-10  1.898E-11  3.292E-12  5.547E-13
+   8   2.240E-02  5.822E-02  0.167      0.139      7.420E-02  2.907E-02  8.940E-03  2.298E-03  5.247E-04  1.121E-04  2.308E-05
+       4.591E-06  8.869E-07  1.669E-07  3.070E-08  5.534E-09  9.796E-10  1.706E-10  2.930E-11  4.965E-12  8.302E-13
+   9   6.628E-03  1.459E-02  3.271E-02  3.188E-02  2.008E-02  9.076E-03  3.178E-03  9.173E-04  2.307E-04  5.279E-05  1.138E-05
+       2.367E-06  4.763E-07  9.311E-08  1.774E-08  3.302E-09  6.022E-10  1.078E-10  1.898E-11  3.292E-12  5.547E-13
+  10   1.195E-03  2.341E-03  4.521E-03  4.704E-03  3.314E-03  1.661E-03  6.479E-04  2.078E-04  5.755E-05  1.432E-05  3.299E-06
+       7.208E-07  1.517E-07  3.097E-08  6.149E-09  1.191E-09  2.254E-10  4.182E-11  7.615E-12  1.363E-12  2.320E-13
+  11   1.661E-04  2.988E-04  5.205E-04  5.577E-04  4.227E-04  2.296E-04  9.777E-05  3.432E-05  1.037E-05  2.797E-06  6.917E-07
+       1.602E-07  3.536E-08  7.528E-09  1.557E-09  3.135E-10  6.165E-11  1.186E-11  2.237E-12  4.138E-13  7.122E-14
+  12   1.949E-05  3.284E-05  5.301E-05  5.755E-05  4.569E-05  2.650E-05  1.214E-05  4.607E-06  1.504E-06  4.366E-07  1.156E-07
+       2.846E-08  6.617E-09  1.473E-09  3.167E-10  6.622E-11  1.351E-11  2.693E-12  5.258E-13  1.005E-13  1.747E-14
+  13   2.027E-06  3.241E-06  4.928E-06  5.369E-06  4.407E-06  2.695E-06  1.314E-06  5.332E-07  1.864E-07  5.786E-08  1.632E-08
+       4.263E-09  1.046E-09  2.440E-10  5.471E-11  1.187E-11  2.506E-12  5.168E-13  1.043E-13  2.058E-14  3.612E-15
+  14   1.923E-07  2.945E-07  4.268E-07  4.641E-07  3.904E-07  2.495E-07  1.283E-07  5.522E-08  2.053E-08  6.770E-09  2.025E-09
+       5.595E-10  1.447E-10  3.543E-11  8.288E-12  1.869E-12  4.087E-13  8.706E-14  1.813E-14  3.689E-15  6.531E-16
+  15   1.835E-08  2.705E-08  3.758E-08  4.066E-08  3.487E-08  2.317E-08  1.252E-08  5.695E-09  2.244E-09  7.856E-10  2.492E-10
+       7.286E-11  1.989E-11  5.128E-12  1.259E-12  2.963E-13  6.744E-14  1.490E-14  3.209E-15  6.737E-16  1.203E-16
+
+                     CONCENTRATIONS   IN LAYER  7 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   3.592E-08  5.425E-08  7.748E-08  8.408E-08  7.118E-08  4.610E-08  2.415E-08  1.062E-08  4.042E-09  1.368E-09  4.202E-10
+       1.192E-10  3.162E-11  7.939E-12  1.902E-12  4.382E-13  9.782E-14  2.123E-14  4.501E-15  9.311E-16  1.643E-16
+   2   3.987E-07  6.301E-07  9.464E-07  1.030E-06  8.506E-07  5.263E-07  2.606E-07  1.077E-07  3.843E-08  1.219E-08  3.520E-09
+       9.409E-10  2.363E-10  5.634E-11  1.288E-11  2.849E-12  6.119E-13  1.283E-13  2.634E-14  5.281E-15  9.264E-16
+   3   4.478E-06  7.455E-06  1.188E-05  1.290E-05  1.031E-05  6.053E-06  2.817E-06  1.089E-06  3.629E-07  1.077E-07  2.919E-08
+       7.360E-09  1.751E-09  3.980E-10  8.729E-11  1.859E-11  3.860E-12  7.837E-13  1.558E-13  3.030E-14  5.281E-15
+   4   4.644E-05  8.253E-05  1.420E-04  1.523E-04  1.164E-04  6.397E-05  2.766E-05  9.889E-06  3.051E-06  8.412E-07  2.129E-07
+       5.045E-08  1.137E-08  2.467E-09  5.196E-10  1.066E-10  2.135E-11  4.186E-12  8.044E-13  1.515E-13  2.620E-14
+   5   4.336E-04  8.391E-04  1.600E-03  1.669E-03  1.188E-03  6.021E-04  2.382E-04  7.774E-05  2.196E-05  5.582E-06  1.314E-06
+       2.926E-07  6.265E-08  1.301E-08  2.628E-09  5.178E-10  9.978E-11  1.884E-11  3.493E-12  6.362E-13  1.089E-13
+   6   3.498E-03  7.612E-03  1.688E-02  1.653E-02  1.050E-02  4.795E-03  1.700E-03  4.979E-04  1.273E-04  2.964E-05  6.491E-06
+       1.368E-06  2.789E-07  5.529E-08  1.068E-08  2.017E-09  3.732E-10  6.778E-11  1.211E-11  2.130E-12  3.606E-13
+   7   2.252E-02  5.843E-02  0.168      0.139      7.446E-02  2.922E-02  9.006E-03  2.321E-03  5.319E-04  1.140E-04  2.353E-05
+       4.696E-06  9.100E-07  1.718E-07  3.172E-08  5.737E-09  1.019E-09  1.782E-10  3.072E-11  5.225E-12  8.748E-13
+   8   9.324E-02  0.324       1.59      0.837      0.331      0.105      2.707E-02  6.055E-03  1.270E-03  2.563E-04  5.002E-05
+       9.482E-06  1.753E-06  3.170E-07  5.626E-08  9.819E-09  1.688E-09  2.865E-10  4.804E-11  7.971E-12  1.323E-12
+   9   2.252E-02  5.844E-02  0.168      0.139      7.445E-02  2.922E-02  9.005E-03  2.321E-03  5.318E-04  1.140E-04  2.353E-05
+       4.696E-06  9.099E-07  1.718E-07  3.172E-08  5.737E-09  1.019E-09  1.782E-10  3.072E-11  5.225E-12  8.747E-13
+  10   3.498E-03  7.614E-03  1.688E-02  1.653E-02  1.050E-02  4.794E-03  1.699E-03  4.978E-04  1.272E-04  2.963E-05  6.490E-06
+       1.367E-06  2.789E-07  5.528E-08  1.068E-08  2.017E-09  3.731E-10  6.778E-11  1.211E-11  2.130E-12  3.606E-13
+  11   4.337E-04  8.392E-04  1.600E-03  1.669E-03  1.188E-03  6.020E-04  2.382E-04  7.773E-05  2.196E-05  5.581E-06  1.313E-06
+       2.926E-07  6.265E-08  1.301E-08  2.628E-09  5.180E-10  9.983E-11  1.886E-11  3.496E-12  6.369E-13  1.091E-13
+  12   4.645E-05  8.255E-05  1.420E-04  1.523E-04  1.164E-04  6.396E-05  2.765E-05  9.887E-06  3.050E-06  8.411E-07  2.129E-07
+       5.048E-08  1.138E-08  2.471E-09  5.206E-10  1.069E-10  2.142E-11  4.203E-12  8.082E-13  1.524E-13  2.639E-14
+  13   4.479E-06  7.456E-06  1.188E-05  1.290E-05  1.031E-05  6.052E-06  2.817E-06  1.089E-06  3.629E-07  1.078E-07  2.922E-08
+       7.375E-09  1.757E-09  3.998E-10  8.784E-11  1.873E-11  3.897E-12  7.925E-13  1.578E-13  3.077E-14  5.382E-15
+  14   3.987E-07  6.301E-07  9.464E-07  1.030E-06  8.506E-07  5.262E-07  2.606E-07  1.077E-07  3.846E-08  1.221E-08  3.530E-09
+       9.455E-10  2.380E-10  5.691E-11  1.305E-11  2.896E-12  6.240E-13  1.313E-13  2.705E-14  5.445E-15  9.612E-16
+  15   3.592E-08  5.425E-08  7.748E-08  8.408E-08  7.118E-08  4.611E-08  2.416E-08  1.063E-08  4.050E-09  1.372E-09  4.226E-10
+       1.202E-10  3.204E-11  8.085E-12  1.948E-12  4.513E-13  1.013E-13  2.212E-14  4.716E-15  9.813E-16  1.749E-16
+
+                     CONCENTRATIONS   IN LAYER  8 AT END OF TRANSPORT STEP    8, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   2.372E-08  3.478E-08  4.802E-08  5.191E-08  4.463E-08  2.981E-08  1.622E-08  7.431E-09  2.951E-09  1.040E-09  3.320E-10
+       9.756E-11  2.674E-11  6.912E-12  1.700E-12  4.004E-13  9.113E-14  2.013E-14  4.330E-15  9.079E-16  1.610E-16
+   2   2.452E-07  3.732E-07  5.370E-07  5.835E-07  4.925E-07  3.168E-07  1.642E-07  7.130E-08  2.675E-08  8.900E-09  2.685E-09
+       7.470E-10  1.944E-10  4.786E-11  1.124E-11  2.543E-12  5.575E-13  1.190E-13  2.482E-14  5.053E-15  8.910E-16
+   3   2.549E-06  4.045E-06  6.102E-06  6.646E-06  5.479E-06  3.376E-06  1.662E-06  6.812E-07  2.407E-07  7.549E-08  2.151E-08
+       5.668E-09  1.402E-09  3.294E-10  7.424E-11  1.618E-11  3.431E-12  7.101E-13  1.438E-13  2.845E-14  4.987E-15
+   4   2.415E-05  4.034E-05  6.448E-05  7.005E-05  5.594E-05  3.273E-05  1.516E-05  5.819E-06  1.923E-06  5.648E-07  1.512E-07
+       3.762E-08  8.828E-09  1.980E-09  4.283E-10  9.009E-11  1.848E-11  3.702E-12  7.263E-13  1.394E-13  2.425E-14
+   5   2.025E-04  3.606E-04  6.207E-04  6.663E-04  5.089E-04  2.793E-04  1.204E-04  4.283E-05  1.312E-05  3.585E-06  8.977E-07
+       2.102E-07  4.682E-08  1.004E-08  2.091E-09  4.240E-10  8.391E-11  1.624E-11  3.081E-12  5.730E-13  9.877E-14
+   6   1.433E-03  2.770E-03  5.271E-03  5.501E-03  3.923E-03  1.990E-03  7.868E-04  2.562E-04  7.205E-05  1.819E-05  4.245E-06
+       9.371E-07  1.989E-07  4.093E-08  8.190E-09  1.598E-09  3.047E-10  5.690E-11  1.043E-11  1.877E-12  3.203E-13
+   7   7.798E-03  1.689E-02  3.712E-02  3.646E-02  2.328E-02  1.068E-02  3.805E-03  1.118E-03  2.859E-04  6.643E-05  1.450E-05
+       3.043E-06  6.181E-07  1.219E-07  2.343E-08  4.397E-09  8.082E-10  1.458E-10  2.585E-11  4.511E-12  7.618E-13
+   8   2.583E-02  6.573E-02  0.183      0.154      8.423E-02  3.366E-02  1.057E-02  2.771E-03  6.447E-04  1.394E-04  2.903E-05
+       5.840E-06  1.140E-06  2.168E-07  4.026E-08  7.323E-09  1.307E-09  2.296E-10  3.972E-11  6.777E-12  1.136E-12
+   9   7.799E-03  1.689E-02  3.712E-02  3.646E-02  2.328E-02  1.068E-02  3.804E-03  1.118E-03  2.859E-04  6.643E-05  1.450E-05
+       3.043E-06  6.180E-07  1.219E-07  2.342E-08  4.397E-09  8.082E-10  1.458E-10  2.585E-11  4.511E-12  7.618E-13
+  10   1.433E-03  2.771E-03  5.270E-03  5.501E-03  3.923E-03  1.990E-03  7.867E-04  2.562E-04  7.204E-05  1.819E-05  4.245E-06
+       9.370E-07  1.989E-07  4.093E-08  8.189E-09  1.598E-09  3.046E-10  5.690E-11  1.043E-11  1.877E-12  3.202E-13
+  11   2.026E-04  3.606E-04  6.207E-04  6.663E-04  5.089E-04  2.793E-04  1.204E-04  4.283E-05  1.312E-05  3.585E-06  8.976E-07
+       2.102E-07  4.682E-08  1.004E-08  2.091E-09  4.240E-10  8.392E-11  1.625E-11  3.082E-12  5.732E-13  9.881E-14
+  12   2.416E-05  4.034E-05  6.448E-05  7.005E-05  5.594E-05  3.273E-05  1.516E-05  5.818E-06  1.923E-06  5.648E-07  1.512E-07
+       3.764E-08  8.835E-09  1.982E-09  4.290E-10  9.025E-11  1.852E-11  3.713E-12  7.286E-13  1.400E-13  2.437E-14
+  13   2.549E-06  4.046E-06  6.102E-06  6.646E-06  5.479E-06  3.377E-06  1.662E-06  6.813E-07  2.408E-07  7.555E-08  2.154E-08
+       5.681E-09  1.407E-09  3.308E-10  7.466E-11  1.629E-11  3.458E-12  7.168E-13  1.453E-13  2.880E-14  5.061E-15
+  14   2.452E-07  3.732E-07  5.370E-07  5.835E-07  4.925E-07  3.168E-07  1.643E-07  7.135E-08  2.678E-08  8.920E-09  2.694E-09
+       7.511E-10  1.959E-10  4.834E-11  1.139E-11  2.583E-12  5.678E-13  1.215E-13  2.540E-14  5.187E-15  9.195E-16
+  15   2.372E-08  3.478E-08  4.802E-08  5.192E-08  4.463E-08  2.982E-08  1.623E-08  7.442E-09  2.959E-09  1.045E-09  3.344E-10
+       9.858E-11  2.712E-11  7.042E-12  1.740E-12  4.120E-13  9.423E-14  2.091E-14  4.521E-15  9.523E-16  1.702E-16
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    8, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.5401737E-09
+                                                WELLS:    1250.000                    0.000000    
+                                MASS STORAGE (SOLUTE):    0.000000                   -1250.000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    1250.000       LB          -1250.000       LB
+
+                                                          NET (IN - OUT):   0.6103516E-03
+                                                   DISCREPANCY (PERCENT):   0.4882813E-04
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   9 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  10 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  11 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  12 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  13 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  14 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  15 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  16 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+  MAXIMUM CONCENTRATION CHANGES FOR EACH ITERATION:
+  MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL
+ ------------------------------------------------------------------------------------------------------------------------------------
+   0.1601E-01 (  7,  8,  3)  0.3055E-05 (  8,  8,  2)  0.9313E-09 (  8,  9,  1)
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   16
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   50.00000     DAY
+ .....................................................................
+
+                     CONCENTRATIONS   IN LAYER  1 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   6.420E-10  9.136E-10  1.239E-09  1.496E-09  1.586E-09  1.492E-09  1.225E-09  8.867E-10  5.697E-10  3.276E-10  1.700E-10
+       8.032E-11  3.483E-11  1.397E-11  5.223E-12  1.831E-12  6.055E-13  1.900E-13  5.680E-14  1.611E-14  3.653E-15
+   2   3.547E-09  5.109E-09  7.027E-09  8.564E-09  9.093E-09  8.520E-09  6.920E-09  4.926E-09  3.100E-09  1.740E-09  8.796E-10
+       4.038E-10  1.700E-10  6.610E-11  2.394E-11  8.131E-12  2.606E-12  7.927E-13  2.299E-13  6.341E-14  1.424E-14
+   3   2.007E-08  2.925E-08  4.079E-08  5.016E-08  5.331E-08  4.971E-08  3.991E-08  2.795E-08  1.723E-08  9.450E-09  4.654E-09
+       2.079E-09  8.501E-10  3.211E-10  1.129E-10  3.722E-11  1.158E-11  3.424E-12  9.658E-13  2.595E-13  5.778E-14
+   4   1.002E-07  1.478E-07  2.093E-07  2.597E-07  2.759E-07  2.558E-07  2.027E-07  1.394E-07  8.408E-08  4.496E-08  2.155E-08
+       9.350E-09  3.711E-09  1.359E-09  4.636E-10  1.483E-10  4.480E-11  1.287E-11  3.529E-12  9.244E-13  2.039E-13
+   5   4.251E-07  6.356E-07  9.151E-07  1.146E-06  1.217E-06  1.120E-06  8.740E-07  5.890E-07  3.469E-07  1.806E-07  8.407E-08
+       3.539E-08  1.361E-08  4.833E-09  1.597E-09  4.954E-10  1.453E-10  4.052E-11  1.081E-11  2.762E-12  6.037E-13
+   6   1.458E-06  2.212E-06  3.242E-06  4.100E-06  4.338E-06  3.957E-06  3.036E-06  2.001E-06  1.149E-06  5.815E-07  2.627E-07
+       1.072E-07  3.995E-08  1.374E-08  4.401E-09  1.324E-09  3.771E-10  1.023E-10  2.660E-11  6.633E-12  1.437E-12
+   7   3.708E-06  5.710E-06  8.526E-06  1.088E-05  1.145E-05  1.033E-05  7.775E-06  5.009E-06  2.802E-06  1.379E-06  6.049E-07
+       2.395E-07  8.664E-08  2.893E-08  9.007E-09  2.637E-09  7.321E-10  1.939E-10  4.931E-11  1.205E-11  2.594E-12
+   8   5.875E-06  9.164E-06  1.391E-05  1.785E-05  1.867E-05  1.665E-05  1.233E-05  7.790E-06  4.268E-06  2.056E-06  8.826E-07
+       3.422E-07  1.213E-07  3.971E-08  1.214E-08  3.498E-09  9.564E-10  2.500E-10  6.281E-11  1.520E-11  3.258E-12
+   9   3.708E-06  5.710E-06  8.526E-06  1.088E-05  1.145E-05  1.033E-05  7.775E-06  5.009E-06  2.802E-06  1.379E-06  6.049E-07
+       2.395E-07  8.664E-08  2.893E-08  9.009E-09  2.638E-09  7.324E-10  1.940E-10  4.935E-11  1.207E-11  2.598E-12
+  10   1.458E-06  2.212E-06  3.242E-06  4.100E-06  4.338E-06  3.957E-06  3.036E-06  2.001E-06  1.149E-06  5.814E-07  2.627E-07
+       1.072E-07  3.995E-08  1.374E-08  4.402E-09  1.325E-09  3.775E-10  1.025E-10  2.665E-11  6.650E-12  1.442E-12
+  11   4.251E-07  6.356E-07  9.151E-07  1.146E-06  1.216E-06  1.120E-06  8.739E-07  5.890E-07  3.469E-07  1.806E-07  8.407E-08
+       3.539E-08  1.362E-08  4.835E-09  1.598E-09  4.960E-10  1.455E-10  4.063E-11  1.085E-11  2.774E-12  6.073E-13
+  12   1.001E-07  1.477E-07  2.092E-07  2.596E-07  2.759E-07  2.558E-07  2.027E-07  1.394E-07  8.406E-08  4.495E-08  2.154E-08
+       9.350E-09  3.712E-09  1.360E-09  4.641E-10  1.486E-10  4.493E-11  1.292E-11  3.548E-12  9.306E-13  2.058E-13
+  13   2.007E-08  2.924E-08  4.078E-08  5.015E-08  5.329E-08  4.970E-08  3.990E-08  2.794E-08  1.723E-08  9.448E-09  4.653E-09
+       2.079E-09  8.505E-10  3.214E-10  1.131E-10  3.732E-11  1.163E-11  3.443E-12  9.730E-13  2.620E-13  5.850E-14
+  14   3.545E-09  5.106E-09  7.022E-09  8.559E-09  9.088E-09  8.516E-09  6.916E-09  4.924E-09  3.099E-09  1.740E-09  8.795E-10
+       4.039E-10  1.701E-10  6.621E-11  2.400E-11  8.163E-12  2.621E-12  7.988E-13  2.322E-13  6.423E-14  1.448E-14
+  15   6.412E-10  9.125E-10  1.237E-09  1.494E-09  1.584E-09  1.491E-09  1.224E-09  8.860E-10  5.693E-10  3.274E-10  1.700E-10
+       8.035E-11  3.487E-11  1.400E-11  5.242E-12  1.841E-12  6.101E-13  1.919E-13  5.756E-14  1.639E-14  3.732E-15
+
+                     CONCENTRATIONS   IN LAYER  2 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   3.022E-09  4.352E-09  5.985E-09  7.294E-09  7.744E-09  7.257E-09  5.894E-09  4.196E-09  2.642E-09  1.483E-09  7.498E-10
+       3.444E-10  1.450E-10  5.641E-11  2.044E-11  6.946E-12  2.227E-12  6.780E-13  1.968E-13  5.431E-14  1.220E-14
+   2   1.757E-08  2.564E-08  3.582E-08  4.409E-08  4.685E-08  4.367E-08  3.501E-08  2.447E-08  1.506E-08  8.235E-09  4.043E-09
+       1.800E-09  7.338E-10  2.762E-10  9.676E-11  3.179E-11  9.860E-12  2.904E-12  8.165E-13  2.187E-13  4.864E-14
+   3   1.045E-07  1.544E-07  2.190E-07  2.722E-07  2.892E-07  2.679E-07  2.119E-07  1.454E-07  8.741E-08  4.658E-08  2.223E-08
+       9.607E-09  3.795E-09  1.384E-09  4.696E-10  1.495E-10  4.493E-11  1.284E-11  3.505E-12  9.137E-13  2.012E-13
+   4   5.490E-07  8.227E-07  1.188E-06  1.490E-06  1.581E-06  1.454E-06  1.132E-06  7.602E-07  4.459E-07  2.311E-07  1.070E-07
+       4.479E-08  1.713E-08  6.042E-09  1.984E-09  6.112E-10  1.780E-10  4.933E-11  1.308E-11  3.319E-12  7.237E-13
+   5   2.463E-06  3.748E-06  5.513E-06  6.986E-06  7.387E-06  6.727E-06  5.142E-06  3.374E-06  1.926E-06  9.682E-07  4.342E-07
+       1.758E-07  6.495E-08  2.214E-08  7.025E-09  2.094E-09  5.906E-10  1.587E-10  4.087E-11  1.010E-11  2.181E-12
+   6   8.963E-06  1.387E-05  2.084E-05  2.666E-05  2.802E-05  2.520E-05  1.885E-05  1.205E-05  6.678E-06  3.252E-06  1.410E-06
+       5.512E-07  1.967E-07  6.474E-08  1.986E-08  5.728E-09  1.566E-09  4.086E-10  1.024E-10  2.468E-11  5.282E-12
+   7   2.421E-05  3.817E-05  5.868E-05  7.567E-05  7.886E-05  6.972E-05  5.091E-05  3.166E-05  1.701E-05  8.020E-06  3.363E-06
+       1.271E-06  4.386E-07  1.397E-07  4.154E-08  1.163E-08  3.094E-09  7.870E-10  1.927E-10  4.550E-11  9.672E-12
+   8   4.039E-05  6.482E-05  1.019E-04  1.319E-04  1.360E-04  1.180E-04  8.420E-05  5.110E-05  2.677E-05  1.230E-05  5.027E-06
+       1.854E-06  6.247E-07  1.947E-07  5.672E-08  1.560E-08  4.081E-09  1.023E-09  2.473E-10  5.780E-11  1.225E-11
+   9   2.421E-05  3.817E-05  5.868E-05  7.567E-05  7.886E-05  6.972E-05  5.091E-05  3.166E-05  1.701E-05  8.020E-06  3.363E-06
+       1.271E-06  4.386E-07  1.397E-07  4.155E-08  1.163E-08  3.095E-09  7.873E-10  1.928E-10  4.553E-11  9.682E-12
+  10   8.963E-06  1.387E-05  2.084E-05  2.666E-05  2.802E-05  2.520E-05  1.885E-05  1.205E-05  6.678E-06  3.252E-06  1.410E-06
+       5.512E-07  1.967E-07  6.474E-08  1.986E-08  5.730E-09  1.567E-09  4.090E-10  1.025E-10  2.473E-11  5.295E-12
+  11   2.463E-06  3.748E-06  5.513E-06  6.986E-06  7.387E-06  6.727E-06  5.142E-06  3.374E-06  1.926E-06  9.681E-07  4.342E-07
+       1.758E-07  6.495E-08  2.214E-08  7.029E-09  2.096E-09  5.914E-10  1.590E-10  4.098E-11  1.013E-11  2.191E-12
+  12   5.490E-07  8.227E-07  1.188E-06  1.490E-06  1.581E-06  1.453E-06  1.132E-06  7.601E-07  4.459E-07  2.310E-07  1.070E-07
+       4.480E-08  1.713E-08  6.045E-09  1.986E-09  6.122E-10  1.784E-10  4.948E-11  1.313E-11  3.336E-12  7.289E-13
+  13   1.044E-07  1.543E-07  2.190E-07  2.721E-07  2.892E-07  2.679E-07  2.119E-07  1.453E-07  8.740E-08  4.658E-08  2.223E-08
+       9.609E-09  3.797E-09  1.385E-09  4.703E-10  1.498E-10  4.509E-11  1.290E-11  3.526E-12  9.208E-13  2.033E-13
+  14   1.757E-08  2.563E-08  3.581E-08  4.407E-08  4.684E-08  4.366E-08  3.500E-08  2.447E-08  1.505E-08  8.234E-09  4.044E-09
+       1.801E-09  7.344E-10  2.766E-10  9.699E-11  3.190E-11  9.908E-12  2.923E-12  8.234E-13  2.211E-13  4.933E-14
+  15   3.020E-09  4.349E-09  5.981E-09  7.290E-09  7.740E-09  7.253E-09  5.892E-09  4.195E-09  2.641E-09  1.483E-09  7.499E-10
+       3.446E-10  1.452E-10  5.653E-11  2.051E-11  6.980E-12  2.242E-12  6.840E-13  1.991E-13  5.510E-14  1.243E-14
+
+                     CONCENTRATIONS   IN LAYER  3 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   1.441E-08  2.099E-08  2.927E-08  3.599E-08  3.824E-08  3.566E-08  2.864E-08  2.007E-08  1.238E-08  6.794E-09  3.349E-09
+       1.498E-09  6.131E-10  2.319E-10  8.163E-11  2.696E-11  8.403E-12  2.488E-12  7.030E-13  1.893E-13  4.216E-14
+   2   8.798E-08  1.300E-07  1.844E-07  2.291E-07  2.434E-07  2.255E-07  1.784E-07  1.224E-07  7.366E-08  3.927E-08  1.876E-08
+       8.111E-09  3.207E-09  1.170E-09  3.976E-10  1.267E-10  3.812E-11  1.090E-11  2.980E-12  7.777E-13  1.713E-13
+   3   5.483E-07  8.217E-07  1.186E-06  1.488E-06  1.579E-06  1.452E-06  1.130E-06  7.593E-07  4.453E-07  2.307E-07  1.068E-07
+       4.472E-08  1.710E-08  6.030E-09  1.979E-09  6.097E-10  1.775E-10  4.918E-11  1.303E-11  3.307E-12  7.211E-13
+   4   3.033E-06  4.617E-06  6.796E-06  8.614E-06  9.108E-06  8.292E-06  6.335E-06  4.154E-06  2.369E-06  1.190E-06  5.329E-07
+       2.155E-07  7.950E-08  2.706E-08  8.573E-09  2.551E-09  7.182E-10  1.926E-10  4.952E-11  1.222E-11  2.636E-12
+   5   1.439E-05  2.229E-05  3.354E-05  4.294E-05  4.512E-05  4.054E-05  3.028E-05  1.932E-05  1.068E-05  5.187E-06  2.242E-06
+       8.736E-07  3.105E-07  1.018E-07  3.110E-08  8.931E-09  2.431E-09  6.314E-10  1.575E-10  3.780E-11  8.076E-12
+   6   5.564E-05  8.799E-05  1.358E-04  1.753E-04  1.825E-04  1.610E-04  1.171E-04  7.244E-05  3.871E-05  1.813E-05  7.545E-06
+       2.829E-06  9.675E-07  3.054E-07  8.991E-08  2.493E-08  6.564E-09  1.653E-09  4.008E-10  9.379E-11  1.988E-11
+   7   1.605E-04  2.599E-04  4.130E-04  5.362E-04  5.503E-04  4.733E-04  3.338E-04  1.997E-04  1.029E-04  4.643E-05  1.860E-05
+       6.715E-06  2.213E-06  6.738E-07  1.917E-07  5.150E-08  1.317E-08  3.230E-09  7.644E-10  1.754E-10  3.696E-11
+   8   2.844E-04  4.725E-04  7.751E-04  1.005E-03  1.014E-03  8.432E-04  5.777E-04  3.350E-04  1.674E-04  7.320E-05  2.847E-05
+       9.984E-06  3.202E-06  9.513E-07  2.647E-07  6.971E-08  1.752E-08  4.233E-09  9.889E-10  2.246E-10  4.718E-11
+   9   1.605E-04  2.599E-04  4.130E-04  5.362E-04  5.503E-04  4.733E-04  3.338E-04  1.997E-04  1.029E-04  4.643E-05  1.860E-05
+       6.715E-06  2.213E-06  6.738E-07  1.917E-07  5.150E-08  1.317E-08  3.231E-09  7.646E-10  1.755E-10  3.698E-11
+  10   5.564E-05  8.799E-05  1.358E-04  1.753E-04  1.825E-04  1.610E-04  1.171E-04  7.244E-05  3.871E-05  1.813E-05  7.544E-06
+       2.829E-06  9.675E-07  3.054E-07  8.992E-08  2.494E-08  6.567E-09  1.654E-09  4.012E-10  9.390E-11  1.992E-11
+  11   1.439E-05  2.229E-05  3.354E-05  4.294E-05  4.512E-05  4.054E-05  3.028E-05  1.932E-05  1.068E-05  5.187E-06  2.242E-06
+       8.736E-07  3.105E-07  1.018E-07  3.111E-08  8.936E-09  2.433E-09  6.322E-10  1.577E-10  3.788E-11  8.101E-12
+  12   3.033E-06  4.617E-06  6.796E-06  8.614E-06  9.107E-06  8.291E-06  6.335E-06  4.153E-06  2.369E-06  1.190E-06  5.329E-07
+       2.155E-07  7.952E-08  2.707E-08  8.578E-09  2.553E-09  7.193E-10  1.931E-10  4.967E-11  1.226E-11  2.650E-12
+  13   5.483E-07  8.216E-07  1.186E-06  1.488E-06  1.579E-06  1.452E-06  1.130E-06  7.592E-07  4.453E-07  2.307E-07  1.068E-07
+       4.472E-08  1.710E-08  6.034E-09  1.982E-09  6.108E-10  1.780E-10  4.935E-11  1.310E-11  3.326E-12  7.268E-13
+  14   8.796E-08  1.300E-07  1.844E-07  2.290E-07  2.434E-07  2.255E-07  1.784E-07  1.224E-07  7.366E-08  3.927E-08  1.876E-08
+       8.114E-09  3.210E-09  1.172E-09  3.983E-10  1.270E-10  3.827E-11  1.096E-11  3.000E-12  7.844E-13  1.733E-13
+  15   1.441E-08  2.099E-08  2.926E-08  3.597E-08  3.823E-08  3.566E-08  2.864E-08  2.006E-08  1.238E-08  6.795E-09  3.350E-09
+       1.498E-09  6.138E-10  2.323E-10  8.186E-11  2.706E-11  8.450E-12  2.506E-12  7.098E-13  1.915E-13  4.282E-14
+
+                     CONCENTRATIONS   IN LAYER  4 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   5.866E-08  8.647E-08  1.223E-07  1.517E-07  1.612E-07  1.495E-07  1.186E-07  8.163E-08  4.932E-08  2.642E-08  1.269E-08
+       5.520E-09  2.197E-09  8.071E-10  2.761E-10  8.863E-11  2.687E-11  7.746E-12  2.133E-12  5.608E-13  1.239E-13
+   2   3.765E-07  5.637E-07  8.130E-07  1.020E-06  1.082E-06  9.950E-07  7.754E-07  5.214E-07  3.063E-07  1.590E-07  7.377E-08
+       3.095E-08  1.186E-08  4.196E-09  1.382E-09  4.269E-10  1.247E-10  3.467E-11  9.221E-12  2.347E-12  5.125E-13
+   3   2.467E-06  3.754E-06  5.522E-06  6.997E-06  7.398E-06  6.738E-06  5.151E-06  3.380E-06  1.929E-06  9.701E-07  4.351E-07
+       1.762E-07  6.511E-08  2.220E-08  7.047E-09  2.101E-09  5.927E-10  1.593E-10  4.104E-11  1.014E-11  2.191E-12
+   4   1.442E-05  2.234E-05  3.361E-05  4.303E-05  4.522E-05  4.063E-05  3.036E-05  1.937E-05  1.071E-05  5.202E-06  2.249E-06
+       8.767E-07  3.118E-07  1.023E-07  3.125E-08  8.978E-09  2.445E-09  6.354E-10  1.586E-10  3.808E-11  8.138E-12
+   5   7.276E-05  1.151E-04  1.778E-04  2.297E-04  2.391E-04  2.107E-04  1.531E-04  9.464E-05  5.051E-05  2.361E-05  9.812E-06
+       3.672E-06  1.253E-06  3.948E-07  1.160E-07  3.209E-08  8.430E-09  2.119E-09  5.125E-10  1.197E-10  2.536E-11
+   6   3.018E-04  4.901E-04  7.813E-04  1.015E-03  1.040E-03  8.927E-04  6.272E-04  3.736E-04  1.916E-04  8.594E-05  3.423E-05
+       1.227E-05  4.014E-06  1.213E-06  3.425E-07  9.128E-08  2.316E-08  5.638E-09  1.324E-09  3.020E-10  6.350E-11
+   7   9.413E-04  1.580E-03  2.623E-03  3.401E-03  3.412E-03  2.807E-03  1.898E-03  1.084E-03  5.327E-04  2.288E-04  8.726E-05
+       2.998E-05  9.407E-06  2.733E-06  7.437E-07  1.916E-07  4.715E-08  1.116E-08  2.563E-09  5.728E-10  1.198E-10
+   8   1.805E-03  3.157E-03  5.520E-03  7.031E-03  6.820E-03  5.347E-03  3.465E-03  1.900E-03  8.977E-04  3.715E-04  1.367E-04
+       4.544E-05  1.383E-05  3.908E-06  1.038E-06  2.618E-07  6.326E-08  1.475E-08  3.345E-09  7.396E-10  1.545E-10
+   9   9.413E-04  1.580E-03  2.623E-03  3.401E-03  3.412E-03  2.807E-03  1.898E-03  1.084E-03  5.327E-04  2.288E-04  8.726E-05
+       2.998E-05  9.407E-06  2.733E-06  7.437E-07  1.916E-07  4.716E-08  1.117E-08  2.564E-09  5.729E-10  1.199E-10
+  10   3.018E-04  4.901E-04  7.813E-04  1.015E-03  1.040E-03  8.927E-04  6.272E-04  3.736E-04  1.916E-04  8.594E-05  3.422E-05
+       1.227E-05  4.014E-06  1.213E-06  3.425E-07  9.129E-08  2.317E-08  5.639E-09  1.325E-09  3.021E-10  6.355E-11
+  11   7.277E-05  1.152E-04  1.778E-04  2.297E-04  2.391E-04  2.107E-04  1.531E-04  9.464E-05  5.050E-05  2.361E-05  9.811E-06
+       3.672E-06  1.253E-06  3.948E-07  1.160E-07  3.210E-08  8.434E-09  2.120E-09  5.130E-10  1.198E-10  2.540E-11
+  12   1.442E-05  2.234E-05  3.361E-05  4.303E-05  4.522E-05  4.063E-05  3.035E-05  1.937E-05  1.071E-05  5.202E-06  2.249E-06
+       8.767E-07  3.118E-07  1.023E-07  3.126E-08  8.984E-09  2.447E-09  6.363E-10  1.589E-10  3.817E-11  8.165E-12
+  13   2.467E-06  3.754E-06  5.522E-06  6.997E-06  7.398E-06  6.737E-06  5.151E-06  3.380E-06  1.929E-06  9.701E-07  4.351E-07
+       1.762E-07  6.513E-08  2.221E-08  7.052E-09  2.103E-09  5.937E-10  1.597E-10  4.117E-11  1.019E-11  2.203E-12
+  14   3.765E-07  5.637E-07  8.130E-07  1.019E-06  1.082E-06  9.950E-07  7.753E-07  5.214E-07  3.063E-07  1.590E-07  7.378E-08
+       3.096E-08  1.187E-08  4.199E-09  1.383E-09  4.278E-10  1.251E-10  3.480E-11  9.268E-12  2.362E-12  5.169E-13
+  15   5.865E-08  8.646E-08  1.223E-07  1.517E-07  1.612E-07  1.495E-07  1.186E-07  8.162E-08  4.932E-08  2.642E-08  1.269E-08
+       5.522E-09  2.199E-09  8.083E-10  2.767E-10  8.891E-11  2.699E-11  7.791E-12  2.149E-12  5.662E-13  1.254E-13
+
+                     CONCENTRATIONS   IN LAYER  5 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   1.932E-07  2.883E-07  4.142E-07  5.183E-07  5.500E-07  5.067E-07  3.962E-07  2.678E-07  1.582E-07  8.270E-08  3.868E-08
+       1.637E-08  6.332E-09  2.262E-09  7.524E-10  2.350E-10  6.940E-11  1.951E-11  5.246E-12  1.349E-12  2.958E-13
+   2   1.306E-06  1.983E-06  2.912E-06  3.685E-06  3.898E-06  3.553E-06  2.722E-06  1.790E-06  1.025E-06  5.175E-07  2.331E-07
+       9.485E-08  3.524E-08  1.208E-08  3.859E-09  1.158E-09  3.288E-10  8.897E-11  2.307E-11  5.741E-12  1.243E-12
+   3   9.024E-06  1.396E-05  2.097E-05  2.682E-05  2.819E-05  2.536E-05  1.898E-05  1.214E-05  6.730E-06  3.279E-06  1.423E-06
+       5.568E-07  1.989E-07  6.553E-08  2.013E-08  5.812E-09  1.591E-09  4.157E-10  1.043E-10  2.518E-11  5.391E-12
+   4   5.601E-05  8.854E-05  1.366E-04  1.763E-04  1.836E-04  1.620E-04  1.178E-04  7.296E-05  3.901E-05  1.828E-05  7.616E-06
+       2.858E-06  9.788E-07  3.094E-07  9.121E-08  2.533E-08  6.679E-09  1.685E-09  4.091E-10  9.588E-11  2.034E-11
+   5   3.029E-04  4.918E-04  7.839E-04  1.018E-03  1.044E-03  8.958E-04  6.296E-04  3.751E-04  1.925E-04  8.639E-05  3.442E-05
+       1.235E-05  4.044E-06  1.223E-06  3.457E-07  9.222E-08  2.342E-08  5.707E-09  1.342E-09  3.063E-10  6.443E-11
+   6   1.363E-03  2.293E-03  3.816E-03  4.948E-03  4.957E-03  4.070E-03  2.744E-03  1.563E-03  7.654E-04  3.275E-04  1.244E-04
+       4.255E-05  1.329E-05  3.843E-06  1.041E-06  2.669E-07  6.538E-08  1.541E-08  3.526E-09  7.850E-10  1.641E-10
+   7   4.689E-03  8.293E-03  1.469E-02  1.865E-02  1.794E-02  1.389E-02  8.879E-03  4.795E-03  2.230E-03  9.070E-04  3.278E-04
+       1.068E-04  3.187E-05  8.824E-06  2.297E-06  5.685E-07  1.349E-07  3.098E-08  6.923E-09  1.512E-09  3.151E-10
+   8   1.002E-02  1.904E-02  3.729E-02  4.457E-02  3.993E-02  2.872E-02  1.723E-02  8.813E-03  3.902E-03  1.517E-03  5.259E-04
+       1.649E-04  4.752E-05  1.276E-05  3.237E-06  7.835E-07  1.825E-07  4.131E-08  9.119E-09  1.971E-09  4.111E-10
+   9   4.689E-03  8.293E-03  1.469E-02  1.865E-02  1.794E-02  1.389E-02  8.879E-03  4.795E-03  2.230E-03  9.070E-04  3.278E-04
+       1.068E-04  3.186E-05  8.824E-06  2.297E-06  5.685E-07  1.349E-07  3.098E-08  6.923E-09  1.512E-09  3.151E-10
+  10   1.363E-03  2.293E-03  3.816E-03  4.948E-03  4.957E-03  4.069E-03  2.744E-03  1.563E-03  7.653E-04  3.275E-04  1.244E-04
+       4.255E-05  1.329E-05  3.843E-06  1.041E-06  2.669E-07  6.539E-08  1.542E-08  3.526E-09  7.851E-10  1.641E-10
+  11   3.029E-04  4.919E-04  7.839E-04  1.018E-03  1.044E-03  8.958E-04  6.295E-04  3.751E-04  1.925E-04  8.638E-05  3.442E-05
+       1.235E-05  4.043E-06  1.223E-06  3.457E-07  9.223E-08  2.343E-08  5.709E-09  1.343E-09  3.065E-10  6.448E-11
+  12   5.601E-05  8.855E-05  1.366E-04  1.763E-04  1.836E-04  1.620E-04  1.178E-04  7.295E-05  3.901E-05  1.828E-05  7.615E-06
+       2.858E-06  9.787E-07  3.094E-07  9.122E-08  2.534E-08  6.683E-09  1.686E-09  4.096E-10  9.601E-11  2.038E-11
+  13   9.024E-06  1.396E-05  2.097E-05  2.682E-05  2.819E-05  2.535E-05  1.898E-05  1.214E-05  6.729E-06  3.279E-06  1.423E-06
+       5.568E-07  1.989E-07  6.554E-08  2.013E-08  5.816E-09  1.593E-09  4.164E-10  1.045E-10  2.524E-11  5.411E-12
+  14   1.306E-06  1.983E-06  2.912E-06  3.685E-06  3.898E-06  3.553E-06  2.721E-06  1.790E-06  1.025E-06  5.175E-07  2.331E-07
+       9.486E-08  3.525E-08  1.209E-08  3.862E-09  1.159E-09  3.294E-10  8.921E-11  2.316E-11  5.767E-12  1.251E-12
+  15   1.932E-07  2.883E-07  4.142E-07  5.183E-07  5.500E-07  5.067E-07  3.962E-07  2.677E-07  1.582E-07  8.270E-08  3.868E-08
+       1.637E-08  6.336E-09  2.264E-09  7.535E-10  2.355E-10  6.963E-11  1.959E-11  5.275E-12  1.359E-12  2.986E-13
+
+                     CONCENTRATIONS   IN LAYER  6 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   4.755E-07  7.184E-07  1.048E-06  1.322E-06  1.399E-06  1.279E-06  9.858E-07  6.538E-07  3.782E-07  1.931E-07  8.810E-08
+       3.635E-08  1.371E-08  4.777E-09  1.551E-09  4.734E-10  1.368E-10  3.767E-11  9.940E-12  2.514E-12  5.478E-13
+   2   3.381E-06  5.210E-06  7.790E-06  9.942E-06  1.046E-05  9.432E-06  7.092E-06  4.562E-06  2.548E-06  1.252E-06  5.482E-07
+       2.168E-07  7.828E-08  2.610E-08  8.117E-09  2.374E-09  6.585E-10  1.743E-10  4.431E-11  1.083E-11  2.330E-12
+   3   2.465E-05  3.883E-05  5.964E-05  7.688E-05  8.015E-05  7.090E-05  5.183E-05  3.227E-05  1.738E-05  8.207E-06  3.449E-06
+       1.307E-06  4.523E-07  1.445E-07  4.311E-08  1.211E-08  3.233E-09  8.253E-10  2.027E-10  4.803E-11  1.022E-11
+   4   1.630E-04  2.638E-04  4.187E-04  5.435E-04  5.580E-04  4.803E-04  3.391E-04  2.032E-04  1.049E-04  4.743E-05  1.905E-05
+       6.896E-06  2.279E-06  6.964E-07  1.989E-07  5.361E-08  1.376E-08  3.388E-09  8.047E-10  1.853E-10  3.907E-11
+   5   9.522E-04  1.597E-03  2.649E-03  3.434E-03  3.446E-03  2.838E-03  1.921E-03  1.099E-03  5.408E-04  2.327E-04  8.894E-05
+       3.063E-05  9.639E-06  2.808E-06  7.667E-07  1.982E-07  4.892E-08  1.162E-08  2.676E-09  5.995E-10  1.255E-10
+   6   4.720E-03  8.342E-03  1.477E-02  1.875E-02  1.804E-02  1.398E-02  8.943E-03  4.835E-03  2.251E-03  9.170E-04  3.319E-04
+       1.084E-04  3.239E-05  8.987E-06  2.345E-06  5.816E-07  1.383E-07  3.182E-08  7.125E-09  1.558E-09  3.250E-10
+   7   1.837E-02  3.532E-02  7.005E-02  8.311E-02  7.375E-02  5.242E-02  3.108E-02  1.570E-02  6.865E-03  2.635E-03  9.009E-04
+       2.786E-04  7.912E-05  2.095E-05  5.244E-06  1.254E-06  2.890E-07  6.478E-08  1.418E-08  3.046E-09  6.354E-10
+   8   4.575E-02  0.101      0.252      0.249      0.189      0.119      6.462E-02  3.036E-02  1.248E-02  4.536E-03  1.476E-03
+       4.367E-04  1.194E-04  3.059E-05  7.449E-06  1.741E-06  3.946E-07  8.717E-08  1.886E-08  4.013E-09  8.373E-10
+   9   1.837E-02  3.532E-02  7.005E-02  8.311E-02  7.375E-02  5.242E-02  3.107E-02  1.570E-02  6.865E-03  2.635E-03  9.009E-04
+       2.785E-04  7.912E-05  2.095E-05  5.244E-06  1.254E-06  2.890E-07  6.478E-08  1.418E-08  3.046E-09  6.354E-10
+  10   4.720E-03  8.343E-03  1.477E-02  1.875E-02  1.804E-02  1.398E-02  8.943E-03  4.835E-03  2.251E-03  9.169E-04  3.319E-04
+       1.083E-04  3.238E-05  8.986E-06  2.345E-06  5.815E-07  1.383E-07  3.182E-08  7.125E-09  1.558E-09  3.250E-10
+  11   9.523E-04  1.597E-03  2.649E-03  3.434E-03  3.446E-03  2.837E-03  1.920E-03  1.099E-03  5.407E-04  2.327E-04  8.893E-05
+       3.063E-05  9.638E-06  2.808E-06  7.666E-07  1.981E-07  4.892E-08  1.162E-08  2.676E-09  5.997E-10  1.256E-10
+  12   1.630E-04  2.638E-04  4.187E-04  5.435E-04  5.580E-04  4.803E-04  3.391E-04  2.032E-04  1.049E-04  4.743E-05  1.905E-05
+       6.895E-06  2.279E-06  6.963E-07  1.989E-07  5.362E-08  1.376E-08  3.389E-09  8.051E-10  1.854E-10  3.911E-11
+  13   2.466E-05  3.884E-05  5.964E-05  7.688E-05  8.014E-05  7.090E-05  5.183E-05  3.227E-05  1.737E-05  8.206E-06  3.449E-06
+       1.307E-06  4.522E-07  1.445E-07  4.312E-08  1.212E-08  3.235E-09  8.260E-10  2.030E-10  4.811E-11  1.024E-11
+  14   3.381E-06  5.211E-06  7.790E-06  9.942E-06  1.046E-05  9.432E-06  7.092E-06  4.562E-06  2.548E-06  1.252E-06  5.482E-07
+       2.168E-07  7.829E-08  2.611E-08  8.121E-09  2.376E-09  6.593E-10  1.746E-10  4.442E-11  1.086E-11  2.340E-12
+  15   4.755E-07  7.185E-07  1.048E-06  1.322E-06  1.399E-06  1.279E-06  9.858E-07  6.538E-07  3.781E-07  1.931E-07  8.810E-08
+       3.636E-08  1.372E-08  4.780E-09  1.553E-09  4.742E-10  1.371E-10  3.779E-11  9.983E-12  2.528E-12  5.517E-13
+
+                     CONCENTRATIONS   IN LAYER  7 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   7.616E-07  1.161E-06  1.712E-06  2.170E-06  2.290E-06  2.080E-06  1.585E-06  1.038E-06  5.916E-07  2.976E-07  1.338E-07
+       5.439E-08  2.023E-08  6.957E-09  2.232E-09  6.739E-10  1.929E-10  5.265E-11  1.379E-11  3.465E-12  7.533E-13
+   2   5.612E-06  8.750E-06  1.327E-05  1.703E-05  1.781E-05  1.589E-05  1.177E-05  7.445E-06  4.084E-06  1.970E-06  8.475E-07
+       3.293E-07  1.170E-07  3.843E-08  1.179E-08  3.406E-09  9.345E-10  2.451E-10  6.178E-11  1.499E-11  3.218E-12
+   3   4.268E-05  6.829E-05  1.070E-04  1.384E-04  1.429E-04  1.242E-04  8.898E-05  5.424E-05  2.856E-05  1.320E-05  5.429E-06
+       2.016E-06  6.844E-07  2.150E-07  6.313E-08  1.750E-08  4.615E-09  1.166E-09  2.840E-10  6.679E-11  1.419E-11
+   4   2.979E-04  4.935E-04  8.067E-04  1.045E-03  1.057E-03  8.812E-04  6.062E-04  3.532E-04  1.774E-04  7.808E-05  3.057E-05
+       1.080E-05  3.493E-06  1.046E-06  2.937E-07  7.800E-08  1.977E-08  4.814E-09  1.133E-09  2.590E-10  5.452E-11
+   5   1.872E-03  3.262E-03  5.682E-03  7.240E-03  7.039E-03  5.538E-03  3.604E-03  1.986E-03  9.436E-04  3.929E-04  1.456E-04
+       4.876E-05  1.496E-05  4.262E-06  1.141E-06  2.903E-07  7.070E-08  1.660E-08  3.791E-09  8.430E-10  1.763E-10
+   6   1.028E-02  1.946E-02  3.795E-02  4.543E-02  4.082E-02  2.947E-02  1.776E-02  9.128E-03  4.064E-03  1.590E-03  5.546E-04
+       1.752E-04  5.085E-05  1.376E-05  3.517E-06  8.575E-07  2.011E-07  4.579E-08  1.016E-08  2.206E-09  4.601E-10
+   7   4.640E-02  0.102      0.253      0.251      0.191      0.121      6.589E-02  3.108E-02  1.284E-02  4.689E-03  1.534E-03
+       4.564E-04  1.254E-04  3.234E-05  7.918E-06  1.860E-06  4.233E-07  9.388E-08  2.037E-08  4.347E-09  9.070E-10
+   8   0.143      0.419       1.79       1.10      0.603      0.310      0.147      6.286E-02  2.403E-02  8.227E-03  2.545E-03
+       7.212E-04  1.903E-04  4.742E-05  1.129E-05  2.597E-06  5.810E-07  1.270E-07  2.725E-08  5.757E-09  1.201E-09
+   9   4.641E-02  0.102      0.253      0.251      0.191      0.121      6.589E-02  3.108E-02  1.284E-02  4.688E-03  1.534E-03
+       4.564E-04  1.254E-04  3.234E-05  7.917E-06  1.860E-06  4.233E-07  9.387E-08  2.037E-08  4.347E-09  9.070E-10
+  10   1.028E-02  1.947E-02  3.795E-02  4.542E-02  4.081E-02  2.947E-02  1.776E-02  9.127E-03  4.063E-03  1.590E-03  5.546E-04
+       1.752E-04  5.085E-05  1.376E-05  3.517E-06  8.575E-07  2.011E-07  4.578E-08  1.016E-08  2.206E-09  4.601E-10
+  11   1.872E-03  3.262E-03  5.683E-03  7.240E-03  7.039E-03  5.538E-03  3.604E-03  1.986E-03  9.434E-04  3.929E-04  1.456E-04
+       4.875E-05  1.496E-05  4.261E-06  1.141E-06  2.902E-07  7.069E-08  1.660E-08  3.791E-09  8.430E-10  1.763E-10
+  12   2.980E-04  4.936E-04  8.068E-04  1.045E-03  1.057E-03  8.812E-04  6.061E-04  3.532E-04  1.774E-04  7.807E-05  3.057E-05
+       1.080E-05  3.493E-06  1.046E-06  2.937E-07  7.800E-08  1.977E-08  4.814E-09  1.133E-09  2.591E-10  5.454E-11
+  13   4.268E-05  6.830E-05  1.070E-04  1.384E-04  1.429E-04  1.242E-04  8.897E-05  5.423E-05  2.856E-05  1.320E-05  5.428E-06
+       2.016E-06  6.843E-07  2.150E-07  6.314E-08  1.750E-08  4.617E-09  1.167E-09  2.842E-10  6.686E-11  1.421E-11
+  14   5.613E-06  8.751E-06  1.327E-05  1.703E-05  1.781E-05  1.589E-05  1.177E-05  7.444E-06  4.084E-06  1.970E-06  8.475E-07
+       3.293E-07  1.170E-07  3.844E-08  1.179E-08  3.408E-09  9.354E-10  2.454E-10  6.188E-11  1.503E-11  3.228E-12
+  15   7.617E-07  1.161E-06  1.712E-06  2.170E-06  2.290E-06  2.080E-06  1.585E-06  1.038E-06  5.916E-07  2.976E-07  1.338E-07
+       5.439E-08  2.024E-08  6.961E-09  2.234E-09  6.748E-10  1.932E-10  5.279E-11  1.383E-11  3.480E-12  7.576E-13
+
+                     CONCENTRATIONS   IN LAYER  8 AT END OF TRANSPORT STEP   16, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1          2          3          4          5          6          7          8          9         10         11
+          12         13         14         15         16         17         18         19         20         21
+ ..............................................................................................................................
+   1   6.511E-07  9.811E-07  1.426E-06  1.796E-06  1.903E-06  1.743E-06  1.347E-06  8.971E-07  5.213E-07  2.675E-07  1.227E-07
+       5.087E-08  1.929E-08  6.752E-09  2.203E-09  6.750E-10  1.958E-10  5.409E-11  1.431E-11  3.630E-12  7.919E-13
+   2   4.579E-06  7.035E-06  1.048E-05  1.335E-05  1.406E-05  1.271E-05  9.597E-06  6.204E-06  3.484E-06  1.721E-06  7.584E-07
+       3.017E-07  1.096E-07  3.674E-08  1.148E-08  3.375E-09  9.400E-10  2.498E-10  6.368E-11  1.560E-11  3.361E-12
+   3   3.301E-05  5.179E-05  7.915E-05  1.019E-04  1.064E-04  9.448E-05  6.943E-05  4.348E-05  2.356E-05  1.120E-05  4.741E-06
+       1.809E-06  6.301E-07  2.026E-07  6.079E-08  1.717E-08  4.603E-09  1.180E-09  2.907E-10  6.908E-11  1.471E-11
+   4   2.153E-04  3.467E-04  5.469E-04  7.093E-04  7.307E-04  6.319E-04  4.491E-04  2.711E-04  1.410E-04  6.426E-05  2.602E-05
+       9.491E-06  3.160E-06  9.723E-07  2.795E-07  7.577E-08  1.955E-08  4.832E-09  1.152E-09  2.658E-10  5.611E-11
+   5   1.238E-03  2.061E-03  3.391E-03  4.399E-03  4.437E-03  3.679E-03  2.512E-03  1.450E-03  7.201E-04  3.127E-04  1.206E-04
+       4.191E-05  1.330E-05  3.906E-06  1.074E-06  2.792E-07  6.930E-08  1.653E-08  3.819E-09  8.580E-10  1.797E-10
+   6   6.017E-03  1.053E-02  1.841E-02  2.346E-02  2.277E-02  1.784E-02  1.154E-02  6.306E-03  2.967E-03  1.222E-03  4.469E-04
+       1.474E-04  4.448E-05  1.245E-05  3.274E-06  8.172E-07  1.954E-07  4.514E-08  1.014E-08  2.224E-09  4.638E-10
+   7   2.288E-02  4.332E-02  8.421E-02  0.101      9.090E-02  6.564E-02  3.949E-02  2.023E-02  8.961E-03  3.483E-03  1.205E-03
+       3.770E-04  1.082E-04  2.894E-05  7.301E-06  1.757E-06  4.072E-07  9.165E-08  2.013E-08  4.334E-09  9.038E-10
+   8   5.551E-02  0.120      0.288      0.290      0.228      0.147      8.095E-02  3.869E-02  1.616E-02  5.958E-03  1.966E-03
+       5.891E-04  1.628E-04  4.215E-05  1.035E-05  2.435E-06  5.548E-07  1.231E-07  2.670E-08  5.698E-09  1.189E-09
+   9   2.288E-02  4.332E-02  8.421E-02  0.101      9.090E-02  6.564E-02  3.949E-02  2.023E-02  8.961E-03  3.483E-03  1.205E-03
+       3.770E-04  1.082E-04  2.894E-05  7.300E-06  1.757E-06  4.072E-07  9.165E-08  2.013E-08  4.334E-09  9.037E-10
+  10   6.017E-03  1.053E-02  1.841E-02  2.346E-02  2.277E-02  1.783E-02  1.153E-02  6.305E-03  2.967E-03  1.222E-03  4.469E-04
+       1.474E-04  4.448E-05  1.245E-05  3.273E-06  8.172E-07  1.954E-07  4.514E-08  1.014E-08  2.224E-09  4.638E-10
+  11   1.238E-03  2.062E-03  3.391E-03  4.399E-03  4.437E-03  3.679E-03  2.512E-03  1.450E-03  7.200E-04  3.127E-04  1.206E-04
+       4.190E-05  1.330E-05  3.905E-06  1.074E-06  2.792E-07  6.929E-08  1.653E-08  3.819E-09  8.580E-10  1.797E-10
+  12   2.154E-04  3.467E-04  5.470E-04  7.093E-04  7.307E-04  6.319E-04  4.491E-04  2.710E-04  1.410E-04  6.425E-05  2.601E-05
+       9.489E-06  3.160E-06  9.722E-07  2.794E-07  7.577E-08  1.955E-08  4.832E-09  1.152E-09  2.658E-10  5.612E-11
+  13   3.301E-05  5.180E-05  7.916E-05  1.019E-04  1.064E-04  9.448E-05  6.943E-05  4.348E-05  2.356E-05  1.120E-05  4.741E-06
+       1.809E-06  6.301E-07  2.026E-07  6.079E-08  1.717E-08  4.604E-09  1.180E-09  2.909E-10  6.913E-11  1.473E-11
+  14   4.580E-06  7.036E-06  1.048E-05  1.335E-05  1.406E-05  1.271E-05  9.596E-06  6.204E-06  3.483E-06  1.721E-06  7.584E-07
+       3.016E-07  1.096E-07  3.675E-08  1.149E-08  3.377E-09  9.407E-10  2.500E-10  6.377E-11  1.563E-11  3.369E-12
+  15   6.511E-07  9.812E-07  1.426E-06  1.796E-06  1.903E-06  1.743E-06  1.347E-06  8.971E-07  5.213E-07  2.675E-07  1.227E-07
+       5.088E-08  1.929E-08  6.756E-09  2.204E-09  6.759E-10  1.961E-10  5.422E-11  1.436E-11  3.643E-12  7.957E-13
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   16, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.8578869E-06
+                                                WELLS:    2500.000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.2301216                   -2500.230    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    2500.230       LB          -2500.230       LB
+
+                                                          NET (IN - OUT):   0.7324219E-03
+                                                   DISCREPANCY (PERCENT):   0.2929418E-04
+  ----- 
+ | M T |
+ | 3 D | END OF MODEL OUTPUT
+  ----- 

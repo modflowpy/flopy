@@ -1,0 +1,8 @@
+LIST  6 p3.lst
+BAS6         1 P3MF2K.ba6
+BCF6        11 P3MF2K.bc6
+WEL  12 p3.wel
+SIP  19 p3.sip
+OC   22 p3.oc
+LMT6  24 p3.lmt
+DIS         10 P3MF2K.dis

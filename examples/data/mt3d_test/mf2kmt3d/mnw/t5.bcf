@@ -1,0 +1,11 @@
+ 0  1.E30  0  0.0  0  0    Item 1: IBCFCB HDRY IWDFLG WETFCT IWETIT IHDWET
+ 00 00 00                  Item 2: Ltype
+ CONSTANT    1.0           Item 3: TRPY
+ CONSTANT  1.000E-04       Item 4: S, layer 1
+ CONSTANT  4.630E-02       Item 5: T, layer 1
+ CONSTANT  0.000E+00       Item 7: VC 1/2
+ CONSTANT  1.000E-04       Item 4: S, layer 2
+ CONSTANT  0.000E+00       Item 5: T, layer 2
+ CONSTANT  0.000E+00       Item 7: VC 2/3
+ CONSTANT  1.000E-04       Item 4: S, layer 3
+ CONSTANT  1.157E-02       Item 5: T, layer 3

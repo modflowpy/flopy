@@ -1,0 +1,12 @@
+#
+# HSS example input file
+#
+
+10  10  1000  NoRunHSSM     !MaxHSSSource, MaxHSSCells, MaxHSSStep, HSSOption
+1.  1.  1.                  !faclength, factime, facmass
+1                           !nHSSSource
+hss_source.dat   33         !HSSFileName, inHSSFile
+1   16   16  1  MTBE-1      !kSource,iSource,jSource,iHSSComp,SourceName
+
+
+

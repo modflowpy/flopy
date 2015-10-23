@@ -1,0 +1,206 @@
+
+ CONCENTRATION OBSERVATION OUTPUT FILE
+ =====================================
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        1
+ TOTAL ELAPSED TIME:    3.500    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ [No obs wells active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        2
+ TOTAL ELAPSED TIME:    7.000    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    6.5029E-05   no observed conc given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        3
+ TOTAL ELAPSED TIME:    10.50    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow1            27.50       77.50       -3    8    3      1    0.3135      0.5000       1.000     -0.1865    
+ ow2a           45.00       75.00        5    8    5      1    1.0214E-03  1.0000E-03   1.000      2.1441E-05
+ ow2b           45.00       75.00        4    8    5      1    7.7943E-05  1.0000E-05  0.5000      3.3971E-05
+ ow4            45.00       95.00        5   10    5      1    2.9996E-05  1.0000E-05   1.000      1.9996E-05
+
+    NUMBER OF ACTIVE OBSERVATION POINTS =     4
+                  MEAN OF RESIDUALS (M) =  -0.4660222E-01
+ STANDARD DEVIATION OF RESIDUALS (SDEV) =   0.9325471E-01
+        MEAN OF ABSOLUTE RESIDUALS (MA) =   0.4663992E-01
+      ROOT MEAN SQUARED RESIDUALS (RMS) =   0.9324214E-01
+                CORRELATION COEFFICIENT =   0.9999995    
+          PROBABILITY OF UN-CORRELATION =   0.5364417E-06
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        4
+ TOTAL ELAPSED TIME:    14.00    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    5.6439E-04   no observed conc given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        5
+ TOTAL ELAPSED TIME:    17.50    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ [No obs wells active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        6
+ TOTAL ELAPSED TIME:    21.00    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    1.9839E-03   no observed conc given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        7
+ TOTAL ELAPSED TIME:    24.50    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ [No obs wells active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        8
+ TOTAL ELAPSED TIME:    25.00    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    3.3077E-03   no observed conc given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        9
+ TOTAL ELAPSED TIME:    28.50    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ [No obs wells active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       10
+ TOTAL ELAPSED TIME:    32.00    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    6.5057E-03   no observed conc given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       11
+ TOTAL ELAPSED TIME:    35.50    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ [No obs wells active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       12
+ TOTAL ELAPSED TIME:    39.00    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    1.0560E-02   no observed conc given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       13
+ TOTAL ELAPSED TIME:    42.50    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ [No obs wells active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       14
+ TOTAL ELAPSED TIME:    46.00    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    1.5170E-02   no observed conc given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       15
+ TOTAL ELAPSED TIME:    49.50    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ [No obs wells active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       16
+ TOTAL ELAPSED TIME:    50.00    
+ ******************************
+
+ WELLID        X_GRID      Y_GRID     LAYER ROW COLUMN SPECIES  CALCULATED   OBSERVED   WEIGHT    (CAL.-OBS.)
+ ............................................................................................................
+ ow3            45.00       85.00        5    9    5      1    1.7943E-02   no observed conc given  

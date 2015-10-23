@@ -1,0 +1,198 @@
+
+ MASS FLUX OBJECT OBSERVATION OUTPUT FILE
+ ========================================
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        1
+ TOTAL ELAPSED TIME:    3.500    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        2
+ TOTAL ELAPSED TIME:    7.000    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        3
+ TOTAL ELAPSED TIME:    10.50    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+    1  WELLFLUX_t1    10.50       1         50.00       50.00       1.000      3.8147E-06
+    3  CHFLUX2_t1     10.50       1       -1.6862E-13   no observed flux given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        4
+ TOTAL ELAPSED TIME:    14.00    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        5
+ TOTAL ELAPSED TIME:    17.50    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        6
+ TOTAL ELAPSED TIME:    21.00    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        7
+ TOTAL ELAPSED TIME:    24.50    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        8
+ TOTAL ELAPSED TIME:    25.00    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+    2  CHDFLUX1_t2    25.00       1       -4.2336E-12   no observed flux given  
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:        9
+ TOTAL ELAPSED TIME:    28.50    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       10
+ TOTAL ELAPSED TIME:    32.00    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       11
+ TOTAL ELAPSED TIME:    35.50    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       12
+ TOTAL ELAPSED TIME:    39.00    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       13
+ TOTAL ELAPSED TIME:    42.50    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       14
+ TOTAL ELAPSED TIME:    46.00    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       15
+ TOTAL ELAPSED TIME:    49.50    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+ [No flux object active at current transport step]
+
+
+ ******************************
+      STRESS PERIOD:        1
+          TIME STEP:        1
+     TRANSPORT STEP:       16
+ TOTAL ELAPSED TIME:    50.00    
+ ******************************
+
+   NO. NAME            TIME   SPECIES      CALCULATED   OBSERVED   WEIGHT     (CAL.-OBS.)
+ ........................................................................................
+    1  WELLFLUX_t2    50.00       1         50.00       50.00       1.000      3.8147E-06
+    2  CHDFLUX1_t3    50.00       1       -8.3988E-09   no observed flux given  
+    3  CHFLUX2_t2     50.00       1       -1.3534E-07   no observed flux given  

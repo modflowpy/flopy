@@ -1,0 +1,6 @@
+         1    1.        100000                                    MIXELM,PERCEL,MXPART,NADVFD
+         1 0.500                                                  ITRACK,WD
+ 0.100e-04         0         0        16         2        32      DCEPS,NPLANE,NPL,NPH,NPMIN,NPMAX
+
+//TVD: use the following input
+        -1   .25                                                  MIXELM,PERCEL

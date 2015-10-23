@@ -1,0 +1,706 @@
+ LISTING FILE: p4.m3d
+                         UNIT  16
+
+ OPENING p4.btn
+ FILE TYPE:BTN   UNIT   1
+
+ OPENING p4.adv
+ FILE TYPE:ADV   UNIT   2
+
+ OPENING p4.dsp
+ FILE TYPE:DSP   UNIT   3
+
+ OPENING p4.ssm
+ FILE TYPE:SSM   UNIT   4
+
+ OPENING p4.gcg
+ FILE TYPE:GCG   UNIT   9
+
+ OPENING p4.ftl
+ FILE TYPE:FTL   UNIT  10
+
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              +                                                                     +
+                              +                               MT3DMS                                +
+                              +             A Modular 3D Multi-Species Transport Model              +
+                              +    For Simulation of Advection, Dispersion and Chemical Reactions   +
+                              +                of Contaminants in Groundwater Systems               +
+                              +                                                                     +
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ----- 
+ | M T | MT3DMS BENCHMARK TEST PROBLEM #4                                                
+ | 3 D | 2D TRANSPORT IN A DIAGONAL FLOW FIELD                                           
+  ----- 
+ THE TRANSPORT MODEL CONSISTS OF     1 LAYER(S)  100 ROW(S)  100 COLUMN(S)
+ NUMBER OF STRESS PERIOD(S) FOR TRANSPORT SIMULATION =    1
+ NUMBER OF ALL COMPONENTS INCLUDED IN SIMULATION =    1
+ NUMBER OF MOBILE COMPONENTS INCLUDED IN SIMULATION =    1
+ UNIT FOR TIME IS DAY ;  UNIT FOR LENGTH IS UNDF;  UNIT FOR MASS IS UNDF
+ OPTIONAL PACKAGES INCLUDED IN CURRENT SIMULATION:
+  o ADV   ON UNIT  2
+  o DSP   ON UNIT  3
+  o SSM   ON UNIT  4
+  o GCG   ON UNIT  9
+
+ BTN5 -- BASIC TRANSPORT PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  1
+     160400 ELEMENTS OF THE  X ARRAY USED BY THE BTN PACKAGE
+      10001 ELEMENTS OF THE IX ARRAY USED BY THE BTN PACKAGE
+
+ FMI5 -- FLOW MODEL INTERFACE PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT 10
+ FLOW MODEL IS STEADY-STATE
+ FLOW MODEL CONTAINS CONSTANT-HEAD CELLS
+
+ ADV5 -- ADVECTION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  2
+ ADVECTION IS SOLVED WITH THE [MOC] SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM =  1.00    
+ MAXIMUM NUMBER OF MOVING PARTICLES ALLOWED =  100000
+     400000 ELEMENTS OF THE  X ARRAY USED BY THE ADV PACKAGE
+     210000 ELEMENTS OF THE IX ARRAY USED BY THE ADV PACKAGE
+
+ DSP5 -- DISPERSION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  3
+     110002 ELEMENTS OF THE  X ARRAY USED BY THE DSP PACKAGE
+          0 ELEMENTS OF THE IX ARRAY USED BY THE DSP PACKAGE
+
+ SSM5 -- SINK & SOURCE MIXING PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  4
+ HEADER LINE OF THE SSM PACKAGE INPUT FILE:
+  T F F F F F                                                                                                                                                                                            
+ MAJOR STRESS COMPONENTS PRESENT IN THE FLOW MODEL:
+  o WELL [WEL]
+ MAXIMUM NUMBER OF POINT SINKS/SOURCES =    1000
+      13000 ELEMENTS OF THE  X ARRAY USED BY THE SSM PACKAGE
+          0 ELEMENTS OF THE IX ARRAY BY THE SSM PACKAGE
+
+ GCG5 -- GENERALIZED CONJUGATE GRADIENT SOLVER PACKAGE, VERSION 5, FEBRUARY 2010 INPUT READ FROM UNIT  9
+ MAXIMUM OF    1 OUTER ITERATIONS
+        AND  200 INNER ITERATIONS ALLOWED FOR CLOSURE
+ THE PRECONDITIONING TYPE SELECTED IS MODIFIED INCOMPLETE CHOLESKY (MIC).
+ DISPERSION CROSS TERMS LUMPED INTO RIGHT-HAND-SIDE
+     220200 ELEMENTS OF THE  X ARRAY USED BY THE GCG PACKAGE
+        600 ELEMENTS OF THE IX ARRAY USED BY THE GCG PACKAGE
+
+ ..........................................
+ ELEMENTS OF THE  X ARRAY USED =    903603
+ ELEMENTS OF THE IX ARRAY USED =    220602
+ ..........................................
+
+ LAYER NUMBER  AQUIFER TYPE
+ ------------  ------------
+       1            0
+                                       WIDTH ALONG ROWS (DELR)  =   10.00000    
+                                       WIDTH ALONG COLS (DELC)  =   10.00000    
+                                       TOP ELEV. OF 1ST LAYER   =   1.000000    
+                                       CELL THICKNESS (DZ)      =   1.000000     FOR LAYER  1
+                                       POROSITY                 =  0.1414000     FOR LAYER  1
+                                       CONCN. BOUNDARY ARRAY    =              1 FOR LAYER  1
+                                       INITIAL CONC.: COMP.  01 =   0.000000     FOR LAYER  1
+
+ VALUE INDICATING INACTIVE CONCENTRATION CELLS =   -999.0000    
+ MINIMUM SATURATED THICKNESS [THKMIN] ALLOWED =  0.0000 OF TOTAL CELL THICKNESS
+
+
+ OUTPUT CONTROL OPTIONS
+ ----------------------
+
+ DO NOT PRINT CELL CONCENTRATION
+ DO NOT PRINT PARTICLE NUMBER IN EACH CELL
+ DO NOT PRINT RETARDATION FACTOR
+ DO NOT PRINT DISPERSION COEFFICIENT
+ SAVE DISSOLVED PHASE CONCENTRATIONS IN UNFORMATTED FILES [MT3Dnnn.UCN]
+  FOR EACH SPECIES ON UNITS 201 AND ABOVE
+
+ NUMBER OF TIMES AT WHICH SIMULATION RESULTS ARE SAVED =   10
+ TOTAL ELAPSED TIMES AT WHICH SIMULATION RESULTS ARE SAVED: 
+    100.00       200.00       300.00       400.00       500.00       600.00       700.00       800.00    
+    900.00       1000.0    
+
+ NUMBER OF OBSERVATION POINTS =    1
+ SAVE CONCENTRATIONS AT OBSERVATION POINTS IN FILES [MT3Dnnn.OBS]
+  FOR EACH SPECIES ON UNITS 401 AND ABOVE, EVERY  1 TRANSPORT STEPS
+ LOCATION OF OBSERVATION POINTS
+ ..............................
+ NUMBER  LAYER   ROW   COLUMN
+   1        1     50     50
+
+ SAVE ONE-LINE SUMMARY OF MASS BUDGETS IN FILES [MT3Dnnn.MAS]
+  FOR EACH SPECIES ON UNITS 601 AND ABOVE, EVERY  1 TRANSPORT STEPS
+
+ MAXIMUM LENGTH ALONG THE X (J) AXIS =   1000.000    
+ MAXIMUM LENGTH ALONG THE Y (I) AXIS =   1000.000    
+ MAXIMUM LENGTH ALONG THE Z (K) AXIS =   1.000000    
+
+
+ ADVECTION SOLUTION OPTIONS
+ --------------------------
+
+ ADVECTION IS SOLVED WITH THE [MOC] SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM =  1.00    
+ MAXIMUM NUMBER OF MOVING PARTICLES ALLOWED =  100000
+ METHOD FOR PARTICLE TRACKING IS [1ST ORDER]
+ CONCENTRATION WEIGHTING FACTOR [WD] =     0.500
+ THE CONCENTRATION GRADIENT CONSIDERED NEGLIGIBLE [DCEPS] =  0.1000000E-04
+ INITIAL PARTICLES ARE PLACED RANDOMLY WITHIN CELL BLOCK
+ PARTICLE NUMBER PER CELL IF DCCELL =< DCEPS =    0
+ PARTICLE NUMBER PER CELL IF DCCELL  > DCEPS =   16
+ MINIMUM PARTICLE NUMBER ALLOWD PER CELL     =    2
+ MAXIMUM PARTICLE NUMBER ALLOWD PER CELL     =   32
+ MULTIPLIER OF PARTICLE NUMBER AT SOURCE     =  1.00    
+
+
+ DISPERSION INPUT PARAMETERS
+ ---------------------------
+
+                                       LONG. DISPERSIVITY (AL)  =   2.000000     FOR LAYER  1
+                                       H. TRANS./LONG. DISP.    =  0.1000000    
+                                       V. TRANS./LONG. DISP.    =  0.1000000E-01
+                                       DIFFUSION COEFFICIENT    =   0.000000    
+
+
+
+                                               SOLUTION BY THE GENERALIZED CONJUGATE GRADIENT METHOD
+                                               -----------------------------------------------------
+                                     MAXIMUM OUTER ITERATIONS ALLOWED FOR CLOSURE =        1
+                                     MAXIMUM INNER ITERATIONS ALLOWED FOR CLOSURE =      200
+                                                    PRECONDITIONING TYPE SELECTED =    3
+                                                           ACCELERATION PARAMETER =     1.0000    
+                                       CONCENTRATION CHANGE CRITERION FOR CLOSURE =    0.10000E-05
+                                       GCG CONCENTRATION CHANGE PRINTOUT INTERVAL =      999
+
+
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                                       STRESS PERIOD NO.  001
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+ LENGTH OF CURRENT STRESS PERIOD =   1000.000    
+ NUMBER OF TIME STEPS FOR CURRENT STRESS PERIOD =    1
+ TIME STEP MULTIPLIER USED IN FLOW SOLUTION =   1.000000    
+
+ ***Type of Transport Simulation is TRANSIENT
+
+ USER-SPECIFIED TRANSPORT STEPSIZE =   0.000000    DAY 
+ MAXIMUM NUMBER OF TRANSPORT STEPS ALLOWED  IN ONE FLOW TIME STEP =     10000
+ MULTIPLIER FOR SUCCESSIVE TRANSPORT STEPS  [USED IN IMPLICIT SCHEMES] =     1.000
+ MAXIMUM TRANSPORT STEP SIZE  [USED IN IMPLICIT SCHEMES] =   0.000000    DAY 
+
+       NO    LAYER   ROW   COLUMN   CONCENTRATION       TYPE            COMPONENT
+       1       1      80      21       1000.000         WELL                1
+
+
+                                          ================================================
+                                                         TIME STEP NO.  001
+                                          ================================================
+
+ FROM TIME =   0.0000     TO    1000.0    
+
+
+                    "THKSAT          " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QXX             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QYY             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+ MAXIMUM STEPSIZE DURING WHICH ANY PARTICLE CANNOT MOVE MORE THAN ONE CELL
+ =  14.11    (WHEN MIN. R.F.=1)  AT K=   1, I=  79, J=  21
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE ADVECTION TERM
+ (FOR PURE FINITE-DIFFERENCE OPTION, MIXELM=0) 
+ =  7.052    (WHEN MIN. R.F.=1)  AT K=   1, I=  80, J=  21
+
+                    "CNH             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "WEL             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+
+ TOTAL NUMBER OF POINT SOURCES/SINKS PRESENT IN THE FLOW MODEL =   397
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE SINK & SOURCE TERM
+ =  7.070    (WHEN MIN. R.F.=1)  AT K=   1, I= 100, J=   1
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE DISPERSION TERM
+ =  22.68    (WHEN MIN. R.F.=1)  AT K=   1, I=  79, J=  21
+
+
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   1 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     5 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   2 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   3 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   4 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   5 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   6 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   7 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   8 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    8
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   100.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =      4896
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       496
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    8, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                    0.000000    
+                                                WELLS:    1000.000                    0.000000    
+                                MASS STORAGE (SOLUTE):    52.05839                   -1090.700    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    1052.058     UNDF          -1090.700     UNDF
+
+                                                          NET (IN - OUT):   -38.64172    
+                                                   DISCREPANCY (PERCENT):   -3.606727    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   9 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  10 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  11 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  12 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  13 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  14 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  15 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  16 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   16
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   200.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =      8560
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       704
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   16, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                    0.000000    
+                                                WELLS:    1999.999                    0.000000    
+                                MASS STORAGE (SOLUTE):    295.4724                   -2302.523    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    2295.472     UNDF          -2302.523     UNDF
+
+                                                          NET (IN - OUT):   -7.051270    
+                                                   DISCREPANCY (PERCENT):  -0.3067107    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  17 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  18 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  19 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  20 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  21 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  22 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  23 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  24 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   24
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   300.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     12144
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       480
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   24, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                    0.000000    
+                                                WELLS:    2999.999                    0.000000    
+                                MASS STORAGE (SOLUTE):    602.2695                   -3617.580    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    3602.268     UNDF          -3617.580     UNDF
+
+                                                          NET (IN - OUT):   -15.31201    
+                                                   DISCREPANCY (PERCENT):  -0.4241644    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  25 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  26 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  27 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  28 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  29 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  30 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  31 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  32 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   32
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   400.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     16272
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       544
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   32, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.1377960E-35
+                                                WELLS:    3999.998                    0.000000    
+                                MASS STORAGE (SOLUTE):    985.1257                   -4987.408    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    4985.123     UNDF          -4987.408     UNDF
+
+                                                          NET (IN - OUT):   -2.285156    
+                                                   DISCREPANCY (PERCENT):  -0.4582901E-01
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  33 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  34 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  35 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  36 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  37 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  38 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  39 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  40 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   40
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   500.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     20224
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       480
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   40, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.3710833E-28
+                                                WELLS:    4999.997                    0.000000    
+                                MASS STORAGE (SOLUTE):    1456.311                   -6474.736    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    6456.308     UNDF          -6474.736     UNDF
+
+                                                          NET (IN - OUT):   -18.42871    
+                                                   DISCREPANCY (PERCENT):  -0.2850305    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  41 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  42 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  43 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  44 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  45 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  46 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  47 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  48 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   48
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   600.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     24656
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       560
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   48, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.6377556E-21
+                                                WELLS:    5999.996                    0.000000    
+                                MASS STORAGE (SOLUTE):    2010.451                   -8025.750    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    8010.447     UNDF          -8025.750     UNDF
+
+                                                          NET (IN - OUT):   -15.30322    
+                                                   DISCREPANCY (PERCENT):  -0.1908585    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  49 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  50 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  51 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  52 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  53 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  54 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  55 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  56 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   56
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   700.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     29312
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       768
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   56, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.1332661E-13
+                                                WELLS:    6999.995                    0.000000    
+                                MASS STORAGE (SOLUTE):    2647.794                   -9637.338    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    9647.788     UNDF          -9637.338     UNDF
+
+                                                          NET (IN - OUT):    10.45020    
+                                                   DISCREPANCY (PERCENT):   0.1083757    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  57 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  58 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  59 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  60 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  61 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  62 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  63 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  64 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   64
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   800.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     33648
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       720
+ PARTICLES REMOVED AT END OF LAST STEP    =         0
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   64, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.1891051E-06
+                                                WELLS:    7999.994                    0.000000    
+                                MASS STORAGE (SOLUTE):    3369.896                   -11344.02    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    11369.89     UNDF          -11344.02     UNDF
+
+                                                          NET (IN - OUT):    25.87207    
+                                                   DISCREPANCY (PERCENT):   0.2278082    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  65 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  66 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  67 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  68 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  69 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  70 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  71 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  72 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   72
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   900.0000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     37496
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       800
+ PARTICLES REMOVED AT END OF LAST STEP    =       664
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   72, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.9982712E-01
+                                                WELLS:    8999.996                    0.000000    
+                                MASS STORAGE (SOLUTE):    4119.356                   -13090.25    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    13119.35     UNDF          -13090.35     UNDF
+
+                                                          NET (IN - OUT):    29.00586    
+                                                   DISCREPANCY (PERCENT):   0.2213369    
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  73 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  74 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  75 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  76 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  77 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  78 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  79 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     4 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  80 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     3 TOTAL ITERATIONS
+  MAXIMUM CONCENTRATION CHANGES FOR EACH ITERATION:
+  MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL
+ ------------------------------------------------------------------------------------------------------------------------------------
+   0.9236E-01 (  1, 80, 21)  0.1450E-04 (  1, 81, 20)  0.2328E-08 (  1, 82, 19)
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   80
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   1000.000    DAY 
+ .....................................................................
+
+ TOTAL PARTICLES USED IN THE CURRENT STEP =     38713
+ PARTICLES ADDED AT BEGINNING OF THE STEP =       912
+ PARTICLES REMOVED AT END OF LAST STEP    =       910
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   80, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -12.41865    
+                                                WELLS:    9999.999                    0.000000    
+                                MASS STORAGE (SOLUTE):    4972.743                   -14923.84    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    14972.74     UNDF          -14936.25     UNDF
+
+                                                          NET (IN - OUT):    36.48730    
+                                                   DISCREPANCY (PERCENT):   0.2439888    
+  ----- 
+ | M T |
+ | 3 D | END OF MODEL OUTPUT
+  ----- 

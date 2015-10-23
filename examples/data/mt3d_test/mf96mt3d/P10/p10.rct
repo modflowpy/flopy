@@ -1,0 +1,13 @@
+         1         0         2         0          |ISOTHM,IREACT,IRCTOP,IGETSC
+         0       1.7                              |RHOB, g/cm^3, LAYER 1
+         0       1.7                              |RHOB, g/cm^3        2
+         0       1.7                              |RHOB, g/cm^3        3
+         0       1.7                              |RHOB, g/cm^3        4
+         0      .176                              |SP1, LAYER 1
+         0      .176                              |SP1,       2
+         0      .176                              |SP1,       3
+         0      .176                              |SP1,       4
+         0    .15e-3                              |SP2  LAYER 1
+         0    .15e-3                              |SP2        2
+         0    .15e-3                              |SP2        3
+         0    .15e-3                              |SP2        4

@@ -1,0 +1,132 @@
+MT3DMS benchmark test problem #8
+Sudicky 1989 Waterloo test problem
+        27         1        50         2         1         1
+YR  M   UNDF
+ T T T F T F F F F F
+ 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+         0 5.000E+00                                 */DELR         
+         0 5.000E+00                                 */DELC         
+         0 6.750E+00                                 */HTOP         
+         0 2.500E-01                                 */DZ            layer: 1
+         0 2.500E-01                                 */DZ            layer: 2
+         0 2.500E-01                                 */DZ            layer: 3
+         0 2.500E-01                                 */DZ            layer: 4
+         0 2.500E-01                                 */DZ            layer: 5
+         0 2.500E-01                                 */DZ            layer: 6
+         0 2.500E-01                                 */DZ            layer: 7
+         0 2.500E-01                                 */DZ            layer: 8
+         0 2.500E-01                                 */DZ            layer: 9
+         0 2.500E-01                                 */DZ            layer:10
+         0 2.500E-01                                 */DZ            layer:11
+         0 2.500E-01                                 */DZ            layer:12
+         0 2.500E-01                                 */DZ            layer:13
+         0 2.500E-01                                 */DZ            layer:14
+         0 2.500E-01                                 */DZ            layer:15
+         0 2.500E-01                                 */DZ            layer:16
+         0 2.500E-01                                 */DZ            layer:17
+         0 2.500E-01                                 */DZ            layer:18
+         0 2.500E-01                                 */DZ            layer:19
+         0 2.500E-01                                 */DZ            layer:20
+         0 2.500E-01                                 */DZ            layer:21
+         0 2.500E-01                                 */DZ            layer:22
+         0 2.500E-01                                 */DZ            layer:23
+         0 2.500E-01                                 */DZ            layer:24
+         0 2.500E-01                                 */DZ            layer:25
+         0 2.500E-01                                 */DZ            layer:26
+         0 2.500E-01                                 */DZ            layer:27
+         0 3.500E-01                                 */POROSITY      layer: 1
+         0 3.500E-01                                 */POROSITY      layer: 2
+         0 3.500E-01                                 */POROSITY      layer: 3
+         0 3.500E-01                                 */POROSITY      layer: 4
+         0 3.500E-01                                 */POROSITY      layer: 5
+         0 3.500E-01                                 */POROSITY      layer: 6
+         0 3.500E-01                                 */POROSITY      layer: 7
+         0 3.500E-01                                 */POROSITY      layer: 8
+         0 3.500E-01                                 */POROSITY      layer: 9
+         0 3.500E-01                                 */POROSITY      layer:10
+         0 3.500E-01                                 */POROSITY      layer:11
+         0 3.500E-01                                 */POROSITY      layer:12
+         0 3.500E-01                                 */POROSITY      layer:13
+         0 3.500E-01                                 */POROSITY      layer:14
+         0 3.500E-01                                 */POROSITY      layer:15
+         0 3.500E-01                                 */POROSITY      layer:16
+         0 3.500E-01                                 */POROSITY      layer:17
+         0 3.500E-01                                 */POROSITY      layer:18
+         0 3.500E-01                                 */POROSITY      layer:19
+         0 3.500E-01                                 */POROSITY      layer:20
+         0 3.500E-01                                 */POROSITY      layer:21
+         0 3.500E-01                                 */POROSITY      layer:22
+         0 3.500E-01                                 */POROSITY      layer:23
+         0 3.500E-01                                 */POROSITY      layer:24
+         0 3.500E-01                                 */POROSITY      layer:25
+         0 3.500E-01                                 */POROSITY      layer:26
+         0 3.500E-01                                 */POROSITY      layer:27
+         0        -1                                 */ICBUND        layer: 1
+         0         1                                 */ICBUND        layer: 2
+         0         1                                 */ICBUND        layer: 3
+         0         1                                 */ICBUND        layer: 4
+         0         1                                 */ICBUND        layer: 5
+         0         1                                 */ICBUND        layer: 6
+         0         1                                 */ICBUND        layer: 7
+         0         1                                 */ICBUND        layer: 8
+         0         1                                 */ICBUND        layer: 9
+         0         1                                 */ICBUND        layer:10
+         0         1                                 */ICBUND        layer:11
+         0         1                                 */ICBUND        layer:12
+         0         1                                 */ICBUND        layer:13
+         0         1                                 */ICBUND        layer:14
+         0         1                                 */ICBUND        layer:15
+         0         1                                 */ICBUND        layer:16
+         0         1                                 */ICBUND        layer:17
+         0         1                                 */ICBUND        layer:18
+         0         1                                 */ICBUND        layer:19
+         0         1                                 */ICBUND        layer:20
+         0         1                                 */ICBUND        layer:21
+         0         1                                 */ICBUND        layer:22
+         0         1                                 */ICBUND        layer:23
+         0         1                                 */ICBUND        layer:24
+         0         1                                 */ICBUND        layer:25
+         0         1                                 */ICBUND        layer:26
+         0         1                                 */ICBUND        layer:27
+       100 0.000E+00(6x,10f11.0)               -12   */StartingConc  layer: 1
+       0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000      1.000      1.000    
+        1.000      1.000      1.000      1.000      1.000      1.000     0.0000     0.0000     0.0000     0.0000    
+       0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000    
+       0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000    
+       0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000    
+         0 0.000E+00                                 */StartingConc  layer: 2
+         0 0.000E+00                                 */StartingConc  layer: 3
+         0 0.000E+00                                 */StartingConc  layer: 4
+         0 0.000E+00                                 */StartingConc  layer: 5
+         0 0.000E+00                                 */StartingConc  layer: 6
+         0 0.000E+00                                 */StartingConc  layer: 7
+         0 0.000E+00                                 */StartingConc  layer: 8
+         0 0.000E+00                                 */StartingConc  layer: 9
+         0 0.000E+00                                 */StartingConc  layer:10
+         0 0.000E+00                                 */StartingConc  layer:11
+         0 0.000E+00                                 */StartingConc  layer:12
+         0 0.000E+00                                 */StartingConc  layer:13
+         0 0.000E+00                                 */StartingConc  layer:14
+         0 0.000E+00                                 */StartingConc  layer:15
+         0 0.000E+00                                 */StartingConc  layer:16
+         0 0.000E+00                                 */StartingConc  layer:17
+         0 0.000E+00                                 */StartingConc  layer:18
+         0 0.000E+00                                 */StartingConc  layer:19
+         0 0.000E+00                                 */StartingConc  layer:20
+         0 0.000E+00                                 */StartingConc  layer:21
+         0 0.000E+00                                 */StartingConc  layer:22
+         0 0.000E+00                                 */StartingConc  layer:23
+         0 0.000E+00                                 */StartingConc  layer:24
+         0 0.000E+00                                 */StartingConc  layer:25
+         0 0.000E+00                                 */StartingConc  layer:26
+         0 0.000E+00                                 */StartingConc  layer:27
+  -999.000        0.
+         0         0         0         0         T
+         5
+  2.50      5.00      8.00      12.0      20.0    
+         0        0.
+         T        0.
+5.0000E+00         1     1.000                       */Stress Period:   1
+ 0.000         10000        1.         0
+1.5000E+01         1     1.000                       */Stress Period:   2
+ 0.000         10000        1.         0

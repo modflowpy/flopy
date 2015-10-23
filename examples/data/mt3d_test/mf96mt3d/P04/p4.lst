@@ -1,0 +1,186 @@
+ LISTING FILE: p4.lst
+                         UNIT   6
+
+ OPENING p4.bas
+ FILE TYPE:BAS   UNIT   1
+
+ OPENING p4.bcf
+ FILE TYPE:BCF   UNIT  11
+
+ OPENING p4.wel
+ FILE TYPE:WEL   UNIT  12
+
+ OPENING p4.sip
+ FILE TYPE:SIP   UNIT  19
+
+ OPENING p4.oc
+ FILE TYPE:OC   UNIT  22
+
+ OPENING p4.ftl
+ FILE TYPE:LMT   UNIT  60
+
+ OPENING p4.ufh
+ FILE TYPE:DATA(BINARY)   UNIT   3
+1                                 MODFLOW
+      U.S. GEOLOGICAL SURVEY MODULAR FINITE-DIFFERENCE GROUND-WATER FLOW MODEL
+
+ MT3DMS benchmark test problem #4                                                
+ 2D transport in a diagonal uniform flow field                                   
+    1 LAYERS       100 ROWS       100 COLUMNS
+   1 STRESS PERIOD(S) IN SIMULATION
+ MODEL TIME UNIT IS DAYS
+
+ BAS5 -- BASIC MODEL PACKAGE, VERSION 5, 1/1/95 INPUT READ FROM UNIT  1
+ ARRAYS RHS AND BUFF WILL SHARE MEMORY
+ INITIAL HEAD WILL NOT BE KEPT THROUGHOUT THE SIMULATION, WHICH MEANS
+ DRAWDOWN CANNOT BE CALCULATED
+      80204 ELEMENTS IN X ARRAY ARE USED BY BAS
+      80204 ELEMENTS OF X ARRAY USED OUT OF  999999999
+
+ BCF5 -- BLOCK-CENTERED FLOW PACKAGE, VERSION 5, 9/1/93 INPUT READ FROM UNIT 11
+ STEADY-STATE SIMULATION
+ HEAD AT CELLS THAT CONVERT TO DRY=  0.10000E+31
+ WETTING CAPABILITY IS NOT ACTIVE
+      LAYER  LAYER-TYPE CODE     INTERBLOCK T
+      --------------------------------------------
+         1            0          0 -- HARMONIC    
+          1 ELEMENTS IN X ARRAY ARE USED BY BCF
+      80205 ELEMENTS OF X ARRAY USED OUT OF  999999999
+
+ WEL5 -- WELL PACKAGE, VERSION 5, 9/1/93 INPUT READ FROM UNIT 12
+ MAXIMUM OF 1000 WELLS
+       4000 ELEMENTS IN X ARRAY ARE USED BY WEL
+      84205 ELEMENTS OF X ARRAY USED OUT OF  999999999
+
+ SIP5 -- STRONGLY IMPLICIT PROCEDURE SOLUTION PACKAGE
+                    VERSION 5, 9/1/93 INPUT READ FROM UNIT 19
+ MAXIMUM OF 100 ITERATIONS ALLOWED FOR CLOSURE
+  5 ITERATION PARAMETERS
+      40405 ELEMENTS IN X ARRAY ARE USED BY SIP
+     124610 ELEMENTS OF X ARRAY USED OUT OF  999999999
+1
+ MT3DMS benchmark test problem #4                                                
+ 2D transport in a diagonal uniform flow field                                   
+
+
+
+                     BOUNDARY ARRAY FOR LAYER   1
+ READING ON UNIT   1 WITH FORMAT: (6x,20i3)           
+
+ AQUIFER HEAD WILL BE SET TO -999.00     AT ALL NO-FLOW NODES (IBOUND=0).
+
+
+
+                       INITIAL HEAD FOR LAYER   1
+ READING ON UNIT   1 WITH FORMAT: (6x,10f11.0)        
+
+ OUTPUT CONTROL IS SPECIFIED EVERY TIME STEP
+ HEAD PRINT FORMAT CODE IS   0    DRAWDOWN PRINT FORMAT CODE IS   0
+ HEADS WILL BE SAVED ON UNIT   3    DRAWDOWNS WILL BE SAVED ON UNIT   0
+
+ COLUMN TO ROW ANISOTROPY =   1.000000    
+
+                     DELR =   10.00000    
+
+                     DELC =   10.00000    
+
+     TRANSMIS. ALONG ROWS =   10.00000     FOR LAYER   1
+
+
+
+          SOLUTION BY THE STRONGLY IMPLICIT PROCEDURE
+          -------------------------------------------
+ MAXIMUM ITERATIONS ALLOWED FOR CLOSURE =      100
+                 ACCELERATION PARAMETER =     1.0000    
+      HEAD CHANGE CRITERION FOR CLOSURE =    0.10000E-04
+      SIP HEAD CHANGE PRINTOUT INTERVAL =      999
+
+     CALCULATE ITERATION PARAMETERS FROM MODEL CALCULATED WSEED
+1
+                            STRESS PERIOD NO.   1, LENGTH =   1.000000    
+                            ----------------------------------------------
+
+                              NUMBER OF TIME STEPS =     1
+
+                               MULTIPLIER FOR DELT =     1.000
+
+                            INITIAL TIME STEP SIZE =   1.000000    
+
+
+     1 WELLS
+
+ LAYER   ROW   COL   STRESS RATE   WELL NO.
+ ------------------------------------------
+    1     80    21    0.10000E-01      1
+
+ AVERAGE SEED = 0.00024674
+ MINIMUM SEED = 0.00024674
+
+     5 ITERATION PARAMETERS CALCULATED FROM AVERAGE SEED:
+
+  0.000000E+00 0.874669E+00 0.984292E+00 0.998031E+00 0.999753E+00
+
+    11 ITERATIONS FOR TIME STEP   1 IN STRESS PERIOD  1
+
+ MAXIMUM HEAD CHANGE FOR EACH ITERATION:
+
+    HEAD CHANGE   HEAD CHANGE   HEAD CHANGE   HEAD CHANGE   HEAD CHANGE
+  LAYER,ROW,COL LAYER,ROW,COL LAYER,ROW,COL LAYER,ROW,COL LAYER,ROW,COL
+ ----------------------------------------------------------------------
+     0.3614E-03    0.1309E-03    0.1580E-03    0.1885E-03    0.1230E-03
+  (  1, 80, 21) (  1, 81, 20) (  1, 81, 22) (  1, 76, 25) (  1, 82, 33)
+     0.1488E-04   -0.3210E-04   -0.3346E-04   -0.7844E-04    0.4410E-04
+  (  1, 80, 21) (  1, 76, 26) (  1, 74, 27) (  1, 77, 31) (  1, 74, 28)
+     0.5316E-05
+  (  1, 80, 34)
+
+
+ HEAD/DRAWDOWN PRINTOUT FLAG = 1     TOTAL BUDGET PRINTOUT FLAG = 0
+ CELL-BY-CELL FLOW TERM FLAG = 0
+
+ OUTPUT FLAGS FOR ALL LAYERS ARE THE SAME:
+   HEAD    DRAWDOWN  HEAD  DRAWDOWN
+ PRINTOUT  PRINTOUT  SAVE    SAVE
+ ----------------------------------
+     0         0       1       0
+
+ SATURATED THICKNESS AND FLOW TERMS SAVED ON UNIT 60 FOR MT3D BY LINKMT3D PACKAGE 5.0
+
+ HEAD WILL BE SAVED ON UNIT   3 AT END OF TIME STEP  1, STRESS PERIOD  1
+1
+  VOLUMETRIC BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  1 IN STRESS PERIOD  1
+  -----------------------------------------------------------------------------
+
+     CUMULATIVE VOLUMES      L**3       RATES FOR THIS TIME STEP      L**3/T
+     ------------------                 ------------------------
+
+           IN:                                      IN:
+           ---                                      ---
+       CONSTANT HEAD =         195.9909         CONSTANT HEAD =         195.9909
+               WELLS =       1.0000E-02                 WELLS =       1.0000E-02
+
+            TOTAL IN =         196.0009              TOTAL IN =         196.0009
+
+          OUT:                                     OUT:
+          ----                                     ----
+       CONSTANT HEAD =         196.0008         CONSTANT HEAD =         196.0008
+               WELLS =           0.0000                 WELLS =           0.0000
+
+           TOTAL OUT =         196.0008             TOTAL OUT =         196.0008
+
+            IN - OUT =       6.6528E-05              IN - OUT =       6.6528E-05
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+
+
+          TIME SUMMARY AT END OF TIME STEP  1 IN STRESS PERIOD  1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+1
