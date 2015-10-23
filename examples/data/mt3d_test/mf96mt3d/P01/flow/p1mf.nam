@@ -1,0 +1,6 @@
+LIST 6 p1.lst
+BAS  1 p1.bas
+BCF 11 p1.bcf
+PCG 19 p1.pcg
+OC  20 p1.oc
+LMT 22 p1.ftl

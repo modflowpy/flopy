@@ -1,0 +1,10 @@
+        -1       1.0                                                     MIXELM,PERCEL
+
+
+//hmoc: use the following input
+         3       1.0    100000         1                                 MIXELM,PERCEL,MXPART,NADVFD
+         3       .50                                                     ITRACK,WD
+     1.e-5         1         0        16         2        32             DCEPS,NPL,NPH,NPMIN,NPMAX
+         1         1        16                                           INTERP,NLSINK,NPSINK
+     1.e-3                                                               DCHMOC
+

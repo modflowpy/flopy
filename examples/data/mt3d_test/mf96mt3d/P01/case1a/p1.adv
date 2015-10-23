@@ -1,0 +1,3 @@
+         1        .5     10000      1         !MIXELM,PERCEL,MXPART,NADVFD
+         1        .5                          !ITRACK,WD
+     1.E-5         1         0         4         0         8    !DCEPS,NPLANE,NPL,NPH,NPMIN,NPMAX

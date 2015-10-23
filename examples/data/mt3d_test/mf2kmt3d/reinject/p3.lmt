@@ -1,0 +1,25 @@
+#
+# EXAMPLE INPUT DATA FILE FOR THE LINK-MT3DMS (LMT6) PACKAGE
+#
+# The capital letters are keywords that must not be altered except that
+# thet can appear in either uppercase or lowercase.
+#
+# Assign any valid file name for the flow-transport link file
+# to be produced by the LMT Package. Leave the input blank to use the
+# default file name 'RootName.FTL'.
+#
+# Assign any valid integer as the unit number for the flow-transport link file.
+# Leave the input blank to use the default unit number 333.
+#
+# The valid input for the header of the flow-transport link file
+# is Standard or Extended. The default is Standard if no input is given.
+#
+# The valid input for the format of the flow-transport link file
+# is Unformatted or Formatted. The default is Unformatted if no input is given.
+#
+
+OUTPUT_FILE_NAME    
+OUTPUT_FILE_UNIT
+OUTPUT_FILE_HEADER  standard
+OUTPUT_FILE_FORMAT  unformatted
+

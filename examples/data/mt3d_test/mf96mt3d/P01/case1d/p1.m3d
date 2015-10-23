@@ -1,0 +1,455 @@
+ LISTING FILE: p1.m3d
+                         UNIT  16
+# Transport package input files                                                                                                                                                                         
+
+ OPENING p1.btn
+ FILE TYPE:BTN   UNIT   1
+
+ OPENING p1.adv
+ FILE TYPE:ADV   UNIT   2
+
+ OPENING p1.dsp
+ FILE TYPE:DSP   UNIT   3
+
+ OPENING p1.ssm
+ FILE TYPE:SSM   UNIT   4
+
+ OPENING p1.rct
+ FILE TYPE:RCT   UNIT   8
+
+ OPENING p1.gcg
+ FILE TYPE:GCG   UNIT   9
+# Flow-Transport Link input file                                                                                                                                                                        
+
+ OPENING ..\flow\p1.ftl
+ FILE TYPE:FTL   UNIT  10
+# Uncomment the following lines to override                                                                                                                                                             
+# the default names of optional MT3DMS output files                                                                                                                                                     
+# mt3d001.ucn, mt3d001s.ucn, mt3d001.obs, mt3d001.mas, mt3d.cnf.                                                                                                                                        
+# The unit numbers for these files are preset in the                                                                                                                                                    
+# MT3DMS code:                                                                                                                                                                                          
+#                                                                                                                                                                                                       
+# data(binary) 201 p1.ucn                                                                                                                                                                               
+# data(binary) 301 p1s.ucn                                                                                                                                                                              
+# data         401 p1.obs                                                                                                                                                                               
+# data         601 p1.mas                                                                                                                                                                               
+# data         17  p1.cnf                                                                                                                                                                               
+
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              +                                                                     +
+                              +                               MT3DMS                                +
+                              +             A Modular 3D Multi-Species Transport Model              +
+                              +    For Simulation of Advection, Dispersion and Chemical Reactions   +
+                              +                of Contaminants in Groundwater Systems               +
+                              +                                                                     +
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ----- 
+ | M T | MT3DMS Benchmark Test Problem #1 - Case 1d                                      
+ | 3 D | 1D UNIFORM FLOW FIELD                                                           
+  ----- 
+ THE TRANSPORT MODEL CONSISTS OF     1 LAYER(S)    1 ROW(S)  101 COLUMN(S)
+ NUMBER OF STRESS PERIOD(S) FOR TRANSPORT SIMULATION =    1
+ NUMBER OF ALL COMPONENTS INCLUDED IN SIMULATION =    1
+ NUMBER OF MOBILE COMPONENTS INCLUDED IN SIMULATION =    1
+ UNIT FOR TIME IS  DAY;  UNIT FOR LENGTH IS    M;  UNIT FOR MASS IS    G
+ OPTIONAL PACKAGES INCLUDED IN CURRENT SIMULATION:
+  o ADV   ON UNIT  2
+  o DSP   ON UNIT  3
+  o SSM   ON UNIT  4
+  o RCT   ON UNIT  8
+  o GCG   ON UNIT  9
+
+ BTN5 -- BASIC TRANSPORT PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  1
+       1820 ELEMENTS OF THE  X ARRAY USED BY THE BTN PACKAGE
+        102 ELEMENTS OF THE IX ARRAY USED BY THE BTN PACKAGE
+
+ FMI5 -- FLOW MODEL INTERFACE PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT 10
+ FLOW MODEL IS STEADY-STATE
+ FLOW MODEL CONTAINS CONSTANT-HEAD CELLS
+
+ ADV5 -- ADVECTION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  2
+ ADVECTION IS SOLVED WITH THE ULTIMATE SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM = 0.500    
+          0 ELEMENTS OF THE  X ARRAY USED BY THE ADV PACKAGE
+          0 ELEMENTS OF THE IX ARRAY USED BY THE ADV PACKAGE
+
+ DSP5 -- DISPERSION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  3
+       1113 ELEMENTS OF THE  X ARRAY USED BY THE DSP PACKAGE
+          0 ELEMENTS OF THE IX ARRAY USED BY THE DSP PACKAGE
+
+ SSM5 -- SINK & SOURCE MIXING PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  4
+ HEADER LINE OF THE SSM PACKAGE INPUT FILE:
+  F F F F F F                                                                                                                                                                                            
+ MAJOR STRESS COMPONENTS PRESENT IN THE FLOW MODEL:
+ MAXIMUM NUMBER OF POINT SINKS/SOURCES =      10
+        130 ELEMENTS OF THE  X ARRAY USED BY THE SSM PACKAGE
+          0 ELEMENTS OF THE IX ARRAY BY THE SSM PACKAGE
+
+ RCT5 -- CHEMICAL REACTION PACKAGE, VERSION 5, FEBRUARY 2010, INPUT READ FROM UNIT  8
+ TYPE OF SORPTION SELECTED IS [LINEAR]
+ FIRST-ORDER IRREVERSIBLE REACTION [RADIOACTIVE DECAY OR BIODEGRADATION] IS SIMULATED
+ REACTION COEFFICIENTS ASSIGNED CELL-BY-CELL
+ INITIAL SORBED/IMMOBILE PHASE CONCENTRATION ASSIGNED BY DEFAULT
+        505 ELEMENTS OF THE  X ARRAY USED BY THE RCT PACKAGE
+          0 ELEMENTS OF THE IX ARRAY USED BY THE RCT PACKAGE
+
+ GCG5 -- GENERALIZED CONJUGATE GRADIENT SOLVER PACKAGE, VERSION 5, FEBRUARY 2010 INPUT READ FROM UNIT  9
+ MAXIMUM OF    1 OUTER ITERATIONS
+        AND  200 INNER ITERATIONS ALLOWED FOR CLOSURE
+ THE PRECONDITIONING TYPE SELECTED IS MODIFIED INCOMPLETE CHOLESKY (MIC).
+ DISPERSION CROSS TERMS LUMPED INTO RIGHT-HAND-SIDE
+       2422 ELEMENTS OF THE  X ARRAY USED BY THE GCG PACKAGE
+        600 ELEMENTS OF THE IX ARRAY USED BY THE GCG PACKAGE
+
+ ..........................................
+ ELEMENTS OF THE  X ARRAY USED =      5991
+ ELEMENTS OF THE IX ARRAY USED =       703
+ ..........................................
+
+ LAYER NUMBER  AQUIFER TYPE
+ ------------  ------------
+       1            0
+                                       WIDTH ALONG ROWS (DELR)  =   10.00000    
+                                       WIDTH ALONG COLS (DELC)  =   1.000000    
+                                       TOP ELEV. OF 1ST LAYER   =   1.000000    
+                                       CELL THICKNESS (DZ)      =   1.000000     FOR LAYER  1
+                                       POROSITY                 =  0.2500000     FOR LAYER  1
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  1 READ ON UNIT  1 USING FORMAT: "(15I3)              "
+                     ------------------------------------------------------------------------------------------
+
+        1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
+       31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60
+       61  62  63  64  65  66  67  68  69  70  71  72  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90
+       91  92  93  94  95  96  97  98  99 100 101
+ .................................................................................................................................
+   1   -1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+        1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+        1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+        1   1   1   1   1   1   1   1   1   1   1
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  1 READ ON UNIT  1 USING FORMAT: "(15F3.0)            "
+                     ------------------------------------------------------------------------------------------
+
+           1       2       3       4       5       6       7       8       9      10      11      12      13      14      15
+          16      17      18      19      20      21      22      23      24      25      26      27      28      29      30
+          31      32      33      34      35      36      37      38      39      40      41      42      43      44      45
+          46      47      48      49      50      51      52      53      54      55      56      57      58      59      60
+          61      62      63      64      65      66      67      68      69      70      71      72      73      74      75
+          76      77      78      79      80      81      82      83      84      85      86      87      88      89      90
+          91      92      93      94      95      96      97      98      99     100     101
+ ................................................................................................................................
+   1     1.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+         0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+         0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+         0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+         0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+         0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+         0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+
+ VALUE INDICATING INACTIVE CONCENTRATION CELLS =   -999.0000    
+ MINIMUM SATURATED THICKNESS [THKMIN] ALLOWED =  0.0000 OF TOTAL CELL THICKNESS
+
+
+ OUTPUT CONTROL OPTIONS
+ ----------------------
+
+ PRINT CELL CONCENTRATION USING FORMAT CODE:    6
+ PRINT PARTICLE NUMBER IN EACH CELL USING FORMAT CODE:    2
+ PRINT RETARDATION FACTOR USING FORMAT CODE:    3
+ PRINT DISPERSION COEFFICIENT USING FORMAT CODE:    6
+ SAVE DISSOLVED PHASE CONCENTRATIONS IN UNFORMATTED FILES [MT3Dnnn.UCN]
+  FOR EACH SPECIES ON UNITS 201 AND ABOVE
+ SAVE SORBED/IMMOBILE PHASE CONCENTRATIONS IN UNFORMATTED FILES [MT3DnnnS.UCN]
+  FOR EACH SPECIES ON UNITS 301 AND ABOVE, IF SORPTION/MASS TRANSFER SIMULATED
+
+ NUMBER OF TIMES AT WHICH SIMULATION RESULTS ARE SAVED =    0
+
+ NUMBER OF OBSERVATION POINTS =    5
+ SAVE CONCENTRATIONS AT OBSERVATION POINTS IN FILES [MT3Dnnn.OBS]
+  FOR EACH SPECIES ON UNITS 401 AND ABOVE, EVERY  1 TRANSPORT STEPS
+ LOCATION OF OBSERVATION POINTS
+ ..............................
+ NUMBER  LAYER   ROW   COLUMN
+   1        1      1      1
+   2        1      1     11
+   3        1      1     21
+   4        1      1     41
+   5        1      1     81
+
+ SAVE ONE-LINE SUMMARY OF MASS BUDGETS IN FILES [MT3Dnnn.MAS]
+  FOR EACH SPECIES ON UNITS 601 AND ABOVE, EVERY  1 TRANSPORT STEPS
+
+ MAXIMUM LENGTH ALONG THE X (J) AXIS =   1010.000    
+ MAXIMUM LENGTH ALONG THE Y (I) AXIS =   1.000000    
+ MAXIMUM LENGTH ALONG THE Z (K) AXIS =   1.000000    
+
+
+ ADVECTION SOLUTION OPTIONS
+ --------------------------
+
+ ADVECTION IS SOLVED WITH THE ULTIMATE SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM = 0.500    
+
+
+ DISPERSION INPUT PARAMETERS
+ ---------------------------
+
+                                       LONG. DISPERSIVITY (AL)  =   10.00000     FOR LAYER  1
+                                       H. TRANS./LONG. DISP.    =   0.000000    
+                                       V. TRANS./LONG. DISP.    =   0.000000    
+                                       DIFFUSION COEFFICIENT    =   0.000000    
+
+
+ SORPTION AND 1ST/0TH ORDER REACTION PARAMETERS
+ ----------------------------------------------
+
+                                       BULK DENSITY (RHOB)      =  0.2500000     FOR LAYER  1
+                                       1ST SORP. COEF. COMP. 01 =   4.000000     FOR LAYER  1
+                                       2ND SORP. COEF. COMP. 01 =   0.000000     FOR LAYER  1
+                                       SOLUTE RXN RATE: COMP 01 =  0.2000000E-02 FOR LAYER  1
+                                       SORBED RXN RATE: COMP 01 =  0.2000000E-02 FOR LAYER  1
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE REACTION TERM
+ =  250.0     AT K=   1, I=   1, J=   2
+
+                                   RETARD. FACTOR:  IN LAYER  1 FOR TIME STEP  1, STRESS PERIOD  1
+                                   ---------------------------------------------------------------
+
+           1       2       3       4       5       6       7       8       9      10      11      12      13      14      15
+          16      17      18      19      20      21      22      23      24      25      26      27      28      29      30
+          31      32      33      34      35      36      37      38      39      40      41      42      43      44      45
+          46      47      48      49      50      51      52      53      54      55      56      57      58      59      60
+          61      62      63      64      65      66      67      68      69      70      71      72      73      74      75
+          76      77      78      79      80      81      82      83      84      85      86      87      88      89      90
+          91      92      93      94      95      96      97      98      99     100     101
+ ................................................................................................................................
+   1      5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0
+          5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0
+          5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0
+          5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0
+          5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0
+          5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0
+          5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0     5.0
+
+
+
+                                               SOLUTION BY THE GENERALIZED CONJUGATE GRADIENT METHOD
+                                               -----------------------------------------------------
+                                     MAXIMUM OUTER ITERATIONS ALLOWED FOR CLOSURE =        1
+                                     MAXIMUM INNER ITERATIONS ALLOWED FOR CLOSURE =      200
+                                                    PRECONDITIONING TYPE SELECTED =    3
+                                                           ACCELERATION PARAMETER =     1.0000    
+                                       CONCENTRATION CHANGE CRITERION FOR CLOSURE =    0.10000E-05
+                                       GCG CONCENTRATION CHANGE PRINTOUT INTERVAL =      999
+
+
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                                       STRESS PERIOD NO.  001
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+ LENGTH OF CURRENT STRESS PERIOD =   2000.000    
+ NUMBER OF TIME STEPS FOR CURRENT STRESS PERIOD =    1
+ TIME STEP MULTIPLIER USED IN FLOW SOLUTION =   1.000000    
+
+ ***Type of Transport Simulation is TRANSIENT
+
+ USER-SPECIFIED TRANSPORT STEPSIZE =   50.00000     DAY
+ MAXIMUM NUMBER OF TRANSPORT STEPS ALLOWED  IN ONE FLOW TIME STEP =       500
+ MULTIPLIER FOR SUCCESSIVE TRANSPORT STEPS  [USED IN IMPLICIT SCHEMES] =     1.000
+ MAXIMUM TRANSPORT STEP SIZE  [USED IN IMPLICIT SCHEMES] =   0.000000     DAY
+
+ NO. OF POINT SINKS/SOURCES OF SPECIFIED CONCONCENTRATIONS =    0 IN STRESS PERIOD  1
+
+
+                                          ================================================
+                                                         TIME STEP NO.  001
+                                          ================================================
+
+ FROM TIME =   0.0000     TO    2000.0    
+
+
+                    "THKSAT          " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QXX             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+ MAXIMUM STEPSIZE DURING WHICH ANY PARTICLE CANNOT MOVE MORE THAN ONE CELL
+ =  41.67    (WHEN MIN. R.F.=1)  AT K=   1, I=   1, J=  16
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE ADVECTION TERM
+ (FOR PURE FINITE-DIFFERENCE OPTION, MIXELM=0) 
+ =  41.67    (WHEN MIN. R.F.=1)  AT K=   1, I=   1, J=  15
+
+                    "CNH             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+
+ TOTAL NUMBER OF POINT SOURCES/SINKS PRESENT IN THE FLOW MODEL =     2
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE SINK & SOURCE TERM
+ =  41.67    (WHEN MIN. R.F.=1)  AT K=   1, I=   1, J=   1
+
+ PRINTED DISPERSION COEFFICIENTS ARE APPARENT Dij CALCULATED USING DARCY FLUX RATHER THAN SEEPAGE VELOCITY
+
+                                   Dxx^ Comp. # 001 IN LAYER  1 FOR TIME STEP  1, STRESS PERIOD  1
+                                   ---------------------------------------------------------------
+
+           1       2       3       4       5       6       7       8       9      10      11      12      13      14      15
+          16      17      18      19      20      21      22      23      24      25      26      27      28      29      30
+          31      32      33      34      35      36      37      38      39      40      41      42      43      44      45
+          46      47      48      49      50      51      52      53      54      55      56      57      58      59      60
+          61      62      63      64      65      66      67      68      69      70      71      72      73      74      75
+          76      77      78      79      80      81      82      83      84      85      86      87      88      89      90
+          91      92      93      94      95      96      97      98      99     100     101
+ ................................................................................................................................
+   1   0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000
+       0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000
+       0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000
+       0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000
+       0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000
+       0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000
+       0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.6000  0.0000
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE DISPERSION TERM
+ =  20.83    (WHEN MIN. R.F.=1)  AT K=   1, I=   1, J=  15
+
+
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   1 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   2 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   3 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   4 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   5 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   6 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   7 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   8 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP   9 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  10 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  11 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  12 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  13 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  14 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  15 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  16 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  17 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  18 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  19 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  20 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  21 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  22 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  23 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  24 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  25 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  26 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  27 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  28 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  29 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  30 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  31 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  32 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  33 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  34 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  35 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  36 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  37 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  38 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  39 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+     1 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP  40 IN FLOW TIME STEP   1 STRESS PERIOD   1
+     2 TOTAL ITERATIONS
+  MAXIMUM CONCENTRATION CHANGES FOR EACH ITERATION:
+  MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL
+ ------------------------------------------------------------------------------------------------------------------------------------
+   0.5279E-01 (  1,  1,  2)  0.4039E-27 (  1,  1, 68)
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   40
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   2000.000     DAY
+ .....................................................................
+
+                     CONCENTRATIONS   IN LAYER  1 AT END OF TRANSPORT STEP   40, TIME STEP  1, STRESS PERIOD  1
+                     ------------------------------------------------------------------------------------------
+
+           1       2       3       4       5       6       7       8       9      10      11      12      13      14      15
+          16      17      18      19      20      21      22      23      24      25      26      27      28      29      30
+          31      32      33      34      35      36      37      38      39      40      41      42      43      44      45
+          46      47      48      49      50      51      52      53      54      55      56      57      58      59      60
+          61      62      63      64      65      66      67      68      69      70      71      72      73      74      75
+          76      77      78      79      80      81      82      83      84      85      86      87      88      89      90
+          91      92      93      94      95      96      97      98      99     100     101
+ ................................................................................................................................
+   1   1.0000  0.7360  0.5586  0.4224  0.3194  0.2412  0.1820  0.1369  0.1027  0.0767  0.0570  0.0420  0.0307  0.0222  0.0158
+       0.0112  0.0077  0.0053  0.0035  0.0023  0.0015  0.0010  0.0006  0.0004  0.0002  0.0001  0.0001  0.0000  0.0000  0.0000
+       0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+       0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+       0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+       0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+       0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
+
+                     CUMMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   40, TIME STEP    1, STRESS PERIOD    1
+                     ------------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    156.0609                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.6935703E-38
+                               1ST/0TH ORDER REACTION:    0.000000                   -118.8381    
+                                MASS STORAGE (SOLUTE):    0.000000                   -7.444536    
+                                MASS STORAGE (SORBED):    0.000000                   -29.77814    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    156.0609        G          -156.0608        G
+
+                                                          NET (IN - OUT):   0.1068115E-03
+                                                   DISCREPANCY (PERCENT):   0.6844223E-04
+  ----- 
+ | M T |
+ | 3 D | END OF MODEL OUTPUT
+  ----- 

@@ -1,0 +1,12 @@
+LIST           0  t5.m3d
+BTN            0  t5.btn
+ADV            0  t5.adv
+DSP            0  t5.dsp
+SSM            0  t5.ssm
+GCG            0  t5.gcg
+FTL            0  t5.ftl
+DATA          44  t5mnw.dat
+DATA(BINARY) 201  t5.ucn
+DATA         401  t5.obs
+DATA         601  t5.mas
+DATA          17  t5.cnf

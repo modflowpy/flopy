@@ -160,10 +160,12 @@ class mflist(object):
             if len(list(data.keys())) == 0:
                 raise Exception("mflist error: data dict is empty")
             for kper, d in data.items():
-                assert isinstance(kper, int), "mflist error: data dict key " + \
-                                              " \'{0:s}\' " + \
-                                              "not integer: ".format(kper) + \
-                                              str(type(kper))
+                try:
+                    kper = int(kper)
+                except Exception as e:
+                    raise Exception("mflist error: data dict key " + \
+                                              "{0:s} not integer: ".format(kper) + \
+                                              str(type(kper)) + "\n" + str(e))
                 # Same as before, just try...
                 if isinstance(d, list):
                     # warnings.warn("mflist: casting list to array at " +\

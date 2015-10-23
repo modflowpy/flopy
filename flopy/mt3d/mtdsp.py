@@ -31,11 +31,14 @@ class Mt3dDsp(Package):
         the modified isotropic dispersion model is used (Equation 11 in
         Chapter 2).
         (default is 0.01)
-    dmcoef : float or array of floats (nlay)
+    dmcoef : float or array of floats (nlay) or (nlay, nrow, ncol) if the
+        multiDiff option is used.
         DMCOEF is the effective molecular diffusion coefficient (unit, L2T-1).
         Set DMCOEF = 0 if the effect of molecular diffusion is considered
         unimportant. Each value in the array corresponds to one model layer.
-        (default is 1.e-9)
+        The value for dmcoef applies only to species 1.  See kwargs for
+        entering dmcoef for other species.
+        (default is 1.e-9).
     multiDiff : boolean
         To activate the component-dependent diffusion option, a keyword
         input record must be inserted to the beginning of the Dispersion
@@ -66,6 +69,11 @@ class Mt3dDsp(Package):
         Filename extension (default is 'dsp')
     unitnumber : int
         File unit number (default is 33).
+    kwargs : dictionary
+        If a multi-species simulation, then dmcoef values can be specified for
+        other species as dmcoef2, dmcoef3, etc.  For example:
+        dmcoef1=1.e-10, dmcoef2=4.e-10, ...  If a value is not specifed, then
+        dmcoef is set to 0.0.
 
     Attributes
     ----------
@@ -87,15 +95,17 @@ class Mt3dDsp(Package):
     >>> dsp = flopy.mt3d.Mt3dDsp(m)
 
     """
+    unitnumber = 33
     def __init__(self, model, al=0.01, trpt=0.1, trpv=0.01, dmcoef=1e-9, 
-                 extension='dsp', multiDiff=False, unitnumber=33, **kwargs):
-        '''
-        if dmcoef is passed as a list of (nlay, nrow, ncol) arrays,
-        then the multicomponent diffusion is activated
-        '''
+                 extension='dsp', multiDiff=False, unitnumber=None, **kwargs):
+        if unitnumber is None:
+            unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'DSP', unitnumber)
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
-        ncomp = self.parent.get_ncomp()        
+        nrow = model.nrow
+        ncol = model.ncol
+        nlay = model.nlay
+        ncomp = model.ncomp
+        mcomp = model.mcomp
         self.multiDiff = multiDiff
         self.al = util_3d(model,(nlay,nrow,ncol),np.float32,al,name='al',
                           locat=self.unit_number[0])
@@ -103,24 +113,33 @@ class Mt3dDsp(Package):
                             locat=self.unit_number[0])
         self.trpv = util_2d(model,(nlay,),np.float32,trpv,name='trpv',
                             locat=self.unit_number[0])
+
+        # Multi-species and multi-diffusion, hence the complexity
         self.dmcoef = []
-        a = util_3d(model, (nlay, nrow, ncol), np.float32, dmcoef,
+        shape = (nlay, 1)
+        utype = util_2d
+        nmcomp = ncomp
+        if multiDiff:
+            shape = (nlay, nrow, ncol)
+            utype = util_3d
+            nmcomp = mcomp
+        u2or3 = utype(model, shape, np.float32, dmcoef,
                     name='dmcoef1', locat=self.unit_number[0])
-        self.dmcoef.append(a)
-        if self.multiDiff:
-            for icomp in range(2, ncomp+1):
-                name = "dmcoef" + str(icomp)
-                val = 0.0
-                if name in list(kwargs.keys()):
-                    val = kwargs[name]
-                    kwargs.pop(name)
-                else:
-                    print("DSP: setting dmcoef for component " +\
-                          str(icomp) + " to zero, kwarg name " +\
-                          name)
-                a = util_3d(model, (nlay, nrow, ncol), np.float32, val,
-                            name=name, locat=self.unit_number[0])
-                self.dmcoef.append(a)
+        self.dmcoef.append(u2or3)
+        for icomp in range(2, nmcomp + 1):
+            name = "dmcoef" + str(icomp)
+            val = 0.0
+            if name in list(kwargs.keys()):
+                val = kwargs[name]
+                kwargs.pop(name)
+            else:
+                print("DSP: setting dmcoef for component " +
+                      str(icomp) + " to zero, kwarg name " +
+                      name)
+            u2or3 = utype(model, shape, np.float32, val,
+                        name=name, locat=self.unit_number[0])
+            self.dmcoef.append(u2or3)
+
         if len(list(kwargs.keys())) > 0:
             raise Exception("DSP error: unrecognized kwargs: " +
                             ' '.join(list(kwargs.keys())))
@@ -133,7 +152,9 @@ class Mt3dDsp(Package):
         """
 
         # Get size
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
+        nrow = self.parent.nrow
+        ncol = self.parent.ncol
+        nlay = self.parent.nlay
 
         # Open file for writing
         f_dsp = open(self.fn_path, 'w')
@@ -200,11 +221,11 @@ class Mt3dDsp(Package):
 
         # Set dimensions if necessary
         if nlay is None:
-            dum, dum, nlay, dum = model.mf.nrow_ncol_nlay_nper
+            nlay = model.nlay
         if nrow is None:
-            nrow, dum, dum, dum = model.mf.nrow_ncol_nlay_nper
+            nrow = model.nrow
         if ncol is None:
-            dum, ncol, dum, dum = model.mf.nrow_ncol_nlay_nper
+            ncol = model.ncol
 
         # Open file, if necessary
         if not hasattr(f, 'read'):
@@ -212,19 +233,29 @@ class Mt3dDsp(Package):
             f = open(filename, 'r')
 
         # Dataset 0 -- comment line
+        imsd = 0
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line.strip() == '':
+                continue
+            elif line[0] == '#':
+                continue
+            elif line[0] == '$':
+                imsd = 1
+                break
+            else:
                 break
 
         # Check for keywords (multidiffusion)
         multiDiff = False
-        if line[0] == '$':
-            keywords = line[0:].strip().split()
+        if imsd == 1:
+            keywords = line[1:].strip().split()
             for k in keywords:
                 if k.lower() == 'multidiffusion':
                     multiDiff = True
-            line = f.readline()
+        else:
+            # go back to beginning of file
+            f.seek(0, 0)
 
         # Read arrays
         if model.verbose:
@@ -244,12 +275,29 @@ class Mt3dDsp(Package):
 
         if model.verbose:
             print('   loading DMCOEFF...')
+        kwargs = {}
+        dmcoef = []
         if multiDiff:
-            raise NotImplementedError("dsp.load() doesn't support multidiffusion yet.")
+            dmcoef = util_3d.load(f, model, (nlay, nrow, ncol), np.float32,
+                               'dmcoef1', ext_unit_dict)
+            if model.mcomp > 1:
+                for icomp in range(2, model.mcomp + 1):
+                    name = "dmcoef" + str(icomp)
+                    u3d = util_3d.load(f, model, (nlay, nrow, ncol), np.float32,
+                                       name, ext_unit_dict)
+                    kwargs[name] = u3d
+
+
         else:
-            dmcoef = util_2d.load(f, model, (nlay, 1), np.float32, 'dmcoef',
-                            ext_unit_dict)
+            dmcoef = util_2d.load(f, model, (nlay, 1), np.float32,
+                               'dmcoef1', ext_unit_dict)
+            if model.mcomp > 1:
+                for icomp in range(2, model.mcomp + 1):
+                    name = "dmcoef" + str(icomp + 1)
+                    u2d = util_2d.load(f, model, (nlay, 1), np.float32, name,
+                                ext_unit_dict)
+                    kwargs[name] = u2d
 
         dsp = Mt3dDsp(model, al=al, trpt=trpt, trpv=trpv, dmcoef=dmcoef,
-                      multiDiff=multiDiff)
+                      multiDiff=multiDiff, **kwargs)
         return dsp

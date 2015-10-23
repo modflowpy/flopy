@@ -1,0 +1,20 @@
+#
+# MODFLOW-2000 NAME file for test case SState
+#
+#
+# Output files
+#
+LIST         6       SState.LST
+
+# Global input files
+DIS         10       SState.DIS
+
+#Link-MT3DMS input file
+LMT6        66       SState.LMT
+
+# Flow process input files
+BAS6         1       SState.BA6
+BCF6        11       SState.BC6
+WEL         12       SState.WEL
+SIP         19       SState.SIP
+OC          22       SState.OC

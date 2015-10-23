@@ -1,0 +1,26 @@
+1D TEST PROBLEM w/ zero-order reaction
+UNIFORM FLOW FIELD WITH pulse source
+         1         1       101         3
+ day   m   g
+T T T T t                                             !TRNOP
+ 0                                                    !LAYCON
+         0  .1600000                                  !DELR
+         0   1.00000                                  !DELC
+         0   1.00000                                  !HTOP
+         0   1.00000                                  !DZ
+         0      .370                                  !PRSITY
+         0         1                                  !ICBUND-LAY1
+         0        0.                                  !SCONC-LAY1
+   -999.99                                            !CINACT
+         5         2         5         0         T         t
+         2                                            !NPRS
+         0   1000.00
+         1                                            !NOBS
+         1         1        51
+         T
+    160.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0      5000      1.0        10.                !DT0 MXSTRN
+    320.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0      5000      1.0        10.                !DT0 MXSTRN
+   1120.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0      5000      1.0        10.                !DT0 MXSTRN

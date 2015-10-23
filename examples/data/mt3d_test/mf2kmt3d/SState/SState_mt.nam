@@ -1,0 +1,18 @@
+#
+# MT3DMS v5.3 Name file for test case SState
+#
+
+# Standard output file
+LIST  0 SState.m3d
+
+# Transport package input files
+BTN   0 SState.btn
+ADV   0 SState.adv
+DSP   0 SState.dsp
+SSM   0 SState.ssm
+GCG   0 SState.gcg
+
+# Flow-Transport Link input file
+FTL   0 SState.ftl
+
+

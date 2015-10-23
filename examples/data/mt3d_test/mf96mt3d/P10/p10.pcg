@@ -1,0 +1,2 @@
+         1        50         1         MXITER,ITER1,NPCOND
+      .001        .1       1.0         0         0         0         0  HCLOSE,RCLOSE,RELAX,NBPOL,IPRPCG,MUTPCG,IPCGCD

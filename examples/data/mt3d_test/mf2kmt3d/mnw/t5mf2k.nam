@@ -1,0 +1,19 @@
+#
+# NOTE: Forward slashes (/) in pathnames may need to be converted
+#       to back slashes (/) in some computing environments
+#
+# Main output file
+LIST   7 t5.lst
+#
+# Input files
+DIS    8 t5.dis
+BAS6   9 t5.bas
+BCF6  10 t5.bcf
+MNW1  75 t5.mnw
+PCG   74 t5.pcg
+OC    71 t5.oc
+LMT6  66 t5.lmt
+#
+# Binary output files
+DATA(BINARY)  89  t5.ufh       REPLACE
+DATA(BINARY)  90  t5.cbc       REPLACE

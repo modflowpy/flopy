@@ -1,0 +1,203 @@
+ LISTING FILE: p1.lst
+                         UNIT   6
+
+ OPENING p1.bas
+ FILE TYPE:BAS   UNIT   1
+
+ OPENING p1.bcf
+ FILE TYPE:BCF   UNIT  11
+
+ OPENING p1.pcg
+ FILE TYPE:PCG   UNIT  19
+
+ OPENING p1.oc
+ FILE TYPE:OC   UNIT  20
+
+ OPENING p1.ftl
+ FILE TYPE:LMT   UNIT  22
+1                                 MODFLOW
+      U.S. GEOLOGICAL SURVEY MODULAR FINITE-DIFFERENCE GROUND-WATER FLOW MODEL
+
+ MT3DMS Benchmark Test Problem #1                                                
+ 1D UNIFORM FLOW FIELD                                                           
+    1 LAYERS         1 ROWS       101 COLUMNS
+   1 STRESS PERIOD(S) IN SIMULATION
+ MODEL TIME UNIT IS DAYS
+
+ BAS5 -- BASIC MODEL PACKAGE, VERSION 5, 1/1/95 INPUT READ FROM UNIT  1
+ ARRAYS RHS AND BUFF WILL SHARE MEMORY
+ INITIAL HEAD WILL NOT BE KEPT THROUGHOUT THE SIMULATION, WHICH MEANS
+ DRAWDOWN CANNOT BE CALCULATED
+        914 ELEMENTS IN X ARRAY ARE USED BY BAS
+        914 ELEMENTS OF X ARRAY USED OUT OF  999999999
+
+ BCF5 -- BLOCK-CENTERED FLOW PACKAGE, VERSION 5, 9/1/93 INPUT READ FROM UNIT 11
+ STEADY-STATE SIMULATION
+ HEAD AT CELLS THAT CONVERT TO DRY=  0.10000E+31
+ WETTING CAPABILITY IS NOT ACTIVE
+      LAYER  LAYER-TYPE CODE     INTERBLOCK T
+      --------------------------------------------
+         1            0          0 -- HARMONIC    
+          1 ELEMENTS IN X ARRAY ARE USED BY BCF
+        915 ELEMENTS OF X ARRAY USED OUT OF  999999999
+0PCG2 -- CONJUGATE GRADIENT SOLUTION PACKAGE, VERSION 2.1, 6/1/95
+ MAXIMUM OF   1 CALLS OF SOLUTION ROUTINE
+ MAXIMUM OF  30 INTERNAL ITERATIONS PER CALL TO SOLUTION ROUTINE
+ MATRIX PRECONDITIONING TYPE :    1
+     674 ELEMENTS IN X ARRAY ARE USED BY PCG
+    1589 ELEMENTS OF X ARRAY USED OUT OF 999999999
+1
+ MT3DMS Benchmark Test Problem #1                                                
+ 1D UNIFORM FLOW FIELD                                                           
+
+
+
+                     BOUNDARY ARRAY FOR LAYER   1
+ READING ON UNIT   1 WITH FORMAT: (15I3)              
+
+        1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
+       31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60
+       61  62  63  64  65  66  67  68  69  70  71  72  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90
+       91  92  93  94  95  96  97  98  99 100 101
+ ............................................................................................................................
+   1   -1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+        1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+        1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
+        1   1   1   1   1   1   1   1   1   1  -1
+
+ AQUIFER HEAD WILL BE SET TO  999.99     AT ALL NO-FLOW NODES (IBOUND=0).
+
+
+
+                       INITIAL HEAD FOR LAYER   1
+ READING ON UNIT   1 WITH FORMAT: (15F3.0)            
+
+           1       2       3       4       5       6       7       8       9      10      11      12      13      14      15
+          16      17      18      19      20      21      22      23      24      25      26      27      28      29      30
+          31      32      33      34      35      36      37      38      39      40      41      42      43      44      45
+          46      47      48      49      50      51      52      53      54      55      56      57      58      59      60
+          61      62      63      64      65      66      67      68      69      70      71      72      73      74      75
+          76      77      78      79      80      81      82      83      84      85      86      87      88      89      90
+          91      92      93      94      95      96      97      98      99     100     101
+ ...........................................................................................................................
+   1     7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00    7.00
+         6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00    6.00
+         5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00    5.00
+         4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00    4.00
+         3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00    3.00
+         2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00    2.00
+         1.00    1.00    1.00    1.00    1.00    1.00    1.00    1.00    1.00    1.00    1.00
+
+ OUTPUT CONTROL IS SPECIFIED EVERY TIME STEP
+ HEAD PRINT FORMAT CODE IS   4    DRAWDOWN PRINT FORMAT CODE IS   4
+ HEADS WILL BE SAVED ON UNIT   0    DRAWDOWNS WILL BE SAVED ON UNIT   0
+
+ COLUMN TO ROW ANISOTROPY =   1.000000    
+
+                     DELR =   10.00000    
+
+                     DELC =   1.000000    
+
+     TRANSMIS. ALONG ROWS =   10.00000     FOR LAYER   1
+0
+
+
+                                                         SOLUTION BY THE CONJUGATE-GRADIENT METHOD
+                                                         -------------------------------------------
+0                                      MAXIMUM NUMBER OF CALLS TO PCG ROUTINE =        1
+                                           MAXIMUM ITERATIONS PER CALL TO PCG =       30
+                                                  MATRIX PRECONDITIONING TYPE =        1
+                           RELAXATION FACTOR (ONLY USED WITH PRECOND. TYPE 1) =    0.10000E+01
+                    PARAMETER OF POLYMOMIAL PRECOND. = 2 (2) OR IS CALCULATED :        0
+                                            HEAD CHANGE CRITERION FOR CLOSURE =    0.10000E-02
+                                        RESIDUAL CHANGE CRITERION FOR CLOSURE =    0.10000E-02
+                               PCG HEAD AND RESIDUAL CHANGE PRINTOUT INTERVAL =      999
+                        PRINTING FROM SOLVER IS LIMITED(1) OR SUPPRESSED (>1) =        0
+                                                            DAMPING PARAMETER =    0.10000E+01
+1
+                            STRESS PERIOD NO.   1, LENGTH =   1.000000    
+                            ----------------------------------------------
+
+                              NUMBER OF TIME STEPS =     1
+
+                               MULTIPLIER FOR DELT =     1.000
+
+                            INITIAL TIME STEP SIZE =   1.000000    
+0
+     1 CALLS TO PCG ROUTINE FOR TIME STEP   1 IN STRESS PERIOD  1
+     2 TOTAL ITERATIONS
+0MAXIMUM HEAD CHANGE FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+0    HEAD CHANGE  LAYER,ROW,COL    HEAD CHANGE  LAYER,ROW,COL    HEAD CHANGE  LAYER,ROW,COL    HEAD CHANGE  LAYER,ROW,COL
+ ------------------------------------------------------------------------------------------------------------------------
+   1  -0.8400     (  1,  1, 15)  0  -0.1923E-05 (  1,  1, 43)
+0
+0MAXIMUM RESIDUAL FOR EACH ITERATION (1 INDICATES THE FIRST INNER ITERATION):
+0     RESIDUAL    LAYER,ROW,COL     RESIDUAL    LAYER,ROW,COL     RESIDUAL    LAYER,ROW,COL     RESIDUAL    LAYER,ROW,COL
+ ------------------------------------------------------------------------------------------------------------------------
+   1   0.5960E-07 (  1,  1, 13)  0   0.1685E-12 (  1,  1, 91)
+0
+
+ HEAD/DRAWDOWN PRINTOUT FLAG = 1     TOTAL BUDGET PRINTOUT FLAG = 0
+ CELL-BY-CELL FLOW TERM FLAG = 1
+
+ OUTPUT FLAGS FOR ALL LAYERS ARE THE SAME:
+   HEAD    DRAWDOWN  HEAD  DRAWDOWN
+ PRINTOUT  PRINTOUT  SAVE    SAVE
+ ----------------------------------
+     1         0       1       0
+
+ SATURATED THICKNESS AND FLOW TERMS SAVED ON UNIT 22 FOR MT3D BY LINKMT3D PACKAGE 5.0
+1
+              HEAD IN LAYER  1 AT END OF TIME STEP  1 IN STRESS PERIOD  1
+  -----------------------------------------------------------------------
+
+           1       2       3       4       5       6       7       8       9      10      11      12      13      14      15
+          16      17      18      19      20      21      22      23      24      25      26      27      28      29      30
+          31      32      33      34      35      36      37      38      39      40      41      42      43      44      45
+          46      47      48      49      50      51      52      53      54      55      56      57      58      59      60
+          61      62      63      64      65      66      67      68      69      70      71      72      73      74      75
+          76      77      78      79      80      81      82      83      84      85      86      87      88      89      90
+          91      92      93      94      95      96      97      98      99     100     101
+ ...........................................................................................................................
+   1     7.00    6.94    6.88    6.82    6.76    6.70    6.64    6.58    6.52    6.46    6.40    6.34    6.28    6.22    6.16
+         6.10    6.04    5.98    5.92    5.86    5.80    5.74    5.68    5.62    5.56    5.50    5.44    5.38    5.32    5.26
+         5.20    5.14    5.08    5.02    4.96    4.90    4.84    4.78    4.72    4.66    4.60    4.54    4.48    4.42    4.36
+         4.30    4.24    4.18    4.12    4.06    4.00    3.94    3.88    3.82    3.76    3.70    3.64    3.58    3.52    3.46
+         3.40    3.34    3.28    3.22    3.16    3.10    3.04    2.98    2.92    2.86    2.80    2.74    2.68    2.62    2.56
+         2.50    2.44    2.38    2.32    2.26    2.20    2.14    2.08    2.02    1.96    1.90    1.84    1.78    1.72    1.66
+         1.60    1.54    1.48    1.42    1.36    1.30    1.24    1.18    1.12    1.06    1.00
+1
+  VOLUMETRIC BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  1 IN STRESS PERIOD  1
+  -----------------------------------------------------------------------------
+
+     CUMULATIVE VOLUMES      L**3       RATES FOR THIS TIME STEP      L**3/T
+     ------------------                 ------------------------
+
+           IN:                                      IN:
+           ---                                      ---
+       CONSTANT HEAD =       6.0000E-02         CONSTANT HEAD =       6.0000E-02
+
+            TOTAL IN =       6.0000E-02              TOTAL IN =       6.0000E-02
+
+          OUT:                                     OUT:
+          ----                                     ----
+       CONSTANT HEAD =       6.0000E-02         CONSTANT HEAD =       6.0000E-02
+
+           TOTAL OUT =       6.0000E-02             TOTAL OUT =       6.0000E-02
+
+            IN - OUT =       5.2154E-08              IN - OUT =       5.2154E-08
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+
+
+          TIME SUMMARY AT END OF TIME STEP  1 IN STRESS PERIOD  1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+1

@@ -1,0 +1,6 @@
+         1         1         2         0           !ISOTHM,IREACT,irctop,igetsc
+         0       .25                               !RHOB
+         0         4                               !SP1
+         0         0                               !SP2
+         0     2.e-3                               !RC1
+         0     2.e-3                               !RC2

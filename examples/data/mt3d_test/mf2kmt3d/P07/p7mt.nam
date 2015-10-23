@@ -1,0 +1,28 @@
+#
+# MT3DMS v5 Name file for test case P7
+#
+
+# Standard output file
+LIST  0 p7.m3d
+
+# Transport package input files
+BTN   0 p7.btn
+ADV   0 p7.adv
+DSP   0 p7.dsp
+SSM   0 p7.ssm
+GCG   0 p7.gcg
+
+# Flow-Transport Link input file
+FTL   0 p7.ftl
+
+# Uncomment the following lines to override
+# the default names of optional MT3DMS output files
+# mt3d001.ucn, mt3d001s.ucn, mt3d001.obs, mt3d001.mas, mt3d.cnf.
+# The unit numbers for these files are preset in the
+# MT3DMS code.
+
+# data(binary) 201 p7.ucn
+# data(binary) 301 p7s.ucn
+# data         401 p7.obs
+# data         601 p7.mas
+# data         17  p7.cnf

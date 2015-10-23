@@ -1,0 +1,8 @@
+LIST 0 p2.m3d
+BTN  0 p2.btn
+ADV  0 p2.adv
+DSP  0 p2.dsp
+SSM  0 p2.ssm
+RCT  0 p2.rct
+GCG  0 p2.gcg
+FTL  0 ..\flow\p2.ftl

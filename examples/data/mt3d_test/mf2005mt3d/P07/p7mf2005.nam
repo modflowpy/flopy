@@ -1,0 +1,20 @@
+#
+# MODFLOW-2000 NAME file for test case P7
+#
+#
+# Output files
+#
+LIST         7       P7.LST
+
+# Global input files
+DIS         10       P7.DIS
+
+#Link-MT3DMS input file
+LMT6        66       P7.LMT
+
+# Flow process input files
+BAS6         1       P7.BA6
+BCF6        11       P7.BC6
+WEL         12       P7.WEL
+SIP         19       P7.SIP
+OC          22       P7.OC

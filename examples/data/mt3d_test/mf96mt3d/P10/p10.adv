@@ -1,0 +1,9 @@
+         3        1.    275000         1                                 |MIXELM,PERCEL,MXPART,NADVFD
+         3       .50                                                     |ITRACK,WD
+     1.e-5         0         0        16         2        32             |DCEPS,NPLANE,NPL,NPH,NPMIN,NPMAX,SRMULT
+         1         0        16                                           |INTERP,NLSINK,NPSINK
+       .01                                                               |DCHMOC
+
+//Upstream FD: use the following input
+         0        1.         0         1                                 |MIXELM,PERCEL,MXPART,NADVFD
+

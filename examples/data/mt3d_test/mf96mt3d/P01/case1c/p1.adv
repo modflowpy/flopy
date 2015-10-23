@@ -1,0 +1,5 @@
+         3        .5      2000      1          !MIXELM,PERCEL,MXPART,NADVFD
+         1        .5                           !ITRACK,WD
+     1.e-5         1         0         4         0         8    !DCEPS,NPLANE,NPL,NPH,NPMIN,NPMAX
+         1         1         4                 !INTERP, NLSINK, NPSINK
+     1.e-3                                     !DCHMOC

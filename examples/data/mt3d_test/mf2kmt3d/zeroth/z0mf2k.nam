@@ -1,0 +1,8 @@
+LIST          6 ZEROTH.lst
+BAS6          1 ZEROTH.ba6
+BCF6         11 ZEROTH.bc6
+SIP          12 ZEROTH.sip
+OC           13 ZEROTH.oc
+data(binary) 80 ZEROTH.hed
+LMT6         14 ZEROTH.lmt
+DIS          10 ZEROTH.dis
