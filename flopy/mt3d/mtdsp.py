@@ -87,15 +87,18 @@ class Mt3dDsp(Package):
     >>> dsp = flopy.mt3d.Mt3dDsp(m)
 
     """
+    unitnumber = 33
     def __init__(self, model, al=0.01, trpt=0.1, trpv=0.01, dmcoef=1e-9, 
-                 extension='dsp', multiDiff=False, unitnumber=33, **kwargs):
+                 extension='dsp', multiDiff=False, unitnumber=None, **kwargs):
         '''
         if dmcoef is passed as a list of (nlay, nrow, ncol) arrays,
         then the multicomponent diffusion is activated
         '''
+        if unitnumber is None:
+            unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'DSP', unitnumber)
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
-        ncomp = self.parent.get_ncomp()        
+        ncomp = model.ncomp
         self.multiDiff = multiDiff
         self.al = util_3d(model,(nlay,nrow,ncol),np.float32,al,name='al',
                           locat=self.unit_number[0])
@@ -212,19 +215,29 @@ class Mt3dDsp(Package):
             f = open(filename, 'r')
 
         # Dataset 0 -- comment line
+        imsd = 0
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line.strip() == '':
+                continue
+            elif line[0] == '#':
+                continue
+            elif line[0] == '$':
+                imsd = 1
+                break
+            else:
                 break
 
         # Check for keywords (multidiffusion)
         multiDiff = False
-        if line[0] == '$':
+        if imsd == 1:
             keywords = line[0:].strip().split()
             for k in keywords:
                 if k.lower() == 'multidiffusion':
                     multiDiff = True
-            line = f.readline()
+        else:
+            # go back to beginning of file
+            f.seek(0, 0)
 
         # Read arrays
         if model.verbose:

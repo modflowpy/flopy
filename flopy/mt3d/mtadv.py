@@ -157,11 +157,14 @@ class Mt3dAdv(Package):
     >>> adv = flopy.mt3d.Mt3dAdv(m)
 
     """
+    unitnumber = 32
     def __init__(self, model, mixelm=3, percel=0.75, mxpart=800000, nadvfd=1,
                  itrack=3, wd=0.5,
                  dceps=1e-5, nplane=2, npl=10, nph=40, npmin=5, npmax=80,
                  nlsink=0, npsink=15,
-                 dchmoc=0.0001, extension='adv', unitnumber=32):
+                 dchmoc=0.0001, extension='adv', unitnumber=None):
+        if unitnumber is None:
+            unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'ADV', unitnumber)
         self.mixelm = mixelm
         self.percel = percel
@@ -256,9 +259,13 @@ class Mt3dAdv(Package):
         if model.verbose:
             print('   loading MIXELM, PERCEL, MXPART, NADVFD...')
         mixelm = int(line[0:10])
-        percel = float(line[11:20])
-        mxpart = int(line[21:30])
-        nadvfd = int(line[31:40])
+        percel = float(line[10:20])
+        mxpart = 0
+        if mixelm == 1 or mixelm == 3:
+            mxpart = int(line[20:30])
+        nadvfd = 0
+        if mixelm == 0:
+            nadvfd = int(line[30:40])
         if model.verbose:
             print('   MIXELM {}'.format(mixelm))
             print('   PERCEL {}'.format(nadvfd))
@@ -273,7 +280,7 @@ class Mt3dAdv(Package):
                 print('   loading ITRACK, WD...')
             line = f.readline()
             itrack = int(line[0:10])
-            wd = float(line[11:20])
+            wd = float(line[10:20])
             if model.verbose:
                 print('   ITRACK {}'.format(itrack))
                 print('   WD {}'.format(wd))
@@ -290,11 +297,11 @@ class Mt3dAdv(Package):
                 print('   loading DCEPS, NPLANE, NPL, NPH, NPMIN, NPMAX...')
             line = f.readline()
             dceps = float(line[0:10])
-            nplane = int(line[11:20])
-            npl = int(line[21:30])
-            nph = int(line[31:40])
-            npmin = int(line[41:50])
-            npmax = int(line[51:60])
+            nplane = int(line[10:20])
+            npl = int(line[20:30])
+            nph = int(line[30:40])
+            npmin = int(line[40:50])
+            npmax = int(line[50:60])
             if model.verbose:
                 print('   DCEPS {}'.format(dceps))
                 print('   NPLANE {}'.format(nplane))
@@ -312,8 +319,8 @@ class Mt3dAdv(Package):
                 print('   loading INTERP, NLSINK, NPSINK...')
             line = f.readline()
             interp = int(line[0:10])
-            nlsink = int(line[11:20])
-            npsink = int(line[21:30])
+            nlsink = int(line[10:20])
+            npsink = int(line[20:30])
             if model.verbose:
                 print('   INTERP {}'.format(interp))
                 print('   NLSINK {}'.format(nlsink))
