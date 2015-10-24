@@ -11,7 +11,7 @@ import numpy as np
 # from numpy import empty,array
 from flopy.mbase import Package
 from flopy.utils import util_2d, util_3d, read1d
-
+import warnings
 
 class Mt3dBtn(Package):
     """
@@ -365,12 +365,14 @@ class Mt3dBtn(Package):
                                           np.int, flow_package.laytyp.get_value(),
                                           name='laycon', locat=self.unit_number[0])
 
-        s = 'BTN error. Laycon has not been set.  A modflow model with a valid'
-        s += ' BCF or LPF package must exist in a modflow model that is passed'
-        s += ' to the Mt3dms constructor, or laycon must be specified as an'
-        s += 'argument to the BTN constructor.'
+        s = 'BTN warning. Laycon has not been set.  A modflow model with a '
+        s += ' BCF or LPF package does not exist and laycon was not passed '
+        s += ' to the BTN constructor.  Setting laycon to 1 (convertible).'
         if self.laycon is None:
-            raise Exception(s)
+            warnings.warn(s)
+            self.laycon = util_2d(self.parent, (nlay,), np.int, 1,
+                                  name='laycon',
+                                  locat=self.unit_number[0])
         return
 
     def write_file(self):
@@ -677,6 +679,7 @@ class Mt3dBtn(Package):
             print('   NOBS {}'.format(nobs))
             print('   NPROBS {}'.format(nprobs))
 
+        obs = None
         if nobs > 0:
             if model.verbose:
                 print('   loading KOBS, IOBS, JOBS...')

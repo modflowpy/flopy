@@ -130,8 +130,7 @@ class Mt3dDsp(Package):
             name = "dmcoef" + str(icomp)
             val = 0.0
             if name in list(kwargs.keys()):
-                val = kwargs[name]
-                kwargs.pop(name)
+                val = kwargs.pop(name)
             else:
                 print("DSP: setting dmcoef for component " +
                       str(icomp) + " to zero, kwarg name " +

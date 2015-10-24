@@ -210,8 +210,7 @@ class Mt3dSsm(Package):
                     val = 0.0
                     name = "crch" + str(icomp)
                     if name in list(kwargs.keys()):
-                        val = kwargs[name]
-                        kwargs.pop(name)
+                        val = kwargs.pop(name)
                     else:
                         print("SSM: setting crch for component " +\
                               str(icomp) + " to zero. kwarg name " +\
@@ -223,7 +222,7 @@ class Mt3dSsm(Package):
         else:
             self.crch = None
 
-        if (cevt != None):
+        if cevt is not None:
             self.cevt = []
             t2d = transient_2d(model, (nrow, ncol), np.float32,
                                cevt, name='cevt1',
@@ -319,14 +318,14 @@ class Mt3dSsm(Package):
                 for c, t2d in enumerate(self.crch):
                     incrch, file_entry = t2d.get_kper_entry(kper)
                     if (c == 0):
-                        f_ssm.write('{:10i}\n'.format(incrch))
+                        f_ssm.write('{:10d}\n'.format(incrch))
                     f_ssm.write(file_entry)
 
             if (self.cevt != None):
                 for c, t2d in enumerate(self.cevt):
                     incevt, file_entry = t2d.get_kper_entry(kper)
                     if (c == 0):
-                        f_ssm.write('{:10i}\n'.format(incevt))
+                        f_ssm.write('{:10d}\n'.format(incevt))
                     f_ssm.write(file_entry)
 
             # List of sources
