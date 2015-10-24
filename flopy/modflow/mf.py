@@ -161,6 +161,8 @@ class Modflow(BaseModel):
             "evt": flopy.modflow.ModflowEvt,
             "ghb": flopy.modflow.ModflowGhb,
             "gmg": flopy.modflow.ModflowGmg,
+            "lmt6": flopy.modflow.ModflowLmt,
+            "lmt7": flopy.modflow.ModflowLmt,
             "riv": flopy.modflow.ModflowRiv,
             "str": flopy.modflow.ModflowStr,
             "swi2": flopy.modflow.ModflowSwi2,

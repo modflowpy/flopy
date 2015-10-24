@@ -157,7 +157,7 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
 | Link-AMG (LMG)                                 | Not supported        | Not supported        | Not supported        |
-| MODFLOW Link-MT3DMS (LMT)                      | Supported            | Not supported        | Not supported        |
+| MODFLOW Link-MT3DMS (LMT)                      | Supported            | Supported            | Not supported        |
 | Multipler (MULT)                               | Not supported        | Supported            | Not supported        |
 | Multi-Node Well 1 (MNW1)                       | Limited support      | Not supported        | Not supported        |
 | Multi-Node Well 2 (MNW1)                       | Limited support      | Not supported        | Not supported        |
