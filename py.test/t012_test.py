@@ -12,7 +12,7 @@ def test_mf2005_p07():
     namfile = 'p7mf2005.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'p7mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -22,7 +22,7 @@ def test_mf2000_p07():
     namfile = 'p7mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'p7mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -32,7 +32,7 @@ def test_mf2000_HSSTest():
     namfile = 'hsstest_mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'hsstest_mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -44,7 +44,7 @@ def test_mf2000_mnw():
     namfile = 't5mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 't5mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -55,7 +55,7 @@ def test_mf2000_MultiDiffusion():
     namfile = 'p7mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'p7MT.NAM'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -65,7 +65,7 @@ def test_mf2000_P07():
     namfile = 'p7mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'p7mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -75,7 +75,7 @@ def test_mf2000_reinject():
     namfile = 'P3MF2K.NAM'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'P3MT.NAM'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -85,7 +85,7 @@ def test_mf2000_SState():
     namfile = 'SState_mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'SState_mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -95,7 +95,7 @@ def test_mf2000_tob():
     namfile = 'p7mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'p7mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return
@@ -105,7 +105,7 @@ def test_mf2000_zeroth():
     namfile = 'z0mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'z0mt.nam'
-    mt = flopy.mt3d.mt.Mt3dms2.load(namfile, model_ws=pth, verbose=True)
+    mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
     return

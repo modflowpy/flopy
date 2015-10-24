@@ -137,7 +137,7 @@ class Mt3dSsm(Package):
     """
     unitnumber = 34
     def __init__(self, model, crch=None, cevt=None, mxss=None,
-                 modflowmodel=None, stress_period_data=None, dtype=None,
+                 stress_period_data=None, dtype=None,
                  extension='ssm', unitnumber=None, **kwargs):
 
         if unitnumber is None:
@@ -158,10 +158,10 @@ class Mt3dSsm(Package):
         ncomp = model.ncomp
 
         self.__SsmPackages = []
-        if modflowmodel is not None:
+        if self.parent.mf is not None:
             for i, label in enumerate(SsmLabels):
                 self.__SsmPackages.append(SsmPackage(label,
-                                   modflowmodel.get_package(label),
+                                   self.parent.mf.get_package(label),
                                    (i < 6))) # First 6 need T/F flag in file line 1
 
         if dtype is not None:
@@ -169,18 +169,23 @@ class Mt3dSsm(Package):
         else:
             self.dtype = self.get_default_dtype(ncomp)
 
-        self.stress_period_data = mflist(self, model=model,
-                                                 data=stress_period_data)
+        if stress_period_data is None:
+            self.stress_period_data = None
+        else:
+            self.stress_period_data = mflist(self, model=model,
+                                         data=stress_period_data)
 
-        if mxss is None and modflowmodel is None:
+        if mxss is None and self.parent.mf is None:
             warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
                           'None.  Cannot calculate max number of sources ' +
                           'and sinks.  Estimating from stress_period_data. ')
 
         if mxss is None:
             # Need to calculate max number of sources and sinks
-            self.mxss = np.sum(self.stress_period_data.data[0].itype == -1)
-            self.mxss += np.sum(self.stress_period_data.data[0].itype == -15)
+            self.mxss = 0
+            if self.stress_period_data is not None:
+                self.mxss += np.sum(self.stress_period_data.data[0].itype == -1)
+                self.mxss += np.sum(self.stress_period_data.data[0].itype == -15)
 
             if isinstance(self.parent.btn.icbund, np.ndarray):
                 self.mxss += (self.parent.btn.icbund < 0).sum()
@@ -325,7 +330,10 @@ class Mt3dSsm(Package):
                     f_ssm.write(file_entry)
 
             # List of sources
-            self.stress_period_data.write_transient(f_ssm, single_per=kper)
+            if self.stress_period_data is not None:
+                self.stress_period_data.write_transient(f_ssm, single_per=kper)
+            else:
+                f_ssm.write('{}\n'.format(0))
 
         f_ssm.close()
         return
