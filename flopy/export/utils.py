@@ -46,6 +46,7 @@ def mflist_helper(f,mfl):
                 units = NC_UNITS_FORMAT[var_name].format(f.grid_units,f.time_units)
             precision_str = NC_PRECISION_TYPE[mfl.dtype[name].type]
             attribs = {"long_name":"flopy.mflist instance of {0}".format(var_name)}
+            attribs["coordinates"] = "time layer latitude longitude"
             if units is not None:
                 attribs["units"] = units
             try:
@@ -101,6 +102,7 @@ def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units,f.time_units)
         precision_str = NC_PRECISION_TYPE[t2d.dtype]
         attribs = {"long_name":"flopy.transient_2d instance of {0}".format(var_name)}
+        attribs["coordinates"] = "time layer latitude longitude"
         if units is not None:
             attribs["units"] = units
         try:
@@ -167,6 +169,7 @@ def util3d_helper(f,u3d,min_valid=-1.0e+9, max_valid=1.0e+9):
         precision_str = NC_PRECISION_TYPE[u3d.dtype]
 
         attribs = {"long_name":"flopy.util_3d instance of {0}".format(var_name)}
+        attribs["coordinates"] = "layer latitude longitude"
         if units is not None:
             attribs["units"] = units
         try:
@@ -228,6 +231,7 @@ def util2d_helper(f,u2d,min_valid=-1.0e+9, max_valid=1.0e+9):
         precision_str = NC_PRECISION_TYPE[u2d.dtype]
 
         attribs = {"long_name":"flopy.util_2d instance of {0}".format(var_name)}
+        attribs["coordinates"] = "latitude longitude"
         if units is not None:
             attribs["units"] = units
         try:
