@@ -72,7 +72,7 @@ def test_mf2000_P07():
 
 def test_mf2000_reinject():
     pth = os.path.join(pth2000, 'reinject')
-    namfile = 'P3MF2K.nam'
+    namfile = 'P3MF2K.NAM'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
     namfile = 'P3MT.NAM'
     mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
