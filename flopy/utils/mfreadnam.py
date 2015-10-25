@@ -147,7 +147,7 @@ def parsenamefile(namfilename, packages, verbose=True):
                     bname = os.path.basename(fname)
                     if bname.lower() in lownams:
                         idx = lownams.index(bname.lower())
-                        fname = os.path.join(dn, lownams[idx])
+                        fname = os.path.join(dn, fls[idx])
                 # parse the line
                 openmode = 'r'
                 if tmp[0].upper() == 'DATA(BINARY)':
