@@ -135,21 +135,21 @@ def parsenamefile(namfilename, packages, verbose=True):
             # be sure the second value is an integer
             if testint(tmp[1]):
                 fname = os.path.join(os.path.dirname(namfilename), tmp[2])
+                if not os.path.isfile(fname):
+                    # change to lower and make comparison (required for linux)
+                    dn = os.path.dirname(fname)
+                    fls = os.listdir(dn)
+                    lownams = [f.lower() for f in fls]
+                    bname = os.path.basename(fname)
+                    if bname.lower() in lownams:
+                        idx = lownams.index(bname.lower())
+                        fname = os.path.join(dn, lownams[idx])
                 # parse the line
                 openmode = 'r'
                 if tmp[0].upper() == 'DATA(BINARY)':
                     openmode = 'rb'
                 try:
-                    try:
-                        # case sensitive
-                        filehandle = open(fname, openmode)
-                    except:
-                        # case insensitive
-                        dn = os.path.dirname(fname)
-                        fls = os.listdir(dn)
-                        lownams = [f.lower() for f in fls]
-                        fname = lownams[lownams.index(fname.lower())]
-                        filehandle = open(fname, openmode)
+                    filehandle = open(fname, openmode)
                 except:
                     if verbose:
                         print('could not set filehandle for {0:s}'\
