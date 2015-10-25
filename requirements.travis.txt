@@ -2,4 +2,3 @@ numpy>=1.9
 matplotlib>=1.4
 pyshp
 pandas
-netCDF4
