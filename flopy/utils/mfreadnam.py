@@ -126,7 +126,8 @@ def parsenamefile(namfilename, packages, verbose=True):
         print('Setting filehandles:')
 
     if not os.path.isfile(namfilename):
-        s = 'Could not find {} in path {}'.format(namfilename, os.path.dirname(namfilename))
+        dn = os.path.dirname(namfilename)
+        s = 'Could not find {} in path {} with files \n {}'.format(namfilename, dn, os.listdir(dn))
         raise Exception(s)
     indata = open(namfilename, 'r').readlines()
     for line in indata:
