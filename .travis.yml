@@ -13,4 +13,4 @@ python:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
-    - nosetests ./py.test
+    - nosetests -v -w ./py.test
