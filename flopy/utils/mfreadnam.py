@@ -140,7 +140,16 @@ def parsenamefile(namfilename, packages, verbose=True):
                 if tmp[0].upper() == 'DATA(BINARY)':
                     openmode = 'rb'
                 try:
-                    filehandle = open(fname, openmode)
+                    try:
+                        # case sensitive
+                        filehandle = open(fname, openmode)
+                    except:
+                        # case insensitive
+                        dn = os.path.dirname(fname)
+                        fls = os.listdir(dn)
+                        lownams = [f.lower() for f in fls]
+                        fname = lownams[lownams.index(fname.lower())]
+                        filehandle = open(fname, openmode)
                 except:
                     if verbose:
                         print('could not set filehandle for {0:s}'\
