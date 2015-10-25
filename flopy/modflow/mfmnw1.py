@@ -107,7 +107,8 @@ class ModflowMnw1(Package):
     def write_file( self ):
         
         #-open file for writing
-        f_mnw1 = open( self.file_name[0], 'w' )
+        # f_mnw1 = open( self.file_name[0], 'w' )
+        f_mnw1 = open( self.fn_path, 'w' )
 
         #-write header
         f_mnw1.write( '%s\n' % self.heading )
