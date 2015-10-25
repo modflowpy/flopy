@@ -371,7 +371,7 @@ class Modflow(BaseModel):
 
         # read name file
         try:
-            namefile_path = os.path.join(ml.model_ws, ml.namefile)
+            namefile_path = os.path.join(ml.model_ws, f)
             ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
                                                     ml.mfnam_packages,
                                                     verbose=verbose)
