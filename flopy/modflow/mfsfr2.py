@@ -449,6 +449,8 @@ class ModflowSfr2(Package):
             line = next(f)
             line = line_parse(line)
             ireach = tuple(map(float, line[:len(dtypes)]))
+            if sum(ireach) < 0:
+                j=2
             lines.append(ireach)
 
         tmp = np.array(lines, dtype=dtypes)
@@ -1138,10 +1140,10 @@ class check:
                 cols = [c for c in reach_data.dtype.names if c in \
                         ['node', 'krch', 'irch', 'jrch', 'iseg', 'ireach', 'rchlen', 'strthick', 'strhc1']]
 
-                recfunctions.append_fields(reach_data,
-                                           names=['width', 'conductance'],
-                                           data=[w, Cond],
-                                           asrecarray=True)
+                reach_data = recfunctions.append_fields(reach_data,
+                                                        names=['width', 'conductance'],
+                                                        data=[w, Cond],
+                                                        asrecarray=True)
                 has_multiple = np.array([True if n in nodes_with_multiple_conductance
                                          else False for n in reach_data.node])
                 txt += _print_rec_array(reach_data[cols][has_multiple])
@@ -1187,10 +1189,10 @@ class check:
                                         (segment_data.outseg != 0)
                 if np.any(backwards_connections):
                     backwards_info = segment_data[['nseg', 'outseg', 'elevdn']]
-                    recfunctions.append_fields(backwards_info,
-                                               names='outseg_elevup',
-                                               data=outseg_elevup,
-                                               asrecarray=True)
+                    backwards_info = recfunctions.append_fields(backwards_info,
+                                                                names='outseg_elevup',
+                                                                data=outseg_elevup,
+                                                                asrecarray=True)
                     backwards_info = backwards_info[backwards_connections]
                     txt += 'Stress Period {}: {} segments encountered with outseg elevup > elevdn.\n' \
                         .format(per + 1, len(backwards_info))
@@ -1198,8 +1200,8 @@ class check:
                         txt += 'Backwards segment connections:\n'
                         txt += _print_rec_array(backwards_info)
                     txt += '\n'
-                if len(txt) == 0:
-                    passed = True
+            if len(txt) == 0:
+                passed = True
         else:
             txt += 'Segment elevup and elevdn not specified for nstrm={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.isfropt)
@@ -1254,7 +1256,7 @@ class check:
 
             # check streambed bottoms in relation to respective cell bottoms
             bots = self.sfr.parent.dis.botm.array[k, i, j]
-            recfunctions.append_fields(reach_data, names='layerbot', data=bots, asrecarray=True)
+            reach_data = recfunctions.append_fields(reach_data, names='layerbot', data=bots, asrecarray=True)
             streambed_bots = reach_data.strtop - reach_data.strthick
             below_layer_bottoms = streambed_bots < bots
             if np.any(below_layer_bottoms):
@@ -1269,7 +1271,7 @@ class check:
 
             # check streambed elevations in relation to model top
             tops = self.sfr.parent.dis.top.array[i, j]
-            recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
+            reach_data = recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
             above_model_top = reach_data.strtop > tops
             if np.any(above_model_top):
                 above_info = reach_data[['krch', 'irch', 'jrch', 'iseg', 'strtop',
@@ -1574,7 +1576,7 @@ def parse_1c(line, reachinput, transroute):
 
     irtflg, numtim, weight, flwtol = na, na, na, na
     if nstrm < 0 or transroute:
-        irtflg = int(line.pop(0))
+        irtflg = _pop_item(line)
         if irtflg > 0:
             numtim = int(line.pop(0))
             weight = int(line.pop(0))
