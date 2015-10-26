@@ -257,6 +257,12 @@ class util_3d(object):
         if isinstance(value, util_3d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
+            self.model = model
+            for i,u2d in enumerate(self.util_2ds):
+                self.util_2ds[i] = util_2d(model,u2d.shape,u2d.dtype,
+                                           u2d.array,name=u2d.name,
+                                           fmtin=u2d.fmtin,locat=locat)
+
             return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
         self.model = model
@@ -295,6 +301,9 @@ class util_3d(object):
         else:
             raise NotImplementedError("util_3d doesn't support setitem indices" + str(k))
 
+    def export(self,f):
+        from flopy import export
+        return export.utils.util3d_helper(f,self)
 
     def to_shapefile(self, filename):
         """
@@ -614,6 +623,7 @@ class transient_2d(object):
         if isinstance(value, transient_2d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
+            self.model = model
             return
 
         self.model = model
@@ -800,11 +810,23 @@ class transient_2d(object):
         elif kper < min(self.transient_2ds.keys()):
             return self.get_zero_2d(kper)
         else:
-            for i in range(kper, 0, -1):
+            for i in range(kper, -1, -1):
                 if i in list(self.transient_2ds.keys()):
                     return self.transient_2ds[i]
             raise Exception("transient_2d.__getitem__(): error:" + \
-                            " could find an entry before kper {0:d}".format(kper))
+                            " could not find an entry before kper {0:d}".format(kper))
+
+    @property
+    def array(self):
+        arr = np.zeros((self.model.dis.nper,self.shape[0],self.shape[1]),dtype=self.dtype)
+        for kper in range(self.model.dis.nper):
+            u2d = self[kper]
+            arr[kper,:,:] = u2d.array
+        return arr
+
+    def export(self,f):
+        from flopy import export
+        return export.utils.transient2d_helper(f,self)
 
     def get_kper_entry(self, kper):
         """
@@ -864,7 +886,6 @@ class transient_2d(object):
         else:
             raise Exception("transient_2d error: value type not " +
                             " recognized: " + str(type(self.__value)))
-
 
     def __get_2d_instance(self, kper, arg):
         """
@@ -962,6 +983,7 @@ class util_2d(object):
         if isinstance(value, util_2d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
+            self.model = model
             return
         self.model = model
         self.shape = shape
@@ -1096,6 +1118,11 @@ class util_2d(object):
         return pu._plot_array_helper(self.array, self.model,
                                      names=title, filenames=filename,
                                      fignum=fignum, **kwargs)
+
+
+    def export(self,f):
+        from flopy import export
+        return export.utils.util2d_helper(f,self)
 
 
     def to_shapefile(self, filename):
@@ -1592,6 +1619,10 @@ class util_2d(object):
                                     str(value))
 
         if isinstance(value, np.ndarray):
+            # if value is 3d, but dimension 1 is only length 1,
+            # then drop the first dimension
+            if len(value.shape) == 3 and value.shape[0] == 1:
+                value = value[0]
             if self.shape != value.shape:
                 raise Exception('util_2d:self.shape: ' + str(self.shape) +
                                 ' does not match value.shape: ' +
@@ -1626,10 +1657,16 @@ class util_2d(object):
                     curr_unit = cunit
                     break
 
+        # Allows for special MT3D array reader
+        array_format = None
+        if hasattr(model, 'array_format'):
+            array_format = model.array_format
+
         cr_dict = util_2d.parse_control_record(f_handle.readline(),
                                                current_unit=curr_unit,
                                                dtype=dtype,
-                                               ext_unit_dict=ext_unit_dict)
+                                               ext_unit_dict=ext_unit_dict,
+                                               array_format=array_format)
 
         if cr_dict['type'] == 'constant':
             u2d = util_2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
@@ -1656,14 +1693,20 @@ class util_2d(object):
                 f = open(fname, 'rb')
                 header_data, data = util_2d.load_bin(shape, f, dtype, bintype='Head')
             f.close()
-            data *= cr_dict['cnstnt']
+            factor = cr_dict['cnstnt']
+            if factor == 0:
+                factor = 1
+            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
 
 
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
-            data *= cr_dict['cnstnt']
+            factor = cr_dict['cnstnt']
+            if factor == 0:
+                factor = 1
+            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
 
@@ -1677,7 +1720,10 @@ class util_2d(object):
                 header_data, data = util_2d.load_bin(
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
                     bintype='Head')
-            data *= cr_dict['cnstnt']
+            factor = cr_dict['cnstnt']
+            if factor == 0:
+                factor = 1
+            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
                           iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
             # track this unit number so we can remove it from the external
@@ -1688,7 +1734,7 @@ class util_2d(object):
 
     @staticmethod
     def parse_control_record(line, current_unit=None, dtype=np.float32,
-                             ext_unit_dict=None):
+                             ext_unit_dict=None, array_format=None):
         """
         parses a control record when reading an existing file
         rectifies fixed to free format
@@ -1745,14 +1791,15 @@ class util_2d(object):
                 cnstnt = np.float(line[10:20].strip().lower().replace('d', 'e'))
             else:
                 cnstnt = np.int(line[10:20].strip())
+                if cnstnt == 0:
+                    cnstnt = 1
             if locat != 0:
                 fmtin = line[20:40].strip()
                 iprn = np.int(line[40:50].strip())
-            #locat = int(raw[0])        
+            #locat = int(raw[0])
             #cnstnt = float(raw[1])
             #fmtin = raw[2].strip()
             #iprn = int(raw[3])
-
             if locat == 0:
                 freefmt = 'constant'
             elif locat < 0:
@@ -1766,6 +1813,21 @@ class util_2d(object):
                 else:
                     freefmt = 'external'
                 nunit = np.int(locat)
+
+            # Reset for special MT3D control flags
+            if array_format == 'mt3d':
+                if locat == 100:
+                    freefmt = 'internal'
+                    nunit = current_unit
+                elif locat == 101:
+                    raise NotImplementedError('MT3D block format not supported...')
+                elif locat == 102:
+                    raise NotImplementedError('MT3D zonal format not supported...')
+                elif locat == 103:
+                    freefmt = 'internal'
+                    nunit = current_unit
+                    fmtin = '(free)'
+
         cr_dict = {}
         cr_dict['type'] = freefmt
         cr_dict['cnstnt'] = cnstnt

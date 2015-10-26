@@ -1,0 +1,8 @@
+LIST 6  p4.lst
+BAS  1  p4.bas
+BCF 11  p4.bcf
+WEL 12  p4.wel
+SIP 19  p4.sip
+OC  22  p4.oc
+LMT 60  p4.ftl
+DATA(Binary) 3 p4.ufh

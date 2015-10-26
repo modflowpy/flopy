@@ -20,6 +20,6 @@
     --------
 
     """
-from .plotutil import SwiConcentration, plot_shapefile
+from .plotutil import SwiConcentration, plot_shapefile, shapefile_extents
 from .map import ModelMap
 from .crosssection import ModelCrossSection

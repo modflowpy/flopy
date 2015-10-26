@@ -1,0 +1,26 @@
+MT3DMS Benchmark Test Problem #2
+1D advection-dispersion with nonlinear sorption
+         1         1       101         2         1         1
+ SEC  CM   G
+T T T T T F F F F                                     !TRNOP
+ 0                                                    !LAYCON
+         0  .1600000                                  !DELR
+         0   1.00000                                  !DELC
+         0   1.00000                                  !HTOP
+         0   1.00000                                  !DZ
+         0      .370                                  !PRSITY
+       101         1                                  !ICBUND-LAY1
+2
+1 1  1 101 1
+1 1  1 101 1
+         0        0.                                  !SCONC-LAY1
+   -999.99        0.                                  !CINACT,thkmin
+         5         2         5         0         T
+         0                                            !NPRS
+         1        10                                  !NOBS,NPROBS
+         1         1        51
+         T        10                                  !CHKMAS,NPRMAS
+    160.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0     15000     1.00        10.                !DT0 MXSTRN
+   1320.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0     15000     1.00        10.                !DT0 MXSTRN

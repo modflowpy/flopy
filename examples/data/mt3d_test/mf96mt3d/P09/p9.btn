@@ -1,0 +1,24 @@
+MT3DMS Benchmark Test Problem #9
+transport in a 2d flow field with a low-K zone
+         1        18        14         2         1         1  !NLAY,NROW,NCOL,NPER,NCOMP,MCOMP
+   S   M   G                                                  !TUNIT,LUNIT,MUNIT
+ T T T F T F F F F F                                          !ADV,DSP,SSM,RCT,GCG,......
+ 0                                                            !LAYCON
+         0      100.                                          !DELR
+         0      100.                                          !DELC
+         0       10.                                          !HTOP
+         0       10.                                          !DZ
+         0       .30                                          !PRSITY
+         0         1                                          !ICBUND
+         0        0.(31F3.0)                                  !COLD
+    -999.0        0.                                          !CINACT,THKMIN
+         8         2         0         0         T            !OUTPUT CONTROL
+         0                                                    !NPRS
+         2         1                                          !NOBS,NPROBS
+         1         4         7                                !KOBS,IOBS,JOBS
+         1        11         7
+         T         1                                          !CHKMAS,NPRMAS
+31536005.0         1        1.                                !PERLEN,NSTP,TSMULT
+         0      1000                                          !DT0 MXSTRN
+31536005.0         1        1.                                !PERLEN,NSTP,TSMULT
+         0      1000        1.        0.                      !DT0 MXSTRN TTSMULT,TTSMAX

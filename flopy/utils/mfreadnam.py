@@ -59,7 +59,7 @@ class NamData(object):
         self.filename = name
         self.filetype = pkgtype
         self.package = None
-        if self.filetype.lower() in list(packages.keys()):
+        if self.filetype.lower() in packages:
             self.package = packages[self.filetype.lower()]
 
 def getfiletypeunit(nf, filetype):
@@ -114,8 +114,9 @@ def parsenamefile(namfilename, packages, verbose=True):
         is stored in the ext_unit_dict dictionary keyed by unit number
     """
     # add the .nam extension to namfilename if missing
-    if namfilename[-4:].lower() != '.nam':
-        namfilename += '.nam'
+    if not os.path.isfile(namfilename):
+        if namfilename[-4:].lower() != '.nam':
+            namfilename += '.nam'
     
     # initiate the ext_unit_dict dictionary
     ext_unit_dict = dict()
@@ -146,7 +147,19 @@ def parsenamefile(namfilename, packages, verbose=True):
                             .format(tmp[2]))
                     filehandle = None
                 # populate the dictionary
-                ext_unit_dict[int(tmp[1])] = NamData(tmp[0], fname, filehandle,
-                                                     packages)
+                key = int(tmp[1])
+                #
+                # Trap for the case where unit numbers are specified as zero
+                # In this case, the package must have a variable called
+                # unit number attached to it.  If not, then the key is set
+                # to fname
+                if key == 0:
+                    ftype = tmp[0].lower()
+                    if ftype in packages:
+                        key = packages[ftype].unitnumber
+                    else:
+                        key = tmp[0]
+                ext_unit_dict[key] = NamData(tmp[0], fname, filehandle,
+                                             packages)
     return ext_unit_dict
 

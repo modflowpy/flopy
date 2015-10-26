@@ -1,0 +1,52 @@
+3D TRANSPORT IN UNIFORM FLOW FIELD WITH CONTINUOUS POINT SOURCE
+(REFER TO SECTION 7.7 OF MT3DMS MANUAL)
+         8        15        21         1         1         1  !NLAY,NROW,NCOL,NPER,NCOMP,MCOMP
+ DAY  FT  LB                                                  !TUNIT,LUNIT,MUNIT
+ T T T F T F F F F F                            !TRNOP: ADV,DSP,SSM,RCT,GCG...
+ 0 0 0 0 0 0 0 0                                              !LAYCON
+         0       10.                                          !DELR
+         0       10.                                          !DELC
+         0       80.                                          !HTOP
+         0       10.                                          !DZ-LAYER 1
+         0       10.                                          !DZ-2
+         0       10.                                          !DZ-3
+         0       10.                                          !DZ-4
+         0       10.                                          !DZ-5
+         0       10.                                          !DZ-6
+         0       10.                                          !DZ-7
+         0       10.                                          !DZ-8
+         0       .20                                          !PRSITY-LAYER 1
+         0       .20                                          !PRSITY-2
+         0       .20                                          !PRSITY-3
+         0       .20                                          !PRSITY-4
+         0       .20                                          !PRSITY-5
+         0       .20                                          !PRSITY-6
+         0       .20                                          !PRSITY-7
+         0       .20                                          !PRSITY-8
+         0         1                                          !ICBUND-LAYER 1
+         0         1                                          !ICBUND-2
+         0         1                                          !ICBUND-3
+         0         1                                          !ICBUND-4
+         0         1                                          !ICBUND-5
+         0         1                                          !ICBUND-6
+         0         1                                          !ICBUND-7
+         0         1                                          !ICBUND-8
+         0        0.                                          !SCONC-LAYER 1
+         0        0.                                          !SCONC-2
+         0        0.                                          !SCONC-3
+         0        0.                                          !SCONC-4
+         0        0.                                          !SCONC-5
+         0        0.                                          !SCONC-6
+         0        0.                                          !SCONC-7
+         0        0.                                          !SCONC-8
+    999.99         0                                          !CINACT,THKMIN
+         1         2         0         0         T         T  !OUTPUT CONTROL
+         0                                                    !NPRS
+         4         1                                          !NOBS,NPROBS
+         7         8         3                                !KOBS,IOBS,JOBS
+         5         8         5
+         5         9         5
+         5        10         5
+         T         1                                          !CHKMAS,NPRMAS
+      100.         1        1.                                !PERLEN,NSTP,TSMULT
+        0.     10000        1.       3.5                      !DT0,MXSTRN,TTSMULT,TTSMAX

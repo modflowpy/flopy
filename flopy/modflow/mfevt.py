@@ -166,7 +166,7 @@ class ModflowEvt(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # Dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
@@ -179,7 +179,7 @@ class ModflowEvt(Package):
                 if model.verbose:
                     print('  Parameters detected. Number of parameters = ', npar)
             line = f.readline()
-        #dataset 2
+        # Dataset 2
         t = line.strip().split()
         nevtop = int(t[0])
         ipakcb = 0
@@ -190,7 +190,7 @@ class ModflowEvt(Package):
         except:
             pass
 
-        # dataset 3 and 4 - parameters data
+        # Dataset 3 and 4 - parameters data
         pak_parms = None
         if npar > 0:
             pak_parms = mfparbc.loadarray(f, npar, model.verbose)
@@ -198,7 +198,8 @@ class ModflowEvt(Package):
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        #read data for every stress period
+
+        # Read data for every stress period
         surf = {}
         evtr = {}
         exdp = {}

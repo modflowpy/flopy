@@ -1,0 +1,39 @@
+MT3DMS Benchmark Test Problem #1 - Case 1b
+1D UNIFORM FLOW FIELD
+         1         1       101         1         1         1  !NLAY,NROW,NCOL,NPER,NCOMP,MCOMP
+ DAY   M   G         !TUNIT,LUNIT,MUNIT
+ T T T F T F F F F F               !ADV,DSP,SSM,RCT,GCG,...
+ 0                                          !LAYCON
+         0       10.                                    !DELR
+         0        1.                                    !DELC
+         0        1.                                    !HTOP
+         0        1.                                    !DZ-LAYER 1
+         0       .25                                    !PRSITY-LAYER 1
+       100         1(15I3)                       3      !ICBUND-LAYER 1
+ -1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1
+       100        0.(15F3.0)                     4      !SCONC-1
+  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0
+   -999.00         0                                    !CINACT,THKMIN
+         6         2         3         6         T      !IFMTCN,IFMTNP,IFMTRF,IFMTDP,SAVUCN
+         0                !NPRS
+         5         1      !NOBS,NPROBS
+         1         1         1        !KOBS,IOBS,JOBS
+         1         1        11
+         1         1        21
+         1         1        41
+         1         1        81
+         T         1                       !CHKMAS,NPRMAS
+     2000.         1        1.             !PERLEN,NSTP,TSMULT
+         0       500        1.         0   !DT0,MXSTRN,TTSMULT,TTSMAX

@@ -410,6 +410,47 @@ class SwiConcentration():
         else:
             return conc[layer, :, :]
 
+
+
+def shapefile_extents(shp):
+    """
+    Determine the extents of a shapefile
+
+    Parameters
+    ----------
+    shp : string
+        Name of the shapefile to convert to a PatchCollection.
+
+    Returns
+    -------
+    extents : tuple
+        tuple with xmin, xmax, ymin, ymax from shapefile.
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> fshp = 'myshapefile'
+    >>> extent = flopy.plot.plotutil.shapefile_extents(fshp)
+
+    """
+    try:
+        import shapefile
+    except:
+        s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
+        raise Exception(s)
+    sf = shapefile.Reader(shp)
+    shapes = sf.shapes()
+    nshp = len(shapes)
+    xmin, xmax, ymin, ymax = 1.e20, -1.e20, 1.e20, -1.e20
+    ptchs = []
+    for n in range(nshp):
+        for p in shapes[n].points:
+            xmin, xmax = min(xmin, p[0]), max(xmax, p[0])
+            ymin, ymax = min(ymin, p[1]), max(ymax, p[1])
+    return xmin, xmax, ymin, ymax
+
+
 def shapefile_get_vertices(shp):
     """
     Get vertices for the features in a shapefile
@@ -516,7 +557,9 @@ def shapefile_to_patch_collection(shp, radius=500.):
     return pc
 
 def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
-                   edgecolor='scaled', facecolor='scaled', **kwargs):
+                   edgecolor='scaled', facecolor='scaled',
+                   a=None, masked_values=None,
+                   **kwargs):
     """
     Generic function for plotting a shapefile.
 
@@ -534,6 +577,10 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
         Color name.  (Default is 'scaled' to scale the edge colors.)
     facecolor : string
         Color name.  (Default is 'scaled' to scale the face colors.)
+    a : numpy.ndarray
+        Array to plot.
+    masked_values : iterable of floats, ints
+        Values to mask.
     kwargs : dictionary
         Keyword arguments that are passed to PatchCollection.set(**kwargs).
         Some common kwargs would be 'linewidths', 'linestyles', 'alpha', etc.
@@ -555,21 +602,44 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     import numpy as np
     import matplotlib.pyplot as plt
 
+    if 'vmin' in kwargs:
+        vmin = kwargs.pop('vmin')
+    else:
+        vmin = None
+
+    if 'vmax' in kwargs:
+        vmax = kwargs.pop('vmax')
+    else:
+        vmax = None
+
     if ax is None:
         ax = plt.gca()
     cm = plt.get_cmap(cmap)
     pc = shapefile_to_patch_collection(shp, radius=radius)
-    nshp = len(pc.get_paths())
-    cccol = cm(1. * np.arange(nshp) / nshp)
-    if facecolor == 'scaled':
-        pc.set_facecolor(cccol)
-    else:
-        pc.set_facecolor(facecolor)
-    if edgecolor == 'scaled':
-        pc.set_edgecolor(cccol)
-    else:
-        pc.set_edgecolor(edgecolor)
     pc.set(**kwargs)
+    if a is None:
+        nshp = len(pc.get_paths())
+        cccol = cm(1. * np.arange(nshp) / nshp)
+        if facecolor == 'scaled':
+            pc.set_facecolor(cccol)
+        else:
+            pc.set_facecolor(facecolor)
+        if edgecolor == 'scaled':
+            pc.set_edgecolor(cccol)
+        else:
+            pc.set_edgecolor(edgecolor)
+    else:
+        pc.set_cmap(cm)
+        if masked_values is not None:
+            for mval in masked_values:
+                a = np.ma.masked_equal(a, mval)
+        if edgecolor == 'scaled':
+            pc.set_edgecolor('none')
+        else:
+            pc.set_edgecolor(edgecolor)
+        pc.set_array(a)
+        pc.set_clim(vmin=vmin, vmax=vmax)
+    # add the patch collection to the axis
     ax.add_collection(pc)
     return pc
 

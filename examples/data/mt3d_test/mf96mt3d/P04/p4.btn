@@ -1,0 +1,23 @@
+MT3DMS BENCHMARK TEST PROBLEM #4
+2D TRANSPORT IN A DIAGONAL FLOW FIELD
+         1       100       100         1         1         1
+DAY UNDFUNDF
+ T T T F T F F F F F
+ 0
+         0 1.000E+01                                 */DELR         
+         0 1.000E+01                                 */DELC         
+         0 1.000E+00                                 */HTOP         
+         0 1.000E+00                                 */DZ            layer: 1
+         0 1.414E-01                                 */POROSITY      layer: 1
+         0         1                                 */ICBUND        layer: 1
+         0 0.000E+00                                 */StartingConc  layer: 1
+  -999.000        0.
+         0         0         0         0         T
+        10
+      100.      200.      300.      400.      500.      600.      700.      800.
+      900.     1000.
+         1         1
+         1        50        50
+         T         1
+1.0000E+03         1     1.000                       */Stress Period:   1
+     0         10000        1.         0

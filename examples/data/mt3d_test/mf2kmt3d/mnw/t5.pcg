@@ -1,0 +1,4 @@
+# MXITER, ITER1, NPCOND
+      1000        10         1
+  0.001     0.100           1.         2         1         1    1.0
+ # HCLOSE, RCLOSE, RELAX, NBPOL, IPRPCG, MUTPCG, DAMP

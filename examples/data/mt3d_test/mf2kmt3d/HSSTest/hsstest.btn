@@ -1,0 +1,26 @@
+2D TEST PROBLEM for HSS Package
+UNIFORM FLOW FIELD with TIME-VARYING MASS LOADING SOURCE
+         1        31        46         2         1         1  !NLAY,NROW,NCOL,NPER,NCOMP,MCOMP
+ DAY  M UNDF                                          !TUNIT,LUNIT,MUNIT
+(optional)                                            !TRNOP
+ 0                                                    !LAYCON
+         0       10.                                  !DELR
+         0       10.                                  !DELC
+         0       10.                                  !HTOP
+         0       10.                                  !DZ
+         0       .30                                  !PRSITY
+         0         1                                  !ICBUND-LAY1
+         0        0.                                  !SCONC-LAY1
+   -999.00                                            !CINACT
+         4         2         5         4         T    !IFMTCN,IFMTNP,IFMTRF,IFMTDP,SAVUCN
+        -1                                            !NPRS
+         4                                            !NOBS
+         1        16        16
+         1        16        18
+         1        18        16
+         1        16        31
+         T
+    365.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0      1000       1.0      100.              !DT0 MXSTRN,TTSMULT,TTSMAX
+    365.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0      1000       1.0      100.              !DT0 MXSTRN,TTSMULT,TTSMAX

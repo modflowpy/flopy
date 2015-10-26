@@ -229,7 +229,7 @@ class ModflowOc(Package):
                        .format(self.unit_number[4]))
 
         if self.compact:
-            f_oc.write('COMPACT BUDGET FILES\n')
+            f_oc.write('COMPACT BUDGET AUX\n')
         
         # add a line separator between header and stress
         #  period data

@@ -54,7 +54,7 @@ class ModpathSim(Package):
                  mask_layer = [1], mask_1lay = [1], face_ct = [1], ifaces = [[6, 1, 1]], part_ct = [[1, 1, 1]],
                  time_ct = 1, release_time_incr = 1, time_pts = [1],
                  particle_cell_cnt = [[2, 2, 2]], 
-                 cell_bd_ct = 1, bud_loc = [[1, 1, 1]], trace_id = 1, stop_zone = 1, zone = 1,
+                 cell_bd_ct = 1, bud_loc = [[1, 1, 1, 1]], trace_id = 1, stop_zone = 1, zone = 1,
                  retard_fac = 1.0, retard_fcCB = 1.0, extension='mpsim'):
         
         # Call ancestor's init to set self.parent, extension, name and unit number
@@ -216,12 +216,12 @@ class ModpathSim(Package):
         if self.options_dict['BudgetOutputOption'] != 1 or self.options_dict['BudgetOutputOption'] != 2:
             # item 26
             if self.options_dict['BudgetOutputOption'] == 3:
-                f_sim.write('{0:s}\n'.format(self.cell_bd_ct))
+                f_sim.write('{0:d}\n'.format(self.cell_bd_ct))
                 # item 27
                 for k in range(self.cell_bd_ct):
                     Grid, Layer, Row, Column = self.bud_loc[k]
-                    f_sim.write('{0:d} {1:d} {2:d} {3:d} \n'.format(Grid, Layer, Row, Column))
-            if self.options_dict['BudgetOutputOption']== 4:
+                    f_sim.write('{0:d} {1:d} {2:d} {3:d} \n'.format(Grid, Layer+1, Row+1, Column+1))
+            if self.options_dict['BudgetOutputOption'] == 4:
                 # item 28
                 f_sim.write('{0:s}\n'.format(self.trace_file))
                 # item 29

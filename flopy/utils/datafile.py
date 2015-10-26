@@ -238,7 +238,14 @@ class LayerFile(object):
             fext = fext.replace('.', '')
         else:
             fext = 'png'
-               
+
+        masked_values = kwargs.pop("masked_values",[])
+        if self.model is not None:
+            if self.model.bas6 is not None:
+                masked_values.append(self.model.bas6.hnoflo)
+        kwargs["masked_values"] = masked_values
+
+
         filenames = None
         if filename_base is not None:
             if mflay is not None:

@@ -117,6 +117,7 @@ class Modflow(BaseModel):
 
         # external option stuff
         self.free_format = True
+        self.array_format = 'modflow'
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
@@ -160,6 +161,8 @@ class Modflow(BaseModel):
             "evt": flopy.modflow.ModflowEvt,
             "ghb": flopy.modflow.ModflowGhb,
             "gmg": flopy.modflow.ModflowGmg,
+            "lmt6": flopy.modflow.ModflowLmt,
+            "lmt7": flopy.modflow.ModflowLmt,
             "riv": flopy.modflow.ModflowRiv,
             "str": flopy.modflow.ModflowStr,
             "swi2": flopy.modflow.ModflowSwi2,
@@ -373,9 +376,10 @@ class Modflow(BaseModel):
                                                     ml.mfnam_packages,
                                                     verbose=verbose)
         except Exception as e:
-            print("error loading name file entries from file")
-            print(str(e))
-            return None
+            #print("error loading name file entries from file")
+            #print(str(e))
+            #return None
+            raise Exception("error loading name file entries from file:\n" + str(e))
 
         if ml.verbose:
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.

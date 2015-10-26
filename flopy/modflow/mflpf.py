@@ -425,7 +425,7 @@ class ModflowLpf(Package):
 
         Returns
         -------
-        dis : ModflowLpf object
+        lpf : ModflowLpf object
             ModflowLpf object.
 
         Examples

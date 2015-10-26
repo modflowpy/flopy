@@ -7,6 +7,7 @@ import os
 import numpy as np
 from numpy.lib import recfunctions
 from flopy.mbase import Package
+from ..utils.flopy_io import line_parse
 
 
 class ModflowSfr2(Package):
@@ -380,6 +381,9 @@ class ModflowSfr2(Package):
     @staticmethod
     def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
+        if model.verbose:
+            sys.stdout.write('loading sfr2 package file...\n')
+
         tabfiles = False
         tabfiles_dict = {}
         transroute = False
@@ -442,7 +446,9 @@ class ModflowSfr2(Package):
 
         lines = []
         for i in range(abs(nstrm)):
-            ireach = tuple(map(float, next(f).strip().split()))
+            line = next(f)
+            line = line_parse(line)
+            ireach = tuple(map(float, line[:len(dtypes)]))
             lines.append(ireach)
 
         tmp = np.array(lines, dtype=dtypes)
@@ -1410,7 +1416,7 @@ def _get_dataset(line, dataset):
     tmp = []
     # interpret number supplied with decimal points as floats, rest as ints
     # this could be a bad idea (vs. explicitly formatting values for each dataset)
-    for i, s in enumerate(line.strip().split()):
+    for i, s in enumerate(line_parse(line)):
         try:
             n = int(s)
         except:
@@ -1540,7 +1546,8 @@ def parse_1c(line, reachinput, transroute):
     """
     na = 0
     # line = _get_dataset(line, [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 30, 1, 2, 0.75, 0.0001, []])
-    line = line.strip().split()
+    # line = line.strip().split()
+    line = line_parse(line)
 
     nstrm = int(line.pop(0))
     nss = int(line.pop(0))
@@ -1593,7 +1600,8 @@ def parse_6a(line, option):
     -------
         a list of length 13 containing all variables for Data Set 6a
     """
-    line = line.strip().split()
+    # line = line.strip().split()
+    line = line_parse(line)
 
     xyz = []
     # handle any aux variables at end of line
@@ -1651,7 +1659,7 @@ def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     """
     na = 0
     # line = [s for s in line.strip().split() if s.isnumeric()]
-    nvalues = sum([_isnumeric(s) for s in line.strip().split()])
+    nvalues = sum([_isnumeric(s) for s in line_parse(line)])
     line = _get_dataset(line, [0] * nvalues)
 
     hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = [0.0] * 9

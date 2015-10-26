@@ -157,7 +157,7 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
 | Link-AMG (LMG)                                 | Not supported        | Not supported        | Not supported        |
-| MODFLOW Link-MT3DMS (LMT)                      | Supported            | Not supported        | Not supported        |
+| MODFLOW Link-MT3DMS (LMT)                      | Supported            | Supported            | Not supported        |
 | Multipler (MULT)                               | Not supported        | Supported            | Not supported        |
 | Multi-Node Well 1 (MNW1)                       | Limited support      | Not supported        | Not supported        |
 | Multi-Node Well 2 (MNW1)                       | Limited support      | Not supported        | Not supported        |
@@ -201,19 +201,19 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 ### MT3DMS
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
-| Advection (ADV)                          | Supported            | Not supported        | Not supported        |
-| Basic Transport (BTN)                    | Supported            | Not supported        | Not supported        |
-| Dispersion (DSP)                         | Supported            | Not supported        | Not supported        |
-| Generalized Conjugate Gradient (GCG)     | Supported            | Not supported        | Not supported        |
+| Advection (ADV)                          | Supported            | Supported            | Not supported        |
+| Basic Transport (BTN)                    | Supported            | Supported            | Not supported        |
+| Dispersion (DSP)                         | Supported            | Supported            | Not supported        |
+| Generalized Conjugate Gradient (GCG)     | Supported            | Supported            | Not supported        |
 | PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
 | Reaction (RCT)                           | Supported            | Not supported        | Not supported        |
-| Sink and Source Mixing (SSM)             | Supported            | Not supported        | Not supported        |
+| Sink and Source Mixing (SSM)             | Supported            | Supported            | Not supported        |
 | Transport Observation (TOB)              | Supported            | Not supported        | Not supported        |
 
 ### SEAWAT
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
-| Variable Density Flow (VDF)              | Supported            | Not supported        | Not supported        |
+| Variable Density Flow (VDF)              | Supported            | Supported            | Not supported        |
 | Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
 
 
@@ -224,6 +224,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 ### Version 3.2.3
 * `flopy.utils.CellBudgetFile` returns a numpy recarray for list based budget data. Previously a dictionary with the `node` number and `q` were returned. The recarray will return the `node` number, `q`, and the `aux` variables for list based budget data.
 * Added support for the SEAWAT viscosity (VSC) package.
+* Mt3d model was redesigned based on recent changes to the Modflow model.  Mt3d packages rewritten to support multi-species.  Primary packages can be loaded (btn, adv, dsp, ssm, gcg).  Array utilities modified to read some MT3D RARRAY formats.
+* Fixed array loading functionality for case when the CNSTNT value is zero.  If CNSTNT is zero and is used as an array multiplier, it is changed to 1 (as done in MODFLOW).
 
 ### Version 3.2.2
 * *FloPy<sub>3</sub>* now supports some simple plotting capabilities for two- and three-dimensional model input data array classes  and transient two-dimensional stress period input data using the `.plot()` methods associated with the data array classes (`util_2d`, `util_3d`, and `transient_2d`). The model results reader classes (`HeadFile`, `UcnFile`, and `CellBudgetFile`) have also been extended to include a `.plot()` method that can be used to create simple plots of model output data. See the notebook [flopy3_PlotArrayExample](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_PlotArrayExample.ipynb).

@@ -1,0 +1,9 @@
+LIST           6    p8.LST
+BAS            1    p8.BAS
+BCF           11    p8.BCF
+RCH           18    p8.RCH
+PCG           13    p8.PCG
+OC            22    p8.OC
+LMT           32    p8.FTL
+Data          90    SHEAD.DAT
+Data(Binary)  93    p8.UFH

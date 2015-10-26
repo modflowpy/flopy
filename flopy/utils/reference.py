@@ -1,91 +1,71 @@
 """
-Module spatial and temporal referencing for flopy model objects
+Module spatial referencing for flopy model objects
 
 """
-
-from datetime import datetime
 import numpy as np
-#import pandas as pd
-#from flopy.utils.util_array import util_2d
 
-# def temporalreference_from_binary_headers(recordarray, verbose=False):
-#
-#     ukper = np.unique(recordarray['kper'])
-#     totim = []
-#     nstp = []
-#     tsmult = []
-#     for uk in ukper:
-#         uk_recarray = recordarray[recordarray['kper'] == uk]
-#         # what is tsmult used for?? Is it necessary for anything??
-#         #  no pertim in ucn file
-#         tm = 1.0
-#         try:
-#             us = np.unique(uk_recarray['pertim'])
-#             if us.shape[0] > 1:
-#                 tm = (us[1] / us[0]) - 1.0
-#         except:
-#             pass
-#         t = uk_recarray['totim'].max()
-#         n = uk_recarray['kstp'].max()
-#         totim.append(t)
-#         nstp.append(n)
-#         tsmult.append(tm)
-#     totim = np.array(totim, dtype=np.float32)
-#     nstp = np.array(nstp, dtype=np.int)
-#     tsmults = np.array(tsmult, dtype=np.float32)
-#     perlen = [totim[0]]
-#     perlen.extend(list(totim[1:] - totim[:-1]))
-#     perlen = np.array(perlen, dtype=np.float32)
-#     if verbose:
-#         print('LayerFile._build_tr(): assuming time units of days...')
-#     #should this be tsmults instead of tsmult??
-#     tr = TemporalReference(np.array(perlen), np.zeros_like(nstp),
-#                            nstp, tsmult, 4)
-#     return tr
-
-def spatialreference_from_gridspc_file(filename, lenuni=0):
-    f = open(filename,'r')
-    lines = f.readlines()
-    raw = f.readline().strip().split()
-    nrow = int(raw[0])
-    ncol = int(raw[1])
-    raw = f.readline().strip().split()
-    xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
-    delr = []
-    j = 0
-    while j < ncol:
-        raw = f.readline().strip().split()
-        for r in raw:
-            if '*' in r:
-                rraw = r.split('*')
-                for n in range(int(rraw[0])):
-                    delr.append(int(rraw[1]))
-                    j += 1
-            else:
-                delr.append(int(r))
-                j += 1
-
-    delc = []
-    i = 0
-    while i < nrow:
-        raw = f.readline().strip().split()
-        for r in raw:
-            if '*' in r:
-                rraw = r.split('*')
-                for n in range(int(rraw[0])):
-                    delc.append(int(rraw[1]))
-                    i += 1
-            else:
-                delc.append(int(r))
-                i += 1
-
-    f.close()
-    return SpatialReference(np.array(delr), np.array(delc),
-                            lenuni, xul=xul, yul=yul, rotation=rot)
 
 class SpatialReference(object):
+    """
+    a simple class to locate the model grid in x-y space
 
-    def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0):
+    Parameters
+    ----------
+
+    delr : util_2d
+        the model discretization delr vector
+
+    delc : util_2d
+        the model discretization delc vector
+
+    lenuni : int
+        the length units flag from the discretization package
+
+    xul : float
+        the x coordinate of the upper left corner of the grid
+
+    yul : float
+        the y coordinate of the upper left corner of the grid
+
+    rotation : float
+        the counter-clockwise rotation (in degrees) of the grid
+
+    Attributes
+    ----------
+    xedge : ndarray
+        array of column edges
+
+    yedge : ndarray
+        array of row edges
+
+    xgrid : ndarray
+        numpy meshgrid of xedges
+
+    ygrid : ndarray
+        numpy meshgrid of yedges
+
+    xcenter : ndarray
+        array of column centers
+
+    ycenter : ndarray
+        array of row centers
+
+    xcentergrid : ndarray
+        numpy meshgrid of column centers
+
+    ycentergrid : ndarray
+        numpy meshgrid of row centers
+
+    Note:
+    ----
+
+    xul and yul can be explicitly (re)set after SpatialReference instantiation, but only before
+    any of the other attributes and methods are accessed
+        
+    """
+
+    def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0,
+                 epsg_str="EPSG:4326"):
         """
             delr: delr array
             delc: delc array
@@ -101,9 +81,48 @@ class SpatialReference(object):
         self.ncol = self.delr.shape[0]
 
         self.lenuni = lenuni
-
+        self.epsg_str = epsg_str
         self.set_spatialreference(xul, yul, rotation)
 
+
+    @classmethod
+    def from_gridspec(cls,gridspec_file,lenuni=0):
+        f = open(gridspec_file,'r')
+        lines = f.readlines()
+        raw = f.readline().strip().split()
+        nrow = int(raw[0])
+        ncol = int(raw[1])
+        raw = f.readline().strip().split()
+        xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
+        delr = []
+        j = 0
+        while j < ncol:
+            raw = f.readline().strip().split()
+            for r in raw:
+                if '*' in r:
+                    rraw = r.split('*')
+                    for n in range(int(rraw[0])):
+                        delr.append(int(rraw[1]))
+                        j += 1
+                else:
+                    delr.append(int(r))
+                    j += 1
+        delc = []
+        i = 0
+        while i < nrow:
+            raw = f.readline().strip().split()
+            for r in raw:
+                if '*' in r:
+                    rraw = r.split('*')
+                    for n in range(int(rraw[0])):
+                        delc.append(int(rraw[1]))
+                        i += 1
+                else:
+                    delc.append(int(r))
+                    i += 1
+        f.close()
+        return cls(np.array(delr), np.array(delc),
+                   lenuni, xul=xul, yul=yul, rotation=rot)
 
     def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
         """
@@ -290,7 +309,7 @@ class SpatialReference(object):
     def get_xcenter_array(self):
         """
         Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every column in the grid.
+        coordinate for every column in the grid in model space - not offset or rotated.
 
         """
         x = np.add.accumulate(self.delr) - 0.5 * self.delr
@@ -299,7 +318,7 @@ class SpatialReference(object):
     def get_ycenter_array(self):
         """
         Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every row in the grid.
+        coordinate for every row in the grid in model space - not offset of rotated.
 
         """
         Ly = np.add.reduce(self.delc)
@@ -310,7 +329,8 @@ class SpatialReference(object):
     def get_xedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid.  Array is of size (ncol + 1)
+        coordinates for every column in the grid in model space - not offset or rotated.
+          Array is of size (ncol + 1)
 
         """
         xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
@@ -319,7 +339,8 @@ class SpatialReference(object):
     def get_yedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid.  Array is of size (nrow + 1)
+        coordinates for every row in the grid in model space - not offset or rotated.
+          Array is of size (nrow + 1)
 
         """
         length_y = np.add.reduce(self.delc)
@@ -329,6 +350,8 @@ class SpatialReference(object):
 
 
     def write_gridSpec(self, filename):
+        """ write a PEST-style grid specification file
+        """
         f = open(filename,'w')
         f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
         f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))

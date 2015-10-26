@@ -8,7 +8,7 @@ def test_reference():
     import shapefile
     import flopy
 
-    mf = flopy.modflow.Modflow(model_ws='data')
+    mf = flopy.modflow.Modflow(model_ws='temp')
     nrow,ncol = 10,10
     nlay = 3
     botm = [20,10,0]
@@ -46,7 +46,7 @@ def test_reference():
     mm.plot_ibound(ax=ax)
     plt.close(fig)
 
-    shapename = os.path.join('data', 'test1.shp')
+    shapename = os.path.join('temp', 'test1.shp')
     lpf.hk.to_shapefile(shapename)
     shp = shapefile.Reader(shapename)
     assert shp.numRecords == mf.nrow * mf.ncol
@@ -61,7 +61,7 @@ def test_binaryfile_reference():
     import flopy.modflow as fmf
 
     # make the model
-    ml = fmf.Modflow(exe_name='mf2005', model_ws='data')
+    ml = fmf.Modflow(exe_name='mf2005', model_ws='temp')
     perlen = np.arange(1,20,1)
     nstp = np.flipud(perlen) + 3
     tsmult = 1.2
@@ -86,12 +86,12 @@ def test_binaryfile_reference():
     ml.write_input()
     ml.run_model()
     #instance without any knowledge of sr tr - builds defaults from info in hds file
-    hds = os.path.join('data', 'modflowtest.hds')
+    hds = os.path.join('temp', 'modflowtest.hds')
     if not os.path.exists(hds):
         print("could not find hds file " + hds)
         return
     bf = flopy.utils.HeadFile(hds)
-    name = os.path.join('data', 'test2.shp')
+    name = os.path.join('temp', 'test2.shp')
     bf.to_shapefile(name)
     shp = shapefile.Reader(name)
     assert shp.numRecords == ml.nrow * ml.ncol
@@ -137,7 +137,7 @@ def test_mflist_reference():
     ghb_dict = {0:[1,10,10,400,300]}
     ghb = fmf.ModflowGhb(ml, stress_period_data=ghb_dict)
 
-    test = os.path.join('data', 'test3.shp')
+    test = os.path.join('temp', 'test3.shp')
     ml.to_shapefile(test, kper=0)
     shp = shapefile.Reader(test)
     assert shp.numRecords == nrow * ncol

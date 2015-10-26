@@ -1,0 +1,29 @@
+MT3DMS Benchmark Test Porblem #2
+1D advection-dispersion with nonequilibrium sorption
+         1         1       101         3         1         1
+ SEC  CM   G
+T T T T T F F F F F                                   !TRNOP
+ 0                                                    !LAYCON
+         0  .1600000                                  !DELR
+         0   1.00000                                  !DELC
+         0   1.00000                                  !HTOP
+         0   1.00000                                  !DZ
+         0      .370                                  !PRSITY
+       101         1                                  !ICBUND-LAY1
+2
+1 1  1 101 1
+1 1  1 101 1
+         0        0.                                  !SCONC-LAY1
+   -999.99        0.                                  !CINACT,thkmin
+         5         2         5         0         T         T
+         2                                            !NPRS
+         0   1000.00                                  !TIMPRS
+         1         1                                  !NOBS,NPROBS
+         1         1        51                        !KOBS,IOBS,JOBS
+         T         1                                  !CHKMAS,NPRMAS
+    160.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0     15000      1.1        10.                !DT0 MXSTRN
+    320.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0     15000      1.1        10.                !DT0 MXSTRN
+   1000.00         1        1.                        !PERLEN,NSTP,TSMULT
+         0     15000      1.1        10.                !DT0 MXSTRN

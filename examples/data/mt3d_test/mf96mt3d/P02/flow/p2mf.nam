@@ -1,0 +1,7 @@
+LIST 6 p2.lst
+BAS  1 p2.bas
+BCF 11 p2.bcf
+SIP 17 p2.sip
+OC  20 p2.oc
+LMT 22 p2.ftl
+DATA(Binary) 80 p2.ufh

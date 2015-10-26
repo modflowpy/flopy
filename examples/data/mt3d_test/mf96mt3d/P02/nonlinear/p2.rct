@@ -1,0 +1,18 @@
+         2         0         2         0
+         0  1.587E+0                               RHOB
+         0    .30E-0                               SP1
+         0        .7                               SP2
+
+
+//Freundlich: use the following input
+         2         0         2         0
+         0  1.587E+0                               RHOB
+         0    .30E-0                               SP1
+         0        .7                               SP2
+
+
+//Langmuir: use the following input
+         3         0         2         0
+         0  1.587E+0                               RHOB
+         0     100.0                               SP1
+         0  .003E-00                               SP2
