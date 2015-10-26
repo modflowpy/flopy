@@ -668,7 +668,7 @@ class ModflowSfr2(Package):
         -------
         all_upsegs : dict
             Nested dictionary of form {stress period: {segment: [list of upsegs]}}
-            
+
         Note:
         This method will not work if there are instances of circular routing.
         """
