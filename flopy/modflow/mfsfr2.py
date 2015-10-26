@@ -449,8 +449,6 @@ class ModflowSfr2(Package):
             line = next(f)
             line = line_parse(line)
             ireach = tuple(map(float, line[:len(dtypes)]))
-            if sum(ireach) < 0:
-                j=2
             lines.append(ireach)
 
         tmp = np.array(lines, dtype=dtypes)
@@ -606,12 +604,12 @@ class ModflowSfr2(Package):
                     # subset outsegs map to only include rows with outseg number > 0 in last column
                     circular_segs = all_outsegs.T[all_outsegs[-1] > 0]
 
-                    # only retain one instance of each outseg number at iteration 1000
+                    # only retain one instance of each outseg number at iteration=nss
                     vals = []  # append outseg values to vals after they've appeared once
                     mask = [(True, vals.append(v))[0]
                             if v not in vals
                             else False for v in circular_segs[-1]]
-                    circular_segs = circular_segs[np.array(mask)]
+                    circular_segs = circular_segs[:, np.array(mask)]
 
                     # cull the circular segments array to remove duplicate instances of routing circles
                     circles = []
@@ -1348,6 +1346,7 @@ class check:
         if self.verbose:
             print(headertxt.strip())
 
+        passed = False
         if self.sfr.isfropt in [1, 2, 3]:
             is_less = self.reach_data.slope < minimum_slope
             if np.any(is_less):
@@ -1356,7 +1355,8 @@ class check:
                 if self.level == 1:
                     txt += 'Reaches with low slopes:\n'
                     txt += _print_rec_array(below_minimum)
-                passed = False
+            if len(txt) == 0:
+                passed = True
         else:
             txt += 'slope not specified for isfropt={}\n'.format(self.sfr.isfropt)
             passed = True
@@ -1384,7 +1384,8 @@ def _check_numbers(n, numbers, level=1, datatype='reach'):
     if not np.array_equal(num_range, numbers):
         txt += 'Invalid {} numbering\n'.format(datatype)
         if level == 1:
-            gaps = num_range[np.diff(numbers) != 1] + 1
+            non_consecutive = np.append(np.diff(numbers) != 1, False) # consistent dimmension for boolean array
+            gaps = num_range[non_consecutive] + 1
             if len(gaps) > 0:
                 gapstr = ' '.join(map(str, gaps))
                 txt += 'Gaps in numbering at positions {}\n'.format(gapstr)
@@ -1435,7 +1436,8 @@ def _get_duplicates(a):
     http://stackoverflow.com/questions/11528078/determining-duplicate-values-in-an-array
     """
     s = np.sort(a, axis=None)
-    return s[s[1:] == s[:-1]]
+    equal_to_previous_item = np.append(s[1:] == s[:-1], False) # maintain same dimmension for boolean array
+    return np.unique(s[equal_to_previous_item])
 
 
 def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
@@ -1576,7 +1578,7 @@ def parse_1c(line, reachinput, transroute):
 
     irtflg, numtim, weight, flwtol = na, na, na, na
     if nstrm < 0 or transroute:
-        irtflg = _pop_item(line)
+        irtflg = int(_pop_item(line))
         if irtflg > 0:
             numtim = int(line.pop(0))
             weight = int(line.pop(0))
