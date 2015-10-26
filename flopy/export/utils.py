@@ -10,7 +10,7 @@ NC_UNITS_FORMAT = {"hk":"{0}/{1}","sy":"","ss":"1/{0}","rech":"{0}/{1}","strt":"
                    "ghb_cond":"{0}/{1}^2","ghb_bhead":"{0}","transmissivity":"{0}^2/{1}",
                    "vertical_conductance":"{0}/{1}^2","primary_storage_coefficient":"1/{1}",
                    "horizontal_hydraulic_conductivity":"{0}/{1}","riv_cond":"1/{1}",
-                   "riv_stage":"{0}"}
+                   "riv_stage":"{0}","riv_rbot":"{0}"}
 NC_PRECISION_TYPE = {np.float32:"f4",np.int:"i4"}
 
 
@@ -40,6 +40,7 @@ def mflist_helper(f,mfl):
         f.log("getting 4D masked arrays for {0}".format(base_name))
 
         for name,array in m4d.items():
+            array[np.isnan(array)] = f.fillvalue
             var_name = base_name + '_' + name
             units = None
             if var_name in NC_UNITS_FORMAT:
@@ -96,15 +97,14 @@ def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
         array[array<=min_valid] = f.fillvalue
         array[array>=max_valid] = f.fillvalue
 
-        units = None
+        units = "unitless"
         var_name = t2d.name_base.replace('_','')
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units,f.time_units)
         precision_str = NC_PRECISION_TYPE[t2d.dtype]
         attribs = {"long_name":"flopy.transient_2d instance of {0}".format(var_name)}
         attribs["coordinates"] = "time layer latitude longitude"
-        if units is not None:
-            attribs["units"] = units
+        attribs["units"] = units
         try:
             var = f.create_variable(var_name,attribs,precision_str=precision_str,
                                     dimensions=("time","layer","y","x"))
@@ -161,17 +161,13 @@ def util3d_helper(f,u3d,min_valid=-1.0e+9, max_valid=1.0e+9):
         array[array<=min_valid] = f.fillvalue
         array[array>=max_valid] = f.fillvalue
 
-        units = None
-
+        units = "unitless"
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units,f.time_units)
-
         precision_str = NC_PRECISION_TYPE[u3d.dtype]
-
         attribs = {"long_name":"flopy.util_3d instance of {0}".format(var_name)}
         attribs["coordinates"] = "layer latitude longitude"
-        if units is not None:
-            attribs["units"] = units
+        attribs["units"] = units
         try:
             var = f.create_variable(var_name,attribs,precision_str=precision_str,
                                     dimensions=("layer","y","x"))
@@ -222,18 +218,14 @@ def util2d_helper(f,u2d,min_valid=-1.0e+9, max_valid=1.0e+9):
         array[array<=min_valid] = f.fillvalue
         array[array>=max_valid] = f.fillvalue
 
-        units = None
+        units = "unitless"
         var_name = u2d.name
-
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units,f.time_units)
-
         precision_str = NC_PRECISION_TYPE[u2d.dtype]
-
         attribs = {"long_name":"flopy.util_2d instance of {0}".format(var_name)}
         attribs["coordinates"] = "latitude longitude"
-        if units is not None:
-            attribs["units"] = units
+        attribs["units"] = units
         try:
             var = f.create_variable(var_name,attribs,precision_str=precision_str,
                                     dimensions=("y","x"))
