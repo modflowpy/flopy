@@ -2,7 +2,7 @@
 import matplotlib
 matplotlib.use('Agg')
 
-def test_reference():
+def notest_reference():
     import os
     from datetime import datetime
     import numpy as np
@@ -54,7 +54,7 @@ def test_reference():
     assert shp.numRecords == mf.nrow * mf.ncol
     return
 
-def test_binaryfile_reference():
+def notest_binaryfile_reference():
     import os
     import numpy as np
     import matplotlib.pyplot as plt
@@ -147,5 +147,5 @@ def test_mflist_reference():
 
 if __name__ == '__main__':
     test_mflist_reference()
-    #test_reference()
-    #test_binaryfile_reference()
+    notest_reference()
+    notest_binaryfile_reference()
