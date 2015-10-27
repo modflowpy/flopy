@@ -1,6 +1,6 @@
 language: python
 
-# 2.6 and 3.5-dev do not work at the moment, so they are commented out.
+# 2.6 and "nightly" do not work at the moment, so they are commented out.
 python:
   # - "2.6"
   - "2.7"
