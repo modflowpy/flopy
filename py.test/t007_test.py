@@ -12,8 +12,13 @@ def test_netcdf():
     ml.dis.sr.yul = 2000.0
     ml.dis.sr.rotation = 15.0
 
-    fnc = ml.export(os.path.join("temp","test.nc"))
+    # Do not fail if netCDF4 not installed
+    try:
+        import netCDF4
+    except
+        return
 
+    fnc = ml.export(os.path.join("temp","test.nc"))
     hk = fnc.nc.variables["hk"]
     assert fnc.nc.variables['hk'].shape == ml.lpf.hk.shape
     fnc.write()

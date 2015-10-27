@@ -9,7 +9,7 @@ python:
   - "3.5-dev" # 3.5 development branch
   - "nightly" # currently points to 3.6-dev
 # command to install dependencies
-install: "pip install -r requirements.txt"
+install: "pip install -r requirements.travis.txt"
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
