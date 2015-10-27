@@ -125,6 +125,10 @@ def parsenamefile(namfilename, packages, verbose=True):
         print('Parsing the namefile --> {0:s}'.format(namfilename))
         print('Setting filehandles:')
 
+    if not os.path.isfile(namfilename):
+        dn = os.path.dirname(namfilename)
+        s = 'Could not find {} in path {} with files \n {}'.format(namfilename, dn, os.listdir(dn))
+        raise Exception(s)
     indata = open(namfilename, 'r').readlines()
     for line in indata:
         tmp = line.strip().split()
@@ -135,6 +139,15 @@ def parsenamefile(namfilename, packages, verbose=True):
             # be sure the second value is an integer
             if testint(tmp[1]):
                 fname = os.path.join(os.path.dirname(namfilename), tmp[2])
+                if not os.path.isfile(fname):
+                    # change to lower and make comparison (required for linux)
+                    dn = os.path.dirname(fname)
+                    fls = os.listdir(dn)
+                    lownams = [f.lower() for f in fls]
+                    bname = os.path.basename(fname)
+                    if bname.lower() in lownams:
+                        idx = lownams.index(bname.lower())
+                        fname = os.path.join(dn, fls[idx])
                 # parse the line
                 openmode = 'r'
                 if tmp[0].upper() == 'DATA(BINARY)':

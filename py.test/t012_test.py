@@ -54,7 +54,7 @@ def test_mf2000_MultiDiffusion():
     pth = os.path.join(pth2000, 'MultiDiffusion')
     namfile = 'p7mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
-    namfile = 'p7MT.NAM'
+    namfile = 'P7MT.NAM'
     mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True)
     mt.change_model_ws(newpth)
     mt.write_input()
