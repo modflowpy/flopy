@@ -1037,6 +1037,81 @@ class check:
         self.failed = []
         self.txt = '\n{} ERRORS:\n'.format(self.sfr.name[0])
 
+    def _boolean_compare(self, array, col1, col2,
+                         level0txt='{} violations encountered.',
+                         level1txt='Violations:',
+                         sort_ascending=True, print_delimiter=' '):
+        """Compare two columns in a record array. For each row,
+        tests if value in col1 is greater than col2. If any values
+        in col1 are > col2, subsets array to only include rows where
+        col1 is greater. Creates another column with differences
+        (col1-col2), and prints the array sorted by the differences
+        column (diff).
+
+        Parameters
+        ----------
+        array : record array
+            Array with columns to compare.
+        col1 : string
+            Column name in array.
+        col2 : string
+            Column name in array.
+        sort_ascending : T/F; default True
+            If True, printed array will be sorted by differences in
+            ascending order.
+        print_delimiter : str
+            Delimiter for printed array.
+
+        Returns
+        -------
+        txt : str
+            Error messages and printed array (if .level attribute of
+            checker is set to 1). Returns an empty string if no
+            values in col1 are greater than col2.
+
+        Notes
+        -----
+        info about appending to record arrays (views vs. copies and upcoming changes to numpy):
+        http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
+        """
+        txt = ''
+        array = array.copy()
+        if isinstance(col1, np.ndarray):
+            array = recfunctions.append_fields(array, names='tmp1', data=col1)
+            col1 = 'tmp1'
+        if isinstance(col2, np.ndarray):
+            array = recfunctions.append_fields(array, names='tmp2', data=col2)
+            col2 = 'tmp2'
+        if isinstance(col1, tuple):
+            array = recfunctions.append_fields(array, names=col1[0], data=col1[1])
+            col1 = col1[0]
+        if isinstance(col2, tuple):
+            array = recfunctions.append_fields(array, names=col2[0], data=col2[1])
+            col2 = col2[0]
+
+        failed = array[col1] > array[col2]
+        if np.any(failed):
+            failed_info = array[failed].copy()
+            txt += level0txt.format(len(failed_info)) + '\n'
+            if self.level == 1:
+                diff = failed_info[col2] - failed_info[col1]
+                cols = [c for c in failed_info.dtype.names if failed_info[c].sum() != 0
+                        and c != 'diff'
+                        and 'tmp' not in c]
+                # currently failed_info[cols] results in a warning. Not sure
+                # how to do this properly with a recarray.
+                failed_info = recfunctions.append_fields(failed_info[cols].copy(),
+                                                         names='diff',
+                                                         data=diff,
+                                                         asrecarray=True)
+                failed_info.sort(order='diff', axis=0)
+                if not sort_ascending:
+                    failed_info = failed_info[::-1]
+                txt += level1txt + '\n'
+                txt += _print_rec_array(failed_info, delimiter=print_delimiter)
+            txt += '\n'
+        return txt
+
     def _txt_footer(self, headertxt, txt, testname, passed=False):
         if len(txt) == 0 or passed:
             txt += 'passed.'
@@ -1144,7 +1219,7 @@ class check:
                                                         asrecarray=True)
                 has_multiple = np.array([True if n in nodes_with_multiple_conductance
                                          else False for n in reach_data.node])
-                txt += _print_rec_array(reach_data[cols][has_multiple])
+                txt += _print_rec_array(reach_data[cols][has_multiple], delimiter='\t')
 
         self._txt_footer(headertxt, txt, 'overlapping conductance')
 
@@ -1171,6 +1246,17 @@ class check:
                     raise Exception('Elevation check requires consecutive segment numbering.')
 
                 # first check for segments where elevdn > elevup
+                d_elev = segment_data.elevdn - segment_data.elevup
+                segment_data = recfunctions.append_fields(segment_data, names='d_elev', data=d_elev,
+                                                          asrecarray=True)
+                txt += self._boolean_compare(segment_data[['nseg', 'outseg', 'elevup', 'elevdn',
+                                                           'd_elev']].copy(),
+                                             col1='d_elev', col2=np.zeros(len(segment_data)),
+                                             level0txt='Stress Period {}: '.format(per+1) +\
+                                                       '{} segments encountered with elevdn > elevup.',
+                                             level1txt='Backwards segments:',
+                                             )
+                '''
                 backwards_segments = (segment_data.elevdn - segment_data.elevup) > 0
                 if np.any(backwards_segments):
                     backwards_info = segment_data[['nseg', 'outseg', 'elevup', 'elevdn']][backwards_segments]
@@ -1178,11 +1264,27 @@ class check:
                         .format(per + 1, len(backwards_info))
                     if self.level == 1:
                         txt += 'Backwards segments:\n'
-                        txt += _print_rec_array(backwards_info)
+                        txt += _print_rec_array(backwards_info, delimiter='\t')
                     txt += '\n'
-
+                '''
                 # next check for rises between segments
                 outseg_elevup = np.array([segment_data.elevup[o - 1] for o in segment_data.outseg])
+                d_elev2 = outseg_elevup - segment_data.elevdn
+                segment_data = recfunctions.append_fields(segment_data,
+                                                          names=['outseg_elevup', 'd_elev2'],
+                                                          data=[outseg_elevup, d_elev2],
+                                                          asrecarray=True)
+                non_outlets_seg_data = segment_data[segment_data.outseg != 0]
+                txt += self._boolean_compare(non_outlets_seg_data[['nseg', 'outseg', 'elevdn',
+                                                                   'outseg_elevup', 'd_elev2']].copy(),
+                                             col1='d_elev2', col2=np.zeros(len(non_outlets_seg_data)),
+                                             level0txt='Stress Period {}: '.format(per+1) +\
+                                                       '{} segments encountered with segments encountered '\
+                                                       'with outseg elevup > elevdn.',
+                                             level1txt='Backwards segment connections:',
+                                             )
+
+                '''
                 backwards_connections = ((outseg_elevup - segment_data.elevdn) > 0) & \
                                         (segment_data.outseg != 0)
                 if np.any(backwards_connections):
@@ -1196,21 +1298,22 @@ class check:
                         .format(per + 1, len(backwards_info))
                     if self.level == 1:
                         txt += 'Backwards segment connections:\n'
-                        txt += _print_rec_array(backwards_info)
+                        txt += _print_rec_array(backwards_info, delimiter='\t')
                     txt += '\n'
+                '''
             if len(txt) == 0:
                 passed = True
         else:
             txt += 'Segment elevup and elevdn not specified for nstrm={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.isfropt)
             passed = True
-        self._txt_footer(headertxt, txt, 'segment elevations')
+        self._txt_footer(headertxt, txt, 'segment elevations', passed)
 
         headertxt = 'Checking reach_data for downstream rises in streambed elevation...\n'
         txt = ''
         if self.verbose:
             print(headertxt.strip())
-
+        passed = False
         if self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]:  # see SFR input instructions
             # first get an outreach for each reach
             if np.diff(self.sfr.reach_data.outreach).max() == 0: # not sure if this is the best test
@@ -1222,21 +1325,37 @@ class check:
 
             # use outreach values to get downstream elevations
             outreach_elevdn = np.array([reach_data.strtop[o-1] for o in reach_data.outreach])
+            d_strtop = outreach_elevdn - reach_data.strtop
             reach_data = recfunctions.append_fields(reach_data,
-                                                    names='strtopdn',
-                                                    data=outreach_elevdn,
+                                                    names=['strtopdn', 'd_strtop'],
+                                                    data=[outreach_elevdn, d_strtop],
                                                     asrecarray=True)
+
+            txt += self._boolean_compare(reach_data[['krch', 'irch', 'jrch', 'iseg',
+                                                     'strtop', 'strtopdn', 'd_strtop', 'reachID']].copy(),
+                                         col1='d_strtop', col2=np.zeros(len(reach_data)),
+                                         level0txt='{} reaches encountered with strtop < strtop of downstream reach.',
+                                         level1txt='Elevation rises:',
+                                         )
+
+            '''
             elevation_rises = (reach_data.strtopdn - reach_data.strtop) > 0
             if np.any(elevation_rises):
                 backwards_info = reach_data[['krch', 'irch', 'jrch', 'iseg', 'strtop',
-                                             'strtopdn', 'reachID', 'outreach']][elevation_rises]
+                                             'strtopdn', 'reachID', 'outreach']][elevation_rises].copy()
                 txt += '{} reaches encountered with strtop > strtop of downstream reach.\n' \
                     .format(len(backwards_info))
                 if self.level == 1:
+                    diff = backwards_info.strtop - backwards_info.strtopdn
+                    backwards_info = recfunctions.append_fields(backwards_info, names='diff', data=diff, asrecarray=True)
+                    backwards_info.sort(order='diff')
                     txt += 'Elevation rises:\n'
-                    txt += _print_rec_array(backwards_info)
+                    txt += _print_rec_array(backwards_info, delimiter='\t')
                 txt += '\n'
                 passed = False
+            '''
+            if len(txt) == 0:
+                passed = True
         else:
             txt += 'Reach strtop not specified for nstrm={}, reachinput={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt)
@@ -1254,8 +1373,21 @@ class check:
 
             # check streambed bottoms in relation to respective cell bottoms
             bots = self.sfr.parent.dis.botm.array[k, i, j]
-            reach_data = recfunctions.append_fields(reach_data, names='layerbot', data=bots, asrecarray=True)
             streambed_bots = reach_data.strtop - reach_data.strthick
+            reach_data = recfunctions.append_fields(reach_data,
+                                                    names=['layerbot', 'strbot'],
+                                                    data=[bots, streambed_bots],
+                                                    asrecarray=True)
+
+
+            txt += self._boolean_compare(reach_data[['krch', 'irch', 'jrch', 'iseg',
+                                                     'strtop', 'strthick', 'strbot', 'layerbot',
+                                                     'reachID']].copy(),
+                                         col1='layerbot', col2='strbot',
+                                         level0txt='{} reaches encountered with streambed bottom below layer bottom.',
+                                         level1txt='Layer bottom violations:',
+                                         )
+            '''
             below_layer_bottoms = streambed_bots < bots
             if np.any(below_layer_bottoms):
                 below_info = reach_data[['krch', 'irch', 'jrch', 'iseg', 'strtop',
@@ -1263,23 +1395,39 @@ class check:
                 txt += '{} reaches encountered with streambed bottom below layer bottom.\n' \
                     .format(len(below_info))
                 if self.level == 1:
+                    diff = below_info.strtop - below_info.modeltop
+                    below_info = recfunctions.append_fields(below_info, names='diff', data=diff, asrecarray=True)
+                    below_info.sort(order='diff')
                     txt += 'Layer bottom violations:\n'
-                    txt += _print_rec_array(below_info)
+                    txt += _print_rec_array(below_info, delimiter='\t')
                 txt += '\n'
-
+            '''
             # check streambed elevations in relation to model top
             tops = self.sfr.parent.dis.top.array[i, j]
             reach_data = recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
+
+            txt += self._boolean_compare(reach_data[['krch', 'irch', 'jrch', 'iseg',
+                                                     'strtop', 'modeltop', 'reachID']].copy(),
+                                         col1='strtop', col2='modeltop',
+                                         level0txt='{} reaches encountered with streambed above model top.',
+                                         level1txt='Model top violations:',
+                                         )
+            '''
             above_model_top = reach_data.strtop > tops
             if np.any(above_model_top):
                 above_info = reach_data[['krch', 'irch', 'jrch', 'iseg', 'strtop',
                                              'modeltop', 'reachID']][above_model_top]
                 txt += '{} reaches encountered with streambed above model top.\n' \
-                    .format(len(below_info))
+                    .format(len(above_info))
                 if self.level == 1:
+                    diff = above_info.strtop - above_info.modeltop
+                    above_info = recfunctions.append_fields(above_info, names='diff', data=diff, asrecarray=True)
+                    above_info.sort(order='diff')
+                    above_info = above_info[::-1]
                     txt += 'Model top violations:\n'
-                    txt += _print_rec_array(above_info)
+                    txt += _print_rec_array(above_info, delimiter='\t')
                 txt += '\n'
+            '''
             if len(txt) == 0:
                 passed = True
         else:
@@ -1295,7 +1443,7 @@ class check:
         txt = ''
         if self.verbose:
             print(headertxt.strip())
-
+        passed = False
         if self.sfr.isfropt in [0, 4, 5]:
             reach_data = self.reach_data
             pers = sorted(self.segment_data.keys())
@@ -1315,21 +1463,33 @@ class check:
             segment_ends['strtop'] = np.append(segment_data.elevup, segment_data.elevdn)
             i, j = segment_ends.irch, segment_ends.jrch
             tops = self.sfr.parent.dis.top.array[i, j]
+            diff = tops - segment_ends.strtop
             segment_ends = recfunctions.append_fields(segment_ends,
-                                                      names='modeltop',
-                                                      data=tops,
+                                                      names=['modeltop', 'diff'],
+                                                      data=[tops, diff],
                                                       asrecarray=True)
+
+            txt += self._boolean_compare(segment_ends[['krch', 'irch', 'jrch', 'iseg',
+                                                       'strtop', 'modeltop', 'diff', 'reachID']].copy(),
+                                         col1=np.zeros(len(segment_ends)), col2='diff',
+                                         level0txt='{} reaches encountered with streambed above model top.',
+                                         level1txt='Model top violations:',
+                                         )
+
+            '''
             above_model_top = (tops - segment_ends.strtop) < 0
             if np.any(above_model_top):
                 above_info = segment_ends[['krch', 'irch', 'jrch', 'iseg', 'strtop',
-                                             'modeltop', 'reachID']][above_model_top]
+                                             'modeltop', 'reachID']][above_model_top].copy()
                 txt += '{} reaches encountered with streambed above model top.\n' \
                     .format(len(above_info))
                 if self.level == 1:
                     txt += 'Model top violations:\n'
-                    txt += _print_rec_array(above_info)
+                    txt += _print_rec_array(above_info, delimiter='\t')
                 txt += '\n'
-                passed = False
+            '''
+            if len(txt) == 0:
+                passed = True
         else:
             txt += 'Segment elevup and elevdn not specified for nstrm={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.isfropt)
@@ -1354,7 +1514,7 @@ class check:
                 txt += '{} instances of streambed slopes below minimum found.'.format(len(below_minimum))
                 if self.level == 1:
                     txt += 'Reaches with low slopes:\n'
-                    txt += _print_rec_array(below_minimum)
+                    txt += _print_rec_array(below_minimum, delimiter='\t')
             if len(txt) == 0:
                 passed = True
         else:
@@ -1470,14 +1630,14 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
     return names
 
 
-def _fmt_string(array):
+def _fmt_string(array, float_format='{}'):
     fmt_string = ''
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
         if (vtype == 'i'):
             fmt_string += '{:.0f} '
         elif (vtype == 'f'):
-            fmt_string += '{} '
+            fmt_string += '{} '.format(float_format)
         elif (vtype == 'o'):
             fmt_string += '{} '
         elif (vtype == 's'):
@@ -1490,14 +1650,14 @@ def _fmt_string(array):
     return fmt_string
 
 
-def _fmt_string_list(array):
+def _fmt_string_list(array, float_format='{}'):
     fmt_string = []
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
         if (vtype == 'i'):
             fmt_string += ['{:.0f}']
         elif (vtype == 'f'):
-            fmt_string += ['{}']
+            fmt_string += [float_format]
         elif (vtype == 'o'):
             fmt_string += ['{}']
         elif (vtype == 's'):
@@ -1510,7 +1670,7 @@ def _fmt_string_list(array):
     return fmt_string
 
 
-def _print_rec_array(array, cols=None, delimiter=' '):
+def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
     """Print out a numpy record array to string, with column names.
 
     Parameters
@@ -1530,8 +1690,10 @@ def _print_rec_array(array, cols=None, delimiter=' '):
         cols = [c for c in array.dtype.names if c in cols]
     else:
         cols = list(array.dtype.names)
+    # add _fmt_string call here
+    fmts = _fmt_string_list(array, float_format=float_format)
     txt += delimiter.join(cols) + '\n'
-    txt += '\n'.join([delimiter.join(map(str, r)) for r in array[cols].tolist()])
+    txt += '\n'.join([delimiter.join(fmts).format(*r) for r in array[cols].copy().tolist()])
     return txt
 
 
