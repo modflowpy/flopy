@@ -124,6 +124,7 @@ class Modflow(BaseModel):
         self.external = False
         self.verbose = verbose
         self.load = load
+        self.load_fail = False
         # the starting external data unit number
         self.__next_ext_unit = 1000
         if external_path is not None:
@@ -447,6 +448,7 @@ class Modflow(BaseModel):
                             sys.stdout.write('   {:4s} package load...success\n'
                                              .format(pck.name[0]))
                     except BaseException as o:
+                        ml.load_fail = True
                         if ml.verbose:
                             sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
                                              .format(item.filetype, o))

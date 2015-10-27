@@ -393,7 +393,7 @@ class ModflowOc(Package):
                     if ibudfl != 0:
                         lines.append('PRINT BUDGET')
                     if icbcfl != 0:
-                        lines.append('PRINT BUDGET')
+                        lines.append('SAVE BUDGET')
                     if incode == 0:
                         line = f.readline()
                         lnlst = line.strip().split()
@@ -430,7 +430,7 @@ class ModflowOc(Package):
                         if len(ddnprint) > 0:
                             lines.append('PRINT DRAWDOWN'+ddnprint)
                         if len(headsave) > 0:
-                            lines.append('SAVE HEAD'+headdave)
+                            lines.append('SAVE HEAD'+headsave)
                         if len(ddnsave) > 0:
                             lines.append('SAVE DRAWDOWN'+ddnsave)
                     stress_period_data[(iperoc, itsoc)] = list(lines)

@@ -11,6 +11,8 @@ import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils.util_array import transient_2d, util_2d
+from flopy.modflow.mfparbc import ModflowParBc as mfparbc
+
 
 class ModflowEvt(Package):
     """
@@ -245,8 +247,7 @@ class ModflowEvt(Package):
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), 'evtr',
-                                                 parm_dict, pak_parms)
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), parm_dict, pak_parms)
 
 
                 current_evtr = t

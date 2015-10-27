@@ -117,7 +117,7 @@ class ModflowPcg(Package):
 
         """
         f = open(self.fn_path, 'w')
-        f.write('%s\n' % self.heading)
+        f.write('{}\n'.format(self.heading))
         ifrfm = self.parent.get_ifrefm()
         if ifrfm:
             f.write('{} '.format(self.mxiter))
@@ -197,7 +197,7 @@ class ModflowPcg(Package):
             line = f.readline()
             if line[0] != '#':
                 break
-        #dataset 1
+        # dataset 1
         ifrfm = model.get_ifrefm()
         if model.version != 'mf2k':
             ifrfm = True
@@ -212,6 +212,7 @@ class ModflowPcg(Package):
                 ihcofadd = int(t[3])
             except:
                 pass
+            # dataset 2
             line = f.readline()
             t = line.strip().split()
             hclose = float(t[0])
@@ -231,6 +232,7 @@ class ModflowPcg(Package):
                 ihcofadd = int(line[30:40].strip())
             except:
                 pass
+            # dataset 2
             line = f.readline()
             hclose = float(line[0:10].strip())
             rclose = float(line[10:20].strip())
