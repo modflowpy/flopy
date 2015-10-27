@@ -4,6 +4,8 @@ def test_reference():
     import os
     from datetime import datetime
     import numpy as np
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import shapefile
     import flopy

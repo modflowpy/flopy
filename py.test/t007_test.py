@@ -15,7 +15,7 @@ def test_netcdf():
     # Do not fail if netCDF4 not installed
     try:
         import netCDF4
-    except
+    except:
         return
 
     fnc = ml.export(os.path.join("temp","test.nc"))
