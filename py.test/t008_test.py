@@ -17,7 +17,8 @@ def test_modflow_load():
                                        version='mf2005', verbose=True)
         assert m, 'Could not load namefile {}'.format(namfile)
         assert m.load_fail is False
-        plt.close("all")
+        #m.plot()
+        #plt.close("all")
 
 
     return
