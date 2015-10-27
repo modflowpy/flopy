@@ -270,8 +270,18 @@ class ModflowEvt(Package):
                 ievt[iper] = current_ievt
 
         # create evt object
-        evt = ModflowEvt(model, nevtop=nevtop, ipakcb=ipakcb, 
-                         surf=surf, evtr=evtr, exdp=exdp, ievt=ievt)
-
+        args = {}
+        if ievt:
+            args["ievt"] = ievt
+        if nevtop:
+            args["nevtop"] = nevtop
+        if evtr:
+            args["evtr"] = evtr
+        if surf:
+            args["surf"] = surf
+        if exdp:
+            args["exdp"] = exdp
+        args["ipakcb"] = ipakcb
+        evt = ModflowEvt(model, **args)
         # return evt object
         return evt

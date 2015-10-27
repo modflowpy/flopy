@@ -112,12 +112,12 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
     if filenames is not None:
         if not isinstance(filenames, list):
             filenames = [filenames]
-        assert len(filenames) == (i1 - i0)
+        assert len(filenames) == plotarray.shape[0]
     
     if fignum is not None:
         if not isinstance(fignum, list):
             fignum = [fignum]
-        assert len(fignum) == (i1 - i0)
+        assert len(fignum) == plotarray.shape[0]
         # check for existing figures
         f0 = fignum[0]
         for i in plt.get_fignums():
@@ -280,7 +280,7 @@ def _plot_bc_helper(package, kper,
     if axes is not None:
         if not isinstance(axes, list):
             axes = [axes]
-        assert len(axes) == plotarray.shape[0]
+        assert len(axes) == i1 - i0
     # prepare some axis objects for use
     else:
         axes = []

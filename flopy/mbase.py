@@ -826,7 +826,7 @@ class Package(object):
             elif isinstance(a, list):
                 for v in a:
                     if isinstance(v, util_3d):
-                        f = export.utils.util3d_helper(f,a)
+                        f = export.utils.util3d_helper(f,v)
         return f
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
@@ -1015,7 +1015,8 @@ class Package(object):
             elif isinstance(value, utils.util_3d):
                 if self.parent.verbose:
                     print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
-                fignum = list(range(ifig, ifig + inc))
+                #fignum = list(range(ifig, ifig + inc))
+                fignum = list(range(ifig, ifig + value.shape[0]))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=True))

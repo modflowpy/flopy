@@ -14,11 +14,14 @@ def test_mflist():
     assert os.path.exists(list_file)
     mflist = flopy.utils.MfListBudget(list_file)
 
-    # this is failing
-    # df_in, df_out = mflist.get_recarrays()
+    flux_in, flux_out, vol_in, vol_out = mflist.get_recarrays()
 
     # if pandas is installed
-    # df_in, df_out = mflist.get_dataframes(start_datetime=None)
+    try:
+        import pandas
+    except:
+        return
+    df_flx, df_vol = mflist.get_dataframes(start_datetime=None)
     return
 
 if __name__ == '__main__':
