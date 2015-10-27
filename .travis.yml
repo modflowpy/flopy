@@ -1,0 +1,22 @@
+language: python
+
+# 2.6 and "nightly" do not work at the moment, so they are commented out.
+python:
+  # - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.5-dev" # 3.5 development branch
+  # - "nightly" # currently points to 3.6-dev
+
+
+# command to install dependencies
+install: "pip install -r requirements.travis.txt"
+
+
+# command to run tests
+script: 
+    - export PYTHONPATH=$PYTHONPATH:.
+    - nosetests -v -w ./py.test
