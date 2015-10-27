@@ -5,6 +5,9 @@ These are the examples that are distributed with MODFLOW-2005.
 
 import os
 import flopy
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 def test_modflow_load():
     pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -12,6 +15,10 @@ def test_modflow_load():
     for namfile in namfiles:
         m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=True)
         assert m, 'Could not load namefile {}'.format(namfile)
+        m.plot()
+        plt.close("all")
+
+
     return
 
 
