@@ -726,23 +726,38 @@ class mflist(object):
         for name in self.dtype.names[i0:]:
             arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
             arrays[name] = arr.copy()
-        if kper in self.data.keys():
-            sarr = self.data[kper]
-            for name, arr in arrays.items():
-                cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol), dtype=np.float)
-                for rec in sarr:
-                    arr[rec['k'], rec['i'], rec['j']] += rec[name]
-                    cnt[rec['k'], rec['i'], rec['j']] += 1.
-                # average keys that should not be added
-                if name != 'cond' and name != 'flux':
-                    idx = cnt > 0.
-                    arr[idx] /= cnt[idx]
+
+        # if this kper is not found
+        if kper not in self.data.keys():
+            kpers = list(self.data.keys())
+            kpers.sort()
+            # if this kper is before the first entry,
+            # (maybe) mask and return
+            if kper < kpers[0]:
                 if mask:
-                    arr[cnt == 0] = np.NaN
-                arrays[name] = arr
-        elif mask:
-            for name, arr in arrays.items():
-                arrays[name][:] = np.NaN
+                    for name, arr in arrays.items():
+                        arrays[name][:] = np.NaN
+                return arrays
+            # find the last kper
+            else:
+                kper = self.__find_last_kper(kper)
+        sarr = self.data[kper]
+        for name, arr in arrays.items():
+            cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol),
+                           dtype=np.float)
+            for rec in sarr:
+                arr[rec['k'], rec['i'], rec['j']] += rec[name]
+                cnt[rec['k'], rec['i'], rec['j']] += 1.
+            # average keys that should not be added
+            if name != 'cond' and name != 'flux':
+                idx = cnt > 0.
+                arr[idx] /= cnt[idx]
+            if mask:
+                arr[cnt == 0] = np.NaN
+            arrays[name] = arr.copy()
+        # elif mask:
+        #     for name, arr in arrays.items():
+        #         arrays[name][:] = np.NaN
         return arrays
 
     @property
@@ -753,7 +768,8 @@ class mflist(object):
         # initialize these big arrays
         m4ds = {}
         for name,array in arrays.items():
-            m4d = np.zeros((self.model.nper,self.model.nlay,self.model.nrow,self.model.ncol))
+            m4d = np.zeros((self.model.nper,self.model.nlay,
+                            self.model.nrow,self.model.ncol))
             m4d[0,:,:,:] = array
             m4ds[name] = m4d
         for kper in range(1,self.model.nper):

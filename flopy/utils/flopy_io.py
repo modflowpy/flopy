@@ -4,6 +4,15 @@ Module for exporting and importing flopy model attributes
 import numpy as np
 from flopy.utils import util_2d, util_3d, transient_2d, mflist
 
+def line_parse(line):
+    """
+    Convert a line of text into to a list of values.  This handles the
+    case where a free formatted MODFLOW input file may have commas in
+    it.
+
+    """
+    line = line.replace(',', ' ')
+    return line.strip().split()
 
 def write_gridlines_shapefile(filename,sr):
     """

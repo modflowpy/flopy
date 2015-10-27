@@ -85,7 +85,7 @@ class NetCdf(object):
      ----------
         output_filename (str) : the name of the .nc file to write
 
-        ml : flopy model instance
+        model : flopy model instance
 
         time_values : the entires for the time dimension
             if not None, the constructor will initialize
@@ -108,11 +108,11 @@ class NetCdf(object):
 
     """
 
-    def __init__(self,output_filename,ml,time_values=None,verbose=False):
+    def __init__(self,output_filename,model,time_values=None,verbose=None):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
-            verbose = ml.verbose
+            verbose = model.verbose
         self.logger = Logger(verbose)
         self.log = self.logger.log
         if os.path.exists(output_filename):
@@ -120,19 +120,19 @@ class NetCdf(object):
             os.remove(output_filename)
         self.output_filename = output_filename
 
-        assert ml.dis != None
-        self.ml = ml
-        self.shape = (self.ml.nlay,self.ml.nrow,self.ml.ncol)
+        assert model.dis != None
+        self.model = model
+        self.shape = (self.model.nlay,self.model.nrow,self.model.ncol)
 
         import pandas as pd
-        self.start_datetime = pd.to_datetime(self.ml.dis.start_datetime).\
+        self.start_datetime = pd.to_datetime(self.model.dis.start_datetime).\
                                   isoformat().split('.')[0].split('+')[0] + "Z"
 
-        self.grid_units = LENUNI[self.ml.dis.lenuni]
+        self.grid_units = LENUNI[self.model.dis.lenuni]
         assert self.grid_units in ["feet","meters"],\
             "unsupported length units: " + self.grid_units
 
-        self.time_units = ITMUNI[self.ml.dis.itmuni]
+        self.time_units = ITMUNI[self.model.dis.itmuni]
 
         # this gives us confidence that every NetCdf instance has the same attributes
         self.log("initializing attributes")
@@ -172,6 +172,7 @@ class NetCdf(object):
             "NetCdf._initialize_attributes() error: nc attribute already set"
 
         self.nc_epsg_str = 'epsg:4326'
+        self.nc_crs_longname = "http://www.opengis.net/def/crs/EPSG/0/4326"
         self.nc_semi_major = float(6378137.0)
         self.nc_inverse_flat = float(298.257223563)
 
@@ -193,6 +194,9 @@ class NetCdf(object):
 
         self.nc = None
 
+        self.origin_x = None
+        self.origin_y = None
+
 
 
     def initialize_geometry(self):
@@ -204,12 +208,14 @@ class NetCdf(object):
         except Exception as e:
             raise Exception("NetCdf error importing pyproj module:\n" + str(e))
 
-        self.grid_crs = Proj(init=self.ml.dis.sr.epsg_str)
+        self.grid_crs = Proj(init=self.model.dis.sr.epsg_str)
 
-        self.zs = -1.0 * self.ml.dis.zcentroids[:,:,::-1]
+        self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
 
-        ys = np.flipud(self.ml.dis.sr.ycentergrid)
-        xs = np.fliplr(self.ml.dis.sr.xcentergrid)
+        #ys = np.flipud(self.model.dis.sr.ycentergrid)
+        #xs = np.fliplr(self.model.dis.sr.xcentergrid)
+        ys = self.model.dis.sr.ycentergrid
+        xs = self.model.dis.sr.xcentergrid
 
         if self.grid_units.lower().startswith("f"):
             ys /= 3.281
@@ -219,6 +225,10 @@ class NetCdf(object):
         nc_crs = Proj(init=self.nc_epsg_str)
 
         self.xs, self.ys = transform(self.grid_crs,nc_crs,xs,ys)
+        base_x = self.model.dis.sr.xgrid[0,0]
+        base_y = self.model.dis.sr.ygrid[0,0]
+        self.origin_x,self.origin_y = transform(self.grid_crs,nc_crs,base_x,base_y)
+        pass
 
     def initialize_file(self,time_values=None):
         """ initialize the netcdf instance, including global attributes,
@@ -259,10 +269,10 @@ class NetCdf(object):
         self.nc.setncattr("geospatial_vertical_max", max_vertical)
         self.nc.setncattr("geospatial_vertical_resolution", "variable")
         self.nc.setncattr("featureType", "Grid")
-        self.nc.setncattr("origin_x", self.ml.dis.sr.xul)
-        self.nc.setncattr("origin_y", self.ml.dis.sr.yul)
-        self.nc.setncattr("origin_crs", self.ml.dis.sr.epsg_str)
-        self.nc.setncattr("grid_rotation_from_origin", self.ml.dis.sr.rotation)
+        self.nc.setncattr("origin_x", self.model.dis.sr.xul)
+        self.nc.setncattr("origin_y", self.model.dis.sr.yul)
+        self.nc.setncattr("origin_crs", self.model.dis.sr.epsg_str)
+        self.nc.setncattr("grid_rotation_from_origin", self.model.dis.sr.rotation)
         for k, v in self.global_attributes.items():
             try:
                 self.nc.setself.ncattr(k, v)
@@ -278,7 +288,7 @@ class NetCdf(object):
 
         # Metadata variables
         crs = self.nc.createVariable("crs", "i4")
-        crs.long_name = "see http://www.opengis.net for more info"
+        crs.long_name = self.nc_crs_longname
         crs.epsg_code = self.nc_epsg_str
         crs.semi_major_axis = self.nc_semi_major
         crs.inverse_flattening = self.nc_inverse_flat
@@ -286,7 +296,7 @@ class NetCdf(object):
 
         # time
         if time_values is None:
-            time_values = np.cumsum(self.ml.dis.perlen)
+            time_values = np.cumsum(self.model.dis.perlen)
         self.chunks["time"] = min(len(time_values), 100)
         self.nc.createDimension("time", len(time_values))
 
@@ -298,13 +308,13 @@ class NetCdf(object):
         # Latitude
         attribs = {"units":"degrees_north","standard_name":"latitude",
                    "long_name":"latitude","axis":"Y"}
-        lat = self.create_variable("latitude",attribs,dimensions=("x","y"))
+        lat = self.create_variable("latitude",attribs,precision_str="f8",dimensions=("y","x"))
         lat[:] = self.ys
 
         # Longitude
         attribs = {"units":"degrees_east","standard_name":"longitude",
                    "long_name":"longitude","axis":"X"}
-        lon = self.create_variable("longitude",attribs,dimensions=("x","y"))
+        lon = self.create_variable("longitude",attribs,precision_str="f8",dimensions=("y","x"))
         lon[:] = self.xs
 
         # Elevation
@@ -312,7 +322,7 @@ class NetCdf(object):
                    "long_name":"elevation","axis":"Z",
                    "valid_min":min_vertical,"valid_max":max_vertical,
                    "positive":"down"}
-        elev = self.create_variable("elevation",attribs,dimensions=("layer","x","y"))
+        elev = self.create_variable("elevation",attribs,precision_str="f8",dimensions=("layer","y","x"))
         elev[:] = self.zs
 
         # layer
@@ -323,31 +333,31 @@ class NetCdf(object):
 
         # delc
         attribs = {"units":"meters","long_names":"row spacing",
-                   "origin_x":self.ml.dis.sr.xul,
-                   "origin_y":self.ml.dis.sr.yul,
+                   "origin_x":self.model.dis.sr.xul,
+                   "origin_y":self.model.dis.sr.yul,
                    "origin_crs":self.nc_epsg_str}
         delc = self.create_variable('delc', attribs, dimensions=('y',))
         if self.grid_units.lower().startswith('f'):
-            delc[:] = self.ml.dis.delc.array[::-1] * 0.3048
+            delc[:] = self.model.dis.delc.array[::-1] * 0.3048
         else:
-            delc[:] = self.ml.dis.delc.array[::-1]
-        if self.ml.dis.sr.rotation != 0:
-            delc.comments = "This is the column spacing that applied to the UNROTATED grid. " +\
+            delc[:] = self.model.dis.delc.array[::-1]
+        if self.model.dis.sr.rotation != 0:
+            delc.comments = "This is the row spacing that applied to the UNROTATED grid. " +\
                             "This grid HAS been rotated before being saved to NetCDF. " +\
                             "To compute the unrotated grid, use the origin point and this array."
 
         # delr
         attribs = {"units":"meters","long_names":"col spacing",
-                   "origin_x":self.ml.dis.sr.xul,
-                   "origin_y":self.ml.dis.sr.yul,
+                   "origin_x":self.model.dis.sr.xul,
+                   "origin_y":self.model.dis.sr.yul,
                    "origin_crs":self.nc_epsg_str}
         delr = self.create_variable('delr', attribs, dimensions=('x',))
         if self.grid_units.lower().startswith('f'):
-            delr[:] = self.ml.dis.delr.array[::-1] * 0.3048
+            delr[:] = self.model.dis.delr.array[::-1] * 0.3048
         else:
-            delr[:] = self.ml.dis.delr.array[::-1]
-        if self.ml.dis.sr.rotation != 0:
-            delr.comments = "This is the row spacing that applied to the UNROTATED grid. " +\
+            delr[:] = self.model.dis.delr.array[::-1]
+        if self.model.dis.sr.rotation != 0:
+            delr.comments = "This is the col spacing that applied to the UNROTATED grid. " +\
                             "This grid HAS been rotated before being saved to NetCDF. " +\
                             "To compute the unrotated grid, use the origin point and this array."
 
@@ -361,7 +371,7 @@ class NetCdf(object):
         exp._CoordinateAxes = "layer"
 
     def create_variable(self, name, attributes, precision_str='f4',
-                        dimensions=("time", "layer", "x", "y")):
+                        dimensions=("time", "layer", "y", "x")):
         """ create a new variable in the netcdf object
 
         Parameters:
@@ -415,6 +425,7 @@ class NetCdf(object):
         var = self.nc.createVariable(name, precision_str, dimensions,
                                      fill_value=self.fillvalue, zlib=True,
                                      chunksizes=tuple(chunks))
+
 
         for k, v in attributes.items():
             try:
