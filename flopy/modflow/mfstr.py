@@ -174,7 +174,7 @@ class ModflowStr(Package):
     >>> strd = {}
     >>> strd[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this river boundary will be
     >>>                                         #applied to all stress periods
-    >>> str8 = flopy.modflow.ModflowStr(m, stress_period_data=lrcd)
+    >>> str8 = flopy.modflow.ModflowStr(m, stress_period_data=strd)
 
     """
 
@@ -282,9 +282,7 @@ class ModflowStr(Package):
         self.segment_data = segment_data
 
         self.parent.add_package(self)
-
-    def __repr__(self):
-        return 'Stream class'
+        return
 
     @staticmethod
     def get_empty(ncells=0, nss=0, aux_names=None, structured=True):
@@ -585,7 +583,8 @@ class ModflowStr(Package):
                 else:
                     if model.verbose:
                         print("   reading str dataset 6")
-                    current, current_seg = ModflowStr.get_empty(itmp, nss, aux_names=aux_names)
+                    current, current_seg = ModflowStr.get_empty(itmp, nss,
+                                                                aux_names=aux_names)
                     for ibnd in range(itmp):
                         line = f.readline()
                         t = []
@@ -599,18 +598,24 @@ class ModflowStr(Package):
                             if len(aux_names) > 0:
                                 for idx, v in enumerate(t[10:]):
                                     t.append(v)
+                            if len(tt) != len(current.dtype.names):
+                                raise Exception
                         except:
                             ipos = [5, 5, 5, 5, 5, 15, 10, 10, 10, 10]
                             istart = 0
                             for ivar in range(len(ipos)):
-                                istop = istart + ipos(ivar)
-                                t.append(line[istart:istop])
-                                istart = istop + 1
+                                istop = istart + ipos[ivar]
+                                txt = line[istart:istop]
+                                try:
+                                    t.append(float(txt))
+                                except:
+                                    t.append(0.)
+                                istart = istop
                             for ivar in range(3):
                                 t.append(-1.0E+10)
                             if len(aux_names) > 0:
                                 tt = line[istart:].strip().split()
-                                for ivar in len(aux_names):
+                                for ivar in range(len(aux_names)):
                                     t.append(tt[ivar])
                         current[ibnd] = tuple(t[:len(current.dtype.names)])
 
@@ -633,7 +638,7 @@ class ModflowStr(Package):
                             ipos = [10, 10, 10]
                             istart = 0
                             for ivar in range(len(ipos)):
-                                istop = istart + ipos(ivar)
+                                istop = istart + ipos[ivar]
                                 v.append(float(line[istart:istop]))
                                 istart = istop + 1
                         ipos = 0
@@ -659,7 +664,7 @@ class ModflowStr(Package):
                             for ivar in range(ntrib):
                                 istop = istart + ipos
                                 v.append(float(line[istart:istop]))
-                                istart = istop + 1
+                                istart = istop
                         for idx in range(ntrib):
                             current_seg[iseg][idx] = v[idx]
 
@@ -678,7 +683,7 @@ class ModflowStr(Package):
                             for ivar in range(ntrib):
                                 istop = istart + ipos
                                 v = float(line[istart:istop])
-                                istart = istop + 1
+                                istart = istop
                         current_seg[iseg][10] = v
 
                 seg_output = np.recarray.copy(current_seg)
