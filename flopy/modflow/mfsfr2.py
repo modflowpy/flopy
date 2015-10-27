@@ -1077,16 +1077,20 @@ class check:
         txt = ''
         array = array.copy()
         if isinstance(col1, np.ndarray):
-            array = recfunctions.append_fields(array, names='tmp1', data=col1)
+            array = recfunctions.append_fields(array, names='tmp1', data=col1,
+                                                         asrecarray=True)
             col1 = 'tmp1'
         if isinstance(col2, np.ndarray):
-            array = recfunctions.append_fields(array, names='tmp2', data=col2)
+            array = recfunctions.append_fields(array, names='tmp2', data=col2,
+                                                         asrecarray=True)
             col2 = 'tmp2'
         if isinstance(col1, tuple):
-            array = recfunctions.append_fields(array, names=col1[0], data=col1[1])
+            array = recfunctions.append_fields(array, names=col1[0], data=col1[1],
+                                                         asrecarray=True)
             col1 = col1[0]
         if isinstance(col2, tuple):
-            array = recfunctions.append_fields(array, names=col2[0], data=col2[1])
+            array = recfunctions.append_fields(array, names=col2[0], data=col2[1],
+                                                         asrecarray=True)
             col2 = col2[0]
 
         failed = array[col1] > array[col2]
@@ -1268,13 +1272,15 @@ class check:
                     txt += '\n'
                 '''
                 # next check for rises between segments
-                outseg_elevup = np.array([segment_data.elevup[o - 1] for o in segment_data.outseg])
-                d_elev2 = outseg_elevup - segment_data.elevdn
-                segment_data = recfunctions.append_fields(segment_data,
-                                                          names=['outseg_elevup', 'd_elev2'],
-                                                          data=[outseg_elevup, d_elev2],
-                                                          asrecarray=True)
-                non_outlets_seg_data = segment_data[segment_data.outseg != 0]
+                non_outlets = segment_data.outseg > 0
+                non_outlets_seg_data = segment_data[non_outlets] # lake outsegs are < 0
+                outseg_elevup = np.array([segment_data.elevup[o - 1] for o in segment_data.outseg if o > 0])
+                d_elev2 = outseg_elevup - segment_data.elevdn[non_outlets]
+                non_outlets_seg_data = recfunctions.append_fields(non_outlets_seg_data,
+                                                                  names=['outseg_elevup', 'd_elev2'],
+                                                                  data=[outseg_elevup, d_elev2],
+                                                                  asrecarray=True)
+
                 txt += self._boolean_compare(non_outlets_seg_data[['nseg', 'outseg', 'elevdn',
                                                                    'outseg_elevup', 'd_elev2']].copy(),
                                              col1='d_elev2', col2=np.zeros(len(non_outlets_seg_data)),
@@ -1786,7 +1792,7 @@ def parse_6a(line, option):
     iprior = na
     nstrpts = na
 
-    if iupseg != 0:
+    if iupseg > 0:
         iprior = int(line.pop(0))
     if icalc == 4:
         nstrpts = int(line.pop(0))
