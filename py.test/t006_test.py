@@ -1,6 +1,6 @@
 # Test reference class
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('agg')
 
 
 def test_binaryfile_reference():
