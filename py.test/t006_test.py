@@ -13,7 +13,7 @@ def test_binaryfile_reference():
     h.sr.xul = 1000.0
     h.sr.yul = 200.0
     h.sr.rotation = 15.0
-    h.plot()
+    h.plot(filename_base=os.path.join('temp', 't006'))
     plt.close('all')
     return
 
