@@ -63,4 +63,4 @@ def test_mflist_reference():
 
 if __name__ == '__main__':
     test_mflist_reference()
-    test_binaryfile_reference()
+    #test_binaryfile_reference()
