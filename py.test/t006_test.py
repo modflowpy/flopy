@@ -3,17 +3,17 @@ import matplotlib
 matplotlib.use('agg')
 
 
-def test_binaryfile_reference():
-    import os
-    import flopy
-
-    h = flopy.utils.HeadFile(os.path.join('..', 'examples', 'data', 'freyberg', 'freyberg.githds'))
-    h.sr.xul = 1000.0
-    h.sr.yul = 200.0
-    h.sr.rotation = 15.0
-    h.plot(filename_base=os.path.join('temp', 't006'))
-    matplotlib.pyplot.close('all')
-    return
+# def test_binaryfile_reference():
+#     import os
+#     import flopy
+#
+#     h = flopy.utils.HeadFile(os.path.join('..', 'examples', 'data', 'freyberg', 'freyberg.githds'))
+#     h.sr.xul = 1000.0
+#     h.sr.yul = 200.0
+#     h.sr.rotation = 15.0
+#     h.plot(filename_base=os.path.join('temp', 't006'))
+#     matplotlib.pyplot.close('all')
+#     return
 
 
 def test_mflist_reference():
