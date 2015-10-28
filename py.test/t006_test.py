@@ -1,12 +1,10 @@
 # Test reference class
 import matplotlib
-
 matplotlib.use('Agg')
 
 
 def test_binaryfile_reference():
     import os
-    import matplotlib.pyplot as plt
     import flopy
 
     h = flopy.utils.HeadFile(os.path.join('..', 'examples', 'data', 'freyberg', 'freyberg.githds'))
@@ -14,16 +12,14 @@ def test_binaryfile_reference():
     h.sr.yul = 200.0
     h.sr.rotation = 15.0
     h.plot(filename_base=os.path.join('temp', 't006'))
-    plt.close('all')
+    matplotlib.pyplot.close('all')
     return
 
 
 def test_mflist_reference():
     import os
     import numpy as np
-    import matplotlib.pyplot as plt
     import shapefile
-    import flopy
     import flopy.modflow as fmf
 
     # model_ws = os.path.join('..', 'data', 'freyberg')
