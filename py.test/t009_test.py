@@ -4,6 +4,7 @@ import sys
 sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import numpy as np
+import matplotlib as mpl
 import flopy
 
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -97,6 +98,8 @@ def test_sfr():
     assert round(sum(sfr.segment_data[49][0]), 7) == 3.9700007
     
     m, sfr = sfr_process('UZFtest2.nam', 'UZFtest2.sfr', path)
+
+    assert isinstance(sfr.plot()[0], mpl.axes.Axes) # test the plot() method
 
     # trout lake example (only sfr file is included)
     # can add tests for sfr connection with lak package

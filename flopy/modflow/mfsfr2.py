@@ -7,6 +7,7 @@ import os
 import numpy as np
 from numpy.lib import recfunctions
 from flopy.mbase import Package
+from flopy.utils.util_list import mflist
 from ..utils.flopy_io import line_parse
 
 
@@ -263,6 +264,10 @@ class ModflowSfr2(Package):
         for k, v in new_cols.items():
             if k not in self.reach_data.dtype.names:
                 recfunctions.append_fields(self.reach_data, names=k, data=v, asrecarray=True)
+        # create a stress_period_data attribute to enable parent functions (e.g. plot)
+        replacenames = {'krch': 'k', 'irch': 'i', 'jrch': 'j'}
+        reach_data.dtype.names = [replacenames.get(n, n) for n in reach_data.dtype.names]
+        self.stress_period_data = mflist(self, reach_data, dtype=reach_data.dtype)
 
         # Datasets 4 and 6. -----------------------------------------------------------------------
         self.segment_data = segment_data
