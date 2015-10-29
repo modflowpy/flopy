@@ -354,7 +354,7 @@ class ModflowStr(Package):
 
         nrow, ncol, nlay, nper = self.parent.get_nrow_ncol_nlay_nper()
 
-        kpers = list(self.stress_period_data.keys())
+        kpers = list(self.stress_period_data.data.keys())
         kpers.sort()
 
         if self.parent.bas6.ifrefm:
