@@ -266,8 +266,11 @@ class ModflowSfr2(Package):
                 recfunctions.append_fields(self.reach_data, names=k, data=v, asrecarray=True)
         # create a stress_period_data attribute to enable parent functions (e.g. plot)
         replacenames = {'krch': 'k', 'irch': 'i', 'jrch': 'j'}
-        reach_data.dtype.names = [replacenames.get(n, n) for n in reach_data.dtype.names]
-        self.stress_period_data = mflist(self, reach_data, dtype=reach_data.dtype)
+        stpd = self.get_empty_reach_data(nreaches=len(reach_data))
+        stpd[:] = reach_data[:] # apparently this is the only way to make a deep copy
+        # (so reach_data column names don't change)
+        stpd.dtype.names = [replacenames.get(n, n) for n in stpd.dtype.names]
+        self.stress_period_data = mflist(self, stpd, dtype=stpd.dtype)
 
         # Datasets 4 and 6. -----------------------------------------------------------------------
         self.segment_data = segment_data

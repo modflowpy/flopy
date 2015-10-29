@@ -1,14 +1,18 @@
 __author__ = 'aleaf'
 
-import sys
-sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
+#import sys
+#sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import numpy as np
 import matplotlib as mpl
 import flopy
 
-path = os.path.join('..', 'examples', 'data', 'mf2005_test')
-path2 = os.path.join('..', 'examples', 'data', 'sfr_test')
+if os.path.split(os.getcwd())[-1] == 'flopy3':
+    path = os.path.join('examples', 'data', 'mf2005_test')
+    path2 = os.path.join('examples', 'data', 'sfr_test')
+else:
+    path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    path2 = os.path.join('..', 'examples', 'data', 'sfr_test')
 
 sfr_items = {0: {'mfnam': 'test1ss.nam',
                      'sfrfile': 'test1ss.sfr'},
@@ -59,7 +63,7 @@ def load_all_sfr_only(path):
     for i, item in sfr_items.items():
         load_sfr_only(os.path.join(path, item['sfrfile']))
 
-def test_interpolate_to_reaches(sfr):
+def interpolate_to_reaches(sfr):
     reach_data = sfr.reach_data
     segment_data = sfr.segment_data[0]
     for reachvar, segvars in {'strtop': ('elevup', 'elevdn'),
@@ -76,6 +80,7 @@ def test_interpolate_to_reaches(sfr):
     return reach_data
 
 def test_sfr():
+
     load_all_sfr_only(path2)
 
     m, sfr = sfr_process('test1ss.nam', 'test1ss.sfr', path)
@@ -107,7 +112,7 @@ def test_sfr():
     # convert sfr package to reach input
     sfr.reachinput = True
     sfr.isfropt = 1
-    sfr.reach_data = test_interpolate_to_reaches(sfr)
+    sfr.reach_data = interpolate_to_reaches(sfr)
     sfr.get_slopes()
     assert sfr.reach_data.slope[29] == (sfr.reach_data.strtop[29] - sfr.reach_data.strtop[107])\
                                        /sfr.reach_data.rchlen[29]
