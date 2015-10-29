@@ -258,6 +258,8 @@ class NetCdf(object):
         # open the file for writing
         self.nc = netCDF4.Dataset(self.output_filename, "w")
 
+
+
         # write some attributes
         self.log("setting standard attributes")
         self.nc.setncattr("Conventions", "CF-1.6")
@@ -293,7 +295,6 @@ class NetCdf(object):
         crs.semi_major_axis = self.nc_semi_major
         crs.inverse_flattening = self.nc_inverse_flat
 
-
         # time
         if time_values is None:
             time_values = np.cumsum(self.model.dis.perlen)
@@ -301,19 +302,22 @@ class NetCdf(object):
         self.nc.createDimension("time", len(time_values))
 
         attribs = {"units":"{0} since {1}".format(self.time_units, self.start_datetime),
-                   "standard_name": "time", "long_name": "time", "calendar": "gregorian"}
+                   "standard_name": "time", "long_name": "time", "calendar": "gregorian",
+                   "_CoordinateAxisType":"Time"}
         time = self.create_variable("time",attribs,precision_str="f8",dimensions=("time",))
         time[:] = np.asarray(time_values)
 
         # Latitude
         attribs = {"units":"degrees_north","standard_name":"latitude",
-                   "long_name":"latitude","axis":"Y"}
+                   "long_name":"latitude","axis":"Y",
+                   "_CoordinateAxisType":"Lat"}
         lat = self.create_variable("latitude",attribs,precision_str="f8",dimensions=("y","x"))
         lat[:] = self.ys
 
         # Longitude
         attribs = {"units":"degrees_east","standard_name":"longitude",
-                   "long_name":"longitude","axis":"X"}
+                   "long_name":"longitude","axis":"X",
+                   "_CoordinateAxisType":"Lon"}
         lon = self.create_variable("longitude",attribs,precision_str="f8",dimensions=("y","x"))
         lon[:] = self.xs
 
@@ -425,7 +429,6 @@ class NetCdf(object):
         var = self.nc.createVariable(name, precision_str, dimensions,
                                      fill_value=self.fillvalue, zlib=True,
                                      chunksizes=tuple(chunks))
-
 
         for k, v in attributes.items():
             try:

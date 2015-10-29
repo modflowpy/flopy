@@ -10,6 +10,7 @@ def test_loadfreyberg():
     ml = flopy.modflow.Modflow.load(namefile)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
+    assert ml.load_fail is False
     return
 
 def test_loadoahu():
@@ -21,6 +22,7 @@ def test_loadoahu():
     ml = flopy.modflow.Modflow.load(namefile)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
+    assert ml.load_fail is False
     return
 
 def test_loadtwrip():
@@ -32,6 +34,7 @@ def test_loadtwrip():
     ml = flopy.modflow.Modflow.load(namefile)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
+    assert ml.load_fail is False
     return
 
 

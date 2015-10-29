@@ -744,7 +744,20 @@ class mflist(object):
             # find the last kper
             else:
                 kper = self.__find_last_kper(kper)
+
         sarr = self.data[kper]
+
+        if np.isscalar(sarr):
+            # if there are no entries for this kper
+            if sarr == 0:
+                if mask:
+                    for name, arr in arrays.items():
+                        arrays[name][:] = np.NaN
+                return arrays
+            else:
+                raise Exception("mflist: something bad happened")
+
+
         for name, arr in arrays.items():
             cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol),
                            dtype=np.float)

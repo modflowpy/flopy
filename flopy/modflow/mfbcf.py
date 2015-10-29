@@ -99,8 +99,11 @@ class ModflowBcf(Package):
         self.hy = util_3d(model, (nlay,nrow,ncol), np.float32, hy,
                           'Horizontal Hydraulic Conductivity',
                           locat=self.unit_number[0])
-        self.vcont = util_3d(model, (nlay-1,nrow,ncol), np.float32, vcont,
-                             'Vertical Conductance', locat=self.unit_number[0])
+        if model.nlay > 1:
+            self.vcont = util_3d(model, (nlay-1,nrow,ncol), np.float32, vcont,
+                                 'Vertical Conductance', locat=self.unit_number[0])
+        else:
+            self.vcont = None
         self.sf1 = util_3d(model, (nlay,nrow,ncol), np.float32, sf1,
                            'Primary Storage Coefficient',
                            locat=self.unit_number[0])
