@@ -105,7 +105,7 @@ def test_sfr():
     
     m, sfr = sfr_process('UZFtest2.nam', 'UZFtest2.sfr', path)
 
-    #assert isinstance(sfr.plot()[0], matplotlib.axes.Axes) # test the plot() method
+    assert isinstance(sfr.plot()[0], matplotlib.axes.Axes) # test the plot() method
 
     # trout lake example (only sfr file is included)
     # can add tests for sfr connection with lak package

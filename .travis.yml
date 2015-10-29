@@ -15,6 +15,9 @@ python:
 # command to install dependencies
 install: "pip install -r requirements.travis.txt"
 
+# start Virtual X, so default matplotlib backend works
+    - "export DISPLAY=:99.0"
+    - "sh -e /etc/init.d/xvfb start"
 
 # command to run tests
 script: 
