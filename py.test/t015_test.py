@@ -21,7 +21,7 @@ str_items = {0: {'mfnam': 'str.nam',
 def test_str():
 
     m = flopy.modflow.Modflow.load(str_items[0]['mfnam'], model_ws=path, verbose=True)
-    #assert isinstance(m.str.plot()[0], matplotlib.axes.Axes)
+    assert isinstance(m.str.plot()[0], matplotlib.axes.Axes)
 
 if __name__ == '__main__':
     test_str()
