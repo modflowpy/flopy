@@ -4,6 +4,17 @@
 ### Version 3.2.3
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 
+##AGU 2015 coding sprint focus
+###Let's list items here and we can sort later
+- refactor namespaces so that `flopy.modflow.ModflowWel` becomes `flopy.ModflowWel` etc
+- develope a standard SpatialReference file that `flopy` can write and read
+- unstructured grid support
+- refactor `util_2d` to inherit from `numpy.ndarray`
+- refactor all of the non-PEP8 compliant util class names (e.g. `util_2d` to `Util2d`)
+- move shapefile support into `export`
+
+
+
 ## Introduction
 
 *FloPy<sub>3</sub>* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.

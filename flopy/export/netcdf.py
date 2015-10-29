@@ -101,7 +101,6 @@ class NetCdf(object):
         including these attributes:
                     lenuni
                     itmuni
-                    epsg_str
                     start_datetime
                     sr (SpatialReference)
         make sure these attributes have meaningful values
@@ -208,25 +207,48 @@ class NetCdf(object):
         except Exception as e:
             raise Exception("NetCdf error importing pyproj module:\n" + str(e))
 
-        self.grid_crs = Proj(init=self.model.dis.sr.epsg_str)
 
-        self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
+        proj4_str = self.model.dis.sr.proj4_str
+        if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
+            proj4_str = "+init=" + proj4_str
+        self.log("building grid crs using proj4 string: {0}".format(proj4_str))
+        try:
+            self.grid_crs = Proj(proj4_str)
+        except Exception as e:
+            self.log("error building grid crs:\n{0}".format(str(e)))
+            raise Exception("error building grid crs:\n{0}".format(str(e)))
+        self.log("building grid crs using proj4 string: {0}".format(proj4_str))
 
-        #ys = np.flipud(self.model.dis.sr.ycentergrid)
-        #xs = np.fliplr(self.model.dis.sr.xcentergrid)
+        #self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
+        self.zs = -1.0 * self.model.dis.zcentroids
+
+
         ys = self.model.dis.sr.ycentergrid
         xs = self.model.dis.sr.xcentergrid
 
         if self.grid_units.lower().startswith("f"):
+            self.log("converting feet to meters")
             ys /= 3.281
             xs /= 3.281
+            self.log("converting feet to meters")
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)
+        self.log("projecting grid cell center arrays " +\
+                 "from {0} to {1}".format(str(self.grid_crs),
+                                          str(nc_crs)))
+        try:
+            self.xs, self.ys = transform(self.grid_crs, nc_crs, xs, ys)
+        except Exception as e:
+            self.log("error projecting:\n{0}".format(str(e)))
+            raise Exception("error projecting:\n{0}".format(str(e)))
 
-        self.xs, self.ys = transform(self.grid_crs,nc_crs,xs,ys)
-        base_x = self.model.dis.sr.xgrid[0,0]
-        base_y = self.model.dis.sr.ygrid[0,0]
+        self.log("projecting grid cell center arrays " +\
+                 "from {0} to {1}".format(str(self.grid_crs),
+                                          str(nc_crs)))
+
+        base_x = self.model.dis.sr.xgrid[0, 0]
+        base_y = self.model.dis.sr.ygrid[0, 0]
         self.origin_x,self.origin_y = transform(self.grid_crs,nc_crs,base_x,base_y)
         pass
 
@@ -273,7 +295,7 @@ class NetCdf(object):
         self.nc.setncattr("featureType", "Grid")
         self.nc.setncattr("origin_x", self.model.dis.sr.xul)
         self.nc.setncattr("origin_y", self.model.dis.sr.yul)
-        self.nc.setncattr("origin_crs", self.model.dis.sr.epsg_str)
+        self.nc.setncattr("origin_crs", self.model.dis.sr.proj4_str)
         self.nc.setncattr("grid_rotation_from_origin", self.model.dis.sr.rotation)
         for k, v in self.global_attributes.items():
             try:
