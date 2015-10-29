@@ -1,10 +1,34 @@
 __author__ = 'aleaf'
 
+#import sys
+#sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import numpy as np
+import matplotlib as mpl
 import flopy
 
-path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+if os.path.split(os.getcwd())[-1] == 'flopy3':
+    path = os.path.join('examples', 'data', 'mf2005_test')
+    path2 = os.path.join('examples', 'data', 'sfr_test')
+else:
+    path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    path2 = os.path.join('..', 'examples', 'data', 'sfr_test')
+
+sfr_items = {0: {'mfnam': 'test1ss.nam',
+                     'sfrfile': 'test1ss.sfr'},
+                 1: {'mfnam': 'test1tr.nam',
+                     'sfrfile': 'test1tr.sfr'},
+                 2: {'mfnam': 'testsfr2_tab.nam',
+                     'sfrfile': 'testsfr2_tab_ICALC1.sfr'},
+                 3: {'mfnam': 'testsfr2_tab.nam',
+                     'sfrfile': 'testsfr2_tab_ICALC2.sfr'},
+                 4: {'mfnam': 'testsfr2.nam',
+                     'sfrfile': 'testsfr2.sfr'},
+                 5: {'mfnam': 'UZFtest2.nam',
+                     'sfrfile': 'UZFtest2.sfr'},
+                 6: {'mfnam': 'TL2009.nam',
+                     'sfrfile': 'TL2009.sfr'}
+                 }
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder='temp'):
 
@@ -30,7 +54,35 @@ def sfr_process(mfnam, sfrfile, model_ws, outfolder='temp'):
 
     return m, sfr
 
+def load_sfr_only(sfrfile):
+    m = flopy.modflow.Modflow()
+    sfr = flopy.modflow.ModflowSfr2.load(sfrfile, m)
+    return m, sfr
+
+def load_all_sfr_only(path):
+    for i, item in sfr_items.items():
+        load_sfr_only(os.path.join(path, item['sfrfile']))
+
+def interpolate_to_reaches(sfr):
+    reach_data = sfr.reach_data
+    segment_data = sfr.segment_data[0]
+    for reachvar, segvars in {'strtop': ('elevup', 'elevdn'),
+                              'strthick': ('thickm1', 'thickm2'),
+                              'strhc1': ('hcond1', 'hcond2')}.items():
+        reach_data[reachvar] = sfr._interpolate_to_reaches(*segvars)
+        for seg in segment_data.nseg:
+            reaches = reach_data[reach_data.iseg == seg]
+            dist = np.cumsum(reaches.rchlen) - 0.5 * reaches.rchlen
+            fp = [segment_data[segment_data['nseg'] == seg][segvars[0]][0],
+                  segment_data[segment_data['nseg'] == seg][segvars[1]][0]]
+            xp = [dist[0], dist[-1]]
+            assert np.sum(np.abs(reaches[reachvar] - np.interp(dist, xp, fp).tolist())) < 0.01
+    return reach_data
+
 def test_sfr():
+
+    load_all_sfr_only(path2)
+
     m, sfr = sfr_process('test1ss.nam', 'test1ss.sfr', path)
 
     m, sfr = sfr_process('test1tr.nam', 'test1tr.sfr', path)
@@ -51,6 +103,20 @@ def test_sfr():
     assert round(sum(sfr.segment_data[49][0]), 7) == 3.9700007
     
     m, sfr = sfr_process('UZFtest2.nam', 'UZFtest2.sfr', path)
+
+    assert isinstance(sfr.plot()[0], mpl.axes.Axes) # test the plot() method
+
+    # trout lake example (only sfr file is included)
+    # can add tests for sfr connection with lak package
+    m, sfr = load_sfr_only(os.path.join(path2, 'TL2009.sfr'))
+    # convert sfr package to reach input
+    sfr.reachinput = True
+    sfr.isfropt = 1
+    sfr.reach_data = interpolate_to_reaches(sfr)
+    sfr.get_slopes()
+    assert sfr.reach_data.slope[29] == (sfr.reach_data.strtop[29] - sfr.reach_data.strtop[107])\
+                                       /sfr.reach_data.rchlen[29]
+    sfr.check()
 
 if __name__ == '__main__':
     test_sfr()

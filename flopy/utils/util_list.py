@@ -52,7 +52,7 @@ class mflist(object):
 
     """
 
-    def __init__(self, package, data=None, model=None):
+    def __init__(self, package, data=None, dtype=None, model=None):
 
         if isinstance(data, mflist):
             for attr in data.__dict__.items():
@@ -73,8 +73,11 @@ class mflist(object):
             self.sr = self.model.dis.sr
         except:
             self.sr = None
-        assert isinstance(self.package.dtype, np.dtype)
-        self.__dtype = self.package.dtype
+        if dtype is None:
+            assert isinstance(self.package.dtype, np.dtype)
+            self.__dtype = self.package.dtype
+        else:
+            self.__dtype = dtype
         self.__vtype = {}
         self.__data = {}
         if data is not None:

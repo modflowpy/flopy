@@ -255,7 +255,7 @@ class ModflowStr(Package):
                                     str(type(d)) + ' at kper ' +
                                     '{0:d}'.format(key))
         # add stress_period_data to package
-        self.stress_period_data = stress_period_data
+        self.stress_period_data = mflist(self, stress_period_data)
 
         # convert segment_data for datasets 9 and 10 to a recarray if necessary
         if segment_data is not None:
