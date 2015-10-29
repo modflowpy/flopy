@@ -937,22 +937,7 @@ class ModflowSfr2(Package):
             self.fn_path = filename
 
         f_sfr = open(self.fn_path, 'w')
-        '''
-        line = '{0:10d}{1:10d}'.format(self.stress_period_data.mxact, self.ipakcb)
-        for opt in self.options:
-            line += ' ' + str(opt)
-        line += '\n'
-        f_riv.write(line)
-        self.stress_period_data.write_transient(f_riv)
-        f_riv.close()
-        
-        self.reachinput = reachinput
-        self.transroute = transroute
-        self.tabfiles = tabfiles
-        self.tabfiles_dict = tabfiles_dict
-        self.numtab = len(tabfiles_dict)
-        self.maxval = np.max([tb['numval'] for tb in tabfiles_dict.values()]) if len(tabfiles_dict) > 0 else 0
-        '''
+
         # Item 0 -- header
         f_sfr.write('{0}\n'.format(self.heading))
 
@@ -1305,17 +1290,7 @@ class check:
                                                        '{} segments encountered with elevdn > elevup.',
                                              level1txt='Backwards segments:',
                                              )
-                '''
-                backwards_segments = (segment_data.elevdn - segment_data.elevup) > 0
-                if np.any(backwards_segments):
-                    backwards_info = segment_data[['nseg', 'outseg', 'elevup', 'elevdn']][backwards_segments]
-                    txt += 'Stress Period {}: {} segments encountered with elevdn > elevup.\n' \
-                        .format(per + 1, len(backwards_info))
-                    if self.level == 1:
-                        txt += 'Backwards segments:\n'
-                        txt += _print_rec_array(backwards_info, delimiter='\t')
-                    txt += '\n'
-                '''
+
                 # next check for rises between segments
                 non_outlets = segment_data.outseg > 0
                 non_outlets_seg_data = segment_data[non_outlets] # lake outsegs are < 0
@@ -1335,23 +1310,6 @@ class check:
                                              level1txt='Backwards segment connections:',
                                              )
 
-                '''
-                backwards_connections = ((outseg_elevup - segment_data.elevdn) > 0) & \
-                                        (segment_data.outseg != 0)
-                if np.any(backwards_connections):
-                    backwards_info = segment_data[['nseg', 'outseg', 'elevdn']]
-                    backwards_info = recfunctions.append_fields(backwards_info,
-                                                                names='outseg_elevup',
-                                                                data=outseg_elevup,
-                                                                asrecarray=True)
-                    backwards_info = backwards_info[backwards_connections]
-                    txt += 'Stress Period {}: {} segments encountered with outseg elevup > elevdn.\n' \
-                        .format(per + 1, len(backwards_info))
-                    if self.level == 1:
-                        txt += 'Backwards segment connections:\n'
-                        txt += _print_rec_array(backwards_info, delimiter='\t')
-                    txt += '\n'
-                '''
             if len(txt) == 0:
                 passed = True
         else:
@@ -1390,22 +1348,6 @@ class check:
                                          level1txt='Elevation rises:',
                                          )
 
-            '''
-            elevation_rises = (reach_data.strtopdn - reach_data.strtop) > 0
-            if np.any(elevation_rises):
-                backwards_info = reach_data[['krch', 'irch', 'jrch', 'iseg', 'strtop',
-                                             'strtopdn', 'reachID', 'outreach']][elevation_rises].copy()
-                txt += '{} reaches encountered with strtop > strtop of downstream reach.\n' \
-                    .format(len(backwards_info))
-                if self.level == 1:
-                    diff = backwards_info.strtop - backwards_info.strtopdn
-                    backwards_info = recfunctions.append_fields(backwards_info, names='diff', data=diff, asrecarray=True)
-                    backwards_info.sort(order='diff')
-                    txt += 'Elevation rises:\n'
-                    txt += _print_rec_array(backwards_info, delimiter='\t')
-                txt += '\n'
-                passed = False
-            '''
             if len(txt) == 0:
                 passed = True
         else:
@@ -1443,21 +1385,7 @@ class check:
                                          level0txt='{} reaches encountered with streambed bottom below layer bottom.',
                                          level1txt='Layer bottom violations:',
                                          )
-            '''
-            below_layer_bottoms = streambed_bots < bots
-            if np.any(below_layer_bottoms):
-                below_info = reach_data[['krch', 'irch', 'jrch', 'iseg', 'strtop',
-                                             'strthick', 'layerbot', 'reachID']][below_layer_bottoms]
-                txt += '{} reaches encountered with streambed bottom below layer bottom.\n' \
-                    .format(len(below_info))
-                if self.level == 1:
-                    diff = below_info.strtop - below_info.modeltop
-                    below_info = recfunctions.append_fields(below_info, names='diff', data=diff, asrecarray=True)
-                    below_info.sort(order='diff')
-                    txt += 'Layer bottom violations:\n'
-                    txt += _print_rec_array(below_info, delimiter='\t')
-                txt += '\n'
-            '''
+
             # check streambed elevations in relation to model top
             tops = self.sfr.parent.dis.top.array[i, j]
             reach_data = recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
@@ -1468,22 +1396,7 @@ class check:
                                          level0txt='{} reaches encountered with streambed above model top.',
                                          level1txt='Model top violations:',
                                          )
-            '''
-            above_model_top = reach_data.strtop > tops
-            if np.any(above_model_top):
-                above_info = reach_data[['krch', 'irch', 'jrch', 'iseg', 'strtop',
-                                             'modeltop', 'reachID']][above_model_top]
-                txt += '{} reaches encountered with streambed above model top.\n' \
-                    .format(len(above_info))
-                if self.level == 1:
-                    diff = above_info.strtop - above_info.modeltop
-                    above_info = recfunctions.append_fields(above_info, names='diff', data=diff, asrecarray=True)
-                    above_info.sort(order='diff')
-                    above_info = above_info[::-1]
-                    txt += 'Model top violations:\n'
-                    txt += _print_rec_array(above_info, delimiter='\t')
-                txt += '\n'
-            '''
+
             if len(txt) == 0:
                 passed = True
         else:
@@ -1532,18 +1445,6 @@ class check:
                                          level1txt='Model top violations:',
                                          )
 
-            '''
-            above_model_top = (tops - segment_ends.strtop) < 0
-            if np.any(above_model_top):
-                above_info = segment_ends[['krch', 'irch', 'jrch', 'iseg', 'strtop',
-                                             'modeltop', 'reachID']][above_model_top].copy()
-                txt += '{} reaches encountered with streambed above model top.\n' \
-                    .format(len(above_info))
-                if self.level == 1:
-                    txt += 'Model top violations:\n'
-                    txt += _print_rec_array(above_info, delimiter='\t')
-                txt += '\n'
-            '''
             if len(txt) == 0:
                 passed = True
         else:
