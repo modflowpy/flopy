@@ -1,7 +1,7 @@
 __author__ = 'aleaf'
 
-#import sys
-#sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
+import sys
+sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import numpy as np
 import matplotlib as mpl
@@ -10,9 +10,11 @@ import flopy
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
     path2 = os.path.join('examples', 'data', 'sfr_test')
+    outpath = os.path.join('py.test/temp')
 else:
     path = os.path.join('..', 'examples', 'data', 'mf2005_test')
     path2 = os.path.join('..', 'examples', 'data', 'sfr_test')
+    outpath = 'temp'
 
 sfr_items = {0: {'mfnam': 'test1ss.nam',
                      'sfrfile': 'test1ss.sfr'},
@@ -30,7 +32,7 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
                      'sfrfile': 'TL2009.sfr'}
                  }
 
-def sfr_process(mfnam, sfrfile, model_ws, outfolder='temp'):
+def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
 
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
     sfr = m.get_package('SFR2')
@@ -104,7 +106,9 @@ def test_sfr():
     
     m, sfr = sfr_process('UZFtest2.nam', 'UZFtest2.sfr', path)
 
-    assert isinstance(sfr.plot()[0], mpl.axes.Axes) # test the plot() method
+    #assert isinstance(sfr.plot()[0], mpl.axes.Axes) # test the plot() method
+    sfr.reach_data = interpolate_to_reaches(sfr)
+    sfr.plot(key='strtop', vmin=sfr.reach_data.strtop.min(), vmax=sfr.reach_data.strtop.max())
 
     # trout lake example (only sfr file is included)
     # can add tests for sfr connection with lak package

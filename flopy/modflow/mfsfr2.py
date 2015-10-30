@@ -250,11 +250,13 @@ class ModflowSfr2(Package):
         self.flwtol = flwtol  # streamflow tolerance for convergence of the kinematic wave equation
 
         # Dataset 2. -----------------------------------------------------------------------
-        self.reach_data = reach_data
+        self.reach_data = self.get_empty_reach_data(len(reach_data))
+        for n in reach_data.dtype.names:
+            self.reach_data[n] = reach_data[n]
         # assign node numbers if there are none (structured grid)
         if np.diff(self.reach_data.node).max() == 0 and 'DIS' in self.parent.get_package_list():
             # first make kij list
-            lrc = self.reach_data[['krch', 'irch', 'jrch']]
+            lrc = self.reach_data[['k', 'i', 'j']]
             lrc = (lrc.view((int, len(lrc.dtype.names))) + 1).tolist()
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
@@ -265,15 +267,14 @@ class ModflowSfr2(Package):
             if k not in self.reach_data.dtype.names:
                 recfunctions.append_fields(self.reach_data, names=k, data=v, asrecarray=True)
         # create a stress_period_data attribute to enable parent functions (e.g. plot)
-        replacenames = {'krch': 'k', 'irch': 'i', 'jrch': 'j'}
-        stpd = self.get_empty_reach_data(nreaches=len(reach_data))
-        stpd[:] = reach_data[:] # apparently this is the only way to make a deep copy
-        # (so reach_data column names don't change)
-        stpd.dtype.names = [replacenames.get(n, n) for n in stpd.dtype.names]
-        self.stress_period_data = mflist(self, stpd, dtype=stpd.dtype)
+        self.stress_period_data = mflist(self, self.reach_data, dtype=self.reach_data.dtype)
 
         # Datasets 4 and 6. -----------------------------------------------------------------------
-        self.segment_data = segment_data
+        self.segment_data = {}
+        for i in segment_data.keys():
+            self.segment_data[i] = self.get_empty_segment_data(nss)
+            for n in segment_data[i].dtype.names:
+                self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg column has non-default values
         if len(self.segment_data[0]) == 1 or \
            np.diff(self.segment_data[0].nseg).max() != 0 and np.diff(self.segment_data[0].outseg).max() != 0:
@@ -322,9 +323,9 @@ class ModflowSfr2(Package):
         if structured:
             # include node column for structured grids (useful for indexing)
             return np.dtype([('node', np.int),
-                             ('krch', np.int),
-                             ('irch', np.int),
-                             ('jrch', np.int),
+                             ('k', np.int),
+                             ('i', np.int),
+                             ('j', np.int),
                              ('iseg', np.int),
                              ('ireach', np.int),
                              ('rchlen', np.float32),
@@ -472,7 +473,7 @@ class ModflowSfr2(Package):
             reach_data[n] = tmp[n]  # not sure if there's a way to assign multiple columns
 
         # zero-based convention
-        inds = ['krch', 'irch', 'jrch'] if structured else ['node']
+        inds = ['k', 'i', 'j'] if structured else ['node']
         _markitzero(reach_data, inds)
 
         # items 3 and 4 are skipped (parameters not supported)
@@ -842,7 +843,7 @@ class ModflowSfr2(Package):
         #[lnames.append(name.lower()) for name in names]
         # --make copy of data for multiple calls
         d = np.recarray.copy(self.reach_data[columns])
-        for idx in ['krch', 'irch', 'jrch', 'node']:
+        for idx in ['k', 'i', 'j', 'node']:
             if (idx in columns):
                 d[idx] += 1
         formats = _fmt_string(d)[:-1] + '\n'
@@ -926,6 +927,10 @@ class ModflowSfr2(Package):
         else:
             pass
         f_sfr.write('\n')
+
+
+        #def plot(self,  **kwargs):
+        #return super(ModflowSfr2, self).plot(**kwargs)
 
     def write(self, filename=None):
 
@@ -1204,10 +1209,10 @@ class check:
         # make nodes based on unique row, col pairs
         if np.diff(reach_data.node).max() == 0:
             uniquerc = {}
-            for i, (r, c) in enumerate(reach_data[['irch', 'jrch']]):
+            for i, (r, c) in enumerate(reach_data[['i', 'j']]):
                 if (r, c) not in uniquerc:
                     uniquerc[(r, c)] = i + 1
-            reach_data['node'] = [uniquerc[(r, c)] for r, c in reach_data[['irch', 'jrch']]]
+            reach_data['node'] = [uniquerc[(r, c)] for r, c in reach_data[['i', 'j']]]
 
         K = reach_data.strhc1
         if K.max() == 0:
@@ -1245,15 +1250,18 @@ class check:
                 reach_data['strhc1'] = K
 
                 cols = [c for c in reach_data.dtype.names if c in \
-                        ['node', 'krch', 'irch', 'jrch', 'iseg', 'ireach', 'rchlen', 'strthick', 'strhc1']]
+                        ['node', 'k', 'i', 'j', 'iseg', 'ireach', 'rchlen', 'strthick', 'strhc1']]
 
                 reach_data = recfunctions.append_fields(reach_data,
                                                         names=['width', 'conductance'],
                                                         data=[w, Cond],
+                                                        usemask=False,
                                                         asrecarray=True)
                 has_multiple = np.array([True if n in nodes_with_multiple_conductance
                                          else False for n in reach_data.node])
-                txt += _print_rec_array(reach_data[cols][has_multiple], delimiter='\t')
+                reach_data = reach_data[has_multiple].copy()
+                reach_data = reach_data[cols].copy()
+                txt += _print_rec_array(reach_data, delimiter='\t')
 
         self._txt_footer(headertxt, txt, 'overlapping conductance')
 
@@ -1341,7 +1349,7 @@ class check:
                                                     data=[outreach_elevdn, d_strtop],
                                                     asrecarray=True)
 
-            txt += self._boolean_compare(non_outlets[['krch', 'irch', 'jrch', 'iseg', 'ireach',
+            txt += self._boolean_compare(non_outlets[['k', 'i', 'j', 'iseg', 'ireach',
                                                      'strtop', 'strtopdn', 'd_strtop', 'reachID']].copy(),
                                          col1='d_strtop', col2=np.zeros(len(non_outlets)),
                                          level0txt='{} reaches encountered with strtop < strtop of downstream reach.',
@@ -1367,7 +1375,7 @@ class check:
         passed = False
         if self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]:  # see SFR input instructions
             reach_data = self.reach_data
-            i, j, k = reach_data.irch, reach_data.jrch, reach_data.krch
+            i, j, k = reach_data.i, reach_data.j, reach_data.k
 
             # check streambed bottoms in relation to respective cell bottoms
             bots = self.sfr.parent.dis.botm.array[k, i, j]
@@ -1378,7 +1386,7 @@ class check:
                                                     asrecarray=True)
 
 
-            txt += self._boolean_compare(reach_data[['krch', 'irch', 'jrch', 'iseg', 'ireach',
+            txt += self._boolean_compare(reach_data[['k', 'i', 'j', 'iseg', 'ireach',
                                                      'strtop', 'strthick', 'strbot', 'layerbot',
                                                      'reachID']].copy(),
                                          col1='layerbot', col2='strbot',
@@ -1390,7 +1398,7 @@ class check:
             tops = self.sfr.parent.dis.top.array[i, j]
             reach_data = recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
 
-            txt += self._boolean_compare(reach_data[['krch', 'irch', 'jrch', 'iseg', 'ireach',
+            txt += self._boolean_compare(reach_data[['k', 'i', 'j', 'iseg', 'ireach',
                                                      'strtop', 'modeltop', 'reachID']].copy(),
                                          col1='strtop', col2='modeltop',
                                          level0txt='{} reaches encountered with streambed above model top.',
@@ -1430,7 +1438,7 @@ class check:
             segment_ends = recfunctions.stack_arrays([first_reaches, last_reaches],
                                                      asrecarray=True, usemask=False)
             segment_ends['strtop'] = np.append(segment_data.elevup, segment_data.elevdn)
-            i, j = segment_ends.irch, segment_ends.jrch
+            i, j = segment_ends.i, segment_ends.j
             tops = self.sfr.parent.dis.top.array[i, j]
             diff = tops - segment_ends.strtop
             segment_ends = recfunctions.append_fields(segment_ends,
@@ -1438,7 +1446,7 @@ class check:
                                                       data=[tops, diff],
                                                       asrecarray=True)
 
-            txt += self._boolean_compare(segment_ends[['krch', 'irch', 'jrch', 'iseg',
+            txt += self._boolean_compare(segment_ends[['k', 'i', 'j', 'iseg',
                                                        'strtop', 'modeltop', 'diff', 'reachID']].copy(),
                                          col1=np.zeros(len(segment_ends)), col2='diff',
                                          level0txt='{} reaches encountered with streambed above model top.',
@@ -1576,7 +1584,7 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
     """
     names = []
     if structured:
-        names += ['krch', 'irch', 'jrch']
+        names += ['k', 'i', 'j']
     else:
         names += ['node']
     names += ['iseg', 'ireach', 'rchlen']
