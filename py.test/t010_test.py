@@ -3,8 +3,8 @@ Some basic tests for SFR checker (not super rigorous)
 need to add a test case that has elevation input by reach
 """
 
-import sys
-sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
+#import sys
+#sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import flopy
 from flopy.modflow.mfsfr2 import check
@@ -22,8 +22,12 @@ def load_check_sfr(mfnam, model_ws, checker_output_path):
 
 def test_sfrcheck():
 
-    path = os.path.join('..', 'examples', 'data', 'mf2005_test')
-    cpth = os.path.join('temp')
+    if os.path.split(os.getcwd())[-1] == 'flopy3':
+        path = os.path.join('examples', 'data', 'mf2005_test')
+        cpth = os.path.join('py.test/temp')
+    else:
+        path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+        cpth = os.path.join('temp')
 
     m = flopy.modflow.Modflow.load('test1tr.nam', model_ws=path, verbose=False)
 

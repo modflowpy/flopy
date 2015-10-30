@@ -1,7 +1,7 @@
 __author__ = 'aleaf'
 
-import sys
-sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
+#import sys
+#sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import numpy as np
 import matplotlib
