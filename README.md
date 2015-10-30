@@ -7,12 +7,12 @@
 ##AGU 2015 coding sprint focus
 ###Let's list items here and we can sort later
 - refactor namespaces so that `flopy.modflow.ModflowWel` becomes `flopy.ModflowWel` etc
-- develope a standard SpatialReference file that `flopy` can write and read
+- develop a standard SpatialReference file that `flopy` can write and read
 - unstructured grid support
 - refactor `util_2d` to inherit from `numpy.ndarray`
 - refactor all of the non-PEP8 compliant util class names (e.g. `util_2d` to `Util2d`)
 - move shapefile support into `export`
-
+- standardize an observation module, revisit the current template file writer, and move toward a m.calibrate() method that writes the files needed for PEST
 
 
 ## Introduction
