@@ -691,7 +691,7 @@ class mflist(object):
                     array_dict[aname] = array[k]
         fio.write_grid_shapefile(filename, self.sr, array_dict)
 
-    def to_array(self, kper=0,mask=False):
+    def to_array(self, kper=0, mask=False):
         """
         Convert stress period boundary condition (mflist) data for a
         specified stress period to a 3-D numpy array

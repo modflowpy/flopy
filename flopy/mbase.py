@@ -782,7 +782,7 @@ class Package(object):
                                            fmtin=old_value.fmtin,
                                            locat=old_value.locat)
             elif isinstance(old_value, utils.mflist):
-                value = utils.mflist(self.parent, old_value.dtype, data=value)
+                value = utils.mflist(self.parent, dtype=old_value.dtype, data=value)
             elif isinstance(old_value, list):
                 if isinstance(old_value[0], utils.util_3d):
                     new_list = []
@@ -1010,7 +1010,7 @@ class Package(object):
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(key, names, kper,
                                        filename_base=fileb, file_extension=fext, mflay=mflay,
-                                       fignum=fignum, colorbar=colorbar))
+                                       fignum=fignum, colorbar=colorbar, **kwargs))
 
             elif isinstance(value, utils.util_3d):
                 if self.parent.verbose:

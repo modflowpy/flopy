@@ -11,9 +11,11 @@ import flopy
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
     path2 = os.path.join('examples', 'data', 'sfr_test')
+    outpath = os.path.join('py.test/temp')
 else:
     path = os.path.join('..', 'examples', 'data', 'mf2005_test')
     path2 = os.path.join('..', 'examples', 'data', 'sfr_test')
+    outpath = 'temp'
 
 sfr_items = {0: {'mfnam': 'test1ss.nam',
                      'sfrfile': 'test1ss.sfr'},
@@ -31,7 +33,7 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
                      'sfrfile': 'TL2009.sfr'}
                  }
 
-def sfr_process(mfnam, sfrfile, model_ws, outfolder='temp'):
+def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
 
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
     sfr = m.get_package('SFR2')
@@ -39,7 +41,7 @@ def sfr_process(mfnam, sfrfile, model_ws, outfolder='temp'):
     if not os.path.exists(outfolder):
         os.makedirs(outfolder)
     outpath = os.path.join(outfolder, sfrfile)
-    sfr.write(outpath)
+    sfr.write_file(outpath)
 
     m.remove_package('SFR2')
     sfr2 = flopy.modflow.ModflowSfr2.load(outpath, m)
