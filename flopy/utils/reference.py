@@ -30,6 +30,9 @@ class SpatialReference(object):
     rotation : float
         the counter-clockwise rotation (in degrees) of the grid
 
+    proj4_str: str
+        a PROJ4 string that identifies the grid in space. warning: case sensitive!
+
     Attributes
     ----------
     xedge : ndarray
@@ -65,14 +68,16 @@ class SpatialReference(object):
     """
 
     def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0,
-                 epsg_str="EPSG:4326"):
+                 proj4_str="EPSG:4326"):
         """
+
             delr: delr array
             delc: delc array
             lenuni: lenght unit code
             xul: x coord of upper left corner of grid
             yul: y coord of upper left corner of grid
             rotation_degrees: grid rotation
+
         """
         self.delc = delc
         self.delr = delr
@@ -81,7 +86,7 @@ class SpatialReference(object):
         self.ncol = self.delr.shape[0]
 
         self.lenuni = lenuni
-        self.epsg_str = epsg_str
+        self.proj4_str = proj4_str
         self.set_spatialreference(xul, yul, rotation)
 
 

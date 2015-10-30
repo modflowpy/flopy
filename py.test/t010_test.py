@@ -22,12 +22,8 @@ def load_check_sfr(mfnam, model_ws, checker_output_path):
 
 def test_sfrcheck():
 
-    if os.path.split(os.getcwd())[-1] == 'flopy3':
-        path = os.path.join('examples', 'data', 'mf2005_test')
-        cpth = os.path.join('temp')
-    else:
-        path = os.path.join('..', 'examples', 'data', 'mf2005_test')
-        cpth = os.path.join('..', 'temp')
+    path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    cpth = os.path.join('temp')
 
     m = flopy.modflow.Modflow.load('test1tr.nam', model_ws=path, verbose=False)
 
