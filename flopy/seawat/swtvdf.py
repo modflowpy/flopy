@@ -168,16 +168,18 @@ class SeawatVdf(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> lpf = flopy.modflow.ModflowLpf(m)
+    >>> m = flopy.seawat.Seawat()
+    >>> lpf = flopy.seawat.SeawatVdf(m)
 
     """
+    unitnumber = 37
     def __init__(self, model, mtdnconc=1, mfnadvfd=1, nswtcpl=1, iwtable=1,
                  densemin=1.000, densemax=1.025, dnscrit=1e-2, denseref=1.000,
                  denseslp=.025, crhoref=0, firstdt=0.001, indense=0,
                  dense=1.000, nsrhoeos=1, drhodprhd=4.46e-3, prhdref=0.,
-                 extension='vdf', unitnumber=37, **kwargs):
-
+                 extension='vdf', unitnumber=None, **kwargs):
+        if unitnumber is None:
+            unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'VDF', unitnumber)
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         self.mtdnconc = kwargs.pop('mt3drhoflag', mtdnconc)
