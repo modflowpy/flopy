@@ -41,7 +41,7 @@ def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
     if not os.path.exists(outfolder):
         os.makedirs(outfolder)
     outpath = os.path.join(outfolder, sfrfile)
-    sfr.write(outpath)
+    sfr.write_file(outpath)
 
     m.remove_package('SFR2')
     sfr2 = flopy.modflow.ModflowSfr2.load(outpath, m)

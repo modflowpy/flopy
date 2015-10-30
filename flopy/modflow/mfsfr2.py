@@ -932,7 +932,7 @@ class ModflowSfr2(Package):
         #def plot(self,  **kwargs):
         #return super(ModflowSfr2, self).plot(**kwargs)
 
-    def write(self, filename=None):
+    def write_file(self, filename=None):
 
         # tabfiles = False
         # tabfiles_dict = {}
