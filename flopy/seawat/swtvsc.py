@@ -121,11 +121,11 @@ class SeawatVsc(Package):
 
     """
     unitnumber = 38
-    def __init__(self, model, mt3dmuflg=-1, viscmin=0, viscmax=0,
+    def __init__(self, model, mt3dmuflg=-1, viscmin=0., viscmax=0.,
                  viscref=8.904e-4, nsmueos=0, mutempopt=2, mtmuspec=1,
-                 dmudc=1.923e-06, cmuref=0, mtmutempspec=1,
-                 amucoeff=None, invisc=-1,
-                 visc=-1, extension='vsc', unitnumber=None, **kwargs):
+                 dmudc=1.923e-06, cmuref=0., mtmutempspec=1,
+                 amucoeff=None, invisc=-1, visc=-1, extension='vsc',
+                 unitnumber=None, **kwargs):
 
         if len(list(kwargs.keys())) > 0:
             raise Exception("VSC error: unrecognized kwargs: " +
@@ -146,7 +146,7 @@ class SeawatVsc(Package):
         self.cmuref = cmuref
         self.mtmutempspec = mtmutempspec
         if amucoeff is None:
-            amucoeff = [0.001, 1, 0.015512, -20, -1.572]
+            amucoeff = [0.001, 1, 0.015512, -20., -1.572]
         self.amucoeff = amucoeff
         self.invisc = invisc
         self.visc = util_3d(model, (nlay, nrow, ncol), np.float32, visc,
@@ -363,8 +363,7 @@ class SeawatVsc(Package):
                     print('   MTMUTEMSPEC {}'.format(mtmutempspec))
                     print('   AMUCOEFF {}'.format(amucoeff))
 
-
-        # Items 6 and 7 -- INDENSE DENSE
+        # Items 6 and 7 -- INDVISC VISC
         invisc = None
         visc = None
         if mt3dmuflg == 0:
