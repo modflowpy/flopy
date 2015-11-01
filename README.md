@@ -13,6 +13,7 @@
 - refactor all of the non-PEP8 compliant util class names (e.g. `util_2d` to `Util2d`)
 - move shapefile support into `export`
 - standardize an observation module, revisit the current template file writer, and move toward a m.calibrate() method that writes the files needed for PEST
+- introduce the concept of a hydraulic feature (river, well, etc.) that has spatial attributes and time-series data.  Build an infrastructure to support construction of packages from these features.  Support plotting of features also.
 
 
 ## Introduction
