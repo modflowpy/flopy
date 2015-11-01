@@ -1,0 +1,16 @@
+GLOBAL 6 case2.glo
+LIST 7 case2.lst
+BAS6  1 case2.bas
+DIS  12 case2.dis
+BCF6 11 case2.bcf
+CHD 35 case2_mod.chd
+SIP 19 case2.sip
+OC  22 case2.oc
+BTN 23 case2.btn
+ADV 24 case2.adv
+DSP 25 case2.dsp
+SSM 28 case2.ssm
+GCG 26 case2.gcg
+VDF 27 case2.vdf
+DATA(BINARY) 50 case2.cbb
+DATA(BINARY) 30 case2.hds

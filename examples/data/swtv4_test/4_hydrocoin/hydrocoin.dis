@@ -1,0 +1,84 @@
+# MODFLOW2000 Discretization File
+ 76  1  45  1  4  0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+         0    20.000(10E12.4)                    0     DELTA-X or C
+         0    20.000(10E12.4)                    0     DELTA-Y or R
+         0-8.720e-12(10e12.4)                   -1     TOP of Model
+         0    -4.000(10e12.4)                   -1     BOTTOM of Layer   1
+         0    -8.000(10e12.4)                   -1     BOTTOM of Layer   2
+         0   -12.000(10e12.4)                   -1     BOTTOM of Layer   3
+         0   -16.000(10e12.4)                   -1     BOTTOM of Layer   4
+         0   -20.000(10e12.4)                   -1     BOTTOM of Layer   5
+         0   -24.000(10e12.4)                   -1     BOTTOM of Layer   6
+         0   -28.000(10e12.4)                   -1     BOTTOM of Layer   7
+         0   -32.000(10e12.4)                   -1     BOTTOM of Layer   8
+         0   -36.000(10e12.4)                   -1     BOTTOM of Layer   9
+         0   -40.000(10e12.4)                   -1     BOTTOM of Layer  10
+         0   -44.000(10e12.4)                   -1     BOTTOM of Layer  11
+         0   -48.000(10e12.4)                   -1     BOTTOM of Layer  12
+         0   -52.000(10e12.4)                   -1     BOTTOM of Layer  13
+         0   -56.000(10e12.4)                   -1     BOTTOM of Layer  14
+         0   -60.000(10e12.4)                   -1     BOTTOM of Layer  15
+         0   -64.000(10e12.4)                   -1     BOTTOM of Layer  16
+         0   -68.000(10e12.4)                   -1     BOTTOM of Layer  17
+         0   -72.000(10e12.4)                   -1     BOTTOM of Layer  18
+         0   -76.000(10e12.4)                   -1     BOTTOM of Layer  19
+         0   -80.000(10e12.4)                   -1     BOTTOM of Layer  20
+         0   -84.000(10e12.4)                   -1     BOTTOM of Layer  21
+         0   -88.000(10e12.4)                   -1     BOTTOM of Layer  22
+         0   -92.000(10e12.4)                   -1     BOTTOM of Layer  23
+         0   -96.000(10e12.4)                   -1     BOTTOM of Layer  24
+         0  -100.000(10e12.4)                   -1     BOTTOM of Layer  25
+         0  -104.000(10e12.4)                   -1     BOTTOM of Layer  26
+         0  -108.000(10e12.4)                   -1     BOTTOM of Layer  27
+         0  -112.000(10e12.4)                   -1     BOTTOM of Layer  28
+         0  -116.000(10e12.4)                   -1     BOTTOM of Layer  29
+         0  -120.000(10e12.4)                   -1     BOTTOM of Layer  30
+         0  -124.000(10e12.4)                   -1     BOTTOM of Layer  31
+         0  -128.000(10e12.4)                   -1     BOTTOM of Layer  32
+         0  -132.000(10e12.4)                   -1     BOTTOM of Layer  33
+         0  -136.000(10e12.4)                   -1     BOTTOM of Layer  34
+         0  -140.000(10e12.4)                   -1     BOTTOM of Layer  35
+         0  -144.000(10e12.4)                   -1     BOTTOM of Layer  36
+         0  -148.000(10e12.4)                   -1     BOTTOM of Layer  37
+         0  -152.000(10e12.4)                   -1     BOTTOM of Layer  38
+         0  -156.000(10e12.4)                   -1     BOTTOM of Layer  39
+         0  -160.000(10e12.4)                   -1     BOTTOM of Layer  40
+         0  -164.000(10e12.4)                   -1     BOTTOM of Layer  41
+         0  -168.000(10e12.4)                   -1     BOTTOM of Layer  42
+         0  -172.000(10e12.4)                   -1     BOTTOM of Layer  43
+         0  -176.000(10e12.4)                   -1     BOTTOM of Layer  44
+         0  -180.000(10e12.4)                   -1     BOTTOM of Layer  45
+         0  -184.000(10e12.4)                   -1     BOTTOM of Layer  46
+         0  -188.000(10e12.4)                   -1     BOTTOM of Layer  47
+         0  -192.000(10e12.4)                   -1     BOTTOM of Layer  48
+         0  -196.000(10e12.4)                   -1     BOTTOM of Layer  49
+         0  -200.000(10e12.4)                   -1     BOTTOM of Layer  50
+         0  -204.000(10e12.4)                   -1     BOTTOM of Layer  51
+         0  -208.000(10e12.4)                   -1     BOTTOM of Layer  52
+         0  -212.000(10e12.4)                   -1     BOTTOM of Layer  53
+         0  -216.000(10e12.4)                   -1     BOTTOM of Layer  54
+         0  -220.000(10e12.4)                   -1     BOTTOM of Layer  55
+         0  -224.000(10e12.4)                   -1     BOTTOM of Layer  56
+         0  -228.000(10e12.4)                   -1     BOTTOM of Layer  57
+         0  -232.000(10e12.4)                   -1     BOTTOM of Layer  58
+         0  -236.000(10e12.4)                   -1     BOTTOM of Layer  59
+         0  -240.000(10e12.4)                   -1     BOTTOM of Layer  60
+         0  -244.000(10e12.4)                   -1     BOTTOM of Layer  61
+         0  -248.000(10e12.4)                   -1     BOTTOM of Layer  62
+         0  -252.000(10e12.4)                   -1     BOTTOM of Layer  63
+         0  -256.000(10e12.4)                   -1     BOTTOM of Layer  64
+         0  -260.000(10e12.4)                   -1     BOTTOM of Layer  65
+         0  -264.000(10e12.4)                   -1     BOTTOM of Layer  66
+         0  -268.000(10e12.4)                   -1     BOTTOM of Layer  67
+         0  -272.000(10e12.4)                   -1     BOTTOM of Layer  68
+         0  -276.000(10e12.4)                   -1     BOTTOM of Layer  69
+         0  -280.000(10e12.4)                   -1     BOTTOM of Layer  70
+         0  -284.000(10e12.4)                   -1     BOTTOM of Layer  71
+         0  -288.000(10e12.4)                   -1     BOTTOM of Layer  72
+         0  -292.000(10e12.4)                   -1     BOTTOM of Layer  73
+         0  -296.000(10e12.4)                   -1     BOTTOM of Layer  74
+         0  -300.000(10e12.4)                   -1     BOTTOM of Layer  75
+         0  -304.000(10e12.4)                   -1     BOTTOM of Layer  76
+  146000.000000  1  1.000000  TR

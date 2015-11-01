@@ -1,0 +1,9 @@
+        -1         1        -1         0  MT3DRHOFLG   MFNADVFD   NSWTCPL   IWTABLE
+    0.0000    0.0000                      DENSEMIN DENSEMAX
+    0.0000                                DNSCRIT
+ 1000.0000  4.46E-03        0.            DENSEREF DRHODPRHD PRHDREF
+         2                                NSRHOEOS
+         1    0.7000        0.            MTRHOSPEC(1) DRHODC(1) CRHOREF(1)
+         2   -0.3750       25.            MTRHOSPEC(2) DRHODC(2) CRHOREF(2)
+1.0000e-02                                FIRSTDT
+

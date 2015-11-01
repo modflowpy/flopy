@@ -1,0 +1,20 @@
+#GLO Process
+GLOBAL 6 hydrocoin.glo
+LIST 7 hydrocoin.lst
+#
+#VDF Process
+VDF 36 hydrocoin.vdf
+BAS6  1 hydrocoin.bas
+DIS  29 hydrocoin.dis
+LPF 11 hydrocoin.lpf
+OC  22 hydrocoin.oc
+PCG 19 hydrocoin.pcg
+DATA(BINARY) 50 hydrocoin.cbb
+DATA(BINARY) 30 hydrocoin.hds
+#
+#IMT Process
+BTN 31 hydrocoin.btn
+ADV 32 hydrocoin.adv
+DSP 33 hydrocoin.dsp
+SSM 34 hydrocoin.ssm
+GCG 35 hydrocoin.gcg

@@ -1,0 +1,325 @@
+#HEAD SAVE FORMAT (1F15.6) LABEL 
+HEAD SAVE UNIT 30
+
+Period 1 step 1
+   save head   
+   save budget   
+   print budget   
+Period 1 step 2
+   save head   
+   save budget   
+   print budget   
+Period 1 step 3
+   save head   
+   save budget   
+   print budget   
+Period 1 step 4
+   save head   
+   save budget   
+   print budget   
+Period 1 step 5
+   save head   
+   save budget   
+   print budget   
+Period 1 step 6
+   save head   
+   save budget   
+   print budget   
+Period 1 step 7
+   save head   
+   save budget   
+   print budget   
+Period 1 step 8
+   save head   
+   save budget   
+   print budget   
+Period 1 step 9
+   save head   
+   save budget   
+   print budget   
+Period 1 step 10
+   save head   
+   save budget   
+   print budget   
+Period 1 step 11
+   save head   
+   save budget   
+   print budget   
+Period 1 step 12
+   save head   
+   save budget   
+   print budget   
+Period 1 step 13
+   save head   
+   save budget   
+   print budget   
+Period 1 step 14
+   save head   
+   save budget   
+   print budget   
+Period 1 step 15
+   save head   
+   save budget   
+   print budget   
+Period 1 step 16
+   save head   
+   save budget   
+   print budget   
+Period 1 step 17
+   save head   
+   save budget   
+   print budget   
+Period 1 step 18
+   save head   
+   save budget   
+   print budget   
+Period 1 step 19
+   save head   
+   save budget   
+   print budget   
+Period 1 step 20
+   save head   
+   save budget   
+   print budget   
+Period 1 step 21
+   save head   
+   save budget   
+   print budget   
+Period 1 step 22
+   save head   
+   save budget   
+   print budget   
+Period 1 step 23
+   save head   
+   save budget   
+   print budget   
+Period 1 step 24
+   save head   
+   save budget   
+   print budget   
+Period 1 step 25
+   save head   
+   save budget   
+   print budget   
+Period 1 step 26
+   save head   
+   save budget   
+   print budget   
+Period 1 step 27
+   save head   
+   save budget   
+   print budget   
+Period 1 step 28
+   save head   
+   save budget   
+   print budget   
+Period 1 step 29
+   save head   
+   save budget   
+   print budget   
+Period 1 step 30
+   save head   
+   save budget   
+   print budget   
+Period 1 step 31
+   save head   
+   save budget   
+   print budget   
+Period 1 step 32
+   save head   
+   save budget   
+   print budget   
+Period 1 step 33
+   save head   
+   save budget   
+   print budget   
+Period 1 step 34
+   save head   
+   save budget   
+   print budget   
+Period 1 step 35
+   save head   
+   save budget   
+   print budget   
+Period 1 step 36
+   save head   
+   save budget   
+   print budget   
+Period 1 step 37
+   save head   
+   save budget   
+   print budget   
+Period 1 step 38
+   save head   
+   save budget   
+   print budget   
+Period 1 step 39
+   save head   
+   save budget   
+   print budget   
+Period 1 step 40
+   save head   
+   save budget   
+   print budget   
+Period 1 step 41
+   save head   
+   save budget   
+   print budget   
+Period 1 step 42
+   save head   
+   save budget   
+   print budget   
+Period 1 step 43
+   save head   
+   save budget   
+   print budget   
+Period 1 step 44
+   save head   
+   save budget   
+   print budget   
+Period 1 step 45
+   save head   
+   save budget   
+   print budget   
+Period 1 step 46
+   save head   
+   save budget   
+   print budget   
+Period 1 step 47
+   save head   
+   save budget   
+   print budget   
+Period 1 step 48
+   save head   
+   save budget   
+   print budget   
+Period 1 step 49
+   save head   
+   save budget   
+   print budget   
+Period 1 step 50
+   save head   
+   save budget   
+   print budget   
+Period 1 step 51
+   save head   
+   save budget   
+   print budget   
+Period 1 step 52
+   save head   
+   save budget   
+   print budget   
+Period 1 step 53
+   save head   
+   save budget   
+   print budget   
+Period 1 step 54
+   save head   
+   save budget   
+   print budget   
+Period 1 step 55
+   save head   
+   save budget   
+   print budget   
+Period 1 step 56
+   save head   
+   save budget   
+   print budget   
+Period 1 step 57
+   save head   
+   save budget   
+   print budget   
+Period 1 step 58
+   save head   
+   save budget   
+   print budget   
+Period 1 step 59
+   save head   
+   save budget   
+   print budget   
+Period 1 step 60
+   save head   
+   save budget   
+   print budget   
+Period 1 step 61
+   save head   
+   save budget   
+   print budget   
+Period 1 step 62
+   save head   
+   save budget   
+   print budget   
+Period 1 step 63
+   save head   
+   save budget   
+   print budget   
+Period 1 step 64
+   save head   
+   save budget   
+   print budget   
+Period 1 step 65
+   save head   
+   save budget   
+   print budget   
+Period 1 step 66
+   save head   
+   save budget   
+   print budget   
+Period 1 step 67
+   save head   
+   save budget   
+   print budget   
+Period 1 step 68
+   save head   
+   save budget   
+   print budget   
+Period 1 step 69
+   save head   
+   save budget   
+   print budget   
+Period 1 step 70
+   save head   
+   save budget   
+   print budget   
+Period 1 step 71
+   save head   
+   save budget   
+   print budget   
+Period 1 step 72
+   save head   
+   save budget   
+   print budget   
+Period 1 step 73
+   save head   
+   save budget   
+   print budget   
+Period 1 step 74
+   save head   
+   save budget   
+   print budget   
+Period 1 step 75
+   save head   
+   save budget   
+   print budget   
+Period 1 step 76
+   save head   
+   save budget   
+   print budget   
+Period 1 step 77
+   save head   
+   save budget   
+   print budget   
+Period 1 step 78
+   save head   
+   save budget   
+   print budget   
+Period 1 step 79
+   save head   
+   save budget   
+   print budget   
+Period 1 step 80
+   save head   
+   save budget   
+   print budget   
+
+  

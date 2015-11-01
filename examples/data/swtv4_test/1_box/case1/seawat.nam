@@ -1,0 +1,14 @@
+GLOBAL 6 case1.glo
+LIST 7 case1.lst
+BAS6  1 case1.bas
+DIS  12 case1.dis
+BCF6 11 case1.bcf
+SIP 19 case1.sip
+OC  22 case1.oc
+BTN 23 case1.btn
+ADV 24 case1.adv
+DSP 25 case1.dsp
+GCG 26 case1.gcg
+VDF 27 case1.vdf
+DATA(BINARY) 50 case1.cbb
+DATA(BINARY) 30 case1.hds

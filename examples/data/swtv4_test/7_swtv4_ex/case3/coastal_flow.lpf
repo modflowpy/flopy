@@ -1,0 +1,315 @@
+# MODFLOW2000 Layer Property Flow (LPF) Package
+        50  -1.000000e+030         0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000
+  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000
+  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000
+  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000
+  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000  1.000000e+000
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 1  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 1  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 1  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 2  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 2  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 2  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 3  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 3  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 3  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 4  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 4  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 4  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 5  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 5  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 5  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 6  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 6  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 6  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 7  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 7  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 7  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 8  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 8  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 8  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 9  
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 9  
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 9  
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 10 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 10 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 10 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 11 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 11 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 11 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 12 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 12 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 12 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 13 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 13 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 13 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 14 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 14 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 14 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 15 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 15 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 15 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 16 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 16 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 16 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 17 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 17 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 17 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 18 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 18 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 18 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 19 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 19 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 19 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 20 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 20 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 20 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 21 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 21 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 21 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 22 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 22 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 22 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 23 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 23 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 23 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 24 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 24 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 24 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 25 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 25 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 25 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 26 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 26 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 26 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 27 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 27 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 27 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 28 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 28 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 28 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 29 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 29 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 29 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 30 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 30 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 30 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 31 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 31 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 31 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 32 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 32 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 32 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 33 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 33 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 33 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 34 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 34 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 34 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 35 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 35 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 35 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 36 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 36 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 36 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 37 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 37 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 37 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 38 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 38 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 38 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 39 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 39 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 39 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 40 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 40 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 40 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 41 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 41 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 41 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 42 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 42 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 42 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 43 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 43 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 43 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 44 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 44 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 44 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 45 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 45 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 45 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 46 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 46 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 46 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 47 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 47 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 47 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 48 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 48 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 48 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 49 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 49 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 49 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 50 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 50 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 50 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 51 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 51 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 51 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 52 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 52 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 52 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 53 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 53 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 53 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 54 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 54 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 54 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 55 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 55 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 55 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 56 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 56 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 56 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 57 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 57 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 57 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 58 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 58 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 58 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 59 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 59 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 59 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 60 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 60 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 60 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 61 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 61 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 61 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 62 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 62 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 62 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 63 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 63 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 63 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 64 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 64 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 64 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 65 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 65 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 65 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 66 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 66 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 66 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 67 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 67 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 67 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 68 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 68 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 68 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 69 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 69 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 69 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 70 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 70 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 70 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 71 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 71 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 71 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 72 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 72 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 72 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 73 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 73 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 73 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 74 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 74 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 74 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 75 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 75 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 75 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 76 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 76 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 76 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 77 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 77 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 77 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 78 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 78 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 78 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 79 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 79 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 79 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 80 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 80 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 80 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 81 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 81 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 81 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 82 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 82 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 82 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 83 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 83 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 83 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 84 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 84 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 84 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 85 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 85 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 85 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 86 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 86 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 86 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 87 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 87 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 87 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 88 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 88 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 88 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 89 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 89 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 89 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 90 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 90 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 90 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 91 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 91 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 91 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 92 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 92 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 92 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 93 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 93 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 93 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 94 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 94 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 94 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 95 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 95 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 95 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 96 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 96 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 96 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 97 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 97 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 97 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 98 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 98 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 98 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 99 
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 99 
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 99 
+CONSTANT 10.                                           HYDRAULIC CONDUCTIVITY           LAYER 100
+CONSTANT 0.1                                           VERTICAL HYDRAULIC CONDUCTIVITY  LAYER 100
+CONSTANT 1.e-5                                         SPECIFIC STORAGE                 LAYER 100

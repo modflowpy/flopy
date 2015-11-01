@@ -1,0 +1,30 @@
+#SEAWAT LISTING FILE
+LIST          7    coastal_flow.lst
+#
+#
+#SEAWAT VDF INPUT FILE
+VDF          80    coastal_flow.vdf
+#
+#
+#MODFLOW INPUT FILES
+BAS6          1    coastal_flow.bas
+DIS          29    coastal_flow.dis
+LPF          11    coastal_flow.lpf
+WEL          12    coastal_flow.wel
+OC           22    coastal_flow.oc
+PCG          19    coastal_flow.pcg
+#
+#
+#MT3DMS INPUT FILES
+BTN          81    coastal_flow.btn
+ADV          82    coastal_flow.adv
+DSP          83    coastal_flow.dsp
+SSM          84    coastal_flow.ssm
+RCT          85    coastal_flow.rct
+GCG          86    coastal_flow.gcg
+#
+#
+#OUTPUT FILES
+DATA(BINARY) 50    coastal_flow.cbb
+DATA(BINARY) 30    coastal_flow.hds
+

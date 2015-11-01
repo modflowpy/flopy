@@ -1,0 +1,22 @@
+# GLOBAL PROCESS OUTPUT FILES
+GLOBAL 6 saltlake.glo
+LIST 7 saltlake.lst
+#
+# VDF PROCESS INPUT AND OUTPUT FILES
+VDF 20 saltlake.vdf
+BAS6  1 saltlake.bas
+DIS  23 saltlake.dis
+BCF6 11 saltlake.bcf
+RCH 18 saltlake.rch
+OC  22 saltlake.oc
+PCG 19 saltlake.pcg
+DATA(BINARY) 50 saltlake.cbb
+DATA(BINARY) 30 saltlake.hds
+#
+#MT3DMS PACKAGES
+BTN 41 saltlake.btn
+ADV 42 saltlake.adv
+DSP 43 saltlake.dsp
+SSM 44 saltlake.ssm
+GCG 45 saltlake.gcg
+

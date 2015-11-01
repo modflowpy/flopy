@@ -1,0 +1,27 @@
+# MODFLOW2000 Discretization File
+ 20  1  20  1  4  2
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+         0   100.000(10E12.4)                    0     DELTA-X or C
+         0   100.000(10E12.4)                    0     DELTA-Y or R
+         00.0000e+00(10e12.4)                   -1     TOP of Model
+         0  -100.000(10e12.4)                   -1     BOTTOM of Layer   1
+         0  -200.000(10e12.4)                   -1     BOTTOM of Layer   2
+         0  -300.000(10e12.4)                   -1     BOTTOM of Layer   3
+         0  -400.000(10e12.4)                   -1     BOTTOM of Layer   4
+         0  -500.000(10e12.4)                   -1     BOTTOM of Layer   5
+         0  -600.000(10e12.4)                   -1     BOTTOM of Layer   6
+         0  -700.000(10e12.4)                   -1     BOTTOM of Layer   7
+         0  -800.000(10e12.4)                   -1     BOTTOM of Layer   8
+         0  -900.000(10e12.4)                   -1     BOTTOM of Layer   9
+         0 -1000.000(10e12.4)                   -1     BOTTOM of Layer  10
+         0 -1100.000(10e12.4)                   -1     BOTTOM of Layer  11
+         0 -1200.000(10e12.4)                   -1     BOTTOM of Layer  12
+         0 -1300.000(10e12.4)                   -1     BOTTOM of Layer  13
+         0 -1400.000(10e12.4)                   -1     BOTTOM of Layer  14
+         0 -1500.000(10e12.4)                   -1     BOTTOM of Layer  15
+         0 -1600.000(10e12.4)                   -1     BOTTOM of Layer  16
+         0 -1700.000(10e12.4)                   -1     BOTTOM of Layer  17
+         0 -1800.000(10e12.4)                   -1     BOTTOM of Layer  18
+         0 -1900.000(10e12.4)                   -1     BOTTOM of Layer  19
+         0 -2000.000(10e12.4)                   -1     BOTTOM of Layer  20
+  50000.000000  1  1.000000  SS

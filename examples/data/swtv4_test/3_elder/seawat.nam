@@ -1,0 +1,21 @@
+#GLO Process
+GLOBAL 6 elder.glo
+LIST 7 elder.lst
+#
+#VDF Process
+VDF 36 elder.vdf
+BAS6  1 elder.bas
+DIS  29 elder.dis
+BCF6 11 elder.bcf
+CHD 16 elder.chd
+OC  22 elder.oc
+PCG 19 elder.pcg
+DATA(BINARY) 50 elder.cbb
+DATA(BINARY) 30 elder.hds
+#
+#IMT Process
+BTN 31 elder.btn
+ADV 32 elder.adv
+DSP 33 elder.dsp
+SSM 34 elder.ssm
+GCG 35 elder.gcg

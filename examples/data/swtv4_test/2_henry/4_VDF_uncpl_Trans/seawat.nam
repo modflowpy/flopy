@@ -1,0 +1,22 @@
+#GLO PROCESS OUTPUT FILES
+GLOBAL 6 henry.glo
+LIST 7 henry.lst
+#
+#VDF PROCESS INPUT AND OUTPUT FILES
+VDF 29 henry.vdf
+BAS6  1 henry.bas
+DIS  16 henry.dis
+BCF6 11 henry.bcf
+WEL 12 henry.wel
+OC  22 henry.oc
+PCG 19 henry.pcg
+LMT6 66 henry.lmt
+DATA(BINARY) 50 henry.cbb
+DATA(BINARY) 30 henry.hds
+#
+#IMT PROCESS INPUT FILES
+BTN 24 henry.btn
+ADV 25 henry.adv
+DSP 26 henry.dsp
+SSM 27 henry.ssm
+GCG 28 henry.gcg

@@ -1,0 +1,39 @@
+# MODFLOW2000 Discretization File
+ 27  1  44  1  4  0
+ 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        29     1.000(10E12.4)                    0     DELTA-X or C
+  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01
+  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01
+  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01
+  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01
+  1.3636e+01  1.3636e+01  1.3636e+01  1.3636e+01
+         0    13.636(10E12.4)                    0     DELTA-Y or R
+         0     6.000(10e12.4)                   -1     TOP of Model
+         00.0000e+00(10e12.4)                   -1     BOTTOM of Layer   1
+         0    -6.000(10e12.4)                   -1     BOTTOM of Layer   2
+         0   -12.000(10e12.4)                   -1     BOTTOM of Layer   3
+         0   -18.000(10e12.4)                   -1     BOTTOM of Layer   4
+         0   -24.000(10e12.4)                   -1     BOTTOM of Layer   5
+         0   -30.000(10e12.4)                   -1     BOTTOM of Layer   6
+         0   -36.000(10e12.4)                   -1     BOTTOM of Layer   7
+         0   -42.000(10e12.4)                   -1     BOTTOM of Layer   8
+         0   -48.000(10e12.4)                   -1     BOTTOM of Layer   9
+         0   -54.000(10e12.4)                   -1     BOTTOM of Layer  10
+         0   -60.000(10e12.4)                   -1     BOTTOM of Layer  11
+         0   -66.000(10e12.4)                   -1     BOTTOM of Layer  12
+         0   -72.000(10e12.4)                   -1     BOTTOM of Layer  13
+         0   -78.000(10e12.4)                   -1     BOTTOM of Layer  14
+         0   -84.000(10e12.4)                   -1     BOTTOM of Layer  15
+         0   -90.000(10e12.4)                   -1     BOTTOM of Layer  16
+         0   -96.000(10e12.4)                   -1     BOTTOM of Layer  17
+         0  -102.000(10e12.4)                   -1     BOTTOM of Layer  18
+         0  -108.000(10e12.4)                   -1     BOTTOM of Layer  19
+         0  -114.000(10e12.4)                   -1     BOTTOM of Layer  20
+         0  -120.000(10e12.4)                   -1     BOTTOM of Layer  21
+         0  -126.000(10e12.4)                   -1     BOTTOM of Layer  22
+         0  -132.000(10e12.4)                   -1     BOTTOM of Layer  23
+         0  -138.000(10e12.4)                   -1     BOTTOM of Layer  24
+         0  -144.000(10e12.4)                   -1     BOTTOM of Layer  25
+         0  -150.000(10e12.4)                   -1     BOTTOM of Layer  26
+         0  -156.000(10e12.4)                   -1     BOTTOM of Layer  27
+  7300.000000  20  1.000000  TR

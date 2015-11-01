@@ -1,0 +1,280 @@
+Conversion from Groundwater Vistas
+MT3D Model
+        57         1       135         1         1         1
+D   M   Kg  
+ T T T F T
+ 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+       100     1.000(10E12.4)                   -1     DELTA-X or C
+  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01
+  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01
+  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01
+  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01
+  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01
+  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01
+  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01  7.5000e-01
+  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00
+  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00
+  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00
+  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00
+  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00
+  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00
+  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00  1.5000e+00
+         0     1.500(10E12.4)                   -1     DELTA-Y or R
+         0    75.000(10E12.4)                   -1     TOP OF MODEL
+         08.0000e-01(10E12.4)                   -1     DELZ Layer   1
+         07.0000e-01(10E12.4)                   -1     DELZ Layer   2
+         08.0000e-01(10E12.4)                   -1     DELZ Layer   3
+         07.0000e-01(10E12.4)                   -1     DELZ Layer   4
+         08.0000e-01(10E12.4)                   -1     DELZ Layer   5
+         07.0000e-01(10E12.4)                   -1     DELZ Layer   6
+         08.0000e-01(10E12.4)                   -1     DELZ Layer   7
+         07.0000e-01(10E12.4)                   -1     DELZ Layer   8
+         08.0000e-01(10E12.4)                   -1     DELZ Layer   9
+         07.0000e-01(10E12.4)                   -1     DELZ Layer  10
+         08.0000e-01(10E12.4)                   -1     DELZ Layer  11
+         07.0000e-01(10E12.4)                   -1     DELZ Layer  12
+         08.0000e-01(10E12.4)                   -1     DELZ Layer  13
+         07.0000e-01(10E12.4)                   -1     DELZ Layer  14
+         0     1.500(10E12.4)                   -1     DELZ Layer  15
+         0     1.500(10E12.4)                   -1     DELZ Layer  16
+         0     1.500(10E12.4)                   -1     DELZ Layer  17
+         0     1.500(10E12.4)                   -1     DELZ Layer  18
+         0     1.500(10E12.4)                   -1     DELZ Layer  19
+         0     1.500(10E12.4)                   -1     DELZ Layer  20
+         0     1.500(10E12.4)                   -1     DELZ Layer  21
+         0     1.500(10E12.4)                   -1     DELZ Layer  22
+         0     1.500(10E12.4)                   -1     DELZ Layer  23
+         0     1.500(10E12.4)                   -1     DELZ Layer  24
+         0     1.500(10E12.4)                   -1     DELZ Layer  25
+         0     1.500(10E12.4)                   -1     DELZ Layer  26
+         0     1.500(10E12.4)                   -1     DELZ Layer  27
+         0     1.500(10E12.4)                   -1     DELZ Layer  28
+         0     1.500(10E12.4)                   -1     DELZ Layer  29
+         0     1.500(10E12.4)                   -1     DELZ Layer  30
+         0     1.500(10E12.4)                   -1     DELZ Layer  31
+         0     1.500(10E12.4)                   -1     DELZ Layer  32
+         0     1.500(10E12.4)                   -1     DELZ Layer  33
+         0     1.500(10E12.4)                   -1     DELZ Layer  34
+         0     1.500(10E12.4)                   -1     DELZ Layer  35
+         0     1.500(10E12.4)                   -1     DELZ Layer  36
+         0     1.500(10E12.4)                   -1     DELZ Layer  37
+         0     1.500(10E12.4)                   -1     DELZ Layer  38
+         0     1.500(10E12.4)                   -1     DELZ Layer  39
+         0     1.500(10E12.4)                   -1     DELZ Layer  40
+         0     1.500(10E12.4)                   -1     DELZ Layer  41
+         0     1.500(10E12.4)                   -1     DELZ Layer  42
+         0     1.500(10E12.4)                   -1     DELZ Layer  43
+         0     1.500(10E12.4)                   -1     DELZ Layer  44
+         0     1.500(10E12.4)                   -1     DELZ Layer  45
+         0     1.500(10E12.4)                   -1     DELZ Layer  46
+         0     1.500(10E12.4)                   -1     DELZ Layer  47
+         0     1.500(10E12.4)                   -1     DELZ Layer  48
+         0     1.500(10E12.4)                   -1     DELZ Layer  49
+         0     1.500(10E12.4)                   -1     DELZ Layer  50
+         0     1.500(10E12.4)                   -1     DELZ Layer  51
+         0     1.500(10E12.4)                   -1     DELZ Layer  52
+         0     1.500(10E12.4)                   -1     DELZ Layer  53
+         0     1.500(10E12.4)                   -1     DELZ Layer  54
+         0     1.500(10E12.4)                   -1     DELZ Layer  55
+         0     1.500(10E12.4)                   -1     DELZ Layer  56
+         0     1.500(10E12.4)                   -1     DELZ Layer  57
+         0     1.000(10E12.4)                   -1     POROSITY Layer   1
+         0     1.000(10E12.4)                   -1     POROSITY Layer   2
+         0     1.000(10E12.4)                   -1     POROSITY Layer   3
+         0     1.000(10E12.4)                   -1     POROSITY Layer   4
+         0     1.000(10E12.4)                   -1     POROSITY Layer   5
+         0     1.000(10E12.4)                   -1     POROSITY Layer   6
+         0     1.000(10E12.4)                   -1     POROSITY Layer   7
+         0     1.000(10E12.4)                   -1     POROSITY Layer   8
+         0     1.000(10E12.4)                   -1     POROSITY Layer   9
+         0     1.000(10E12.4)                   -1     POROSITY Layer  10
+         0     1.000(10E12.4)                   -1     POROSITY Layer  11
+         0     1.000(10E12.4)                   -1     POROSITY Layer  12
+         0     1.000(10E12.4)                   -1     POROSITY Layer  13
+         0     1.000(10E12.4)                   -1     POROSITY Layer  14
+         0     1.000(10E12.4)                   -1     POROSITY Layer  15
+         0     1.000(10E12.4)                   -1     POROSITY Layer  16
+         0     1.000(10E12.4)                   -1     POROSITY Layer  17
+         0     1.000(10E12.4)                   -1     POROSITY Layer  18
+         0     1.000(10E12.4)                   -1     POROSITY Layer  19
+         0     1.000(10E12.4)                   -1     POROSITY Layer  20
+         0     1.000(10E12.4)                   -1     POROSITY Layer  21
+         0     1.000(10E12.4)                   -1     POROSITY Layer  22
+         0     1.000(10E12.4)                   -1     POROSITY Layer  23
+         0     1.000(10E12.4)                   -1     POROSITY Layer  24
+         0     1.000(10E12.4)                   -1     POROSITY Layer  25
+         0     1.000(10E12.4)                   -1     POROSITY Layer  26
+         0     1.000(10E12.4)                   -1     POROSITY Layer  27
+         0     1.000(10E12.4)                   -1     POROSITY Layer  28
+         0     1.000(10E12.4)                   -1     POROSITY Layer  29
+         0     1.000(10E12.4)                   -1     POROSITY Layer  30
+         0     1.000(10E12.4)                   -1     POROSITY Layer  31
+         0     1.000(10E12.4)                   -1     POROSITY Layer  32
+         0     1.000(10E12.4)                   -1     POROSITY Layer  33
+         0     1.000(10E12.4)                   -1     POROSITY Layer  34
+         0     1.000(10E12.4)                   -1     POROSITY Layer  35
+         0     1.000(10E12.4)                   -1     POROSITY Layer  36
+         0     1.000(10E12.4)                   -1     POROSITY Layer  37
+         0     1.000(10E12.4)                   -1     POROSITY Layer  38
+         0     1.000(10E12.4)                   -1     POROSITY Layer  39
+         0     1.000(10E12.4)                   -1     POROSITY Layer  40
+         0     1.000(10E12.4)                   -1     POROSITY Layer  41
+         0     1.000(10E12.4)                   -1     POROSITY Layer  42
+         0     1.000(10E12.4)                   -1     POROSITY Layer  43
+         0     1.000(10E12.4)                   -1     POROSITY Layer  44
+         0     1.000(10E12.4)                   -1     POROSITY Layer  45
+         0     1.000(10E12.4)                   -1     POROSITY Layer  46
+         0     1.000(10E12.4)                   -1     POROSITY Layer  47
+         0     1.000(10E12.4)                   -1     POROSITY Layer  48
+         0     1.000(10E12.4)                   -1     POROSITY Layer  49
+         0     1.000(10E12.4)                   -1     POROSITY Layer  50
+         0     1.000(10E12.4)                   -1     POROSITY Layer  51
+         0     1.000(10E12.4)                   -1     POROSITY Layer  52
+         0     1.000(10E12.4)                   -1     POROSITY Layer  53
+         0     1.000(10E12.4)                   -1     POROSITY Layer  54
+         0     1.000(10E12.4)                   -1     POROSITY Layer  55
+         0     1.000(10E12.4)                   -1     POROSITY Layer  56
+         0     1.000(10E12.4)                   -1     POROSITY Layer  57
+       100         1(25I3)                       0     ICBUND Layer   1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  0  0  0  0  0  0  0  0
+  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+  0  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1
+         0         1(25I3)                       0     ICBUND Layer   2
+         0         1(25I3)                       0     ICBUND Layer   3
+         0         1(25I3)                       0     ICBUND Layer   4
+         0         1(25I3)                       0     ICBUND Layer   5
+         0         1(25I3)                       0     ICBUND Layer   6
+         0         1(25I3)                       0     ICBUND Layer   7
+         0         1(25I3)                       0     ICBUND Layer   8
+         0         1(25I3)                       0     ICBUND Layer   9
+         0         1(25I3)                       0     ICBUND Layer  10
+         0         1(25I3)                       0     ICBUND Layer  11
+         0         1(25I3)                       0     ICBUND Layer  12
+         0         1(25I3)                       0     ICBUND Layer  13
+         0         1(25I3)                       0     ICBUND Layer  14
+         0         1(25I3)                       0     ICBUND Layer  15
+         0         1(25I3)                       0     ICBUND Layer  16
+         0         1(25I3)                       0     ICBUND Layer  17
+         0         1(25I3)                       0     ICBUND Layer  18
+         0         1(25I3)                       0     ICBUND Layer  19
+         0         1(25I3)                       0     ICBUND Layer  20
+         0         1(25I3)                       0     ICBUND Layer  21
+         0         1(25I3)                       0     ICBUND Layer  22
+         0         1(25I3)                       0     ICBUND Layer  23
+         0         1(25I3)                       0     ICBUND Layer  24
+         0         1(25I3)                       0     ICBUND Layer  25
+         0         1(25I3)                       0     ICBUND Layer  26
+         0         1(25I3)                       0     ICBUND Layer  27
+         0         1(25I3)                       0     ICBUND Layer  28
+         0         1(25I3)                       0     ICBUND Layer  29
+         0         1(25I3)                       0     ICBUND Layer  30
+         0         1(25I3)                       0     ICBUND Layer  31
+         0         1(25I3)                       0     ICBUND Layer  32
+         0         1(25I3)                       0     ICBUND Layer  33
+         0         1(25I3)                       0     ICBUND Layer  34
+         0         1(25I3)                       0     ICBUND Layer  35
+         0         1(25I3)                       0     ICBUND Layer  36
+         0         1(25I3)                       0     ICBUND Layer  37
+         0         1(25I3)                       0     ICBUND Layer  38
+         0         1(25I3)                       0     ICBUND Layer  39
+         0         1(25I3)                       0     ICBUND Layer  40
+         0         1(25I3)                       0     ICBUND Layer  41
+         0         1(25I3)                       0     ICBUND Layer  42
+         0         1(25I3)                       0     ICBUND Layer  43
+         0         1(25I3)                       0     ICBUND Layer  44
+         0         1(25I3)                       0     ICBUND Layer  45
+         0         1(25I3)                       0     ICBUND Layer  46
+         0         1(25I3)                       0     ICBUND Layer  47
+         0         1(25I3)                       0     ICBUND Layer  48
+         0         1(25I3)                       0     ICBUND Layer  49
+         0         1(25I3)                       0     ICBUND Layer  50
+         0         1(25I3)                       0     ICBUND Layer  51
+         0         1(25I3)                       0     ICBUND Layer  52
+         0         1(25I3)                       0     ICBUND Layer  53
+         0         1(25I3)                       0     ICBUND Layer  54
+         0         1(25I3)                       0     ICBUND Layer  55
+         0         1(25I3)                       0     ICBUND Layer  56
+         0         1(25I3)                       0     ICBUND Layer  57
+       100     1.000(10E12.4)                   -1     INITIAL CONCENTRATION Layer   1
+  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04
+  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04
+  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04
+  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04
+  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04
+  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04
+  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  1.1000e-04  8.4000e-05  8.4000e-05  8.4000e-05
+  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05
+  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05
+  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05
+  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05
+  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05
+  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05
+  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05  8.4000e-05
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   2
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   3
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   4
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   5
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   6
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   7
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   8
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer   9
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  10
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  11
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  12
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  13
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  14
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  15
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  16
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  17
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  18
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  19
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  20
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  21
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  22
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  23
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  24
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  25
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  26
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  27
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  28
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  29
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  30
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  31
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  32
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  33
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  34
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  35
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  36
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  37
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  38
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  39
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  40
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  41
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  42
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  43
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  44
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  45
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  46
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  47
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  48
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  49
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  50
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  51
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  52
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  53
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  54
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  55
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  56
+         08.4000e-05(10E12.4)                   -1     INITIAL CONCENTRATION Layer  57
+-1.000e+00 5.000e-02
+         0         0         0         0         T         F
+         8
+2.5810e+035.1620e+031.0311e+041.2904e+041.5485e+041.8053e+042.0634e+042.3215e+04
+         0        10
+         T        10
+2.4000e+04         11.0000e+00
+6.0000e+01     10000 1.000e+00 1.000e+02

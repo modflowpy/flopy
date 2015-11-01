@@ -1,0 +1,20 @@
+#MODFLOW-2000 PACKAGES
+GLOBAL 6 rotate.glo
+LIST 7 rotate.lst
+BAS6  1 rotate.bas
+DIS  29 rotate.dis
+LPF 11 rotate.lpf
+OC  22 rotate.oc
+PCG 19 rotate.pcg
+DATA(BINARY) 50 rotate.cbb
+DATA(BINARY) 30 rotate.hds
+#
+#MT3DMS PACKAGES
+BTN 41 rotate.btn
+ADV 42 rotate.adv
+SSM 43 rotate.ssm
+GCG 44 rotate.gcg
+#
+#SEAWAT-2000 VARIABLE-DENSITY FLOW INPUT FILE
+VDF 20 rotate.vdf
+
