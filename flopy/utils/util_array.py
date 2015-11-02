@@ -643,6 +643,7 @@ class transient_2d(object):
                 os.path.join(model.external_path,
                              self.name_base.replace(' ', '_'))
         self.transient_2ds = self.build_transient_sequence()
+        return
 
     def get_zero_2d(self, kper):
         name = self.name_base + str(kper + 1) + '(filled zero)'
@@ -833,7 +834,7 @@ class transient_2d(object):
         get the file entry info for a given kper
         returns (itmp,file entry string from util_2d)
         """
-        if kper in list(self.transient_2ds.keys()):
+        if kper in self.transient_2ds:
             return (1, self.transient_2ds[kper].get_file_entry())
         elif kper < min(self.transient_2ds.keys()):
             return (1, self.get_zero_2d(kper))

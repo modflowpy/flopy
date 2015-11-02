@@ -767,20 +767,17 @@ class Package(object):
                                       fmtin=old_value.fmtin,
                                       locat=old_value.locat)
             elif isinstance(old_value, utils.util_3d):
-                try:
-                    value = utils.util_3d(self.parent, old_value.shape,
+                 value = utils.util_3d(self.parent, old_value.shape,
                                           old_value.dtype, value,
                                           name=old_value.name_base,
                                           fmtin=old_value.fmtin,
                                           locat=old_value.locat)
-                except:
-                    pass
             elif isinstance(old_value, utils.transient_2d):
                 value = utils.transient_2d(self.parent, old_value.shape,
-                                           old_value.dtype, value,
-                                           name=old_value.name_base,
-                                           fmtin=old_value.fmtin,
-                                           locat=old_value.locat)
+                                               old_value.dtype, value,
+                                               name=old_value.name_base,
+                                               fmtin=old_value.fmtin,
+                                               locat=old_value.locat)
             elif isinstance(old_value, utils.mflist):
                 value = utils.mflist(self.parent, dtype=old_value.dtype, data=value)
             elif isinstance(old_value, list):
