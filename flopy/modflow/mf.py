@@ -177,7 +177,8 @@ class Modflow(BaseModel):
             "de4": flopy.modflow.ModflowDe4,
             "oc": flopy.modflow.ModflowOc,
             "uzf": flopy.modflow.ModflowUzf1,
-            "upw": flopy.modflow.ModflowUpw
+            "upw": flopy.modflow.ModflowUpw,
+            "sub": flopy.modflow.ModflowSub
         }
         return
 

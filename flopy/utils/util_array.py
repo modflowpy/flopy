@@ -1796,7 +1796,10 @@ class util_2d(object):
                     cnstnt = 1
             if locat != 0:
                 fmtin = line[20:40].strip()
-                iprn = np.int(line[40:50].strip())
+                try:
+                    iprn = np.int(line[40:50].strip())
+                except:
+                    iprn = 0
             #locat = int(raw[0])
             #cnstnt = float(raw[1])
             #fmtin = raw[2].strip()
