@@ -10,4 +10,6 @@ ml = flopy.modflow.Modflow.load(mname, version='mf2005', model_ws=pth, verbose=T
 
 ml.change_model_ws(opth)
 
+ml.write_input()
+
 print('finished...')

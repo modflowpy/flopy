@@ -211,45 +211,45 @@ class ModflowLpf(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f_lpf = open(self.fn_path, 'w')
+        f = open(self.fn_path, 'w')
         # Item 0: text
-        f_lpf.write('%s\n' % self.heading)
+        f.write('%s\n' % self.heading)
         # Item 1: IBCFCB, HDRY, NPLPF        
-        f_lpf.write('{0:10d}{1:10.6G}{2:10d} {3:s}\n'.format(self.ilpfcb,
+        f.write('{0:10d}{1:10.6G}{2:10d} {3:s}\n'.format(self.ilpfcb,
                                                              self.hdry,
                                                              self.nplpf,
                                                              self.options))
         # LAYTYP array
-        f_lpf.write(self.laytyp.string)
+        f.write(self.laytyp.string)
         # LAYAVG array
-        f_lpf.write(self.layavg.string)
+        f.write(self.layavg.string)
         # CHANI array
-        f_lpf.write(self.chani.string)
+        f.write(self.chani.string)
         # LAYVKA array
-        f_lpf.write(self.layvka.string)
+        f.write(self.layvka.string)
         # LAYWET array
-        f_lpf.write(self.laywet.string)
+        f.write(self.laywet.string)
         # Item 7: WETFCT, IWETIT, IHDWET
         iwetdry = self.laywet.sum()
         if iwetdry > 0:
-            f_lpf.write('{0:10f}{1:10d}{2:10d}\n'.format(self.wetfct,
+            f.write('{0:10f}{1:10d}{2:10d}\n'.format(self.wetfct,
                                                          self.iwetit,
                                                          self.ihdwet))
         transient = not self.parent.get_package('DIS').steady.all()
         for k in range(nlay):
-            f_lpf.write(self.hk[k].get_file_entry())
+            f.write(self.hk[k].get_file_entry())
             if self.chani[k] < 1:
-                f_lpf.write(self.hani[k].get_file_entry())
-            f_lpf.write(self.vka[k].get_file_entry())
+                f.write(self.hani[k].get_file_entry())
+            f.write(self.vka[k].get_file_entry())
             if transient == True:
-                f_lpf.write(self.ss[k].get_file_entry())
+                f.write(self.ss[k].get_file_entry())
                 if self.laytyp[k] != 0:
-                    f_lpf.write(self.sy[k].get_file_entry())
+                    f.write(self.sy[k].get_file_entry())
             if self.parent.get_package('DIS').laycbd[k] > 0:
-                f_lpf.write(self.vkcb[k].get_file_entry())
+                f.write(self.vkcb[k].get_file_entry())
             if (self.laywet[k] != 0 and self.laytyp[k] != 0):
-                f_lpf.write(self.wetdry[k].get_file_entry())
-        f_lpf.close()
+                f.write(self.wetdry[k].get_file_entry())
+        f.close()
         return
 
     def check(self, f=None, verbose=True, level=1):

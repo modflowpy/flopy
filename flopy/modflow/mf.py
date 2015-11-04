@@ -260,7 +260,7 @@ class Modflow(BaseModel):
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
-        f_nam.write('%s\n' % (self.heading))
+        f_nam.write('{}\n'.format(self.heading))
         if self.version == 'mf2k':
             f_nam.write('{:12s} {:3d} {}\n'.format(self.glo.name[0], self.glo.unit_number[0], self.glo.file_name[0]))
         f_nam.write('{:12s} {:3d} {}\n'.format(self.lst.name[0], self.lst.unit_number[0], self.lst.file_name[0]))

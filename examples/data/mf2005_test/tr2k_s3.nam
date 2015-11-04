@@ -12,3 +12,5 @@ DATA(BINARY)         21 tr2k_s3.hed REPLACE
 DATA(BINARY)         22 tr2k_s3.ddn REPLACE
 DATA(BINARY)         41 tr2k_s3.sbs REPLACE
 DATA(BINARY)         42 tr2k_s3.cmp REPLACE
+DATA(BINARY)         43 tr2k_s3.rst REPLACE
+
