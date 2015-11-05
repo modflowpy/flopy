@@ -4,7 +4,7 @@ import flopy
 
 pth = os.path.join('..', 'data', 'mf2005_test')
 opth = os.path.join('data')
-mname = 'tr2k_s3'
+mname = 'swtex4'
 
 ml = flopy.modflow.Modflow.load(mname, version='mf2005', model_ws=pth, verbose=True)
 

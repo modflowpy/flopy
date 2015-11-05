@@ -195,7 +195,7 @@ class ModflowSub(Package):
         extra = ['']
 
         if isuboc > 0:
-            extensions.append('bud')
+            extensions.append('subbud')
             name.append('DATA(BINARY)')
             units.append(2051)
             extra.append('REPLACE')
@@ -287,7 +287,7 @@ class ModflowSub(Package):
                 if isinstance(ids16, list):
                     ids16 = np.array(ids16)
             if len(ids16.shape) == 1:
-                ids16 = numpy.reshape(ids16, (1, ids16.shape[0]))
+                ids16 = np.reshape(ids16, (1, ids16.shape[0]))
             self.ids16 = ids16
 
         # add package to model
@@ -307,7 +307,7 @@ class ModflowSub(Package):
         # First line: heading
         f.write('{}\n'.format(self.heading))
         # write dataset 1
-        f.write('{} {} {} {} {} {}'.format(self.isubcb, self.isuboc, self.nndb,
+        f.write('{} {} {} {} {} {} '.format(self.isubcb, self.isuboc, self.nndb,
                                            self.ndb, self.nmz, self.nn))
 
         f.write('{} {} {} {} {}\n'.format(self.ac1, self.ac2,
@@ -387,7 +387,7 @@ class ModflowSub(Package):
 
         Returns
         -------
-        swi2 : ModflowSwi2 object
+        sub : ModflowSub object
 
         Examples
         --------

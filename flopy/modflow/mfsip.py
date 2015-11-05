@@ -94,9 +94,10 @@ class ModflowSip(Package):
             f.write('{} {} {} {} {}\n'.format(self.accl, self.hclose, self.ipcalc, self.wseed, self.iprsip))
         else:
             f.write('{:10d}{:10d}\n'.format(self.mxiter, self.nparm))
-            f.write('{:10.3f}{:10.3f}{:10d}{:10.3f}{:10d}\n'.format(self.accl, self.hclose, self.ipcalc,
+            f.write('{:10.3f}{:10.3g}{:10d}{:10.3f}{:10d}\n'.format(self.accl, self.hclose, self.ipcalc,
                                                                     self.wseed, self.iprsip))
         f.close()
+
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):

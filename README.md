@@ -192,8 +192,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Seawater Intrusion (SWI)                       | Supported            | Not supported        | Not supported        |
 | Seawater Intrusion (SWI2)                      | Supported            | Supported            | Not supported        |
 | Surface-Water Routing (SWR)                    | Not supported        | Not supported        | Not supported        |
-| Subsidence (SUB)                               | Not supported        | Not supported        | Not supported        |
-| Subsidence and Aquifer-System <br />Compaction (SWT) | Not supported        | Not supported        | Not supported        |
+| Subsidence (SUB)                               | Supported            | Supported            | Not supported        |
+| Subsidence and Aquifer-System <br />Compaction (SWT) | Supported            | Supported            | Not supported        |
 | Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
 | Upstream Weighted (UPW)                        | Supported            | Supported            | Not supported        |
 | Unzaturated Zone Flow (UZF)                    | Supported            | Not supported        | Not supported        |

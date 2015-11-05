@@ -40,4 +40,5 @@ from .mfbct import ModflowBct
 from .mfhfb import ModflowHfb
 from .mfsfr2 import ModflowSfr2
 from .mfsub import ModflowSub
+from .mfswt import ModflowSwt
 from .mfaddoutsidefile import mfaddoutsidefile
