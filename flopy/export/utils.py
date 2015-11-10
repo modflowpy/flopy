@@ -11,7 +11,7 @@ NC_UNITS_FORMAT = {"hk":"{0}/{1}","sy":"","ss":"1/{0}","rech":"{0}/{1}","strt":"
                    "vertical_conductance":"{0}/{1}^2","primary_storage_coefficient":"1/{1}",
                    "horizontal_hydraulic_conductivity":"{0}/{1}","riv_cond":"1/{1}",
                    "riv_stage":"{0}","riv_rbot":"{0}"}
-NC_PRECISION_TYPE = {np.float32:"f4",np.int:"i4"}
+NC_PRECISION_TYPE = {np.float32:"f4",np.int:"i4",np.int64:"i4"}
 
 
 def datafile_helper(f,df):
@@ -103,11 +103,11 @@ def transient2d_helper(f,t2d,min_valid=-1.0e+9, max_valid=1.0e+9):
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units,f.time_units)
         precision_str = NC_PRECISION_TYPE[t2d.dtype]
         attribs = {"long_name":"flopy.transient_2d instance of {0}".format(var_name)}
-        attribs["coordinates"] = "time layer latitude longitude"
+        attribs["coordinates"] = "time latitude longitude"
         attribs["units"] = units
         try:
             var = f.create_variable(var_name,attribs,precision_str=precision_str,
-                                    dimensions=("time","layer","y","x"))
+                                    dimensions=("time","y","x"))
         except Exception as e:
                 estr = "error creating variable {0}:\n{1}".format(var_name,str(e))
                 f.logger.warn(estr)
