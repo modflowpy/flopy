@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import math
@@ -42,18 +44,18 @@ if narg > 1:
 dirs = [os.path.join('SWI2'), os.path.join('SEAWAT')]
 
 if cleanFiles:
-    print 'cleaning all files'
-    print 'excluding *.py files'
+    print('cleaning all files')
+    print('excluding *.py files')
     file_dict = {}
     file_dict['.'] = os.listdir('.')
     file_dict[dirs[0]] = os.listdir(dirs[0])
     file_dict[dirs[1]] = os.listdir(dirs[1])
-    for key, files in file_dict.iteritems():
+    for key, files in file_dict.items():
         for f in files:
             if os.path.isdir(f):
                 continue
             if '.py' != os.path.splitext(f)[1].lower():
-                print '  removing...{}'.format(os.path.basename(f))
+                print('  removing...{}'.format(os.path.basename(f)))
                 os.remove(os.path.join(key, f))
     for d in dirs:
         if os.path.exists(d):
@@ -75,16 +77,16 @@ r = np.zeros((ncol), np.float)
 x = np.zeros((ncol), np.float)
 edge = np.zeros((ncol), np.float)
 dx = 25.0
-for i in xrange(0, ncol):
+for i in range(0, ncol):
     delr[i] = dx
 r[0] = delr[0] / 2.0
-for i in xrange(1, ncol):
+for i in range(1, ncol):
     r[i] = r[i - 1] + ( delr[i - 1] + delr[i] ) / 2.0
 x[0] = delr[0] / 2.0
-for i in xrange(1, ncol):
+for i in range(1, ncol):
     x[i] = x[i - 1] + ( delr[i - 1] + delr[i] ) / 2.0
 edge[0] = delr[0]
-for i in xrange(1, ncol):
+for i in range(1, ncol):
     edge[i] = edge[i - 1] + delr[i]
 
 # constant data for all simulations
@@ -96,7 +98,7 @@ steady = True
 nsave_zeta = 8
 ndecay = 4
 ibound = np.ones((nlay, nrow, ncol), np.int)
-for k in xrange(0, nlay):
+for k in range(0, nlay):
     ibound[k, 0, ncol - 1] = -1
 bot = np.zeros((nlay, nrow, ncol), np.float)
 dz = 100. / float(nlay - 1)
@@ -104,8 +106,8 @@ zall = -np.arange(0, 100 + dz, dz)
 zall = np.append(zall, -120.)
 tb = -np.arange(dz, 100 + dz, dz)
 tb = np.append(tb, -120.)
-for k in xrange(0, nlay):
-    for i in xrange(0, ncol):
+for k in range(0, nlay):
+    for i in range(0, ncol):
         bot[k, 0, i] = tb[k]
 isource = np.zeros((nlay, nrow, ncol), np.int)
 isource[:, 0, ncol - 1] = 1
@@ -119,7 +121,7 @@ kh = np.zeros((nlay, nrow, ncol), np.float)
 kv = np.zeros((nlay, nrow, ncol), np.float)
 ss = np.zeros((nlay, nrow, ncol), np.float)
 ssz = np.zeros((nlay, nrow, ncol), np.float)
-for k in xrange(0, nlay):
+for k in range(0, nlay):
     for i in range(0, ncol):
         f = r[i] * 2.0 * math.pi
         kh[k, 0, i] = khb * f
@@ -130,17 +132,17 @@ z = np.ones((nlay), np.float)
 z = -100. * z
 
 nwell = 1
-for k in xrange(0, nlay):
+for k in range(0, nlay):
     if zall[k] > -20. and zall[k + 1] <= -20:
         nwell = k + 1
-print 'nlay={} dz={} nwell={}'.format(nlay, dz, nwell)
+print('nlay={} dz={} nwell={}'.format(nlay, dz, nwell))
 wellQ = -2400.
 wellbtm = -20.0
 wellQpm = wellQ / abs(wellbtm)
 well_data = {}
-for ip in xrange(0, nper):
+for ip in range(0, nper):
     welllist = np.zeros((nwell, 4), np.float)
-    for iw in xrange(0, nwell):
+    for iw in range(0, nwell):
         if ip == 0:
             b = zall[iw] - zall[iw + 1]
             if zall[iw + 1] < wellbtm:
@@ -157,9 +159,9 @@ for ip in xrange(0, nper):
 ihead = np.zeros((nlay), np.float)
 
 savewords = []
-for i in xrange(0, nper):
+for i in range(0, nper):
     icnt = 0
-    for j in xrange(0, nstp[i]):
+    for j in range(0, nstp[i]):
         icnt += 1
         savebudget = False
         savehead = False
@@ -217,7 +219,7 @@ nprs = len(timprs)
 # --
 ndecay = 4
 ibound = np.ones((nlay_swt, nrow, ncol), 'int')
-for k in xrange(0, nlay_swt):
+for k in range(0, nlay_swt):
     ibound[k, 0, ncol - 1] = -1
 bot = np.zeros((nlay_swt, nrow, ncol), np.float)
 zall = [0, -20., -40., -60., -80., -100., -120.]
@@ -229,8 +231,8 @@ strt = np.zeros((nlay_swt, nrow, ncol), np.float)
 pressure = 0.
 g = 9.81
 z = - dz / 2.  #cell center
-for k in xrange(0, nlay_swt):
-    for i in xrange(0, ncol):
+for k in range(0, nlay_swt):
+    for i in range(0, ncol):
         bot[k, 0, i] = tb[k]
     if bot[k, 0, 0] >= -100.:
         sconc[k, 0, :] = 0. / 3. * .025 * 1000. / .7143
@@ -255,8 +257,8 @@ kh = np.zeros((nlay_swt, nrow, ncol), np.float)
 kv = np.zeros((nlay_swt, nrow, ncol), np.float)
 ss = np.zeros((nlay_swt, nrow, ncol), np.float)
 ssz = np.zeros((nlay_swt, nrow, ncol), np.float)
-for k in xrange(0, nlay_swt):
-    for i in xrange(0, ncol):
+for k in range(0, nlay_swt):
+    for i in range(0, ncol):
         f = r[i] * 2.0 * math.pi
         kh[k, 0, i] = khb * f
         kv[k, 0, i] = kvb * f
@@ -265,19 +267,19 @@ for k in xrange(0, nlay_swt):
 # wells and ssm data
 itype = mt3.Mt3dSsm.itype_dict()
 nwell = 1
-for k in xrange(0, nlay_swt):
+for k in range(0, nlay_swt):
     if bot[k, 0, 0] >= -20.:
         nwell = k + 1
-print 'nlay_swt={} dz={} nwell={}'.format(nlay_swt, dz, nwell)
+print('nlay_swt={} dz={} nwell={}'.format(nlay_swt, dz, nwell))
 well_data = {}
 ssm_data = {}
 wellQ = -2400.
 wellbtm = -20.0
 wellQpm = wellQ / abs(wellbtm)
-for ip in xrange(0, nper):
+for ip in range(0, nper):
     welllist = np.zeros((nwell, 4), np.float)
     ssmlist = []
-    for iw in xrange(0, nwell):
+    for iw in range(0, nwell):
         if ip == 0:
             q = wellQpm * dz
         else:
@@ -340,12 +342,12 @@ timprs
 ucnfile = os.path.join(dirs[1], 'MT3D001.UCN')
 uobj = fu.UcnFile(ucnfile)
 times = uobj.get_times()
-print times
+print(times)
 conc = np.zeros((len(times), nlay_swt, ncol), np.float)
 for idx, tt in enumerate(times):
     c = uobj.get_data(totim=tt)
-    for ilay in xrange(0, nlay_swt):
-        for jcol in xrange(0, ncol):
+    for ilay in range(0, nlay_swt):
+        for jcol in range(0, ncol):
             conc[idx, ilay, jcol] = c[ilay, 0, jcol]
 
 # spatial data
@@ -356,8 +358,8 @@ zall = -np.arange(0, 100 + dz, dz)
 zall = np.append(zall, -120.)
 tb = -np.arange(dz, 100 + dz, dz)
 tb = np.append(tb, -120.)
-for k in xrange(0, nlay):
-    for i in xrange(0, ncol):
+for k in range(0, nlay):
+    for i in range(0, ncol):
         bot[0, i, k] = tb[k]
 # seawat
 swt_dz = 120. / nlay_swt
@@ -395,7 +397,7 @@ ax.plot([-1, -1], [-1, -1], marker='s', color='k', linewidth=0, linestyle='none'
 leg = ax.legend(loc='upper left', numpoints=1, ncol=1, labelspacing=0.5, borderaxespad=1, handlelength=3)
 leg._drawFrame = False
 # data items
-for itime in xrange(0, nswi_times):
+for itime in range(0, nswi_times):
     zb = np.zeros((ncol), np.float)
     zs = np.zeros((ncol), np.float)
     for icol in range(0, ncol):
@@ -456,4 +458,4 @@ for itime in range(0, nswi_times):
 
 outfig = 'Figure11_swi2ex5.{0}'.format(fext)
 xsf.savefig(outfig, dpi=300)
-print 'created...', outfig
+print('created...', outfig)

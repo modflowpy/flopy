@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import math
@@ -41,18 +43,18 @@ if narg > 1:
 dirs = [os.path.join('SWI2'), os.path.join('SEAWAT')]
 
 if cleanFiles:
-    print 'cleaning all files'
-    print 'excluding *.py files'
+    print('cleaning all files')
+    print('excluding *.py files')
     file_dict = {}
     file_dict['.'] = os.listdir('.')
     file_dict[dirs[0]] = os.listdir(dirs[0])
     file_dict[dirs[1]] = os.listdir(dirs[1])
-    for key, files in file_dict.iteritems():
+    for key, files in list(file_dict.items()):
         for f in files:
             if os.path.isdir(f):
                 continue
             if '.py' != os.path.splitext(f)[1].lower():
-                print '  removing...{}'.format(os.path.basename(f))
+                print('  removing...{}'.format(os.path.basename(f)))
                 os.remove(os.path.join(key, f))
     for d in dirs:
         if os.path.exists(d):
@@ -94,7 +96,7 @@ isource[0, 0] = 2
 
 # stratified model
 modelname = 'swiex2_strat'
-print 'creating...', modelname
+print('creating...', modelname)
 ml = mf.Modflow(modelname, version='mf2005', exe_name=mf_name, model_ws=dirs[0])
 discret = mf.ModflowDis(ml, nlay=1, ncol=ncol, nrow=nrow, delr=delr, delc=1, top=0, botm=[-40.0],
                         nper=nper, perlen=perlen, nstp=nstp)
@@ -117,7 +119,7 @@ zeta2 = zobj.get_data(kstpkper=zkstpkper[-1], text='      ZETASRF  2')[0]
 #
 # vd model
 modelname = 'swiex2_vd'
-print 'creating...', modelname
+print('creating...', modelname)
 ml = mf.Modflow(modelname, version='mf2005', exe_name=mf_name, model_ws=dirs[0])
 discret = mf.ModflowDis(ml, nlay=1, ncol=ncol, nrow=nrow, delr=delr, delc=1, top=0, botm=[-40.0],
                         nper=nper, perlen=perlen, nstp=nstp)
@@ -141,7 +143,7 @@ zetavd2 = zobj.get_data(kstpkper=zkstpkper[-1], text='      ZETASRF  2')[0]
 # seawat model
 swtexe_name = 'swt_v4'
 modelname = 'swiex2_swt'
-print 'creating...', modelname
+print('creating...', modelname)
 swt_xmax = 300.0
 swt_zmax = 40.0
 swt_delr = 1.0
@@ -150,7 +152,7 @@ swt_delz = 0.5
 swt_ncol = int(swt_xmax / swt_delr)  #300
 swt_nrow = 1
 swt_nlay = int(swt_zmax / swt_delz)  #80
-print swt_nlay, swt_nrow, swt_ncol
+print(swt_nlay, swt_nrow, swt_ncol)
 swt_ibound = np.ones((swt_nlay, swt_nrow, swt_ncol), np.int)
 #swt_ibound[0, swt_ncol-1, 0] = -1
 swt_ibound[0, 0, 0] = -1
@@ -240,9 +242,9 @@ if not skipRuns:
 ucnfile = os.path.join(dirs[1], 'MT3D001.UCN')
 uobj = fu.UcnFile(ucnfile)
 times = uobj.get_times()
-print times
+print(times)
 ukstpkper = uobj.get_kstpkper()
-print ukstpkper
+print(ukstpkper)
 c = uobj.get_data(totim=times[-1])
 conc = np.zeros((swt_nlay, swt_ncol), np.float)
 for icol in range(0, swt_ncol):
@@ -257,7 +259,7 @@ frgt = 0.95
 fbot = 0.125
 ftop = 0.925
 
-print 'creating  cross-section figure...'
+print('creating  cross-section figure...')
 xsf = plt.figure(figsize=(fwid, fhgt), facecolor='w')
 xsf.subplots_adjust(wspace=0.25, hspace=0.25, left=flft, right=frgt, bottom=fbot, top=ftop)
 # plot initial conditions
@@ -322,4 +324,4 @@ ax.set_ylabel('Elevation, in meters')
 
 outfig = 'Figure07_swi2ex2.{0}'.format(fext)
 xsf.savefig(outfig, dpi=300)
-print 'created...', outfig
+print('created...', outfig)

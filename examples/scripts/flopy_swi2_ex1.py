@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import math
@@ -34,12 +36,14 @@ if narg > 1:
             fext = 'pdf'
 
 if cleanFiles:
-    print 'cleaning all files'
-    print 'excluding *.py files'
+    print('cleaning all files')
+    print('excluding *.py files')
     files = os.listdir('.')
     for f in files:
+        if os.path.isdir(f):
+            continue 
         if '.py' != os.path.splitext(f)[1].lower():
-            print '  removing...{}'.format(os.path.basename(f))
+            print('  removing...{}'.format(os.path.basename(f)))
             os.remove(f)
     sys.exit(1)
 
@@ -66,7 +70,7 @@ isource = np.ones((nrow, ncol), np.int)
 isource[0, 0] = 2
 
 ocdict = {}
-for idx in xrange(49, 200, 50):
+for idx in range(49, 200, 50):
     key = (0, idx)
     ocdict[key] = ['save head', 'save budget']
     key = (0, idx+1)  
@@ -142,11 +146,11 @@ ax.set_ylabel('Elevation, in meters')
 ax = fig.add_subplot(212)
 ax.text(-0.075, 1.05, 'B', transform=ax.transAxes, va='center', ha='center', size='8')
 
-for i in xrange(4):
+for i in range(4):
     Ltoe[i] = H * math.sqrt(k * nu * (t[i] + tzero) / n / H)
     ax.plot([100 - Ltoe[i] + v * t[i], 100 + Ltoe[i] + v * t[i]], [0, -40], 'k', label='_None')
 
-for i in xrange(4):
+for i in range(4):
     zi = zeta[i, 0, 0, :]
     p = (zi < 0) & (zi > -39.9)
     ax.plot(x[p], zeta[i, 0, 0, p], 'bo',
@@ -174,7 +178,7 @@ ax.set_xlabel('Horizontal distance, in meters')
 
 outfig = 'Figure06_swi2ex1.{0}'.format(fext)
 fig.savefig(outfig, dpi=300)
-print 'created...', outfig
+print('created...', outfig)
 
 
 

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import platform
 import sys
@@ -48,12 +50,12 @@ if narg > 1:
             fext = 'pdf'
 
 if cleanFiles:
-    print 'cleaning all files'
-    print 'excluding *.py files'
+    print('cleaning all files')
+    print('excluding *.py files')
     files = os.listdir('.')
     for f in files:
         if '.py' != os.path.splitext(f)[1].lower():
-            print '  removing...{}'.format(os.path.basename(f))
+            print('  removing...{}'.format(os.path.basename(f)))
             os.remove(f)
     sys.exit(1)
 
@@ -81,9 +83,9 @@ botm = np.array([-10., -30., -50.])
 
 # oc data
 savewords = []
-for i in xrange(0, nper):
+for i in range(0, nper):
     icnt = 0
-    for j in xrange(0, nstp[i]):
+    for j in range(0, nstp[i]):
         icnt += 1
         savebudget = False
         savehead = False
@@ -193,7 +195,7 @@ if not skipRuns:
     rch = mf.ModflowRch(ml, rech=rch_data)
     swi = mf.ModflowSwi2(ml, nsrf=1, istrat=1, toeslope=toeslope, tipslope=tipslope, nu=nu,
                          zeta=z, ssz=ssz, isource=iso, nsolver=1,
-                         adaptive=adaptive, nadptmx=nadptmx, nadptmn=nadptmn, 
+                         nadptmx=nadptmx, nadptmn=nadptmn, 
                          nobs=nobs, iswiobs=iswiobs, obsnam=obsnam, obslrc=obslrc)
     oc = mf.ModflowOc88(ml, words=savewords)
     pcg = mf.ModflowPcg(ml, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
@@ -217,7 +219,7 @@ if not skipRuns:
     rch = mf.ModflowRch(ml2, rech=rch_data)
     swi = mf.ModflowSwi2(ml2, nsrf=1, istrat=1, toeslope=toeslope, tipslope=tipslope, nu=nu,
                          zeta=z, ssz=ssz, isource=iso, nsolver=1,
-                         adaptive=adaptive, nadptmx=nadptmx, nadptmn=nadptmn,
+                         nadptmx=nadptmx, nadptmn=nadptmn,
                          nobs=nobs, iswiobs=iswiobs, obsnam=obsnam, obslrc=obslrc)
     oc = mf.ModflowOc88(ml2, words=savewords)
     pcg = mf.ModflowPcg(ml2, hclose=1.0e-6, rclose=3.0e-3, mxiter=100, iter1=50)
@@ -283,7 +285,7 @@ ax = fig.add_subplot(2, 2, 1)
 # axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
-for idx in xrange(5):
+for idx in range(5):
     # layer 1
     ax.plot(xcell, zeta[idx, 0, 30, :], drawstyle='steps-mid', 
             linewidth=0.5, color=cc[idx], label='{:2d} years'.format(years[idx]))
@@ -305,7 +307,7 @@ ax = fig.add_subplot(2, 2, 2)
 # axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
-for idx in xrange(5, len(years)):
+for idx in range(5, len(years)):
     # layer 1
     ax.plot(xcell, zeta[idx, 0, 30, :], drawstyle='steps-mid', 
             linewidth=0.5, color=cc[idx-5], label='{:2d} years'.format(years[idx]))
@@ -327,7 +329,7 @@ ax = fig.add_subplot(2, 2, 3)
 # axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
-for idx in xrange(5, len(years)):
+for idx in range(5, len(years)):
     # layer 1
     ax.plot(xcell, zeta2[idx, 0, 30, :], drawstyle='steps-mid', 
             linewidth=0.5, color=cc[idx-5], label='{:2d} years'.format(years[idx]))
@@ -353,7 +355,7 @@ ax.set_ylim(-50, -10)
 t = zobs['TOTIM'][999:] / 365 - 200.
 tz2 = zobs['layer1_001'][999:]
 tz3 = zobs2['layer1_001'][999:]
-for i in xrange(len(t)):
+for i in range(len(t)):
     if zobs['layer2_001'][i+999] < -30. - 0.1:
         tz2[i] = zobs['layer2_001'][i+999]
     if zobs2['layer2_001'][i+999] < 20. - 0.1:
@@ -372,4 +374,4 @@ ax.text(0.025, .45, 'Layer 2', transform=ax.transAxes, va='center', ha='left', s
 
 outfig = 'Figure09_swi2ex4.{0}'.format(fext)
 fig.savefig(outfig, dpi=300)
-print 'created...', outfig
+print('created...', outfig)

@@ -781,24 +781,25 @@ class Package(object):
             elif isinstance(old_value, utils.mflist):
                 value = utils.mflist(self.parent, dtype=old_value.dtype, data=value)
             elif isinstance(old_value, list):
-                if isinstance(old_value[0], utils.util_3d):
-                    new_list = []
-                    for vo, v in zip(old_value, value):
-                        new_list.append(utils.util_3d(self.parent, vo.shape,
-                                                      vo.dtype, v,
-                                                      name=vo.name_base,
-                                                      fmtin=vo.fmtin,
-                                                      locat=vo.locat))
-                    value = new_list
-                elif isinstance(old_value[0], utils.util_2d):
-                    new_list = []
-                    for vo, v in zip(old_value, value):
-                        new_list.append(utils.util_2d(self.parent, vo.shape,
-                                                      vo.dtype, v,
-                                                      name=vo.name,
-                                                      fmtin=vo.fmtin,
-                                                      locat=vo.locat))
-                    value = new_list
+                if len(old_value) > 0:
+                    if isinstance(old_value[0], utils.util_3d):
+                        new_list = []
+                        for vo, v in zip(old_value, value):
+                            new_list.append(utils.util_3d(self.parent, vo.shape,
+                                                          vo.dtype, v,
+                                                          name=vo.name_base,
+                                                          fmtin=vo.fmtin,
+                                                          locat=vo.locat))
+                        value = new_list
+                    elif isinstance(old_value[0], utils.util_2d):
+                        new_list = []
+                        for vo, v in zip(old_value, value):
+                            new_list.append(utils.util_2d(self.parent, vo.shape,
+                                                          vo.dtype, v,
+                                                          name=vo.name,
+                                                          fmtin=vo.fmtin,
+                                                          locat=vo.locat))
+                        value = new_list
 
         super(Package, self).__setattr__(key, value)
 

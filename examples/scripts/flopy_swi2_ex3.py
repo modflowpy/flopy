@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import math
@@ -62,12 +64,14 @@ if narg > 1:
             fext = 'pdf'
 
 if cleanFiles:
-    print 'cleaning all files'
-    print 'excluding *.py files'
+    print('cleaning all files')
+    print('excluding *.py files')
     files = os.listdir('.')
     for f in files:
+        if os.path.isdir(f):
+            continue 
         if '.py' != os.path.splitext(f)[1].lower():
-            print '  removing...{}'.format(os.path.basename(f))
+            print('  removing...{}'.format(os.path.basename(f)))
             os.remove(f)
     sys.exit(1)
 
@@ -209,4 +213,4 @@ ax.set_xlim(-250., 2500.)
 
 outfig = 'Figure08_swi2ex3.{0}'.format(fext)
 fig.savefig(outfig, dpi=300)
-print 'created...', outfig
+print('created...', outfig)
