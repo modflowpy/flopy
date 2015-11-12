@@ -189,7 +189,7 @@ class ModflowMlt(Package):
                 break
             op = t.pop(0)
             multname = t.pop(0)
-            atemp = mult_dict[multname].array
+            atemp = mult_dict[multname.lower()].array
             if op == '+':
                 multarray = multarray + atemp
             elif op == '*':
