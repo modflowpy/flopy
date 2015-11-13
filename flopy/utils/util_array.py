@@ -1225,6 +1225,12 @@ class util_2d(object):
                 if self.model.free_format:
                     self.fmtin = '(FREE)'
                     self.py_desc = self.fort_2_py(self.fmtin)
+                else:
+                    shutil.copy2(self.__value, self.ext_filename)
+                    # if fixed format, we need to get a new unit number
+                    #  and reset locat
+                    self.locat = self.model.next_ext_unit()
+                    self.model.add_external(self.ext_filename, self.locat)
                 return ''
             # otherwise, we need to load the the value filename
             #  and return as a string
