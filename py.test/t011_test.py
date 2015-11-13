@@ -14,7 +14,7 @@ def test_mflist():
     assert os.path.exists(list_file)
     mflist = flopy.utils.MfListBudget(list_file)
 
-    flux_in, flux_out, vol_in, vol_out = mflist.get_recarrays()
+    inc, cum = mflist.get_budget()
 
     # if pandas is installed
     try:
