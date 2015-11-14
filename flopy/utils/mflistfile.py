@@ -1,13 +1,15 @@
-import os
-import sys
-import re
-from datetime import datetime, timedelta
 import collections
+import os
+import re
+import sys
+from datetime import timedelta
+
 import numpy as np
 
 
 class ListBudget(object):
-    """ MODFLOW family list file handling
+    """
+    MODFLOW family list file handling
 
     Parameters:
     ----------
@@ -15,13 +17,33 @@ class ListBudget(object):
 
     Methods:
     ----------
-        get_recarrays : returns flux_in,flux_out,vol_in,vol_out numpy.recarrays for all
-            entries in the list file budget.  The columns include stress period and time step
+        get_record_names : returns a list of water budget items in the list file.
+        The names also include totim, stress period, and time step.
 
-        get_dataframes(start_datetime='1-1-1970') : returns flux and volume dateframes.
-            Columns of each dataframe are multiindex on (["in","out"],[budget entries])
-            If start_datetime is passed as none, the rows are also multiindex on
-            (stress period,time step).  Otherwise, a DatetimeIndex is set.
+        get_times : returns a list of unique water budget times in the list file.
+
+        get_kstpkper : returns a list of unique stress periods and time steps in
+        the list file water budgets.
+
+        get_incremental : returns a numpy.recarray for all cumulative water budget
+        entries in the list file budget.  The columns include totim, stress period,
+        and time step.
+
+        get_cumulative : returns a numpy.recarray for all cumulative water budget
+        entries in the list file budget.  The columns include totim, stress period,
+        and time step.
+
+        get_budget : returns incremental, cumulative numpy.recarrays for all entries
+        in the list file budget.  The columns include totim, stress period, and time step.
+
+        get_data : returns a numpy.recarray with water budget data from the list file
+        for the specified conditions. The numpy.recarray includes index, value, and
+        name columns.
+
+        get_dataframes(start_datetime='1-1-1970') : returns incremental and cumulative
+        water budget dateframes.  If start_datetime is passed as none, the rows are indexed
+        on totim.  Otherwise, a DatetimeIndex is set.
+
     Note:
     ----
         The ListBudget class should not be instantiated directly.  Access is
@@ -31,7 +53,7 @@ class ListBudget(object):
     Example:
     -------
         >>> mf_list = MfListBudget("my_model.list")
-        >>> in_flux, out_flux, in_vol, out_vol = mf_list.get_recarrays()
+        >>> incremental, cumulative = mf_list.get_budget()
         >>> df_in, df_out = mf_list.get_dataframes(start_datetime="10-21-2015")
 
     """
@@ -39,83 +61,6 @@ class ListBudget(object):
     def __init__(self, file_name):
         raise Exception('base class lstbudget does not have a " +\
         "constructor - must call a derived class')
-
-
-    def get_cumulative(self, names=None):
-        """
-        Get a recarray with the cumulative water budget items in the list file
-
-        Parameters
-        ----------
-        names : str ot list of strings
-            Selection of column names to return.  If names is not None then
-            totim, time_step, stress_period, and selection(s) will be returned.
-            (default is None).
-
-        Returns
-        ----------
-        out : recarray
-            Numpy recarray with the water budget items in list file. The
-            recarray also includes totim, time_step, and stress_period.
-
-        """
-        if names is None:
-            return self.cum
-        else:
-            if not isinstance(names, list):
-                names = [names]
-            names.insert(0, 'stress_period')
-            names.insert(0, 'time_step')
-            names.insert(0, 'totim')
-            dtype = self.cum[names].dtype
-            return self.cum[names].view(dtype=dtype)
-
-
-    def get_incremental(self, names=None):
-        """
-        Get a recarray with the incremental water budget items in the list file
-
-        Parameters
-        ----------
-        names : str ot list of strings
-            Selection of column names to return.  If names is not None then
-            totim, time_step, stress_period, and selection(s) will be returned.
-            (default is None).
-
-        Returns
-        ----------
-        out : recarray
-            Numpy recarray with the water budget items in list file. The
-            recarray also includes totim, time_step, and stress_period.
-
-        """
-        if names is None:
-            return self.inc
-        else:
-            if not isinstance(names, list):
-                names = [names]
-            names.insert(0, 'stress_period')
-            names.insert(0, 'time_step')
-            names.insert(0, 'totim')
-            dtype = self.inc[names].dtype
-            return self.inc[names].view(dtype=dtype)
-
-    def get_budget(self):
-        """
-        Get the recarrays with the incremental and cumulative water budget items
-        in the list file
-
-        Returns
-        ----------
-        out : recarrays
-            Numpy recarrays with the water budget items in list file. The
-            recarray also includes totim, time_step, and stress_period. A
-            separate recarray is returned for the incremental and cumulative
-            water budget entries.
-
-        """
-        return self.inc, self.cum
-
 
     def get_record_names(self):
         """
@@ -126,9 +71,13 @@ class ListBudget(object):
         out : list of strings
             List of unique text names in the binary file.
 
+        Example:
+        -------
+            >>> mf_list = MfListBudget("my_model.list")
+            >>> names = mf_list.get_record_names()
+
         """
         return self.inc.dtype.names
-
 
     def get_times(self):
         """
@@ -139,19 +88,31 @@ class ListBudget(object):
         out : list of floats
             List contains unique water budget simulation times (totim) in list file.
 
+
+        Example:
+        -------
+            >>> mf_list = MfListBudget("my_model.list")
+            >>> times = mf_list.get_times()
+
         """
         return self.inc['totim'].tolist()
 
-
     def get_kstpkper(self):
         """
-        Get a list of unique stress periods and time steps in the file
+        Get a list of unique stress periods and time steps in the list file
+        water budgets.
 
         Returns
         ----------
         out : list of (kstp, kper) tuples
             List of unique kstp, kper combinations in list file.  kstp and
-            kper values are presently zero-based.
+            kper values are zero-based.
+
+
+        Example:
+        -------
+            >>> mf_list = MfListBudget("my_model.list")
+            >>> kstpkper = mf_list.get_kstpkper()
 
         """
         kstpkper = []
@@ -159,10 +120,111 @@ class ListBudget(object):
             kstpkper.append((kstp, kper))
         return kstpkper
 
+    def get_incremental(self, names=None):
+        """
+        Get a recarray with the incremental water budget items in the list file
+
+        Parameters
+        ----------
+        names : str or list of strings
+            Selection of column names to return.  If names is not None then
+            totim, time_step, stress_period, and selection(s) will be returned.
+            (default is None).
+
+        Returns
+        ----------
+        out : recarray
+            Numpy recarray with the water budget items in list file. The
+            recarray also includes totim, time_step, and stress_period.
+
+
+        Example:
+        -------
+            >>> mf_list = MfListBudget("my_model.list")
+            >>> incremental = mf_list.get_incremental()
+        """
+        if names is None:
+            return self.inc
+        else:
+            if not isinstance(names, list):
+                names = [names]
+            names.insert(0, 'stress_period')
+            names.insert(0, 'time_step')
+            names.insert(0, 'totim')
+            return self.inc[names].view(np.recarray)
+
+    def get_cumulative(self, names=None):
+        """
+        Get a recarray with the cumulative water budget items in the list file
+
+        Parameters
+        ----------
+        names : str or list of strings
+            Selection of column names to return.  If names is not None then
+            totim, time_step, stress_period, and selection(s) will be returned.
+            (default is None).
+
+        Returns
+        ----------
+        out : recarray
+            Numpy recarray with the water budget items in list file. The
+            recarray also includes totim, time_step, and stress_period.
+
+
+        Example:
+        -------
+            >>> mf_list = MfListBudget("my_model.list")
+            >>> cumulative = mf_list.get_cumulative()
+       """
+        if names is None:
+            return self.cum
+        else:
+            if not isinstance(names, list):
+                names = [names]
+            names.insert(0, 'stress_period')
+            names.insert(0, 'time_step')
+            names.insert(0, 'totim')
+            return self.cum[names].view(np.recarray)
+
+    def get_budget(self, names=None):
+        """
+        Get the recarrays with the incremental and cumulative water budget items
+        in the list file
+
+        Parameters
+        ----------
+        names : str or list of strings
+            Selection of column names to return.  If names is not None then
+            totim, time_step, stress_period, and selection(s) will be returned.
+            (default is None).
+
+        Returns
+        ----------
+        out : recarrays
+            Numpy recarrays with the water budget items in list file. The
+            recarray also includes totim, time_step, and stress_period. A
+            separate recarray is returned for the incremental and cumulative
+            water budget entries.
+
+
+        Example:
+        -------
+            >>> mf_list = MfListBudget("my_model.list")
+            >>> budget = mf_list.get_budget()
+        """
+        if names is None:
+            return self.inc, self.cum
+        else:
+            if not isinstance(names, list):
+                names = [names]
+            names.insert(0, 'stress_period')
+            names.insert(0, 'time_step')
+            names.insert(0, 'totim')
+            return self.inc[names].view(np.recarray), self.cum[names].view(np.recarray)
 
     def get_data(self, kstpkper=None, idx=None, totim=None, incremental=False):
         """
-        Get data from the file for the specified conditions.
+        Get water budget data from the list file for the specified conditions.
 
         Parameters
         ----------
@@ -194,8 +256,15 @@ class ListBudget(object):
         -----
         if both kstpkper and totim are None, will return the last entry
 
-        Examples
-        --------
+        Example:
+        -------
+            >>> import matplotlib.pyplot as plt
+            >>> import flopy
+            >>> mf_list = flopy.utils.MfListBudget("my_model.list")
+            >>> data = mf_list.get_data(kstpkper=(0,0))
+            >>> plt.bar(data['index'], data['value'])
+            >>> plt.xticks(data['index'], data['name'], rotation=45, size=6)
+            >>> plt.show()
 
         """
         ipos = None
@@ -236,19 +305,38 @@ class ListBudget(object):
             v[i]['name'] = name
         return v
 
+    def get_dataframes(self, start_datetime='1-1-1970'):
+        """
+        Get pandas dataframes with the incremental and cumulative water budget
+        items in the list file
 
-    def get_dataframes(self, start_datetime="1-1-1970"):
+        Parameters
+        ----------
+        start_datetime : str
+            If start_datetime is passed as None, the rows are indexed on totim.
+            Otherwise, a DatetimeIndex is set. (default is 1-1-1970).
+
+        Returns
+        ----------
+        out : panda dataframes
+            Pandas dataframes with the incremental and cumulative water budget
+            items in list file. A separate pandas dataframe is returned for the
+            incremental and cumulative water budget entries.
+
+
+        Example:
+        -------
+            >>> mf_list = MfListBudget("my_model.list")
+            >>> incrementaldf, cumulativedf = mf_list.get_dataframes()
         """
-        :param start_datetime:
-        :return:
-        """
+
         try:
             import pandas as pd
         except Exception as e:
             raise Exception("ListBudget.get_dataframe() error import pandas: " + \
                             str(e))
 
-        # so we can get a datetime index for the dataframe
+            # so we can get a datetime index for the dataframe
         if start_datetime is not None:
             lt = ListTime(self.file_name, start=pd.to_datetime(start_datetime))
         else:
@@ -294,10 +382,12 @@ class ListBudget(object):
 
         return idxs
 
+
     def _get_ts_sp(self, line):
         ts = int(line[self.ts_idxs[0]:self.ts_idxs[1]])
         sp = int(line[self.sp_idxs[0]:self.sp_idxs[1]])
         return ts, sp
+
 
     def _set_entries(self):
         if len(self.entries) > 0:
@@ -350,10 +440,12 @@ class ListBudget(object):
             self.inc[entry] = incdict[entry]
             self.cum[entry] = cumdict[entry]
         self.inc['totim'], self.cum['totim'] = np.array(totim)[:], np.array(totim)[:]
-        self.inc["time_step"], self.inc["stress_period"] = idx_array[:, 0], idx_array[:, 1]
-        self.cum["time_step"], self.cum["stress_period"] = idx_array[:, 0], idx_array[:, 1]
+        # zero based time_step (kstp) and stress_period (kper)
+        self.inc["time_step"], self.inc["stress_period"] = idx_array[:, 0] - 1, idx_array[:, 1] - 1
+        self.cum["time_step"], self.cum["stress_period"] = idx_array[:, 0] - 1, idx_array[:, 1] - 1
 
         return
+
 
     def _get_sp(self, ts, sp, seekpoint):
         self.f.seek(seekpoint)
@@ -409,6 +501,7 @@ class ListBudget(object):
 
         return incdict, cumdict
 
+
     def _parse_budget_line(self, line):
         raw = line.strip().split()
         entry = line.strip().split('=')[0].strip()
@@ -429,6 +522,9 @@ class ListBudget(object):
 
 
 class SwtListBudget(ListBudget):
+    """
+
+    """
     def __init__(self, file_name, key_string='MASS BUDGET FOR ENTIRE MODEL',
                  timeunit='days'):
         assert os.path.exists(file_name)
@@ -452,6 +548,9 @@ class SwtListBudget(ListBudget):
 
 
 class MfListBudget(ListBudget):
+    """
+
+    """
     def __init__(self, file_name, key_string='VOLUMETRIC BUDGET FOR ENTIRE MODEL',
                  timeunit='days'):
         assert os.path.exists(file_name)
@@ -475,6 +574,9 @@ class MfListBudget(ListBudget):
 
 
 class SwrListBudget(ListBudget):
+    """
+
+    """
     def __init__(self, file_name, key_string='VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL',
                  timeunit='days'):
         assert os.path.exists(file_name)
@@ -498,9 +600,29 @@ class SwrListBudget(ListBudget):
 
 
 class ListTime(ListBudget):
-    '''class to extract time information from lst file
+    """
+    Class to extract time information from lst file
     passing a start datetime results in casting the totim to dts from start
-    '''
+
+    Parameters:
+    ----------
+
+
+    Methods:
+    ----------
+        get_times : returns a list of unique water budget times in the list file.
+
+    Note:
+    ----
+        The ListBudget class should not be instantiated directly.  Access is
+        through derived classes: MfListBudget (MODFLOW), SwtListBudget (SEAWAT)
+        and SwrListBudget (MODFLOW with the SWR process)
+
+    Example:
+    -------
+        >>> mf_listtime = ListTime("my_model.list")
+        >>> times = mf_listtime.get_times()
+    """
 
     def __init__(self, file_name, timeunit='days', key_str='TIME SUMMARY AT END',
                  start=None, flow=True):
@@ -525,12 +647,24 @@ class ListTime(ListBudget):
             self.ts_idxs = [65, 71]
             self.sp_idxs = [87, 92]
         self.time_line_idx = 20
-        if timeunit.upper() == 'DAYS':
+        if timeunit.upper() == 'SECONDS':
+            self.timeunit = 'S'
+            self.time_idx = 0
+        elif timeunit.upper() == 'MINUTES':
+            self.timeunit = 'M'
+            self.time_idx = 1
+        elif timeunit.upper() == 'HOURS':
+            self.timeunit = 'H'
+            self.time_idx = 2
+        elif timeunit.upper() == 'DAYS':
             self.timeunit = 'D'
             self.time_idx = 3
+        elif timeunit.upper() == 'YEARS':
+            self.timeunit = 'Y'
+            self.time_idx = 4
         else:
-            raise Exception('need to reset time_idxs attribute to " +\
-            "use units other than days and check usage of timedelta')
+            raise Exception('need to reset time_idxs attribute to ' + \
+                            'use units other than days and check usage of timedelta')
         self.null_entries = [np.NaN, np.NaN, np.NaN]
         self.start = start
         if start:
@@ -538,7 +672,6 @@ class ListTime(ListBudget):
 
         # load the data
         self._load()
-
 
     def get_times(self):
         """
@@ -551,7 +684,6 @@ class ListTime(ListBudget):
 
         """
         return self.totim
-
 
     def _load(self, maxentries=None):
         self._build_index(maxentries)
@@ -568,10 +700,30 @@ class ListTime(ListBudget):
         return
 
     def _cast_totim(self):
-        if self.timeunit == 'D':
+        if self.timeunit == 'S':
+            totim = []
+            for to in self.totim:
+                t = timedelta(seconds=to)
+                totim.append(self.start + t)
+        elif self.timeunit == 'M':
+            totim = []
+            for to in self.totim:
+                t = timedelta(minutes=to)
+                totim.append(self.start + t)
+        elif self.timeunit == 'H':
+            totim = []
+            for to in self.totim:
+                t = timedelta(hours=to)
+                totim.append(self.start + t)
+        elif self.timeunit == 'D':
             totim = []
             for to in self.totim:
                 t = timedelta(days=to)
+                totim.append(self.start + t)
+        elif self.timeunit == 'Y':
+            totim = []
+            for to in self.totim:
+                t = timedelta(days=to * 365.25)
                 totim.append(self.start + t)
         return totim
 

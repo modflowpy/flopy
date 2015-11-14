@@ -3,14 +3,13 @@ Some basic tests for mflistfile.py module (not super rigorous)
 
 """
 
-import sys
 import os
 import flopy
 import numpy as np
 #import matplotlib.pyplot as plt
 
 
-def test_mflist():
+def test_mflistfile():
     pth = os.path.join('..', 'examples', 'data', 'freyberg')
     list_file = os.path.join(pth, 'freyberg.gitlist')
     assert os.path.exists(list_file)
@@ -53,4 +52,4 @@ def test_mflist():
     return
 
 if __name__ == '__main__':
-    test_mflist()
+    test_mflistfile()
