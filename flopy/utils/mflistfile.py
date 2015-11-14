@@ -2,6 +2,7 @@ import os
 import sys
 import re
 from datetime import datetime, timedelta
+import collections
 import numpy as np
 
 
@@ -40,10 +41,17 @@ class ListBudget(object):
         "constructor - must call a derived class')
 
 
-    def get_cumulative(self):
+    def get_cumulative(self, names=None):
         """
         Get a recarray with the cumulative water budget items in the list file
 
+        Parameters
+        ----------
+        names : str ot list of strings
+            Selection of column names to return.  If names is not None then
+            totim, time_step, stress_period, and selection(s) will be returned.
+            (default is None).
+
         Returns
         ----------
         out : recarray
@@ -51,12 +59,29 @@ class ListBudget(object):
             recarray also includes totim, time_step, and stress_period.
 
         """
-        return self.cum
+        if names is None:
+            return self.cum
+        else:
+            if not isinstance(names, list):
+                names = [names]
+            names.insert(0, 'stress_period')
+            names.insert(0, 'time_step')
+            names.insert(0, 'totim')
+            dtype = self.cum[names].dtype
+            return self.cum[names].view(dtype=dtype)
 
-    def get_incremental(self):
+
+    def get_incremental(self, names=None):
         """
         Get a recarray with the incremental water budget items in the list file
 
+        Parameters
+        ----------
+        names : str ot list of strings
+            Selection of column names to return.  If names is not None then
+            totim, time_step, stress_period, and selection(s) will be returned.
+            (default is None).
+
         Returns
         ----------
         out : recarray
@@ -64,7 +89,16 @@ class ListBudget(object):
             recarray also includes totim, time_step, and stress_period.
 
         """
-        return self.inc
+        if names is None:
+            return self.inc
+        else:
+            if not isinstance(names, list):
+                names = [names]
+            names.insert(0, 'stress_period')
+            names.insert(0, 'time_step')
+            names.insert(0, 'totim')
+            dtype = self.inc[names].dtype
+            return self.inc[names].view(dtype=dtype)
 
     def get_budget(self):
         """
@@ -82,6 +116,20 @@ class ListBudget(object):
         """
         return self.inc, self.cum
 
+
+    def get_record_names(self):
+        """
+        Get a list of water budget record names in the file
+
+        Returns
+        ----------
+        out : list of strings
+            List of unique text names in the binary file.
+
+        """
+        return self.inc.dtype.names
+
+
     def get_times(self):
         """
         Get a list of unique water budget times in the list file
@@ -94,6 +142,7 @@ class ListBudget(object):
         """
         return self.inc['totim'].tolist()
 
+
     def get_kstpkper(self):
         """
         Get a list of unique stress periods and time steps in the file
@@ -101,7 +150,7 @@ class ListBudget(object):
         Returns
         ----------
         out : list of (kstp, kper) tuples
-            List of unique kstp, kper combinations in binary file.  kstp and
+            List of unique kstp, kper combinations in list file.  kstp and
             kper values are presently zero-based.
 
         """
@@ -109,6 +158,84 @@ class ListBudget(object):
         for kstp, kper in zip(self.inc['time_step'], self.inc['stress_period']):
             kstpkper.append((kstp, kper))
         return kstpkper
+
+
+    def get_data(self, kstpkper=None, idx=None, totim=None, incremental=False):
+        """
+        Get data from the file for the specified conditions.
+
+        Parameters
+        ----------
+        idx : int
+            The zero-based record number.  The first record is record 0.
+            (default is None).
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper).
+            These are zero-based kstp and kper values. (default is None).
+        totim : float
+            The simulation time. (default is None).
+        incremental : bool
+            Boolean flag used to determine if incremental or cumulative water
+            budget data for the specified conditions will be returned. If
+            incremental=True, incremental water budget data will be returned.
+            If incremental=False, cumulative water budget data will be
+            returned. (default is False).
+
+        Returns
+        ----------
+        data : numpy recarray
+            Array has size (number of budget items, 3). Recarray names are 'index',
+            'value', 'name'.
+
+        See Also
+        --------
+
+        Notes
+        -----
+        if both kstpkper and totim are None, will return the last entry
+
+        Examples
+        --------
+
+        """
+        ipos = None
+        if kstpkper is not None:
+            try:
+                ipos = self.get_kstpkper().index(kstpkper)
+            except:
+                pass
+        elif totim is not None:
+            try:
+                ipos = self.get_times().index(totim)
+            except:
+                pass
+        elif idx is not None:
+            ipos = idx
+        else:
+            ipos = -1
+
+        if ipos is None:
+            print('Could not find specified condition.')
+            print('  kstpkper = {}'.format(kstpkper))
+            print('  totim = {}'.format(totim))
+            return None
+
+        if incremental:
+            t = self.inc[ipos]
+        else:
+            t = self.cum[ipos]
+
+        dtype = np.dtype([('index', np.int32), ('value', np.float32), ('name', '|S25')])
+        v = np.recarray(shape=(len(self.inc.dtype.names[3:])), dtype=dtype)
+        for i, name in enumerate(self.inc.dtype.names[3:]):
+            mult = 1.
+            if '_OUT' in name:
+                mult = -1.
+            v[i]['index'] = i
+            v[i]['value'] = mult * t[name]
+            v[i]['name'] = name
+        return v
+
 
     def get_dataframes(self, start_datetime="1-1-1970"):
         """
@@ -124,13 +251,9 @@ class ListBudget(object):
         # so we can get a datetime index for the dataframe
         if start_datetime is not None:
             lt = ListTime(self.file_name, start=pd.to_datetime(start_datetime))
-            #lt._load()
-            #idx = lt.dt
         else:
             # idx = pd.MultiIndex.from_tuples(list(zip(fin["stress_period"], fin["time_step"])))
             lt = ListTime(self.file_name, start=pd.to_datetime(start_datetime))
-            #lt._load()
-            #idx = lt.totim
         idx = lt.get_times()
 
         df_flux = pd.DataFrame(self.inc, index=idx).loc[:, self.entries]
@@ -143,6 +266,7 @@ class ListBudget(object):
         # print('building index...')
         self.idx_map = self._get_index(maxentries)
         # print('\ndone - found',len(self.idx_map),'entries')
+
 
     def _get_index(self, maxentries):
         # --parse through the file looking for matches and parsing ts and sp
@@ -187,9 +311,9 @@ class ListBudget(object):
         except:
             raise Exception('unable to read budget information from first entry in list file')
         self.entries = incdict.keys()
-        null_entries = {}
-        incdict = {}
-        cumdict = {}
+        null_entries = collections.OrderedDict()
+        incdict = collections.OrderedDict()
+        cumdict = collections.OrderedDict()
         for entry in self.entries:
             incdict[entry] = []
             cumdict[entry] = []
@@ -211,7 +335,7 @@ class ListBudget(object):
         idx_array = np.array(self.idx_map)
 
         # get totime
-        lt = ListTime(self.file_name, start=None)
+        lt = ListTime(self.file_name, start=None, timeunit=self.timeunit)
         totim = lt.get_times()
 
         # build rec arrays
@@ -246,7 +370,7 @@ class ListBudget(object):
                 break
 
         tag = 'IN'
-        incdict, cumdict = {}, {}
+        incdict, cumdict = collections.OrderedDict(), collections.OrderedDict()
         while True:
 
             if line == '':
@@ -305,20 +429,19 @@ class ListBudget(object):
 
 
 class SwtListBudget(ListBudget):
-    def __init__(self, file_name, key_string='MASS BUDGET FOR ENTIRE MODEL'):
+    def __init__(self, file_name, key_string='MASS BUDGET FOR ENTIRE MODEL',
+                 timeunit='days'):
         assert os.path.exists(file_name)
         self.file_name = file_name
         if sys.version_info[0] == 2:
             self.f = open(file_name, 'r')
         elif sys.version_info[0] == 3:
             self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        # self.lstkey = re.compile(key_string)
+        self.timeunit = timeunit
         self.lstkey = key_string
         self.idx_map = []
         self.entries = []
         self.null_entries = []
-        self.flux = {}
-        self.cumu = {}
         self.cumu_idxs = [22, 40]
         self.flux_idxs = [63, 80]
         self.ts_idxs = [50, 54]
@@ -329,20 +452,19 @@ class SwtListBudget(ListBudget):
 
 
 class MfListBudget(ListBudget):
-    def __init__(self, file_name, key_string='VOLUMETRIC BUDGET FOR ENTIRE MODEL'):
+    def __init__(self, file_name, key_string='VOLUMETRIC BUDGET FOR ENTIRE MODEL',
+                 timeunit='days'):
         assert os.path.exists(file_name)
         self.file_name = file_name
         if sys.version_info[0] == 2:
             self.f = open(file_name, 'r')
         elif sys.version_info[0] == 3:
             self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        # self.lstkey = re.compile(key_string)
+        self.timeunit = timeunit
         self.lstkey = key_string
         self.idx_map = []
         self.entries = []
         self.null_entries = []
-        self.flux = {}
-        self.cumu = {}
         self.cumu_idxs = [22, 40]
         self.flux_idxs = [63, 80]
         self.ts_idxs = [56, 61]
@@ -353,20 +475,19 @@ class MfListBudget(ListBudget):
 
 
 class SwrListBudget(ListBudget):
-    def __init__(self, file_name, key_string='VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL'):
+    def __init__(self, file_name, key_string='VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL',
+                 timeunit='days'):
         assert os.path.exists(file_name)
         self.file_name = file_name
         if sys.version_info[0] == 2:
             self.f = open(file_name, 'r')
         elif sys.version_info[0] == 3:
             self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        # self.lstkey = re.compile(key_string)
+        self.timeunit = timeunit
         self.lstkey = key_string
         self.idx_map = []
         self.entries = []
         self.null_entries = []
-        self.flux = {}
-        self.cumu = {}
         self.cumu_idxs = [25, 43]
         self.flux_idxs = [66, 84]
         self.ts_idxs = [39, 46]
