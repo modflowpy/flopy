@@ -234,17 +234,19 @@ class ModflowDisU(Package):
                                name='nodelay', locat=self.unit_number[0])
 
         # Top and bot are both 1d arrays of size nodes
-        self.top = util_2d(model, (self.nodes,), np.float32, top,
-                           'top', locat=self.unit_number[0])
-        self.bot = util_2d(model, (self.nodes,), np.float32, bot,
-                           'bot', locat=self.unit_number[0])
+        self.top = util_3d(model, (nlay, 1, nodes), np.float32, top, name='top',
+                           locat=self.unit_number[0])
+        self.bot = util_3d(model, (nlay, 1, nodes), np.float32, bot, name='bot',
+                           locat=self.unit_number[0])
 
-        # The size of area array depends on ivsd
-        n = self.nodes
+
+        # Area is util_2d if ivsd == -1, otherwise it is util_3d
         if ivsd == -1:
-            n = self.nodelay.array[0]
-        self.area = util_2d(model, (n,), np.float32, area,
-                            'area', locat=self.unit_number[0])
+            self.area = util_2d(model, (self.nodelay[0],), np.float32, area,
+                                'area', locat=self.unit_number[0])
+        else:
+            self.area = util_3d(model, (nlay, 1, nodes), np.float32, area,
+                                name='area', locat=self.unit_number[0])
 
         # Connectivity and ivc
         if iac is None:
@@ -315,10 +317,11 @@ class ModflowDisU(Package):
         return
 
     def __calculate_thickness(self):
-        thk = np.empty((self.nodes), dtype=np.float)
-        thk[:] = self.top[:] - self.bot[:]
-        self.__thickness = util_2d(self.parent, (self.nodes,), np.float32,
-                                   thk, name='thickness')
+        thk = []
+        for k in range(self.nlay):
+            thk.append(self.top[k] - self.bot[k])
+        self.__thickness = util_3d(self.parent, (self.nlay, 1, self.nodes),
+                                   np.float32, thk, name='thickness')
         return
 
     @property
@@ -456,35 +459,32 @@ class ModflowDisU(Package):
             print('   loading NODELAY...')
         nodelay = util_2d.load(f, model, (1, nlay), np.int, 'nodelay',
                                ext_unit_dict)
-        nodelay = nodelay.array.reshape((nlay))
         if model.verbose:
             print('   NODELAY {}'.format(nodelay))
 
         # dataset 4 -- top
         if model.verbose:
             print('   loading TOP...')
-        top = np.empty((nodes), dtype=np.float32)
-        istart = 0
+        top = [0] * nlay
         for k in range(nlay):
-            tpk = util_2d.load(f, model, (1, nodelay[k]), np.float32, 'topk',
+            tpk = util_2d.load(f, model, (1, nodelay[k]), np.float32, 'top',
                                ext_unit_dict)
-            top[istart : istart + nodelay[k]] = tpk.array.reshape((nodelay[k]))
-            istart += nodelay[k]
+            top[k] = tpk
         if model.verbose:
-            print('   TOP {}'.format(top))
+            for tpk in top:
+                print('   TOP layer {}: {}'.format(k, tpk))
 
         # dataset 5 -- bot
         if model.verbose:
             print('   loading BOT...')
-        bot = np.empty((nodes), dtype=np.float32)
-        istart = 0
+        bot = [0] * nlay
         for k in range(nlay):
             btk = util_2d.load(f, model, (1, nodelay[k]), np.float32, 'btk',
                                ext_unit_dict)
-            bot[istart : istart + nodelay[k]] = btk.array.reshape((nodelay[k]))
-            istart += nodelay[k]
+            bot[k] = btk
         if model.verbose:
-            print('   BOT {}'.format(bot))
+            for btk in bot:
+                print('   BOT layer {}: {}'.format(k, btk))
 
         # dataset 6 -- area
         if model.verbose:
@@ -492,15 +492,16 @@ class ModflowDisU(Package):
         if ivsd == -1:
             area = util_2d.load(f, model, (1, nodelay[0]), np.float32, 'area',
                                    ext_unit_dict)
-            area = area.array.reshape((nodelay[0]))
         else:
-            area = np.empty((nodes), dtype=np.float32)
-            istart = 0
+            area = [0] * nlay
+            #area = np.empty((nodes), dtype=np.float32)
+            #istart = 0
             for k in range(nlay):
                 ak = util_2d.load(f, model, (1, nodelay[k]), np.float32, 'ak',
                                    ext_unit_dict)
-                area[istart : istart + nodelay[k]] = ak.array.reshape((nodelay[k]))
-                istart += nodelay[k]
+                #area[istart : istart + nodelay[k]] = ak.array.reshape((nodelay[k]))
+                #istart += nodelay[k]
+                area[k] = ak
         if model.verbose:
             print('   AREA {}'.format(area))
 
