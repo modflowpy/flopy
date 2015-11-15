@@ -1,0 +1,14 @@
+LIST          7 ex3D.lst
+BAS6          1 ex3D.bas
+WEL          14 ex3D.wel
+DIS          12 ex3D.dis
+BCF6         11 ex3D.bcf
+CLN          13 ex3D.cln
+OC           22 ex3D.oc
+SMS          19 ex3D.sms
+DATA(BINARY) 50 ex3D.cbb
+DATA(BINARY) 30 ex3D.hds
+DATA(BINARY) 31 ex3D.ddn
+DATA(BINARY) 35 ex3D.cln.cbb
+DATA(BINARY) 36 ex3D.cln.hds
+DATA         55 ex3D.cln.afr

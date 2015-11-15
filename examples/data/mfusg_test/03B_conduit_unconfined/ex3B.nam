@@ -1,0 +1,14 @@
+LIST          7 ex3B.lst
+BAS6          1 ex3B.bas
+WEL          14 ex3B.wel
+DIS          12 ex3B.dis
+BCF6         11 ex3B.bcf
+CLN          13 ex3B.cln
+OC           22 ex3B.oc
+SMS          19 ex3B.sms
+DATA(BINARY) 50 ex3B.cbb
+DATA(BINARY) 30 ex3B.hds
+DATA(BINARY) 31 ex3B.ddn
+DATA(BINARY) 35 ex3B.cln.cbb
+DATA(BINARY) 36 ex3B.cln.hds
+DATA         55 ex3B.cln.afr

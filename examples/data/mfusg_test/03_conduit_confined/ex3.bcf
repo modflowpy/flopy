@@ -1,0 +1,10 @@
+50 -1.000e+30 0 1.000 5 0 0 0  IBCFCB HDRY IWDFLG WETFCT IWETIT IHDWET IKVFLAG
+04 04                          Ltype(NLAY)
+constant 1.000                 TRPY(NLAY)
+constant 1.000e-4              PRIMARY STORAGE Layer   1
+constant 1.000e+2              HYDRAULIC CONDUCTIVITY Layer   1
+constant 0.000e00              LEAKANCE Layer   1
+constant 1.000e-2              SECONDARY STORAGE Layer   1
+constant 1.000e-4              PRIMARY STORAGE Layer   2
+constant 4.000e+2              HYDRAULIC CONDUCTIVITY Layer   2
+constant 1.000e-2              SECONDARY STORAGE Layer   2

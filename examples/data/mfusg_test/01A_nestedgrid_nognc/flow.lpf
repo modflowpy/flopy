@@ -1,0 +1,9 @@
+        50  -1.0e+30         0         0
+ 0
+ 0
+ 1
+ 1
+ 0
+        0  1.000e+00          (10G13.0)         -1 HK() = Horizontal hydraulic conductivity of layer 1
+        0  1.000e+00          (10G13.0)         -1 VKA() = Vertical hydraulic conductivity of layer 1
+        0  0.000e+00          (10G13.0)         -1 WETDRY() = Wetting threshold of layer 1

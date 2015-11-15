@@ -1,0 +1,204 @@
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   110
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -62836.3       -19.7013       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   111
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -62196.4       -19.7179       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   112
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -61573.4       -19.7253       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   113
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -60968.0       -19.7310       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   114
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -60370.6       -19.7358       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   115
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -59782.5       -19.7400       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   116
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -59202.3       -19.7439       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   117
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -58629.4       -19.7474       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   118
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -58063.3       -19.7507       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   119
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -57503.7       -19.7538       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   120
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -56950.5       -19.7567       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   121
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -56403.6       -19.7595       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   122
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -55862.8       -19.7622       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   123
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -55328.0       -19.7647       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   124
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -54700.5       -19.7676       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   125
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -54018.0       -19.7707       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   126
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -53338.6       -19.7736       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   127
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -52670.2       -19.7765       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   128
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -52013.5       -19.7792       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   129
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -51368.2       -19.7818       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   130
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -50734.1       -19.7843       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   131
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -50110.8       -19.7868       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   132
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -49498.1       -19.7891       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   133
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -48895.7       -19.7914       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   134
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -48303.5       -19.7936       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   135
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -47721.3       -19.7958       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   136
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -47148.8       -19.7978       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   137
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -46585.9       -19.7999       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   138
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -46032.4       -19.8018       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   139
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -45488.1       -19.8038       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   140
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -44952.9       -19.8056       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   141
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -44426.5       -19.8075       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   142
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -43908.9       -19.8092       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   143
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -43399.8       -19.8110       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   144
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -42899.1       -19.8127       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   145
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -42406.7       -19.8144       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   146
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -41922.3       -19.8160       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   147
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -41445.9       -19.8176       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   148
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -40977.2       -19.8191       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   149
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -40516.3       -19.8207       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   150
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -40062.8       -19.8222       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   151
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -39616.7       -19.8236       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   152
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -39177.8       -19.8251       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   153
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -38758.2       -19.8265       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   154
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -38431.9       -19.8275       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   155
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -38045.8       -19.8288       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   156
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -37630.7       -19.8301       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   157
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -37206.5       -19.8315       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   158
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -36782.2       -19.8329       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   159
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -36361.9       -19.8342       -20.0000    
+ 
+ WELLS WITH REDUCED PUMPING FOR STRESS PERIOD     1 TIME STEP   160
+WELL.NO   LAY   ROW   COL         APPL.Q          ACT.Q        GW_HEAD       CELL_BOT
+      1     3     1     1   -62840.0       -35947.7       -19.8355       -20.0000    

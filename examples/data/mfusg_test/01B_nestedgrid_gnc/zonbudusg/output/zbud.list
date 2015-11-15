@@ -1,0 +1,99 @@
+ ZONEBUDGET USG version 1.00             
+ Program to compute a flow budget for subregions of a model using
+ budget data from MODFLOW-USG
+# Unstructured discretization file for MODFLOW-USG                                                                      
+ NEQ=         121
+ NLAY=           1
+ NJAG=         601
+ IVSD=           0
+
+ NODELAY                  =       121
+
+ TOP                      =   0.00000    
+
+ BOT                      = -100.0000    
+
+
+
+           AREA                    
+ READING ON UNIT   12 WITH FORMAT: (5G13.0)            
+
+
+
+           IAC                     
+ READING ON UNIT   12 WITH FORMAT: (5I13)              
+
+
+
+           JA                      
+ READING ON UNIT   12 WITH FORMAT: (5I13)              
+ 
+  The cell-by-cell budget file is:
+ ..\flow.cbc                                                                    
+  
+  Single precision budget file
+ 
+ ZONBUDUSG ANALYSIS                                                              
+ 
+  The zone file is:
+ zbud.zon                                                                       
+  
+
+
+
+           ZONES                   
+ READING ON UNIT   10 WITH FORMAT: (FREE)              
+           2  zones.
+    1    2
+1
+ ZONBUDUSG ANALYSIS                                                              
+ 
+     Flow Budget for Zone  1 at Time Step   1 of Stress Period   1
+     -------------------------------------------------------------
+ 
+                       Budget Term     Flow (L**3/T)
+                       -----------------------------
+
+             IN:
+             ---
+                     CONSTANT HEAD =    116.67    
+                   Zone   2 to   1 =    50.000    
+ 
+                          Total IN =    166.67    
+ 
+             OUT:
+             ----
+                     CONSTANT HEAD =    116.67    
+                   Zone   1 to   2 =    50.000    
+ 
+                         Total OUT =    166.67    
+ 
+                          IN - OUT =  -0.18027E-08
+ 
+               Percent Discrepancy =               -0.00
+1
+ ZONBUDUSG ANALYSIS                                                              
+ 
+     Flow Budget for Zone  2 at Time Step   1 of Stress Period   1
+     -------------------------------------------------------------
+ 
+                       Budget Term     Flow (L**3/T)
+                       -----------------------------
+
+             IN:
+             ---
+                     CONSTANT HEAD =    0.0000    
+                   Zone   1 to   2 =    50.000    
+ 
+                          Total IN =    50.000    
+ 
+             OUT:
+             ----
+                     CONSTANT HEAD =    0.0000    
+                   Zone   2 to   1 =    50.000    
+ 
+                         Total OUT =    50.000    
+ 
+                          IN - OUT =   0.18027E-08
+ 
+               Percent Discrepancy =                0.00

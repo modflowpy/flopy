@@ -1,0 +1,12 @@
+LIST          7 ex3.lst
+BAS6          1 ex3.bas
+WEL          14 ex3.wel
+DIS          12 ex3.dis
+BCF6         11 ex3.bcf
+CLN          13 ex3.cln
+OC           22 ex3.oc
+SMS          19 ex3.sms
+DATA(BINARY) 50 ex3.cbb
+DATA(BINARY) 30 ex3.hds
+DATA(BINARY) 31 ex3.ddn
+DATA(BINARY) 36 ex3.clnhds

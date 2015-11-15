@@ -1,0 +1,10 @@
+        50 -1.000e+30         0     1.000         5         0         0         0         0         0         0         0         1
+0404
+         0     1.000(10E12.4)                    0     ANISOTROPY
+         0   1.00e-4(10e12.4)                   -1     PRIMARY STORAGE Layer   1
+         0   100.000(10e12.4)                   -1     HYDRAULIC CONDUCTIVITY Layer   1
+         0     0.000(10e12.4)                   -1     LEAKANCE Layer   1
+         0   1.00e-2(10e12.4)                   -1     SECONDARY STORAGE Layer   1
+         0   1.00e-4(10e12.4)                   -1     PRIMARY STORAGE Layer   2
+         0   400.000(10e12.4)                   -1     HYDRAULIC CONDUCTIVITY Layer   2
+         0   1.00e-2(10e12.4)                   -1     SECONDARY STORAGE Layer   2

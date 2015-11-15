@@ -1,0 +1,10 @@
+# MODFLOW2000 Discretization File
+ 2  100  100  1  4  0           NLAY NROW NCOL NPER ITMUNI LENUNI
+ 1 0                            LAYCBD(NLAY)
+constant  470.000               DELTA-X or C
+constant  470.000               DELTA-Y or R
+constant -100.000               TOP of Model
+constant -110.000               BOTTOM of Layer   1
+constant -120.000               BOTTOM of Confining Layer   1
+constant -130.000               BOTTOM of Layer   2
+  2.800000  60  1.000000  TR    PERLEN NSTP TSMULT Ss/Tr
