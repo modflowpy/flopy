@@ -141,6 +141,7 @@ class Util2dTpl(object):
     indexed_param : bool
         A flag to indicated whether or not the array contains parameter names
         within the array itself.
+
     """
     def __init__(self, chararray, name, multiplier, indexed_param):
         self.chararray = chararray

@@ -42,7 +42,7 @@ class ModflowDis(Package):
         An array of flags indicating whether or not a layer has a Quasi-3D
         confining bed below it. 0 indicates no confining bed, and not zero
         indicates a confining bed. LAYCBD for the bottom layer must be 0. (the
-        default is 1)
+        default is 0)
     top : float or array of floats (nrow, ncol), optional
         An array of the top elevation of layer 1. For the common situation in
         which the top layer represents a water-table aquifer, it may be
