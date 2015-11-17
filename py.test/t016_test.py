@@ -1,5 +1,6 @@
 import os
 import flopy
+import numpy as np
 
 def test_usg_disu_load():
 
@@ -25,8 +26,11 @@ def test_usg_disu_load():
 
     # Load disu file
     disu2 = flopy.modflow.ModflowDisU.load(fname, m)
-    for key in disu2.__dict__.keys():
-        assert disu2[key] == disu[key]
+    for (key1, value1), (key2, value2) in zip(disu2.__dict__.items(), disu.__dict__.items()):
+        if isinstance(value1, flopy.utils.util_2d) or isinstance(value1, flopy.utils.util_3d):
+            assert np.array_equal(value1.array, value2.array)
+        else:
+            assert value1 == value2
 
     return
 
