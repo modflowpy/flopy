@@ -92,6 +92,7 @@ class ModflowBas(Package):
         self.ichflg = ichflg
         self.stoper = stoper
         self.ifrefm = ifrefm
+        model.free_format = ifrefm
         self.hnoflo = hnoflo
         self.parent.add_package(self)
         return

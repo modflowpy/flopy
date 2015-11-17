@@ -1,7 +1,7 @@
 import os
 import flopy
 
-def test_usgload():
+def test_usg_disu_load():
 
     pthusgtest = os.path.join('..', 'examples', 'data', 'mfusg_test',
                               '01A_nestedgrid_nognc')
@@ -13,6 +13,7 @@ def test_usgload():
 
     # Load the disu file
     disu = flopy.modflow.ModflowDisU.load(fname, m)
+    assert isinstance(disu, flopy.modflow.ModflowDisU)
 
     # Change where model files are written
     model_ws = 'temp'
@@ -20,8 +21,14 @@ def test_usgload():
 
     # Write the disu file
     disu.write_file()
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(m.name, m.disu.extension[0]))) is True
+
+    # Load disu file
+    disu2 = flopy.modflow.ModflowDisU.load(fname, m)
+    for key in disu2.__dict__.keys():
+        assert disu2[key] == disu[key]
 
     return
 
 if __name__ == '__main__':
-    test_usgload()
+    test_usg_disu_load()

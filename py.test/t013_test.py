@@ -25,6 +25,16 @@ def test_mt3d_create_withmfmodel():
 
     # Write the output
     mt.write_input()
+
+    # confirm that MT3D files exist
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, btn.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, adv.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, dsp.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, ssm.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, gcg.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, rct.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, tob.extension[0]))) is True
+
     return
 
 def test_mt3d_create_woutmfmodel():
@@ -44,6 +54,16 @@ def test_mt3d_create_woutmfmodel():
 
     # Write the output
     mt.write_input()
+
+    # confirm that MT3D files exist
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, btn.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, adv.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, dsp.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, ssm.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, gcg.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, rct.extension[0]))) is True
+    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(mt.name, tob.extension[0]))) is True
+
     return
 
 

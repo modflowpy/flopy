@@ -8,6 +8,7 @@ def test_binaryfile_reference():
     import flopy
 
     h = flopy.utils.HeadFile(os.path.join('..', 'examples', 'data', 'freyberg', 'freyberg.githds'))
+    assert isinstance(h, flopy.utils.HeadFile)
     h.sr.xul = 1000.0
     h.sr.yul = 200.0
     h.sr.rotation = 15.0
@@ -25,6 +26,7 @@ def test_mflist_reference():
     # ml = fmf.Modflow.load('freyberg.nam', model_ws=model_ws)
     # make the model
     ml = fmf.Modflow()
+    assert isinstance(ml, fmf.Modflow)
     perlen = np.arange(1, 20, 1)
     nstp = np.flipud(perlen) + 3
     tsmult = 1.2
@@ -37,22 +39,30 @@ def test_mflist_reference():
                          nper=perlen.shape[0], perlen=perlen,
                          nstp=nstp, tsmult=tsmult,
                          top=10, botm=botm, steady=False, rotation=45)
+    assert isinstance(dis, fmf.ModflowDis)
     lpf = fmf.ModflowLpf(ml, hk=hk, vka=10.0, laytyp=1)
+    assert isinstance(lpf, fmf.ModflowLpf)
     pcg = fmf.ModflowPcg(ml)
+    assert isinstance(pcg, fmf.ModflowPcg)
     oc = fmf.ModflowOc(ml)
+    assert isinstance(oc, fmf.ModflowOc)
     ibound = np.ones((nrow, ncol))
     ibound[:, 0] = -1
     ibound[25:30, 30:39] = 0
     bas = fmf.ModflowBas(ml, strt=5.0, ibound=ibound)
+    assert isinstance(bas, fmf.ModflowBas)
     rch = fmf.ModflowRch(ml, rech={0: 0.00001, 5: 0.0001, 6: 0.0})
+    assert isinstance(rch, fmf.ModflowRch)
     wel_dict = {}
     wel_data = [[9, 25, 20, -200], [0, 0, 0, -400], [5, 20, 32, 500]]
     wel_dict[0] = wel_data
     wel_data2 = [[45, 20, 200], [9, 49, 39, 400], [5, 20, 32, 500]]
     wel_dict[10] = wel_data2
     wel = fmf.ModflowWel(ml, stress_period_data={0: wel_data})
+    assert isinstance(wel, fmf.ModflowWel)
     ghb_dict = {0: [1, 10, 10, 400, 300]}
     ghb = fmf.ModflowGhb(ml, stress_period_data=ghb_dict)
+    assert isinstance(ghb, fmf.ModflowGhb)
 
     test = os.path.join('temp', 'test3.shp')
     ml.to_shapefile(test, kper=0)

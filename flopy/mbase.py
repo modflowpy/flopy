@@ -741,17 +741,19 @@ class Package(object):
         return s
 
     def __getitem__(self, item):
-        if not isinstance(item, list) and not isinstance(item, tuple):
-            assert item in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
-                item) + " not in data.keys()"
-            return self.stress_period_data[item]
-
-        if item[1] not in self.dtype.names:
-            raise Exception("package.__getitem(): item \'" + item + "\' not in dtype names " + str(self.dtype.names))
-        assert item[0] in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
-            item[0]) + " not in data.keys()"
-        if self.stress_period_data.vtype[item[0]] == np.recarray:
-            return self.stress_period_data[item[0]][item[1]]
+        if hasattr(self, 'stress_period_data'):
+            if not isinstance(item, list) and not isinstance(item, tuple):
+                assert item in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                    item) + " not in data.keys()"
+                return self.stress_period_data[item]
+            else:
+                if item[1] not in self.dtype.names:
+                    raise Exception(
+                        "package.__getitem(): item \'" + item + "\' not in dtype names " + str(self.dtype.names))
+                assert item[0] in list(self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                    item[0]) + " not in data.keys()"
+                if self.stress_period_data.vtype[item[0]] == np.recarray:
+                    return self.stress_period_data[item[0]][item[1]]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("package.__setitem__() not implemented")
@@ -1183,7 +1185,7 @@ class Package(object):
 
         # read parameter data
         if nppak > 0:
-            dt = pack_type.get_empty(1, aux_names=aux_names).dtype
+            dt = pack_type.get_empty(1, aux_names=aux_names, structured=model.structured).dtype
             pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
             #pak_parms = mfparbc.load(f, nppak, len(dt.names))
 
@@ -1210,9 +1212,9 @@ class Package(object):
 
             if itmp == 0:
                 bnd_output = None
-                current = pack_type.get_empty(itmp, aux_names=aux_names)
+                current = pack_type.get_empty(itmp, aux_names=aux_names, structured=model.structured)
             elif itmp > 0:
-                current = pack_type.get_empty(itmp, aux_names=aux_names)
+                current = pack_type.get_empty(itmp, aux_names=aux_names, structured=model.structured)
                 for ibnd in range(itmp):
                     line = f.readline()
                     if "open/close" in line.lower():
@@ -1242,9 +1244,12 @@ class Package(object):
                         current[ibnd] = tuple(t[:len(current.dtype.names)])
 
                 # convert indices to zero-based
-                current['k'] -= 1
-                current['i'] -= 1
-                current['j'] -= 1
+                if model.structured:
+                    current['k'] -= 1
+                    current['i'] -= 1
+                    current['j'] -= 1
+                else:
+                    current['node'] -= 1
                 bnd_output = np.recarray.copy(current)
             else:
                 bnd_output = np.recarray.copy(current)
@@ -1282,9 +1287,12 @@ class Package(object):
                 for ibnd, t in enumerate(data_dict):
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 
-                par_current['k'] -= 1
-                par_current['i'] -= 1
-                par_current['j'] -= 1
+                if model.structured:
+                    par_current['k'] -= 1
+                    par_current['i'] -= 1
+                    par_current['j'] -= 1
+                else:
+                    par_current['node'] -= 1
 
                 for ptype in partype:
                     par_current[ptype] *= parval
@@ -1302,6 +1310,6 @@ class Package(object):
 
         pak = pack_type(model, ipakcb=ipakcb,
                         stress_period_data=stress_period_data, \
-                        dtype=pack_type.get_empty(0, aux_names=aux_names).dtype, \
+                        dtype=pack_type.get_empty(0, aux_names=aux_names, structured=model.structured).dtype, \
                         options=options)
         return pak

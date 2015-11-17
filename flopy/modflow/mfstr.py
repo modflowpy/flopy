@@ -379,6 +379,8 @@ class ModflowStr(Package):
                 sdata = self.segment_data[iper]
                 if isinstance(tdata, int):
                     itmp = tdata
+                elif tdata is None:
+                    itmp = -1
                 else:
                     itmp = tdata.shape[0]
             line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0, 0, iper)
@@ -588,7 +590,7 @@ class ModflowStr(Package):
                     for ibnd in range(itmp):
                         line = f.readline()
                         t = []
-                        try:
+                        if model.free_format:
                             tt = line.strip().split()
                             #current[ibnd] = tuple(t[:len(current.dtype.names)])
                             for idx, v in enumerate(tt[:10]):
@@ -598,9 +600,9 @@ class ModflowStr(Package):
                             if len(aux_names) > 0:
                                 for idx, v in enumerate(t[10:]):
                                     t.append(v)
-                            if len(tt) != len(current.dtype.names):
+                            if len(tt) != len(current.dtype.names)-3:
                                 raise Exception
-                        except:
+                        else:
                             ipos = [5, 5, 5, 5, 5, 15, 10, 10, 10, 10]
                             istart = 0
                             for ivar in range(len(ipos)):
@@ -630,10 +632,10 @@ class ModflowStr(Package):
                         print("   reading str dataset 8")
                     for ibnd in range(itmp):
                         line = f.readline()
-                        try:
+                        if model.free_format:
                             t = line.strip().split()
                             v = [float(vt) for vt in t[:3]]
-                        except:
+                        else:
                             v = []
                             ipos = [10, 10, 10]
                             istart = 0
@@ -654,16 +656,19 @@ class ModflowStr(Package):
                         print("   reading str dataset 9")
                     for iseg in range(nss):
                         line = f.readline()
-                        try:
+                        if model.free_format:
                             t = line.strip().split()
                             v = [float(vt) for vt in t[:ntrib]]
-                        except:
+                        else:
                             v = []
-                            ipos = 10
+                            ipos = 5
                             istart = 0
                             for ivar in range(ntrib):
                                 istop = istart + ipos
-                                v.append(float(line[istart:istop]))
+                                try:
+                                    v.append(float(line[istart:istop]))
+                                except:
+                                    v.append(0.)
                                 istart = istop
                         for idx in range(ntrib):
                             current_seg[iseg][idx] = v[idx]
@@ -674,13 +679,13 @@ class ModflowStr(Package):
                         print("   reading str dataset 10")
                     for iseg in range(nss):
                         line = f.readline()
-                        try:
+                        if model.free_format:
                             t = line.strip().split()
                             v = float(t[0])
-                        except:
+                        else:
                             ipos = 10
                             istart = 0
-                            for ivar in range(ntrib):
+                            for ivar in range(ndiv):
                                 istop = istart + ipos
                                 v = float(line[istart:istop])
                                 istart = istop
