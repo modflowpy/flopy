@@ -346,7 +346,8 @@ class BaseModel(object):
 
         return None
 
-    def run_model(self, silent=False, pause=False, report=False):
+    def run_model(self, silent=False, pause=False, report=False,
+                  normal_msg='normal termination'):
         """
         This method will run the model using subprocess.Popen.
 
@@ -355,10 +356,13 @@ class BaseModel(object):
         silent : boolean
             Echo run information to screen (default is True).
         pause : boolean, optional
-            Pause upon completion (the default is False).
+            Pause upon completion (default is False).
         report : boolean, optional
             Save stdout lines to a list (buff) which is returned 
-            by the method . (the default is False).
+            by the method . (default is False).
+        normal_msg : str
+            Normal termination message used to determine if the
+            run terminated normally. (default is 'normal termination')
 
         Returns
         -------
@@ -396,7 +400,7 @@ class BaseModel(object):
             line = proc.stdout.readline()
             c = line.decode('utf-8')
             if c != '':
-                if 'normal termination of simulation' in c.lower():
+                if 'normal termination' in c.lower():
                     success = True
                 c = c.rstrip('\r\n')
                 if not silent:
