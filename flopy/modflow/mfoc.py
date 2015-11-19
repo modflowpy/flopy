@@ -270,6 +270,128 @@ class ModflowOc(Package):
         f_oc.close()
 
     @staticmethod
+    def get_ocoutput_units(f, ext_unit_dict=None):
+        """
+        Get head and drawdown units from a OC file.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        ihedun : integer
+            Unit number of the head file.
+        fhead : str
+            File name of the head file. Is only defined if ext_unit_dict is
+            passed and the unit number is a valid key.
+            , headfilename, oc : ModflowOc object
+            ModflowOc object.
+        iddnun : integer
+            Unit number of the drawdown file.
+        fddn : str
+            File name of the drawdown file. Is only defined if ext_unit_dict is
+            passed and the unit number is a valid key.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> ihds, hf, iddn, df = flopy.modflow.ModflowOc.get_ocoutput_units('test.oc')
+
+        """
+
+
+        #initialize
+        ihedun = 0
+        iddnun = 0
+        fhead = None
+        fddn = None
+
+        numericformat = False
+
+        #open file
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+
+        # read header
+        ipos = f.tell()
+        while True:
+            line = f.readline()
+            if line[0] == '#':
+                continue
+            elif line[0] == []:
+                continue
+            else:
+                lnlst = line.strip().split()
+                try:
+                    ihedfm, iddnfm = int(lnlst[0]), int(lnlst[1])
+                    ihedun, iddnun = int(lnlst[2]), int(lnlst[3])
+                    numericformat = True
+                except:
+                    f.seek(ipos)
+                    pass
+                # exit so the remaining data can be read
+                #  from the file based on numericformat
+                break
+            # set pointer to current position in the OC file
+            ipos = f.tell()
+            #
+            if not numericformat:
+                while True:
+                    line = f.readline()
+                    if len(line) < 1:
+                        break
+                    lnlst = line.strip().split()
+                    if line[0] == '#':
+                        continue
+
+                    # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
+                    if len(lnlst) < 1:
+                        continue
+                    # end add
+
+                    #dataset 1 values
+                    elif ('HEAD' in lnlst[0].upper() and
+                          'SAVE' in lnlst[1].upper() and
+                          'UNIT' in lnlst[2].upper()
+                          ):
+                        ihedun = int(lnlst[3])
+                    elif ('DRAWDOWN' in lnlst[0].upper() and
+                          'SAVE' in lnlst[1].upper() and
+                          'UNIT' in lnlst[2].upper()
+                          ):
+                        iddnun = int(lnlst[3])
+                    #dataset 2
+                    elif 'PERIOD' in lnlst[0].upper():
+                        break
+        #
+        if ext_unit_dict is not None:
+            try:
+                fhead = ext_unit_dict[ihedun]
+            except:
+                pass
+            try:
+                fddn = ext_unit_dict[iddnunun]
+            except:
+                pass
+
+        # close the oc file
+        f.close()
+
+        # return
+        return ihedun, fhead, iddnun, fddn
+
+
+    @staticmethod
     def load(f, model, nper=None, nstp=None, nlay=None, ext_unit_dict=None):
         """
         Load an existing package.
