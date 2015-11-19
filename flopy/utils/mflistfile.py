@@ -384,8 +384,25 @@ class ListBudget(object):
 
 
     def _get_ts_sp(self, line):
-        ts = int(line[self.ts_idxs[0]:self.ts_idxs[1]])
-        sp = int(line[self.sp_idxs[0]:self.sp_idxs[1]])
+        """
+        From the line string, extract the time step and stress period numbers.
+
+        """
+
+        # Old method.  Was not generic enough.
+        #ts = int(line[self.ts_idxs[0]:self.ts_idxs[1]])
+        #sp = int(line[self.sp_idxs[0]:self.sp_idxs[1]])
+
+        searchstring = 'TIME STEP'
+        idx = line.index(searchstring) + len(searchstring)
+        ll = line[idx:].strip().split()
+        ts = int(ll[0])
+
+        searchstring = 'STRESS PERIOD'
+        idx = line.index(searchstring) + len(searchstring)
+        ll = line[idx:].strip().split()
+        sp = int(ll[0])
+
         return ts, sp
 
 
@@ -571,6 +588,30 @@ class MfListBudget(ListBudget):
         self.tssp_lines = 0
         # set budget recarrays
         self._load()
+
+class MfusgListBudget(ListBudget):
+    """
+
+    """
+    def __init__(self, file_name, key_string='VOLUMETRIC BUDGET FOR ENTIRE MODEL',
+                 timeunit='days'):
+        assert os.path.exists(file_name)
+        self.file_name = file_name
+        if sys.version_info[0] == 2:
+            self.f = open(file_name, 'r')
+        elif sys.version_info[0] == 3:
+            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
+        self.timeunit = timeunit
+        self.lstkey = key_string
+        self.idx_map = []
+        self.entries = []
+        self.null_entries = []
+        self.cumu_idxs = [22, 40]
+        self.flux_idxs = [63, 80]
+        self.tssp_lines = 0
+        # set budget recarrays
+        self._load()
+        return
 
 
 class SwrListBudget(ListBudget):
