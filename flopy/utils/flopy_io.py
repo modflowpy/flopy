@@ -4,6 +4,7 @@ Module for exporting and importing flopy model attributes
 import numpy as np
 from flopy.utils import util_2d, util_3d, transient_2d, mflist
 
+
 def line_parse(line):
     """
     Convert a line of text into to a list of values.  This handles the
@@ -14,7 +15,8 @@ def line_parse(line):
     line = line.replace(',', ' ')
     return line.strip().split()
 
-def write_gridlines_shapefile(filename,sr):
+
+def write_gridlines_shapefile(filename, sr):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative to polygons
     Parameters
@@ -35,13 +37,11 @@ def write_gridlines_shapefile(filename,sr):
                         "importing shapefile - try pip install pyshp")
 
     wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
-    wr.field("number","N",20,0)
-    for i,line in enumerate(sr.get_grid_lines()):
+    wr.field("number", "N", 20, 0)
+    for i, line in enumerate(sr.get_grid_lines()):
         wr.poly([line])
         wr.record(i)
     wr.save(filename)
-
-
 
 
 def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
@@ -151,7 +151,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                     array_dict[name] = a.array
                 elif isinstance(a, util_3d):
                     for i, u2d in enumerate(a):
-                        #name = u2d.name.lower().replace(' ', '_')
+                        # name = u2d.name.lower().replace(' ', '_')
                         name = shape_attr_name(u2d.name)
                         name += '_{:03d}'.format(i + 1)
                         array_dict[name] = u2d.array
@@ -160,7 +160,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                     kpers.sort()
                     for kper in kpers:
                         u2d = a.transient_2ds[kper]
-                        #name = u2d.name.lower() + "_{0:03d}".format(kper + 1)
+                        # name = u2d.name.lower() + "_{0:03d}".format(kper + 1)
                         name = shape_attr_name(u2d.name)
                         name = "{}_{:03d}".format(name, kper + 1)
                         array_dict[name] = u2d.array
@@ -170,21 +170,22 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                         arrays = a.to_array(kper)
                         for name, array in arrays.items():
                             for k in range(array.shape[0]):
-                                #aname = name + "{0:03d}{1:02d}".format(kper, k)
+                                # aname = name + "{0:03d}{1:02d}".format(kper, k)
                                 name = shape_attr_name(name, length=4)
-                                aname = "{}{:03d}{:03d}".format(name, k+1, kper+1)
+                                aname = "{}{:03d}{:03d}".format(name, k + 1, kper + 1)
                                 array_dict[aname] = array[k]
                 elif isinstance(a, list):
                     for v in a:
                         if isinstance(v, util_3d):
                             for i, u2d in enumerate(v):
-                                #name = u2d.name.lower().replace(' ', '_')
+                                # name = u2d.name.lower().replace(' ', '_')
                                 name = shape_attr_name(u2d.name)
                                 name += '_{:03d}'.format(i + 1)
                                 array_dict[name] = u2d.array
 
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.dis.sr, array_dict)
+
 
 def shape_attr_name(name, length=6, keep_layer=False):
     """

@@ -23,4 +23,4 @@ before_install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
-    - nosetests -v -w ./py.test
+    - nosetests -v -w ./autotest

@@ -66,6 +66,6 @@ examples/Testing/data
 examples/Testing/.ipynb_checkpoints
 
 
-py.test/*.bin
-py.test/*.dat
-py.test/temp
+autotest/*.bin
+autotest/*.dat
+autotest/temp

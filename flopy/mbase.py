@@ -358,7 +358,7 @@ class BaseModel(object):
         pause : boolean, optional
             Pause upon completion (default is False).
         report : boolean, optional
-            Save stdout lines to a list (buff) which is returned 
+            Save stdout lines to a list (buff) which is returned
             by the method . (default is False).
         normal_msg : str
             Normal termination message used to determine if the
@@ -371,47 +371,10 @@ class BaseModel(object):
         buff : list of lines of stdout
 
         """
-        success = False
-        buff = []
 
-        # Check to make sure that program and namefile exist
-        exe = which(self.exe_name)
-        if exe is None:
-            import platform
-
-            if platform.system() in 'Windows':
-                if not self.exe_name.lower().endswith('.exe'):
-                    exe = which(self.exe_name + '.exe')
-        if exe is None:
-            s = 'The program {} does not exist or is not executable.'.format(self.exe_name)
-            raise Exception(s)
-        else:
-            if not silent:
-                s = 'FloPy is using the following executable to run the model: {}'.format(exe)
-                print(s)
-
-        if not os.path.isfile(os.path.join(self.model_ws, self.namefile)):
-            s = 'The namefile for this model does not exists: {}'.format(self.namefile)
-            raise Exception(s)
-
-        proc = sp.Popen([self.exe_name, self.namefile],
-                        stdout=sp.PIPE, cwd=self.model_ws)
-        while True:
-            line = proc.stdout.readline()
-            c = line.decode('utf-8')
-            if c != '':
-                if 'normal termination' in c.lower():
-                    success = True
-                c = c.rstrip('\r\n')
-                if not silent:
-                    print('{}'.format(c))
-                if report == True:
-                    buff.append(c)
-            else:
-                break
-        if pause == True:
-            input('Press Enter to continue...')
-        return ([success, buff])
+        return run_model(self.exe_name, self.namefile, model_ws=self.model_ws,
+                         silent=silent, pause=pause, report=report,
+                         normal_msg=normal_msg)
 
     def load_results(self):
 
@@ -1317,3 +1280,80 @@ class Package(object):
                         dtype=pack_type.get_empty(0, aux_names=aux_names, structured=model.structured).dtype, \
                         options=options)
         return pak
+
+
+def run_model(exe_name, namefile, model_ws='./',
+              silent=False, pause=False, report=False,
+              normal_msg='normal termination'):
+    """
+    This function will run the model using subprocess.Popen.
+
+    Parameters
+    ----------
+    exe_name : str
+        Executable name (with path, if necessary) to run.
+    namefile : str
+        Namefile of model to run. The namefile must be the
+        filename of the namefile without the path.
+    model_ws : str
+        Path to the location of the namefile. (default is the
+        current working directory - './')
+    silent : boolean
+        Echo run information to screen (default is True).
+    pause : boolean, optional
+        Pause upon completion (default is False).
+    report : boolean, optional
+        Save stdout lines to a list (buff) which is returned
+        by the method . (default is False).
+    normal_msg : str
+        Normal termination message used to determine if the
+        run terminated normally. (default is 'normal termination')
+
+    Returns
+    -------
+    (success, buff)
+    success : boolean
+    buff : list of lines of stdout
+
+    """
+    success = False
+    buff = []
+
+    # Check to make sure that program and namefile exist
+    exe = which(exe_name)
+    if exe is None:
+        import platform
+
+        if platform.system() in 'Windows':
+            if not exe_name.lower().endswith('.exe'):
+                exe = which(exe_name + '.exe')
+    if exe is None:
+        s = 'The program {} does not exist or is not executable.'.format(exe_name)
+        raise Exception(s)
+    else:
+        if not silent:
+            s = 'FloPy is using the following executable to run the model: {}'.format(exe)
+            print(s)
+
+    if not os.path.isfile(os.path.join(model_ws, namefile)):
+        s = 'The namefile for this model does not exists: {}'.format(namefile)
+        raise Exception(s)
+
+    proc = sp.Popen([exe_name, namefile],
+                    stdout=sp.PIPE, cwd=model_ws)
+    while True:
+        line = proc.stdout.readline()
+        c = line.decode('utf-8')
+        if c != '':
+            if 'normal termination' in c.lower():
+                success = True
+            c = c.rstrip('\r\n')
+            if not silent:
+                print('{}'.format(c))
+            if report == True:
+                buff.append(c)
+        else:
+            break
+    if pause:
+        input('Press Enter to continue...')
+    return success, buff
