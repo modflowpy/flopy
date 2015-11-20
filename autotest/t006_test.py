@@ -15,6 +15,17 @@ def test_binaryfile_reference():
     assert isinstance(h.plot(), matplotlib.axes.Axes)
     return
 
+def test_formattedfile_reference():
+    import os
+    import flopy
+    h = flopy.utils.FormattedHeadFile(os.path.join('..', 'examples', 'data', 'mf2005_test', 'test1tr.githds'))
+    assert isinstance(h, flopy.utils.FormattedHeadFile)
+    h.sr.xul = 1000.0
+    h.sr.yul = 200.0
+    h.sr.rotation = 15.0
+    assert isinstance(h.plot(masked_values=[6999.000]), matplotlib.axes.Axes)
+    return
+
 
 def test_mflist_reference():
     import os
@@ -72,4 +83,5 @@ def test_mflist_reference():
 
 if __name__ == '__main__':
     test_mflist_reference()
+    test_formattedfile_reference()
     test_binaryfile_reference()

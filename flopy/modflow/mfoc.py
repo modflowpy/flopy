@@ -342,37 +342,36 @@ class ModflowOc(Package):
                 # exit so the remaining data can be read
                 #  from the file based on numericformat
                 break
-            # set pointer to current position in the OC file
-            ipos = f.tell()
-            #
-            if not numericformat:
-                while True:
-                    line = f.readline()
-                    if len(line) < 1:
-                        break
-                    lnlst = line.strip().split()
-                    if line[0] == '#':
-                        continue
+        # set pointer to current position in the OC file
+        ipos = f.tell()
+        #
+        if not numericformat:
+            while True:
+                line = f.readline()
+                if len(line) < 1:
+                    break
+                lnlst = line.strip().split()
+                if line[0] == '#':
+                    continue
 
-                    # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
-                    if len(lnlst) < 1:
-                        continue
-                    # end add
+                # skip blank line in the OC file
+                if len(lnlst) < 1:
+                    continue
 
-                    #dataset 1 values
-                    elif ('HEAD' in lnlst[0].upper() and
-                          'SAVE' in lnlst[1].upper() and
-                          'UNIT' in lnlst[2].upper()
-                          ):
-                        ihedun = int(lnlst[3])
-                    elif ('DRAWDOWN' in lnlst[0].upper() and
-                          'SAVE' in lnlst[1].upper() and
-                          'UNIT' in lnlst[2].upper()
-                          ):
-                        iddnun = int(lnlst[3])
-                    #dataset 2
-                    elif 'PERIOD' in lnlst[0].upper():
-                        break
+                #dataset 1 values
+                elif ('HEAD' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                      ):
+                    ihedun = int(lnlst[3])
+                elif ('DRAWDOWN' in lnlst[0].upper() and
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                      ):
+                    iddnun = int(lnlst[3])
+                #dataset 2
+                elif 'PERIOD' in lnlst[0].upper():
+                    break
         #
         if ext_unit_dict is not None:
             try:

@@ -56,7 +56,7 @@ class FormattedHeader(Header):
         also stores the header's format string as self.format_string
         """
 
-        header_text = text_file.readline()
+        header_text = text_file.readline().decode('ascii')
         arrheader = header_text.split()
 
         # Verify header exists and is in the expected format
@@ -88,8 +88,8 @@ class FormattedLayerFile(LayerFile):
     classes are formed.  This class should not be instantiated directly
 
     """
-    def __init__(self, filename, precision, verbose):
-        super(FormattedLayerFile, self).__init__(filename, precision, verbose)
+    def __init__(self, filename, precision, verbose, kwargs):
+        super(FormattedLayerFile, self).__init__(filename, precision, verbose, kwargs)
         return
 
     def _build_index(self):
@@ -328,9 +328,9 @@ class FormattedHeadFile(FormattedLayerFile):
 
     """
     def __init__(self, filename, text='head', precision='single',
-                 verbose=False):
+                 verbose=False, **kwargs):
         self.text = text
-        super(FormattedHeadFile, self).__init__(filename, precision, verbose)
+        super(FormattedHeadFile, self).__init__(filename, precision, verbose, kwargs)
         return
 
     def _get_text_header(self):

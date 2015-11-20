@@ -655,7 +655,7 @@ class CellBudgetFile(object):
         if text is not None:
             text16 = None
             for t in self.unique_record_names():
-                if text.encode().upper() in t:
+                if text.decode().upper() in t.decode():
                     text16 = t
                     break
             if text16 is None:
