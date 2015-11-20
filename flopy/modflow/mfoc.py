@@ -379,7 +379,7 @@ class ModflowOc(Package):
             except:
                 pass
             try:
-                fddn = ext_unit_dict[iddnunun]
+                fddn = ext_unit_dict[iddnun]
             except:
                 pass
 
