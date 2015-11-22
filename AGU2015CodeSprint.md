@@ -23,3 +23,4 @@
 - remove package from mbase and put into its own module
 - Change array output style to be managed at array level instead of at model level.
 - Modify the way unit numbers for head, ddn, and cbc are specified. Develop a method for creating namefile entries that can accept package budget information going to separate files.
+- Modify run_model to return a tuple.  Use psutil to calculate the memory usage, and return that as well (if requested), or perhaps make it more general to get at anything that psutil can get at.
