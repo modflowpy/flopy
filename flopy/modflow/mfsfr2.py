@@ -201,7 +201,7 @@ class ModflowSfr2(Package):
                  dataset_5=None,
                  reachinput=False, transroute=False,
                  tabfiles=False, tabfiles_dict=None,
-                 extension='sfr', unitnumber=14):
+                 extension='sfr', unitnumber=17):
 
         """
         Package constructor
