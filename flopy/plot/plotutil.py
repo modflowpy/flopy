@@ -164,7 +164,10 @@ def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
             cm = mm.plot_array(plotarray[k], masked_values=masked_values,
                                ax=axes[idx], **kwargs)
             if cb:
-                plt.colorbar(cm, ax=axes[idx], shrink=0.5)
+                label = ''
+                if not isinstance(cb,bool):
+                    label = str(cb)
+                plt.colorbar(cm, ax=axes[idx], shrink=0.5,label=label)
 
         if contourdata:
             cl = mm.contour_array(plotarray[k], masked_values=masked_values,
