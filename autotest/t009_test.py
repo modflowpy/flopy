@@ -121,5 +121,27 @@ def test_sfr():
                                        /sfr.reach_data.rchlen[29]
     sfr.check()
 
+def test_sfr_renumbering():
+    # test segment renumbering
+
+    r = np.zeros((9, 2), dtype=[('iseg', int), ('ireach', int)])
+    r = np.core.records.fromarrays(r.transpose(), dtype=[('iseg', int), ('ireach', int)])
+    r['iseg'] = range(1, 10)
+    r['ireach'] = np.ones(9)
+
+    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
+    d = np.core.records.fromarrays(d.transpose(), dtype=[('nseg', int), ('outseg', int)])
+    d['nseg'] = range(1, 10)
+    d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
+    m = flopy.modflow.Modflow()
+    sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
+    chk = sfr.check()
+    assert 'segment numbering order' in chk.failed
+    sfr.renumber_segments()
+    chk = sfr.check()
+    assert 'continuity in segment and reach numbering' in chk.passed
+    assert 'segment numbering order' in chk.passed
+    
 if __name__ == '__main__':
-    test_sfr()
+    #test_sfr()
+    test_sfr_renumbering()
