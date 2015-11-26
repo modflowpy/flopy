@@ -119,7 +119,11 @@ def test_sfr():
     sfr.get_slopes()
     assert sfr.reach_data.slope[29] == (sfr.reach_data.strtop[29] - sfr.reach_data.strtop[107])\
                                        /sfr.reach_data.rchlen[29]
-    sfr.check()
+    chk = sfr.check()
+    assert sfr.reach_data.slope.min() < 0.0001 and 'minimum slope' in chk.failed
+    sfr.reach_data.slope[0] = 1.1
+    chk.slope(maximum_slope=1.0)
+    assert 'maximum slope' in chk.failed
 
 def test_sfr_renumbering():
     # test segment renumbering
@@ -141,7 +145,7 @@ def test_sfr_renumbering():
     chk = sfr.check()
     assert 'continuity in segment and reach numbering' in chk.passed
     assert 'segment numbering order' in chk.passed
-    
+
 if __name__ == '__main__':
-    #test_sfr()
+    test_sfr()
     test_sfr_renumbering()

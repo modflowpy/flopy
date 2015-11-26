@@ -226,7 +226,7 @@ class ModflowSfr2(Package):
         self.maxval = np.max([tb['numval'] for tb in tabfiles_dict.values()]) if self.numtab > 0 else 0
 
         # Dataset 1c. ----------------------------------------------------------------------
-        self.nstrm = len(reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
+        self.nstrm = np.sign(nstrm) * len(reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
         self.nss = len(segment_data[0]) if segment_data is not None else nss  # number of stream segments
         self.nsfrpar = nsfrpar
         self.nparseg = nparseg
@@ -251,7 +251,7 @@ class ModflowSfr2(Package):
         self.flwtol = flwtol  # streamflow tolerance for convergence of the kinematic wave equation
 
         # Dataset 2. -----------------------------------------------------------------------
-        self.reach_data = self.get_empty_reach_data(self.nstrm)
+        self.reach_data = self.get_empty_reach_data(np.abs(self.nstrm))
         if reach_data is not None:
             for n in reach_data.dtype.names:
                 self.reach_data[n] = reach_data[n]
@@ -1609,7 +1609,7 @@ class check:
             passed = True
         self._txt_footer(headertxt, txt, 'segment elevations vs. model grid', passed)
 
-    def slope(self, minimum_slope=1e-4, maximum_slope=1):
+    def slope(self, minimum_slope=1e-4, maximum_slope=1.0):
         """Checks that streambed slopes are greater than or equal to a specified minimum value.
             Low slope values can cause "backup" or unrealistic stream stages with icalc options
             where stage is computed.
@@ -1636,7 +1636,32 @@ class check:
         else:
             txt += 'slope not specified for isfropt={}\n'.format(self.sfr.isfropt)
             passed = True
-        self._txt_footer(headertxt, txt, 'slope', passed)
+        self._txt_footer(headertxt, txt, 'minimum slope', passed)
+
+        headertxt = 'Checking for streambed slopes of greater than {}...\n'.format(maximum_slope)
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+
+        passed = False
+        if self.sfr.isfropt in [1, 2, 3]:
+            if np.diff(self.reach_data.slope).max() == 0:
+                txt += 'isfropt setting of 1,2 or 3 requries slope information!\n'
+            else:
+                is_greater = self.reach_data.slope > maximum_slope
+
+                if np.any(is_greater):
+                    above_max = self.reach_data[is_greater]
+                    txt += '{} instances of streambed slopes above maximum found.\n'.format(len(above_max))
+                    if self.level == 1:
+                        txt += 'Reaches with high slopes:\n'
+                        txt += _print_rec_array(above_max, delimiter='\t')
+                if len(txt) == 0:
+                    passed = True
+        else:
+            txt += 'slope not specified for isfropt={}\n'.format(self.sfr.isfropt)
+            passed = True
+        self._txt_footer(headertxt, txt, 'maximum slope', passed)
 
 
 def _check_numbers(n, numbers, level=1, datatype='reach'):
