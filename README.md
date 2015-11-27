@@ -191,7 +191,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 ### MODFLOW-USG
 | Package                                      | Creation and Write   | Load Available       | Template Creation    |
 | -------------------------------------------- | -------------------- | -------------------- | -------------------- |
-| Sparse Matrix Solver (SMS)                   | Supported            | Not supported        | Not supported        |
+| Unstructured Discretization (DISU)           | Supported            | Supported            | Not supported        |
+| Sparse Matrix Solver (SMS)                   | Supported            | Supported            | Not supported        |
 
 ### MODPATH
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
