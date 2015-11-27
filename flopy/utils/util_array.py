@@ -260,11 +260,13 @@ class util_3d(object):
             self.model = model
             for i, u2d in enumerate(self.util_2ds):
                 self.util_2ds[i] = util_2d(model, u2d.shape, u2d.dtype,
-                                           u2d.array, name=u2d.name,
-                                           fmtin=u2d.fmtin, locat=locat)
+                                           u2d._array, name=u2d.name,
+                                           fmtin=u2d.fmtin, locat=locat,
+                                           cnstnt=u2d.cnstnt)
 
             return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
+        self.util_2ds = []
         self.model = model
         self.shape = shape
         self.dtype = dtype
@@ -293,6 +295,7 @@ class util_3d(object):
                                                            self.name_base[k].replace(' ', '_')))
         self.util_2ds = self.build_2d_instances()
 
+
     def __setitem__(self, k, value):
         if isinstance(k, int):
             assert k in range(0, self.shape[0]), "util_3d error: k not in range nlay"
@@ -300,9 +303,20 @@ class util_3d(object):
         else:
             raise NotImplementedError("util_3d doesn't support setitem indices" + str(k))
 
+
+    def __setattr__(self, key, value):
+        if key == "cnstnt":
+            #set the cnstnt for each u2d
+            for u2d in self.util_2ds:
+                u2d.cnstnt = value
+        #set the attribute for u3d, even for cnstnt
+        super(util_3d,self).__setattr__(key,value)
+
+
     def export(self, f):
         from flopy import export
         return export.utils.util3d_helper(f, self)
+
 
     def to_shapefile(self, filename):
         """
@@ -537,7 +551,7 @@ class util_3d(object):
         elif isinstance(other, list):
             assert len(other) == self.shape[0]
             new_u2ds = []
-            for i in range(self.shape[0]):
+            for u2d in self.util_2ds:
                 new_u2ds.append(u2d * other)
             return util_3d(self.model, self.shape, self.dtype, new_u2ds,
                            self.name, self.fmtin, self.cnstnt, self.iprn,
@@ -1261,7 +1275,7 @@ class util_2d(object):
                         f.write(self.string)
                         f.close()
                     else:
-                        a = self.array.tofile(self.ext_filename)
+                        a = self._array.tofile(self.ext_filename)
                 return ''
 
             # this internal array or constant
@@ -1299,17 +1313,49 @@ class util_2d(object):
     def string(self):
         """
         get the string representation of value attribute
+
+        Note:
+            the string representation DOES NOT include the effects of the control
+            record multiplier - this method is used primarily for writing model input files
+
         """
-        a = self.array
+        a = self._array
         # convert array to sting with specified format
         a_string = array2string(a, self.py_desc)
         return a_string
 
+
     @property
     def array(self):
         """
+        get the COPY of array representation of value attribute with the effects of the control
+        record multiplier applied.
+
+        Note:
+        ----
+            .array is a COPY of the array representation as seen by the model - with the effects
+            of the control record multiplier applied.
+
+        """
+        if self.cnstnt == 0.0:
+            cnstnt = 1.0
+        else:
+            cnstnt = self.cnstnt
+        # return a copy of self._array since it is being
+        # multiplied
+        return (self._array * cnstnt).astype(self.dtype)
+
+
+    @property
+    def _array(self):
+        """
         get the array representation of value attribute
         if value is a string or a constant, the array is loaded/built only once
+
+        Note:
+            the return array representation DOES NOT include the effect of the multiplier
+            in the control record.  To get the array as the model sees it (with the multiplier applied),
+            use the util_2d.array method.
         """
         if self.vtype == str:
             if self.__value_built is None:
@@ -1828,7 +1874,6 @@ class util_2d(object):
 
     def __mul__(self, other):
         if np.isscalar(other):
-            self.array
             return util_2d(self.model, self.shape, self.dtype,
                            self.__value_built * other, self.name,
                            self.fmtin, self.cnstnt, self.iprn, self.ext_filename,

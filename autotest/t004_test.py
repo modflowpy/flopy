@@ -3,6 +3,9 @@ import numpy as np
 import flopy
 from flopy.utils.util_array import util_2d, util_3d
 
+out_dir = "temp"
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
@@ -11,19 +14,32 @@ def test_util2d():
     a2 = np.ones((10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
     # bin read write test
-    fname = os.path.join('temp', 'test.bin')
+    fname = os.path.join(out_dir, 'test.bin')
     u2d.write_bin((10, 10), fname, u2d.array)
     a3 = u2d.load_bin((10, 10), fname, u2d.dtype)[1]
     assert np.array_equal(a3, a1)
     # ascii read write test
-    fname = os.path.join('temp', 'text.dat')
+    fname = os.path.join(out_dir, 'text.dat')
     u2d.write_txt((10, 10), fname, u2d.array)
     a4 = u2d.load_txt((10, 10), fname, u2d.dtype, "(FREE)")
     assert np.array_equal(a1, a4)
 
+    # test view vs copy with .array
+    a5 = u2d.array
+    a5 += 1
+    assert not np.array_equal(a5,u2d.array)
+
     # util_2d.__mul__() overload
     new_2d = u2d * 2
     assert np.array_equal(new_2d.array, u2d.array * 2)
+
+    # test the cnstnt application
+    u2d.cnstnt = 2.0
+    a6 = u2d.array
+    assert not np.array_equal(a1,a6)
+    u2d.write_txt((10, 10), fname, u2d.array)
+    a7 = u2d.load_txt((10, 10), fname, u2d.dtype, "(FREE)")
+    assert np.array_equal(u2d.array,a7)
 
     return
 
@@ -37,6 +53,10 @@ def test_util3d():
 
     new_3d = u3d * 2.0
     assert np.array_equal(new_3d.array, u3d.array * 2)
+
+    u3d.cnstnt = 2.0
+    assert not np.array_equal(a1,u3d.array)
+
     return
 
 
