@@ -1345,7 +1345,7 @@ def run_model(exe_name, namefile, model_ws='./',
         line = proc.stdout.readline()
         c = line.decode('utf-8')
         if c != '':
-            if 'normal termination' in c.lower():
+            if normal_msg in c.lower():
                 success = True
             c = c.rstrip('\r\n')
             if not silent:
