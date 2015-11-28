@@ -1726,22 +1726,16 @@ class util_2d(object):
                 f = open(fname, 'rb')
                 header_data, data = util_2d.load_bin(shape, f, dtype, bintype='Head')
             f.close()
-            factor = cr_dict['cnstnt']
-            if factor == 0:
-                factor = 1
-            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                          cnstnt=cr_dict['cnstnt'])
 
 
         elif cr_dict['type'] == 'internal':
             data = util_2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
-            factor = cr_dict['cnstnt']
-            if factor == 0:
-                factor = 1
-            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                          cnstnt=cr_dict['cnstnt'])
 
         elif cr_dict['type'] == 'external':
             assert cr_dict['nunit'] in list(ext_unit_dict.keys())
@@ -1753,12 +1747,9 @@ class util_2d(object):
                 header_data, data = util_2d.load_bin(
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
                     bintype='Head')
-            factor = cr_dict['cnstnt']
-            if factor == 0:
-                factor = 1
-            data *= factor
             u2d = util_2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                          cnstnt=cr_dict['cnstnt'])
             # track this unit number so we can remove it from the external
             # file list later
             model.pop_key_list.append(cr_dict['nunit'])

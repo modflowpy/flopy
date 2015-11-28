@@ -22,11 +22,14 @@ def test_usg_disu_load():
 
     # Write the disu file
     disu.write_file()
-    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(m.name, m.disu.extension[0])))
+    assert os.path.isfile(os.path.join(model_ws,
+                                       '{}.{}'.format(m.name,
+                                                      m.disu.extension[0])))
 
     # Load disu file
     disu2 = flopy.modflow.ModflowDisU.load(fname, m)
-    for (key1, value1), (key2, value2) in zip(disu2.__dict__.items(), disu.__dict__.items()):
+    for (key1, value1), (key2, value2) in zip(disu2.__dict__.items(),
+                                              disu.__dict__.items()):
         if isinstance(value1, flopy.utils.util_2d) or isinstance(value1, flopy.utils.util_3d):
             assert np.array_equal(value1.array, value2.array)
         else:
@@ -54,11 +57,14 @@ def test_usg_sms_load():
 
     # Write the sms file
     sms.write_file()
-    assert os.path.isfile(os.path.join(model_ws, '{}.{}'.format(m.name, m.sms.extension[0])))
+    assert os.path.isfile(os.path.join(model_ws,
+                                       '{}.{}'.format(m.name,
+                                                      m.sms.extension[0])))
 
     # Load sms file
     sms2 = flopy.modflow.ModflowSms.load(fname, m)
-    for (key1, value1), (key2, value2) in zip(sms2.__dict__.items(), sms.__dict__.items()):
+    for (key1, value1), (key2, value2) in zip(sms2.__dict__.items(),
+                                              sms.__dict__.items()):
         assert value1 == value2, 'key1 {}, value 1 {} != key2 {} value 2 {}'.format(key1, value1, key2, value2)
 
     return
