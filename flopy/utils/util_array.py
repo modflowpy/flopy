@@ -266,7 +266,6 @@ class util_3d(object):
 
             return
         assert len(shape) == 3, 'util_3d:shape attribute must be length 3'
-        self.util_2ds = []
         self.model = model
         self.shape = shape
         self.dtype = dtype
@@ -305,7 +304,7 @@ class util_3d(object):
 
 
     def __setattr__(self, key, value):
-        if key == "cnstnt":
+        if hasattr(self,"util_2ds") and key == "cnstnt":
             #set the cnstnt for each u2d
             for u2d in self.util_2ds:
                 u2d.cnstnt = value
