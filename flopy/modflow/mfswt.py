@@ -273,7 +273,7 @@ class ModflowSwt(Package):
             self.ssv = None
             self.cr = util_3d(model, (nsystm, nrow, ncol), np.float32, cr, name='cr',
                               locat=self.unit_number[0])
-            self.cc = util_3d(model, (nsystm, nrow, ncol), np.float32, cc, name='cr',
+            self.cc = util_3d(model, (nsystm, nrow, ncol), np.float32, cc, name='cc',
                               locat=self.unit_number[0])
 
         # layer data
