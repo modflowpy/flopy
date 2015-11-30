@@ -1,5 +1,5 @@
 numpy>=1.9
 matplotlib>=1.4
-cython>=0.19
+pandas>=0.17
 netcdf4>1.1
 pyshp
