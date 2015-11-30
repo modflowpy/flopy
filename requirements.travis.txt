@@ -2,4 +2,5 @@ numpy>=1.9
 matplotlib>=1.4
 pandas>=0.17
 netcdf4>1.1
+pyproj>=1.9
 pyshp
