@@ -13,8 +13,10 @@ class ModflowBcf(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.Modflow`) to which
         this package will be added.
-    ibcfcb : int
-        A flag and unit number. (default is 53)
+    ipakcb : int
+        A flag that is used to determine if cell-by-cell budget data should be
+        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
+        (default is 53)
     intercellt : int
         Intercell transmissivities, harmonic mean (0), arithmetic mean (1),
         logarithmetic mean (2), combination (3). (default is 0)
@@ -75,7 +77,7 @@ class ModflowBcf(Package):
 
     """
 
-    def __init__(self, model, ibcfcb=53, intercellt=0, laycon=3, trpy=1.0,
+    def __init__(self, model, ipakcb=53, intercellt=0, laycon=3, trpy=1.0,
                  hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0,
                  tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01,
                  extension='bcf', unitnumber=15):
@@ -89,7 +91,10 @@ class ModflowBcf(Package):
                               locat=self.unit_number[0])
         self.trpy = util_2d(model, (nlay,), np.float32, trpy,
                             name='Anisotropy factor', locat=self.unit_number[0])
-        self.ibcfcb = ibcfcb
+        if ipakcb != 0:
+            self.ipakcb = 53
+        else:
+            self.ipakcb = 0
         self.hdry = hdry
         self.iwdflg = iwdflg
         self.wetfct = wetfct
@@ -120,9 +125,9 @@ class ModflowBcf(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_bcf = open(self.fn_path, 'w')
-        # Item 1: IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
+        # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
         f_bcf.write('{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n'.format(
-        self.ibcfcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit, self.ihdwet))
+        self.ipakcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit, self.ihdwet))
         # LAYCON array
         for k in range(nlay):
             f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k], self.laycon[k]))
@@ -193,15 +198,15 @@ class ModflowBcf(Package):
                 break
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        # Item 1: IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
+        # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
-            print('   loading IBCFCB, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
+            print('   loading ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
         t = line.strip().split()
-        ibcfcb, hdry, iwdflg, wetfct, iwetit, ihdwet = int(t[0]), float(t[1]), int(t[2]), \
+        ipakcb, hdry, iwdflg, wetfct, iwetit, ihdwet = int(t[0]), float(t[1]), int(t[2]), \
                                                        float(t[3]), int(t[4]), int(t[5])
-        if ibcfcb != 0:
-            model.add_pop_key_list(ibcfcb)
-            ibcfcb = 53
+        if ipakcb != 0:
+            model.add_pop_key_list(ipakcb)
+            ipakcb = 53
         # LAYCON array
         if model.verbose:
             print('   loading LAYCON...')
@@ -265,7 +270,7 @@ class ModflowBcf(Package):
                 wetdry[k, :, :] = t.array
 
         # create instance of bcf object
-        bcf = ModflowBcf(model, ibcfcb=ibcfcb, intercellt=intercellt, laycon=laycon, trpy=trpy, hdry=hdry,
+        bcf = ModflowBcf(model, ipakcb=ipakcb, intercellt=intercellt, laycon=laycon, trpy=trpy, hdry=hdry,
                          iwdflg=iwdflg, wetfct=wetfct, iwetit=iwetit, ihdwet=ihdwet,
                          tran=tran, hy=hy, vcont=vcont, sf1=sf1, sf2=sf2, wetdry=wetdry)
 

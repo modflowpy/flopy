@@ -144,18 +144,13 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Direct Solver (DE4)                            | Supported            | Supported            | Not supported        |
 | Discretization (DIS)                           | Supported            | Supported            | Not supported        |
 | Drain (DRN)                                    | Supported            | Supported            | Not supported        |
-| Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
 | Drain Return (DRT)                             | Not supported        | Not supported        | Not supported        |
 | Evapotranspiration (EVT)                       | Supported            | Supported            | Not supported        |
 | Evapotranspiration Segments (ETS)              | Not supported        | Not supported        | Not supported        |
 | Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
-| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
 | General Head Boundary (GHB)                    | Supported            | Supported            | Not supported        |
-| General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
 | Geometric Multi-Grid (GMG)                     | Supported            | Supported            | Not supported        |
-| Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
 | Horizontal Flow Barrier (HFB)                  | Supported            | Supported            | Not supported        |
-| HYDMOD (HYD)                                   | Not supported        | Not supported        | Not supported        |
 | Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
 | Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
@@ -174,18 +169,15 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
 | Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
 | River (RIV)                                    | Supported            | Supported            | Not supported        |
-| River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
 | Streamflow Routing (SFR2)                      | Supported            | Supported            | Not supported        |
 | Strongly Implicit Procedure (SIP)              | Supported            | Not supported        | Not supported        |
 | Slice-successive Overrelaxation (SOR)          | Supported            | Not supported        | Not supported        |
 | Stream (STR)                                   | Supported            | Supported            | Not supported        |
-| Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
 | Seawater Intrusion (SWI)                       | Supported            | Not supported        | Not supported        |
 | Seawater Intrusion (SWI2)                      | Supported            | Supported            | Not supported        |
 | Surface-Water Routing (SWR)                    | Not supported        | Not supported        | Not supported        |
 | Subsidence (SUB)                               | Supported            | Supported            | Not supported        |
 | Subsidence and Aquifer-System <br />Compaction (SWT) | Supported            | Supported            | Not supported        |
-| Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
 | Upstream Weighted (UPW)                        | Supported            | Supported            | Not supported        |
 | Unzaturated Zone Flow (UZF)                    | Supported            | Not supported        | Not supported        |
 | Well (WEL)                                     | Supported            | Supported            | Not supported        |
@@ -220,6 +212,18 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Variable Density Flow (VDF)              | Supported            | Supported            | Not supported        |
 | Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
+
+### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT Observations
+| Package                                        | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
+| Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
+| HYDMOD (HYD)                                   | Not supported        | Not supported        | Not supported        |
+| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
+| General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
+| Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
+| River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
+| Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
+| Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
 
 
 --------------------------------

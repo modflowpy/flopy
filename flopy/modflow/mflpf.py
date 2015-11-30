@@ -24,8 +24,10 @@ class ModflowLpf(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    ilpfcb : int
-        A flag and unit number. (default is 53).
+    ipakcb : int
+        A flag that is used to determine if cell-by-cell budget data should be
+        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
+        (default is 53)
     hdry : float
         Is the head that is assigned to cells that are converted to dry during
         a simulation. Although this value plays no role in the model
@@ -149,7 +151,7 @@ class ModflowLpf(Package):
     'Layer-property flow package class\n'
 
     def __init__(self, model, laytyp=0, layavg=0, chani=1.0, layvka=0,
-                 laywet=0, ilpfcb=53, hdry=-1E+30, iwdflg=0, wetfct=0.1,
+                 laywet=0, ipakcb=53, hdry=-1E+30, iwdflg=0, wetfct=0.1,
                  iwetit=1, ihdwet=0, hk=1.0, hani=1.0, vka=1.0, ss=1e-5,
                  sy=0.15, vkcb=0.0, wetdry=-0.01, storagecoefficient=False,
                  constantcv=False, thickstrt=False, nocvcorrection=False,
@@ -160,7 +162,10 @@ class ModflowLpf(Package):
         self.url = 'lpf.htm'
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # item 1
-        self.ilpfcb = ilpfcb  # Unit number for file with cell-by-cell flow terms
+        if ipakcb != 0:
+            self.ipakcb = 53
+        else:
+            self.ipakcb = 0  # 0: no cell by cell terms are written
         self.hdry = hdry  # Head in cells that are converted to dry during a simulation
         self.nplpf = 0  # number of LPF parameters
         self.laytyp = util_2d(model, (nlay,), np.int, laytyp, name='laytyp')
@@ -215,7 +220,7 @@ class ModflowLpf(Package):
         # Item 0: text
         f.write('%s\n' % self.heading)
         # Item 1: IBCFCB, HDRY, NPLPF        
-        f.write('{0:10d}{1:10.6G}{2:10d} {3:s}\n'.format(self.ilpfcb,
+        f.write('{0:10d}{1:10.6G}{2:10d} {3:s}\n'.format(self.ipakcb,
                                                              self.hdry,
                                                              self.nplpf,
                                                              self.options))
@@ -454,10 +459,10 @@ class ModflowLpf(Package):
         if model.verbose:
             print('   loading IBCFCB, HDRY, NPLPF...')
         t = line.strip().split()
-        ilpfcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
-        if ilpfcb != 0:
-            model.add_pop_key_list(ilpfcb)
-            ilpfcb = 53
+        ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
+        if ipakcb != 0:
+            model.add_pop_key_list(ipakcb)
+            ipakcb = 53
         # options
         storagecoefficient = False
         constantcv = False
@@ -600,7 +605,7 @@ class ModflowLpf(Package):
                 wetdry[k] = t
 
         # create instance of lpf class
-        lpf = ModflowLpf(model, ilpfcb=ilpfcb, laytyp=laytyp, layavg=layavg, chani=chani,
+        lpf = ModflowLpf(model, ipakcb=ipakcb, laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet, hdry=hdry, iwdflg=iwetdry,
                          wetfct=wetfct, iwetit=iwetit, ihdwet=ihdwet,
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb,
