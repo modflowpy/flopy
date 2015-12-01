@@ -278,7 +278,10 @@ class NetCdf(object):
             raise Exception("NetCdf error importing netCDF4 module:\n" + str(e))
 
         # open the file for writing
-        self.nc = netCDF4.Dataset(self.output_filename, "w")
+        try:
+            self.nc = netCDF4.Dataset(self.output_filename, "w")
+        except Exception as e:
+            raise Exception("error creating netcdf dataset:\n{0}".format(str(e)))
 
 
 
@@ -305,43 +308,33 @@ class NetCdf(object):
         self.global_attributes = {}
         self.log("setting standard attributes")
         # spatial dimensions
-
-        self.nc.createDimension('x', self.shape[2])
-        self.nc.createDimension('y', self.shape[1])
+        self.log("creating dimensions")
+        # time
+        if time_values is None:
+            time_values = np.cumsum(self.model.dis.perlen)
+        self.chunks["time"] = min(len(time_values), 100)
+        self.nc.createDimension("time", len(time_values))
         self.nc.createDimension('layer', self.shape[0])
+        self.nc.createDimension('y', self.shape[1])
+        self.nc.createDimension('x', self.shape[2])
+        self.log("creating dimensions")
 
+        self.log("setting CRS info")
         # Metadata variables
         crs = self.nc.createVariable("crs", "i4")
         crs.long_name = self.nc_crs_longname
         crs.epsg_code = self.nc_epsg_str
         crs.semi_major_axis = self.nc_semi_major
         crs.inverse_flattening = self.nc_inverse_flat
+        self.log("setting CRS info")
 
-        # time
-        if time_values is None:
-            time_values = np.cumsum(self.model.dis.perlen)
-        self.chunks["time"] = min(len(time_values), 100)
-        self.nc.createDimension("time", len(time_values))
+
 
         attribs = {"units":"{0} since {1}".format(self.time_units, self.start_datetime),
                    "standard_name": "time", "long_name": "time", "calendar": "gregorian",
                    "_CoordinateAxisType":"Time"}
         time = self.create_variable("time",attribs,precision_str="f8",dimensions=("time",))
         time[:] = np.asarray(time_values)
-
-        # Latitude
-        attribs = {"units":"degrees_north","standard_name":"latitude",
-                   "long_name":"latitude","axis":"Y",
-                   "_CoordinateAxisType":"Lat"}
-        lat = self.create_variable("latitude",attribs,precision_str="f8",dimensions=("y","x"))
-        lat[:] = self.ys
-
-        # Longitude
-        attribs = {"units":"degrees_east","standard_name":"longitude",
-                   "long_name":"longitude","axis":"X",
-                   "_CoordinateAxisType":"Lon"}
-        lon = self.create_variable("longitude",attribs,precision_str="f8",dimensions=("y","x"))
-        lon[:] = self.xs
 
         # Elevation
         attribs = {"units":"meters","standard_name":"elevation",
@@ -351,11 +344,31 @@ class NetCdf(object):
         elev = self.create_variable("elevation",attribs,precision_str="f8",dimensions=("layer","y","x"))
         elev[:] = self.zs
 
+
+        # Longitude
+        attribs = {"units":"degrees_east","standard_name":"longitude",
+                   "long_name":"longitude","axis":"X",
+                   "_CoordinateAxisType":"Lon"}
+        lon = self.create_variable("longitude",attribs,precision_str="f8",dimensions=("y","x"))
+        lon[:] = self.xs
+        self.log("creating longitude var")
+
+        # Latitude
+        self.log("creating latitude var")
+        attribs = {"units":"degrees_north","standard_name":"latitude",
+                   "long_name":"latitude","axis":"Y",
+                   "_CoordinateAxisType":"Lat"}
+        lat = self.create_variable("latitude",attribs,precision_str="f8",dimensions=("y","x"))
+        lat[:] = self.ys
+
+
         # layer
+        self.log("creating layer var")
         attribs = {"units":"","standard_name":"layer","long_name":"layer",
                    "positive":"down","axis":"Z"}
         lay = self.create_variable("layer",attribs,dimensions=("layer",))
         lay[:] = np.arange(0, self.shape[0])
+        self.log("creating layer var")
 
         # delc
         attribs = {"units":"meters","long_names":"row spacing",
@@ -371,7 +384,6 @@ class NetCdf(object):
             delc.comments = "This is the row spacing that applied to the UNROTATED grid. " +\
                             "This grid HAS been rotated before being saved to NetCDF. " +\
                             "To compute the unrotated grid, use the origin point and this array."
-
         # delr
         attribs = {"units":"meters","long_names":"col spacing",
                    "origin_x":self.model.dis.sr.xul,

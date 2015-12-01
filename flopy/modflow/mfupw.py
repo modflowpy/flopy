@@ -10,7 +10,7 @@ class ModflowUpw(Package):
     Upstream weighting package class
     """
 
-    def __init__(self, model, laytyp=0, layavg=0, chani=1.0, layvka=0, laywet=0, iupwcb=53, hdry=-1E+30, iphdry=0,
+    def __init__(self, model, laytyp=0, layavg=0, chani=1.0, layvka=0, laywet=0, ipakcb=53, hdry=-1E+30, iphdry=0,
                  hk=1.0, hani=1.0, vka=1.0, ss=1e-5, sy=0.15, vkcb=0.0, noparcheck=False,
                  extension='upw', unitnumber=31):
         Package.__init__(self, model, extension, 'UPW',
@@ -19,7 +19,10 @@ class ModflowUpw(Package):
         self.url = 'upw_upstream_weighting_package.htm'
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # item 1
-        self.iupwcb = iupwcb  # Unit number for file with cell-by-cell flow terms
+        if ipakcb != 0:
+            self.ipakcb = 53
+        else:
+            self.ipakcb = 0  # 0: no cell by cell terms are written
         self.hdry = hdry  # Head in cells that are converted to dry during a simulation
         self.npupw = 0  # number of UPW parameters
         self.iphdry = iphdry
@@ -53,7 +56,7 @@ class ModflowUpw(Package):
         # Item 0: text
         f_upw.write('%s\n' % self.heading)
         # Item 1: IBCFCB, HDRY, NPLPF        
-        f_upw.write('{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n'.format(self.iupwcb, self.hdry, self.npupw, self.iphdry,
+        f_upw.write('{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n'.format(self.ipakcb, self.hdry, self.npupw, self.iphdry,
                                                                    self.options))
         # LAYTYP array
         f_upw.write(self.laytyp.string);
@@ -133,12 +136,12 @@ class ModflowUpw(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
-            print('   loading IUPWCB, HDRY, NPUPW, IPHDRY...')
+            print('   loading ipakcb, HDRY, NPUPW, IPHDRY...')
         t = line.strip().split()
-        iupwcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
-        if iupwcb != 0:
-            model.add_pop_key_list(iupwcb)
-            iupwcb = 53
+        ipakcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
+        if ipakcb != 0:
+            model.add_pop_key_list(ipakcb)
+            ipakcb = 53
         # options
         noparcheck = False
         if len(t) > 3:
@@ -261,7 +264,7 @@ class ModflowUpw(Package):
                 vkcb[k] = t
 
         # create upw object
-        upw = ModflowUpw(model, iupwcb=iupwcb, iphdry=iphdry, hdry=hdry,
+        upw = ModflowUpw(model, ipakcb=ipakcb, iphdry=iphdry, hdry=hdry,
                          noparcheck=noparcheck,
                          laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet,

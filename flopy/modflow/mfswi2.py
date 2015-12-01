@@ -33,7 +33,10 @@ class ModflowSwi2(Package):
         number of observation locations. (default is 0).
     iswizt : int
         unit number for zeta output. (default is 55).
-    iswibd : int
+    ipakcb : int
+        A flag that is used to determine if cell-by-cell budget data should be
+        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
+        (default is 0).
         unit number for SWI2 Package budget output. (default is 56).
     iswiobs : int
         flag and unit number SWI2 observation output. (default is 0).
@@ -162,22 +165,22 @@ class ModflowSwi2(Package):
 
     """
 
-    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=55, iswibd=56, iswiobs=0, options=None,
+    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=55, ipakcb=53, iswiobs=0, options=None,
                  nsolver=1, iprsol=0, mutsol=3, 
                  solver2params={'mxiter': 100, 'iter1': 20, 'npcond': 1, 'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
                                 'nbpol': 2, 'damp': 1.0, 'dampt': 1.0},
                  toeslope=0.05, tipslope=0.05, alpha=None, beta=0.1, nadptmx=1, nadptmn=1, adptfct=1.0,
                  nu=0.025, zeta=0.0, ssz=0.25, isource=0,
                  obsnam=[], obslrc=[],
-                 extension=['swi2', 'zta', 'swb'], unit_number=29,
+                 extension=['swi2', 'zta'], unit_number=29,
                  npln=None):
         """
         Package constructor.
 
         """
-        name = ['SWI2', 'DATA(BINARY)', 'DATA(BINARY)']
-        units = [unit_number, iswizt, iswibd]
-        extra = ['', 'REPLACE', 'REPLACE']
+        name = ['SWI2', 'DATA(BINARY)']
+        units = [unit_number, iswizt]
+        extra = ['', 'REPLACE']
         if nobs > 0:
             extension.append('zobs')
             name.append('DATA')
@@ -209,8 +212,13 @@ class ModflowSwi2(Package):
             print('npln keyword is deprecated. use the nsrf keyword')
             nsrf = npln
 
-        self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswibd, self.iswiobs = nsrf, istrat, nobs, \
-                                                                                    iswizt, iswibd, iswiobs
+        self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, istrat, nobs,\
+                                                                       iswizt, iswiobs
+        if ipakcb != 0:
+            self.ipakcb = 53
+        else:
+            self.ipakcb = 0  # 0: no cell by cell terms are written
+
         #
         self.nsolver, self.iprsol, self.mutsol = nsolver, iprsol, mutsol
         #
@@ -252,7 +260,7 @@ class ModflowSwi2(Package):
         # write dataset 1
         f.write('# Dataset 1\n')
         f.write(
-            '{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}'.format(self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswibd,
+            '{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}'.format(self.nsrf, self.istrat, self.nobs, self.iswizt, self.ipakcb,
                                                           self.iswiobs))
         # write SWI2 options
         if self.options != None:
@@ -370,9 +378,9 @@ class ModflowSwi2(Package):
             iswizt = 55
         if int(t[4]) > 0:
             model.add_pop_key_list(int(t[4]))
-            iswibd = 56
+            ipakcb = 56
         else:
-            iswibd = 0
+            ipakcb = 0
         iswiobs = 0
         if int(t[5]) > 0:
             model.add_pop_key_list(int(t[5]))
@@ -532,7 +540,7 @@ class ModflowSwi2(Package):
                 nobs = len(obsname)
 
         # create swi2 instance
-        swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs, iswizt=iswizt, iswibd=iswibd,
+        swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs, iswizt=iswizt, ipakcb=ipakcb,
                            iswiobs=iswiobs,options=options,
                            nsolver=nsolver, iprsol=iprsol, mutsol=mutsol, solver2params=solver2params,
                            toeslope=toeslope, tipslope=tipslope, alpha=alpha, beta=beta,

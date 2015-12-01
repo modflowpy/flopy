@@ -51,13 +51,12 @@ class ModflowSfr2(Package):
         reach and active model cell. Value is in units of length. Usually a value of 0.0001 is sufficient when units
         of feet or meters are used in model.
     istcsb1 : integer
-        An integer value used as a flag for writing stream-aquifer leakage values. If ISTCB1 > 0, it is the unit
-        number to which unformatted leakage between each stream reach and corresponding model cell will be saved to
-        a file whenever the cell-by-cell budget has been specified in Output Control (see Harbaugh and others, 2000,
-        pages 52-55). If ISTCB1 = 0, leakage values will not be printed or saved. If ISTCB1 < 0, all information on
-        inflows and outflows from each reach; on stream depth, width, and streambed conductance; and on head difference
-        and gradient across the streambed will be printed in the main listing file whenever a cell-by-cell budget has
-        been specified in Output Control.
+        An integer value used as a flag for writing stream-aquifer leakage values. If ISTCB1 > 0, unformatted leakage
+        between each stream reach and corresponding model cell will be saved to a file whenever the cell-by-cell budget
+        has been specified in Output Control (see Harbaugh and others, 2000, pages 52-55). If ISTCB1 = 0, leakage values
+        will not be printed or saved. If ISTCB1 < 0, all information on inflows and outflows from each reach; on stream
+        depth, width, and streambed conductance; and on head difference and gradient across the streambed will be
+        printed in the main listing file whenever a cell-by-cell budget has been specified in Output Control.
     istcsb2 : integer
         An integer value used as a flag for writing to a separate formatted file all information on inflows and
         outflows from each reach; on stream depth, width, and streambed conductance; and on head difference and
@@ -231,7 +230,13 @@ class ModflowSfr2(Package):
         self.nparseg = nparseg
         self.const = const  # conversion factor used in calculating stream depth for stream reach (icalc = 1 or 2)
         self.dleak = dleak  # tolerance level of stream depth used in computing leakage
-        self.istcb1 = istcb1  # flag; unit number for stream leakage output
+        if istcb1 != 0: # flag; unit number for stream leakage output
+            if istcb1 < 0:
+                self.istcb1 = -53
+            else:
+                self.istcb1 = 53
+        else:
+            self.istcb1 = 0  # 0: no cell by cell terms are written
         self.istcb2 = istcb2  # flag; unit number for writing table of SFR output to text file
 
         # if nstrm < 0

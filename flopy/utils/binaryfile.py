@@ -126,7 +126,7 @@ def binaryread(file, vartype, shape=(1), charlen=16):
     
     # read a string variable of length charlen
     if vartype == str:
-        result = file.read(charlen*1)     
+        result = file.read(charlen*1)
     else:
         # find the number of values
         nval = np.core.fromnumeric.prod(shape)
@@ -654,8 +654,12 @@ class CellBudgetFile(object):
         # check and make sure that text is in file
         if text is not None:
             text16 = None
+            if isinstance(text, bytes):
+                ttext = text.decode()
+            else:
+                ttext = text
             for t in self.unique_record_names():
-                if text.decode().upper() in t.decode():
+                if ttext.upper() in t.decode():
                     text16 = t
                     break
             if text16 is None:

@@ -45,7 +45,9 @@ class ModflowStr(Package):
         days in the simulation. If ICALC is 0, const can be any real value.
         (default is 86400.)
     ipakcb : int
-        is a flag and a unit number. (default is 0)
+        A flag that is used to determine if cell-by-cell budget data should be
+        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
+        (default is 0).
     dtype : tuple, list, or numpy array of numpy dtypes
         is a tuple, list, or numpy array containing the dtype for
         datasets 6 and 8 and the dtype for datasets 9 and 10 data in
@@ -196,7 +198,10 @@ class ModflowStr(Package):
         self.ntrib = ntrib
         self.ndiv = ndiv
         self.const = const
-        self.ipakcb = ipakcb
+        if ipakcb != 0:
+            self.ipakcb = 53
+        else:
+            self.ipakcb = 0  # 0: no cell by cell terms are written
 
         # issue exception if ntrib is greater than 10
         if ntrib > 10:
