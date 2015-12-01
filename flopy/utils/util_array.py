@@ -92,13 +92,17 @@ def read1d(f, a):
 def array2string(a, fmt_tup):
     """
     Converts a 1D or 2D array into a string
-    Input:
-        a: array
-        fmt_tup = (npl,fmt_str)
-        fmt_str: format string
-        npl: number of numbers per line
-    Output:
-        s: string representation of the array
+
+    Parameters
+    ----------
+    a : numpy.ndarray
+    fmt_tup : str
+
+    Returns
+    -------
+    s : string
+        string representation of the array
+
     """
 
     aa = np.atleast_2d(a)
@@ -1327,13 +1331,18 @@ class util_2d(object):
     @property
     def array(self):
         """
-        get the COPY of array representation of value attribute with the effects of the control
-        record multiplier applied.
+        Get the COPY of array representation of value attribute with the
+        effects of the control record multiplier applied.
 
-        Note:
+        Returns
+        -------
+        array : numpy.ndarray
+            Copy of the array with the multiplier applied.
+
+        Note
         ----
-            .array is a COPY of the array representation as seen by the model - with the effects
-            of the control record multiplier applied.
+            .array is a COPY of the array representation as seen by the
+            model - with the effects of the control record multiplier applied.
 
         """
         if self.cnstnt == 0.0:

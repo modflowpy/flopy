@@ -18,7 +18,9 @@ def line_parse(line):
 
 def write_gridlines_shapefile(filename, sr):
     """
-    Write a polyline shapefile of the grid lines - a lightweight alternative to polygons
+    Write a polyline shapefile of the grid lines - a lightweight alternative
+    to polygons.
+
     Parameters
     ----------
     filename : string
@@ -47,16 +49,16 @@ def write_gridlines_shapefile(filename, sr):
 def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     """
     Write a grid shapefile array_dict attributes.
+
     Parameters
     ----------
     filename : string
         name of the shapefile to write
     sr : spatial reference instance
-    package_names : (optional) list of package names (e.g. ["dis","lpf"])
-        packages to scrap arrays out of for adding to shapefile
-    array_dict : (optional) dict of {name:2D array} pairs
-       additional 2D arrays to add as attributes to the grid shapefile
-
+        spatial reference object for model grid
+    array_dict : dict
+       Dictionary of name and 2D array pairs.  Additional 2D arrays to add as
+       attributes to the grid shapefile.
 
     Returns
     -------
