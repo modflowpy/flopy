@@ -3,7 +3,6 @@ import os
 import re
 import sys
 from datetime import timedelta
-
 import numpy as np
 
 
@@ -58,9 +57,56 @@ class ListBudget(object):
 
     """
 
-    def __init__(self, file_name):
-        raise Exception('base class lstbudget does not have a " +\
-        "constructor - must call a derived class')
+    def __init__(self, file_name, budgetkey=None, timeunit='days'):
+
+        # Set up file reading
+        assert os.path.exists(file_name)
+        self.file_name = file_name
+        if sys.version_info[0] == 2:
+            self.f = open(file_name, 'r')
+        elif sys.version_info[0] == 3:
+            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
+
+        # Assign the budgetkey, which should have been overriden
+        if budgetkey is None:
+            self.set_budget_key()
+        else:
+            self.budgetkey = budgetkey
+
+        self.totim = []
+        self.timeunit = timeunit
+        self.idx_map = []
+        self.entries = []
+        self.null_entries = []
+        self.tssp_lines = 0
+
+        self.time_line_idx = 20
+        if timeunit.upper() == 'SECONDS':
+            self.timeunit = 'S'
+            self.time_idx = 0
+        elif timeunit.upper() == 'MINUTES':
+            self.timeunit = 'M'
+            self.time_idx = 1
+        elif timeunit.upper() == 'HOURS':
+            self.timeunit = 'H'
+            self.time_idx = 2
+        elif timeunit.upper() == 'DAYS':
+            self.timeunit = 'D'
+            self.time_idx = 3
+        elif timeunit.upper() == 'YEARS':
+            self.timeunit = 'Y'
+            self.time_idx = 4
+        else:
+            raise Exception('need to reset time_idxs attribute to '
+                            'use units other than days and check usage of '
+                            'timedelta')
+
+        # Fill budget recarrays
+        self._load()
+        return
+
+    def set_budget_key(self):
+        raise Exception('Must be overridden...')
 
     def get_record_names(self):
         """
@@ -73,7 +119,7 @@ class ListBudget(object):
 
         Example:
         -------
-            >>> mf_list = MfListBudget("my_model.list")
+            >>> mf_list = MfListBudget('my_model.list')
             >>> names = mf_list.get_record_names()
 
         """
@@ -91,7 +137,7 @@ class ListBudget(object):
 
         Example:
         -------
-            >>> mf_list = MfListBudget("my_model.list")
+            >>> mf_list = MfListBudget('my_model.list')
             >>> times = mf_list.get_times()
 
         """
@@ -116,7 +162,8 @@ class ListBudget(object):
 
         """
         kstpkper = []
-        for kstp, kper in zip(self.inc['time_step'], self.inc['stress_period']):
+        for kstp, kper in zip(self.inc['time_step'],
+                              self.inc['stress_period']):
             kstpkper.append((kstp, kper))
         return kstpkper
 
@@ -220,7 +267,8 @@ class ListBudget(object):
             names.insert(0, 'stress_period')
             names.insert(0, 'time_step')
             names.insert(0, 'totim')
-            return self.inc[names].view(np.recarray), self.cum[names].view(np.recarray)
+            return self.inc[names].view(np.recarray), self.cum[names].view(
+                np.recarray)
 
     def get_data(self, kstpkper=None, idx=None, totim=None, incremental=False):
         """
@@ -294,7 +342,8 @@ class ListBudget(object):
         else:
             t = self.cum[ipos]
 
-        dtype = np.dtype([('index', np.int32), ('value', np.float32), ('name', '|S25')])
+        dtype = np.dtype(
+            [('index', np.int32), ('value', np.float32), ('name', '|S25')])
         v = np.recarray(shape=(len(self.inc.dtype.names[3:])), dtype=dtype)
         for i, name in enumerate(self.inc.dtype.names[3:]):
             mult = 1.
@@ -333,28 +382,23 @@ class ListBudget(object):
         try:
             import pandas as pd
         except Exception as e:
-            raise Exception("ListBudget.get_dataframe() error import pandas: " + \
-                            str(e))
+            raise Exception(
+                "ListBudget.get_dataframe() error import pandas: " + \
+                str(e))
 
-            # so we can get a datetime index for the dataframe
+        totim = self.get_times()
         if start_datetime is not None:
-            lt = ListTime(self.file_name, start=pd.to_datetime(start_datetime))
-        else:
-            # idx = pd.MultiIndex.from_tuples(list(zip(fin["stress_period"], fin["time_step"])))
-            lt = ListTime(self.file_name, start=pd.to_datetime(start_datetime))
-        idx = lt.get_times()
+            totim = self._totim_to_datetime(totim,
+                                          start=pd.to_datetime(start_datetime))
 
-        df_flux = pd.DataFrame(self.inc, index=idx).loc[:, self.entries]
+        df_flux = pd.DataFrame(self.inc, index=totim).loc[:, self.entries]
+        df_vol = pd.DataFrame(self.cum, index=totim).loc[:, self.entries]
 
-        df_vol = pd.DataFrame(self.cum, index=idx).loc[:, self.entries]
         return df_flux, df_vol
 
-
     def _build_index(self, maxentries):
-        # print('building index...')
         self.idx_map = self._get_index(maxentries)
-        # print('\ndone - found',len(self.idx_map),'entries')
-
+        return
 
     def _get_index(self, maxentries):
         # --parse through the file looking for matches and parsing ts and sp
@@ -365,13 +409,14 @@ class ListBudget(object):
             line = self.f.readline()
             if line == '':
                 break
-            if self.lstkey in line:
+            if self.budgetkey in line:
                 for l in range(self.tssp_lines):
                     line = self.f.readline()
                 try:
                     ts, sp = self._get_ts_sp(line)
                 except:
-                    print('unable to cast ts,sp on line number', l_count, ' line: ', line)
+                    print('unable to cast ts,sp on line number', l_count,
+                          ' line: ', line)
                     break
                 # print('info found for timestep stress period',ts,sp)
 
@@ -382,6 +427,28 @@ class ListBudget(object):
 
         return idxs
 
+    def _seek_to_string(self, s):
+        """
+        Parameters
+        ----------
+        s : str
+            Seek through the file to the next occurrence of s.  Return the
+            seek location when found.
+
+        Returns
+        -------
+        seekpoint : int
+            Next location of the string
+
+        """
+        while True:
+            seekpoint = self.f.tell()
+            line = self.f.readline()
+            if line == '':
+                break
+            if s in line:
+                break
+        return seekpoint
 
     def _get_ts_sp(self, line):
         """
@@ -390,8 +457,8 @@ class ListBudget(object):
         """
 
         # Old method.  Was not generic enough.
-        #ts = int(line[self.ts_idxs[0]:self.ts_idxs[1]])
-        #sp = int(line[self.sp_idxs[0]:self.sp_idxs[1]])
+        # ts = int(line[self.ts_idxs[0]:self.ts_idxs[1]])
+        # sp = int(line[self.sp_idxs[0]:self.sp_idxs[1]])
 
         # Get rid of nasty things
         line = line.replace(',', '')
@@ -408,7 +475,6 @@ class ListBudget(object):
 
         return ts, sp
 
-
     def _set_entries(self):
         if len(self.entries) > 0:
             raise Exception('entries already set:' + str(self.entries))
@@ -419,7 +485,8 @@ class ListBudget(object):
                                             self.idx_map[0][1],
                                             self.idx_map[0][2])
         except:
-            raise Exception('unable to read budget information from first entry in list file')
+            raise Exception('unable to read budget information from first '
+                            'entry in list file')
         self.entries = incdict.keys()
         null_entries = collections.OrderedDict()
         incdict = collections.OrderedDict()
@@ -431,41 +498,52 @@ class ListBudget(object):
         self.null_entries = [null_entries, null_entries]
         return incdict, cumdict
 
-
     def _load(self, maxentries=None):
         self._build_index(maxentries)
         incdict, cumdict = self._set_entries()
+        totim = []
         for ts, sp, seekpoint in self.idx_map:
             tinc, tcum = self._get_sp(ts, sp, seekpoint)
             for entry in self.entries:
                 incdict[entry].append(tinc[entry])
                 cumdict[entry].append(tcum[entry])
 
+            # Get the time for this record
+            seekpoint = self._seek_to_string('TIME SUMMARY AT END')
+            tslen, sptim, tt = self._get_totim(ts, sp, seekpoint)
+            totim.append(tt)
+
         # get kstp and kper
         idx_array = np.array(self.idx_map)
 
-        # get totime
-        lt = ListTime(self.file_name, start=None, timeunit=self.timeunit)
-        totim = lt.get_times()
-
-        # build rec arrays
-        dtype_tups = [('totim', np.float32), ("time_step", np.int32), ("stress_period", np.int32)]
+        # build dtype for recarray
+        dtype_tups = [('totim', np.float32), ("time_step", np.int32),
+                      ("stress_period", np.int32)]
         for entry in self.entries:
             dtype_tups.append((entry, np.float32))
         dtype = np.dtype(dtype_tups)
+
+        # create recarray
         nentries = len(incdict[entry])
         self.inc = np.recarray(shape=(nentries,), dtype=dtype)
         self.cum = np.recarray(shape=(nentries,), dtype=dtype)
+
+        # fill each column of the recarray
         for entry in self.entries:
             self.inc[entry] = incdict[entry]
             self.cum[entry] = cumdict[entry]
-        self.inc['totim'], self.cum['totim'] = np.array(totim)[:], np.array(totim)[:]
-        # zero based time_step (kstp) and stress_period (kper)
-        self.inc["time_step"], self.inc["stress_period"] = idx_array[:, 0] - 1, idx_array[:, 1] - 1
-        self.cum["time_step"], self.cum["stress_period"] = idx_array[:, 0] - 1, idx_array[:, 1] - 1
+
+        # file the totim, time_step, and stress_period columns for the
+        # incremental and cumulative recarrays (zero-based kstp,kper)
+        self.inc['totim'] = np.array(totim)[:]
+        self.inc["time_step"] = idx_array[:, 0] - 1
+        self.inc["stress_period"] = idx_array[:, 1] - 1
+
+        self.cum['totim'] = np.array(totim)[:]
+        self.cum["time_step"] = idx_array[:, 0] - 1
+        self.cum["stress_period"] = idx_array[:, 1] - 1
 
         return
-
 
     def _get_sp(self, ts, sp, seekpoint):
         self.f.seek(seekpoint)
@@ -473,8 +551,9 @@ class ListBudget(object):
         while True:
             line = self.f.readline()
             if line == '':
-                # raise Exception('end of file found while seeking budget information')
-                print('end of file found while seeking budget information for ts,sp', ts, sp)
+                print(
+                'end of file found while seeking budget information for ts,sp',
+                ts, sp)
                 return self.null_entries
 
             # --if there are two '=' in this line, then it is a budget line
@@ -482,12 +561,15 @@ class ListBudget(object):
                 break
 
         tag = 'IN'
-        incdict, cumdict = collections.OrderedDict(), collections.OrderedDict()
+        incdict = collections.OrderedDict()
+        cumdict = collections.OrderedDict()
         while True:
 
             if line == '':
                 # raise Exception('end of file found while seeking budget information')
-                print('end of file found while seeking budget information for ts,sp', ts, sp)
+                print(
+                'end of file found while seeking budget information for ts,sp',
+                ts, sp)
                 return self.null_entries
             if len(re.findall('=', line)) == 2:
                 try:
@@ -496,10 +578,14 @@ class ListBudget(object):
                     print('error parsing budget line in ts,sp', ts, sp)
                     return self.null_entries
                 if flux is None:
-                    print('error casting in flux for', entry, ' to float in ts,sp', ts, sp)
+                    print(
+                    'error casting in flux for', entry, ' to float in ts,sp',
+                    ts, sp)
                     return self.null_entries
                 if cumu is None:
-                    print('error casting in cumu for', entry, ' to float in ts,sp', ts, sp)
+                    print(
+                    'error casting in cumu for', entry, ' to float in ts,sp',
+                    ts, sp)
                     return self.null_entries
                 if tag.upper() in entry:
                     if ' - ' in entry.upper():
@@ -521,12 +607,25 @@ class ListBudget(object):
 
         return incdict, cumdict
 
-
     def _parse_budget_line(self, line):
-        raw = line.strip().split()
+
+        # get the budget item name
         entry = line.strip().split('=')[0].strip()
-        cu_str = line[self.cumu_idxs[0]:self.cumu_idxs[1]]
-        fx_str = line[self.flux_idxs[0]:self.flux_idxs[1]]
+
+        # get the cumulative string
+        idx = line.index('=') + 1
+        line2 = line[idx:]
+        ll = line2.strip().split()
+        cu_str = ll[0]
+
+        idx = line2.index('=') + 1
+        fx_str = line2[idx:].strip()
+
+        #
+        # cu_str = line[self.cumu_idxs[0]:self.cumu_idxs[1]]
+        # fx_str = line[self.flux_idxs[0]:self.flux_idxs[1]]
+
+
         flux, cumu = None, None
         try:
             cumu = float(cu_str)
@@ -540,238 +639,7 @@ class ListBudget(object):
                 flux = np.NaN
         return entry, flux, cumu
 
-
-class SwtListBudget(ListBudget):
-    """
-
-    """
-    def __init__(self, file_name, key_string='MASS BUDGET FOR ENTIRE MODEL',
-                 timeunit='days'):
-        assert os.path.exists(file_name)
-        self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        self.timeunit = timeunit
-        self.lstkey = key_string
-        self.idx_map = []
-        self.entries = []
-        self.null_entries = []
-        self.cumu_idxs = [22, 40]
-        self.flux_idxs = [63, 80]
-        self.ts_idxs = [50, 54]
-        self.sp_idxs = [70, 75]
-        self.tssp_lines = 0
-        # set budget recarrays
-        self._load()
-
-
-class MfListBudget(ListBudget):
-    """
-
-    """
-    def __init__(self, file_name, key_string='VOLUMETRIC BUDGET FOR ENTIRE MODEL',
-                 timeunit='days'):
-        assert os.path.exists(file_name)
-        self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        self.timeunit = timeunit
-        self.lstkey = key_string
-        self.idx_map = []
-        self.entries = []
-        self.null_entries = []
-        self.cumu_idxs = [22, 40]
-        self.flux_idxs = [63, 80]
-        self.ts_idxs = [56, 61]
-        self.sp_idxs = [76, 80]
-        self.tssp_lines = 0
-        # set budget recarrays
-        self._load()
-
-class MfusgListBudget(ListBudget):
-    """
-
-    """
-    def __init__(self, file_name, key_string='VOLUMETRIC BUDGET FOR ENTIRE MODEL',
-                 timeunit='days'):
-        assert os.path.exists(file_name)
-        self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        self.timeunit = timeunit
-        self.lstkey = key_string
-        self.idx_map = []
-        self.entries = []
-        self.null_entries = []
-        self.cumu_idxs = [22, 40]
-        self.flux_idxs = [63, 80]
-        self.tssp_lines = 0
-        # set budget recarrays
-        self._load()
-        return
-
-
-class SwrListBudget(ListBudget):
-    """
-
-    """
-    def __init__(self, file_name, key_string='VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL',
-                 timeunit='days'):
-        assert os.path.exists(file_name)
-        self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        self.timeunit = timeunit
-        self.lstkey = key_string
-        self.idx_map = []
-        self.entries = []
-        self.null_entries = []
-        self.cumu_idxs = [25, 43]
-        self.flux_idxs = [66, 84]
-        self.ts_idxs = [39, 46]
-        self.sp_idxs = [62, 68]
-        self.tssp_lines = 1
-        # set budget recarrays
-        self._load()
-
-
-class ListTime(ListBudget):
-    """
-    Class to extract time information from lst file
-    passing a start datetime results in casting the totim to dts from start
-
-    Parameters:
-    ----------
-
-
-    Methods:
-    ----------
-        get_times : returns a list of unique water budget times in the list file.
-
-    Note:
-    ----
-        The ListBudget class should not be instantiated directly.  Access is
-        through derived classes: MfListBudget (MODFLOW), SwtListBudget (SEAWAT)
-        and SwrListBudget (MODFLOW with the SWR process)
-
-    Example:
-    -------
-        >>> mf_listtime = ListTime("my_model.list")
-        >>> times = mf_listtime.get_times()
-    """
-
-    def __init__(self, file_name, timeunit='days', key_str='TIME SUMMARY AT END',
-                 start=None, flow=True):
-
-        assert os.path.exists(file_name)
-        self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-        self.idx_map = []
-        self.tslen = []
-        self.sptim = []
-        self.totim = []
-        # self.lstkey = re.compile(key_str)
-        self.lstkey = key_str
-        self.tssp_lines = 0
-        if flow:
-            self.ts_idxs = [42, 47]
-            self.sp_idxs = [63, 69]
-        else:
-            self.ts_idxs = [65, 71]
-            self.sp_idxs = [87, 92]
-        self.time_line_idx = 20
-        if timeunit.upper() == 'SECONDS':
-            self.timeunit = 'S'
-            self.time_idx = 0
-        elif timeunit.upper() == 'MINUTES':
-            self.timeunit = 'M'
-            self.time_idx = 1
-        elif timeunit.upper() == 'HOURS':
-            self.timeunit = 'H'
-            self.time_idx = 2
-        elif timeunit.upper() == 'DAYS':
-            self.timeunit = 'D'
-            self.time_idx = 3
-        elif timeunit.upper() == 'YEARS':
-            self.timeunit = 'Y'
-            self.time_idx = 4
-        else:
-            raise Exception('need to reset time_idxs attribute to ' + \
-                            'use units other than days and check usage of timedelta')
-        self.null_entries = [np.NaN, np.NaN, np.NaN]
-        self.start = start
-        if start:
-            self.dt = []
-
-        # load the data
-        self._load()
-
-    def get_times(self):
-        """
-        Get a list of unique water budget times in the list file
-
-        Returns
-        ----------
-        out : list of floats
-            List contains unique water budget simulation times (totim) in list file.
-
-        """
-        return self.totim
-
-    def _load(self, maxentries=None):
-        self._build_index(maxentries)
-
-        for i, [ts, sp, seekpoint] in enumerate(self.idx_map):
-            # print 'loading stress period, timestep',sp,ts,
-
-            tslen, sptim, totim = self._get_sp(ts, sp, seekpoint)
-            self.tslen.append(tslen)
-            self.sptim.append(sptim)
-            self.totim.append(totim)
-        if self.start is not None:
-            self.dt = self.cast_totim()
-        return
-
-    def _cast_totim(self):
-        if self.timeunit == 'S':
-            totim = []
-            for to in self.totim:
-                t = timedelta(seconds=to)
-                totim.append(self.start + t)
-        elif self.timeunit == 'M':
-            totim = []
-            for to in self.totim:
-                t = timedelta(minutes=to)
-                totim.append(self.start + t)
-        elif self.timeunit == 'H':
-            totim = []
-            for to in self.totim:
-                t = timedelta(hours=to)
-                totim.append(self.start + t)
-        elif self.timeunit == 'D':
-            totim = []
-            for to in self.totim:
-                t = timedelta(days=to)
-                totim.append(self.start + t)
-        elif self.timeunit == 'Y':
-            totim = []
-            for to in self.totim:
-                t = timedelta(days=to * 365.25)
-                totim.append(self.start + t)
-        return totim
-
-    def _get_sp(self, ts, sp, seekpoint):
+    def _get_totim(self, ts, sp, seekpoint):
         self.f.seek(seekpoint)
         # --read header lines
         ihead = 0
@@ -779,9 +647,10 @@ class ListTime(ListBudget):
             line = self.f.readline()
             ihead += 1
             if line == '':
-                # raise Exception('end of file found while seeking budget information')
-                print('end of file found while seeking time information for ts,sp', ts, sp)
-                return self.null_entries
+                print(
+                'end of file found while seeking time information for ts,sp',
+                ts, sp)
+                return np.NaN, np.NaN, np.Nan
             elif ihead == 2 and 'SECONDS     MINUTES      HOURS       DAYS        YEARS' not in line:
                 break
             elif '-----------------------------------------------------------' in line:
@@ -790,17 +659,17 @@ class ListTime(ListBudget):
         tslen = self._parse_time_line(line)
         if tslen == None:
             print('error parsing tslen for ts,sp', ts, sp)
-            return self.null_entries
+            return np.NaN, np.NaN, np.Nan
 
         sptim = self._parse_time_line(self.f.readline())
         if sptim == None:
             print('error parsing sptim for ts,sp', ts, sp)
-            return self.null_entries
+            return np.NaN, np.NaN, np.Nan
 
         totim = self._parse_time_line(self.f.readline())
         if totim == None:
             print('error parsing totim for ts,sp', ts, sp)
-            return self.null_entries
+            return np.NaN, np.NaN, np.Nan
         return tslen, sptim, totim
 
     def _parse_time_line(self, line):
@@ -824,3 +693,71 @@ class ListTime(ListBudget):
             print('error parsing tslen information', time_str)
             return None
         return tval
+
+    def _totim_to_datetime(self, totim, start):
+        if self.timeunit == 'S':
+            tdtotim = []
+            for to in totim:
+                t = timedelta(seconds=to)
+                tdtotim.append(start + t)
+        elif self.timeunit == 'M':
+            tdtotim = []
+            for to in totim:
+                t = timedelta(minutes=to)
+                tdtotim.append(start + t)
+        elif self.timeunit == 'H':
+            tdtotim = []
+            for to in totim:
+                t = timedelta(hours=to)
+                tdtotim.append(start + t)
+        elif self.timeunit == 'D':
+            tdtotim = []
+            for to in totim:
+                t = timedelta(days=to)
+                tdtotim.append(start + t)
+        elif self.timeunit == 'Y':
+            tdtotim = []
+            for to in totim:
+                t = timedelta(days=to * 365.25)
+                tdtotim.append(start + t)
+        return tdtotim
+
+
+class SwtListBudget(ListBudget):
+    """
+
+    """
+
+    def set_budget_key(self):
+        self.budgetkey = 'MASS BUDGET FOR ENTIRE MODEL'
+        return
+
+
+class MfListBudget(ListBudget):
+    """
+
+    """
+
+    def set_budget_key(self):
+        self.budgetkey = 'VOLUMETRIC BUDGET FOR ENTIRE MODEL'
+        return
+
+
+class MfusgListBudget(ListBudget):
+    """
+
+    """
+
+    def set_budget_key(self):
+        self.budgetkey = 'VOLUMETRIC BUDGET FOR ENTIRE MODEL'
+        return
+
+
+class SwrListBudget(ListBudget):
+    """
+
+    """
+
+    def set_budget_key(self):
+        self.budgetkey = 'VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL'
+        return
