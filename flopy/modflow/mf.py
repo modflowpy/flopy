@@ -392,7 +392,7 @@ class Modflow(BaseModel):
         dis = None
         dis_key = None
         for key, item in ext_unit_dict.items():
-            if item.filetype.lower() == "dis":
+            if item.filetype == "DIS":
                 dis = item
                 dis_key = key
                 break
@@ -441,7 +441,7 @@ class Modflow(BaseModel):
         # try loading packages in ext_unit_dict
         for key, item in ext_unit_dict.items():
             if item.package is not None:
-                if item.filetype in load_only:
+                if item.filetype in load_only and item.filetype != "DIS":
                     try:
                         pck = item.package.load(item.filename, ml,
                                                 ext_unit_dict=ext_unit_dict)
