@@ -37,7 +37,7 @@ class HydmodBinaryStatements:
 class HydmodObs(HydmodBinaryStatements):
     'Reads binary MODFLOW HYDMOD package output'
 
-    def __init__(self, filename, double=False, slurp=False, verbose=False):
+    def __init__(self, filename, double=False, slurp=False, verbose=False, hydlbl_len=20):
         '''slurp is a short cut to read all output using numpy fromfile()
         if you use it, you don't need to read times
         '''
@@ -56,11 +56,12 @@ class HydmodObs(HydmodBinaryStatements):
         self.v = np.empty((self.nhydtot), dtype='float')
         self.v.fill(1.0E+32)
         ctime = self.read_hyd_text(nchar=4)
+        self.hydlbl_len = int(hydlbl_len)
         # read HYDLBL
         hydlbl = []
         #hydid = []
         for idx in range(0, self.nhydtot):
-            cid = self.read_hyd_text()
+            cid = self.read_hyd_text(self.hydlbl_len)
             hydlbl.append(cid)
         self.hydlbl = np.array(hydlbl)
         if self.verbose == True:
