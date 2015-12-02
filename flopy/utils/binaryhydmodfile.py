@@ -112,7 +112,7 @@ class HydmodObs(HydmodBinaryStatements):
             float_type = np.float32
         dtype_list = [('totim', float_type)]
         for site in self.hydlbl:
-            dtype_list.append((site[6:].strip(), float_type))
+            dtype_list.append((site.strip(), float_type))
         dtype = np.dtype(dtype_list)
         data = np.fromfile(self.file, dtype, count=-1)
         return data
