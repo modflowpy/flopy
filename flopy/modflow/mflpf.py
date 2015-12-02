@@ -17,7 +17,7 @@ from flopy.modflow.mfpar import ModflowPar as mfpar
 
 class ModflowLpf(Package):
     """
-    MODFLOW Discretization Package Class.
+    MODFLOW Layer Property Flow Package Class.
 
     Parameters
     ----------

@@ -62,9 +62,11 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + Example problems from the 2015 2nd edition of [Applied Groundwater Modeling](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt (https://github.com/Applied-Groundwater-Modeling-2nd-Ed)
 
-### SWI2 Test Problems for *FloPy<sub>3</sub>*
+### Python Script Examples
 
-*FloPy<sub>3</sub>* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) are available:
+*FloPy<sub>3</sub>* scripts for running and post-processing the lake example and SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) are available:
+
++ [Lake Example](https://github.com/modflowpy/flopy/blob/master/examples/scripts/lake_example.py)
 
 + [SWI2 Example 1](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex1.py)
 
@@ -95,7 +97,7 @@ A few simple *FloPy<sub>3</sub>* tutorials are available at:
 
 **Dependencies:**
 
-*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the flopy.plot submodule require **Pyshp** 1.2 (or higher).
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the `flopy.plot` submodule and shapefile export capabilities in the `flopy.export` submodule require **Pyshp** 1.2 (or higher). The NetCDF export capabilities in the `flopy.export` submodule require **python-dateutil** 2.4 or higher, **netcdf4** 1.1 or higher, **pyproj** 1.9 or higher. Other NetCDF dependencies are detailed on the [UniData](http://unidata.github.io/netcdf4-python/) website.  
 
 
 **For base Python distributions:**

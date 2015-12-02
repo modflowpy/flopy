@@ -13,11 +13,13 @@ PRECISION_STRS = ["f4", "f8", "i4"]
 class Logger(object):
     """ a basic class for logging events during the linear analysis calculations
         if filename is passed, then an file handle is opened
+
     Parameters:
     ----------
         filename (bool or string): if string, it is the log file to write
             if a bool, then log is written to the screen
         echo (bool): a flag to force screen output
+
     Attributes:
     ----------
         items (dict) : tracks when something is started.  If a log entry is
@@ -42,7 +44,8 @@ class Logger(object):
             self.filename = None
 
     def log(self, phrase):
-        """log something that happened
+        """
+        log something that happened
         Parameters:
         ----------
             phrase (str) : the thing that happened
@@ -249,8 +252,9 @@ class NetCdf(object):
         pass
 
     def initialize_file(self, time_values=None):
-        """ initialize the netcdf instance, including global attributes,
-            dimensions, and grid information
+        """
+        initialize the netcdf instance, including global attributes,
+        dimensions, and grid information
 
         Parameters:
         ----------
@@ -400,7 +404,8 @@ class NetCdf(object):
 
     def create_variable(self, name, attributes, precision_str='f4',
                         dimensions=("time", "layer", "y", "x")):
-        """ create a new variable in the netcdf object
+        """
+        create a new variable in the netcdf object
 
         Parameters:
         ----------

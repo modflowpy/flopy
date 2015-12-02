@@ -348,7 +348,7 @@ class ModflowSwi2(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> lpf = flopy.modflow.ModflowSwi2.load('test.swi2', m)
+        >>> swi2 = flopy.modflow.ModflowSwi2.load('test.swi2', m)
 
         """
 
