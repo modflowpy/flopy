@@ -91,7 +91,7 @@ class HydmodObs(HydmodBinaryStatements):
         times = []
         while True:
             current_position = self.file.tell()
-            totim, v, success = next(self)
+            totim, v, success = self.__next__()
             if success == True:
                 times.append([totim, current_position])
             else:
