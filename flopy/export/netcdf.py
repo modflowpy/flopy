@@ -5,28 +5,31 @@ from datetime import datetime
 
 # globals
 FILLVALUE = -99999.9
-ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days", 5: "years"}
+ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
+          5: "years"}
 LENUNI = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
 PRECISION_STRS = ["f4", "f8", "i4"]
 
 
 class Logger(object):
-    """ a basic class for logging events during the linear analysis calculations
-        if filename is passed, then an file handle is opened
+    """
+    Basic class for logging events during the linear analysis calculations
+    if filename is passed, then an file handle is opened
 
-    Parameters:
+    Parameters
     ----------
-        filename (bool or string): if string, it is the log file to write
-            if a bool, then log is written to the screen
-        echo (bool): a flag to force screen output
+    filename : bool or string
+        if string, it is the log file to write.  If a bool, then log is
+        written to the screen. echo (bool): a flag to force screen output
 
-    Attributes:
+    Attributes
     ----------
-        items (dict) : tracks when something is started.  If a log entry is
-            not in items, then it is treated as a new entry with the string
-            being the key and the datetime as the value.  If a log entry is
-            in items, then the end time and delta time are written and
-            the item is popped from the keys
+    items : dict
+        tracks when something is started.  If a log entry is
+        not in items, then it is treated as a new entry with the string
+        being the key and the datetime as the value.  If a log entry is
+        in items, then the end time and delta time are written and
+        the item is popped from the keys
 
     """
 
@@ -46,9 +49,12 @@ class Logger(object):
     def log(self, phrase):
         """
         log something that happened
-        Parameters:
+
+        Parameters
         ----------
-            phrase (str) : the thing that happened
+        phrase : str
+            the thing that happened
+
         """
         pass
         t = datetime.now()
@@ -56,57 +62,61 @@ class Logger(object):
             s = str(t) + ' finished: ' + str(phrase) + ", took: " + \
                 str(t - self.items[phrase]) + '\n'
             if self.echo:
-                print(s, )
+                print(s,)
             if self.filename:
                 self.f.write(s)
             self.items.pop(phrase)
         else:
             s = str(t) + ' starting: ' + str(phrase) + '\n'
             if self.echo:
-                print(s, )
+                print(s,)
             if self.filename:
                 self.f.write(s)
             self.items[phrase] = copy.deepcopy(t)
 
     def warn(self, message):
-        """write a warning to the log file
-        Parameters:
+        """
+        Write a warning to the log file
+
+        Parameters
         ----------
-            message (str) : the warning text
+        message : str
+            the warning text
 
         """
         s = str(datetime.now()) + " WARNING: " + message + '\n'
         if self.echo:
-            print(s, )
+            print(s,)
         if self.filename:
             self.f.write(s)
+        return
 
 
 class NetCdf(object):
-    """ support for writing a netCDF4 compliant file from a flopy model
-     Parameters:
-     ----------
-        output_filename (str) : the name of the .nc file to write
+    """
+    Support for writing a netCDF4 compliant file from a flopy model
 
-        model : flopy model instance
+    Parameters
+    ----------
+    output_filename : str
+        Name of the .nc file to write
+    model : flopy model instance
+    time_values : the entries for the time dimension
+        if not None, the constructor will initialize
+        the file.  If None, the perlen array of ModflowDis
+        will be used
+    verbose : if True, stdout is verbose.  If str, then a log file
+        is written to the verbose file
 
-        time_values : the entires for the time dimension
-            if not None, the constructor will initialize
-            the file.  If None, the perlen array of ModflowDis
-             will be used
-
-        verbose : if True, stdout is verbose.  If str, then a log file
-            is written to the verbose file
-
-    Note:
-    ----
-        this class relies heavily on the ModflowDis object,
-        including these attributes:
-                    lenuni
-                    itmuni
-                    start_datetime
-                    sr (SpatialReference)
-        make sure these attributes have meaningful values
+    Notes
+    -----
+    this class relies heavily on the ModflowDis object,
+    including these attributes:
+                lenuni
+                itmuni
+                start_datetime
+                sr (SpatialReference)
+    make sure these attributes have meaningful values
 
     """
 
@@ -130,7 +140,8 @@ class NetCdf(object):
         # self.start_datetime = pd.to_datetime(self.model.dis.start_datetime).\
         #                          isoformat().split('.')[0].split('+')[0] + "Z"
         import dateutil.parser
-        self.start_datetime = dateutil.parser.parse(self.model.dis.start_datetime).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.start_datetime = dateutil.parser.parse(
+            self.model.dis.start_datetime).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         self.grid_units = LENUNI[self.model.dis.lenuni]
         assert self.grid_units in ["feet", "meters"], \
@@ -150,7 +161,7 @@ class NetCdf(object):
             self.log("time_values != None, initializing file")
 
     def write(self):
-        """ write the nc object to disk"""
+        """write the nc object to disk"""
         self.log("writing nc file")
         assert self.nc is not None, "netcdf.write() error: nc file not initialized"
 
@@ -160,15 +171,16 @@ class NetCdf(object):
                 if self.nc.attributes.get(k) is not None:
                     self.nc.setncattr(k, v)
             except Exception as e:
-                self.logger.warn('error setting global attribute {0}'.format(k))
+                self.logger.warn(
+                    'error setting global attribute {0}'.format(k))
 
         self.nc.sync()
         self.nc.close()
         self.log("writing nc file")
 
     def _initialize_attributes(self):
-        """ private method to initial the attributes
-            of the NetCdf instance
+        """private method to initial the attributes
+           of the NetCdf instance
         """
         assert "nc" not in self.__dict__.keys(), \
             "NetCdf._initialize_attributes() error: nc attribute already set"
@@ -248,7 +260,8 @@ class NetCdf(object):
 
         base_x = self.model.dis.sr.xgrid[0, 0]
         base_y = self.model.dis.sr.ygrid[0, 0]
-        self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x, base_y)
+        self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
+                                                 base_y)
         pass
 
     def initialize_file(self, time_values=None):
@@ -256,7 +269,7 @@ class NetCdf(object):
         initialize the netcdf instance, including global attributes,
         dimensions, and grid information
 
-        Parameters:
+        Parameters
         ----------
 
             time_values : list of times to use as time dimension
@@ -275,18 +288,21 @@ class NetCdf(object):
             import netCDF4
         except Exception as e:
             self.logger.warn("error importing netCDF module")
-            raise Exception("NetCdf error importing netCDF4 module:\n" + str(e))
+            raise Exception(
+                "NetCdf error importing netCDF4 module:\n" + str(e))
 
         # open the file for writing
         try:
             self.nc = netCDF4.Dataset(self.output_filename, "w")
         except Exception as e:
-            raise Exception("error creating netcdf dataset:\n{0}".format(str(e)))
+            raise Exception(
+                "error creating netcdf dataset:\n{0}".format(str(e)))
 
         # write some attributes
         self.log("setting standard attributes")
         self.nc.setncattr("Conventions", "CF-1.6")
-        self.nc.setncattr("date_created", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
+        self.nc.setncattr("date_created",
+                          datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
         self.nc.setncattr("geospatial_vertical_positive", "up")
         min_vertical = np.min(self.zs)
         max_vertical = np.max(self.zs)
@@ -297,12 +313,14 @@ class NetCdf(object):
         self.nc.setncattr("origin_x", self.model.dis.sr.xul)
         self.nc.setncattr("origin_y", self.model.dis.sr.yul)
         self.nc.setncattr("origin_crs", self.model.dis.sr.proj4_str)
-        self.nc.setncattr("grid_rotation_from_origin", self.model.dis.sr.rotation)
+        self.nc.setncattr("grid_rotation_from_origin",
+                          self.model.dis.sr.rotation)
         for k, v in self.global_attributes.items():
             try:
                 self.nc.setself.ncattr(k, v)
             except:
-                self.logger.warn("error setting global attribute {0}".format(k))
+                self.logger.warn(
+                    "error setting global attribute {0}".format(k))
         self.global_attributes = {}
         self.log("setting standard attributes")
         # spatial dimensions
@@ -326,10 +344,13 @@ class NetCdf(object):
         crs.inverse_flattening = self.nc_inverse_flat
         self.log("setting CRS info")
 
-        attribs = {"units": "{0} since {1}".format(self.time_units, self.start_datetime),
-                   "standard_name": "time", "long_name": "time", "calendar": "gregorian",
+        attribs = {"units": "{0} since {1}".format(self.time_units,
+                                                   self.start_datetime),
+                   "standard_name": "time", "long_name": "time",
+                   "calendar": "gregorian",
                    "_CoordinateAxisType": "Time"}
-        time = self.create_variable("time", attribs, precision_str="f8", dimensions=("time",))
+        time = self.create_variable("time", attribs, precision_str="f8",
+                                    dimensions=("time",))
         time[:] = np.asarray(time_values)
 
         # Elevation
@@ -337,14 +358,16 @@ class NetCdf(object):
                    "long_name": "elevation", "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
                    "positive": "down"}
-        elev = self.create_variable("elevation", attribs, precision_str="f8", dimensions=("layer", "y", "x"))
+        elev = self.create_variable("elevation", attribs, precision_str="f8",
+                                    dimensions=("layer", "y", "x"))
         elev[:] = self.zs
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
                    "long_name": "longitude", "axis": "X",
                    "_CoordinateAxisType": "Lon"}
-        lon = self.create_variable("longitude", attribs, precision_str="f8", dimensions=("y", "x"))
+        lon = self.create_variable("longitude", attribs, precision_str="f8",
+                                   dimensions=("y", "x"))
         lon[:] = self.xs
         self.log("creating longitude var")
 
@@ -353,7 +376,8 @@ class NetCdf(object):
         attribs = {"units": "degrees_north", "standard_name": "latitude",
                    "long_name": "latitude", "axis": "Y",
                    "_CoordinateAxisType": "Lat"}
-        lat = self.create_variable("latitude", attribs, precision_str="f8", dimensions=("y", "x"))
+        lat = self.create_variable("latitude", attribs, precision_str="f8",
+                                   dimensions=("y", "x"))
         lat[:] = self.ys
 
         # layer
@@ -401,32 +425,34 @@ class NetCdf(object):
         exp.existingDataField = "elevation"
         exp._CoordinateTransformType = "vertical"
         exp._CoordinateAxes = "layer"
+        return
 
     def create_variable(self, name, attributes, precision_str='f4',
                         dimensions=("time", "layer", "y", "x")):
         """
-        create a new variable in the netcdf object
+        Create a new variable in the netcdf object
 
-        Parameters:
+        Parameters
         ----------
-            name (str) : the name of the variable
+        name : str
+            the name of the variable
+        attributes : dict
+            attributes to add to the new variable
+        precision_str : str
+            netcdf-compliant string. e.g. f4
+        dimensions : tuple
+            which dimensions the variable applies to
+            default : ("time","layer","x","y")
 
-            attributes (dict) : attributes to add to the new variable
-
-            precision_str (str) : netcdf-compliant string. e.g. f4
-
-            dimensions (tuple) : which dimensions the variable applies to
-                default : ("time","layer","x","y")
-
-        Returns:
+        Returns
         -------
-            nc variable
+        nc variable
 
-        Raises:
+        Raises
         ------
-            AssertionError if precision_str not right
-            AssertionError if variable name already in netcdf object
-            AssertionError if one of more dimensions do not exist
+        AssertionError if precision_str not right
+        AssertionError if variable name already in netcdf object
+        AssertionError if one of more dimensions do not exist
 
         """
 

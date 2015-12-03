@@ -625,9 +625,9 @@ class BaseModel(object):
 
     def to_shapefile(self, filename, package_names=None, **kwargs):
         """
-        Wrapper function for writing a shapefile for the model grid.  If package_names
-        is not None, then search through the requested packages looking for arrays
-        that can be added to the shapefile as attributes
+        Wrapper function for writing a shapefile for the model grid.  If
+        package_names is not None, then search through the requested packages
+        looking for arrays that can be added to the shapefile as attributes
 
         Parameters
         ----------
@@ -642,7 +642,6 @@ class BaseModel(object):
 
         Examples
         --------
-
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> m.to_shapefile('model.shp', SelPackList)
@@ -650,7 +649,9 @@ class BaseModel(object):
         """
         from flopy.utils import model_attributes_to_shapefile
 
-        model_attributes_to_shapefile(filename, self, package_names=package_names, **kwargs)
+        model_attributes_to_shapefile(filename, self,
+                                      package_names=package_names, **kwargs)
+        return
 
 
 class Package(object):
@@ -659,8 +660,8 @@ class Package(object):
 
     """
 
-    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1, extra='',
-                 allowDuplicates=False):
+    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1,
+                 extra='', allowDuplicates=False):
         """
         Package init
 
@@ -748,7 +749,8 @@ class Package(object):
                                                fmtin=old_value.fmtin,
                                                locat=old_value.locat)
             elif isinstance(old_value, utils.MfList):
-                value = utils.MfList(self.parent, dtype=old_value.dtype, data=value)
+                value = utils.MfList(self.parent, dtype=old_value.dtype,
+                                     data=value)
             elif isinstance(old_value, list):
                 if len(old_value) > 0:
                     if isinstance(old_value[0], utils.Util3d):
@@ -772,7 +774,6 @@ class Package(object):
 
         super(Package, self).__setattr__(key, value)
 
-
     def export(self,f):
         from flopy import export
         from flopy.utils import Util2d,Util3d,Transient2d,MfList
@@ -795,6 +796,7 @@ class Package(object):
                     if isinstance(v, Util3d):
                         f = export.utils.util3d_helper(f,v)
         return f
+
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
         if not isinstance(field_names, list):
@@ -808,7 +810,6 @@ class Package(object):
         newdtype = sum((dtype.descr for dtype in newdtypes), [])
         newdtype = np.dtype(newdtype)
         return newdtype
-
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -838,6 +839,7 @@ class Package(object):
         >>> import flopy
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.dis.check()
+
         """
         if f is not None:
             if isinstance(f, str):
@@ -849,16 +851,9 @@ class Package(object):
             f.write('{}\n'.format(txt))
         if verbose:
             print(txt)
+        return
 
     def level1_arraylist(self, idx, v, name, txt):
-        """
-
-        :param idx:
-        :param v:
-        :param txt:
-        :param name:
-        :return:
-        """
         ndim = v.ndim
         if ndim == 3:
             kon = -1
@@ -898,7 +893,8 @@ class Package(object):
                 MODFLOW zero-based layer number to return.  If None, then all
                 all layers will be included. (default is None)
             kper : int
-                MODFLOW zero-based stress period number to return. (default is zero)
+                MODFLOW zero-based stress period number to return. (default is
+                zero)
             key : str
                 MfList dictionary key. (default is None)
 
@@ -1030,8 +1026,8 @@ class Package(object):
 
     def to_shapefile(self, filename, **kwargs):
         """
-        Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).  Adds an
-            attribute for each layer in each data array
+        Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).
+        Adds an attribute for each layer in each data array
 
         Parameters
         ----------
@@ -1053,6 +1049,7 @@ class Package(object):
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.lpf.to_shapefile('test_hk.shp')
+
         """
 
         from flopy.utils import model_attributes_to_shapefile
