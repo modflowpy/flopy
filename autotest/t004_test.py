@@ -7,6 +7,7 @@ out_dir = "temp"
 if not os.path.exists(out_dir):
     os.mkdir(out_dir)
 
+
 def test_transient2d():
     ml = flopy.modflow.Modflow()
     dis = flopy.modflow.ModflowDis(ml,nlay=10,nrow=10,ncol=10,nper=3)
@@ -34,6 +35,13 @@ def test_util2d():
     a4 = u2d.load_txt((10, 10), fname, u2d.dtype, "(FREE)")
     assert np.array_equal(a1, a4)
 
+    #fixed format read/write with touching numbers - yuck!
+    data = np.arange(100).reshape(10,10)
+    u2d_arange = Util2d(ml,(10,10),np.float32,data,"test")
+    u2d_arange.write_txt((10,10),fname,u2d_arange.array,python_format=[7,"{0:10.4E}"])
+    a4a = u2d.load_txt((10,10),fname,np.float32,"(7E10.6)")
+    assert np.array_equal(u2d_arange.array,a4a)
+
     # test view vs copy with .array
     a5 = u2d.array
     a5 += 1
@@ -52,6 +60,49 @@ def test_util2d():
     assert np.array_equal(u2d.array,a7)
 
     return
+
+
+def test_util2d_external_free():
+
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if not os.path.exists(model_ws):
+        os.mkdir(model_ws)
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
+    nlay,nrow,ncol = 1,10,10
+    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
+    hk = np.ones((nrow,ncol))
+    # save hk up one dir from model_ws
+    fname = os.path.join(out_dir,"test.ref")
+    np.savetxt(fname,hk,fmt="%15.6e",delimiter='')
+
+    lpf = flopy.modflow.ModflowLpf(ml,hk=fname)
+    ml.write_input()
+
+    #change model_ws
+    ml.model_ws = out_dir
+    ml.write_input()
+
+
+def test_util2d_external_fixed():
+
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if not os.path.exists(model_ws):
+        os.mkdir(model_ws)
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
+    ml.free_format = False
+    nlay,nrow,ncol = 1,10,10
+    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
+    hk = np.ones((nrow,ncol))
+    # save hk up one dir from model_ws
+    fname = os.path.join(out_dir,"test.ref")
+    np.savetxt(fname,hk,fmt="%10.2f",delimiter='')
+
+    lpf = flopy.modflow.ModflowLpf(ml,hk=fname)
+    ml.write_input()
+    #change model_ws
+    ml.model_ws = out_dir
+    ml.write_input()
+
 
 
 def test_util3d():
@@ -75,6 +126,7 @@ def test_util3d():
 
 
 if __name__ == '__main__':
-    test_transient2d()
-    test_util2d()
-    test_util3d()
+    test_util2d_external_free()
+    #test_transient2d()
+    #test_util2d()
+    #test_util3d()

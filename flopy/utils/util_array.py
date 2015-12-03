@@ -100,85 +100,6 @@ def read1d(f, a):
     return a
 
 
-def array2string(a, fmt_tup):
-    """
-    Converts a 1D or 2D array into a string
-
-    Parameters
-    ----------
-    a : numpy.ndarray
-    fmt_tup : str
-
-    Returns
-    -------
-    s : string
-        string representation of the array
-
-    """
-
-    aa = np.atleast_2d(a)
-    nr, nc = np.shape(aa)[0:2]
-    # print 'nr = %d, nc = %d\n' % (nr, nc)
-    npl = fmt_tup[0]
-    fmt_str = fmt_tup[1]
-    # hack for binary - no fmt given
-    if fmt_str == None:
-        fmt_str = '{0:15.6G}'
-        npl = aa.shape[1]
-    s = ''
-    for r in range(nr):
-        for c in range(nc):
-            # fix for numpy 1.6 bug
-            if aa.dtype == 'float32':
-                s = s + (fmt_str.format(float(aa[r, c])))
-            else:
-                s = s + (fmt_str.format(aa[r, c]))
-            if ((c + 1) % npl == 0) or (c == (nc - 1)):
-                s += '\n'
-    return s
-
-
-def cast2dict(value):
-    """
-    Converts scalar or list to dictionary keyed on kper that
-    can be used with the Transient2d class.
-
-    """
-    # If already a dictionary return
-    if (isinstance(value, dict)):
-        return value
-
-    # If value is a scalar or a single numpy array convert to a list
-    if (np.isscalar(value) or isinstance(value, np.ndarray)):
-        value = [value]
-
-    rv = {}
-    # Convert list to dictionary
-    if (isinstance(value, list)):
-        for kper, a in enumerate(value):
-            rv[kper] = a
-    else:
-        raise Exception("cast2dict error: value type not " +
-                        " recognized: " + str(type(value)))
-
-    return rv
-
-
-def u3d_like(model, other):
-    u3d = copy.deepcopy(other)
-    u3d.model = model
-    for i, u2d in enumerate(u3d.util_2ds):
-        u3d.util_2ds[i].model = model
-
-    return u3d
-
-
-def u2d_like(model, other):
-    u2d = copy.deepcopy(other)
-    u2d.model = model
-    return u2d
-
-
 def new_u2d(old_util2d, value):
     new_util2d = Util2d(old_util2d.model, old_util2d.shape, old_util2d.dtype,
                          value, old_util2d.name, old_util2d.fmtin,
@@ -188,20 +109,6 @@ def new_u2d(old_util2d, value):
     return new_util2d
 
 
-# class meta_interceptor(type):
-#     """
-#     meta class to catch existing instances of Util2d,
-#     Transient2d and Util3d to prevent re-instantiating them.
-#     a lot of python trickery here...
-#     """
-#     def __call__(cls, *args, **kwds):
-#         for a in args:
-#             if isinstance(a, Util2d) or isinstance(a, Util3d):
-#                 return a
-#         return type.__call__(cls, *args, **kwds)
-
-
-# class Util3d((with_metaclass(meta_interceptor, object))):
 class Util3d(object):
     """
     Util3d class for handling 3-D model arrays.  just a thin wrapper around
@@ -432,7 +339,7 @@ class Util3d(object):
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.lpf.hk.plot()
-        
+
         """
         import flopy.plot.plotutil as pu
 
@@ -580,7 +487,6 @@ class Util3d(object):
                            self.locat)
 
 
-# class Transient2d((with_metaclass(meta_interceptor, object))):
 class Transient2d(object):
     """
     Transient2d class for handling time-dependent 2-D model arrays.
@@ -694,7 +600,7 @@ class Transient2d(object):
 
     def to_shapefile(self, filename):
         """
-        Export transient 2D data to a shapefile (as polygons). Adds an 
+        Export transient 2D data to a shapefile (as polygons). Adds an
             attribute for each unique Util2d instance in self.data
 
         Parameters
@@ -788,7 +694,7 @@ class Transient2d(object):
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.rch.rech.plot()
-        
+
         """
         import flopy.plot.plotutil as pu
 
@@ -944,7 +850,6 @@ class Transient2d(object):
         return u2d
 
 
-# class Util2d((with_metaclass(meta_interceptor, object))):
 class Util2d(object):
     """
     Util2d class for handling 2-D model arrays
@@ -1067,7 +972,7 @@ class Util2d(object):
                             'name or ext_filename attribute')
         elif self.model.external_path != None and ext_filename == None \
                 and self.vtype not in [np.int, np.float32]:
-            # self.ext_filename = self.model.external_path+name+'.ref'
+
             self.ext_filename = os.path.join(self.model.external_path,
                                              name + '.ref')
         elif self.vtype not in [np.int, np.float32]:
@@ -1316,6 +1221,7 @@ class Util2d(object):
                 else:
                     return ''
         else:
+            #if value is a filename and ext_filename was passed in
             if os.path.exists(self.__value) and self.ext_filename is not None:
                 # if this is a free format model, then we can use the same
                 #  ext file over and over - no need to copy
@@ -1334,7 +1240,8 @@ class Util2d(object):
                     self.model.add_external(self.ext_filename, self.locat)
 
                 return ''
-                # otherwise, we need to load the the value filename
+
+            # otherwise, we need to load the the value filename
             #  and return as a string
             else:
                 return self.string
@@ -1351,7 +1258,7 @@ class Util2d(object):
         """
         a = self._array
         # convert array to sting with specified format
-        a_string = array2string(a, self.py_desc)
+        a_string = self.array2string(self.shape, a, python_format=self.py_desc)
         return a_string
 
     @property
@@ -1465,21 +1372,33 @@ class Util2d(object):
     @staticmethod
     def write_txt(shape, file_out, data, fortran_format="(FREE)",
                   python_format=None):
-        """
-        write a (possibly wrapped format) array from a file
-        (self.__value) and casts to the proper type (self.dtype)
-        made static to support the load functionality
-        this routine now supports fixed format arrays where the numbers
-        may touch.
-        """
-
         if fortran_format.upper() == '(FREE)' and python_format is None:
             np.savetxt(file_out, data,
                        Util2d.get_default_numpy_fmt(data.dtype),
                        delimiter='')
             return
+        if not hasattr(file_out,"write"):
+            file_out = open(file_out,'w')
+        file_out.write(Util2d.array2string(shape,data,fortran_format=fortran_format,
+                                           python_format=python_format))
 
-        nrow, ncol = shape
+    @staticmethod
+    def array2string(shape, data, fortran_format="(FREE)",
+                     python_format=None):
+        """
+        return a string representation of
+        a (possibly wrapped format) array from a file
+        (self.__value) and casts to the proper type (self.dtype)
+        made static to support the load functionality
+        this routine now supports fixed format arrays where the numbers
+        may touch.
+        """
+        if len(shape) == 2:
+            nrow, ncol = shape
+        else:
+            nrow = 1
+            ncol = shape[0]
+        data = np.atleast_2d(data)
         if python_format is None:
             column_length, fmt, width, decimal = \
                 decode_fortran_descriptor(fortran_format)
@@ -1500,20 +1419,21 @@ class Util2d(object):
             lineReturnFlag = False
         else:
             lineReturnFlag = True
-        # write the array
+        # write the array to a string
+        s = ""
         for i in range(nrow):
             icol = 0
             for j in range(ncol):
                 try:
-                    file_out.write(output_fmt.format(data[i, j]))
-                except:
-                    print('Value {0} at row,col [{1},{2}] can not be written' \
-                          .format(data[i, j], i, j))
-                    raise Exception
+                    s = s + output_fmt.format(data[i, j])
+                except Exception as e:
+                    raise Exception("error writing array value" + \
+                     "{0} at r,c [{1},{2}]\n{3}".format(data[i, j], i, j, str(e)))
                 if (j + 1) % column_length == 0.0 and j != 0:
-                    file_out.write('\n')
+                    s += '\n'
             if lineReturnFlag == True:
-                file_out.write('\n')
+                s += '\n'
+        return s
 
     @staticmethod
     def load_bin(shape, file_in, dtype, bintype=None):
@@ -1668,8 +1588,7 @@ class Util2d(object):
                 try:
                     value = float(value)
                 except:
-                    assert os.path.exists(
-                        os.path.join(self.model.model_ws, value)), \
+                    assert os.path.exists(value), \
                         'could not find file: ' + str(value)
                     return value
         if np.isscalar(value):

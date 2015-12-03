@@ -11,8 +11,8 @@ from numpy.lib.recfunctions import stack_arrays
 import sys
 import os
 import subprocess as sp
+import copy
 import webbrowser as wb
-import warnings
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from flopy import utils
 
@@ -89,7 +89,7 @@ class BaseModel(object):
                 # print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd()))
                 model_ws = os.getcwd()
-        self.model_ws = model_ws
+        self._model_ws = model_ws
         self.structured = structured
         self.pop_key_list = []
         self.cl_params = ''
@@ -99,18 +99,6 @@ class BaseModel(object):
         for pak in self.packagelist:
            f = pak.export(f)
         return f
-
-    def set_exename(self, exe_name):
-        """
-        Set the name of the executable.
-
-        Parameters
-        ----------
-        exe_name : name of the executable
-
-        """
-        self.exe_name = exe_name
-        return
 
     def add_package(self, p):
         """
@@ -167,39 +155,6 @@ class BaseModel(object):
 
         """
         return self.get_package(item)
-
-    def build_array_name(self, num, prefix):
-        """
-        Build array name
-
-        Parameters
-        ----------
-        num : int
-            array number
-        prefix : string
-            array prefix
-
-        """
-        return self.external_path + prefix + '_' + str(num) + '.' + self.external_extension
-
-    def assign_external(self, num, prefix):
-        """
-        Assign external file
-
-        Parameters
-        ----------
-        num : int
-            array number
-        prefix : string
-            array prefix
-
-        """
-        fname = self.build_array_name(num, prefix)
-        unit = (self.next_ext_unit())
-        self.external_fnames.append(fname)
-        self.external_units.append(unit)
-        self.external_binflag.append(False)
-        return fname, unit
 
     def add_external(self, fname, unit, binflag=False):
         """
@@ -309,7 +264,7 @@ class BaseModel(object):
             val.append(pp.name[0].upper())
         return val
 
-    def change_model_ws(self, new_pth=None):
+    def _change_model_ws(self, new_pth=None):
         """
         Change the model work space.
 
@@ -338,13 +293,43 @@ class BaseModel(object):
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd()))
                 new_pth = os.getcwd()
         # --reset the model workspace
-        self.model_ws = new_pth
+        self._model_ws = new_pth
         sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
         # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
-
         return None
+
+    @property
+    def model_ws(self):
+        return copy.deepcopy(self._model_ws)
+
+    def _set_name(self, value):
+        """
+        Set model name
+
+        Parameters
+        ----------
+        value : str
+            Name to assign to model.
+
+        """
+        self.__name = value
+        self.namefile = self.__name + '.' + self.namefile_ext
+        for p in self.packagelist:
+            for i in range(len(p.extension)):
+                p.file_name[i] = self.__name + '.' + p.extension[i]
+            p.fn_path = os.path.join(self.model_ws, p.file_name[0])
+
+
+    def __setattr__(self,key,value):
+
+        if key == "name":
+            self._set_name(value)
+        elif key == "model_ws":
+            self._change_model_ws(value)
+        else:
+            super(BaseModel,self).__setattr__(key,value)
 
     def run_model(self, silent=False, pause=False, report=False,
                   normal_msg='normal termination'):
@@ -422,7 +407,8 @@ class BaseModel(object):
         """
         raise Exception('IMPLEMENTATION ERROR: writenamefile must be overloaded')
 
-    def get_name(self):
+    @property
+    def name(self):
         """
         Get model name
 
@@ -432,26 +418,10 @@ class BaseModel(object):
             name of model
 
         """
-        return self.__name
+        return copy.deepcopy(self.__name)
 
-    def set_name(self, value):
-        """
-        Set model name
 
-        Parameters
-        ----------
-        value : str
-            Name to assign to model.
 
-        """
-        self.__name = value
-        self.namefile = self.__name + '.' + self.namefile_ext
-        for p in self.packagelist:
-            for i in range(len(p.extension)):
-                p.file_name[i] = self.__name + '.' + p.extension[i]
-            p.fn_path = os.path.join(self.model_ws, p.file_name[0])
-
-    name = property(get_name, set_name)
 
     def add_pop_key_list(self, key):
         """
