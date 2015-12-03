@@ -1,3 +1,10 @@
+"""
+This is a set of classes for reading budget information out of MODFLOW-style
+listing files.  Cumulative and incremental budgets are returned as numpy
+recarrays, which can then be easily plotted.
+
+"""
+
 import collections
 import os
 import re
@@ -10,50 +17,26 @@ class ListBudget(object):
     """
     MODFLOW family list file handling
 
-    Parameters:
+    Parameters
     ----------
-        file_name : (str) the list file name
+    file_name : str
+        the list file name
+    budgetkey : str
+        the text string identifying the budget table
+    timeunit : str
+        the time unit to return in the recarray (default is 'days')
 
-    Methods:
-    ----------
-        get_record_names : returns a list of water budget items in the list file.
-        The names also include totim, stress period, and time step.
+    Notes
+    -----
+    The ListBudget class should not be instantiated directly.  Access is
+    through derived classes: MfListBudget (MODFLOW), SwtListBudget (SEAWAT)
+    and SwrListBudget (MODFLOW with the SWR process)
 
-        get_times : returns a list of unique water budget times in the list file.
-
-        get_kstpkper : returns a list of unique stress periods and time steps in
-        the list file water budgets.
-
-        get_incremental : returns a numpy.recarray for all cumulative water budget
-        entries in the list file budget.  The columns include totim, stress period,
-        and time step.
-
-        get_cumulative : returns a numpy.recarray for all cumulative water budget
-        entries in the list file budget.  The columns include totim, stress period,
-        and time step.
-
-        get_budget : returns incremental, cumulative numpy.recarrays for all entries
-        in the list file budget.  The columns include totim, stress period, and time step.
-
-        get_data : returns a numpy.recarray with water budget data from the list file
-        for the specified conditions. The numpy.recarray includes index, value, and
-        name columns.
-
-        get_dataframes(start_datetime='1-1-1970') : returns incremental and cumulative
-        water budget dateframes.  If start_datetime is passed as none, the rows are indexed
-        on totim.  Otherwise, a DatetimeIndex is set.
-
-    Note:
-    ----
-        The ListBudget class should not be instantiated directly.  Access is
-        through derived classes: MfListBudget (MODFLOW), SwtListBudget (SEAWAT)
-        and SwrListBudget (MODFLOW with the SWR process)
-
-    Example:
-    -------
-        >>> mf_list = MfListBudget("my_model.list")
-        >>> incremental, cumulative = mf_list.get_budget()
-        >>> df_in, df_out = mf_list.get_dataframes(start_datetime="10-21-2015")
+    Examples
+    --------
+    >>> mf_list = MfListBudget("my_model.list")
+    >>> incremental, cumulative = mf_list.get_budget()
+    >>> df_in, df_out = mf_list.get_dataframes(start_datetime="10-21-2015")
 
     """
 
@@ -113,14 +96,14 @@ class ListBudget(object):
         Get a list of water budget record names in the file
 
         Returns
-        ----------
+        -------
         out : list of strings
             List of unique text names in the binary file.
 
-        Example:
-        -------
-            >>> mf_list = MfListBudget('my_model.list')
-            >>> names = mf_list.get_record_names()
+        Examples
+        --------
+        >>> mf_list = MfListBudget('my_model.list')
+        >>> names = mf_list.get_record_names()
 
         """
         return self.inc.dtype.names
@@ -130,15 +113,14 @@ class ListBudget(object):
         Get a list of unique water budget times in the list file
 
         Returns
-        ----------
+        -------
         out : list of floats
             List contains unique water budget simulation times (totim) in list file.
 
-
-        Example:
-        -------
-            >>> mf_list = MfListBudget('my_model.list')
-            >>> times = mf_list.get_times()
+        Examples
+        --------
+        >>> mf_list = MfListBudget('my_model.list')
+        >>> times = mf_list.get_times()
 
         """
         return self.inc['totim'].tolist()
@@ -154,11 +136,10 @@ class ListBudget(object):
             List of unique kstp, kper combinations in list file.  kstp and
             kper values are zero-based.
 
-
-        Example:
-        -------
-            >>> mf_list = MfListBudget("my_model.list")
-            >>> kstpkper = mf_list.get_kstpkper()
+        Examples
+        --------
+        >>> mf_list = MfListBudget("my_model.list")
+        >>> kstpkper = mf_list.get_kstpkper()
 
         """
         kstpkper = []
@@ -179,16 +160,16 @@ class ListBudget(object):
             (default is None).
 
         Returns
-        ----------
+        -------
         out : recarray
             Numpy recarray with the water budget items in list file. The
             recarray also includes totim, time_step, and stress_period.
 
+        Examples
+        --------
+        >>> mf_list = MfListBudget("my_model.list")
+        >>> incremental = mf_list.get_incremental()
 
-        Example:
-        -------
-            >>> mf_list = MfListBudget("my_model.list")
-            >>> incremental = mf_list.get_incremental()
         """
         if names is None:
             return self.inc
@@ -212,16 +193,16 @@ class ListBudget(object):
             (default is None).
 
         Returns
-        ----------
+        -------
         out : recarray
             Numpy recarray with the water budget items in list file. The
             recarray also includes totim, time_step, and stress_period.
 
+        Examples
+        --------
+        >>> mf_list = MfListBudget("my_model.list")
+        >>> cumulative = mf_list.get_cumulative()
 
-        Example:
-        -------
-            >>> mf_list = MfListBudget("my_model.list")
-            >>> cumulative = mf_list.get_cumulative()
        """
         if names is None:
             return self.cum
@@ -246,18 +227,18 @@ class ListBudget(object):
             (default is None).
 
         Returns
-        ----------
+        -------
         out : recarrays
             Numpy recarrays with the water budget items in list file. The
             recarray also includes totim, time_step, and stress_period. A
             separate recarray is returned for the incremental and cumulative
             water budget entries.
 
+        Examples
+        --------
+        >>> mf_list = MfListBudget("my_model.list")
+        >>> budget = mf_list.get_budget()
 
-        Example:
-        -------
-            >>> mf_list = MfListBudget("my_model.list")
-            >>> budget = mf_list.get_budget()
         """
         if names is None:
             return self.inc, self.cum
@@ -292,7 +273,7 @@ class ListBudget(object):
             returned. (default is False).
 
         Returns
-        ----------
+        -------
         data : numpy recarray
             Array has size (number of budget items, 3). Recarray names are 'index',
             'value', 'name'.
@@ -304,15 +285,15 @@ class ListBudget(object):
         -----
         if both kstpkper and totim are None, will return the last entry
 
-        Example:
-        -------
-            >>> import matplotlib.pyplot as plt
-            >>> import flopy
-            >>> mf_list = flopy.utils.MfListBudget("my_model.list")
-            >>> data = mf_list.get_data(kstpkper=(0,0))
-            >>> plt.bar(data['index'], data['value'])
-            >>> plt.xticks(data['index'], data['name'], rotation=45, size=6)
-            >>> plt.show()
+        Examples
+        --------
+        >>> import matplotlib.pyplot as plt
+        >>> import flopy
+        >>> mf_list = flopy.utils.MfListBudget("my_model.list")
+        >>> data = mf_list.get_data(kstpkper=(0,0))
+        >>> plt.bar(data['index'], data['value'])
+        >>> plt.xticks(data['index'], data['name'], rotation=45, size=6)
+        >>> plt.show()
 
         """
         ipos = None
@@ -366,17 +347,17 @@ class ListBudget(object):
             Otherwise, a DatetimeIndex is set. (default is 1-1-1970).
 
         Returns
-        ----------
+        -------
         out : panda dataframes
             Pandas dataframes with the incremental and cumulative water budget
             items in list file. A separate pandas dataframe is returned for the
             incremental and cumulative water budget entries.
 
+        Examples
+        --------
+        >>> mf_list = MfListBudget("my_model.list")
+        >>> incrementaldf, cumulativedf = mf_list.get_dataframes()
 
-        Example:
-        -------
-            >>> mf_list = MfListBudget("my_model.list")
-            >>> incrementaldf, cumulativedf = mf_list.get_dataframes()
         """
 
         try:
