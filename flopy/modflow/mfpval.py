@@ -11,7 +11,7 @@ import sys
 import collections
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
+from flopy.utils import Util2d
 
 class ModflowPval(Package):
     """

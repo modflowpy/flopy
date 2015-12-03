@@ -21,7 +21,7 @@
 
     """
 from .mfreadnam import parsenamefile
-from .util_array import util_3d, util_2d, transient_2d, read1d
+from .util_array import Util3d, Util2d, Transient2d, read1d
 from .util_list import mflist
 from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
 from .formattedfile import FormattedHeadFile

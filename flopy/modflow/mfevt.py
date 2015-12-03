@@ -10,7 +10,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils.util_array import transient_2d, util_2d
+from flopy.utils.util_array import Transient2d, Util2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 
 
@@ -88,13 +88,13 @@ class ModflowEvt(Package):
         else:
             load = model.load            
 
-        self.surf = transient_2d(model, (nrow, ncol), np.float32,
+        self.surf = Transient2d(model, (nrow, ncol), np.float32,
                                  surf, name='surf')
-        self.evtr = transient_2d(model, (nrow, ncol), np.float32,
+        self.evtr = Transient2d(model, (nrow, ncol), np.float32,
                                  evtr, name='etvr')
-        self.exdp = transient_2d(model, (nrow, ncol), np.float32,
+        self.exdp = Transient2d(model, (nrow, ncol), np.float32,
                                  exdp, name='exdp')
-        self.ievt = transient_2d(model, (nrow, ncol), np.int,
+        self.ievt = Transient2d(model, (nrow, ncol), np.int,
                                  ievt, name='ievt')
         self.np = 0
         self.parent.add_package(self)
@@ -226,7 +226,7 @@ class ModflowEvt(Package):
             if insurf >= 0:
                 if model.verbose:
                     print('   loading surf stress period {0:3d}...'.format(iper+1))
-                t = util_2d.load(f, model, (nrow,ncol), np.float32, 'surf',
+                t = Util2d.load(f, model, (nrow,ncol), np.float32, 'surf',
                                  ext_unit_dict)
                 current_surf = t
             surf[iper] = current_surf
@@ -235,7 +235,7 @@ class ModflowEvt(Package):
                 if npar == 0:
                     if model.verbose:
                         print('   loading evtr stress period {0:3d}...'.format(iper+1))
-                    t = util_2d.load(f, model, (nrow,ncol), np.float32, 'evtr',
+                    t = Util2d.load(f, model, (nrow,ncol), np.float32, 'evtr',
                                      ext_unit_dict)
                 else:
                     parm_dict = {}
@@ -260,7 +260,7 @@ class ModflowEvt(Package):
             if inexdp >= 0:
                 if model.verbose:
                     print('   loading exdp stress period {0:3d}...'.format(iper+1))
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, 'exdp',
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'exdp',
                                  ext_unit_dict)
                 current_exdp = t
             exdp[iper] = current_exdp
@@ -269,7 +269,7 @@ class ModflowEvt(Package):
                     if model.verbose:
                         print('   loading ievt stress period {0:3d}...'.format(
                             iper+1))
-                    t = util_2d.load(f, model, (nrow, ncol), np.int32, 'ievt',
+                    t = Util2d.load(f, model, (nrow, ncol), np.int32, 'ievt',
                                      ext_unit_dict)
                     current_ievt = t
                 ievt[iper] = current_ievt

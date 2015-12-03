@@ -729,20 +729,20 @@ class Package(object):
         var_dict = vars(self)
         if key in list(var_dict.keys()):
             old_value = var_dict[key]
-            if isinstance(old_value, utils.util_2d):
-                value = utils.util_2d(self.parent, old_value.shape,
+            if isinstance(old_value, utils.Util2d):
+                value = utils.Util2d(self.parent, old_value.shape,
                                       old_value.dtype, value,
                                       name=old_value.name,
                                       fmtin=old_value.fmtin,
                                       locat=old_value.locat)
-            elif isinstance(old_value, utils.util_3d):
-                 value = utils.util_3d(self.parent, old_value.shape,
+            elif isinstance(old_value, utils.Util3d):
+                 value = utils.Util3d(self.parent, old_value.shape,
                                           old_value.dtype, value,
                                           name=old_value.name_base,
                                           fmtin=old_value.fmtin,
                                           locat=old_value.locat)
-            elif isinstance(old_value, utils.transient_2d):
-                value = utils.transient_2d(self.parent, old_value.shape,
+            elif isinstance(old_value, utils.Transient2d):
+                value = utils.Transient2d(self.parent, old_value.shape,
                                                old_value.dtype, value,
                                                name=old_value.name_base,
                                                fmtin=old_value.fmtin,
@@ -751,19 +751,19 @@ class Package(object):
                 value = utils.mflist(self.parent, dtype=old_value.dtype, data=value)
             elif isinstance(old_value, list):
                 if len(old_value) > 0:
-                    if isinstance(old_value[0], utils.util_3d):
+                    if isinstance(old_value[0], utils.Util3d):
                         new_list = []
                         for vo, v in zip(old_value, value):
-                            new_list.append(utils.util_3d(self.parent, vo.shape,
+                            new_list.append(utils.Util3d(self.parent, vo.shape,
                                                           vo.dtype, v,
                                                           name=vo.name_base,
                                                           fmtin=vo.fmtin,
                                                           locat=vo.locat))
                         value = new_list
-                    elif isinstance(old_value[0], utils.util_2d):
+                    elif isinstance(old_value[0], utils.Util2d):
                         new_list = []
                         for vo, v in zip(old_value, value):
-                            new_list.append(utils.util_2d(self.parent, vo.shape,
+                            new_list.append(utils.Util2d(self.parent, vo.shape,
                                                           vo.dtype, v,
                                                           name=vo.name,
                                                           fmtin=vo.fmtin,
@@ -775,24 +775,24 @@ class Package(object):
 
     def export(self,f):
         from flopy import export
-        from flopy.utils import util_2d,util_3d,transient_2d,mflist
+        from flopy.utils import Util2d,Util3d,Transient2d,mflist
 
         attrs = dir(self)
         for attr in attrs:
             if '__' in attr:
                 continue
             a = self.__getattribute__(attr)
-            if isinstance(a, util_2d) and len(a.shape) == 2:
+            if isinstance(a, Util2d) and len(a.shape) == 2:
                 f = export.utils.util2d_helper(f,a)
-            elif isinstance(a, util_3d):
+            elif isinstance(a, Util3d):
                 f = export.utils.util3d_helper(f,a)
-            elif isinstance(a, transient_2d):
+            elif isinstance(a, Transient2d):
                 f = export.utils.transient2d_helper(f,a)
             elif isinstance(a, mflist):
                 f = export.utils.mflist_helper(f,a)
             elif isinstance(a, list):
                 for v in a:
-                    if isinstance(v, util_3d):
+                    if isinstance(v, Util3d):
                         f = export.utils.util3d_helper(f,v)
         return f
     @staticmethod
@@ -979,34 +979,34 @@ class Package(object):
                                        filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=colorbar, **kwargs))
 
-            elif isinstance(value, utils.util_3d):
+            elif isinstance(value, utils.Util3d):
                 if self.parent.verbose:
-                    print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                    print('plotting {} package Util3d instance: {}'.format(self.name[0], item))
                 #fignum = list(range(ifig, ifig + inc))
                 fignum = list(range(ifig, ifig + value.shape[0]))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=True))
-            elif isinstance(value, utils.util_2d):
+            elif isinstance(value, utils.Util2d):
                 if len(value.shape) == 2:
                     if self.parent.verbose:
-                        print('plotting {} package util_2d instance: {}'.format(self.name[0], item))
+                        print('plotting {} package Util2d instance: {}'.format(self.name[0], item))
                     fignum = list(range(ifig, ifig + 1))
                     ifig = fignum[-1] + 1
                     caxs.append(value.plot(filename_base=fileb, file_extension=fext,
                                            fignum=fignum, colorbar=True))
-            elif isinstance(value, utils.transient_2d):
+            elif isinstance(value, utils.Transient2d):
                 if self.parent.verbose:
-                    print('plotting {} package transient_2d instance: {}'.format(self.name[0], item))
+                    print('plotting {} package Transient2d instance: {}'.format(self.name[0], item))
                 fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(filename_base=fileb, file_extension=fext, kper=kper,
                                        fignum=fignum, colorbar=True))
             elif isinstance(value, list):
                 for v in value:
-                    if isinstance(v, utils.util_3d):
+                    if isinstance(v, utils.Util3d):
                         if self.parent.verbose:
-                            print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                            print('plotting {} package Util3d instance: {}'.format(self.name[0], item))
                         fignum = list(range(ifig, ifig + inc))
                         ifig = fignum[-1] + 1
                         caxs.append(v.plot(filename_base=fileb, file_extension=fext, mflay=mflay,

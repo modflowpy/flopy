@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d,util_3d
+from flopy.utils import Util2d,Util3d
 
 class Mt3dDsp(Package):
     """
@@ -107,21 +107,21 @@ class Mt3dDsp(Package):
         ncomp = model.ncomp
         mcomp = model.mcomp
         self.multiDiff = multiDiff
-        self.al = util_3d(model,(nlay,nrow,ncol),np.float32,al,name='al',
+        self.al = Util3d(model,(nlay,nrow,ncol),np.float32,al,name='al',
                           locat=self.unit_number[0])
-        self.trpt = util_2d(model,(nlay,),np.float32,trpt,name='trpt',
+        self.trpt = Util2d(model,(nlay,),np.float32,trpt,name='trpt',
                             locat=self.unit_number[0])
-        self.trpv = util_2d(model,(nlay,),np.float32,trpv,name='trpv',
+        self.trpv = Util2d(model,(nlay,),np.float32,trpv,name='trpv',
                             locat=self.unit_number[0])
 
         # Multi-species and multi-diffusion, hence the complexity
         self.dmcoef = []
         shape = (nlay, 1)
-        utype = util_2d
+        utype = Util2d
         nmcomp = ncomp
         if multiDiff:
             shape = (nlay, nrow, ncol)
-            utype = util_3d
+            utype = Util3d
             nmcomp = mcomp
         u2or3 = utype(model, shape, np.float32, dmcoef,
                     name='dmcoef1', locat=self.unit_number[0])
@@ -259,17 +259,17 @@ class Mt3dDsp(Package):
         # Read arrays
         if model.verbose:
             print('   loading AL...')
-        al = util_3d.load(f, model, (nlay, nrow, ncol), np.float32, 'al',
+        al = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'al',
                           ext_unit_dict)
 
         if model.verbose:
             print('   loading TRPT...')
-        trpt = util_2d.load(f, model, (nlay, 1), np.float32, 'trpt',
+        trpt = Util2d.load(f, model, (nlay, 1), np.float32, 'trpt',
                             ext_unit_dict)
 
         if model.verbose:
             print('   loading TRPV...')
-        trpv = util_2d.load(f, model, (nlay, 1), np.float32, 'trpv',
+        trpv = Util2d.load(f, model, (nlay, 1), np.float32, 'trpv',
                             ext_unit_dict)
 
         if model.verbose:
@@ -277,23 +277,23 @@ class Mt3dDsp(Package):
         kwargs = {}
         dmcoef = []
         if multiDiff:
-            dmcoef = util_3d.load(f, model, (nlay, nrow, ncol), np.float32,
+            dmcoef = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
                                'dmcoef1', ext_unit_dict)
             if model.mcomp > 1:
                 for icomp in range(2, model.mcomp + 1):
                     name = "dmcoef" + str(icomp)
-                    u3d = util_3d.load(f, model, (nlay, nrow, ncol), np.float32,
+                    u3d = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
                                        name, ext_unit_dict)
                     kwargs[name] = u3d
 
 
         else:
-            dmcoef = util_2d.load(f, model, (nlay, 1), np.float32,
+            dmcoef = Util2d.load(f, model, (nlay, 1), np.float32,
                                'dmcoef1', ext_unit_dict)
             if model.mcomp > 1:
                 for icomp in range(2, model.mcomp + 1):
                     name = "dmcoef" + str(icomp + 1)
-                    u2d = util_2d.load(f, model, (nlay, 1), np.float32, name,
+                    u2d = Util2d.load(f, model, (nlay, 1), np.float32, name,
                                 ext_unit_dict)
                     kwargs[name] = u2d
 

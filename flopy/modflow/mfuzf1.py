@@ -1,7 +1,7 @@
 ﻿import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
+from flopy.utils import Util2d
 
 
 class ModflowUzf1(Package):
@@ -229,31 +229,31 @@ class ModflowUzf1(Package):
         self.surfdep = surfdep
         # Data Set 2
         # IUZFBND (NCOL, NROW) -- U2DINT
-        self.iuzfbnd = util_2d(model, (nrow, ncol), np.int, iuzfbnd, name='iuzfbnd')
+        self.iuzfbnd = Util2d(model, (nrow, ncol), np.int, iuzfbnd, name='iuzfbnd')
         # If IRUNFLG > 0: Read item 3
         # Data Set 3
         # [IRUNBND (NCOL, NROW)] -- U2DINT
         if irunflg > 0:
-            self.irunbnd = util_2d(model, (nrow, ncol), np.int, irunbnd, name='irunbnd')
+            self.irunbnd = Util2d(model, (nrow, ncol), np.int, irunbnd, name='irunbnd')
         # IF the absolute value of IUZFOPT = 1: Read item 4.
         # Data Set 4
         # [VKS (NCOL, NROW)] -- U2DREL
         if abs(iuzfopt) == 1:
-            self.vks = util_2d(model, (nrow, ncol), np.float32, vks, name='vks')
+            self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
         if iuzfopt > 0:
             # Data Set 5
             # EPS (NCOL, NROW) -- U2DREL
-            self.eps = util_2d(model, (nrow, ncol), np.float32, eps, name='eps')
+            self.eps = Util2d(model, (nrow, ncol), np.float32, eps, name='eps')
             # Data Set 6a
             # THTS (NCOL, NROW) -- U2DREL
-            self.thts = util_2d(model, (nrow, ncol), np.float32, thts, name='thts')
+            self.thts = Util2d(model, (nrow, ncol), np.float32, thts, name='thts')
             # Data Set 6b
             # THTS (NCOL, NROW) -- U2DREL
             if self.specifythtr > 0:
-                self.thtr = util_2d(model, (nrow, ncol), np.float32, thtr, name='thtr')
+                self.thtr = Util2d(model, (nrow, ncol), np.float32, thtr, name='thtr')
             # Data Set 7
             # [THTI (NCOL, NROW)] -- U2DREL
-            self.thti = util_2d(model, (nrow, ncol), np.float32, thti, name='thti')
+            self.thti = Util2d(model, (nrow, ncol), np.float32, thti, name='thti')
         # Data Set 8
         # [IUZROW] [IUZCOL] IFTUNIT [IUZOPT]
         if len(row_col_iftunit_iuzopt) != nuzgag:
@@ -278,7 +278,7 @@ class ModflowUzf1(Package):
         if (not isinstance(finf, list)):
             finf = [finf]
         for i, a in enumerate(finf):
-            b = util_2d(model, (nrow, ncol), np.float32, a, name='finf_' + str(i + 1))
+            b = Util2d(model, (nrow, ncol), np.float32, a, name='finf_' + str(i + 1))
             self.finf.append(b)
         if ietflg > 0:
             # Data Set 12
@@ -287,7 +287,7 @@ class ModflowUzf1(Package):
             if (not isinstance(pet, list)):
                 pet = [pet]
             for i, a in enumerate(pet):
-                b = util_2d(model, (nrow, ncol), np.float32, a, name='pet_' + str(i + 1))
+                b = Util2d(model, (nrow, ncol), np.float32, a, name='pet_' + str(i + 1))
                 self.pet.append(b)
             # Data Set 14
             # [EXTDP (NCOL, NROW)] – U2DREL
@@ -295,7 +295,7 @@ class ModflowUzf1(Package):
             if (not isinstance(extdp, list)):
                 extdp = [extdp]
             for i, a in enumerate(extdp):
-                b = util_2d(model, (nrow, ncol), np.float32, a, name='extdp_' + str(i + 1))
+                b = Util2d(model, (nrow, ncol), np.float32, a, name='extdp_' + str(i + 1))
                 self.extdp.append(b)
             # Data Set 16
             # [EXTWC (NCOL, NROW)] – U2DREL
@@ -304,7 +304,7 @@ class ModflowUzf1(Package):
                 if (not isinstance(extwc, list)):
                     extwc = [extwc]
                 for i, a in enumerate(extwc):
-                    b = util_2d(model, (nrow, ncol), np.float32, a, name='extwc_' + str(i + 1))
+                    b = Util2d(model, (nrow, ncol), np.float32, a, name='extwc_' + str(i + 1))
                     self.extwc.append(b)
         self.parent.add_package(self)
 

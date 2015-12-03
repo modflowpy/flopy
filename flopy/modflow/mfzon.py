@@ -11,7 +11,7 @@ import sys
 import collections
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
+from flopy.utils import Util2d
 
 
 class ModflowZon(Package):
@@ -152,7 +152,7 @@ class ModflowZon(Package):
             if model.verbose:
                 sys.stdout.write('   reading data for "{:<10s}" zone\n'.format(zonnam))
             # load data
-            t = util_2d.load(f, model, (nrow, ncol), np.int, zonnam,
+            t = Util2d.load(f, model, (nrow, ncol), np.int, zonnam,
                              ext_unit_dict)
             # add unit number to list of external files in ext_unit_dict to remove.
             if t.locat is not None:

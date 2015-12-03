@@ -30,7 +30,7 @@ def test_usg_disu_load():
     disu2 = flopy.modflow.ModflowDisU.load(fname, m)
     for (key1, value1), (key2, value2) in zip(disu2.__dict__.items(),
                                               disu.__dict__.items()):
-        if isinstance(value1, flopy.utils.util_2d) or isinstance(value1, flopy.utils.util_3d):
+        if isinstance(value1, flopy.utils.Util2d) or isinstance(value1, flopy.utils.Util3d):
             assert np.array_equal(value1.array, value2.array)
         else:
             assert value1 == value2

@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import Util2d, Util3d
 
 class ModpathSim(Package):
     """
@@ -104,15 +104,15 @@ class ModpathSim(Package):
         self.retard_fac = retard_fac 
         self.retard_fcCB = retard_fcCB
         
-        #self.mask_nlay = util_3d(model,(nlay,nrow,ncol),np.int,\
+        #self.mask_nlay = Util3d(model,(nlay,nrow,ncol),np.int,\
                               #mask_nlay,name='mask_nlay',locat=self.unit_number[0])
-        #self.mask_1lay = util_3d(model,(nlay,nrow,ncol),np.int,\
+        #self.mask_1lay = Util3d(model,(nlay,nrow,ncol),np.int,\
                               #mask_1lay,name='mask_1lay',locat=self.unit_number[0])
-        #self.stop_zone = util_3d(model,(nlay,nrow,ncol),np.int,\
+        #self.stop_zone = Util3d(model,(nlay,nrow,ncol),np.int,\
                               #stop_zone,name='stop_zone',locat=self.unit_number[0])
-        #self.retard_fac = util_3d(model,(nlay,nrow,ncol),np.float32,\
+        #self.retard_fac = Util3d(model,(nlay,nrow,ncol),np.float32,\
                               #retard_fac,name='retard_fac',locat=self.unit_number[0])
-        #self.retard_fcCB = util_3d(model,(nlay,nrow,ncol),np.float32,\
+        #self.retard_fcCB = Util3d(model,(nlay,nrow,ncol),np.float32,\
                               #retard_fcCB,name='retard_fcCB',locat=self.unit_number[0])
 
         self.parent.add_package(self)

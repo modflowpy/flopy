@@ -1,6 +1,6 @@
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import Util2d, Util3d
 
 
 class ModflowSwi(Package):
@@ -85,17 +85,17 @@ class ModflowSwi(Package):
         self.delzeta = delzeta
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = util_2d(model, (self.npln + 1,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.npln + 1,), np.float32, nu, name='nu')
         else:
-            self.nu = util_2d(model, (self.npln + 2,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.npln + 2,), np.float32, nu, name='nu')
         self.zeta = []
         for i in range(nlay):
             # self.zeta.append( empty((nrow, ncol, self.npln)) )
             self.zeta
         for i in range(nlay):
-            self.zeta.append(util_2d(model, (self.npln, nrow, ncol), np.float32, zeta[i], name='zeta_' + str(i + 1)))
-        self.ssz = util_3d(model, (nlay, nrow, ncol), np.float32, ssz, name='ssz')
-        self.isource = util_3d(model, (nlay, nrow, ncol), np.int, isource, name='isource')
+            self.zeta.append(Util2d(model, (self.npln, nrow, ncol), np.float32, zeta[i], name='zeta_' + str(i + 1)))
+        self.ssz = Util3d(model, (nlay, nrow, ncol), np.float32, ssz, name='ssz')
+        self.isource = Util3d(model, (nlay, nrow, ncol), np.int, isource, name='isource')
         self.parent.add_package(self)
 
     def __repr__(self):

@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import Util2d, Util3d
 
 
 class SeawatVdf(Package):
@@ -198,7 +198,7 @@ class SeawatVdf(Package):
         self.firstdt = firstdt
         self.indense = indense
         if dense is not None:
-            self.dense = util_3d(model, (nlay, nrow, ncol), np.float32, dense,
+            self.dense = Util3d(model, (nlay, nrow, ncol), np.float32, dense,
                                  name='dense')
         self.parent.add_package(self)
         return
@@ -404,7 +404,7 @@ class SeawatVdf(Package):
                 for k in range(nlay):
                     if model.verbose:
                         print('   loading DENSE layer {0:3d}...'.format(k + 1))
-                    t = util_2d.load(f, model.mf, (nrow, ncol), np.float32,
+                    t = Util2d.load(f, model.mf, (nrow, ncol), np.float32,
                                      'dense', ext_unit_dict)
                     dense[k] = t
 

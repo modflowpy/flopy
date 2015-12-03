@@ -12,7 +12,7 @@ import copy
 import numpy as np
 # from numpy import ones, zeros, empty
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import Util2d, Util3d
 
 
 class ModflowSwi2(Package):
@@ -228,14 +228,14 @@ class ModflowSwi2(Package):
         self.nadptmx, self.nadptmn, self.adptfct = nadptmx, nadptmn, adptfct
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = util_2d(model, (self.nsrf + 1,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu, name='nu')
         else:
-            self.nu = util_2d(model, (self.nsrf + 2,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu, name='nu')
         self.zeta = []
         for i in range(self.nsrf):
-            self.zeta.append(util_3d(model, (nlay, nrow, ncol), np.float32, zeta[i], name='zeta_' + str(i + 1)))
-        self.ssz = util_3d(model, (nlay, nrow, ncol), np.float32, ssz, name='ssz')
-        self.isource = util_3d(model, (nlay, nrow, ncol), np.int, isource, name='isource')
+            self.zeta.append(Util3d(model, (nlay, nrow, ncol), np.float32, zeta[i], name='zeta_' + str(i + 1)))
+        self.ssz = Util3d(model, (nlay, nrow, ncol), np.float32, ssz, name='ssz')
+        self.isource = Util3d(model, (nlay, nrow, ncol), np.int, isource, name='isource')
         #
         self.obsnam = obsnam
         if isinstance(obslrc, list):
@@ -472,7 +472,7 @@ class ModflowSwi2(Package):
             if line[0] != '#':
                 f.seek(ipos)
                 break
-        nu = util_2d.load(f, model, (1, nnu), np.float32, 'nu',
+        nu = Util2d.load(f, model, (1, nnu), np.float32, 'nu',
                           ext_unit_dict)
         nu = nu.array.reshape((nnu))
 
@@ -488,7 +488,7 @@ class ModflowSwi2(Package):
         zeta = []
         for n in range(nsrf):
             ctxt = 'zeta_surf{:02d}'.format(n+1)
-            zeta.append(util_3d.load(f, model, (nlay, nrow, ncol),
+            zeta.append(Util3d.load(f, model, (nlay, nrow, ncol),
                                      np.float32, ctxt, ext_unit_dict))
 
         # read dataset 6
@@ -500,7 +500,7 @@ class ModflowSwi2(Package):
             if line[0] != '#':
                 f.seek(ipos)
                 break
-        ssz = util_3d.load(f, model, (nlay, nrow, ncol), np.float32,
+        ssz = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
                            'ssz', ext_unit_dict)
 
         # read dataset 7
@@ -512,7 +512,7 @@ class ModflowSwi2(Package):
             if line[0] != '#':
                 f.seek(ipos)
                 break
-        isource = util_3d.load(f, model, (nlay, nrow, ncol), np.int,
+        isource = Util3d.load(f, model, (nlay, nrow, ncol), np.int,
                                'isource', ext_unit_dict)
 
         # read dataset 8

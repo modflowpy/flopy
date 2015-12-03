@@ -12,10 +12,10 @@ class SpatialReference(object):
     Parameters
     ----------
 
-    delr : util_2d
+    delr : Util2d
         the model discretization delr vector
 
-    delc : util_2d
+    delc : Util2d
         the model discretization delc vector
 
     lenuni : int

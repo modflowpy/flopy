@@ -1,6 +1,6 @@
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d,util_3d
+from flopy.utils import Util2d,Util3d
 class Mt3dRct(Package):
     '''
     Chemical reaction package class
@@ -25,31 +25,31 @@ class Mt3dRct(Package):
         # Set values of all parameters
         #self.rhob = self.assignarray((nlay, nrow, ncol), np.float, rhob, 
         #                             name='rhob')
-        self.rhob = util_3d(model,(nlay,nrow,ncol),np.float32,rhob,name='rhob',
+        self.rhob = Util3d(model,(nlay,nrow,ncol),np.float32,rhob,name='rhob',
                             locat=self.unit_number[0])
         #self.prsity2 = self.assignarray((nlay, nrow, ncol), np.float, prsity2, 
         #                                name='prsity2')
-        self.prsity2 = util_3d(model,(nlay,nrow,ncol),np.float32,prsity2,
+        self.prsity2 = Util3d(model,(nlay,nrow,ncol),np.float32,prsity2,
                                name='prsity2',locat=self.unit_number[0])
         #self.srconc = self.assignarray((nlay, nrow, ncol), np.float, srconc, 
         #                               name='srconc')
-        self.srconc = util_3d(model,(nlay,nrow,ncol),np.float32,srconc,
+        self.srconc = Util3d(model,(nlay,nrow,ncol),np.float32,srconc,
                               name='srconc',locat=self.unit_number[0])
         #self.sp1 = self.assignarray((nlay, nrow, ncol), np.float, sp1, 
         #                            name='sp1')
-        self.sp1 = util_3d(model,(nlay,nrow,ncol),np.float32,sp1,name='sp1',
+        self.sp1 = Util3d(model,(nlay,nrow,ncol),np.float32,sp1,name='sp1',
                            locat=self.unit_number[0])
         #self.sp2 = self.assignarray((nlay, nrow, ncol), np.float, sp2, 
         #                            name='sp2')
-        self.sp2 = util_3d(model,(nlay,nrow,ncol),np.float32,sp2,name='sp2',
+        self.sp2 = Util3d(model,(nlay,nrow,ncol),np.float32,sp2,name='sp2',
                            locat=self.unit_number[0])
         #self.rc1 = self.assignarray((nlay, nrow, ncol), np.float, rc1, 
         #                            name='rc1')
-        self.rc1 = util_3d(model,(nlay,nrow,ncol),np.float32,rc1,name='rc1',
+        self.rc1 = Util3d(model,(nlay,nrow,ncol),np.float32,rc1,name='rc1',
                            locat=self.unit_number[0])
         #self.rc2 = self.assignarray((nlay, nrow, ncol), np.float, rc2,
         #                             name='rc2')
-        self.rc2 = util_3d(model,(nlay,nrow,ncol),np.float32,rc2,name='rc2',
+        self.rc2 = Util3d(model,(nlay,nrow,ncol),np.float32,rc2,name='rc2',
                            locat=self.unit_number[0])
         self.parent.add_package(self)
         return

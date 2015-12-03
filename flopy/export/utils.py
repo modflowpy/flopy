@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from flopy.utils import util_2d, util_3d, transient_2d, mflist
+from flopy.utils import Util2d, Util3d, Transient2d, mflist
 from . import NetCdf
 
 NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", "strt": "{0}",
@@ -67,19 +67,19 @@ def mflist_helper(f, mfl):
 
 
 def transient2d_helper(f, t2d, min_valid=-1.0e+9, max_valid=1.0e+9):
-    """ export helper for transient_2d instances
+    """ export helper for Transient2d instances
 
     Parameters:
     -----------
         f : string (filename) or existing export instance type (NetCdf only for now)
-        t2d : transient_2d instance
+        t2d : Transient2d instance
         min_valid : minimum valid value
         max_valid : maximum valid value
 
     """
 
-    assert isinstance(t2d, transient_2d) \
-        , "transient2d_helper only helps transient_2d instances"
+    assert isinstance(t2d, Transient2d) \
+        , "transient2d_helper only helps Transient2d instances"
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, t2d.model)
@@ -100,7 +100,7 @@ def transient2d_helper(f, t2d, min_valid=-1.0e+9, max_valid=1.0e+9):
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[t2d.dtype]
-        attribs = {"long_name": "flopy.transient_2d instance of {0}".format(var_name)}
+        attribs = {"long_name": "flopy.Transient2d instance of {0}".format(var_name)}
         attribs["coordinates"] = "time latitude longitude"
         attribs["units"] = units
         try:
@@ -123,18 +123,18 @@ def transient2d_helper(f, t2d, min_valid=-1.0e+9, max_valid=1.0e+9):
 
 
 def util3d_helper(f, u3d, min_valid=-1.0e+9, max_valid=1.0e+9):
-    """ export helper for transient_2d instances
+    """ export helper for Transient2d instances
 
     Parameters:
     -----------
         f : string (filename) or existing export instance type (NetCdf only for now)
-        u3d : util_3d instance
+        u3d : Util3d instance
         min_valid : minimum valid value
         max_valid : maximum valid value
 
     """
 
-    assert isinstance(u3d, util_3d), "util3d_helper only helps util_3d instances"
+    assert isinstance(u3d, Util3d), "util3d_helper only helps Util3d instances"
     assert len(u3d.shape) == 3, "util3d_helper only supports 3D arrays"
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
@@ -163,7 +163,7 @@ def util3d_helper(f, u3d, min_valid=-1.0e+9, max_valid=1.0e+9):
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[u3d.dtype]
-        attribs = {"long_name": "flopy.util_3d instance of {0}".format(var_name)}
+        attribs = {"long_name": "flopy.Util3d instance of {0}".format(var_name)}
         attribs["coordinates"] = "layer latitude longitude"
         attribs["units"] = units
         try:
@@ -186,17 +186,17 @@ def util3d_helper(f, u3d, min_valid=-1.0e+9, max_valid=1.0e+9):
 
 
 def util2d_helper(f, u2d, min_valid=-1.0e+9, max_valid=1.0e+9):
-    """ export helper for util_2d instances
+    """ export helper for Util2d instances
 
     Parameters:
     ----------
         f : string (filename) or existing export instance type (NetCdf only for now)
-        u2d : util_2d instance
+        u2d : Util2d instance
         min_valid : minimum valid value
         max_valid : maximum valid value
 
     """
-    assert isinstance(u2d, util_2d), "util2d_helper only helps util_2d instances"
+    assert isinstance(u2d, Util2d), "util2d_helper only helps Util2d instances"
 
     assert len(u2d.shape) == 2, "util2d_helper only supports 2D arrays"
 
@@ -220,7 +220,7 @@ def util2d_helper(f, u2d, min_valid=-1.0e+9, max_valid=1.0e+9):
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[u2d.dtype]
-        attribs = {"long_name": "flopy.util_2d instance of {0}".format(var_name)}
+        attribs = {"long_name": "flopy.Util2d instance of {0}".format(var_name)}
         attribs["coordinates"] = "latitude longitude"
         attribs["units"] = units
         try:

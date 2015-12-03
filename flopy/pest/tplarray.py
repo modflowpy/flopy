@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
-from ..utils.util_array import util_3d as util_3d
-from ..utils.util_array import transient_2d as transient_2d
+from ..utils.util_array import Util3d as Util3d
+from ..utils.util_array import Transient2d as Transient2d
 
 def get_template_array(pakarray):
     """
@@ -9,9 +9,9 @@ def get_template_array(pakarray):
 
     """
     tpla = pakarray
-    if isinstance(pakarray, util_3d):
+    if isinstance(pakarray, Util3d):
         tpla = Util3dTpl(pakarray)
-    elif isinstance(pakarray, transient_2d):
+    elif isinstance(pakarray, Transient2d):
         tpla = Transient2dTpl(pakarray)
     return tpla
 
@@ -84,7 +84,7 @@ class Util3dTpl(object):
 
     Parameters
     ----------
-    u3d : util_3d object
+    u3d : Util3d object
 
     """
     def __init__(self, u3d):
@@ -114,7 +114,7 @@ class Util3dTpl(object):
         """
 
         if 'layers' in p.span and 'idx' in p.span:
-            raise Exception('For a util_3d object, cannot have layers and idx in parameter.span')
+            raise Exception('For a Util3d object, cannot have layers and idx in parameter.span')
 
         if 'layers' in p.span:
             for l in p.span['layers']:

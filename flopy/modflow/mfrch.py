@@ -11,8 +11,8 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
-from flopy.utils.util_array import transient_2d
+from flopy.utils import Util2d
+from flopy.utils.util_array import Transient2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 
 class ModflowRch(Package):
@@ -92,10 +92,10 @@ class ModflowRch(Package):
             self.ipakcb = 53
         else:
             self.ipakcb = 0  # 0: no cell by cell terms are written
-        self.rech = transient_2d(model, (nrow, ncol), np.float32,
+        self.rech = Transient2d(model, (nrow, ncol), np.float32,
                                  rech, name = 'rech_')
         if self.nrchop == 2:
-            self.irch = transient_2d(model, (nrow, ncol), np.int,
+            self.irch = Transient2d(model, (nrow, ncol), np.int,
                                      irch+1, name = 'irch_')  # irch+1, as irch is zero based
         else:
             self.irch = None
@@ -224,7 +224,7 @@ class ModflowRch(Package):
                 if npar == 0:
                     if model.verbose:
                         print('   loading rech stress period {0:3d}...'.format(iper+1))
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
                 else:
                     parm_dict = {}
                     for ipar in range(inrech):
@@ -250,7 +250,7 @@ class ModflowRch(Package):
                     if model.verbose:
                         print('   loading irch stress period {0:3d}...'.format(
                             iper+1))
-                    t = util_2d.load(f, model, (nrow,ncol), np.int, 'irch',
+                    t = Util2d.load(f, model, (nrow,ncol), np.int, 'irch',
                                      ext_unit_dict)
                     current_irch = t
                 irch[iper] = current_irch

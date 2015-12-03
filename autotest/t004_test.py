@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import flopy
-from flopy.utils.util_array import util_2d, util_3d
+from flopy.utils.util_array import Util2d, Util3d
 
 out_dir = "temp"
 if not os.path.exists(out_dir):
@@ -9,7 +9,7 @@ if not os.path.exists(out_dir):
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
-    u2d = util_2d(ml, (10, 10), np.float32, 10.)
+    u2d = Util2d(ml, (10, 10), np.float32, 10.)
     a1 = u2d.array
     a2 = np.ones((10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
@@ -29,7 +29,7 @@ def test_util2d():
     a5 += 1
     assert not np.array_equal(a5,u2d.array)
 
-    # util_2d.__mul__() overload
+    # Util2d.__mul__() overload
     new_2d = u2d * 2
     assert np.array_equal(new_2d.array, u2d.array * 2)
 
@@ -46,7 +46,7 @@ def test_util2d():
 
 def test_util3d():
     ml = flopy.modflow.Modflow()
-    u3d = util_3d(ml, (10, 10, 10), np.float32, 10., 'test')
+    u3d = Util3d(ml, (10, 10, 10), np.float32, 10., 'test')
     a1 = u3d.array
     a2 = np.ones((10, 10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
@@ -54,7 +54,7 @@ def test_util3d():
     new_3d = u3d * 2.0
     assert np.array_equal(new_3d.array, u3d.array * 2)
 
-    #test the mult list-based overload for util_3d
+    #test the mult list-based overload for Util3d
     mult = [2.0] * 10
     mult_array = (u3d * mult).array
     assert np.array_equal(mult_array,np.zeros((10,10,10))+20.0)

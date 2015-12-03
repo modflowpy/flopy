@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import Util2d, Util3d
 from flopy.modflow.mfpar import ModflowPar as mfpar
 
 
@@ -142,27 +142,27 @@ class ModflowUpw(Package):
         self.hdry = hdry  # Head in cells that are converted to dry during a simulation
         self.npupw = 0  # number of UPW parameters
         self.iphdry = iphdry
-        self.laytyp = util_2d(model, (nlay,), np.int, laytyp, name='laytyp')
-        self.layavg = util_2d(model, (nlay,), np.int, layavg, name='layavg')
-        self.chani = util_2d(model, (nlay,), np.int, chani, name='chani')
-        self.layvka = util_2d(model, (nlay,), np.int, layvka, name='vka')
-        self.laywet = util_2d(model, (nlay,), np.int, laywet, name='laywet')
+        self.laytyp = Util2d(model, (nlay,), np.int, laytyp, name='laytyp')
+        self.layavg = Util2d(model, (nlay,), np.int, layavg, name='layavg')
+        self.chani = Util2d(model, (nlay,), np.int, chani, name='chani')
+        self.layvka = Util2d(model, (nlay,), np.int, layvka, name='vka')
+        self.laywet = Util2d(model, (nlay,), np.int, laywet, name='laywet')
 
         self.options = ' '
         if noparcheck: self.options = self.options + 'NOPARCHECK  '
 
-        self.hk = util_3d(model, (nlay, nrow, ncol), np.float32, hk, name='hk', locat=self.unit_number[0])
-        self.hani = util_3d(model, (nlay, nrow, ncol), np.float32, hani, name='hani', locat=self.unit_number[0])
+        self.hk = Util3d(model, (nlay, nrow, ncol), np.float32, hk, name='hk', locat=self.unit_number[0])
+        self.hani = Util3d(model, (nlay, nrow, ncol), np.float32, hani, name='hani', locat=self.unit_number[0])
         keys = []
         for k in range(nlay):
             key = 'vka'
             if self.layvka[k] != 0:
                 key = 'vani'
             keys.append(key)
-        self.vka = util_3d(model, (nlay, nrow, ncol), np.float32, vka, name=keys, locat=self.unit_number[0])
-        self.ss = util_3d(model, (nlay, nrow, ncol), np.float32, ss, name='ss', locat=self.unit_number[0])
-        self.sy = util_3d(model, (nlay, nrow, ncol), np.float32, sy, name='sy', locat=self.unit_number[0])
-        self.vkcb = util_3d(model, (nlay, nrow, ncol), np.float32, vkcb, name='vkcb', locat=self.unit_number[0])
+        self.vka = Util3d(model, (nlay, nrow, ncol), np.float32, vka, name=keys, locat=self.unit_number[0])
+        self.ss = Util3d(model, (nlay, nrow, ncol), np.float32, ss, name='ss', locat=self.unit_number[0])
+        self.sy = Util3d(model, (nlay, nrow, ncol), np.float32, sy, name='sy', locat=self.unit_number[0])
+        self.vkcb = Util3d(model, (nlay, nrow, ncol), np.float32, vkcb, name='vkcb', locat=self.unit_number[0])
         self.parent.add_package(self)
 
     def write_file(self):
@@ -321,7 +321,7 @@ class ModflowUpw(Package):
             if model.verbose:
                 print('   loading hk layer {0:3d}...'.format(k + 1))
             if 'hk' not in par_types:
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, 'hk',
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'hk',
                                  ext_unit_dict)
             else:
                 line = f.readline()
@@ -331,7 +331,7 @@ class ModflowUpw(Package):
                 if model.verbose:
                     print('   loading hani layer {0:3d}...'.format(k + 1))
                 if 'hani' not in par_types:
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'hani',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'hani',
                                      ext_unit_dict)
                 else:
                     line = f.readline()
@@ -343,7 +343,7 @@ class ModflowUpw(Package):
                 key = 'vka'
                 if layvka[k] != 0:
                     key = 'vani'
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, key,
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, key,
                                  ext_unit_dict)
             else:
                 line = f.readline()
@@ -356,7 +356,7 @@ class ModflowUpw(Package):
                 if model.verbose:
                     print('   loading ss layer {0:3d}...'.format(k + 1))
                 if 'ss' not in par_types:
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'ss',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'ss',
                                      ext_unit_dict)
                 else:
                     line = f.readline()
@@ -366,7 +366,7 @@ class ModflowUpw(Package):
                     if model.verbose:
                         print('   loading sy layer {0:3d}...'.format(k + 1))
                     if 'sy' not in par_types:
-                        t = util_2d.load(f, model, (nrow, ncol), np.float32, 'sy',
+                        t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sy',
                                          ext_unit_dict)
                     else:
                         line = f.readline()
@@ -376,7 +376,7 @@ class ModflowUpw(Package):
                 if model.verbose:
                     print('   loading vkcb layer {0:3d}...'.format(k + 1))
                 if 'vkcb' not in par_types:
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'vkcb',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'vkcb',
                                      ext_unit_dict)
                 else:
                     line = f.readline()
