@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 from flopy.mbase import Package
 from flopy.utils import Util2d
-from flopy.utils.util_list import mflist
+from flopy.utils.util_list import MfList
 from flopy.utils.util_array import Transient2d
 
 # Note: Order matters as first 6 need logical flag on line 1 of SSM file
@@ -172,7 +172,7 @@ class Mt3dSsm(Package):
         if stress_period_data is None:
             self.stress_period_data = None
         else:
-            self.stress_period_data = mflist(self, model=model,
+            self.stress_period_data = MfList(self, model=model,
                                          data=stress_period_data)
 
         if mxss is None and self.parent.mf is None:

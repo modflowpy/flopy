@@ -2,7 +2,7 @@
 Module for exporting and importing flopy model attributes
 """
 import numpy as np
-from flopy.utils import Util2d, Util3d, Transient2d, mflist
+from flopy.utils import Util2d, Util3d, Transient2d, MfList
 
 
 def line_parse(line):
@@ -166,7 +166,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                         name = shape_attr_name(u2d.name)
                         name = "{}_{:03d}".format(name, kper + 1)
                         array_dict[name] = u2d.array
-                elif isinstance(a, mflist):
+                elif isinstance(a, MfList):
                     kpers = a.data.keys()
                     for kper in kpers:
                         arrays = a.to_array(kper)

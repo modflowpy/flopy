@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils.util_list import mflist
+from flopy.utils.util_list import MfList
 
 
 class ModflowChd(Package):
@@ -105,7 +105,7 @@ class ModflowChd(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        self.stress_period_data = mflist(self, stress_period_data)
+        self.stress_period_data = MfList(self, stress_period_data)
 
         self.np = 0
         self.parent.add_package(self)

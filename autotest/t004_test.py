@@ -1,11 +1,21 @@
 import os
 import numpy as np
 import flopy
-from flopy.utils.util_array import Util2d, Util3d
+from flopy.utils.util_array import Util2d, Util3d, Transient2d
 
 out_dir = "temp"
 if not os.path.exists(out_dir):
     os.mkdir(out_dir)
+
+def test_transient2d():
+    ml = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ml,nlay=10,nrow=10,ncol=10,nper=3)
+    t2d = Transient2d(ml, (10, 10), np.float32, 10., "fake")
+    a1 = t2d.array
+    assert a1.shape == (3,10,10), a1.shape
+    t2d.cnstnt = 2.0
+    assert np.array_equal(t2d.array,np.zeros((3,10,10))+20.0)
+
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
@@ -65,5 +75,6 @@ def test_util3d():
 
 
 if __name__ == '__main__':
+    test_transient2d()
     test_util2d()
     test_util3d()

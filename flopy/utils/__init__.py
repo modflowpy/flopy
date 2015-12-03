@@ -22,7 +22,7 @@
     """
 from .mfreadnam import parsenamefile
 from .util_array import Util3d, Util2d, Transient2d, read1d
-from .util_list import mflist
+from .util_list import MfList
 from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
 from .formattedfile import FormattedHeadFile
 from .modpathfile import PathlineFile, EndpointFile

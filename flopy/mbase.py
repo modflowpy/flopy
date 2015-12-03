@@ -513,7 +513,7 @@ class BaseModel(object):
 
     def plot(self, SelPackList=None, **kwargs):
         """
-        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
         model input data
 
         Parameters
@@ -535,7 +535,7 @@ class BaseModel(object):
             kper : int
                 MODFLOW zero-based stress period number to return. (default is zero)
             key : str
-                mflist dictionary key. (default is None)
+                MfList dictionary key. (default is None)
 
         Returns
         ----------
@@ -747,8 +747,8 @@ class Package(object):
                                                name=old_value.name_base,
                                                fmtin=old_value.fmtin,
                                                locat=old_value.locat)
-            elif isinstance(old_value, utils.mflist):
-                value = utils.mflist(self.parent, dtype=old_value.dtype, data=value)
+            elif isinstance(old_value, utils.MfList):
+                value = utils.MfList(self.parent, dtype=old_value.dtype, data=value)
             elif isinstance(old_value, list):
                 if len(old_value) > 0:
                     if isinstance(old_value[0], utils.Util3d):
@@ -775,7 +775,7 @@ class Package(object):
 
     def export(self,f):
         from flopy import export
-        from flopy.utils import Util2d,Util3d,Transient2d,mflist
+        from flopy.utils import Util2d,Util3d,Transient2d,MfList
 
         attrs = dir(self)
         for attr in attrs:
@@ -788,7 +788,7 @@ class Package(object):
                 f = export.utils.util3d_helper(f,a)
             elif isinstance(a, Transient2d):
                 f = export.utils.transient2d_helper(f,a)
-            elif isinstance(a, mflist):
+            elif isinstance(a, MfList):
                 f = export.utils.mflist_helper(f,a)
             elif isinstance(a, list):
                 for v in a:
@@ -881,7 +881,7 @@ class Package(object):
 
     def plot(self, **kwargs):
         """
-        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
         package input data
 
         Parameters
@@ -900,7 +900,7 @@ class Package(object):
             kper : int
                 MODFLOW zero-based stress period number to return. (default is zero)
             key : str
-                mflist dictionary key. (default is None)
+                MfList dictionary key. (default is None)
 
         Returns
         ----------
@@ -961,9 +961,9 @@ class Package(object):
         axes = []
         for item, value in self.__dict__.items():
             caxs = []
-            if isinstance(value, utils.mflist):
+            if isinstance(value, utils.MfList):
                 if self.parent.verbose:
-                    print('plotting {} package mflist instance: {}'.format(self.name[0], item))
+                    print('plotting {} package MfList instance: {}'.format(self.name[0], item))
                 if key is None:
                     names = ['{} location stress period {} layer {}'.format(self.name[0], kper + 1, k + 1)
                              for k in range(self.parent.nlay)]

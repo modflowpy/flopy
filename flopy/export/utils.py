@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from flopy.utils import Util2d, Util3d, Transient2d, mflist
+from flopy.utils import Util2d, Util3d, Transient2d, MfList
 from . import NetCdf
 
 NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", "strt": "{0}",
@@ -17,16 +17,16 @@ def datafile_helper(f, df):
 
 
 def mflist_helper(f, mfl):
-    """ export helper for mflist instances
+    """ export helper for MfList instances
 
     Parameters:
     -----------
         f : string (filename) or existing export instance type (NetCdf only for now)
-        mfl : mflist instance
+        mfl : MfList instance
 
     """
-    assert isinstance(mfl, mflist) \
-        , "mflist_helper only helps mflist instances"
+    assert isinstance(mfl, MfList) \
+        , "mflist_helper only helps MfList instances"
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, mfl.model)
@@ -44,7 +44,7 @@ def mflist_helper(f, mfl):
             if var_name in NC_UNITS_FORMAT:
                 units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
             precision_str = NC_PRECISION_TYPE[mfl.dtype[name].type]
-            attribs = {"long_name": "flopy.mflist instance of {0}".format(var_name)}
+            attribs = {"long_name": "flopy.MfList instance of {0}".format(var_name)}
             attribs["coordinates"] = "time layer latitude longitude"
             if units is not None:
                 attribs["units"] = units

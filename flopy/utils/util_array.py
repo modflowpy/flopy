@@ -602,7 +602,8 @@ class Transient2d(object):
         can be a scalar, list, or ndarray is the array value is constant in
         time.
     name : string
-        name of the property, used for writing comments to input files
+        name of the property, used for writing comments to input files and
+        for forming external files names (if needed)
     fmtin : string
         modflow fmtin variable (optional).  (the default is None)
     cnstnt : string
@@ -648,7 +649,7 @@ class Transient2d(object):
 
     """
 
-    def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
+    def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None,
                  bin=False):
 
@@ -676,6 +677,15 @@ class Transient2d(object):
                              self.name_base.replace(' ', '_'))
         self.transient_2ds = self.build_transient_sequence()
         return
+
+
+    def __setattr__(self, key, value):
+        if hasattr(self, "transient_2ds") and key == "cnstnt":
+            # set the cnstnt for each u2d
+            for kper,u2d in self.transient_2ds.items():
+                self.transient_2ds[kper].cnstnt = value
+        # set the attribute for u3d, even for cnstnt
+        super(Transient2d, self).__setattr__(key, value)
 
     def get_zero_2d(self, kper):
         name = self.name_base + str(kper + 1) + '(filled zero)'

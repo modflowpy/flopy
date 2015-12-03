@@ -7,7 +7,7 @@ import os
 import numpy as np
 from numpy.lib import recfunctions
 from flopy.mbase import Package
-from flopy.utils.util_list import mflist
+from flopy.utils.util_list import MfList
 from ..utils.flopy_io import line_parse
 
 
@@ -272,7 +272,7 @@ class ModflowSfr2(Package):
             if k not in self.reach_data.dtype.names:
                 recfunctions.append_fields(self.reach_data, names=k, data=v, asrecarray=True)
         # create a stress_period_data attribute to enable parent functions (e.g. plot)
-        self.stress_period_data = mflist(self, self.reach_data, dtype=self.reach_data.dtype)
+        self.stress_period_data = MfList(self, self.reach_data, dtype=self.reach_data.dtype)
 
         # Datasets 4 and 6. -----------------------------------------------------------------------
         self.segment_data = {}
@@ -833,7 +833,7 @@ class ModflowSfr2(Package):
     def _write_reach_data(self, f_sfr):
 
         # Write the recarray (data) to the file (or file handle) f
-        assert isinstance(self.reach_data, np.recarray), "mflist.__tofile() data arg " + \
+        assert isinstance(self.reach_data, np.recarray), "MfList.__tofile() data arg " + \
                                                          "not a recarray"
 
         # decide which columns to write
@@ -1614,11 +1614,11 @@ def _fmt_string(array, float_format='{}'):
         elif (vtype == 'o'):
             fmt_string += '{} '
         elif (vtype == 's'):
-            raise Exception("mflist error: '\str\' type found it dtype." + \
+            raise Exception("MfList error: '\str\' type found it dtype." + \
                             " This gives unpredictable results when " + \
                             "recarray to file - change to \'object\' type")
         else:
-            raise Exception("mflist.fmt_string error: unknown vtype " + \
+            raise Exception("MfList.fmt_string error: unknown vtype " + \
                             "in dtype:" + vtype)
     return fmt_string
 
@@ -1634,11 +1634,11 @@ def _fmt_string_list(array, float_format='{}'):
         elif (vtype == 'o'):
             fmt_string += ['{}']
         elif (vtype == 's'):
-            raise Exception("mflist error: '\str\' type found it dtype." + \
+            raise Exception("MfList error: '\str\' type found it dtype." + \
                             " This gives unpredictable results when " + \
                             "recarray to file - change to \'object\' type")
         else:
-            raise Exception("mflist.fmt_string error: unknown vtype " + \
+            raise Exception("MfList.fmt_string error: unknown vtype " + \
                             "in dtype:" + vtype)
     return fmt_string
 

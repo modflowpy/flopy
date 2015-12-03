@@ -330,7 +330,7 @@ class ModelMap(object):
         except Exception as e:
             raise Exception('Not a list-style boundary package:'+str(e))
 
-        # Return if mflist is None
+        # Return if MfList is None
         if mflist is None:
             return None
         nlay = self.model.nlay

@@ -10,7 +10,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils.util_list import mflist
+from flopy.utils.util_list import MfList
 
 
 class ModflowRiv(Package):
@@ -121,8 +121,8 @@ class ModflowRiv(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        #self.stress_period_data = mflist(model, self.dtype, stress_period_data)
-        self.stress_period_data = mflist(self, stress_period_data)
+        #self.stress_period_data = MfList(model, self.dtype, stress_period_data)
+        self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
 
     def __repr__(self):
