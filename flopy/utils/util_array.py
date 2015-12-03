@@ -1334,6 +1334,18 @@ class Util2d(object):
                     self.model.add_external(self.ext_filename, self.locat)
 
                 return ''
+            # Handles the case where a filename is passed, but exernal_path and ext_filename are None.
+            elif os.path.exists(os.path.join(self.model.model_ws, self.__value)) and self.ext_filename is None:
+                if self.model.free_format:
+                    self.fmtin = '(FREE)'
+                    self.py_desc = self.fort_2_py(self.fmtin)
+                else:
+                    shutil.copy2(self.__value, self.ext_filename)
+                    # if fixed format, we need to get a new unit number
+                    #  and reset locat
+                    self.locat = self.model.next_ext_unit()
+                    self.model.add_external(self.ext_filename, self.locat)
+                return ''
                 # otherwise, we need to load the the value filename
             #  and return as a string
             else:
@@ -1560,6 +1572,12 @@ class Util2d(object):
                         cr = 'CONSTANT ' + self.py_desc[1].format(self.__value)
                     cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
                                                         self.name)
+                # Handles the case where a filename is passed, but exernal_path and ext_filename are None.
+                # Writes out relative path with respect to model_ws.
+                elif self.vtype == str and os.path.exists(os.path.join(self.model.model_ws, self.__value)):
+                    fr = os.path.relpath(os.path.join(self.model.model_ws, self.__value), self.model.model_ws)
+                    cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(fr, self.cnstnt,
+                         self.fmtin.strip(), self.iprn, self.name)
                 else:
                     cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
                         .format(self.cnstnt, self.fmtin, self.iprn, self.name)
@@ -1652,7 +1670,7 @@ class Util2d(object):
                 try:
                     value = int(value)
                 except:
-                    # print value
+                    # print(value)
                     # print os.path.join(self.model.model_ws,value)
                     # JDH Note: value should be the filename with
                     #            the relative path. Trace through code to
