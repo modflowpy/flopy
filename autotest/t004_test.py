@@ -54,6 +54,10 @@ def test_util3d():
     new_3d = u3d * 2.0
     assert np.array_equal(new_3d.array, u3d.array * 2)
 
+    #test the mult list-based overload for util_3d
+    mult = [2.0] * 10
+    mult_array = (u3d * mult).array
+    assert np.array_equal(mult_array,np.zeros((10,10,10))+20.0)
     u3d.cnstnt = 2.0
     assert not np.array_equal(a1,u3d.array)
 

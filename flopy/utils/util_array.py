@@ -573,8 +573,8 @@ class util_3d(object):
         elif isinstance(other, list):
             assert len(other) == self.shape[0]
             new_u2ds = []
-            for u2d in self.util_2ds:
-                new_u2ds.append(u2d * other)
+            for u2d,item in zip(self.util_2ds,other):
+                new_u2ds.append(u2d * item)
             return util_3d(self.model, self.shape, self.dtype, new_u2ds,
                            self.name, self.fmtin, self.cnstnt, self.iprn,
                            self.locat)
@@ -1028,11 +1028,7 @@ class util_2d(object):
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
         self.ext_filename = None
-        # just for testing
-        if hasattr(model, 'use_existing'):
-            self.use_existing = bool(model.use_existing)
-        else:
-            self.use_existing = False
+
             # set fmtin
         if fmtin is not None:
             self.fmtin = fmtin
@@ -1294,13 +1290,12 @@ class util_2d(object):
                     else:
                         self.model.add_external(self.ext_filename, self.locat)
                 # write external formatted or unformatted array
-                if not self.use_existing:
-                    if not self.bin:
-                        f = open(self.ext_filename, 'w')
-                        f.write(self.string)
-                        f.close()
-                    else:
-                        a = self._array.tofile(self.ext_filename)
+                if not self.bin:
+                    f = open(self.ext_filename, 'w')
+                    f.write(self.string)
+                    f.close()
+                else:
+                    a = self._array.tofile(self.ext_filename)
                 return ''
 
             # this internal array or constant
@@ -1449,13 +1444,13 @@ class util_2d(object):
                 if d == (nrow * ncol) - 1:
                     assert len(data) == (nrow * ncol)
                     data.resize(nrow, ncol)
-                    return (data)
+                    return data
                 d += 1
                 #        file_in.close()
         if np.isnan(np.sum(data)):
             raise Exception("util_2d.load_txt() error: np.NaN in data array")
         data.resize(nrow, ncol)
-        return data * mult
+        return data
 
     @staticmethod
     def write_txt(shape, file_out, data, fortran_format="(FREE)",
