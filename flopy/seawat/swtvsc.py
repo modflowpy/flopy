@@ -155,6 +155,14 @@ class SeawatVsc(Package):
         return
 
     def write_file(self):
+        """
+        Write the file
+
+        Returns
+        -------
+        None
+
+        """
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         f_vsc = open(self.fn_path, 'w')
 
