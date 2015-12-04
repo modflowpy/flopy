@@ -272,7 +272,7 @@ class BaseModel(object):
             val.append(pp.name[0].upper())
         return val
 
-    def _change_model_ws(self, new_pth=None):
+    def change_model_ws(self, new_pth=None):
         """
         Change the model work space.
 
@@ -341,7 +341,7 @@ class BaseModel(object):
         if key == "name":
             self._set_name(value)
         elif key == "model_ws":
-            self._change_model_ws(value)
+            self.change_model_ws(value)
         else:
             super(BaseModel,self).__setattr__(key,value)
 
