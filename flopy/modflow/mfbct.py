@@ -45,6 +45,14 @@ class ModflowBct(Package):
         return
 
     def write_file(self):
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_bct = open(self.fn_path, 'w')

@@ -113,7 +113,15 @@ class ModflowMnw1(Package):
         return 'Multi-node well 1 Ppckage class'
 
     def write_file( self ):
-        
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
+
         #-open file for writing
         # f_mnw1 = open( self.file_name[0], 'w' )
         f_mnw1 = open( self.fn_path, 'w' )

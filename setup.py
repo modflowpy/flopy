@@ -1,7 +1,6 @@
 import os
 import sys
 from setuptools import setup
-
 # To use:
 #	   python setup.py bdist --format=wininst
 
@@ -13,19 +12,20 @@ if not sys.version_info[0] in [2, 3]:
     print('Sorry, Flopy not supported in your Python version')
     print('  Supported versions: 2 and 3')
     print('  Your version of Python: {}'.format(sys.version_info[0]))
-    sys.exit(1) # return non-zero value for failure
+    sys.exit(1)  # return non-zero value for failure
 
 long_description = ''
- 
+
 try:
-   import pypandoc
-   long_description = pypandoc.convert('README.md', 'rst')
+    import pypandoc
+
+    long_description = pypandoc.convert('README.md', 'rst')
 except:
-   pass  
-       
+    pass
+
 setup(name=__name__,
       description='FloPy is a Python package to create, run, and post-process MODFLOW-based models.',
-      long_description=long_description,  
+      long_description=long_description,
       author=__author__,
       author_email='mark.bakker@tudelft.nl, vincent.post@flinders.edu.au, langevin@usgs.gov, jdhughes@usgs.gov, ' +
                    'jwhite@usgs.gov, jjstarn@usgs.gov, mnfienen@usgs.gov, frances.alain@gmail.com',
@@ -37,4 +37,4 @@ setup(name=__name__,
                 'flopy.seawat', 'flopy.utils', 'flopy.plot', 'flopy.pest',
                 'flopy.export'],
       # use this version ID if .svn data cannot be found
-      version=__version__ )
+      version=__version__)

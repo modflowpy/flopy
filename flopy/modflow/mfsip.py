@@ -1,3 +1,13 @@
+"""
+mfsip module.  Contains the ModflowSip class. Note that the user can access
+the ModflowSip class as `flopy.modflow.ModflowSip`.
+
+Additional information for this MODFLOW package can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?sip.htm>`_.
+
+"""
+
 import sys
 from flopy.mbase import Package
 
@@ -82,7 +92,11 @@ class ModflowSip(Package):
 
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         # Open file for writing

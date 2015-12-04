@@ -99,7 +99,11 @@ class ModflowBas(Package):
 
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         # Open file for writing

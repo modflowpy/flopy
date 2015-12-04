@@ -67,17 +67,19 @@ class ModflowSwr1(Package):
     def __repr__(self):
         return 'SRW1 class'
 
-
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         print('SWR1 write method not implemented yet')
         # f_swr = open(self.fn_path, 'w')
-        #f_swr.write('{0}\n'.format(self.heading))
-        #f_swr.close()
-
+        # f_swr.write('{0}\n'.format(self.heading))
+        # f_swr.close()
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):

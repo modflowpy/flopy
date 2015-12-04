@@ -118,6 +118,14 @@ class ModflowChd(Package):
         return self.stress_period_data.mxact
 
     def write_file(self):
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         f_chd = open(self.fn_path, 'w')
         f_chd.write('{0:s}\n'.format(self.heading))
         f_chd.write(' {0:9d}\n'.format(self.stress_period_data.mxact))

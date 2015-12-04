@@ -32,7 +32,14 @@ class ModflowGmg(Package):
         return 'Geometric multigrid solver package class'
 
     def write_file(self):
-        # Open file for writing
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         f_gmg = open(self.fn_path, 'w')
         f_gmg.write('%s\n' % self.heading)        
         # dataset 0

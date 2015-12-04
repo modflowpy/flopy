@@ -131,12 +131,16 @@ class ModflowGhb(Package):
 
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         f_ghb = open(self.fn_path, 'w')
-        f_ghb.write('%s\n' % self.heading)
-        f_ghb.write('%10i%10i' % (self.stress_period_data.mxact, self.ipakcb))
+        f_ghb.write('{}\n'.format(self.heading))
+        f_ghb.write('{:10d}{:10d}'.format(self.stress_period_data.mxact, self.ipakcb))
         for option in self.options:
             f_ghb.write('  {}'.format(option))
         f_ghb.write('\n')

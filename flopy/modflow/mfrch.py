@@ -112,7 +112,11 @@ class ModflowRch(Package):
 
     def write_file(self):
         """
-        Write the file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper

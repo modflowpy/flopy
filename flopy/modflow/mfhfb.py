@@ -143,7 +143,11 @@ class ModflowHfb(Package):
 
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         f_hfb = open(self.fn_path, 'w')

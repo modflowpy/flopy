@@ -307,7 +307,11 @@ class ModflowMnw2(Package):
 
     def write_file(self):
         """
-        Write the file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         # -open file for writing

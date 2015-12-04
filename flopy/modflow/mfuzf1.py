@@ -1,4 +1,14 @@
-﻿import sys
+﻿"""
+mfuzf1 module.  Contains the ModflowUzf1 class. Note that the user can access
+the ModflowUzf1 class as `flopy.modflow.ModflowUzf1`.
+
+Additional information for this MODFLOW package can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/uzf___unsaturated_zone_flow_pa_3.htm>`_.
+
+"""
+
+import sys
 import numpy as np
 from flopy.mbase import Package
 from flopy.utils import Util2d
@@ -317,10 +327,18 @@ class ModflowUzf1(Package):
         return (nrow * ncol)
 
     def write_file(self):
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_uzf = open(self.fn_path, 'w')
-        f_uzf.write('%s\n' % self.heading)
+        f_uzf.write('{}\n'.format(self.heading))
         # Dataset 1a
         specify_temp = ''
         if self.specifythtr > 0:

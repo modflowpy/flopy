@@ -137,7 +137,11 @@ class ModflowWel(Package):
 
     def write_file(self):
         """
-        Write the file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         f_wel = open(self.fn_path, 'w')

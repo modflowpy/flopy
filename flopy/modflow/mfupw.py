@@ -167,14 +167,17 @@ class ModflowUpw(Package):
 
     def write_file(self):
         """
-        Write the file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
-
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper  # Open file for writing
         f_upw = open(self.fn_path, 'w')
         # Item 0: text
-        f_upw.write('%s\n' % self.heading)
+        f_upw.write('{}\n'.format(self.heading))
         # Item 1: IBCFCB, HDRY, NPLPF
         f_upw.write('{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n'.format(self.ipakcb, self.hdry, self.npupw, self.iphdry,
                                                                    self.options))

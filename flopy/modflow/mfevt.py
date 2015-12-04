@@ -109,6 +109,14 @@ class ModflowEvt(Package):
         return (nrow * ncol)
 
     def write_file(self):
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         f_evt = open(self.fn_path, 'w')        
         f_evt.write('{0:s}\n'.format(self.heading))        

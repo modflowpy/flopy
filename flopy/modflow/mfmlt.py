@@ -74,8 +74,15 @@ class ModflowMlt(Package):
 
     def write_file(self):
         """
-        Write the package input file.
-        Nothing is written since parameters are only supported on load
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Not implemented because parameters are only supported on load
 
         """
         pass

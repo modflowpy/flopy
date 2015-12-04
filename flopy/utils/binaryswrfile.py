@@ -30,7 +30,7 @@ class SwrBinaryStatements:
 
     def read_record(self):
         if self.skip == True:
-            lpos = self.file.tell() + ( self.nrecord * self.items * SwrBinaryStatements.realbyte )
+            lpos = self.file.tell() + (self.nrecord * self.items * SwrBinaryStatements.realbyte)
             self.file.seek(lpos)
             x = np.zeros((self.nrecord * self.items), SwrBinaryStatements.real)
         else:
@@ -40,7 +40,7 @@ class SwrBinaryStatements:
 
     def read_items(self):
         if self.skip == True:
-            lpos = self.file.tell() + ( self.items * SwrBinaryStatements.realbyte )
+            lpos = self.file.tell() + (self.items * SwrBinaryStatements.realbyte)
             self.file.seek(lpos)
             x = np.zeros((self.items), SwrBinaryStatements.real)
         else:
@@ -73,7 +73,7 @@ class SwrObs(SwrBinaryStatements):
         self.obsnames = np.array(obsnames)
         # set position
         self.datastart = self.file.tell()
-        #get times
+        # get times
         self.times = self.time_list()
 
     def get_time_list(self):
@@ -85,7 +85,7 @@ class SwrObs(SwrBinaryStatements):
     def get_obs_labels(self):
         return self.obsnames
 
-    def rewind_file(self):
+    def _rewind_file(self):
         self.file.seek(self.datastart)
         return True
 
@@ -104,11 +104,10 @@ class SwrObs(SwrBinaryStatements):
                 self.skip = False
                 return times
 
-
     def __iter__(self):
         return self
 
-    def read_header(self):
+    def _read_header(self):
         try:
             totim = self.read_real()
             return totim, True
@@ -116,7 +115,7 @@ class SwrObs(SwrBinaryStatements):
             return -999., False
 
     def __next__(self):
-        totim, success = self.read_header()
+        totim, success = self._read_header()
         if (success):
             for idx in range(0, self.nobs):
                 self.v[idx] = self.read_real()
@@ -152,7 +151,7 @@ class SwrObs(SwrBinaryStatements):
         gage_record = np.zeros((2))  # tottime plus observation
         if idx != -1 and idx < self.nobs:
             # --find offset to position
-            ilen = self.get_point_offset(idx)
+            ilen = self._get_point_offset(idx)
             # get data
             for time_data in self.times:
                 self.file.seek(int(time_data[1]) + ilen)
@@ -160,15 +159,15 @@ class SwrObs(SwrBinaryStatements):
                 this_entry = np.array([float(time_data[0])])
                 this_entry = np.hstack((this_entry, v))
                 gage_record = np.vstack((gage_record, this_entry))
-            #delete the first 'zeros' element
+            # delete the first 'zeros' element
             gage_record = np.delete(gage_record, 0, axis=0)
         return gage_record
 
-    def get_point_offset(self, ipos):
+    def _get_point_offset(self, ipos):
         self.file.seek(self.datastart)
         lpos0 = self.file.tell()
         point_offset = int(0)
-        totim, success = self.read_header()
+        totim, success = self._read_header()
         idx = (ipos)
         lpos1 = self.file.tell() + idx * SwrBinaryStatements.realbyte
         self.file.seek(lpos1)
@@ -220,9 +219,9 @@ class SwrFile(SwrBinaryStatements):
         self.missingData = -9999.9
         self.dataAvailable = True
         self.skip = False
-        #read connectivity for velocity data if necessary
+        # read connectivity for velocity data if necessary
         if self.type == 'qm':
-            self.connectivity = self.read_connectivity()
+            self.connectivity = self._read_connectivity()
             if self.verbose == True:
                 print(self.connectivity)
         # initialize reachlayers and nqaqentries for qaq data
@@ -236,7 +235,7 @@ class SwrFile(SwrBinaryStatements):
                                    ('headdiff', 'f8'), ('qaq', 'f8')])
 
         self.datastart = self.file.tell()
-        #get times
+        # get times
         self.times = self.time_list()
 
     def get_nrecords(self):
@@ -245,7 +244,7 @@ class SwrFile(SwrBinaryStatements):
     def get_time_list(self):
         return self.times
 
-    def read_connectivity(self):
+    def _read_connectivity(self):
         conn = np.zeros((self.nrecord, 3), np.int)
         icount = 0
         for nrg in range(0, self.nrgout):
@@ -322,7 +321,7 @@ class SwrFile(SwrBinaryStatements):
             v[i] = r[i, ipos] * scale
         return v
 
-    def read_header(self):
+    def _read_header(self):
         if self.type == 'qaq':
             try:
                 self.nqaqentries = 0
@@ -330,7 +329,7 @@ class SwrFile(SwrBinaryStatements):
                     self.reachlayers[i] = self.read_integer()
                     self.nqaqentries += self.reachlayers[i]
                     # print i+1, self.reachlayers[i]
-                    #print self.nqaqentries
+                    # print self.nqaqentries
             except:
                 if self.verbose == True:
                     sys.stdout.write('\nCould not read reachlayers')
@@ -397,7 +396,7 @@ class SwrFile(SwrBinaryStatements):
                     ifound = 0
                     ilay = rec_lay
                     ilen = np.shape(r)[0]
-                    #print np.shape(r)
+                    # print np.shape(r)
                     for i in range(0, ilen):
                         ir = int(r[i, 0])
                         il = int(r[i, 1])
@@ -427,7 +426,7 @@ class SwrFile(SwrBinaryStatements):
                 return gage_record
 
     def __next__(self):
-        totim, dt, kper, kstp, swrstp, success = self.read_header()
+        totim, dt, kper, kstp, swrstp, success = self._read_header()
         if success == False:
             if self.verbose == True:
                 print('SWR_Record.next() object reached end of file')
@@ -444,7 +443,7 @@ class SwrFile(SwrBinaryStatements):
         x = np.zeros((self.nqaqentries, self.items), SwrBinaryStatements.real)
         if self.skip == True:
             bytes = self.nqaqentries * (SwrBinaryStatements.integerbyte + 8 * SwrBinaryStatements.realbyte)
-            lpos = self.file.tell() + ( bytes )
+            lpos = self.file.tell() + (bytes)
             self.file.seek(lpos)
         else:
             qaq_list = self.get_item_list()
@@ -460,8 +459,7 @@ class SwrFile(SwrBinaryStatements):
         # print 'shape x: {}'.format(x.shape)
         return x
 
-
-    def rewind_file(self):
+    def _rewind_file(self):
         self.file.seek(self.datastart)
         return True
 
@@ -500,14 +498,14 @@ class SwrFile(SwrBinaryStatements):
         else:
             return 0.0, 0.0, 0, 0, 0, False, self.null_record
 
-    def get_point_offset(self, rec_num, iconn):
+    def _get_point_offset(self, rec_num, iconn):
         self.file.seek(self.datastart)
         lpos0 = self.file.tell()
         point_offset = int(0)
-        totim, dt, kper, kstp, swrstp, success = self.read_header()
+        totim, dt, kper, kstp, swrstp, success = self._read_header()
         # --qaq terms
         if self.type == 'qaq':
-            sys.stdout.write('MFBinaryClass::get_point_offset can not be used to extract QAQ data')
+            sys.stdout.write('MFBinaryClass::_get_point_offset can not be used to extract QAQ data')
             sys.exit(1)
         # stage and reach group terms
         elif self.type == 'stage' or self.type == 'reachgroup':
@@ -543,7 +541,7 @@ class SwrFile(SwrBinaryStatements):
         # --find offset to position
         ilen = int(0)
         if rec_num > 0:
-            ilen = self.get_point_offset(rec_num, iconn)
+            ilen = self._get_point_offset(rec_num, iconn)
         else:
             self.dataAvailable = False
         if self.dataAvailable == False:
@@ -573,5 +571,5 @@ class SwrFile(SwrBinaryStatements):
                 this_entry = np.hstack((this_entry, r))
                 gage_record = np.vstack((gage_record, this_entry))
         # delete first empty entry and return gage_record
-        gage_record = np.delete(gage_record, 0, axis=0)  #delete the first 'zeros' element
+        gage_record = np.delete(gage_record, 0, axis=0)  # delete the first 'zeros' element
         return gage_record

@@ -277,9 +277,16 @@ class ModflowSms(Package):
         return
 
     def write_file(self):
-        # Open file for writing
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         f = open(self.fn_path, 'w')
-        f.write('%s\n' % self.heading)
+        f.write('{}\n'.format(self.heading))
         f.write('{0} {1} {2} {3} {4} {5} {6}\n'.format(
                 self.hclose, self.hiclose, self.mxiter, self.iter1,
                 self.iprsms, self.nonlinmeth, self.linmeth))

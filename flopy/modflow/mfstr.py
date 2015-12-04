@@ -336,7 +336,11 @@ class ModflowStr(Package):
 
     def write_file(self):
         """
-        Write the file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         f_str = open(self.fn_path, 'w')

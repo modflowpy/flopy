@@ -97,7 +97,7 @@ A few simple *FloPy<sub>3</sub>* tutorials are available at:
 
 **Dependencies:**
 
-*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the `flopy.plot` submodule and shapefile export capabilities in the `flopy.export` submodule require **Pyshp** 1.2 (or higher). The NetCDF export capabilities in the `flopy.export` submodule require **python-dateutil** 2.4 or higher, **netcdf4** 1.1 or higher, **pyproj** 1.9 or higher. Other NetCDF dependencies are detailed on the [UniData](http://unidata.github.io/netcdf4-python/) website.  
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the `flopy.plot` submodule and shapefile export capabilities in the `flopy.export` submodule require **Pyshp** 1.2 (or higher). The NetCDF export capabilities in the `flopy.export` submodule require **python-dateutil** 2.4 (or higher), **netcdf4** 1.1 (or higher), and **pyproj** 1.9 (or higher). Other NetCDF dependencies are detailed on the [UniData](http://unidata.github.io/netcdf4-python/) website. The `get_dataframes` method in the `ListBudget` class in the `flopy.utils` submodule require **pandas** 0.15 (or higher).
 
 
 **For base Python distributions:**
