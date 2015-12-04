@@ -12,9 +12,7 @@ import os
 import shutil
 import copy
 import numpy as np
-
-VERBOSE = False
-
+from binaryfile import BinaryHeader
 
 def decode_fortran_descriptor(fd):
     """Decode fortran descriptor
@@ -938,13 +936,13 @@ class Util2d(object):
         self.bin = bool(bin)
         self.name = name
         self.locat = locat
-        self.__value = self.parse_value(value)
+        self.parse_value(value)
         self.__value_built = None
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
         self.ext_filename = None
 
-            # set fmtin
+        # set fmtin
         if fmtin is not None:
             self.fmtin = fmtin
         else:
@@ -966,13 +964,15 @@ class Util2d(object):
         # some defense
         if dtype not in [np.int, np.int32, np.float32, np.bool]:
             raise Exception('Util2d:unsupported dtype: ' + str(dtype))
-        if self.model.external_path != None and name == None \
-                and ext_filename == None:
-            raise Exception('Util2d: use external arrays requires either ' +
-                            'name or ext_filename attribute')
-        elif self.model.external_path != None and ext_filename == None \
-                and self.vtype not in [np.int, np.float32]:
 
+        if self.model.external_path is not None and name is None \
+                and ext_filename is None:
+            raise Exception('Util2d: use of external arrays requires either ' +
+                            'name or ext_filename attribute')
+
+        # a first shot a
+        elif self.model.external_path is not None and ext_filename is None \
+                and self.vtype not in [np.int, np.float32]:
             self.ext_filename = os.path.join(self.model.external_path,
                                              name + '.ref')
         elif self.vtype not in [np.int, np.float32]:
@@ -1111,7 +1111,7 @@ class Util2d(object):
         return
 
     def get_value(self):
-        return self.__value
+        return copy.deepcopy(self.__value)
 
     # overloads, tries to avoid creating arrays if possible
     def __add__(self, other):
@@ -1171,6 +1171,9 @@ class Util2d(object):
     def vtype(self):
         return type(self.__value)
 
+
+
+
     def get_file_entry(self):
         """
         this is the entry point for getting an
@@ -1182,6 +1185,96 @@ class Util2d(object):
         cr = self.get_control_record()
         return cr + vstring
 
+
+    @property
+    def python_file_path(self):
+        """
+        where python is going to write the file
+        Returns
+        -------
+            file_path (str) : path relative to python: includes model_ws
+        """
+        if self.vtype != str:
+            raise Exception("Util2d call to python_file_path " +
+                            "for vtype != str")
+        python_file_path = os.path.join(self.model.model_ws)
+        if self.model.external_path is not None:
+            python_file_path = os.path.join(python_file_path,
+                                           self.model.external_path)
+        python_file_path = os.path.join(python_file_path,
+                                       os.path.split(self.__value)[-1])
+        return python_file_path
+
+    @property
+    def model_file_path(self):
+        """
+        where the model expects the file to be
+
+        Returns
+        -------
+            file_path (str): path relative to the name file
+
+        """
+        if self.vtype != str:
+            raise Exception("Util2d call to model_file_path " +
+                            "for vtype != str")
+        model_file_path = ''
+        if self.model.external_path is not None:
+            model_file_path = os.path.join(model_file_path,
+                                           self.model.external_path)
+        model_file_path = os.path.join(model_file_path,
+                                       os.path.split(self.__value)[-1])
+        return model_file_path
+
+
+    def get_control_record(self):
+        """
+        get the modflow control record
+        """
+        lay_space = '{0:>27s}'.format('')
+        if self.model.free_format:
+            if self.ext_filename is None:
+                if self.vtype in [np.int]:
+                    lay_space = '{0:>32s}'.format('')
+                if self.vtype in [np.int, np.float32]:
+                    cr = 'CONSTANT ' + self.py_desc[1].format(self.__value)
+                    cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
+                                                        self.name)
+                else:
+                    cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
+                        .format(self.cnstnt, self.fmtin, self.iprn, self.name)
+            else:
+                cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
+                    self.model_file_path, self.cnstnt,
+                    self.fmtin.strip(), self.iprn,
+                    self.name)
+
+        else:
+            # if value is a scalar and we don't want external array
+            if self.vtype in [np.int,
+                              np.float32] and self.ext_filename is None:
+                locat = 0
+                cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n' \
+                    .format(locat, float(self.__value),
+                            self.fmtin, self.iprn, self.name)
+            else:
+                if self.ext_filename is None:
+                    assert self.locat != None, 'Util2d:a non-constant value ' + \
+                                               ' for an internal fixed-format requires LOCAT to be passed'
+                if self.dtype == np.int:
+                    cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n' \
+                        .format(self.locat, self.cnstnt, self.fmtin,
+                                self.iprn, self.name)
+                elif self.dtype == np.float32:
+                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n' \
+                        .format(self.locat, self.cnstnt, self.fmtin,
+                                self.iprn, self.name)
+                else:
+                    raise Exception('Util2d: error generating fixed-format ' +
+                                    ' control record,dtype must be np.int or np.float32')
+        return cr
+
+
     def get_file_array(self):
         """
         increments locat and update model instance if needed.
@@ -1192,25 +1285,34 @@ class Util2d(object):
         if self.vtype != str:
 
             # if the ext_filename was passed, then we need
-            #  to write an external array
+            #  to write an external array - jeremy's hack
             if self.ext_filename != None:
+
+                # get the string or array now before we reset __value
+                if self.bin:
+                    a = self._array
+                else:
+                    a = self.string
+                # reset self.__value
+                self.__value = copy.deepcopy(self.ext_filename)
                 # if we need fixed format, reset self.locat and get a
                 #   new unit number
                 if not self.model.free_format:
                     self.locat = self.model.next_ext_unit()
                     if self.bin:
                         self.locat = -1 * np.abs(self.locat)
-                        self.model.add_external(self.ext_filename,
+                        self.model.add_external(self.model_file_path,
                                                 self.locat, binFlag=True)
                     else:
                         self.model.add_external(self.ext_filename, self.locat)
                 # write external formatted or unformatted array
                 if not self.bin:
-                    f = open(self.ext_filename, 'w')
-                    f.write(self.string)
+                    f = open(self.python_file_path, 'w')
+                    f.write(a)
                     f.close()
                 else:
-                    a = self._array.tofile(self.ext_filename)
+                    a.tofile(self.python_file_path)
+
                 return ''
 
             # this internal array or constant
@@ -1220,31 +1322,42 @@ class Util2d(object):
                 # if this is a constant, return a null string
                 else:
                     return ''
+
+        # if a filename was passed, there's no reason to write it internally,
+        # so just use the existing file
         else:
-            #if value is a filename and ext_filename was passed in
-            if os.path.exists(self.__value) and self.ext_filename is not None:
-                # if this is a free format model, then we can use the same
-                #  ext file over and over - no need to copy
-                # also, loosen things up with FREE format
-                if self.model.free_format:
-                    self.ext_filename = self.__value
-                    self.fmtin = '(FREE)'
-                    self.py_desc = self.fort_2_py(self.fmtin)
+            if self.__value != self.python_file_path:
+                if os.path.exists(self.python_file_path):
+                    if self.model.verbose:
+                        print("Util2d warning: removing existing array " +
+                              "file {0}".format(self.model_file_path))
+                    try:
+                        os.remove(self.python_file_path)
+                    except Exception as e:
+                        raise Exception("Util2d: error removing existing file " +\
+                                        self.python_file_path)
+                # copy the file to the new model location
+                try:
+                    shutil.copy2(self.__value,self.python_file_path)
+                except Exception as e:
+                    raise Exception("Util2d.get_file_array(): error copying " +
+                                    "{0} to {1}:{2}".format(self.__value,
+                                                            self.python_file_path,
+                                                            str(e)))
 
-                else:
-                    if self.__value != self.ext_filename:
-                        shutil.copy2(self.__value, self.ext_filename)
-                    # if fixed format, we need to get a new unit number
-                    #  and reset locat
-                    self.locat = self.model.next_ext_unit()
-                    self.model.add_external(self.ext_filename, self.locat)
-
-                return ''
-
-            # otherwise, we need to load the the value filename
-            #  and return as a string
+            # if this is a free format model
+            # then loosen things up with FREE format
+            if self.model.free_format:
+                self.ext_filename = self.__value
+                self.fmtin = '(FREE)'
+                self.py_desc = self.fort_2_py(self.fmtin)
             else:
-                return self.string
+                # if fixed format, we need to get a new unit number
+                #  and reset locat and reserve a namfile entry
+                self.locat = self.model.next_ext_unit()
+                self.model.add_external(self.model_file_path, self.locat)
+
+            return ''
 
     @property
     def string(self):
@@ -1259,7 +1372,7 @@ class Util2d(object):
         a = self._array
         # convert array to sting with specified format
         a_string = self.array2string(self.shape, a, python_format=self.py_desc)
-        return a_string
+        return a_string + '\n'
 
     @property
     def array(self):
@@ -1461,72 +1574,6 @@ class Util2d(object):
         data.tofile(file_out)
         return
 
-    def get_control_record(self):
-        """
-        get the modflow control record
-        """
-        lay_space = '{0:>27s}'.format('')
-        if self.model.free_format:
-            if self.ext_filename is None:
-                if self.vtype in [np.int]:
-                    lay_space = '{0:>32s}'.format('')
-                if self.vtype in [np.int, np.float32]:
-                    # this explicit cast to float is to handle a
-                    # - bug in versions of numpy < l.6.2
-                    if self.dtype == np.float32:
-                        cr = 'CONSTANT ' + \
-                             self.py_desc[1].format(float(self.__value))
-                    else:
-                        cr = 'CONSTANT ' + self.py_desc[1].format(self.__value)
-                    cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
-                                                        self.name)
-                else:
-                    cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
-                        .format(self.cnstnt, self.fmtin, self.iprn, self.name)
-            else:
-                # need to check if ext_filename exists, if not, need to
-                #  write constant as array to file or array to file
-                f = self.ext_filename
-                fr = os.path.relpath(f, self.model.model_ws)
-                # if self.locat is None:
-                cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
-                    fr, self.cnstnt,
-                    self.fmtin.strip(), self.iprn,
-                    self.name)
-                # else:
-                #     cr = 'EXTERNAL  {0:5d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(self.locat, self.cnstnt,
-                #          self.fmtin.strip(), self.iprn, self.name)
-
-        else:
-            # if value is a scalar and we don't want external array
-            if self.vtype in [np.int,
-                              np.float32] and self.ext_filename is None:
-                locat = 0
-                # explicit cast for numpy bug in versions < 1.6.2
-                if self.dtype == np.float32:
-                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n' \
-                        .format(locat, float(self.__value),
-                                self.fmtin, self.iprn, self.name)
-                else:
-                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n' \
-                        .format(locat, self.__value, self.fmtin, self.iprn,
-                                self.name)
-            else:
-                if self.ext_filename is None:
-                    assert self.locat != None, 'Util2d:a non-constant value ' + \
-                                               ' for an internal fixed-format requires LOCAT to be passed'
-                if self.dtype == np.int:
-                    cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n' \
-                        .format(self.locat, self.cnstnt, self.fmtin,
-                                self.iprn, self.name)
-                elif self.dtype == np.float32:
-                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n' \
-                        .format(self.locat, self.cnstnt, self.fmtin,
-                                self.iprn, self.name)
-                else:
-                    raise Exception('Util2d: error generating fixed-format ' +
-                                    ' control record,dtype must be np.int or np.float32')
-        return cr
 
     def fort_2_py(self, fd):
         """
@@ -1552,14 +1599,13 @@ class Util2d(object):
         lot of defense here, so we can make assumptions later
         """
         if isinstance(value, list):
-            if VERBOSE:
-                print('Util2d: casting list to array')
             value = np.array(value)
+
         if isinstance(value, bool):
             if self.dtype == np.bool:
                 try:
-                    value = np.bool(value)
-                    return value
+                    self.__value = np.bool(value)
+
                 except:
                     raise Exception('Util2d:could not cast ' +
                                     'boolean value to type "np.bool": ' +
@@ -1567,48 +1613,41 @@ class Util2d(object):
             else:
                 raise Exception('Util2d:value type is bool, ' +
                                 ' but dtype not set as np.bool')
-        if isinstance(value, str):
-            if self.dtype == np.int:
+        elif isinstance(value, str):
+            if os.path.exists(value):
+                self.__value = value
+                return
+            elif self.dtype == np.int:
                 try:
-                    value = int(value)
+                    self.__value = int(value)
                 except:
-                    # print value
-                    # print os.path.join(self.model.model_ws,value)
-                    # JDH Note: value should be the filename with
-                    #            the relative path. Trace through code to
-                    #            determine why it isn't
-                    if os.path.basename(value) == value:
-                        value = os.path.join(self.model.model_ws, value)
-                    assert os.path.exists(
-                        value), 'could not find file: ' + str(value)
-                    # assert os.path.exists(value), \
-                    #    'could not find file: ' + str(value)
-                    return value
+                    raise Exception("Util2d error: str not a file and " +
+                                    "couldn't be cast to int: {0}".format(value))
+
             else:
                 try:
-                    value = float(value)
+                    self.__value = float(value)
                 except:
-                    assert os.path.exists(value), \
-                        'could not find file: ' + str(value)
-                    return value
-        if np.isscalar(value):
+                    raise Exception("Util2d error: str not a file and " +
+                                    "couldn't be cast to float: {0}".format(value))
+
+
+        elif np.isscalar(value):
             if self.dtype == np.int:
                 try:
-                    value = np.int(value)
-                    return value
+                    self.__value = np.int(value)
                 except:
                     raise Exception('Util2d:could not cast scalar ' +
                                     'value to type "int": ' + str(value))
             elif self.dtype == np.float32:
                 try:
-                    value = np.float32(value)
-                    return value
+                    self.__value = np.float32(value)
                 except:
                     raise Exception('Util2d:could not cast ' +
                                     'scalar value to type "float": ' +
                                     str(value))
 
-        if isinstance(value, np.ndarray):
+        elif isinstance(value, np.ndarray):
             # if value is 3d, but dimension 1 is only length 1,
             # then drop the first dimension
             if len(value.shape) == 3 and value.shape[0] == 1:
@@ -1618,10 +1657,8 @@ class Util2d(object):
                                 ' does not match value.shape: ' +
                                 str(value.shape))
             if self.dtype != value.dtype:
-                if VERBOSE:
-                    print('Util2d:warning - casting array of type: ' + \
-                          str(value.dtype) + ' to type: ' + str(self.dtype))
-            return value.astype(self.dtype)
+                value = value.astype(self.dtype)
+            self.__value = value
 
         else:
             raise Exception('Util2d:unsupported type in util_array: ' +

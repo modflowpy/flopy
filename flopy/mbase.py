@@ -172,6 +172,14 @@ class BaseModel(object):
             binary or not. (default is False)
 
         """
+        if fname in self.external_fnames:
+            print ("BaseModel.add_external() warning: " +
+                   "replacing existing filename {0}".format(fname))
+            idx = self.external_fnames.index(fname)
+            self.external_fnames.pop(idx)
+            self.external_units.pop(idx)
+            self.external_binflag.pop(idx)
+
         self.external_fnames.append(fname)
         self.external_units.append(unit)
         self.external_binflag.append(binflag)
@@ -298,6 +306,12 @@ class BaseModel(object):
         # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
+
+        # create the external path (if needed)
+        if hasattr(self,"external_path") and self.external_path is not None\
+                and not os.path.exists(os.path.join(self._model_ws,
+                                                    self.external_path)):
+            os.makedirs(os.path.join(self._model_ws,self.external_path))
         return None
 
     @property

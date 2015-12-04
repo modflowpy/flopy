@@ -68,20 +68,23 @@ def test_util2d_external_free():
     if not os.path.exists(model_ws):
         os.mkdir(model_ws)
     ml = flopy.modflow.Modflow(model_ws=model_ws)
-    nlay,nrow,ncol = 1,10,10
+    nlay,nrow,ncol = 10,10,10
     dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
-    hk = np.ones((nrow,ncol))
+    hk = np.ones((nlay,nrow,ncol))
+    vk = np.ones((nlay,nrow,ncol)) + 1.0
     # save hk up one dir from model_ws
-    fname = os.path.join(out_dir,"test.ref")
-    np.savetxt(fname,hk,fmt="%15.6e",delimiter='')
+    fnames = []
+    for i,h in enumerate(hk):
+        fname = os.path.join(out_dir,"test_{0}.ref".format(i))
+        fnames.append(fname)
+        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
 
-    lpf = flopy.modflow.ModflowLpf(ml,hk=fname)
+    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
     ml.write_input()
 
     #change model_ws
     ml.model_ws = out_dir
     ml.write_input()
-
 
 def test_util2d_external_fixed():
 
@@ -90,19 +93,74 @@ def test_util2d_external_fixed():
         os.mkdir(model_ws)
     ml = flopy.modflow.Modflow(model_ws=model_ws)
     ml.free_format = False
-    nlay,nrow,ncol = 1,10,10
+    nlay,nrow,ncol = 10,10,10
     dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
-    hk = np.ones((nrow,ncol))
+    hk = np.ones((nlay,nrow,ncol))
+    vk = np.ones((nlay,nrow,ncol)) + 1.0
     # save hk up one dir from model_ws
-    fname = os.path.join(out_dir,"test.ref")
-    np.savetxt(fname,hk,fmt="%10.2f",delimiter='')
+    fnames = []
+    for i,h in enumerate(hk):
+        fname = os.path.join(out_dir,"test_{0}.ref".format(i))
+        fnames.append(fname)
+        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
 
-    lpf = flopy.modflow.ModflowLpf(ml,hk=fname)
+    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
     ml.write_input()
+
     #change model_ws
     ml.model_ws = out_dir
     ml.write_input()
 
+def test_util2d_external_free_path():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if not os.path.exists(model_ws):
+        os.mkdir(model_ws)
+    ml = flopy.modflow.Modflow(model_ws=model_ws,
+                               external_path="ref")
+    nlay,nrow,ncol = 10,10,10
+    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
+    hk = np.ones((nlay,nrow,ncol))
+    vk = np.ones((nlay,nrow,ncol)) + 1.0
+    # save hk up one dir from model_ws
+    fnames = []
+    for i,h in enumerate(hk):
+        fname = os.path.join(out_dir,"test_{0}.ref".format(i))
+        fnames.append(fname)
+        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
+
+    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
+    ml.write_input()
+
+    #change model_ws
+    ml.model_ws = out_dir
+    #ml.lpf.vka = np.ones_like(hk) + 4
+    ml.write_input()
+
+def test_util2d_external_fixed_path():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if not os.path.exists(model_ws):
+        os.mkdir(model_ws)
+    ml = flopy.modflow.Modflow(model_ws=model_ws,
+                               external_path="ref")
+    ml.free_format = False
+    nlay,nrow,ncol = 10,10,10
+    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
+    hk = np.ones((nlay,nrow,ncol))
+    vk = np.ones((nlay,nrow,ncol)) + 1.0
+    # save hk up one dir from model_ws
+    fnames = []
+    for i,h in enumerate(hk):
+        fname = os.path.join(out_dir,"test_{0}.ref".format(i))
+        fnames.append(fname)
+        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
+
+    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
+    ml.write_input()
+
+    #change model_ws
+    ml.model_ws = out_dir
+    #ml.lpf.vka = np.ones_like(hk) + 4
+    ml.write_input()
 
 
 def test_util3d():
@@ -126,7 +184,7 @@ def test_util3d():
 
 
 if __name__ == '__main__':
-    test_util2d_external_free()
+    test_util2d_external_fixed_path()
     #test_transient2d()
     #test_util2d()
     #test_util3d()
