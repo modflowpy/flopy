@@ -12,7 +12,7 @@ import os
 import shutil
 import copy
 import numpy as np
-from binaryfile import BinaryHeader
+from flopy.utils.binaryfile import BinaryHeader
 
 def decode_fortran_descriptor(fd):
     """Decode fortran descriptor
