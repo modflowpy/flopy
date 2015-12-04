@@ -121,13 +121,13 @@ class ModflowPcgn(Package):
     rate_c : float
         this option results in variable enhancement of epsilon. If 0 < RATE_C < 1,
         then enhanced relative convergence is allowed to decrease by increasing
-        epsilon as follows: epsilon(j) = epsilon(j-1) + RATE_C epsilon(j−1), where
-        j is the Picard iteration number; this change in epsilon occurs so long as
-        the Picard iteration is progressing satisfactorily. If RATE_C <= 0, then
-        the value of epsilon set by MCNVG remains unchanged through the Picard
-        iteration. It should be emphasized that RATE_C must have a value greater
-        than 0 for the variable enhancement to be effected; otherwise epsilon
-        remains constant. RATE_C is used only in convergence mode ACNVG = 2.
+        epsilon(j) = epsilon(j-1) + RATE_C epsilon(j-1), where j is the Picard
+        iteration number; this change in epsilon occurs so long as the Picard
+        iteration is progressing satisfactorily. If RATE_C <= 0, then the value
+        of epsilon set by MCNVG remains unchanged through the Picard iteration.
+        It should be emphasized that RATE_C must have a value greater than 0
+        for the variable enhancement to be effected; otherwise epsilon remains
+        constant. RATE_C is used only in convergence mode ACNVG = 2.
         (default is -1.)
     ipunit : int
         enables progress reporting for the Picard iteration. If IPUNIT >= 0,

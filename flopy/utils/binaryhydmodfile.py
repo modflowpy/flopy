@@ -1,7 +1,6 @@
 import sys
 import numpy as np
 import struct as strct
-import string
 
 
 class HydmodBinaryStatements:
@@ -65,9 +64,10 @@ class HydmodObs(HydmodBinaryStatements):
     """
 
     def __init__(self, filename, double=False, slurp=False, verbose=False, hydlbl_len=20):
-        '''slurp is a short cut to read all output using numpy fromfile()
-        if you use it, you don't need to read times
-        '''
+        """
+        Class constructor.
+
+        """
         # initialize class information
         self.skip = True
         self.double = bool(double)
@@ -110,6 +110,13 @@ class HydmodObs(HydmodBinaryStatements):
         out : list of floats
             A list of times stored in a hydmod output file.
 
+        Examples
+        --------
+
+        >>> import flopy
+        >>> h = flopy.utils.HydmodObs('model.hyd.bin')
+        >>> times = h.get_time_list()
+
         """
         return [time for time, ipos in self.times]
 
@@ -123,6 +130,12 @@ class HydmodObs(HydmodBinaryStatements):
         out : int
             The number of observations in a hydmod output file.
 
+        Examples
+        --------
+
+        >>> import flopy
+        >>> h = flopy.utils.HydmodObs('model.hyd.bin')
+        >>> nitems = h.get_num_items()
 
         """
         return self.nhydtot
@@ -137,6 +150,13 @@ class HydmodObs(HydmodBinaryStatements):
             A list of the observation labels in a hydmod output
             file.
 
+        Examples
+        --------
+
+        >>> import flopy
+        >>> h = flopy.utils.HydmodObs('model.hyd.bin')
+        >>> labels = h.get_hyd_labels()
+
         """
         return self.hydlbl
 
@@ -145,8 +165,16 @@ class HydmodObs(HydmodBinaryStatements):
 
         Returns
         -------
-        data : numpy structured array
+        data : numpy structured array (times, nhyd+1)
+            Simulated values for all times in the hydmod output file. The totime for all
+            time steps is also included in data.
 
+        Examples
+        --------
+
+        >>> import flopy
+        >>> h = flopy.utils.HydmodObs('model.hyd.bin', slurp=True)
+        >>> times = h.slurp()
 
         """
         if not self._allow_slurp:
@@ -158,72 +186,132 @@ class HydmodObs(HydmodBinaryStatements):
             float_type = np.float32
         dtype_list = [('totim', float_type)]
         for site in self.hydlbl:
-            dtype_list.append((site.strip(), float_type))
+            if sys.version_info[0] == 3:
+                site_name = site.decode().strip()
+            else:
+                site_name = site.strip()
+            dtype_list.append((site_name, float_type))
         dtype = np.dtype(dtype_list)
         data = np.fromfile(self.file, dtype, count=-1)
         return data
 
-    def get_values(self, idx):
+    def get_values(self, idx=0, totim=None):
         """
 
         Parameters
         ----------
-        idx :
+        idx : int
+            The zero-based time step number to extract from the
+            hydmod output file. (default is 0)
+        totim : float
+            The simulation time to extract from the hydmod output
+            file. (default is None)
 
         Returns
         -------
+        totim : float
+            Simulation time extracted from the hydmod output file.
+        v : numpy array (nhyd)
+            Simulated values at the specified idx or totim
+        success : boolean
+            Boolean indicating if the data extraction was successful.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> h = flopy.utils.HydmodObs('model.hyd.bin')
+        >>> t, data, success = h.get_values(idx=0)
 
         """
-        iposition = int(self.times[idx, 1])
+        iposition = None
+        if totim is None:
+            try:
+                iposition = int(self.times[idx, 1])
+            except:
+                print('Error: could not find the specified time step (idx) in the hydmod file')
+        else:
+            for t, ipos in self.times:
+                if t == totim:
+                    iposition = int(ipos)
+                    break
+            if iposition is None:
+                print('Error: could not find the specified totim [{}] in the hydmod file')
         self.file.seek(iposition)
-        totim, v, success = next(self)
-        if success == True:
+        totim, v, success = self.__next__()
+        if success:
             return totim, v, True
         else:
             self.v.fill(1.0E+32)
             return 0.0, self.v, False
 
-    def get_time_gage(self, record, lblstrip=6):
+    def get_time_gage(self, record=None, idx=0, lblstrip=6):
         """
+        Get data for a selected observation location using the
+        observation name or observation number.
 
         Parameters
         ----------
-        record :
-        lblstrip :
+        record : str
+            observation name. (default is None)
+        idx : int
+            zero-based observation number. (default is 0)
+        lblstrip : int
+            number of characters to strip from the beginning of the
+            hydmod label. (default is 6)
 
         Returns
         -------
+        gage_record : numpy array (len(times), 2)
+            value for the record for all times saved in the hydmod output file
+
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> h = flopy.utils.HydmodObs('model.hyd.bin')
+        >>> data = h.get_time_gage(record='OBS1')
+        >>> data2 = h.get_time_gage(idx=2)
 
         """
-        idx = -1
-        try:
-            idx = int(record) - 1
-            if idx >= 0 and idx < self.nhydtot:
-                if self.verbose == True:
-                    print('retrieving HYDMOD observation record [{0}]'.format(idx + 1))
-            else:
-                print('Error: HYDMOD observation record {0} not found'.format(record.strip().lower()))
-        except:
-            for icnt, cid in enumerate(self.hydlbl):
-                if lblstrip > 0:
-                    tcid = cid[lblstrip:len(cid)]
+
+        if idx is None:
+            idx = -1
+            try:
+                idx = int(record) - 1
+                if idx >= 0 and idx < self.nhydtot:
+                    if self.verbose:
+                        print('retrieving HYDMOD observation record [{0}]'.format(idx + 1))
                 else:
-                    tcid = cid
-                if record.strip().lower() == tcid.strip().lower():
-                    idx = icnt
-                    if self.verbose == True:
-                        print('retrieving HYDMOD observation record [{0}] {1}'.format(idx + 1, record.strip().lower()))
-                    break
-            if idx == -1:
-                print('Error: HYDMOD observation record {0} not found'.format(record.strip().lower()))
-        gage_record = np.zeros((2))  # tottime plus observation
+                    print('Error: HYDMOD observation record {0} not found'.format(record.strip().lower()))
+            except:
+                for icnt, cid in enumerate(self.hydlbl):
+                    if lblstrip > 0:
+                        tcid = cid[lblstrip:len(cid)]
+                    else:
+                        tcid = cid
+                    if record.strip().lower() == tcid.strip().lower():
+                        idx = icnt
+                        if self.verbose:
+                            print('retrieving HYDMOD observation record [{0}] {1}'.format(idx + 1, record.strip().lower()))
+                        break
+                if idx == -1:
+                    print('Error: HYDMOD observation record {0} not found'.format(record.strip().lower()))
+        else:
+            if idx < 0 or idx+1 > self.nhydtot:
+                print('Error: HYDMOD observation index {0} not found'.format(idx))
+                print('Error: HYDMOD observation index must be between 0 and {0} not found'.format(self.nhydtot-1))
+                idx = -1
+
+        gage_record = np.zeros(2, dtype=np.float)  # tottime plus observation
         if idx != -1 and idx < self.nhydtot:
             # --find offset to position
             ilen = self._get_point_offset(idx)
             # --get data
             for time_data in self.times:
                 self.file.seek(int(time_data[1]) + ilen)
-                if self.double == True:
+                if self.double:
                     v = float(self._read_double())
                 else:
                     v = self._read_real()
@@ -233,6 +321,37 @@ class HydmodObs(HydmodBinaryStatements):
             # delete the first 'zeros' element
             gage_record = np.delete(gage_record, 0, axis=0)
         return gage_record
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        totim, success = self._read_header()
+        if success:
+            for idx in range(0, self.nhydtot):
+                if self.double:
+                    self.v[idx] = float(self._read_double())
+                else:
+                    self.v[idx] = self._read_real()
+        else:
+            if self.verbose:
+                print('MODFLOW_HYDMOD object.next() reached end of file.')
+            self.v.fill(1.0E+32)
+        return totim, self.v, success
+
+    def _get_point_offset(self, ipos):
+        self.file.seek(self.datastart)
+        lpos0 = self.file.tell()
+        point_offset = int(0)
+        totim, success = self._read_header()
+        idx = (ipos)
+        if self.double:
+            lpos1 = self.file.tell() + idx * HydmodBinaryStatements.doublebyte
+        else:
+            lpos1 = self.file.tell() + idx * HydmodBinaryStatements.realbyte
+        self.file.seek(lpos1)
+        point_offset = self.file.tell() - lpos0
+        return point_offset
 
     def _time_list(self):
         self.skip = True
@@ -255,34 +374,3 @@ class HydmodObs(HydmodBinaryStatements):
             return totim, True
         except:
             return -999., False
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        totim, success = self._read_header()
-        if (success):
-            for idx in range(0, self.nhydtot):
-                if self.double == True:
-                    self.v[idx] = float(self._read_double())
-                else:
-                    self.v[idx] = self._read_real()
-        else:
-            if self.verbose == True:
-                print('MODFLOW_HYDMOD object.next() reached end of file.')
-            self.v.fill(1.0E+32)
-        return totim, self.v, success
-
-    def _get_point_offset(self, ipos):
-        self.file.seek(self.datastart)
-        lpos0 = self.file.tell()
-        point_offset = int(0)
-        totim, success = self._read_header()
-        idx = (ipos)
-        if self.double == True:
-            lpos1 = self.file.tell() + idx * MFReadBinaryStatements.doublebyte
-        else:
-            lpos1 = self.file.tell() + idx * MFReadBinaryStatements.realbyte
-        self.file.seek(lpos1)
-        point_offset = self.file.tell() - lpos0
-        return point_offset
