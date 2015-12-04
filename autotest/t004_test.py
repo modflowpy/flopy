@@ -80,19 +80,31 @@ def stress_util2d(ml,nlay,nrow,ncol):
 
     lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
     ml.write_input()
+    if ml.external_path is not None:
+        files = os.listdir(os.path.join(ml.model_ws,ml.external_path))
+    else:
+        files = os.listdir(ml.model_ws)
+    print("\n\nexternal files: " + ','.join(files) + '\n\n')
     ml1 = flopy.modflow.Modflow.load(ml.namefile,
                                      model_ws=ml.model_ws,
                                      verbose=True)
+    print("testing load")
     assert ml1.load_fail == False
     assert np.array_equal(ml1.lpf.vka.array,vk)
     assert np.array_equal(ml1.lpf.hk.array,hk)
 
-    #change model_ws
+    print("change model_ws")
     ml.model_ws = out_dir
     ml.write_input()
+    if ml.external_path is not None:
+        files = os.listdir(os.path.join(ml.model_ws,ml.external_path))
+    else:
+        files = os.listdir(ml.model_ws)
+    print("\n\nexternal files: " + ','.join(files) + '\n\n')
     ml1 = flopy.modflow.Modflow.load(ml.namefile,
                                      model_ws=ml.model_ws,
                                      verbose=True)
+    print("testing load")
     assert ml1.load_fail == False
     assert np.array_equal(ml1.lpf.vka.array,vk)
     assert np.array_equal(ml1.lpf.hk.array,hk)
@@ -125,6 +137,7 @@ def test_util2d_external_free_path():
     ml = flopy.modflow.Modflow(model_ws=model_ws,
                                external_path=ext_path)
     stress_util2d(ml,1,1,1)
+
     stress_util2d(ml,10,1,1)
     stress_util2d(ml,1,10,1)
     stress_util2d(ml,1,1,10)
@@ -192,10 +205,10 @@ def test_util3d():
 
 
 if __name__ == '__main__':
-    test_util2d_external_free()
+    #test_util2d_external_free()
     test_util2d_external_free_path()
-    test_util2d_external_fixed()
-    test_util2d_external_fixed_path()
-    test_transient2d()
-    test_util2d()
-    test_util3d()
+    #test_util2d_external_fixed()
+    #test_util2d_external_fixed_path()
+    #test_transient2d()
+    #test_util2d()
+    #test_util3d()

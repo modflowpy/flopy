@@ -947,6 +947,11 @@ class Util2d(object):
                 setattr(self, attr[0], attr[1])
             self.model = model
             return
+        if name is not None:
+            name = name.lower()
+        if ext_filename is not None:
+            ext_filename = ext_filename.lower()
+
         self.model = model
         self.shape = shape
         self.dtype = dtype
@@ -1188,9 +1193,6 @@ class Util2d(object):
     def vtype(self):
         return type(self.__value)
 
-
-
-
     def get_file_entry(self):
         """
         this is the entry point for getting an
@@ -1201,7 +1203,6 @@ class Util2d(object):
         vstring = self.get_file_array()
         cr = self.get_control_record()
         return cr + vstring
-
 
     @property
     def python_file_path(self):
