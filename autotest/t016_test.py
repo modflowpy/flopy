@@ -18,7 +18,7 @@ def test_usg_disu_load():
 
     # Change where model files are written
     model_ws = 'temp'
-    m.change_model_ws(model_ws)
+    m.model_ws = model_ws
 
     # Write the disu file
     disu.write_file()
@@ -53,7 +53,7 @@ def test_usg_sms_load():
 
     # Change where model files are written
     model_ws = 'temp'
-    m.change_model_ws(model_ws)
+    m.model_ws = model_ws
 
     # Write the sms file
     sms.write_file()

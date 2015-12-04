@@ -61,6 +61,14 @@ class Seawat(BaseModel):
     vdf = property(getvdf) # Property has no setter, so read-only
 
     def write_name_file(self):
+        """
+        Write the name file
+
+        Returns
+        -------
+        None
+
+        """
         fn_path = os.path.join(self.model_ws,self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('%s\n' % (self.heading) )

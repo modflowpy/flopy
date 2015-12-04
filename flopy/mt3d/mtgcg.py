@@ -87,6 +87,14 @@ class Mt3dGcg(Package):
         return
         
     def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
         # Open file for writing
         f_gcg = open(self.fn_path, 'w')
         f_gcg.write('{} {} {} {}\n'.format(self.mxiter, self.iter1,

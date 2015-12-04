@@ -62,6 +62,10 @@ class NamData(object):
         if self.filetype.lower() in packages:
             self.package = packages[self.filetype.lower()]
 
+
+    def __repr__(self):
+        return "filename:{0}, filetype:{1}".format(self.filename,self.filetype)
+
 def getfiletypeunit(nf, filetype):
     """
     Method to return unit number of a package from a NamData instance

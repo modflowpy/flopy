@@ -40,7 +40,7 @@ nrow, ncol = ml.dis.nrow, ml.dis.ncol
 ibound = ml.bas6.ibound[3, :, :]
 
 # create base model and run
-ml.change_model_ws(cf_pth)
+ml.model_ws = cf_pth
 ml.write_input()
 ml.run_model()
 

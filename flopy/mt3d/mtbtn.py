@@ -376,6 +376,14 @@ class Mt3dBtn(Package):
         return
 
     def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
         # Open file for writing
         f_btn = open(self.fn_path, 'w')
 

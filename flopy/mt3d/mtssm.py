@@ -295,10 +295,13 @@ class Mt3dSsm(Package):
 
     def write_file(self):
         """
-        Write the SSM file
+        Write the package file
+
+        Returns
+        -------
+        None
 
         """
-
         # Open file for writing
         f_ssm = open(self.fn_path, 'w')
         for p in self.__SsmPackages:

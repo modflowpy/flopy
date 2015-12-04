@@ -204,6 +204,14 @@ class SeawatVdf(Package):
         return
 
     def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         f_vdf = open(self.fn_path, 'w')
 

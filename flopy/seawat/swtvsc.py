@@ -156,7 +156,7 @@ class SeawatVsc(Package):
 
     def write_file(self):
         """
-        Write the file
+        Write the package file
 
         Returns
         -------
