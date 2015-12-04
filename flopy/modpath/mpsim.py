@@ -118,6 +118,14 @@ class ModpathSim(Package):
         self.parent.add_package(self)
 
     def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
         # item numbers and CamelCase variable names correspond to Modpath 6 documentation
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         

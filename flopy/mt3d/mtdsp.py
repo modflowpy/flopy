@@ -147,9 +147,13 @@ class Mt3dDsp(Package):
 
     def write_file(self):
         """
-        Write the file.
-        """
+        Write the package file
 
+        Returns
+        -------
+        None
+
+        """
         # Get size
         nrow = self.parent.nrow
         ncol = self.parent.ncol

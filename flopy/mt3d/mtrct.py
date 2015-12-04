@@ -59,7 +59,11 @@ class Mt3dRct(Package):
 
     def write_file(self):
         """
-        Write the file
+        Write the package file
+
+        Returns
+        -------
+        None
 
         """
         # Open file for writing

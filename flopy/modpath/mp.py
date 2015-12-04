@@ -76,7 +76,14 @@ class Modpath(BaseModel):
         return self.__mf
 
     def write_name_file(self):
-        
+        """
+        Write the name file
+
+        Returns
+        -------
+        None
+
+        """
         fn_path = os.path.join(self.model_ws, self.mpnamefile)
         f_nam = open( fn_path, 'w' )
         f_nam.write('%s\n' % (self.heading) )

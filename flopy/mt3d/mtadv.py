@@ -188,7 +188,11 @@ class Mt3dAdv(Package):
 
     def write_file(self):
         """
-        Write the file.
+        Write the package file
+
+        Returns
+        -------
+        None
 
         """
         f_adv = open(self.fn_path, 'w')

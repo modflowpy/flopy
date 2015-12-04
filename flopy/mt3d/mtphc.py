@@ -45,6 +45,14 @@ class Mt3dPhc(Package):
         return 'PHC package class for PHT3D'
 
     def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
         # Open file for writing
         f_phc = open(self.fn_path, 'w')
         f_phc.write('%3d%10f%3d%10f%10f%3d\n' % (self.os, self.temp, 
