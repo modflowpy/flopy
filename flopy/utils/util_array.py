@@ -902,6 +902,23 @@ class Util2d(object):
 
     Notes
     -----
+    If value is a valid filename and model.external_path is None, then a copy
+    of the file is made and placed in model.model_ws directory.
+
+    If value is a valid filename and model.external_path is not None, then
+    a copy of the file is made a placed in the external_path directory.
+
+    If value is a scalar, it is always written as a constant, regardless of
+    the model.external_path setting.
+
+    If value is an array and model.external_path is not None, then the array
+    is written out in the external_path directory.  The name of the file that
+    holds the array is created from the name attribute.  If the model supports
+    "free format", then the array is accessed via the "open/close" approach.
+    Otherwise, a unit number and filename is added to the name file.
+
+    If value is an array and model.external_path is None, then the array is
+    written internally to the model input file.
 
     Examples
     --------
@@ -1285,7 +1302,7 @@ class Util2d(object):
         if self.vtype != str:
 
             # if the ext_filename was passed, then we need
-            #  to write an external array - jeremy's hack
+            #  to write an external array - jeremy's hackery
             if self.ext_filename != None:
 
                 # get the string or array now before we reset __value
@@ -1295,6 +1312,7 @@ class Util2d(object):
                     a = self.string
                 # reset self.__value
                 self.__value = copy.deepcopy(self.ext_filename)
+                self.__value = copy.deepcopy(self.python_file_path)
                 # if we need fixed format, reset self.locat and get a
                 #   new unit number
                 if not self.model.free_format:
@@ -1372,7 +1390,7 @@ class Util2d(object):
         a = self._array
         # convert array to sting with specified format
         a_string = self.array2string(self.shape, a, python_format=self.py_desc)
-        return a_string + '\n'
+        return a_string
 
     @property
     def array(self):
@@ -1542,7 +1560,7 @@ class Util2d(object):
                 except Exception as e:
                     raise Exception("error writing array value" + \
                      "{0} at r,c [{1},{2}]\n{3}".format(data[i, j], i, j, str(e)))
-                if (j + 1) % column_length == 0.0 and j != 0:
+                if (j + 1) % column_length == 0.0 and (j != 0 or ncol == 1):
                     s += '\n'
             if lineReturnFlag == True:
                 s += '\n'

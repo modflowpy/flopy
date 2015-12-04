@@ -1,11 +1,14 @@
 import os
+import shutil
 import numpy as np
 import flopy
 from flopy.utils.util_array import Util2d, Util3d, Transient2d
 
 out_dir = "temp"
-if not os.path.exists(out_dir):
-    os.mkdir(out_dir)
+if os.path.exists(out_dir):
+    shutil.rmtree(out_dir)
+os.mkdir(out_dir)
+
 
 
 def test_transient2d():
@@ -62,13 +65,8 @@ def test_util2d():
     return
 
 
-def test_util2d_external_free():
+def stress_util2d(ml,nlay,nrow,ncol):
 
-    model_ws = os.path.join(out_dir,"extra_temp")
-    if not os.path.exists(model_ws):
-        os.mkdir(model_ws)
-    ml = flopy.modflow.Modflow(model_ws=model_ws)
-    nlay,nrow,ncol = 10,10,10
     dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
     hk = np.ones((nlay,nrow,ncol))
     vk = np.ones((nlay,nrow,ncol)) + 1.0
@@ -78,90 +76,100 @@ def test_util2d_external_free():
         fname = os.path.join(out_dir,"test_{0}.ref".format(i))
         fnames.append(fname)
         np.savetxt(fname,h,fmt="%15.6e",delimiter='')
+        vk[i] = i + 1.
 
     lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
     ml.write_input()
+    ml1 = flopy.modflow.Modflow.load(ml.namefile,
+                                     model_ws=ml.model_ws,
+                                     verbose=True)
+    assert ml1.load_fail == False
+    assert np.array_equal(ml1.lpf.vka.array,vk)
+    assert np.array_equal(ml1.lpf.hk.array,hk)
 
     #change model_ws
     ml.model_ws = out_dir
     ml.write_input()
+    ml1 = flopy.modflow.Modflow.load(ml.namefile,
+                                     model_ws=ml.model_ws,
+                                     verbose=True)
+    assert ml1.load_fail == False
+    assert np.array_equal(ml1.lpf.vka.array,vk)
+    assert np.array_equal(ml1.lpf.hk.array,hk)
+
+
+def test_util2d_external_free():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
+    ml = flopy.modflow.Modflow(model_ws=model_ws)
+    stress_util2d(ml,1,1,1)
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
+
+
+def test_util2d_external_free_path():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
+    ext_path = "ref"
+    if os.path.exists(ext_path):
+        shutil.rmtree(ext_path)
+    ml = flopy.modflow.Modflow(model_ws=model_ws,
+                               external_path=ext_path)
+    stress_util2d(ml,1,1,1)
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
+
 
 def test_util2d_external_fixed():
-
     model_ws = os.path.join(out_dir,"extra_temp")
     if not os.path.exists(model_ws):
         os.mkdir(model_ws)
     ml = flopy.modflow.Modflow(model_ws=model_ws)
     ml.free_format = False
-    nlay,nrow,ncol = 10,10,10
-    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
-    hk = np.ones((nlay,nrow,ncol))
-    vk = np.ones((nlay,nrow,ncol)) + 1.0
-    # save hk up one dir from model_ws
-    fnames = []
-    for i,h in enumerate(hk):
-        fname = os.path.join(out_dir,"test_{0}.ref".format(i))
-        fnames.append(fname)
-        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
 
-    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
-    ml.write_input()
+    stress_util2d(ml,1,1,1)
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
 
-    #change model_ws
-    ml.model_ws = out_dir
-    ml.write_input()
-
-def test_util2d_external_free_path():
-    model_ws = os.path.join(out_dir,"extra_temp")
-    if not os.path.exists(model_ws):
-        os.mkdir(model_ws)
-    ml = flopy.modflow.Modflow(model_ws=model_ws,
-                               external_path="ref")
-    nlay,nrow,ncol = 10,10,10
-    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
-    hk = np.ones((nlay,nrow,ncol))
-    vk = np.ones((nlay,nrow,ncol)) + 1.0
-    # save hk up one dir from model_ws
-    fnames = []
-    for i,h in enumerate(hk):
-        fname = os.path.join(out_dir,"test_{0}.ref".format(i))
-        fnames.append(fname)
-        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
-
-    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
-    ml.write_input()
-
-    #change model_ws
-    ml.model_ws = out_dir
-    #ml.lpf.vka = np.ones_like(hk) + 4
-    ml.write_input()
 
 def test_util2d_external_fixed_path():
     model_ws = os.path.join(out_dir,"extra_temp")
     if not os.path.exists(model_ws):
         os.mkdir(model_ws)
+    ext_path = "ref"
+    if os.path.exists(ext_path):
+        shutil.rmtree(ext_path)
     ml = flopy.modflow.Modflow(model_ws=model_ws,
-                               external_path="ref")
+                               external_path=ext_path)
     ml.free_format = False
-    nlay,nrow,ncol = 10,10,10
-    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
-    hk = np.ones((nlay,nrow,ncol))
-    vk = np.ones((nlay,nrow,ncol)) + 1.0
-    # save hk up one dir from model_ws
-    fnames = []
-    for i,h in enumerate(hk):
-        fname = os.path.join(out_dir,"test_{0}.ref".format(i))
-        fnames.append(fname)
-        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
 
-    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
-    ml.write_input()
-
-    #change model_ws
-    ml.model_ws = out_dir
-    #ml.lpf.vka = np.ones_like(hk) + 4
-    ml.write_input()
-
+    stress_util2d(ml,1,1,1)
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
 
 def test_util3d():
     ml = flopy.modflow.Modflow()
@@ -184,7 +192,10 @@ def test_util3d():
 
 
 if __name__ == '__main__':
+    test_util2d_external_free()
+    test_util2d_external_free_path()
+    test_util2d_external_fixed()
     test_util2d_external_fixed_path()
-    #test_transient2d()
-    #test_util2d()
-    #test_util3d()
+    test_transient2d()
+    test_util2d()
+    test_util3d()
