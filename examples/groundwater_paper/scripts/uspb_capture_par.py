@@ -61,7 +61,7 @@ def copy_files(ml, nproc):
         cf_pths.append(os.path.join(cf_base, 'cf{:02d}'.format(idx)))
         # create base model in each directory
         if idx == 0:
-            ml.change_model_ws(cf_pths[idx])
+            ml.model_ws = cf_pths[idx]
             # modify the oc file
             ml.remove_package('OC')
             stress_period_data = {(1,9): ['save head', 'save budget', 'print budget'],

@@ -18,7 +18,7 @@ def load_str(mfnam, pth):
     assert m.load_fail is False
 
     # rewrite files
-    m.change_model_ws(cpth)
+    m.model_ws = cpth
     m.write_input()
 
     # load files
