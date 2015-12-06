@@ -280,18 +280,54 @@ def test_util3d():
 
 def test_arrayformat():
     ml = flopy.modflow.Modflow()
-    u2d = Util2d(ml, (15, 2), np.float32, 10., 'test')
-    print(u2d.format.numpy)
+    u2d = Util2d(ml, (15, 2), np.float32, np.ones((15,2)), 'test')
 
+    fmt_fort = u2d.format.fortran
+    cr = u2d.get_control_record()
+    parsed = Util2d.parse_control_record(cr)
+    print(fmt_fort,parsed["fmtin"])
+    assert fmt_fort.upper() == parsed["fmtin"].upper()
 
+    u2d.format.npl = 1
+    fmt_fort = u2d.format.fortran
+    cr = u2d.get_control_record()
+    parsed = Util2d.parse_control_record(cr)
+    print(fmt_fort,parsed["fmtin"])
+    assert fmt_fort.upper() == parsed["fmtin"].upper()
+
+    u2d.format.npl = 2
+    u2d.format.width = 8
+    fmt_fort = u2d.format.fortran
+    cr = u2d.get_control_record()
+    parsed = Util2d.parse_control_record(cr)
+    print(fmt_fort,parsed["fmtin"])
+    assert fmt_fort.upper() == parsed["fmtin"].upper()
+
+    u2d.format.free = True
+    u2d.format.width = 8
+    fmt_fort = u2d.format.fortran
+    cr = u2d.get_control_record()
+    parsed = Util2d.parse_control_record(cr)
+    print(fmt_fort,parsed["fmtin"])
+    assert fmt_fort.upper() == parsed["fmtin"].upper()
+
+    u2d.format.free = False
+    fmt_fort = u2d.format.fortran
+    cr = u2d.get_control_record()
+    parsed = Util2d.parse_control_record(cr)
+    print(fmt_fort,parsed["fmtin"])
+    assert fmt_fort.upper() == parsed["fmtin"].upper()
 
 if __name__ == '__main__':
     test_arrayformat()
-    #test_util2d_external_fixed_nomodelws()
-    #test_util2d_external_free()
-    #test_util2d_external_free_path()
-    #test_util2d_external_fixed()
-    #test_util2d_external_fixed_path()
-    #test_transient2d()
-    #test_util2d()
-    #test_util3d()
+    # test_util2d_external_free_nomodelws()
+    # test_util2d_external_free_path_nomodelws()
+    # test_util2d_external_free()
+    # test_util2d_external_free_path()
+    # test_util2d_external_fixed()
+    # test_util2d_external_fixed_path()
+    # test_util2d_external_fixed_nomodelws()
+    # test_util2d_external_fixed_path_nomodelws()
+    # test_transient2d()
+    # test_util2d()
+    # test_util3d()

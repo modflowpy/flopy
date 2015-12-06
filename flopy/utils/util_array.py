@@ -17,20 +17,80 @@ from flopy.utils.binaryfile import BinaryHeader
 
 
 class ArrayFormat(object):
+    """
+    ArrayFormat class for handling various output format types for both
+    MODFLOW and flopy
 
-    def __init__(self, u2d, python=None, fortran=None, arg_dict=None):
+    Parameters
+    ----------
+    u2d : Util2d instance
+
+    python : str (optional)
+        python-style output format descriptor e.g. {0:15.6e}
+    fortran : str (optional)
+        fortran style output format descriptor e.g. (2E15.6)
+
+
+    Attributes
+    ----------
+    fortran : str
+        fortran format output descriptor (e.g. (100G15.6)
+    py : str
+        python format output descriptor (e.g. "{0:15.6E}")
+    numpy : str
+        numpy format output descriptor (e.g. "%15.6e")
+    npl : int
+        number if items per line of output
+    width : int
+        the width of the formatted numeric output
+    decimal : int
+        the number of decimal digits in the numeric output
+    format : str
+        the output format type e.g. I, G, E, etc
+    free : bool
+        free format flag
+    binary : bool
+        binary format flag
+
+
+    Methods
+    -------
+    get_default_numpy_fmt : (dtype : [np.int,np.float32])
+        a static method to get a default numpy dtype - used for loading
+    decode_fortran_descriptor : (fd : str)
+        a static method to decode fortran descriptors into npl, format,
+        width, decimal.
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    """
+    def __init__(self, u2d, python=None, fortran=None):
 
         assert isinstance(u2d,Util2d),"ArrayFormat only supports Util2d"
         if len(u2d.shape) == 1:
             self._npl_full = u2d.shape[0]
         else:
             self._npl_full = u2d.shape[1]
-
+        self.dtype = u2d.dtype
         self._npl = None
         self._format = None
         self._width = None
         self._decimal = None
         self._freeformat_model = u2d.model.free_format
+
+        self.default_float_width = 15
+        self.default_int_width = 10
+        self.default_float_format = "G"
+        self.default_int_format = "I"
+        self.default_float_decimal = 6
+        self.default_int_decimal = 0
 
         self._fmts = ['I', 'G', 'E', 'F']
 
@@ -40,12 +100,6 @@ class ArrayFormat(object):
         if python is not None and fortran is not None:
             raise Exception("only one of [python,fortran] can be passed" +
                             "to ArrayFormat constructor")
-        if python is not None and arg_dict is not None:
-            raise Exception("only one of [python,arg_dict] can be passed" +
-                            "to ArrayFormat constructor")
-        if fortran is not None and arg_dict is not None:
-            raise Exception("only one of [fortran,arg_dict] can be passed" +
-                            "to ArrayFormat constructor")
 
         if python is not None:
             self._parse_python_format(python)
@@ -53,29 +107,39 @@ class ArrayFormat(object):
         elif fortran is not None:
             self._parse_fortran_format(fortran)
 
-        elif arg_dict is not None:
-            raise NotImplementedError()
-
         else:
-            if u2d.dtype == 'I':
-                self._npl = self._npl_full
-                self._format = 'I'
-                self._width = 10
-                self._decimal = 0
+            self._set_defaults()
 
-            else:
-                self._npl = self._npl_full
-                self._format = 'G'
-                self._width = 15
-                self._decimal = 6
+    def _set_defaults(self):
+        if self.dtype in [int,np.int,np.int32]:
+            self._npl = self._npl_full
+            self._format = self.default_int_format
+            self._width = self.default_int_width
+            self._decimal = None
 
-
+        elif self.dtype in [np.float32,bool]:
+            self._npl = self._npl_full
+            self._format = self.default_float_format
+            self._width = self.default_float_width
+            self._decimal = self.default_float_decimal
+        else:
+            raise Exception("ArrayFormat._set_defaults() error: " +
+                            "unsupported dtype: {0}".format(str(self.dtype)))
     def __str__(self):
         s = "ArrayFormat: npl:{0},format:{1},width:{2},decimal{3}"\
-            .format(self.npl,self.format,self.width,self.decimal)
-        s += ",isfree{0},isbinary:{1}".format(self._isfree,self._isbinary)
+            .format(self.npl, self.format, self.width, self.decimal)
+        s += ",isfree{0},isbinary:{1}".format(self._isfree, self._isbinary)
         return s
 
+    @staticmethod
+    def get_default_numpy_fmt(dtype):
+        if dtype == np.int:
+            return "%10d"
+        elif dtype == np.float32:
+            return "%15.6E"
+        else:
+            raise Exception("ArrayFormat.get_default_numpy_fmt(): unrecognized " + \
+                            "dtype, must be np.int or np.float32")
 
     @classmethod
     def integer(cls):
@@ -84,7 +148,6 @@ class ArrayFormat(object):
     @classmethod
     def float(cls):
         raise NotImplementedError()
-
 
     @property
     def binary(self):
@@ -121,24 +184,52 @@ class ArrayFormat(object):
 
     def __setattr__(self, key, value):
         if key == "format":
-            raise NotImplementedError()
+            value = value.upper()
+            assert value.upper() in self._fmts
+            if value == 'I':
+                assert self.dtype in [int, np.int, np.int32]
+                self._format = value
+                self._decimal = None
+            else:
+                self._format = value
+                if self.decimal is None:
+                    self._decimal = self.default_float_decimal
 
         elif key == "width":
-            raise NotImplementedError()
-
+            width = int(value)
+            if self.dtype == np.float32 and width < self.decimal:
+                raise Exception("width cannot be less than decimal")
+            elif self.dtype == np.float32 and \
+                width < self.default_float_width:
+                print("ArrayFormat warning:setting width less " +
+                      "than default of {0}".format(self.default_float_width))
+                self._width = width
         elif key == "decimal":
-            raise NotImplementedError()
+            if self.dtype in [int,np.int,np.int32]:
+                raise Exception("cannot set decimal for integer dtypes")
+            else:
+                self._decimal = int(value)
 
         elif key == "entries" \
                 or key == "entires_per_line" \
                 or key == "npl":
-            raise NotImplementedError()
+            value = int(value)
+            assert value <= self._npl_full
+            self._npl = value
 
         elif key.lower() == "binary":
             self._isbinary = bool(value)
+            self._set_defaults()
 
         elif key.lower() == "free":
             self._isfree = bool(value)
+            self._set_defaults()
+
+        elif key.lower() == "fortran":
+            self._parse_fortran_format(value)
+
+        elif key.lower() == "python" or key.lower() == "py":
+            self._parse_python_format(value)
 
         else:
             super(ArrayFormat,self).__setattr__(key, value)
@@ -151,20 +242,22 @@ class ArrayFormat(object):
 
         if self.format == 'I':
             fmt = 'd'
+        else:
+            fmt = self.format
         pd = '{0:' + str(self.width)
         if self.decimal is not None:
-            pd += '.' + str(self.decimal) + self.format + '}'
+            pd += '.' + str(self.decimal) + fmt + '}'
         else:
-            pd += self.format + '}'
+            pd += fmt + '}'
 
         if self.npl is None:
             if self._isfree:
-                return (self._npl_full,pd)
+                return (self._npl_full, pd)
             else:
                 raise Exception("ArrayFormat._get_python_format() error: " +\
                                 "format is not 'free' and npl is not set")
 
-        return (self.npl,pd)
+        return (self.npl, pd)
 
     def _parse_python_format(self, arg):
         raise NotImplementedError()
@@ -179,14 +272,14 @@ class ArrayFormat(object):
         if self._isbinary:
             return "(BINARY)"
 
-        fd = '(' + str(self.npl) + self.format + str(self.width)
+        fd = '({0:d}{1:s}{2:d}'.format(self.npl,self.format,self.width)
         if self.decimal is not None:
-            fd += '.' + str(self.decimal) + ')'
+            fd += '.{0:d})'.format(self.decimal)
         else:
             fd += ')'
         return fd
 
-    def _parse_fortran_format(self,arg):
+    def _parse_fortran_format(self, arg):
         """Decode fortran descriptor
 
         Parameters
@@ -199,26 +292,62 @@ class ArrayFormat(object):
 
         """
         # strip off any quotes around format string
-        arg = arg.replace("'", "")
-        arg = arg.replace('"', '')
+
+        npl, fmt, width, decimal = ArrayFormat.decode_fortran_descriptor(arg)
+        if isinstance(npl,str):
+            if 'FREE' in npl.upper():
+                self._set_defaults()
+                self._isfree = True
+                return
+
+            elif 'BINARY' in npl.upper():
+                self._set_defaults()
+                self._isbinary = True
+                return
+        self._npl = npl
+        self._format = fmt
+        self._width = width
+        self._decimal = decimal
+
+
+    @property
+    def numpy(self):
+        return self._get_numpy_format()
+
+    def _get_numpy_format(self):
+        return "%{0}{1}.{2}".format(self.width,self.format,self.decimal)
+
+    @staticmethod
+    def decode_fortran_descriptor(fd):
+        """Decode fortran descriptor
+
+        Parameters
+        ----------
+        fd : str
+
+        Returns
+        -------
+        npl, fmt, width, decimal : int, str, int, int
+
+        """
+        # strip off any quotes around format string
+        fd = fd.replace("'", "")
+        fd = fd.replace('"', '')
         # strip off '(' and ')'
-        arg = arg.strip()[1:-1]
-        if str('FREE') in str(arg.upper()):
-            self._isfree = True
-            return
-
-        elif str('BINARY') in str(arg.upper()):
-            self._isbinary = True
-            return
-
-        if str('.') in str(arg):
-            raw = arg.split('.')
+        fd = fd.strip()[1:-1]
+        if str('FREE') in str(fd.upper()):
+            return 'free', None, None, None
+        elif str('BINARY') in str(fd.upper()):
+            return 'binary', None, None, None
+        if str('.') in str(fd):
+            raw = fd.split('.')
             decimal = int(raw[1])
         else:
-            raw = [arg]
+            raw = [fd]
             decimal = None
+        fmts = ['I', 'G', 'E', 'F']
         raw = raw[0].upper()
-        for fmt in self._fmts:
+        for fmt in fmts:
             if fmt in raw:
                 raw = raw.split(fmt)
                 # '(F9.0)' will return raw = ['', '9']
@@ -231,87 +360,9 @@ class ArrayFormat(object):
                     width = int(raw[1])
                 if fmt == 'G':
                     fmt = 'E'
-                self._npl = npl
-                self._format = fmt
-                self._width = width
-                self._decimal = decimal
-                return
-        raise Exception('Unrecognized fortran format type: ' +
-                        str(arg) + ' looking for: ' + str(self._fmts))
-
-    @property
-    def numpy(self):
-        return self._get_numpy_format()
-
-    def _get_numpy_format(self):
-        return "%{0}{1}.{2}".format(self.width,self.format,self.decimal)
-
-
-def decode_fortran_descriptor(fd):
-    """Decode fortran descriptor
-
-    Parameters
-    ----------
-    fd : str
-
-    Returns
-    -------
-    npl, fmt, width, decimal : int, str, int, int
-
-    """
-    # strip off any quotes around format string
-    fd = fd.replace("'", "")
-    fd = fd.replace('"', '')
-    # strip off '(' and ')'
-    fd = fd.strip()[1:-1]
-    if str('FREE') in str(fd.upper()):
-        return 'free', None, None, None
-    elif str('BINARY') in str(fd.upper()):
-        return 'binary', None, None, None
-    if str('.') in str(fd):
-        raw = fd.split('.')
-        decimal = int(raw[1])
-    else:
-        raw = [fd]
-        decimal = None
-    fmts = ['I', 'G', 'E', 'F']
-    raw = raw[0].upper()
-    for fmt in fmts:
-        if fmt in raw:
-            raw = raw.split(fmt)
-            # '(F9.0)' will return raw = ['', '9']
-            #  try and except will catch this
-            try:
-                npl = int(raw[0])
-                width = int(raw[1])
-            except:
-                npl = 1
-                width = int(raw[1])
-            if fmt == 'G':
-                fmt = 'E'
-            return npl, fmt, width, decimal
-    raise Exception('Unrecognized format type: ' +
-                    str(fd) + ' looking for: ' + str(fmts))
-
-
-def build_fortran_desciptor(npl, fmt, width, decimal):
-    fd = '(' + str(npl) + fmt + str(width)
-    if decimal is not None:
-        fd += '.' + str(decimal) + ')'
-    else:
-        fd += ')'
-    return fd
-
-
-def build_python_descriptor(npl, fmt, width, decimal):
-    if fmt.upper() == 'I':
-        fmt = 'd'
-    pd = '{0:' + str(width)
-    if decimal is not None:
-        pd += '.' + str(decimal) + fmt + '}'
-    else:
-        pd += fmt + '}'
-    return pd
+                return npl, fmt, width, decimal
+        raise Exception('Unrecognized format type: ' +
+                        str(fd) + ' looking for: ' + str(fmts))
 
 
 def read1d(f, a):
@@ -416,7 +467,7 @@ class Util3d(object):
             for i, u2d in enumerate(self.util_2ds):
                 self.util_2ds[i] = Util2d(model, u2d.shape, u2d.dtype,
                                            u2d._array, name=u2d.name,
-                                           fmtin=u2d.fmtin, locat=locat,
+                                           fmtin=u2d.format.fortran, locat=locat,
                                            cnstnt=u2d.cnstnt)
 
             return
@@ -793,6 +844,12 @@ class Transient2d(object):
         if isinstance(value, Transient2d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
+            for kper, u2d in self.transient_2ds.items():
+                self.transient_2ds[kper] = Util2d(model, u2d.shape, u2d.dtype,
+                                           u2d._array, name=u2d.name,
+                                           fmtin=u2d.format.fortran, locat=locat,
+                                           cnstnt=u2d.cnstnt)
+
             self.model = model
             return
 
@@ -1196,27 +1253,8 @@ class Util2d(object):
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
         self.ext_filename = None
-
-        self.format = ArrayFormat(self,fortran=fmtin)
-
-        # set fmtin
-        if fmtin is not None:
-            self.fmtin = fmtin
-        else:
-            if self.bin:
-                self.fmtin = '(BINARY)'
-            else:
-                if len(shape) == 1:
-                    npl = self.shape[0]
-                else:
-                    npl = self.shape[1]
-                if self.dtype == np.int:
-                    self.fmtin = '(' + str(npl) + 'I10) '
-                else:
-                    self.fmtin = '(' + str(npl) + 'G15.6) '
-
-        # get (npl,python_format_descriptor) from fmtin
-        self.py_desc = self.fort_2_py(self.fmtin)
+        #self.fmtin = fmtin
+        self._format = ArrayFormat(self,fortran=fmtin)
 
         # some defense
         if dtype not in [np.int, np.int32, np.float32, np.bool]:
@@ -1227,7 +1265,7 @@ class Util2d(object):
             raise Exception('Util2d: use of external arrays requires either ' +
                             'name or ext_filename attribute')
 
-        # a first shot a
+        # create an external filename in case we need it
         elif self.model.external_path is not None and ext_filename is None \
                 and self.vtype not in [np.int, np.float32]:
             self.ext_filename = os.path.join(self.model.external_path,
@@ -1352,20 +1390,8 @@ class Util2d(object):
         name = shape_attr_name(self.name, keep_layer=True)
         write_grid_shapefile(filename, self.model.dis.sr, {name: self.array})
 
-    @staticmethod
-    def get_default_numpy_fmt(dtype):
-        if dtype == np.int:
-            return "%6d"
-        elif dtype == np.float32:
-            return "%15.6E"
-        else:
-            raise Exception("Util2d.get_default_numpy_fmt(): unrecognized " + \
-                            "dtype, must be np.int or np.float32")
-
     def set_fmtin(self, fmtin):
-        self.fmtin = fmtin
-        self.py_desc = self.fort_2_py(self.fmtin)
-        return
+        self._format = ArrayFormat(self,fortran=fmtin)
 
     def get_value(self):
         return copy.deepcopy(self.__value)
@@ -1382,6 +1408,17 @@ class Util2d(object):
             return self.__value - other.get_value()
         else:
             return self.array - other.array
+
+    def __mul__(self, other):
+        if np.isscalar(other):
+            return Util2d(self.model, self.shape, self.dtype,
+                          self.__value_built * other, self.name,
+                          self.format.fortran, self.cnstnt, self.iprn,
+                          self.ext_filename,
+                          self.locat, self.bin)
+        else:
+            raise NotImplementedError(
+                "Util2d.__mul__() not implemented for non-scalars")
 
     def __getitem__(self, k):
         # array = self.array.copy()
@@ -1415,6 +1452,12 @@ class Util2d(object):
         if self.__value_built is not None:
             self.__value_built = None
 
+    def __setattr__(self, key, value):
+        if key == "format":
+            self._format = ArrayFormat(value)
+        else:
+            super(Util2d, self).__setattr__(key, value)
+
     def all(self):
         return self.array.all()
 
@@ -1423,6 +1466,12 @@ class Util2d(object):
 
     def sum(self):
         return self.array.sum()
+
+    @property
+    def format(self):
+        # don't return a copy because we want to allow
+        # access to the attributes of ArrayFormat
+        return self._format
 
     @property
     def vtype(self):
@@ -1489,16 +1538,16 @@ class Util2d(object):
                 if self.vtype in [np.int]:
                     lay_space = '{0:>32s}'.format('')
                 if self.vtype in [np.int, np.float32]:
-                    cr = 'CONSTANT ' + self.py_desc[1].format(self.__value)
+                    cr = 'CONSTANT ' + self.format.py[1].format(self.__value)
                     cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
                                                         self.name)
                 else:
                     cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
-                        .format(self.cnstnt, self.fmtin, self.iprn, self.name)
+                        .format(self.cnstnt, self.format.fortran, self.iprn, self.name)
             else:
                 cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
                     self.model_file_path, self.cnstnt,
-                    self.fmtin.strip(), self.iprn,
+                    self.format.fortran, self.iprn,
                     self.name)
 
         else:
@@ -1508,24 +1557,23 @@ class Util2d(object):
                 locat = 0
                 cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:10.0f} #{4}\n' \
                     .format(locat, float(self.__value),
-                            self.fmtin, self.iprn, self.name)
+                            self.format.fortran, self.iprn, self.name)
             else:
                 if self.ext_filename is None:
                     assert self.locat != None, 'Util2d:a non-constant value ' + \
                                                ' for an internal fixed-format requires LOCAT to be passed'
                 if self.dtype == np.int:
                     cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n' \
-                        .format(self.locat, self.cnstnt, self.fmtin,
+                        .format(self.locat, self.cnstnt, self.format.fortran,
                                 self.iprn, self.name)
                 elif self.dtype == np.float32:
                     cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n' \
-                        .format(self.locat, self.cnstnt, self.fmtin,
+                        .format(self.locat, self.cnstnt, self.format.fortran,
                                 self.iprn, self.name)
                 else:
                     raise Exception('Util2d: error generating fixed-format ' +
                                     ' control record,dtype must be np.int or np.float32')
         return cr
-
 
     def get_file_array(self):
         """
@@ -1552,14 +1600,14 @@ class Util2d(object):
                 #   new unit number
                 if not self.model.free_format:
                     self.locat = self.model.next_ext_unit()
-                    if self.bin:
+                    if self.format.binary:
                         self.locat = -1 * np.abs(self.locat)
                         self.model.add_external(self.model_file_path,
                                                 self.locat, binFlag=True)
                     else:
                         self.model.add_external(self.ext_filename, self.locat)
                 # write external formatted or unformatted array
-                if not self.bin:
+                if not self.format.binary:
                     f = open(self.python_file_path, 'w')
                     f.write(a)
                     f.close()
@@ -1602,8 +1650,8 @@ class Util2d(object):
             # then loosen things up with FREE format
             if self.model.free_format:
                 self.ext_filename = self.__value
-                self.fmtin = '(FREE)'
-                self.py_desc = self.fort_2_py(self.fmtin)
+                self.format.free = True
+                #self.py_desc = self.fort_2_py(self.fmtin)
             else:
                 # if fixed format, we need to get a new unit number
                 #  and reset locat and reserve a namfile entry
@@ -1624,7 +1672,8 @@ class Util2d(object):
         """
         a = self._array
         # convert array to sting with specified format
-        a_string = self.array2string(self.shape, a, python_format=self.py_desc)
+        a_string = self.array2string(self.shape, a,
+                                     python_format=self.format.py)
         return a_string
 
     @property
@@ -1668,7 +1717,7 @@ class Util2d(object):
                 file_in = open(self.__value, 'r')
                 self.__value_built = \
                     Util2d.load_txt(self.shape, file_in, self.dtype,
-                                     self.fmtin).astype(self.dtype)
+                                     self.format.fortran).astype(self.dtype)
                 file_in.close()
             return self.__value_built
         elif self.vtype != np.ndarray:
@@ -1692,7 +1741,7 @@ class Util2d(object):
         # file_in = open(filename,'r')
         # nrow,ncol = self.shape
         nrow, ncol = shape
-        npl, fmt, width, decimal = decode_fortran_descriptor(fmtin)
+        npl, fmt, width, decimal = ArrayFormat.decode_fortran_descriptor(fmtin)
         data = np.zeros((nrow * ncol), dtype=dtype) + np.NaN
         d = 0
         if not hasattr(file_in, 'read'):
@@ -1740,7 +1789,7 @@ class Util2d(object):
                   python_format=None):
         if fortran_format.upper() == '(FREE)' and python_format is None:
             np.savetxt(file_out, data,
-                       Util2d.get_default_numpy_fmt(data.dtype),
+                       ArrayFormat.get_default_numpy_fmt(data.dtype),
                        delimiter='')
             return
         if not hasattr(file_out,"write"):
@@ -1767,7 +1816,7 @@ class Util2d(object):
         data = np.atleast_2d(data)
         if python_format is None:
             column_length, fmt, width, decimal = \
-                decode_fortran_descriptor(fortran_format)
+                ArrayFormat.decode_fortran_descriptor(fortran_format)
             output_fmt = '{0}0:{1}.{2}{3}{4}'.format('{', width, decimal, fmt,
                                                      '}')
         else:
@@ -1826,25 +1875,6 @@ class Util2d(object):
                 header_data.tofile(file_out)
         data.tofile(file_out)
         return
-
-
-    def fort_2_py(self, fd):
-        """
-        converts the fortran format descriptor
-        into a tuple of npl and a python format specifier
-
-        """
-        npl, fmt, width, decimal = decode_fortran_descriptor(fd)
-        if npl == 'free':
-            if self.vtype == np.int:
-                return (self.shape[1], '{0:10.0f} ')
-            else:
-                return (self.shape[1], '{0:15.6G} ')
-        elif npl == 'binary':
-            return ('binary', None)
-        else:
-            pd = build_python_descriptor(npl, fmt, width, decimal)
-            return (npl, pd)
 
     def parse_value(self, value):
         """
@@ -2114,13 +2144,4 @@ class Util2d(object):
         cr_dict['fname'] = fname
         return cr_dict
 
-    def __mul__(self, other):
-        if np.isscalar(other):
-            return Util2d(self.model, self.shape, self.dtype,
-                           self.__value_built * other, self.name,
-                           self.fmtin, self.cnstnt, self.iprn,
-                           self.ext_filename,
-                           self.locat, self.bin)
-        else:
-            raise NotImplementedError(
-                "Util2d.__mul__() not implemented for non-scalars")
+
