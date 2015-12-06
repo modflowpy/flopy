@@ -108,13 +108,14 @@ class Gridgen(object):
         adname = 'ad{}'.format(len(self._addict))
         if isinstance(feature, list):
             # Create a shapefile
-            features_to_shapefile(feature, 'polygon', adname)
+            adname_w_path = os.path.join(self.model_ws, adname)
+            features_to_shapefile(feature, 'polygon', adname_w_path)
             shapefile = adname
         else:
             shapefile = feature
 
         self._addict[adname] = shapefile
-        sn = shapefile + '.shp'
+        sn = os.path.join(self.model_ws, shapefile + '.shp')
         assert os.path.isfile(sn), 'Shapefile does not exist: {}'.format(sn)
 
         for k in layers:
@@ -144,13 +145,14 @@ class Gridgen(object):
         """
         rfname = 'rf{}'.format(len(self._rfdict))
         if isinstance(features, list):
-            features_to_shapefile(features, featuretype, rfname)
+            rfname_w_path = os.path.join(self.model_ws, rfname)
+            features_to_shapefile(features, featuretype, rfname_w_path)
             shapefile = rfname
         else:
             shapefile = features
 
         self._rfdict[rfname] = [shapefile, featuretype, level]
-        sn = shapefile + '.shp'
+        sn = os.path.join(self.model_ws, shapefile + '.shp')
         assert os.path.isfile(sn), 'Shapefile does not exist: {}'.format(sn)
 
         for k in layers:
@@ -225,48 +227,67 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
-            assert os.path.isfile('qtgrid.shp')
+            fn = os.path.join(self.model_ws, 'qtgrid.shp')
+            assert os.path.isfile(fn)
         except:
             print('Error.  Failed to export polygon shapefile of grid', buff)
 
         cmds = [self.exe_name, 'grid_to_shapefile_point', '_gridgen_export.dfn']
+        buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
-            assert os.path.isfile('qtgrid_pt.shp')
+            fn = os.path.join(self.model_ws, 'qtgrid_pt.shp')
+            assert os.path.isfile(fn)
         except:
             print ('Error.  Failed to export polygon shapefile of grid', buff)
 
         # Export the usg data
         cmds = [self.exe_name, 'grid_to_usgdata', '_gridgen_export.dfn']
+        buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
-            assert os.path.isfile('qtg.nod')
+            fn = os.path.join(self.model_ws, 'qtg.nod')
+            assert os.path.isfile(fn)
         except:
             print ('Error.  Failed to export usgdata', buff)
 
         # Export vtk
         cmds = [self.exe_name, 'grid_to_vtk', '_gridgen_export.dfn']
+        buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
-            assert os.path.isfile('qtg.vtu')
+            fn = os.path.join(self.model_ws, 'qtg.vtu')
+            assert os.path.isfile(fn)
         except:
             print ('Error.  Failed to export vtk file', buff)
 
         cmds = [self.exe_name, 'grid_to_vtk_sv', '_gridgen_export.dfn']
+        buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
-            assert os.path.isfile('qtg_sv.vtu')
+            fn = os.path.join(self.model_ws, 'qtg_sv.vtu')
+            assert os.path.isfile(fn)
         except:
             print ('Error.  Failed to export shared vertex vtk file', buff)
 
         return
 
     def _mfgrid_block(self):
+        # Need to adjust offsets and rotation because gridgen rotates around
+        # lower left corner, whereas flopy rotates around upper left.
+        # gridgen rotation is counter clockwise, whereas flopy rotation is
+        # clock wise.  Crazy.
+        xll = self.dis.sr.xul
+        yll = self.dis.sr.yedge[-1]
+        xllrot, yllrot = self.dis.sr.rotate(xll, yll, self.dis.sr.rotation,
+                                            xorigin=self.dis.sr.xul,
+                                            yorigin=self.dis.sr.yedge[0])
+
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(self.dis.sr.rotation)
-        s += '  X_OFFSET = {}\n'.format(self.dis.sr.xul)
-        s += '  Y_OFFSET = {}\n'.format(self.dis.sr.yedge[-1])
+        s += '  ROTATION_ANGLE = {}\n'.format(-self.dis.sr.rotation)
+        s += '  X_OFFSET = {}\n'.format(xllrot)
+        s += '  Y_OFFSET = {}\n'.format(yllrot)
         s += '  NLAY = {}\n'.format(self.dis.nlay)
         s += '  NROW = {}\n'.format(self.dis.nrow)
         s += '  NCOL = {}\n'.format(self.dis.ncol)
