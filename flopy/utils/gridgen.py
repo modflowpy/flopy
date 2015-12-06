@@ -2,11 +2,13 @@ from __future__ import print_function
 import os
 import numpy as np
 import subprocess
+import flopy
+from flopy.modflow.mfdisu import ModflowDisU
+from flopy.utils.util_array import read1d, Util2d
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
-# plot method that is layer aware
-# create disu?
+# program layer functionality for plot method
 # support an asciigrid option for top and bottom interpolation
 
 
@@ -277,7 +279,8 @@ class Gridgen(object):
 
         return
 
-    def plot(self, ax=None, edgecolor='k', facecolor='none', **kwargs):
+    def plot(self, ax=None, layer=0, edgecolor='k', facecolor='none',
+             **kwargs):
         import matplotlib.pyplot as plt
         from flopy.plot import plot_shapefile, shapefile_extents
         if ax is None:
@@ -289,6 +292,132 @@ class Gridgen(object):
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
         return pc
+
+    def get_disu(self, model, nper=1, perlen=1, nstp=1, tsmult=1, steady=True,
+                 itmuni=4, lenuni=2):
+
+        # nodes, nlay, njag, ivsd, itmuni, lenuni, idsymrd, laycbd
+        fname = os.path.join(self.model_ws, 'qtg.nod')
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.strip().split()
+        nodes = int(ll.pop(0))
+        njag = int(ll.pop(0))
+        f.close()
+        nlay = self.dis.nlay
+        ivsd = 0
+        idsymrd = 0
+        laycbd = 0
+
+        # nodelay
+        nodelay = np.empty((nlay), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
+        f = open(fname, 'r')
+        nodelay = read1d(f, nodelay)
+        f.close()
+
+        # top
+        top = [0] * nlay
+        for k in range(nlay):
+            fname = os.path.join(self.model_ws,
+                                 'quadtreegrid.top{}.dat'.format(k + 1))
+            f = open(fname, 'r')
+            tpk = np.empty((nodelay[k]), dtype=np.float32)
+            tpk = read1d(f, tpk)
+            f.close()
+            if tpk.min() == tpk.max():
+                tpk = tpk.min()
+            else:
+                tpk = Util2d(model, (1, nodelay[k]), np.float32,
+                             np.reshape(tpk, (1,nodelay[k])),
+                             name='top {}'.format(k + 1))
+            top[k] = tpk
+
+        # bot
+        bot = [0] * nlay
+        for k in range(nlay):
+            fname = os.path.join(self.model_ws,
+                                 'quadtreegrid.bot{}.dat'.format(k + 1))
+            f = open(fname, 'r')
+            btk = np.empty((nodelay[k]), dtype=np.float32)
+            btk = read1d(f, btk)
+            f.close()
+            if btk.min() == btk.max():
+                btk = btk.min()
+            else:
+                btk = Util2d(model, (1, nodelay[k]), np.float32,
+                             np.reshape(btk, (1,nodelay[k])),
+                             name='bot {}'.format(k + 1))
+            bot[k] = btk
+
+        # area
+        area = [0] * nlay
+        fname = os.path.join(self.model_ws, 'qtg.area.dat')
+        f = open(fname, 'r')
+        anodes = np.empty((nodes), dtype=np.float32)
+        anodes = read1d(f, anodes)
+        f.close()
+        istart = 0
+        for k in range(nlay):
+            istop = istart + nodelay[k]
+            ark = anodes[istart: istop]
+            if ark.min() == ark.max():
+                ark = ark.min()
+            else:
+                ark = Util2d(model, (1, nodelay[k]), np.float32,
+                             np.reshape(ark, (1, nodelay[k])),
+                             name='area layer {}'.format(k + 1))
+            area[k] = ark
+            istart = istop
+
+        # iac
+        iac = np.empty((nodes), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.iac.dat')
+        f = open(fname, 'r')
+        iac = read1d(f, iac)
+        f.close()
+
+        # ja
+        ja = np.empty((njag), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.ja.dat')
+        f = open(fname, 'r')
+        ja = read1d(f, ja)
+        f.close()
+
+        # ivc
+        ivc = np.empty((njag), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.fldr.dat')
+        f = open(fname, 'r')
+        ivc = read1d(f, ivc)
+        f.close()
+
+        cl1 = None
+        cl2 = None
+        # cl12
+        cl12 = np.empty((njag), dtype=np.float32)
+        fname = os.path.join(self.model_ws, 'qtg.c1.dat')
+        f = open(fname, 'r')
+        cl12 = read1d(f, cl12)
+        f.close()
+
+        # fahl
+        fahl = np.empty((njag), dtype=np.float32)
+        fname = os.path.join(self.model_ws, 'qtg.fahl.dat')
+        f = open(fname, 'r')
+        fahl = read1d(f, fahl)
+        f.close()
+
+        # create dis object instance
+        disu = ModflowDisU(model, nodes=nodes, nlay=nlay, njag=njag, ivsd=ivsd,
+                           nper=nper, itmuni=itmuni, lenuni=lenuni,
+                           idsymrd=idsymrd, laycbd=laycbd, nodelay=nodelay,
+                           top=top, bot=bot, area=area, iac=iac, ja=ja,
+                           ivc=ivc, cl1=cl1, cl2=cl2, cl12=cl12, fahl=fahl,
+                           perlen=perlen, nstp=nstp, tsmult=tsmult,
+                           steady=steady)
+
+        # return dis object instance
+        return disu
 
     def _mfgrid_block(self):
         # Need to adjust offsets and rotation because gridgen rotates around
