@@ -126,6 +126,24 @@ def test_util2d_external_free():
     stress_util2d(ml,10,10,10)
 
 
+def test_util2d_external_free_nomodelws():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
+    ml = flopy.modflow.Modflow()
+    stress_util2d(ml,1,1,1)
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
+
+
+
+
 def test_util2d_external_free_path():
     model_ws = os.path.join(out_dir,"extra_temp")
     if os.path.exists(model_ws):
@@ -136,6 +154,25 @@ def test_util2d_external_free_path():
         shutil.rmtree(ext_path)
     ml = flopy.modflow.Modflow(model_ws=model_ws,
                                external_path=ext_path)
+    stress_util2d(ml,1,1,1)
+
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
+
+def test_util2d_external_free_path_nomodelws():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
+    ext_path = "ref"
+    if os.path.exists(ext_path):
+        shutil.rmtree(ext_path)
+    ml = flopy.modflow.Modflow(external_path=ext_path)
     stress_util2d(ml,1,1,1)
 
     stress_util2d(ml,10,1,1)
@@ -164,6 +201,22 @@ def test_util2d_external_fixed():
     stress_util2d(ml,10,10,10)
 
 
+def test_util2d_external_fixed_nomodelws():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if not os.path.exists(model_ws):
+        os.mkdir(model_ws)
+    ml = flopy.modflow.Modflow()
+    ml.free_format = False
+
+    stress_util2d(ml,1,1,1)
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
+
 def test_util2d_external_fixed_path():
     model_ws = os.path.join(out_dir,"extra_temp")
     if not os.path.exists(model_ws):
@@ -183,6 +236,27 @@ def test_util2d_external_fixed_path():
     stress_util2d(ml,1,10,10)
     stress_util2d(ml,10,1,10)
     stress_util2d(ml,10,10,10)
+
+
+def test_util2d_external_fixed_path_nomodelws():
+    model_ws = os.path.join(out_dir,"extra_temp")
+    if not os.path.exists(model_ws):
+        os.mkdir(model_ws)
+    ext_path = "ref"
+    if os.path.exists(ext_path):
+        shutil.rmtree(ext_path)
+    ml = flopy.modflow.Modflow(external_path=ext_path)
+    ml.free_format = False
+
+    stress_util2d(ml,1,1,1)
+    stress_util2d(ml,10,1,1)
+    stress_util2d(ml,1,10,1)
+    stress_util2d(ml,1,1,10)
+    stress_util2d(ml,10,10,1)
+    stress_util2d(ml,1,10,10)
+    stress_util2d(ml,10,1,10)
+    stress_util2d(ml,10,10,10)
+
 
 def test_util3d():
     ml = flopy.modflow.Modflow()
@@ -205,8 +279,9 @@ def test_util3d():
 
 
 if __name__ == '__main__':
+    test_util2d_external_fixed_nomodelws()
     #test_util2d_external_free()
-    test_util2d_external_free_path()
+    #test_util2d_external_free_path()
     #test_util2d_external_fixed()
     #test_util2d_external_fixed_path()
     #test_transient2d()
