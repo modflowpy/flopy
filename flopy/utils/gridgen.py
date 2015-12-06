@@ -1,8 +1,13 @@
 from __future__ import print_function
 import os
-import shutil
 import numpy as np
 import subprocess
+
+# todo
+# creation of line and polygon shapefiles from features (holes!)
+# plot method that is layer aware
+# create disu?
+# support an asciigrid option for top and bottom interpolation
 
 
 def features_to_shapefile(features, featuretype, filename):
@@ -272,6 +277,19 @@ class Gridgen(object):
 
         return
 
+    def plot(self, ax=None, edgecolor='k', facecolor='none', **kwargs):
+        import matplotlib.pyplot as plt
+        from flopy.plot import plot_shapefile, shapefile_extents
+        if ax is None:
+            ax = plt.gca()
+        shapename = os.path.join(self.model_ws, 'qtgrid')
+        xmin, xmax, ymin, ymax = shapefile_extents(shapename)
+        pc = plot_shapefile(shapename, ax=ax, edgecolor=edgecolor,
+                            facecolor=facecolor, **kwargs)
+        plt.xlim(xmin, xmax)
+        plt.ylim(ymin, ymax)
+        return pc
+
     def _mfgrid_block(self):
         # Need to adjust offsets and rotation because gridgen rotates around
         # lower left corner, whereas flopy rotates around upper left.
@@ -365,7 +383,7 @@ class Gridgen(object):
         for k, adk in enumerate(self._active_domain):
             if adk is None:
                 continue
-            s += '  ACTIVE_DOMAIN LAYER {0} = active_domain_layer_{0}\n'.format(k + 1)
+            s += '  ACTIVE_DOMAIN LAYER {} = {}\n'.format(k + 1, adk)
 
         # Write refinement feature information
         for k, rfkl in enumerate(self._refinement_features):
