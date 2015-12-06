@@ -278,8 +278,16 @@ def test_util3d():
     return
 
 
+def test_arrayformat():
+    ml = flopy.modflow.Modflow()
+    u2d = Util2d(ml, (15, 2), np.float32, 10., 'test')
+    print(u2d.format.numpy)
+
+
+
 if __name__ == '__main__':
-    test_util2d_external_fixed_nomodelws()
+    test_arrayformat()
+    #test_util2d_external_fixed_nomodelws()
     #test_util2d_external_free()
     #test_util2d_external_free_path()
     #test_util2d_external_fixed()

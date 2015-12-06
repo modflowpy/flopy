@@ -14,6 +14,239 @@ import copy
 import numpy as np
 from flopy.utils.binaryfile import BinaryHeader
 
+
+
+class ArrayFormat(object):
+
+    def __init__(self, u2d, python=None, fortran=None, arg_dict=None):
+
+        assert isinstance(u2d,Util2d),"ArrayFormat only supports Util2d"
+        if len(u2d.shape) == 1:
+            self._npl_full = u2d.shape[0]
+        else:
+            self._npl_full = u2d.shape[1]
+
+        self._npl = None
+        self._format = None
+        self._width = None
+        self._decimal = None
+        self._freeformat_model = u2d.model.free_format
+
+        self._fmts = ['I', 'G', 'E', 'F']
+
+        self._isbinary = bool(u2d.bin)
+        self._isfree = False
+
+        if python is not None and fortran is not None:
+            raise Exception("only one of [python,fortran] can be passed" +
+                            "to ArrayFormat constructor")
+        if python is not None and arg_dict is not None:
+            raise Exception("only one of [python,arg_dict] can be passed" +
+                            "to ArrayFormat constructor")
+        if fortran is not None and arg_dict is not None:
+            raise Exception("only one of [fortran,arg_dict] can be passed" +
+                            "to ArrayFormat constructor")
+
+        if python is not None:
+            self._parse_python_format(python)
+
+        elif fortran is not None:
+            self._parse_fortran_format(fortran)
+
+        elif arg_dict is not None:
+            raise NotImplementedError()
+
+        else:
+            if u2d.dtype == 'I':
+                self._npl = self._npl_full
+                self._format = 'I'
+                self._width = 10
+                self._decimal = 0
+
+            else:
+                self._npl = self._npl_full
+                self._format = 'G'
+                self._width = 15
+                self._decimal = 6
+
+
+    def __str__(self):
+        s = "ArrayFormat: npl:{0},format:{1},width:{2},decimal{3}"\
+            .format(self.npl,self.format,self.width,self.decimal)
+        s += ",isfree{0},isbinary:{1}".format(self._isfree,self._isbinary)
+        return s
+
+
+    @classmethod
+    def integer(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def float(cls):
+        raise NotImplementedError()
+
+
+    @property
+    def binary(self):
+        return bool(self._isbinary)
+
+    @property
+    def free(self):
+        return bool(self._isfree)
+
+    def __eq__(self, other):
+        if isinstance(other,str):
+            if other.lower() == "free":
+                return self.free
+            if other.lower() == "binary":
+                return self.binary
+        else:
+            super(ArrayFormat,self).__eq__(other)
+
+    @property
+    def npl(self):
+        return copy.copy(self._npl)
+
+    @property
+    def format(self):
+        return copy.copy(self._format)
+
+    @property
+    def width(self):
+        return copy.copy(self._width)
+
+    @property
+    def decimal(self):
+        return copy.copy(self._decimal)
+
+    def __setattr__(self, key, value):
+        if key == "format":
+            raise NotImplementedError()
+
+        elif key == "width":
+            raise NotImplementedError()
+
+        elif key == "decimal":
+            raise NotImplementedError()
+
+        elif key == "entries" \
+                or key == "entires_per_line" \
+                or key == "npl":
+            raise NotImplementedError()
+
+        elif key.lower() == "binary":
+            self._isbinary = bool(value)
+
+        elif key.lower() == "free":
+            self._isfree = bool(value)
+
+        else:
+            super(ArrayFormat,self).__setattr__(key, value)
+
+    @property
+    def py(self):
+        return self._get_python_format()
+
+    def _get_python_format(self):
+
+        if self.format == 'I':
+            fmt = 'd'
+        pd = '{0:' + str(self.width)
+        if self.decimal is not None:
+            pd += '.' + str(self.decimal) + self.format + '}'
+        else:
+            pd += self.format + '}'
+
+        if self.npl is None:
+            if self._isfree:
+                return (self._npl_full,pd)
+            else:
+                raise Exception("ArrayFormat._get_python_format() error: " +\
+                                "format is not 'free' and npl is not set")
+
+        return (self.npl,pd)
+
+    def _parse_python_format(self, arg):
+        raise NotImplementedError()
+
+    @property
+    def fortran(self):
+        return self._get_fortran_format()
+
+    def _get_fortran_format(self):
+        if self._isfree:
+            return "(FREE)"
+        if self._isbinary:
+            return "(BINARY)"
+
+        fd = '(' + str(self.npl) + self.format + str(self.width)
+        if self.decimal is not None:
+            fd += '.' + str(self.decimal) + ')'
+        else:
+            fd += ')'
+        return fd
+
+    def _parse_fortran_format(self,arg):
+        """Decode fortran descriptor
+
+        Parameters
+        ----------
+        arg : str
+
+        Returns
+        -------
+        npl, fmt, width, decimal : int, str, int, int
+
+        """
+        # strip off any quotes around format string
+        arg = arg.replace("'", "")
+        arg = arg.replace('"', '')
+        # strip off '(' and ')'
+        arg = arg.strip()[1:-1]
+        if str('FREE') in str(arg.upper()):
+            self._isfree = True
+            return
+
+        elif str('BINARY') in str(arg.upper()):
+            self._isbinary = True
+            return
+
+        if str('.') in str(arg):
+            raw = arg.split('.')
+            decimal = int(raw[1])
+        else:
+            raw = [arg]
+            decimal = None
+        raw = raw[0].upper()
+        for fmt in self._fmts:
+            if fmt in raw:
+                raw = raw.split(fmt)
+                # '(F9.0)' will return raw = ['', '9']
+                #  try and except will catch this
+                try:
+                    npl = int(raw[0])
+                    width = int(raw[1])
+                except:
+                    npl = 1
+                    width = int(raw[1])
+                if fmt == 'G':
+                    fmt = 'E'
+                self._npl = npl
+                self._format = fmt
+                self._width = width
+                self._decimal = decimal
+                return
+        raise Exception('Unrecognized fortran format type: ' +
+                        str(arg) + ' looking for: ' + str(self._fmts))
+
+    @property
+    def numpy(self):
+        return self._get_numpy_format()
+
+    def _get_numpy_format(self):
+        return "%{0}{1}.{2}".format(self.width,self.format,self.decimal)
+
+
 def decode_fortran_descriptor(fd):
     """Decode fortran descriptor
 
@@ -964,6 +1197,8 @@ class Util2d(object):
         self.iprn = iprn
         self.ext_filename = None
 
+        self.format = ArrayFormat(self,fortran=fmtin)
+
         # set fmtin
         if fmtin is not None:
             self.fmtin = fmtin
@@ -1243,7 +1478,6 @@ class Util2d(object):
         model_file_path = os.path.join(model_file_path,
                                        os.path.split(self.__value)[-1])
         return model_file_path
-
 
     def get_control_record(self):
         """
