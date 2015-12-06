@@ -1,4 +1,46 @@
 # Test hydmod data readers
+def test_hydmodfile_create():
+    import os
+    import numpy as np
+    import flopy
+
+    model_ws = os.path.join('temp')
+    if not os.path.exists(model_ws):
+        os.makedirs(model_ws)
+    m = flopy.modflow.Modflow('test', model_ws=model_ws)
+    hyd = flopy.modflow.ModflowHyd(m)
+    m.hyd.write_file()
+    pth = os.path.join(model_ws, 'test.hyd')
+    hydload = flopy.modflow.ModflowHyd.load(pth, m)
+    assert np.array_equal(hyd.obsdata, hydload.obsdata), 'Written hydmod data not equal to loaded hydmod data'
+
+    return
+
+
+def test_hydmodfile_load():
+    import os
+    import numpy as np
+    import flopy
+
+    model = 'test1tr.nam'
+    pth = os.path.join('..', 'examples', 'data', 'hydmod_test')
+    m = flopy.modflow.Modflow.load(model, version='mf2005', model_ws=pth, verbose=True)
+    hydref = m.hyd
+    assert isinstance(hydref, flopy.modflow.ModflowHyd), 'Did not load hydmod package...test1tr.hyd'
+
+    model_ws = os.path.join('temp')
+    if not os.path.exists(model_ws):
+        os.makedirs(model_ws)
+
+    m.change_model_ws(model_ws)
+    m.hyd.write_file()
+
+    pth = os.path.join('..', 'examples', 'data', 'hydmod_test', 'test1tr.hyd')
+    hydload = flopy.modflow.ModflowHyd.load(pth, m)
+    assert np.array_equal(hydref.obsdata, hydload.obsdata), 'Written hydmod data not equal to loaded hydmod data'
+
+    return
+
 
 def test_hydmodfile_slurp():
     import os
@@ -58,5 +100,7 @@ def test_hydmodfile_read():
 
 
 if __name__ == '__main__':
+    test_hydmodfile_create()
+    test_hydmodfile_load()
     test_hydmodfile_slurp()
     test_hydmodfile_read()

@@ -172,7 +172,8 @@ class Modflow(BaseModel):
             "uzf": flopy.modflow.ModflowUzf1,
             "upw": flopy.modflow.ModflowUpw,
             "sub": flopy.modflow.ModflowSub,
-            "swt": flopy.modflow.ModflowSwt
+            "swt": flopy.modflow.ModflowSwt,
+            "hyd": flopy.modflow.ModflowHyd
         }
         return
 
