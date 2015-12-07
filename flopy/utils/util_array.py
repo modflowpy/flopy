@@ -1423,6 +1423,7 @@ class Util2d(object):
         else:
             return self.array - other.array
 
+
     def __mul__(self, other):
         if np.isscalar(other):
             return Util2d(self.model, self.shape, self.dtype,
