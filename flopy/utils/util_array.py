@@ -16,7 +16,6 @@ import numpy as np
 from flopy.utils.binaryfile import BinaryHeader
 
 
-
 class ArrayFormat(object):
     """
     ArrayFormat class for handling various output format types for both
@@ -96,7 +95,7 @@ class ArrayFormat(object):
 
         self._fmts = ['I', 'G', 'E', 'F']
 
-        self._isbinary = bool(u2d.bin)
+        self._isbinary = False
         self._isfree = False
 
         if python is not None and fortran is not None:
@@ -1227,7 +1226,7 @@ class Util2d(object):
 
     """
 
-    def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
+    def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
                  ext_unit_dict=None):
         """
@@ -1260,7 +1259,7 @@ class Util2d(object):
                                      "not {0}:{1}".format(type(s),str(s))
         self.shape = shape
         self.dtype = dtype
-        self.bin = bool(bin)
+        #self.bin = bool(bin)
         self.name = name
         self.locat = locat
         self.parse_value(value)
@@ -1270,7 +1269,7 @@ class Util2d(object):
         self.ext_filename = None
         #self.fmtin = fmtin
         self._format = ArrayFormat(self,fortran=fmtin)
-        self._format.binary = self.bin
+        self._format.binary = bool(bin)
         # some defense
         if dtype not in [np.int, np.int32, np.float32, np.bool]:
             raise Exception('Util2d:unsupported dtype: ' + str(dtype))
@@ -1288,7 +1287,7 @@ class Util2d(object):
         elif self.vtype not in [np.int, np.float32]:
             self.ext_filename = ext_filename
 
-        if self.bin and self.ext_filename is None:
+        if self.format.binary and self.ext_filename is None:
             raise Exception('Util2d: binary flag requires ext_filename')
 
     def plot(self, title=None, filename_base=None, file_extension=None,
@@ -1431,7 +1430,7 @@ class Util2d(object):
                           self.__value_built * other, self.name,
                           self.format.fortran, self.cnstnt, self.iprn,
                           self.ext_filename,
-                          self.locat, self.bin)
+                          self.locat, self.format.binary)
         else:
             raise NotImplementedError(
                 "Util2d.__mul__() not implemented for non-scalars")
@@ -1606,7 +1605,7 @@ class Util2d(object):
             if self.ext_filename != None:
 
                 # get the string or array now before we reset __value
-                if self.bin:
+                if self.format.binary:
                     a = self._array
                 else:
                     a = self.string
