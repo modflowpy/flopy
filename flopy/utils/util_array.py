@@ -73,7 +73,8 @@ class ArrayFormat(object):
     """
     def __init__(self, u2d, python=None, fortran=None):
 
-        assert isinstance(u2d,Util2d),"ArrayFormat only supports Util2d"
+        assert isinstance(u2d,Util2d),"ArrayFormat only supports Util2d," +\
+                                      "not {0}".format(type(u2d))
         if len(u2d.shape) == 1:
             self._npl_full = u2d.shape[0]
         else:
@@ -128,7 +129,7 @@ class ArrayFormat(object):
     def __str__(self):
         s = "ArrayFormat: npl:{0},format:{1},width:{2},decimal{3}"\
             .format(self.npl, self.format, self.width, self.decimal)
-        s += ",isfree{0},isbinary:{1}".format(self._isfree, self._isbinary)
+        s += ",isfree:{0},isbinary:{1}".format(self._isfree, self._isbinary)
         return s
 
     @staticmethod
@@ -208,13 +209,22 @@ class ArrayFormat(object):
             if self.dtype in [int,np.int,np.int32]:
                 raise Exception("cannot set decimal for integer dtypes")
             else:
+                value = int(value)
+                if value < self.default_float_decimal:
+                    print("ArrayFormat warning: setting decimal " +
+                          " less than default of " +
+                          "{0}".format(self.default_float_decimal))
+                if value < self.decimal:
+                    print("ArrayFormat warning: setting decimal " +
+                          " less than current value of " +
+                          "{0}".format(self.default_float_decimal))
                 self._decimal = int(value)
 
         elif key == "entries" \
                 or key == "entires_per_line" \
                 or key == "npl":
             value = int(value)
-            assert value <= self._npl_full
+            assert value <= self._npl_full, "cannot set npl > shape"
             self._npl = value
 
         elif key.lower() == "binary":
@@ -1454,7 +1464,7 @@ class Util2d(object):
 
     def __setattr__(self, key, value):
         if key == "format":
-            self._format = ArrayFormat(value)
+            self._format = ArrayFormat(self,fortran=value)
         else:
             super(Util2d, self).__setattr__(key, value)
 
@@ -1532,6 +1542,8 @@ class Util2d(object):
         """
         get the modflow control record
         """
+        if self.format.binary and self.ext_filename is None:
+            raise Exception("binary format but not external filename set")
         lay_space = '{0:>27s}'.format('')
         if self.model.free_format:
             if self.ext_filename is None:
