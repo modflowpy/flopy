@@ -23,7 +23,7 @@ def test_transient2d():
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
-    u2d = Util2d(ml, (10, 10), np.float32, 10.)
+    u2d = Util2d(ml, (10, 10), np.float32, 10., "test")
     a1 = u2d.array
     a2 = np.ones((10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
@@ -318,16 +318,23 @@ def test_arrayformat():
     print(fmt_fort,parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
+    u2d.format = "(10G15.6)"
+    fmt_fort = u2d.format.fortran
+    cr = u2d.get_control_record()
+    parsed = Util2d.parse_control_record(cr)
+    print(fmt_fort,parsed["fmtin"])
+    assert fmt_fort.upper() == parsed["fmtin"].upper()
+
 if __name__ == '__main__':
     test_arrayformat()
-    # test_util2d_external_free_nomodelws()
-    # test_util2d_external_free_path_nomodelws()
-    # test_util2d_external_free()
-    # test_util2d_external_free_path()
-    # test_util2d_external_fixed()
-    # test_util2d_external_fixed_path()
-    # test_util2d_external_fixed_nomodelws()
-    # test_util2d_external_fixed_path_nomodelws()
-    # test_transient2d()
-    # test_util2d()
-    # test_util3d()
+    test_util2d_external_free_nomodelws()
+    test_util2d_external_free_path_nomodelws()
+    test_util2d_external_free()
+    test_util2d_external_free_path()
+    test_util2d_external_fixed()
+    test_util2d_external_fixed_path()
+    test_util2d_external_fixed_nomodelws()
+    test_util2d_external_fixed_path_nomodelws()
+    test_transient2d()
+    test_util2d()
+    test_util3d()
