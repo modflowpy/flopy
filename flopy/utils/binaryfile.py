@@ -560,6 +560,28 @@ class CellBudgetFile(object):
         fullheader = join_struct_arrays([header1, header2])
         return fullheader[0]
 
+    def _find_text(self, text):
+        """
+        Determine if selected record name is in budget file
+
+        """
+        # check and make sure that text is in file
+        text16 = None
+        if text is not None:
+            if isinstance(text, bytes):
+                ttext = text.decode()
+            else:
+                ttext = text
+            for t in self.unique_record_names():
+                if ttext.upper() in t.decode():
+                    text16 = t
+                    break
+            if text16 is None:
+                errmsg = 'The specified text string is not in the budget file.'
+                raise Exception(errmsg)
+        return text16
+
+
     def list_records(self):
         """
         Print a list of all of the records in the file
@@ -595,6 +617,26 @@ class CellBudgetFile(object):
         for kstp, kper in self.kstpkper:
             kstpkper.append((kstp - 1, kper - 1))
         return kstpkper
+
+    def get_indices(self, text=None):
+        """
+        Get a list of indices for a selected record name
+
+        Returns
+        ----------
+        out : tuple
+            indices of selected record name in budget file.
+
+        """
+        # check and make sure that text is in file
+        if text is not None:
+            text16 = self._find_text(text)
+            select_indices = np.where((self.recordarray['text'] == text16))
+            if isinstance(select_indices, tuple):
+                select_indices = select_indices[0]
+        else:
+            select_indices = None
+        return select_indices
 
     def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
                  verbose=False, full3D=False):
@@ -653,18 +695,19 @@ class CellBudgetFile(object):
 
         # check and make sure that text is in file
         if text is not None:
-            text16 = None
-            if isinstance(text, bytes):
-                ttext = text.decode()
-            else:
-                ttext = text
-            for t in self.unique_record_names():
-                if ttext.upper() in t.decode():
-                    text16 = t
-                    break
-            if text16 is None:
-                errmsg = 'The specified text string is not in the budget file.'
-                raise Exception(errmsg)
+            text16 = self._find_text(text)
+            # text16 = None
+            # if isinstance(text, bytes):
+            #     ttext = text.decode()
+            # else:
+            #     ttext = text
+            # for t in self.unique_record_names():
+            #     if ttext.upper() in t.decode():
+            #         text16 = t
+            #         break
+            # if text16 is None:
+            #     errmsg = 'The specified text string is not in the budget file.'
+            #     raise Exception(errmsg)
 
         if kstpkper is not None:
             kstp1 = kstpkper[0] + 1
