@@ -78,6 +78,8 @@ class Gridgen(object):
 
     """
     def __init__(self, dis, model_ws='.', exe_name='gridgen'):
+        self.nodes = 0
+        self.nja = 0
         self.dis = dis
         self.model_ws = model_ws
         self.exe_name = exe_name
@@ -113,6 +115,11 @@ class Gridgen(object):
         None
 
         """
+        # set nodes and nja to 0 to indicate that grid must be rebuilt
+        self.nodes = 0
+        self.nja = 0
+
+        # Create shapefile or set shapefile to feature
         adname = 'ad{}'.format(len(self._addict))
         if isinstance(feature, list):
             # Create a shapefile
@@ -151,6 +158,11 @@ class Gridgen(object):
         None
 
         """
+        # set nodes and nja to 0 to indicate that grid must be rebuilt
+        self.nodes = 0
+        self.nja = 0
+
+        # Create shapefile or set shapefile to feature
         rfname = 'rf{}'.format(len(self._rfdict))
         if isinstance(features, list):
             rfname_w_path = os.path.join(self.model_ws, rfname)
@@ -206,7 +218,7 @@ class Gridgen(object):
         buff = subprocess.check_output(cmds, cwd=self.model_ws)
         assert os.path.isfile(qtgfname)
 
-        # Make shapefiles
+        # Export the grid to shapefiles, usgdata, and vtk files
         self.export()
 
         return
@@ -281,7 +293,41 @@ class Gridgen(object):
         return
 
     def plot(self, ax=None, layer=0, edgecolor='k', facecolor='none',
-             **kwargs):
+             cmap='Dark2', a=None, masked_values=None, **kwargs):
+        """
+        Plot the grid.  This method will plot the grid using the shapefile
+        that was created as part of the build method.
+
+        Note that the layer option is not working yet!
+
+        Parameters
+        ----------
+        ax : matplotlib.pyplot axis
+            The plot axis.  If not provided it, plt.gca() will be used.
+            If there is not a current axis then a new one will be created.
+        layer : int
+            Not working!  This should show only this layer, but there is no
+            way to do this yet with plot_shapefile.
+        cmap : string
+            Name of colormap to use for polygon shading (default is 'Dark2')
+        edgecolor : string
+            Color name.  (Default is 'scaled' to scale the edge colors.)
+        facecolor : string
+            Color name.  (Default is 'scaled' to scale the face colors.)
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        kwargs : dictionary
+            Keyword arguments that are passed to PatchCollection.set(**kwargs).
+            Some common kwargs would be 'linewidths', 'linestyles', 'alpha',
+            etc.
+
+        Returns
+        -------
+        pc : matplotlib.collections.PatchCollection
+
+        """
         import matplotlib.pyplot as plt
         from flopy.plot import plot_shapefile, shapefile_extents
         if ax is None:
@@ -289,7 +335,8 @@ class Gridgen(object):
         shapename = os.path.join(self.model_ws, 'qtgrid')
         xmin, xmax, ymin, ymax = shapefile_extents(shapename)
         pc = plot_shapefile(shapename, ax=ax, edgecolor=edgecolor,
-                            facecolor=facecolor, **kwargs)
+                            facecolor=facecolor, cmap=cmap, a=a,
+                            masked_values=masked_values, **kwargs)
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
         return pc
@@ -309,6 +356,10 @@ class Gridgen(object):
         ivsd = 0
         idsymrd = 0
         laycbd = 0
+
+        # save nodes and njag to self
+        self.nodes = nodes
+        self.nja = njag
 
         # nodelay
         nodelay = np.empty((nlay), dtype=np.int)
