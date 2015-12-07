@@ -1258,6 +1258,7 @@ class Util2d(object):
                                      "not {0}:{1}".format(type(s),str(s))
         self.shape = shape
         self.dtype = dtype
+        self.bin = bool(bin)
         self.name = name.lower()
         self.locat = locat
         self.parse_value(value)
