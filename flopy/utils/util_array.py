@@ -314,10 +314,11 @@ class ArrayFormat(object):
                 self._set_defaults()
                 self._isbinary = True
                 return
-        self._npl = npl
+        self._npl = int(npl)
         self._format = fmt
-        self._width = width
-        self._decimal = decimal
+        self._width = int(width)
+        if decimal is not None:
+            self._decimal = int(decimal)
 
 
     @property
@@ -1253,6 +1254,9 @@ class Util2d(object):
             ext_filename = ext_filename.lower()
 
         self.model = model
+        for s in shape:
+            assert isinstance(s,int),"all shape elements must be integers, " +\
+                                     "not {0}:{1}".format(type(s),str(s))
         self.shape = shape
         self.dtype = dtype
         self.bin = bool(bin)
@@ -1265,7 +1269,7 @@ class Util2d(object):
         self.ext_filename = None
         #self.fmtin = fmtin
         self._format = ArrayFormat(self,fortran=fmtin)
-
+        self._format.binary = self.bin
         # some defense
         if dtype not in [np.int, np.int32, np.float32, np.bool]:
             raise Exception('Util2d:unsupported dtype: ' + str(dtype))
@@ -1431,17 +1435,16 @@ class Util2d(object):
                 "Util2d.__mul__() not implemented for non-scalars")
 
     def __getitem__(self, k):
-        # array = self.array.copy()
-        # array[:] = np.NaN
-        # array[k] = self.array[k]
-        # new_util2d = new_u2d(self,array)
-        # return new_u2d(self,array)
         if isinstance(k, int):
-            # this explicit cast is to handle a bug in numpy versions < 1.6.2
-            if self.dtype == np.float32:
-                return float(self.array[k])
-            else:
+            if len(self.shape) == 1:
                 return self.array[k]
+            elif self.shape[0] == 1:
+                return self.array[0,k]
+            elif self.shape[1] == 1:
+                return self.array[k,0]
+            else:
+                raise Exception("Util2d.__getitem() error: an interger was passed, " +\
+                                "self.shape > 1 in both dimensions")
         else:
             if isinstance(k, tuple):
                 if len(k) == 2:
