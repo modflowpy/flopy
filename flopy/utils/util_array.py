@@ -228,10 +228,16 @@ class ArrayFormat(object):
             self._npl = value
 
         elif key.lower() == "binary":
-            self._isbinary = bool(value)
+            value = bool(value)
+            if value and self.free:
+                raise Exception("cannot switch from 'free' to 'binary' format")
+            self._isbinary = value
             self._set_defaults()
 
         elif key.lower() == "free":
+            value = bool(value)
+            if value and self.binary:
+                raise Exception("cannot switch from 'binary' to 'free' format")
             self._isfree = bool(value)
             self._set_defaults()
 
@@ -527,6 +533,9 @@ class Util3d(object):
             # set the cnstnt for each u2d
             for u2d in self.util_2ds:
                 u2d.cnstnt = value
+        if hasattr(self,"util_2ds") and key == "fmtin":
+            for u2d in self.util_2ds:
+                u2d.format = ArrayFormat(u2d,fortran=value)
         # set the attribute for u3d, even for cnstnt
         super(Util3d, self).__setattr__(key, value)
 
@@ -889,6 +898,10 @@ class Transient2d(object):
             # set the cnstnt for each u2d
             for kper,u2d in self.transient_2ds.items():
                 self.transient_2ds[kper].cnstnt = value
+        if hasattr(self, "transient_2ds") and key == "fmtin":
+            # set the cnstnt for each u2d
+            for kper,u2d in self.transient_2ds.items():
+                self.transient_2ds[kper].format = ArrayFormat(u2d,fortran=value)
         # set the attribute for u3d, even for cnstnt
         super(Transient2d, self).__setattr__(key, value)
 
@@ -1256,10 +1269,9 @@ class Util2d(object):
         self.model = model
         for s in shape:
             assert isinstance(s,numbers.Integral),"all shape elements must be integers, " +\
-                                     "not {0}:{1}".format(type(s),str(s))
+                                                  "not {0}:{1}".format(type(s), str(s))
         self.shape = shape
         self.dtype = dtype
-        #self.bin = bool(bin)
         self.name = name
         self.locat = locat
         self.parse_value(value)
@@ -1267,28 +1279,29 @@ class Util2d(object):
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
         self.ext_filename = None
-        #self.fmtin = fmtin
+        self._ext_filename = None
         self._format = ArrayFormat(self,fortran=fmtin)
         self._format.binary = bool(bin)
+
         # some defense
         if dtype not in [np.int, np.int32, np.float32, np.bool]:
             raise Exception('Util2d:unsupported dtype: ' + str(dtype))
 
-        if self.model.external_path is not None and name is None \
-                and ext_filename is None:
-            raise Exception('Util2d: use of external arrays requires either ' +
-                            'name or ext_filename attribute')
-
-        # create an external filename in case we need it
-        elif self.model.external_path is not None and ext_filename is None \
+        # create an external filename but not if value is a constant
+        if self.model.external_path is not None and ext_filename is None \
                 and self.vtype not in [np.int, np.float32]:
-            self.ext_filename = os.path.join(self.model.external_path,
+            self.ext_filename = os.path.join(self.model.external_path,\
                                              name + '.ref')
+
+        # else if value is not a scalar, set ext_filename attribute
         elif self.vtype not in [np.int, np.float32]:
             self.ext_filename = ext_filename
 
         if self.format.binary and self.ext_filename is None:
             raise Exception('Util2d: binary flag requires ext_filename')
+
+        if self.ext_filename is None:
+            self._ext_filename = self.name.replace(' ','_') + ".ref"
 
     def plot(self, title=None, filename_base=None, file_extension=None,
              fignum=None, **kwargs):
@@ -1423,7 +1436,6 @@ class Util2d(object):
         else:
             return self.array - other.array
 
-
     def __mul__(self, other):
         if np.isscalar(other):
             return Util2d(self.model, self.shape, self.dtype,
@@ -1467,8 +1479,11 @@ class Util2d(object):
             self.__value_built = None
 
     def __setattr__(self, key, value):
-        if key == "format":
+        if key == "fmtin":
             self._format = ArrayFormat(self,fortran=value)
+        elif key == "format":
+            assert isinstance(value,ArrayFormat)
+            self._format = value
         else:
             super(Util2d, self).__setattr__(key, value)
 
@@ -1532,14 +1547,19 @@ class Util2d(object):
 
         """
         if self.vtype != str:
-            raise Exception("Util2d call to model_file_path " +
-                            "for vtype != str")
+            filename = self.ext_filename
+            if filename is None:
+                filename = self._ext_filename
+        else:
+            #assert os.path.exists(self.__value), "Util2d.get_model_filepath " +\
+            #                                     "error: file not found:" +\
+            #                                     "{0}".format(self.__value)
+            filename = os.path.split(self.__value)[-1]
         model_file_path = ''
         if self.model.external_path is not None:
             model_file_path = os.path.join(model_file_path,
                                            self.model.external_path)
-        model_file_path = os.path.join(model_file_path,
-                                       os.path.split(self.__value)[-1])
+        model_file_path = os.path.join(model_file_path, filename)
         return model_file_path
 
     def get_control_record(self):
@@ -1547,7 +1567,8 @@ class Util2d(object):
         get the modflow control record
         """
         if self.format.binary and self.ext_filename is None:
-            raise Exception("binary format but not external filename set")
+            #raise Exception("binary format but not external filename set")
+            self.ext_filename = self._ext_filename
         lay_space = '{0:>27s}'.format('')
         if self.model.free_format:
             if self.ext_filename is None:
@@ -1599,6 +1620,8 @@ class Util2d(object):
         """
         # if the value is not a filename
         if self.vtype != str:
+            if self.format.binary and self.ext_filename is None:
+                self.ext_filename = self._ext_filename
 
             # if the ext_filename was passed, then we need
             #  to write an external array - jeremy's hackery
@@ -1619,7 +1642,7 @@ class Util2d(object):
                     if self.format.binary:
                         self.locat = -1 * np.abs(self.locat)
                         self.model.add_external(self.model_file_path,
-                                                self.locat, binFlag=True)
+                                                self.locat, binflag=True)
                     else:
                         self.model.add_external(self.ext_filename, self.locat)
                 # write external formatted or unformatted array
@@ -1628,8 +1651,9 @@ class Util2d(object):
                     f.write(a)
                     f.close()
                 else:
-                    a.tofile(self.python_file_path)
-
+                    #a.tofile(self.python_file_path)
+                    Util2d.write_bin(self.shape,self.python_file_path,a,
+                                     bintype="head")
                 return ''
 
             # this internal array or constant
@@ -1666,8 +1690,8 @@ class Util2d(object):
             # then loosen things up with FREE format
             if self.model.free_format:
                 self.ext_filename = self.__value
-                self.format.free = True
-                #self.py_desc = self.fort_2_py(self.fmtin)
+                if not self.format.binary:
+                    self.format.free = True
             else:
                 # if fixed format, we need to get a new unit number
                 #  and reset locat and reserve a namfile entry
@@ -1882,11 +1906,14 @@ class Util2d(object):
 
     @staticmethod
     def write_bin(shape, file_out, data, bintype=None, header_data=None):
+        if not hasattr(file_out,'write'):
+            file_out = open(file_out,'wb')
         dtype = data.dtype
         if dtype.kind != 'i':
             if bintype is not None:
                 if header_data is None:
-                    header_data = BinaryHeader.create(bintype=bintype)
+                    header_data = BinaryHeader.create(bintype=bintype,nrow=shape[0],
+                                                      ncol=shape[1])
             if header_data is not None:
                 header_data.tofile(file_out)
         data.tofile(file_out)
@@ -2031,13 +2058,18 @@ class Util2d(object):
                           cnstnt=cr_dict['cnstnt'])
 
         elif cr_dict['type'] == 'external':
-            assert cr_dict['nunit'] in list(ext_unit_dict.keys())
+
+
             if str('binary') not in str(cr_dict['fmtin'].lower()):
+                assert cr_dict['nunit'] in list(ext_unit_dict.keys())
                 data = Util2d.load_txt(shape,
                                         ext_unit_dict[
                                             cr_dict['nunit']].filehandle,
                                         dtype, cr_dict['fmtin'])
             else:
+                if cr_dict['nunit'] not in list(ext_unit_dict.keys()):
+                    cr_dict["nunit"] *= -1
+                assert cr_dict['nunit'] in list(ext_unit_dict.keys())
                 header_data, data = Util2d.load_bin(
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
                     bintype='Head')

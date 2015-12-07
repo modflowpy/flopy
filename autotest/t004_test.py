@@ -79,6 +79,7 @@ def stress_util2d(ml,nlay,nrow,ncol):
         vk[i] = i + 1.
 
     lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
+    ml.lpf.vka[0].format.binary = True
     ml.write_input()
     if ml.external_path is not None:
         files = os.listdir(os.path.join(ml.model_ws,ml.external_path))
@@ -87,7 +88,7 @@ def stress_util2d(ml,nlay,nrow,ncol):
     print("\n\nexternal files: " + ','.join(files) + '\n\n')
     ml1 = flopy.modflow.Modflow.load(ml.namefile,
                                      model_ws=ml.model_ws,
-                                     verbose=True)
+                                     verbose=True,forgive=False)
     print("testing load")
     assert ml1.load_fail == False
     assert np.array_equal(ml1.lpf.vka.array,vk)
@@ -103,7 +104,7 @@ def stress_util2d(ml,nlay,nrow,ncol):
     print("\n\nexternal files: " + ','.join(files) + '\n\n')
     ml1 = flopy.modflow.Modflow.load(ml.namefile,
                                      model_ws=ml.model_ws,
-                                     verbose=True)
+                                     verbose=True,forgive=False)
     print("testing load")
     assert ml1.load_fail == False
     assert np.array_equal(ml1.lpf.vka.array,vk)
@@ -322,15 +323,26 @@ def test_arrayformat():
     print(fmt_fort,parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
-    u2d.format = "(10G15.6)"
+    u2d.fmtin = "(10G15.6)"
     fmt_fort = u2d.format.fortran
     cr = u2d.get_control_record()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort,parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
+    u2d.format.binary = True
+    fmt_fort = u2d.format.fortran
+    cr = u2d.get_control_record()
+    parsed = Util2d.parse_control_record(cr)
+    print(fmt_fort,parsed["fmtin"])
+    assert fmt_fort.upper() == parsed["fmtin"].upper()
+    assert u2d.get_file_array() == ''
+
+
+
 if __name__ == '__main__':
     test_arrayformat()
+
     test_util2d_external_free_nomodelws()
     test_util2d_external_free_path_nomodelws()
     test_util2d_external_free()

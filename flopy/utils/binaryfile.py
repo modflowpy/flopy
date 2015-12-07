@@ -12,7 +12,7 @@ import numpy as np
 from collections import OrderedDict
 from flopy.utils.datafile import Header, LayerFile
 
-class BinaryHeader():
+class BinaryHeader(Header):
     """
     The binary_header class is a class to create headers for MODFLOW
     binary files.
@@ -71,7 +71,7 @@ class BinaryHeader():
         """
         Create a binary header
         """
-        header = Header(filetype=bintype)
+        header = BinaryHeader(bintype=bintype)
         if header.get_dtype() is not None:
             header.set_values(**kwargs)
         return header.get_values()
