@@ -11,6 +11,7 @@ from __future__ import division, print_function
 import os
 import shutil
 import copy
+import numbers
 import numpy as np
 from flopy.utils.binaryfile import BinaryHeader
 
@@ -1255,7 +1256,7 @@ class Util2d(object):
 
         self.model = model
         for s in shape:
-            assert isinstance(s,int),"all shape elements must be integers, " +\
+            assert isinstance(s,numbers.Integral),"all shape elements must be integers, " +\
                                      "not {0}:{1}".format(type(s),str(s))
         self.shape = shape
         self.dtype = dtype
