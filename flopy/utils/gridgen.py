@@ -10,6 +10,7 @@ from flopy.utils.util_array import read1d, Util2d
 # creation of line and polygon shapefiles from features (holes!)
 # program layer functionality for plot method
 # support an asciigrid option for top and bottom interpolation
+# add intersection capability
 
 
 def features_to_shapefile(features, featuretype, filename):
@@ -418,6 +419,79 @@ class Gridgen(object):
 
         # return dis object instance
         return disu
+
+    def intersect(self, features, featuretype, layer):
+        """
+        Parameters
+        ----------
+        features : str or list
+            features can be either a string containing the name of a shapefile
+            or it can be a list of points, lines, or polygons
+        featuretype : str
+            Must be either 'point', 'line', or 'polygon'
+        layer : int
+            Layer (zero based) to intersect with.  Zero based.
+
+        Returns
+        -------
+        None
+
+        """
+        ifname = 'intersect_feature'
+        if isinstance(features, list):
+            ifname_w_path = os.path.join(self.model_ws, ifname)
+            features_to_shapefile(features, featuretype, ifname_w_path)
+            shapefile = ifname
+        else:
+            shapefile = features
+
+        sn = os.path.join(self.model_ws, shapefile + '.shp')
+        assert os.path.isfile(sn), 'Shapefile does not exist: {}'.format(sn)
+
+        fname = os.path.join(self.model_ws, '_intersect.dfn')
+        if os.path.isfile(fname):
+            os.remove(fname)
+        f = open(fname, 'w')
+        f.write('LOAD quadtreegrid.dfn\n')
+        f.write(1 * '\n')
+        f.write(self._intersection_block(shapefile, featuretype, layer))
+        f.close()
+
+        # Intersect
+        cmds = [self.exe_name, 'intersect', '_intersect.dfn']
+        buff = []
+        try:
+            buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            fn = os.path.join(self.model_ws, 'intersection.ifo')
+            assert os.path.isfile(fn)
+        except:
+            print ('Error.  Failed to perform intersection', buff)
+
+        # Calculate the number of columns to import
+        # The extra comma causes one too many columns, so calculate the length
+        f = open(fn, 'r')
+        line = f.readline()
+        f.close()
+        ncol = len(line.strip().split(',')) - 1
+
+        # Load the intersection results as a recarray, convert nodenumber
+        # to zero-based and return
+        result = np.genfromtxt(fn, dtype=None, names=True, delimiter=',',
+                               usecols=tuple(range(ncol)))
+        result = result.view(np.recarray)
+        result['nodenumber'] -= 1
+        return result
+
+    def _intersection_block(self, shapefile, featuretype, layer):
+        s = ''
+        s += 'BEGIN GRID_INTERSECTION intersect' + '\n'
+        s += '  GRID = quadtreegrid\n'
+        s += '  LAYER = {}\n'.format(layer + 1)
+        s += '  SHAPEFILE = {}\n'.format(shapefile)
+        s += '  FEATURE_TYPE = {}\n'.format(featuretype)
+        s += '  OUTPUT_FILE = {}\n'.format('intersection.ifo')
+        s += 'END GRID_INTERSECTION intersect' + '\n'
+        return s
 
     def _mfgrid_block(self):
         # Need to adjust offsets and rotation because gridgen rotates around
