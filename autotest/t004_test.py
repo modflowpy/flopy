@@ -186,8 +186,9 @@ def test_util2d_external_free_path_nomodelws():
 
 def test_util2d_external_fixed():
     model_ws = os.path.join(out_dir,"extra_temp")
-    if not os.path.exists(model_ws):
-        os.mkdir(model_ws)
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
     ml = flopy.modflow.Modflow(model_ws=model_ws)
     ml.free_format = False
 
@@ -203,8 +204,9 @@ def test_util2d_external_fixed():
 
 def test_util2d_external_fixed_nomodelws():
     model_ws = os.path.join(out_dir,"extra_temp")
-    if not os.path.exists(model_ws):
-        os.mkdir(model_ws)
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
     ml = flopy.modflow.Modflow()
     ml.free_format = False
 
@@ -219,8 +221,9 @@ def test_util2d_external_fixed_nomodelws():
 
 def test_util2d_external_fixed_path():
     model_ws = os.path.join(out_dir,"extra_temp")
-    if not os.path.exists(model_ws):
-        os.mkdir(model_ws)
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
     ext_path = "ref"
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)
@@ -240,8 +243,9 @@ def test_util2d_external_fixed_path():
 
 def test_util2d_external_fixed_path_nomodelws():
     model_ws = os.path.join(out_dir,"extra_temp")
-    if not os.path.exists(model_ws):
-        os.mkdir(model_ws)
+    if os.path.exists(model_ws):
+        shutil.rmtree(model_ws)
+    os.mkdir(model_ws)
     ext_path = "ref"
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)
