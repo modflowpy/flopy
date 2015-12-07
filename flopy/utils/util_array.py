@@ -314,10 +314,11 @@ class ArrayFormat(object):
                 self._set_defaults()
                 self._isbinary = True
                 return
-        self._npl = npl
+        self._npl = int(npl)
         self._format = fmt
-        self._width = width
-        self._decimal = decimal
+        self._width = int(width)
+        if decimal is not None:
+            self._decimal = int(decimal)
 
 
     @property
@@ -1225,9 +1226,8 @@ class Util2d(object):
 
     """
 
-    def __init__(self, model, shape, dtype, value, name=None, fmtin=None,
-                 cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
-                 ext_unit_dict=None):
+    def __init__(self, model, shape, dtype, value, name, fmtin=None,
+                 cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False):
         """
         1d or 2-d array support with minimum of mem footprint.
         only creates arrays as needed, 
@@ -1247,24 +1247,25 @@ class Util2d(object):
                 setattr(self, attr[0], attr[1])
             self.model = model
             return
-        if name is not None:
-            name = name.lower()
+
+        self.ext_filename = None
         if ext_filename is not None:
-            ext_filename = ext_filename.lower()
+            self.ext_filename = ext_filename.lower()
 
         self.model = model
+        for s in shape:
+            assert isinstance(s,int),"all shape elements must be integers, " +\
+                                     "not {0}:{1}".format(type(s),str(s))
         self.shape = shape
         self.dtype = dtype
-        self.bin = bool(bin)
-        self.name = name
+        self.name = name.lower()
         self.locat = locat
         self.parse_value(value)
         self.__value_built = None
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
-        self.ext_filename = None
-        #self.fmtin = fmtin
         self._format = ArrayFormat(self,fortran=fmtin)
+        self._format.binary = bool(bin)
 
         # some defense
         if dtype not in [np.int, np.int32, np.float32, np.bool]:
@@ -1283,8 +1284,14 @@ class Util2d(object):
         elif self.vtype not in [np.int, np.float32]:
             self.ext_filename = ext_filename
 
-        if self.bin and self.ext_filename is None:
+        if self.format.binary and self.ext_filename is None:
             raise Exception('Util2d: binary flag requires ext_filename')
+
+    def _decide_where(self):
+        pass
+
+    def set_where(self,**kwargs):
+        pass
 
     def plot(self, title=None, filename_base=None, file_extension=None,
              fignum=None, **kwargs):
@@ -1425,23 +1432,22 @@ class Util2d(object):
                           self.__value_built * other, self.name,
                           self.format.fortran, self.cnstnt, self.iprn,
                           self.ext_filename,
-                          self.locat, self.bin)
+                          self.locat, self.format.binary)
         else:
             raise NotImplementedError(
                 "Util2d.__mul__() not implemented for non-scalars")
 
     def __getitem__(self, k):
-        # array = self.array.copy()
-        # array[:] = np.NaN
-        # array[k] = self.array[k]
-        # new_util2d = new_u2d(self,array)
-        # return new_u2d(self,array)
         if isinstance(k, int):
-            # this explicit cast is to handle a bug in numpy versions < 1.6.2
-            if self.dtype == np.float32:
-                return float(self.array[k])
-            else:
+            if len(self.shape) == 1:
                 return self.array[k]
+            elif self.shape[0] == 1:
+                return self.array[0,k]
+            elif self.shape[1] == 1:
+                return self.array[k,0]
+            else:
+                raise Exception("Util2d.__getitem() error: an interger was passed, " +\
+                                "self.shape > 1 in both dimensions")
         else:
             if isinstance(k, tuple):
                 if len(k) == 2:
@@ -1601,7 +1607,7 @@ class Util2d(object):
             if self.ext_filename != None:
 
                 # get the string or array now before we reset __value
-                if self.bin:
+                if self.format.binary:
                     a = self._array
                 else:
                     a = self.string
