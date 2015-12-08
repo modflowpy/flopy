@@ -726,9 +726,9 @@ class Util3d(object):
                         ext_filename = self.ext_filename_base[i] + str(i + 1) + \
                                        '.ref'
                     u2d = Util2d(self.model, self.shape[1:], self.dtype, item,
-                                  fmtin=self.fmtin, name=name,
-                                  ext_filename=ext_filename,
-                                  locat=self.locat)
+                                 fmtin=self.fmtin, name=name,
+                                 ext_filename=ext_filename,
+                                 locat=self.locat)
                     u2ds.append(u2d)
 
         elif isinstance(self.__value, np.ndarray):
@@ -749,9 +749,9 @@ class Util3d(object):
                     ext_filename = self.ext_filename_base[i] + str(
                         i + 1) + '.ref'
                 u2d = Util2d(self.model, self.shape[1:], self.dtype, a,
-                              fmtin=self.fmtin, name=name,
-                              ext_filename=ext_filename,
-                              locat=self.locat)
+                             fmtin=self.fmtin, name=name,
+                             ext_filename=ext_filename,
+                             locat=self.locat)
                 u2ds.append(u2d)
 
         else:
@@ -777,16 +777,16 @@ class Util3d(object):
             for u2d in self.util_2ds:
                 new_u2ds.append(u2d * other)
             return Util3d(self.model, self.shape, self.dtype, new_u2ds,
-                           self.name, self.fmtin, self.cnstnt, self.iprn,
-                           self.locat)
+                          self.name, self.fmtin, self.cnstnt, self.iprn,
+                          self.locat)
         elif isinstance(other, list):
             assert len(other) == self.shape[0]
             new_u2ds = []
             for u2d,item in zip(self.util_2ds,other):
                 new_u2ds.append(u2d * item)
             return Util3d(self.model, self.shape, self.dtype, new_u2ds,
-                           self.name, self.fmtin, self.cnstnt, self.iprn,
-                           self.locat)
+                          self.name, self.fmtin, self.cnstnt, self.iprn,
+                          self.locat)
 
 
 class Transient2d(object):
@@ -866,9 +866,9 @@ class Transient2d(object):
                 setattr(self, attr[0], attr[1])
             for kper, u2d in self.transient_2ds.items():
                 self.transient_2ds[kper] = Util2d(model, u2d.shape, u2d.dtype,
-                                           u2d._array, name=u2d.name,
-                                           fmtin=u2d.format.fortran, locat=locat,
-                                           cnstnt=u2d.cnstnt)
+                                                  u2d._array, name=u2d.name,
+                                                  fmtin=u2d.format.fortran, locat=locat,
+                                                  cnstnt=u2d.cnstnt)
 
             self.model = model
             return
@@ -885,13 +885,12 @@ class Transient2d(object):
         self.cnstst = cnstnt
         self.iprn = iprn
         self.locat = locat
-        if model.external_path != None:
+        if model.external_path is not None:
             self.ext_filename_base = \
                 os.path.join(model.external_path,
                              self.name_base.replace(' ', '_'))
         self.transient_2ds = self.build_transient_sequence()
         return
-
 
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":
@@ -1153,12 +1152,12 @@ class Transient2d(object):
         """
         ext_filename = None
         name = self.name_base + str(kper + 1)
-        if self.model.external_path != None:
+        if self.model.external_path is not None:
             ext_filename = self.ext_filename_base + str(kper) + '.ref'
         u2d = Util2d(self.model, self.shape, self.dtype, arg,
-                      fmtin=self.fmtin, name=name,
-                      ext_filename=ext_filename,
-                      locat=self.locat)
+                     fmtin=self.fmtin, name=name,
+                     ext_filename=ext_filename,
+                     locat=self.locat)
         return u2d
 
 
@@ -1177,7 +1176,7 @@ class Util2d(object):
         the type of the data
     value : variable
         the data to be assigned to the 2-D array.
-        can be a scalar, list, or ndarray
+        can be a scalar, list, ndarray, or filename
     name : string
         name of the property (optional). (the default is None
     fmtin : string
@@ -1456,7 +1455,7 @@ class Util2d(object):
             elif self.shape[1] == 1:
                 return self.array[k,0]
             else:
-                raise Exception("Util2d.__getitem() error: an interger was passed, " +\
+                raise Exception("Util2d.__getitem__() error: an integer was passed, " +
                                 "self.shape > 1 in both dimensions")
         else:
             if isinstance(k, tuple):
@@ -1874,9 +1873,9 @@ class Util2d(object):
                                 + '   [column_length, fmt]\n'
                                 + '    e.g., [10, {0:10.2e}]')
         if ncol % column_length == 0:
-            lineReturnFlag = False
+            linereturnflag = False
         else:
-            lineReturnFlag = True
+            linereturnflag = True
         # write the array to a string
         s = ""
         for i in range(nrow):
@@ -1889,7 +1888,7 @@ class Util2d(object):
                      "{0} at r,c [{1},{2}]\n{3}".format(data[i, j], i, j, str(e)))
                 if (j + 1) % column_length == 0.0 and (j != 0 or ncol == 1):
                     s += '\n'
-            if lineReturnFlag == True:
+            if linereturnflag:
                 s += '\n'
         return s
 
@@ -1960,7 +1959,6 @@ class Util2d(object):
                     raise Exception("Util2d error: str not a file and " +
                                     "couldn't be cast to float: {0}".format(value))
 
-
         elif np.isscalar(value):
             if self.dtype == np.int:
                 try:
@@ -2018,10 +2016,10 @@ class Util2d(object):
             array_format = model.array_format
 
         cr_dict = Util2d.parse_control_record(f_handle.readline(),
-                                               current_unit=curr_unit,
-                                               dtype=dtype,
-                                               ext_unit_dict=ext_unit_dict,
-                                               array_format=array_format)
+                                              current_unit=curr_unit,
+                                              dtype=dtype,
+                                              ext_unit_dict=ext_unit_dict,
+                                              array_format=array_format)
 
         if cr_dict['type'] == 'constant':
             u2d = Util2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
@@ -2042,23 +2040,23 @@ class Util2d(object):
             if str('binary') not in str(cr_dict['fmtin'].lower()):
                 f = open(fname, 'r')
                 data = Util2d.load_txt(shape=shape,
-                                        file_in=f,
-                                        dtype=dtype, fmtin=cr_dict['fmtin'])
+                                       file_in=f,
+                                       dtype=dtype, fmtin=cr_dict['fmtin'])
             else:
                 f = open(fname, 'rb')
                 header_data, data = Util2d.load_bin(shape, f, dtype,
-                                                     bintype='Head')
+                                                    bintype='Head')
             f.close()
             u2d = Util2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-                          cnstnt=cr_dict['cnstnt'])
+                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         cnstnt=cr_dict['cnstnt'])
 
 
         elif cr_dict['type'] == 'internal':
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-                          cnstnt=cr_dict['cnstnt'])
+                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         cnstnt=cr_dict['cnstnt'])
 
         elif cr_dict['type'] == 'external':
 
@@ -2066,9 +2064,9 @@ class Util2d(object):
             if str('binary') not in str(cr_dict['fmtin'].lower()):
                 assert cr_dict['nunit'] in list(ext_unit_dict.keys())
                 data = Util2d.load_txt(shape,
-                                        ext_unit_dict[
-                                            cr_dict['nunit']].filehandle,
-                                        dtype, cr_dict['fmtin'])
+                                       ext_unit_dict[
+                                       cr_dict['nunit']].filehandle,
+                                       dtype, cr_dict['fmtin'])
             else:
                 if cr_dict['nunit'] not in list(ext_unit_dict.keys()):
                     cr_dict["nunit"] *= -1
@@ -2077,8 +2075,8 @@ class Util2d(object):
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
                     bintype='Head')
             u2d = Util2d(model, shape, dtype, data, name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
-                          cnstnt=cr_dict['cnstnt'])
+                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         cnstnt=cr_dict['cnstnt'])
             # track this unit number so we can remove it from the external
             # file list later
             model.pop_key_list.append(cr_dict['nunit'])
@@ -2096,19 +2094,19 @@ class Util2d(object):
         raw = line.lower().strip().split()
         freefmt, cnstnt, fmtin, iprn, nunit = None, None, None, -1, None
         fname = None
-        isFloat = False
+        isfloat = False
         if dtype == np.float or dtype == np.float32:
-            isFloat = True
+            isfloat = True
             # if free format keywords
         if str(raw[0]) in str(free_fmt):
             freefmt = raw[0]
             if raw[0] == 'constant':
-                if isFloat:
+                if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
             if raw[0] == 'internal':
-                if isFloat:
+                if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
@@ -2122,7 +2120,7 @@ class Util2d(object):
                     except:
                         pass
                 nunit = int(raw[1])
-                if isFloat:
+                if isfloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[2].lower())
@@ -2130,7 +2128,7 @@ class Util2d(object):
                 iprn = int(raw[4])
             elif raw[0] == 'open/close':
                 fname = raw[1].strip()
-                if isFloat:
+                if isfloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[2].lower())
@@ -2139,7 +2137,7 @@ class Util2d(object):
                 npl, fmt, width, decimal = None, None, None, None
         else:
             locat = np.int(line[0:10].strip())
-            if isFloat:
+            if isfloat:
                 cnstnt = np.float(
                     line[10:20].strip().lower().replace('d', 'e'))
             else:
