@@ -876,6 +876,8 @@ class CellBudgetFile(object):
             l = [('node', np.int32), ('q', self.realtype)]
             for i in range(naux):
                 auxname = binaryread(self.file, str, charlen=16)
+                if not isinstance(auxname, str):
+                    auxname = auxname.decode()
                 l.append((auxname, self.realtype))
             dtype = np.dtype(l)                
             nlist = binaryread(self.file, np.int32)
