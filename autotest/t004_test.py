@@ -113,8 +113,7 @@ def stress_util2d(ml,nlay,nrow,ncol):
 
 def stress_util2d_for_joe_the_file_king(ml,nlay,nrow,ncol):
 
-    #base_dir = os.getcwd()
-    #os.chdir(out_dir)
+
     dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
     hk = np.ones((nlay,nrow,ncol))
     vk = np.ones((nlay,nrow,ncol)) + 1.0
@@ -138,8 +137,6 @@ def stress_util2d_for_joe_the_file_king(ml,nlay,nrow,ncol):
     assert np.array_equal(ml1.lpf.vka.array,vk)
     assert np.array_equal(ml1.lpf.hk.array,hk)
 
-    #os.chdir(base_dir)
-
 
 def test_util2d_external_free():
     model_ws = os.path.join(out_dir,"extra_temp")
@@ -162,6 +159,8 @@ def test_util2d_external_free_nomodelws():
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
     os.mkdir(model_ws)
+    base_dir = os.getcwd()
+    os.chdir(out_dir)
     ml = flopy.modflow.Modflow()
     stress_util2d_for_joe_the_file_king(ml,1,1,1)
     stress_util2d_for_joe_the_file_king(ml,10,1,1)
@@ -171,7 +170,7 @@ def test_util2d_external_free_nomodelws():
     stress_util2d_for_joe_the_file_king(ml,1,10,10)
     stress_util2d_for_joe_the_file_king(ml,10,1,10)
     stress_util2d_for_joe_the_file_king(ml,10,10,10)
-
+    os.chdir(base_dir)
 
 
 
@@ -196,15 +195,17 @@ def test_util2d_external_free_path():
     stress_util2d(ml,10,10,10)
 
 def test_util2d_external_free_path_nomodelws():
-    model_ws = os.path.join(out_dir,"extra_temp")
+    model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
     os.mkdir(model_ws)
     ext_path = "ref"
+    base_dir = os.getcwd()
+    os.chdir(out_dir)
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)
     ml = flopy.modflow.Modflow(external_path=ext_path)
-    stress_util2d(ml,1,1,1)
+
 
     stress_util2d_for_joe_the_file_king(ml,10,1,1)
     stress_util2d_for_joe_the_file_king(ml,1,10,1)
@@ -213,7 +214,7 @@ def test_util2d_external_free_path_nomodelws():
     stress_util2d_for_joe_the_file_king(ml,1,10,10)
     stress_util2d_for_joe_the_file_king(ml,10,1,10)
     stress_util2d_for_joe_the_file_king(ml,10,10,10)
-
+    os.chdir(base_dir)
 
 def test_util2d_external_fixed():
     model_ws = os.path.join(out_dir,"extra_temp")
@@ -234,13 +235,16 @@ def test_util2d_external_fixed():
 
 
 def test_util2d_external_fixed_nomodelws():
-    model_ws = os.path.join(out_dir,"extra_temp")
+    model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
     os.mkdir(model_ws)
+
+
+    base_dir = os.getcwd()
+    os.chdir(out_dir)
     ml = flopy.modflow.Modflow()
     ml.free_format = False
-
     stress_util2d_for_joe_the_file_king(ml,1,1,1)
     stress_util2d_for_joe_the_file_king(ml,10,1,1)
     stress_util2d_for_joe_the_file_king(ml,1,10,1)
@@ -249,6 +253,7 @@ def test_util2d_external_fixed_nomodelws():
     stress_util2d_for_joe_the_file_king(ml,1,10,10)
     stress_util2d_for_joe_the_file_king(ml,10,1,10)
     stress_util2d_for_joe_the_file_king(ml,10,10,10)
+    os.chdir(base_dir)
 
 def test_util2d_external_fixed_path():
     model_ws = os.path.join(out_dir,"extra_temp")
@@ -273,16 +278,18 @@ def test_util2d_external_fixed_path():
 
 
 def test_util2d_external_fixed_path_nomodelws():
-    model_ws = os.path.join(out_dir,"extra_temp")
+    model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
     os.mkdir(model_ws)
     ext_path = "ref"
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)
+
+    base_dir = os.getcwd()
+    os.chdir(out_dir)
     ml = flopy.modflow.Modflow(external_path=ext_path)
     ml.free_format = False
-
     stress_util2d_for_joe_the_file_king(ml,1,1,1)
     stress_util2d_for_joe_the_file_king(ml,10,1,1)
     stress_util2d_for_joe_the_file_king(ml,1,10,1)
@@ -291,7 +298,7 @@ def test_util2d_external_fixed_path_nomodelws():
     stress_util2d_for_joe_the_file_king(ml,1,10,10)
     stress_util2d_for_joe_the_file_king(ml,10,1,10)
     stress_util2d_for_joe_the_file_king(ml,10,10,10)
-
+    os.chdir(base_dir)
 
 def test_util3d():
     ml = flopy.modflow.Modflow()
@@ -314,7 +321,7 @@ def test_util3d():
 
 
 def test_arrayformat():
-    ml = flopy.modflow.Modflow()
+    ml = flopy.modflow.Modflow(model_ws=out_dir)
     u2d = Util2d(ml, (15, 2), np.float32, np.ones((15,2)), 'test')
 
     fmt_fort = u2d.format.fortran
