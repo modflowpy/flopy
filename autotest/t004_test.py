@@ -23,7 +23,7 @@ def test_transient2d():
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
-    u2d = Util2d(ml, (10, 10), np.float32, 10.)
+    u2d = Util2d(ml, (10, 10), np.float32, 10.,"test")
     a1 = u2d.array
     a2 = np.ones((10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
@@ -278,11 +278,11 @@ def test_util3d():
 
 
 if __name__ == '__main__':
-    test_util2d_external_fixed_nomodelws()
+    #test_util2d_external_fixed_nomodelws()
     # test_util2d_external_free()
     # test_util2d_external_free_path()
     # test_util2d_external_fixed()
     # test_util2d_external_fixed_path()
     # test_transient2d()
-    # test_util2d()
+    test_util2d()
     # test_util3d()
