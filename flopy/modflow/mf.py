@@ -324,7 +324,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
-             model_ws='.', load_only=None):
+             model_ws='.', load_only=None,forgive=True):
         """
         Load an existing model.
 
@@ -336,6 +336,8 @@ class Modflow(BaseModel):
         model_ws : model workspace path
 
         load_only : (optional) filetype(s) to load (e.g. ["bas6", "lpf"])
+
+        forgive : flag to raise exception(s) on package load failure - good for debugging
 
         Returns
         -------
@@ -435,19 +437,27 @@ class Modflow(BaseModel):
         for key, item in ext_unit_dict.items():
             if item.package is not None:
                 if item.filetype in load_only and item.filetype != "DIS":
-                    try:
+                    if not forgive:
                         pck = item.package.load(item.filename, ml,
                                                 ext_unit_dict=ext_unit_dict)
                         files_succesfully_loaded.append(item.filename)
                         if ml.verbose:
                             sys.stdout.write('   {:4s} package load...success\n'
                                              .format(pck.name[0]))
-                    except BaseException as o:
-                        ml.load_fail = True
-                        if ml.verbose:
-                            sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
-                                             .format(item.filetype, o))
-                        files_not_loaded.append(item.filename)
+                    else:
+                        try:
+                            pck = item.package.load(item.filename, ml,
+                                                    ext_unit_dict=ext_unit_dict)
+                            files_succesfully_loaded.append(item.filename)
+                            if ml.verbose:
+                                sys.stdout.write('   {:4s} package load...success\n'
+                                                 .format(pck.name[0]))
+                        except BaseException as o:
+                            ml.load_fail = True
+                            if ml.verbose:
+                                sys.stdout.write('   {:4s} package load...failed\n   {!s}\n'
+                                                 .format(item.filetype, o))
+                            files_not_loaded.append(item.filename)
                 else:
                     if ml.verbose:
                         sys.stdout.write('   {:4s} package load...skipped\n'

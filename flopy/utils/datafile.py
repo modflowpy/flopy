@@ -8,7 +8,8 @@ import os
 import numpy as np
 import flopy.utils
 
-class Header():
+
+class Header(object):
     """
     The header class is an abstract base class to create headers for MODFLOW files
     """

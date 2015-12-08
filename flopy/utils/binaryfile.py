@@ -12,7 +12,7 @@ import numpy as np
 from collections import OrderedDict
 from flopy.utils.datafile import Header, LayerFile
 
-class BinaryHeader():
+class BinaryHeader(Header):
     """
     The binary_header class is a class to create headers for MODFLOW
     binary files.
@@ -33,19 +33,19 @@ class BinaryHeader():
         fkey = ['pertim', 'totim']
         ckey = ['text']
         for k in ikey:
-            if kwargs.has_key(k):
+            if k in kwargs.values():
                 try:
                     self.header[0][k] = int(kwargs[k])
                 except:
                     print('{0} key not available in {1} header dtype'.format(k, self.header_type))
         for k in fkey:
-            if kwargs.has_key(k):
+            if k in  kwargs.values():
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
                     print('{0} key not available in {1} header dtype'.format(k, self.header_type))
         for k in ckey:
-            if kwargs.has_key(k):
+            if k in kwargs.values():
                 # Convert to upper case to be consistent case used by MODFLOW
                 # text strings. Necessary to work with HeadFile and UcnFile
                 # routines
@@ -71,7 +71,7 @@ class BinaryHeader():
         """
         Create a binary header
         """
-        header = Header(filetype=bintype)
+        header = BinaryHeader(bintype=bintype)
         if header.get_dtype() is not None:
             header.set_values(**kwargs)
         return header.get_values()
