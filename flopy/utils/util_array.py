@@ -1528,7 +1528,9 @@ class Util2d(object):
         if self.vtype != str:
             raise Exception("Util2d call to python_file_path " +
                             "for vtype != str")
-        python_file_path = os.path.join(self.model.model_ws)
+        python_file_path = ''
+        if self.model.model_ws != '.':
+            python_file_path = os.path.join(self.model.model_ws)
         if self.model.external_path is not None:
             python_file_path = os.path.join(python_file_path,
                                            self.model.external_path)
@@ -1668,6 +1670,7 @@ class Util2d(object):
         # so just use the existing file
         else:
             if self.__value != self.python_file_path:
+            #if not os.path.samefile(self.__value,self.python_file_path):
                 if os.path.exists(self.python_file_path):
                     if self.model.verbose:
                         print("Util2d warning: removing existing array " +

@@ -111,6 +111,36 @@ def stress_util2d(ml,nlay,nrow,ncol):
     assert np.array_equal(ml1.lpf.hk.array,hk)
 
 
+def stress_util2d_for_joe_the_file_king(ml,nlay,nrow,ncol):
+
+    #base_dir = os.getcwd()
+    #os.chdir(out_dir)
+    dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
+    hk = np.ones((nlay,nrow,ncol))
+    vk = np.ones((nlay,nrow,ncol)) + 1.0
+    # save hk up one dir from model_ws
+    fnames = []
+    for i,h in enumerate(hk):
+        fname = os.path.join("test_{0}.ref".format(i))
+        fnames.append(fname)
+        np.savetxt(fname,h,fmt="%15.6e",delimiter='')
+        vk[i] = i + 1.
+
+    lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
+    ml.lpf.vka[0].format.binary = True
+
+    ml.write_input()
+    ml1 = flopy.modflow.Modflow.load(ml.namefile,
+                                     model_ws=ml.model_ws,
+                                     verbose=True,forgive=False)
+    print("testing load")
+    assert ml1.load_fail == False
+    assert np.array_equal(ml1.lpf.vka.array,vk)
+    assert np.array_equal(ml1.lpf.hk.array,hk)
+
+    #os.chdir(base_dir)
+
+
 def test_util2d_external_free():
     model_ws = os.path.join(out_dir,"extra_temp")
     if os.path.exists(model_ws):
@@ -128,19 +158,19 @@ def test_util2d_external_free():
 
 
 def test_util2d_external_free_nomodelws():
-    model_ws = os.path.join(out_dir,"extra_temp")
+    model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
         shutil.rmtree(model_ws)
     os.mkdir(model_ws)
     ml = flopy.modflow.Modflow()
-    stress_util2d(ml,1,1,1)
-    stress_util2d(ml,10,1,1)
-    stress_util2d(ml,1,10,1)
-    stress_util2d(ml,1,1,10)
-    stress_util2d(ml,10,10,1)
-    stress_util2d(ml,1,10,10)
-    stress_util2d(ml,10,1,10)
-    stress_util2d(ml,10,10,10)
+    stress_util2d_for_joe_the_file_king(ml,1,1,1)
+    stress_util2d_for_joe_the_file_king(ml,10,1,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,10)
+    stress_util2d_for_joe_the_file_king(ml,10,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,10)
 
 
 
@@ -176,13 +206,13 @@ def test_util2d_external_free_path_nomodelws():
     ml = flopy.modflow.Modflow(external_path=ext_path)
     stress_util2d(ml,1,1,1)
 
-    stress_util2d(ml,10,1,1)
-    stress_util2d(ml,1,10,1)
-    stress_util2d(ml,1,1,10)
-    stress_util2d(ml,10,10,1)
-    stress_util2d(ml,1,10,10)
-    stress_util2d(ml,10,1,10)
-    stress_util2d(ml,10,10,10)
+    stress_util2d_for_joe_the_file_king(ml,10,1,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,10)
+    stress_util2d_for_joe_the_file_king(ml,10,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,10)
 
 
 def test_util2d_external_fixed():
@@ -211,14 +241,14 @@ def test_util2d_external_fixed_nomodelws():
     ml = flopy.modflow.Modflow()
     ml.free_format = False
 
-    stress_util2d(ml,1,1,1)
-    stress_util2d(ml,10,1,1)
-    stress_util2d(ml,1,10,1)
-    stress_util2d(ml,1,1,10)
-    stress_util2d(ml,10,10,1)
-    stress_util2d(ml,1,10,10)
-    stress_util2d(ml,10,1,10)
-    stress_util2d(ml,10,10,10)
+    stress_util2d_for_joe_the_file_king(ml,1,1,1)
+    stress_util2d_for_joe_the_file_king(ml,10,1,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,10)
+    stress_util2d_for_joe_the_file_king(ml,10,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,10)
 
 def test_util2d_external_fixed_path():
     model_ws = os.path.join(out_dir,"extra_temp")
@@ -253,14 +283,14 @@ def test_util2d_external_fixed_path_nomodelws():
     ml = flopy.modflow.Modflow(external_path=ext_path)
     ml.free_format = False
 
-    stress_util2d(ml,1,1,1)
-    stress_util2d(ml,10,1,1)
-    stress_util2d(ml,1,10,1)
-    stress_util2d(ml,1,1,10)
-    stress_util2d(ml,10,10,1)
-    stress_util2d(ml,1,10,10)
-    stress_util2d(ml,10,1,10)
-    stress_util2d(ml,10,10,10)
+    stress_util2d_for_joe_the_file_king(ml,1,1,1)
+    stress_util2d_for_joe_the_file_king(ml,10,1,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,1)
+    stress_util2d_for_joe_the_file_king(ml,1,10,10)
+    stress_util2d_for_joe_the_file_king(ml,10,1,10)
+    stress_util2d_for_joe_the_file_king(ml,10,10,10)
 
 
 def test_util3d():
@@ -338,11 +368,8 @@ def test_arrayformat():
     assert fmt_fort.upper() == parsed["fmtin"].upper()
     assert u2d.get_file_array() == ''
 
-
-
 if __name__ == '__main__':
     test_arrayformat()
-
     test_util2d_external_free_nomodelws()
     test_util2d_external_free_path_nomodelws()
     test_util2d_external_free()

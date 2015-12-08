@@ -33,19 +33,19 @@ class BinaryHeader(Header):
         fkey = ['pertim', 'totim']
         ckey = ['text']
         for k in ikey:
-            if kwargs.has_key(k):
+            if k in kwargs.values():
                 try:
                     self.header[0][k] = int(kwargs[k])
                 except:
                     print('{0} key not available in {1} header dtype'.format(k, self.header_type))
         for k in fkey:
-            if kwargs.has_key(k):
+            if k in  kwargs.values():
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
                     print('{0} key not available in {1} header dtype'.format(k, self.header_type))
         for k in ckey:
-            if kwargs.has_key(k):
+            if k in kwargs.values():
                 # Convert to upper case to be consistent case used by MODFLOW
                 # text strings. Necessary to work with HeadFile and UcnFile
                 # routines
