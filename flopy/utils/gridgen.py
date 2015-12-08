@@ -6,6 +6,7 @@ import flopy
 from flopy.modflow.mfdisu import ModflowDisU
 from flopy.utils.util_array import read1d, Util2d
 
+
 # todo
 # creation of line and polygon shapefiles from features (holes!)
 # program layer functionality for plot method
@@ -34,7 +35,7 @@ def features_to_shapefile(features, featuretype, filename):
     try:
         import shapefile
     except:
-        raise Exception('Erorr importing shapefile: ' +
+        raise Exception('Error importing shapefile: ' +
                         'try pip install pyshp')
 
     if featuretype.lower() not in ['point', 'line', 'polygon']:
@@ -42,21 +43,21 @@ def features_to_shapefile(features, featuretype, filename):
 
     if featuretype.lower() == 'line':
         wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
-        wr.field("number", "N", 20, 0)
+        wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
             wr.line(line)
             wr.record(i)
 
     elif featuretype.lower() == 'point':
         wr = shapefile.Writer(shapeType=shapefile.POINT)
-        wr.field("number", "N", 20, 0)
+        wr.field("SHAPEID", "N", 20, 0)
         for i, point in enumerate(features):
             wr.point(point[0], point[1])
             wr.record(i)
 
     elif featuretype.lower() == 'polygon':
         wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-        wr.field("number", "N", 20, 0)
+        wr.field("SHAPEID", "N", 20, 0)
         for i, polygon in enumerate(features):
             wr.poly(polygon)
             wr.record(i)
@@ -77,12 +78,21 @@ class Gridgen(object):
         path and name of the gridgen program. (default is gridgen)
 
     """
-    def __init__(self, dis, model_ws='.', exe_name='gridgen'):
+
+    def __init__(self, dis, model_ws='.', exe_name='gridgen',
+                 surface_interpolation='replicate'):
         self.nodes = 0
         self.nja = 0
         self.dis = dis
         self.model_ws = model_ws
         self.exe_name = exe_name
+
+        # surface interpolation method
+        self.surface_interpolation = surface_interpolation.upper()
+        if self.surface_interpolation not in ['INTERPOLATE', 'REPLICATE']:
+            raise Exception('Error.  Unknown surface interpolation method: '
+                            '{}.  Must be INTERPOLATE or '
+                            'REPLICATE'.format(self.surface_interpolation))
 
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
@@ -252,14 +262,15 @@ class Gridgen(object):
         except:
             print('Error.  Failed to export polygon shapefile of grid', buff)
 
-        cmds = [self.exe_name, 'grid_to_shapefile_point', '_gridgen_export.dfn']
+        cmds = [self.exe_name, 'grid_to_shapefile_point',
+                '_gridgen_export.dfn']
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
             fn = os.path.join(self.model_ws, 'qtgrid_pt.shp')
             assert os.path.isfile(fn)
         except:
-            print ('Error.  Failed to export polygon shapefile of grid', buff)
+            print('Error.  Failed to export polygon shapefile of grid', buff)
 
         # Export the usg data
         cmds = [self.exe_name, 'grid_to_usgdata', '_gridgen_export.dfn']
@@ -269,7 +280,7 @@ class Gridgen(object):
             fn = os.path.join(self.model_ws, 'qtg.nod')
             assert os.path.isfile(fn)
         except:
-            print ('Error.  Failed to export usgdata', buff)
+            print('Error.  Failed to export usgdata', buff)
 
         # Export vtk
         cmds = [self.exe_name, 'grid_to_vtk', '_gridgen_export.dfn']
@@ -279,7 +290,7 @@ class Gridgen(object):
             fn = os.path.join(self.model_ws, 'qtg.vtu')
             assert os.path.isfile(fn)
         except:
-            print ('Error.  Failed to export vtk file', buff)
+            print('Error.  Failed to export vtk file', buff)
 
         cmds = [self.exe_name, 'grid_to_vtk_sv', '_gridgen_export.dfn']
         buff = []
@@ -288,7 +299,7 @@ class Gridgen(object):
             fn = os.path.join(self.model_ws, 'qtg_sv.vtu')
             assert os.path.isfile(fn)
         except:
-            print ('Error.  Failed to export shared vertex vtk file', buff)
+            print('Error.  Failed to export shared vertex vtk file', buff)
 
         return
 
@@ -344,22 +355,20 @@ class Gridgen(object):
     def get_disu(self, model, nper=1, perlen=1, nstp=1, tsmult=1, steady=True,
                  itmuni=4, lenuni=2):
 
-        # nodes, nlay, njag, ivsd, itmuni, lenuni, idsymrd, laycbd
+        # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
         fname = os.path.join(self.model_ws, 'qtg.nod')
         f = open(fname, 'r')
         line = f.readline()
         ll = line.strip().split()
         nodes = int(ll.pop(0))
-        njag = int(ll.pop(0))
         f.close()
         nlay = self.dis.nlay
         ivsd = 0
         idsymrd = 0
         laycbd = 0
 
-        # save nodes and njag to self
+        # save nodes
         self.nodes = nodes
-        self.nja = njag
 
         # nodelay
         nodelay = np.empty((nlay), dtype=np.int)
@@ -381,7 +390,7 @@ class Gridgen(object):
                 tpk = tpk.min()
             else:
                 tpk = Util2d(model, (1, nodelay[k]), np.float32,
-                             np.reshape(tpk, (1,nodelay[k])),
+                             np.reshape(tpk, (1, nodelay[k])),
                              name='top {}'.format(k + 1))
             top[k] = tpk
 
@@ -398,7 +407,7 @@ class Gridgen(object):
                 btk = btk.min()
             else:
                 btk = Util2d(model, (1, nodelay[k]), np.float32,
-                             np.reshape(btk, (1,nodelay[k])),
+                             np.reshape(btk, (1, nodelay[k])),
                              name='bot {}'.format(k + 1))
             bot[k] = btk
 
@@ -428,6 +437,10 @@ class Gridgen(object):
         f = open(fname, 'r')
         iac = read1d(f, iac)
         f.close()
+
+        # Calculate njag and save as nja to self
+        njag = iac.sum()
+        self.nja = njag
 
         # ja
         ja = np.empty((njag), dtype=np.int)
@@ -491,6 +504,8 @@ class Gridgen(object):
         ifname = 'intersect_feature'
         if isinstance(features, list):
             ifname_w_path = os.path.join(self.model_ws, ifname)
+            if os.path.exists(ifname_w_path + '.shp'):
+                os.remove(ifname_w_path + '.shp')
             features_to_shapefile(features, featuretype, ifname_w_path)
             shapefile = ifname
         else:
@@ -511,12 +526,18 @@ class Gridgen(object):
         # Intersect
         cmds = [self.exe_name, 'intersect', '_intersect.dfn']
         buff = []
+        fn = os.path.join(self.model_ws, 'intersection.ifo')
+        if os.path.isfile(fn):
+            os.remove(fn)
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
-            fn = os.path.join(self.model_ws, 'intersection.ifo')
-            assert os.path.isfile(fn)
         except:
-            print ('Error.  Failed to perform intersection', buff)
+            print('Error.  Failed to perform intersection', buff)
+
+        # Make sure new intersection file was created.
+        if not os.path.isfile(fn):
+            s = ('Error.  Failed to perform intersection', buff)
+            raise Exception(s)
 
         # Calculate the number of columns to import
         # The extra comma causes one too many columns, so calculate the length
@@ -599,7 +620,8 @@ class Gridgen(object):
                 s += '  BOTTOM LAYER {} = CONSTANT {}\n'.format(k + 1,
                                                                 bot.min())
             else:
-                s += '  BOTTOM LAYER {0} = OPEN/CLOSE bot{0}.dat\n'.format(k + 1)
+                s += '  BOTTOM LAYER {0} = OPEN/CLOSE bot{0}.dat\n'.format(k +
+                                                                           1)
                 fname = os.path.join(self.model_ws, 'bot{}.dat'.format(k + 1))
                 np.savetxt(fname, bot)
 
@@ -651,10 +673,12 @@ class Gridgen(object):
         s += '  SMOOTHING = full\n'
 
         for k in range(self.dis.nlay):
-            s += '  TOP LAYER {} = INTERPOLATE basegrid\n'.format(k + 1)
+            s += '  TOP LAYER {} = {} basegrid\n'.format(k + 1,
+                                                         self.surface_interpolation)
 
         for k in range(self.dis.nlay):
-            s += '  BOTTOM LAYER {} = INTERPOLATE basegrid\n'.format(k + 1)
+            s += '  BOTTOM LAYER {} = {} basegrid\n'.format(k + 1,
+                                                            self.surface_interpolation)
 
         s += '  GRID_DEFINITION_FILE = quadtreegrid.dfn\n'
         s += 'END QUADTREE_BUILDER\n'
@@ -690,4 +714,3 @@ class Gridgen(object):
         s += '  SHARE_VERTEX = True\n'
         s += 'END GRID_TO_VTKFILE\n'
         return s
-
