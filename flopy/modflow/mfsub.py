@@ -297,9 +297,6 @@ class ModflowSub(Package):
         # add package to model
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'Subsidence (SUB) package class'
-
     def write_file(self):
         """
         Write the package file.

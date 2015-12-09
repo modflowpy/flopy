@@ -130,9 +130,6 @@ class ModflowHfb(Package):
 
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'HFB package class'
-
     def ncells(self):
         """
         Returns the maximum number of cell pairs that have horizontal

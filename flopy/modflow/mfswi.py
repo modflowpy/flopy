@@ -98,16 +98,6 @@ class ModflowSwi(Package):
         self.isource = Util3d(model, (nlay, nrow, ncol), np.int, isource, name='isource')
         self.parent.add_package(self)
 
-    def __repr__(self):
-        """
-
-        Returns
-        -------
-        None
-
-        """
-        return 'Salt Water Intrusion package class'
-
     def write_file(self):
         """
         Write the package file.
@@ -139,7 +129,6 @@ class ModflowSwi(Package):
 
         # Close file
         f_swi.close()
-
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):

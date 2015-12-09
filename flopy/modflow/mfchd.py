@@ -110,9 +110,6 @@ class ModflowChd(Package):
         self.np = 0
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'CHD package class'
-
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact

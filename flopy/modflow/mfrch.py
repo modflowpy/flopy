@@ -15,6 +15,7 @@ from flopy.utils import Util2d
 from flopy.utils.util_array import Transient2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 
+
 class ModflowRch(Package):
     """
     MODFLOW Recharge Package Class.
@@ -76,8 +77,9 @@ class ModflowRch(Package):
     >>> rch = flopy.modflow.ModflowRch(m, nrchop=3, rech=rech)
 
     """
+
     def __init__(self, model, nrchop=3, ipakcb=0, rech=1e-3, irch=0,
-                 extension ='rch', unitnumber=19):
+                 extension='rch', unitnumber=19):
         """
         Package constructor.
 
@@ -93,19 +95,16 @@ class ModflowRch(Package):
         else:
             self.ipakcb = 0  # 0: no cell by cell terms are written
         self.rech = Transient2d(model, (nrow, ncol), np.float32,
-                                 rech, name = 'rech_')
+                                rech, name='rech_')
         if self.nrchop == 2:
             self.irch = Transient2d(model, (nrow, ncol), np.int,
-                                     irch+1, name = 'irch_')  # irch+1, as irch is zero based
+                                    irch + 1, name='irch_')  # irch+1, as irch is zero based
         else:
             self.irch = None
         self.np = 0
         self.parent.add_package(self)
 
-    def __repr__( self ):
-        return 'Recharge class'
-
-    def ncells( self):
+    def ncells(self):
         # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
@@ -123,7 +122,7 @@ class ModflowRch(Package):
         # Open file for writing
         f_rch = open(self.fn_path, 'w')
         f_rch.write('{0:s}\n'.format(self.heading))
-        f_rch.write('{0:10d}{1:10d}\n'.format(self.nrchop,self.ipakcb))
+        f_rch.write('{0:10d}{1:10d}\n'.format(self.nrchop, self.ipakcb))
         for kper in range(nper):
             inrech, file_entry_rech = self.rech.get_kper_entry(kper)
             if self.nrchop == 2:
@@ -131,7 +130,7 @@ class ModflowRch(Package):
             else:
                 inirch = -1
             f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech,
-                        inirch, "Stress period " + str(kper + 1)))
+                                                          inirch, "Stress period " + str(kper + 1)))
             if (inrech >= 0):
                 f_rch.write(file_entry_rech)
             if self.nrchop == 2:
@@ -180,7 +179,7 @@ class ModflowRch(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
@@ -193,7 +192,7 @@ class ModflowRch(Package):
                 if model.verbose:
                     print('   Parameters detected. Number of parameters = ', npar)
             line = f.readline()
-        #dataset 2
+        # dataset 2
         t = line.strip().split()
         nrchop = int(t[0])
         ipakcb = 0
@@ -211,7 +210,7 @@ class ModflowRch(Package):
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        #read data for every stress period
+        # read data for every stress period
         rech = {}
         irch = None
         if nrchop == 2:
@@ -227,7 +226,7 @@ class ModflowRch(Package):
             if inrech >= 0:
                 if npar == 0:
                     if model.verbose:
-                        print('   loading rech stress period {0:3d}...'.format(iper+1))
+                        print('   loading rech stress period {0:3d}...'.format(iper + 1))
                     t = Util2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
                 else:
                     parm_dict = {}
@@ -253,12 +252,11 @@ class ModflowRch(Package):
                 if inirch >= 0:
                     if model.verbose:
                         print('   loading irch stress period {0:3d}...'.format(
-                            iper+1))
-                    t = Util2d.load(f, model, (nrow,ncol), np.int, 'irch',
-                                     ext_unit_dict)
+                            iper + 1))
+                    t = Util2d.load(f, model, (nrow, ncol), np.int, 'irch',
+                                    ext_unit_dict)
                     current_irch = t
                 irch[iper] = current_irch
         rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb, rech=rech,
                          irch=irch)
         return rch
-

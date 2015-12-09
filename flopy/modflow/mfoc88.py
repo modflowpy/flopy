@@ -255,9 +255,6 @@ class ModflowOc88(Package):
 
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'Output control package class -- deprecated'
-
     def write_file(self):
         """
         Write the package file.

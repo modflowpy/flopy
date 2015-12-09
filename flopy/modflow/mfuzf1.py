@@ -318,9 +318,6 @@ class ModflowUzf1(Package):
                     self.extwc.append(b)
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'UZF1 class'
-
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developped for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper

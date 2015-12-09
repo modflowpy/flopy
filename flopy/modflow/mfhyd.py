@@ -133,9 +133,6 @@ class ModflowHyd(Package):
         # add package
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'HYDMOD (HYD) package class'
-
     def write_file(self):
         """
         Write the package file.
@@ -212,7 +209,7 @@ class ModflowHyd(Package):
 
         Returns
         -------
-        swi2 : ModflowSwi2 object
+        hyd : ModflowHyd object
 
         Examples
         --------

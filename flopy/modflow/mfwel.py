@@ -127,9 +127,6 @@ class ModflowWel(Package):
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
 
-    def __repr__(self):
-        return 'Well package class'
-
     def ncells(self):
         # Returns the  maximum number of cells that have a well
         # (developed for MT3DMS SSM package)

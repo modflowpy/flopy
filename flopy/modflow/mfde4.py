@@ -10,6 +10,7 @@ MODFLOW Guide
 import sys
 from flopy.mbase import Package
 
+
 class ModflowDe4(Package):
     """
     MODFLOW DE4 - Direct Solver Package
@@ -105,8 +106,9 @@ class ModflowDe4(Package):
     >>> de4 = flopy.modflow.ModflowDe4(m)
 
     """
+
     def __init__(self, model, itmx=50, mxup=0, mxlow=0, mxbw=0,
-                 ifreq=3, mutd4=0, accl=1., hclose=1e-5, iprd4=1, 
+                 ifreq=3, mutd4=0, accl=1., hclose=1e-5, iprd4=1,
                  extension='de4', unitnumber=28):
         """
         Package constructor.
@@ -126,11 +128,6 @@ class ModflowDe4(Package):
         self.iprd4 = iprd4
         self.parent.add_package(self)
         return
-
-
-    def __repr__( self ):
-        return 'Direct solver package class'
-
 
     def write_file(self):
         """
@@ -170,7 +167,6 @@ class ModflowDe4(Package):
             f.write('{0:10d}'.format(self.iprd4))
             f.write('\n')
         f.close()
-
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
@@ -244,7 +240,6 @@ class ModflowDe4(Package):
             accl = float(line[20:30].strip())
             hclose = float(line[30:40].strip())
             iprd4 = int(line[40:50].strip())
-            
 
         de4 = ModflowDe4(model, itmx=itmx, mxup=mxup, mxlow=mxlow, mxbw=mxbw,
                          ifreq=ifreq, mutd4=mutd4, accl=accl, hclose=hclose,

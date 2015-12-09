@@ -64,9 +64,6 @@ class ModflowSwr1(Package):
 
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'SRW1 class'
-
     def write_file(self):
         """
         Write the package file.

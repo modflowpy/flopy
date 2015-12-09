@@ -119,9 +119,6 @@ class ModflowGhb(Package):
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
 
-    def __repr__(self):
-        return 'GHB package class'
-
     def ncells(self):
         """
         Returns the  maximum number of cells that have a ghb cell

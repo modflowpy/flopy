@@ -22,9 +22,9 @@ class ListBudget(object):
     file_name : str
         the list file name
     budgetkey : str
-        the text string identifying the budget table
+        the text string identifying the budget table. (default is None)
     timeunit : str
-        the time unit to return in the recarray (default is 'days')
+        the time unit to return in the recarray. (default is 'days')
 
     Notes
     -----
@@ -93,7 +93,7 @@ class ListBudget(object):
 
     def get_record_names(self):
         """
-        Get a list of water budget record names in the file
+        Get a list of water budget record names in the file.
 
         Returns
         -------
@@ -110,7 +110,7 @@ class ListBudget(object):
 
     def get_times(self):
         """
-        Get a list of unique water budget times in the list file
+        Get a list of unique water budget times in the list file.
 
         Returns
         -------
@@ -150,7 +150,7 @@ class ListBudget(object):
 
     def get_incremental(self, names=None):
         """
-        Get a recarray with the incremental water budget items in the list file
+        Get a recarray with the incremental water budget items in the list file.
 
         Parameters
         ----------
@@ -183,7 +183,7 @@ class ListBudget(object):
 
     def get_cumulative(self, names=None):
         """
-        Get a recarray with the cumulative water budget items in the list file
+        Get a recarray with the cumulative water budget items in the list file.
 
         Parameters
         ----------
@@ -217,7 +217,7 @@ class ListBudget(object):
     def get_budget(self, names=None):
         """
         Get the recarrays with the incremental and cumulative water budget items
-        in the list file
+        in the list file.
 
         Parameters
         ----------
@@ -338,7 +338,7 @@ class ListBudget(object):
     def get_dataframes(self, start_datetime='1-1-1970'):
         """
         Get pandas dataframes with the incremental and cumulative water budget
-        items in the list file
+        items in the list file.
 
         Parameters
         ----------

@@ -1,13 +1,15 @@
 """
-Module to read MODPATH output files.  The module contains three
+Module to read MODPATH output files.  The module contains two
 important classes that can be accessed by the user.
 
-*  PathlineFile (Binary head file.  Can also be used for drawdown)
+*  EndpointFile (ascii endpoint file)
+*  PathlineFile (ascii pathline file)
 
 """
 
 import numpy as np
 from collections import OrderedDict
+
 
 class PathlineFile():
     """
@@ -16,7 +18,7 @@ class PathlineFile():
     Parameters
     ----------
     filename : string
-        Name of the concentration file
+        Name of the pathline file
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -43,7 +45,12 @@ class PathlineFile():
 
 
     """
+
     def __init__(self, filename, verbose=False):
+        """
+        Class constructor.
+
+        """
         self.fname = filename
         self.dtype, self.outdtype = self._get_dtypes()
         self._build_index()
@@ -61,7 +68,7 @@ class PathlineFile():
         # close the input file
         self.file.close()
         return
-        
+
     def _build_index(self):
         """
            Set position of the start of the pathline data.
@@ -84,13 +91,12 @@ class PathlineFile():
                           ("time", np.float32), ("x", np.float32),
                           ("y", np.float32), ("z", np.float32),
                           ("k", np.int), ("i", np.int), ("j", np.int),
-                          ("grid", np.int), ("xloc", np.float32), 
+                          ("grid", np.int), ("xloc", np.float32),
                           ("yloc", np.float32), ("zloc", np.float32),
                           ("linesegmentindex", np.int)])
         outdtype = np.dtype([("x", np.float32), ("y", np.float32), ("z", np.float32),
                              ("time", np.float32), ("k", np.int), ("id", np.int)])
         return dtype, outdtype
-                              
 
     def get_maxid(self):
         """
@@ -104,7 +110,6 @@ class PathlineFile():
         """
         return self.maxid
 
-
     def get_maxtime(self):
         """
         Get the maximum time in pathline file
@@ -112,11 +117,10 @@ class PathlineFile():
         Returns
         ----------
         out : float
-            Maximum pathline timer.
+            Maximum pathline time.
 
         """
         return self.data['time'].max()
-
 
     def get_data(self, partid=0, totim=None, ge=True):
         """
@@ -218,7 +222,7 @@ class EndpointFile():
     Parameters
     ----------
     filename : string
-        Name of the concentration file
+        Name of the endpoint file
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -245,7 +249,12 @@ class EndpointFile():
 
 
     """
+
     def __init__(self, filename, verbose=False):
+        """
+        Class constructor.
+
+        """
         self.fname = filename
         self.dtype, self.outdtype = self._get_dtypes()
         self._build_index()
@@ -307,7 +316,6 @@ class EndpointFile():
                              ("time", np.float32), ("k", np.int), ("id", np.int)])
         return dtype, outdtype
 
-
     def get_maxid(self):
         """
         Get the maximum endpoint particle id in the file endpoint file
@@ -319,7 +327,6 @@ class EndpointFile():
 
         """
         return self.maxid
-
 
     def get_maxtime(self):
         """
@@ -333,10 +340,9 @@ class EndpointFile():
         """
         return self.data['finaltime'].max()
 
-
     def get_data(self, partid=0, final=True):
         """
-        get endpoint data from the endpoint file for a single particle.
+        Get endpoint data from the endpoint file for a single particle.
 
         Parameters
         ----------
@@ -381,7 +387,7 @@ class EndpointFile():
 
     def get_alldata(self, final=True):
         """
-        get endpoint data from the endpoint file for all endpoints.
+        Get endpoint data from the endpoint file for all endpoints.
 
         Parameters
         ----------

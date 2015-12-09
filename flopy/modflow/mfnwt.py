@@ -235,9 +235,6 @@ class ModflowNwt(Package):
         self.mxiterxmd = mxiterxmd
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'Newton solver package class'
-
     def write_file(self):
         """
         Write the package file.

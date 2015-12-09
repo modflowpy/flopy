@@ -74,9 +74,6 @@ class ModflowLmt(Package):
         self.parent.add_package(self)
         return
 
-    def __repr__(self):
-        return 'Link-MT3D package class'
-
     def write_file(self):
         """
         Write the package file.

@@ -111,9 +111,6 @@ class ModflowPks(Package):
 
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'Parallel Krylov solver package class'
-
     def write_file(self):
         """
         Write the package file.

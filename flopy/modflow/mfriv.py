@@ -121,12 +121,9 @@ class ModflowRiv(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        #self.stress_period_data = MfList(model, self.dtype, stress_period_data)
+        # self.stress_period_data = MfList(model, self.dtype, stress_period_data)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
-
-    def __repr__(self):
-        return 'River class'
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):

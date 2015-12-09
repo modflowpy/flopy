@@ -42,9 +42,6 @@ class ModflowPbc(Package):
         self.np = 0
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'Periodic boundary condition class'
-
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developped for MT3DMS SSM package)
         return self.mxactp

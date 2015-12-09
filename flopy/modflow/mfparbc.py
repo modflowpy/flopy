@@ -6,6 +6,7 @@ the ModflowParBc class as `flopy.modflow.ModflowParBc`.
 
 import numpy as np
 
+
 class ModflowParBc(object):
     """
     Class for loading boundary condition parameter data for MODFLOW packages
@@ -21,6 +22,7 @@ class ModflowParBc(object):
 
 
     """
+
     def __init__(self, bc_parms):
         """
         Package constructor.
@@ -28,11 +30,6 @@ class ModflowParBc(object):
         """
         self.bc_parms = bc_parms
 
-
-    def __repr__( self ):
-        return 'Boundary Condition Package Parameter Class'
-        
-        
     def get(self, fkey):
         """
         overload get to return a value from the bc_parms dictionary
@@ -42,7 +39,6 @@ class ModflowParBc(object):
             if fkey == key:
                 return self.bc_parms[key]
         return None
-
 
     @staticmethod
     def load(f, npar, dt, verbose=False):
@@ -110,7 +106,7 @@ class ModflowParBc(object):
                         t = line.strip().split()
                         bnd = []
                         for jdx in range(nitems):
-                            #if jdx < 3:
+                            # if jdx < 3:
                             if issubclass(dt[jdx].type, np.integer):
                                 # conversion to zero-based occurs in package load method in mbase.
                                 bnd.append(int(t[jdx]))
@@ -118,9 +114,10 @@ class ModflowParBc(object):
                                 bnd.append(float(t[jdx]))
                         bcinst.append(bnd)
                     pinst[instnam] = bcinst
-                bc_parms[parnam] = [{'partyp':partyp, 'parval':parval, 'nlst':nlst, 'timevarying':timeVarying}, pinst]
-        
-        #print bc_parms
+                bc_parms[parnam] = [{'partyp': partyp, 'parval': parval, 'nlst': nlst, 'timevarying': timeVarying},
+                                    pinst]
+
+        # print bc_parms
         bcpar = ModflowParBc(bc_parms)
         return bcpar
 
@@ -196,9 +193,10 @@ class ModflowParBc(object):
                             bnd.append(iz)
                         bcinst.append(bnd)
                     pinst[instnam] = bcinst
-                bc_parms[parnam] = [{'partyp':partyp, 'parval':parval, 'nclu':nclu, 'timevarying':timeVarying}, pinst]
+                bc_parms[parnam] = [{'partyp': partyp, 'parval': parval, 'nclu': nclu, 'timevarying': timeVarying},
+                                    pinst]
 
-        #print bc_parms
+        # print bc_parms
         bcpar = ModflowParBc(bc_parms)
         return bcpar
 
@@ -240,7 +238,7 @@ class ModflowParBc(object):
         dtype = np.float32
         data = np.zeros(shape, dtype=dtype)
         for key, value in parm_dict.items():
-            #print key, value
+            # print key, value
             pdict, idict = pak_parms.bc_parms[key]
             inst_data = idict[value]
             if model.mfpar.pval is None:
@@ -251,7 +249,7 @@ class ModflowParBc(object):
                 except:
                     pv = np.float(pdict['parval'])
             for [mltarr, zonarr, izones] in inst_data:
-                #print mltarr, zonarr, izones
+                # print mltarr, zonarr, izones
                 if mltarr.lower() == 'none':
                     mult = np.ones(shape, dtype=dtype)
                 else:

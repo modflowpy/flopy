@@ -218,9 +218,6 @@ class ModflowPcgn(Package):
         # add package
         self.parent.add_package(self)
 
-    def __repr__(self):
-        return 'Preconditioned conjugate gradient solver with improved nonlinear control package class'
-
     def write_file(self):
         """
         Write the package file.
