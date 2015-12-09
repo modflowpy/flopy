@@ -22,17 +22,17 @@ class ModflowPcgn(Package):
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
     iter_mo : int
-        The maximum number of Picard (outer) iterations allowed. For nonlinear
+        The maximum number of picard (outer) iterations allowed. For nonlinear
         problems, this variable must be set to some number greater than one,
-        depending on the problem size and degree of nonlinearity. If ITER_MO
-        is set to 1, then the PCGN solver assumes that the problem is linear
+        depending on the problem size and degree of nonlinearity. If iter_mo
+        is set to 1, then the pcgn solver assumes that the problem is linear
         and the input requirements are greatly truncated. (default is 50)
     iter_mi : int
-        The maximum number of PCG (inner) iterations allowed. Generally,
+        maximum number of pcg (inner) iterations allowed. Generally,
         this variable is set to some number greater than one, depending on
         the matrix size, degree of convergence called for, and the nature of
-        the problem. For a nonlinear problem, ITER_MI should be set large
-        enough that the PCG iteration converges freely with the relative
+        the problem. For a nonlinear problem, iter_mi should be set large
+        enough that the pcg iteration converges freely with the relative
         convergence parameter epsilon described in the Parameters Related
         to Convergence of Inner Iteration: Line 4 subsection.
         (default is 30)
@@ -41,42 +41,42 @@ class ModflowPcgn(Package):
         used differently, depending on whether it is applied to a linear or
         nonlinear problem.
 
-        If ITER_MO = 1: For a linear problem, the variant of the conjugate
+        If iter_mo = 1: For a linear problem, the variant of the conjugate
         gradient method outlined in algorithm 2 is employed, but uses the
         absolute convergence criterion in place of the relative convergence
-        criterion. CLOSE_R is used as the value in the absolute convergence
-        criterion for quitting the PCG iterative solver. CLOSE_R is compared
+        criterion. close_r is used as the value in the absolute convergence
+        criterion for quitting the pcg iterative solver. close_r is compared
         to the square root of the weighted residual norm. In particular, if
-        the square root of the weighted residual norm is less than CLOSE_R,
-        then the linear PCG iterative solve is said to have converged,
-        causing the PCG iteration to cease and control of the program to
-        pass out of the PCG solver.
+        the square root of the weighted residual norm is less than close_r,
+        then the linear Pcg iterative solve is said to have converged,
+        causing the pcg iteration to cease and control of the program to
+        pass out of the pcg solver.
 
-        If ITER_MO > 1: For a nonlinear problem, CLOSE_R is used as a criterion
-        for quitting the Picard (outer) iteration. CLOSE_R is compared to the
+        If iter_mo > 1: For a nonlinear problem, close_r is used as a criterion
+        for quitting the picard (outer) iteration. close_r is compared to the
         square root of the inner product of the residuals (the residual norm)
-        as calculated on entry to the PCG solver at the beginning of every
-        Picard iteration. If this norm is less than CLOSE_R, then the Picard
+        as calculated on entry to the pcg solver at the beginning of every
+        picard iteration. if this norm is less than close_r, then the picard
         iteration is considered to have converged.
     close_h : float
-        CLOSE_H is used as an alternate stopping criterion for the Picard
+        close_h is used as an alternate stopping criterion for the picard
         iteration needed to solve a nonlinear problem. The maximum value of
-        the head change is obtained for each Picard iteration, after completion
-        of the inner, PCG iteration. If this maximum head change is less than
-        CLOSE_H, then the Picard iteration is considered tentatively to have
+        the head change is obtained for each picard iteration, after completion
+        of the inner, pcg iteration. If this maximum head change is less than
+        close_h, then the picard iteration is considered tentatively to have
         converged. However, as nonlinear problems can demonstrate oscillation
-        in the head solution, the Picard iteration is not declared to have
-        converged unless the maximum head change is less than CLOSE_H for
-        three Picard iterations. If these Picard iterations are sequential,
-        then a good solution is assumed to have been obtained. If the Picard
+        in the head solution, the picard iteration is not declared to have
+        converged unless the maximum head change is less than close_h for
+        three picard iterations. If these picard iterations are sequential,
+        then a good solution is assumed to have been obtained. If the picard
         iterations are not sequential, then a warning is issued advising that
         the convergence is conditional and the user is urged to examine the
         mass balance of the solution.
     relax : float
         is the relaxation parameter used with npcond = 1. (default is 1.0)
     ifill : int
-        is the fill level of the MIC preconditioner. Preconditioners with
-        fill levels of 0 and 1 are available (IFILL = 0 and IFILL = 1,
+        is the fill level of the mic preconditioner. Preconditioners with
+        fill levels of 0 and 1 are available (ifill = 0 and ifill = 1,
         respectively). (default is 0)
     unit_pc : int
         is the unit number of an optional output file where progress for the
@@ -87,61 +87,57 @@ class ModflowPcgn(Package):
     adamp : int
         defines the mode of damping applied to the linear solution. In general,
         damping determines how much of the head changes vector shall be applied
-        to the hydraulic head vector hj in Picard iteration j. (default is 0)
-
-        If adamp=0: Ordinary damping is employed and a constant value of damping
-        parameter will be used throughout the Picard iteration. This option
-        requires a valid value for DAMP.
-
-        If adamp=1: Adaptive damping is employed.
-
-        If adamp=2: Enhanced damping algorithm in which the damping value is
-        increased (but never decreased) provided the Picard iteration is
-        proceeding satisfactorily.
+        to the hydraulic head vector hj in picard iteration j. If adamp = 0,
+        Ordinary damping is employed and a constant value of damping parameter
+        will be used throughout the picard iteration; this option requires a
+        valid value for damp. If adamp = 1, Adaptive damping is employed. If
+        adamp = 2: Enhanced damping algorithm in which the damping value is
+        increased (but never decreased) provided the picard iteration is
+        proceeding satisfactorily. (default is 0)
     damp : float
         is the damping factor. (default is 1.)
     damp_lb : float
-        is the lower bound placed on the dampening; generally, 0 < DAMP_LB < DAMP.
+        is the lower bound placed on the dampening; generally, 0 < damp_lb < damp.
         (default is 0.001)
     rate_d : float
-        is a rate parameter; generally, 0 < RATE_D < 1. (default is 0.1)
+        is a rate parameter; generally, 0 < rate_d < 1. (default is 0.1)
     chglimit : float
         this variable limits the maximum head change applicable to the updated
-        hydraulic heads in a Picard iteration. If CHGLIMIT = 0.0, then adaptive
+        hydraulic heads in a Picard iteration. If chglimit = 0.0, then adaptive
         damping proceeds without this feature. (default is 0.)
     acnvg : int
         defines the mode of convergence applied to the PCG solver. (default is 0)
     cnvg_lb : int
         is the minimum value that the relative convergence is allowed to take under
-        the self-adjusting convergence option. CNVG_LB is used only in convergence
-        mode ACNVG = 1. (default is 0.001)
+        the self-adjusting convergence option. cnvg_lb is used only in convergence
+        mode acnvg = 1. (default is 0.001)
     mcnvg : float
         increases the relative PCG convergence criteria by a power equal to MCNVG.
-        MCNVG is used only in convergence mode ACNVG = 2. (default is 2)
+        MCNVG is used only in convergence mode acnvg = 2. (default is 2)
     rate_c : float
-        this option results in variable enhancement of epsilon. If 0 < RATE_C < 1,
+        this option results in variable enhancement of epsilon. If 0 < rate_c < 1,
         then enhanced relative convergence is allowed to decrease by increasing
-        epsilon(j) = epsilon(j-1) + RATE_C epsilon(j-1), where j is the Picard
+        epsilon(j) = epsilon(j-1) + rate_c epsilon(j-1), where j is the Picard
         iteration number; this change in epsilon occurs so long as the Picard
-        iteration is progressing satisfactorily. If RATE_C <= 0, then the value
-        of epsilon set by MCNVG remains unchanged through the Picard iteration.
-        It should be emphasized that RATE_C must have a value greater than 0
+        iteration is progressing satisfactorily. If rate_c <= 0, then the value
+        of epsilon set by mcnvg remains unchanged through the picard iteration.
+        It should be emphasized that rate_c must have a value greater than 0
         for the variable enhancement to be effected; otherwise epsilon remains
-        constant. RATE_C is used only in convergence mode ACNVG = 2.
+        constant. rate_c is used only in convergence mode acnvg = 2.
         (default is -1.)
     ipunit : int
-        enables progress reporting for the Picard iteration. If IPUNIT >= 0,
-        then a record of progress made by the Picard iteration for each time
+        enables progress reporting for the picard iteration. If ipunit >= 0,
+        then a record of progress made by the picard iteration for each time
         step is printed in the MODFLOW Listing file (Harbaugh and others, 2000).
         This record consists of the total number of dry cells at the end of each
         time step as well as the total number of PCG iterations necessary to
-        obtain convergence. In addition, if IPUNIT > 0, then extensive
+        obtain convergence. In addition, if ipunit > 0, then extensive
         diagnostics for each Picard iteration is also written in comma-separated
-        format to a file whose unit number corresponds to IPUNIT; the name for
-        this file, along with its unit number and type DATA should be entered in
-        the MODFLOW Name file. If IPUNIT < 0 then printing of all progress
+        format to a file whose unit number corresponds to ipunit; the name for
+        this file, along with its unit number and type 'data' should be entered
+        in the modflow Name file. If ipunit < 0 then printing of all progress
         concerning the Picard iteration is suppressed, as well as information on
-        the nature of the convergence of the Picard iteration. (default is 0)
+        the nature of the convergence of the picard iteration. (default is 0)
     extension : list string
         Filename extension (default is 'pcgn')
     unitnumber : int

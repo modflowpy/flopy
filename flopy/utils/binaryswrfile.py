@@ -53,9 +53,41 @@ class SwrBinaryStatements:
 
 
 class SwrObs(SwrBinaryStatements):
-    'Reads binary SWR observations output from MODFLOW SWR Process binary observation files'
+    """
+    Read binary SWR observations output from MODFLOW SWR Process binary observation files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the cell budget file
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> so = flopy.utils.SwrObs('mymodel.swr.obs')
+
+    """
 
     def __init__(self, filename, verbose=False):
+        """
+        Class constructor.
+
+        """
         # initialize class information
         self.skip = False
         self.verbose = verbose
@@ -176,7 +208,44 @@ class SwrObs(SwrBinaryStatements):
 
 
 class SwrFile(SwrBinaryStatements):
-    def __init__(self, swrtype, filename, verbose=False):
+    """
+    Read binary SWR output from MODFLOW SWR Process binary output files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the swr output file
+    swrtype : str
+        swr data type. Valid data types are 'stage', 'reachgroup',
+        'qm', or 'qaq'. (default is 'stage')
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> so = flopy.utils.SwrFile('mymodel.swr.stage.bin')
+
+    """
+
+    def __init__(self, filename, swrtype='stage', verbose=False):
+        """
+        Class constructor.
+
+        """
         # --swrtype =  0 = stage record
         # swrtype = -1 = reach group record
         # swrtype = -2 = reach group connection velocity record

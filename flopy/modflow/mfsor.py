@@ -27,12 +27,12 @@ class ModflowSor(Package):
         and is generally between 1. and 2. (default is 1)
     hclose : float > 0
         The head change criterion for convergence. When the maximum absolute value of head change from all nodes
-        during an iteration is less than or equal to HCLOSE, iteration stops. (default is 1e-5)
+        during an iteration is less than or equal to hclose, iteration stops. (default is 1e-5)
     iprsor : integer > 0
-        the printout interval for SOR. IPRSOR, if equal to zero, is changed to 999.
+        the printout interval for sor. iprsor, if equal to zero, is changed to 999.
         The maximum head change (positive or negative) is printed for each iteration of
-        a time step whenever the time step is an even multiple of IPRSOR. This printout
-        also occurs at the end of each stress period regardless of the value of IPRSOR.
+        a time step whenever the time step is an even multiple of iprsor. This printout
+        also occurs at the end of each stress period regardless of the value of iprsor.
         (default is 0)
     extension : string
         Filename extension (default is 'sor')

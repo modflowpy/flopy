@@ -74,12 +74,12 @@ class ModflowNwt(Package):
         solve the following time step. (default is False).
     dbtheta : float
         is a coefficient used to reduce the weight applied to the head change between
-        nonlinear iterations. DBDTHETA is used to control oscillations in head.
+        nonlinear iterations. dbdtheta is used to control oscillations in head.
         Values range between 0.0 and 1.0, and larger values increase the weight
         (decrease under-relaxation) applied to the head change. (default is 0.4).
     dbkappa : float
         is a coefficient used to increase the weight applied to the head change between
-        nonlinear iterations. DBDKAPPA is used to control oscillations in head. Values
+        nonlinear iterations. dbdkappa is used to control oscillations in head. Values
         range between 0.0 and 1.0, and larger values increase the weight applied to the
         head change. (default is 1.e-5).
     dbgamma : float
@@ -111,15 +111,17 @@ class ModflowNwt(Package):
     ilumethod : int
         (GMRES) is the index for selection of the method for incomplete factorization
         (ILU) used as a preconditioner. (default is 2).
-        ILUMETHOD=1 is ILU with drop tolerance and fill limit. Fill-in terms less
+
+        ilumethod = 1 is ILU with drop tolerance and fill limit. Fill-in terms less
         than drop tolerance times the diagonal are discarded. The number of fill-in
         terms in each row of L and U is limited to the fill limit. The fill-limit
         largest elements are kept in the L and U factors.
-        ILUMETHOD=2 is ILU(k) order k incomplete LU factorization. Fill-in terms of
+
+        ilumethod=2 is ILU(k) order k incomplete LU factorization. Fill-in terms of
         higher order than k in the factorization are discarded.
     levfill : int
         (GMRES) is the fill limit for ILUMETHOD = 1 and is the level of fill for
-        ILUMETHOD = 2. Recommended values: 5-10 for method 1, 0-2 for method 2.
+        ilumethod = 2. Recommended values: 5-10 for method 1, 0-2 for method 2.
         (default is 5).
     stoptol : float
         (GMRES) is the tolerance for convergence of the linear solver. This is the

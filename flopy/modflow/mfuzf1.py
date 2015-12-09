@@ -25,13 +25,13 @@ class ModflowUzf1(Package):
         this package will be added.
     nuztop : integer
         used to define which cell in a vertical column that recharge and discharge is simulated.
-            1 Recharge to and discharge from only the top model layer. This option assumes land surface is defined
-              as top of layer 1.
-            2 Recharge to and discharge from the specified layer in variable IUZFBND. This option assumes land
-              surface is defined as top of layer specified in IUZFBND.
-            3 Recharge to and discharge from the highest active cell in each vertical column. Land surface is
-              determined as top of layer specified in IUZFBND. A constant head node intercepts any recharge and
-              prevents deeper percolation.
+        1   Recharge to and discharge from only the top model layer. This option assumes land surface is defined
+            as top of layer 1.
+        2   Recharge to and discharge from the specified layer in variable IUZFBND. This option assumes land
+            surface is defined as top of layer specified in IUZFBND.
+        3   Recharge to and discharge from the highest active cell in each vertical column. Land surface is
+            determined as top of layer specified in IUZFBND. A constant head node intercepts any recharge and
+            prevents deeper percolation.
         (default is 1)
     iuzfopt : integer
         equal to 1 or 2. A value of 1 indicates that the vertical hydraulic conductivity will be
@@ -117,12 +117,13 @@ class ModflowUzf1(Package):
     row_col_iftunit_iuzopt : list
         used to specify where information will be printed for each time step. IUZOPT specifies what that information
         will be. IUZOPT is
-        1 Prints time, ground-water head, and thickness of unsaturated zone, and cumulative volumes of
-          infiltration, recharge, storage, change in storage and ground-water discharge to land surface.
-        2 Same as option 1 except rates of infiltration, recharge, change in storage, and ground-water discharge
-          also are printed.
-        3 Prints time, ground-water head, thickness of unsaturated zone, followed by a series of depths and
-          water contents in the unsaturated zone.
+
+        1   Prints time, ground-water head, and thickness of unsaturated zone, and cumulative volumes of
+            infiltration, recharge, storage, change in storage and ground-water discharge to land surface.
+        2   Same as option 1 except rates of infiltration, recharge, change in storage, and ground-water discharge
+            also are printed.
+        3   Prints time, ground-water head, thickness of unsaturated zone, followed by a series of depths and
+            water contents in the unsaturated zone.
         (default is [])
     specifythtr : boolean
         key word for specifying optional input variable THTR
