@@ -367,7 +367,7 @@ class Gridgen(object):
         idsymrd = 0
         laycbd = 0
 
-        # save nodes
+        # Save nodes
         self.nodes = nodes
 
         # nodelay
