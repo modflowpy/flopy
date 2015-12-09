@@ -375,16 +375,41 @@ def test_arrayformat():
     assert fmt_fort.upper() == parsed["fmtin"].upper()
     assert u2d.get_file_array() == ''
 
+
+def test_new_get_file_entry():
+    ml = flopy.modflow.Modflow(model_ws=out_dir)
+    u2d = Util2d(ml, (5, 2), np.float32, np.ones((5,2)), 'test',locat=99)
+    print(u2d.get_file_entry2(how="internal"))
+    print(u2d.get_file_entry2(how="constant"))
+    print(u2d.get_file_entry2(how="external"))
+    u2d.format.binary = True
+    print(u2d.get_file_entry2(how="external"))
+    u2d.format.binary = False
+    print(u2d.get_file_entry2(how="openclose"))
+    u2d.format.binary = True
+    print(u2d.get_file_entry2(how="openclose"))
+
+
+    ml.free_format = False
+    u2d = Util2d(ml, (5, 2), np.float32, np.ones((5,2)), 'test',locat=99)
+    print(u2d.get_file_entry2(how="internal"))
+    print(u2d.get_file_entry2(how="constant"))
+    print(u2d.get_file_entry2(how="external"))
+    u2d.format.binary = True
+    print(u2d.get_file_entry2(how="external"))
+
+
 if __name__ == '__main__':
-    test_arrayformat()
-    test_util2d_external_free_nomodelws()
-    test_util2d_external_free_path_nomodelws()
-    test_util2d_external_free()
-    test_util2d_external_free_path()
-    test_util2d_external_fixed()
-    test_util2d_external_fixed_path()
-    test_util2d_external_fixed_nomodelws()
-    test_util2d_external_fixed_path_nomodelws()
-    test_transient2d()
-    test_util2d()
-    test_util3d()
+    test_new_get_file_entry()
+    # test_arrayformat()
+    # test_util2d_external_free_nomodelws()
+    # test_util2d_external_free_path_nomodelws()
+    # test_util2d_external_free()
+    # test_util2d_external_free_path()
+    # test_util2d_external_fixed()
+    # test_util2d_external_fixed_path()
+    # test_util2d_external_fixed_nomodelws()
+    # test_util2d_external_fixed_path_nomodelws()
+    # test_transient2d()
+    # test_util2d()
+    # test_util3d()

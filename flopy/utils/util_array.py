@@ -1524,9 +1524,9 @@ class Util2d(object):
         -------
             file_path (str) : path relative to python: includes model_ws
         """
-        if self.vtype != str:
-            raise Exception("Util2d call to python_file_path " +
-                            "for vtype != str")
+        #if self.vtype != str:
+        #    raise Exception("Util2d call to python_file_path " +
+        #                    "for vtype != str")
         python_file_path = ''
         if self.model.model_ws != '.':
             python_file_path = os.path.join(self.model.model_ws)
@@ -1534,8 +1534,18 @@ class Util2d(object):
             python_file_path = os.path.join(python_file_path,
                                            self.model.external_path)
         python_file_path = os.path.join(python_file_path,
-                                       os.path.split(self.__value)[-1])
+                                       self.filename)
         return python_file_path
+
+    @property
+    def filename(self):
+        if self.vtype != str:
+            filename = self.ext_filename
+            if filename is None:
+                filename = self._ext_filename
+        else:
+            filename = os.path.split(self.__value)[-1]
+        return filename
 
     @property
     def model_file_path(self):
@@ -1547,20 +1557,12 @@ class Util2d(object):
             file_path (str): path relative to the name file
 
         """
-        if self.vtype != str:
-            filename = self.ext_filename
-            if filename is None:
-                filename = self._ext_filename
-        else:
-            #assert os.path.exists(self.__value), "Util2d.get_model_filepath " +\
-            #                                     "error: file not found:" +\
-            #                                     "{0}".format(self.__value)
-            filename = os.path.split(self.__value)[-1]
+
         model_file_path = ''
         if self.model.external_path is not None:
             model_file_path = os.path.join(model_file_path,
                                            self.model.external_path)
-        model_file_path = os.path.join(model_file_path, filename)
+        model_file_path = os.path.join(model_file_path, self.filename)
         return model_file_path
 
     def get_control_record(self):
@@ -1612,6 +1614,115 @@ class Util2d(object):
                     raise Exception('Util2d: error generating fixed-format ' +
                                     ' control record,dtype must be np.int or np.float32')
         return cr
+
+    def get_constant_cr(self,value):
+
+        if self.model.free_format:
+            lay_space = '{0:>27s}'.format('')
+            if self.vtype in [int,np.int]:
+                lay_space = '{0:>32s}'.format('')
+            cr = 'CONSTANT ' + self.format.py[1].format(value)
+            cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
+                                                self.name)
+        else:
+            cr = self.get_fixed_cr(0)
+        return cr
+
+    def get_fixed_cr(self,locat):
+        if self.dtype == np.int:
+            cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n' \
+                .format(locat, self.cnstnt, self.format.fortran,
+                        self.iprn, self.name)
+        elif self.dtype == np.float32:
+            cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n' \
+                .format(locat, self.cnstnt, self.format.fortran,
+                        self.iprn, self.name)
+        else:
+            raise Exception('Util2d: error generating fixed-format ' +
+                            ' control record, dtype must be np.int or np.float32')
+        return cr
+
+    def get_internal_cr(self):
+        if self.model.free_format:
+            cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
+                 .format(self.cnstnt, self.format.fortran, self.iprn, self.name)
+            return cr
+        else:
+            return self.get_fixed_cr(self.locat)
+
+    def get_openclose_cr(self):
+        cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
+                    self.model_file_path, self.cnstnt,
+                    self.format.fortran, self.iprn,
+                    self.name)
+        return cr
+
+    def get_external_cr(self):
+        locat = self.model.next_ext_unit()
+        if self.format.binary:
+            locat = -1 * np.abs(locat)
+        self.model.add_external(self.model_file_path,locat,self.format.binary)
+        if self.model.free_format:
+            return "need to fix this {0}".format(locat)
+        else:
+            return self.get_fixed_cr(locat)
+
+    def get_file_entry2(self,how=None):
+
+        if how is not None:
+            how = how.lower()
+        else:
+            raise NotImplementedError()
+
+        if how == "internal":
+            assert np.unique(self.array).shape[0] == 1
+            assert not self.format.binary
+            cr = self.get_internal_cr()
+            return cr + self.string
+
+        elif how == "external" or how == "openclose":
+            if how == "openclose":
+                assert self.model.free_format
+
+            # write a file if needed
+            if self.vtype != str:
+                if self.format.binary:
+                    self.write_bin(self.shape,self.python_file_path,self._array)
+                else:
+                    self.write_txt(self.shape, self.python_file_path,
+                                   self._array,fortran_format=self.format.fortran)
+
+            elif self.__value != self.python_file_path:
+                if os.path.exists(self.python_file_path):
+                    # if the file already exists, remove it
+                    if self.model.verbose:
+                        print("Util2d warning: removing existing array " +
+                              "file {0}".format(self.model_file_path))
+                    try:
+                        os.remove(self.python_file_path)
+                    except Exception as e:
+                        raise Exception("Util2d: error removing existing file " +\
+                                        self.python_file_path)
+                # copy the file to the new model location
+                try:
+                    shutil.copy2(self.__value,self.python_file_path)
+                except Exception as e:
+                    raise Exception("Util2d.get_file_array(): error copying " +
+                                    "{0} to {1}:{2}".format(self.__value,
+                                                            self.python_file_path,
+                                                            str(e)))
+            if how == "external":
+                return self.get_external_cr()
+            else:
+                return self.get_openclose_cr()
+
+        elif how == "constant":
+            u = np.unique(self.array)
+            assert u.shape[0] == 1
+            return self.get_constant_cr(u[0])
+
+        else:
+            raise Exception
 
     def get_file_array(self):
         """
