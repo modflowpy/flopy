@@ -80,6 +80,7 @@ def stress_util2d(ml,nlay,nrow,ncol):
 
     lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
     ml.lpf.vka[0].format.binary = True
+    ml.lpf.hk.how = "external"
     ml.write_input()
     if ml.external_path is not None:
         files = os.listdir(os.path.join(ml.model_ws,ml.external_path))
@@ -113,7 +114,6 @@ def stress_util2d(ml,nlay,nrow,ncol):
 
 def stress_util2d_for_joe_the_file_king(ml,nlay,nrow,ncol):
 
-
     dis = flopy.modflow.ModflowDis(ml,nlay=nlay,nrow=nrow,ncol=ncol)
     hk = np.ones((nlay,nrow,ncol))
     vk = np.ones((nlay,nrow,ncol)) + 1.0
@@ -126,7 +126,10 @@ def stress_util2d_for_joe_the_file_king(ml,nlay,nrow,ncol):
         vk[i] = i + 1.
 
     lpf = flopy.modflow.ModflowLpf(ml,hk=fnames,vka=vk)
+    print(ml.lpf.hk[0].how)
+    ml.lpf.hk.how = "internal"
     ml.lpf.vka[0].format.binary = True
+    ml.dis.top.how = "constant"
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load(ml.namefile,
@@ -173,7 +176,6 @@ def test_util2d_external_free_nomodelws():
     os.chdir(base_dir)
 
 
-
 def test_util2d_external_free_path():
     model_ws = os.path.join(out_dir,"extra_temp")
     if os.path.exists(model_ws):
@@ -194,6 +196,7 @@ def test_util2d_external_free_path():
     stress_util2d(ml,10,1,10)
     stress_util2d(ml,10,10,10)
 
+
 def test_util2d_external_free_path_nomodelws():
     model_ws = os.path.join(out_dir)
     if os.path.exists(model_ws):
@@ -206,7 +209,7 @@ def test_util2d_external_free_path_nomodelws():
         shutil.rmtree(ext_path)
     ml = flopy.modflow.Modflow(external_path=ext_path)
 
-
+    stress_util2d_for_joe_the_file_king(ml,1,1,1)
     stress_util2d_for_joe_the_file_king(ml,10,1,1)
     stress_util2d_for_joe_the_file_king(ml,1,10,1)
     stress_util2d_for_joe_the_file_king(ml,1,1,10)
@@ -215,6 +218,7 @@ def test_util2d_external_free_path_nomodelws():
     stress_util2d_for_joe_the_file_king(ml,10,1,10)
     stress_util2d_for_joe_the_file_king(ml,10,10,10)
     os.chdir(base_dir)
+
 
 def test_util2d_external_fixed():
     model_ws = os.path.join(out_dir,"extra_temp")
@@ -254,6 +258,7 @@ def test_util2d_external_fixed_nomodelws():
     stress_util2d_for_joe_the_file_king(ml,10,1,10)
     stress_util2d_for_joe_the_file_king(ml,10,10,10)
     os.chdir(base_dir)
+
 
 def test_util2d_external_fixed_path():
     model_ws = os.path.join(out_dir,"extra_temp")
@@ -300,6 +305,7 @@ def test_util2d_external_fixed_path_nomodelws():
     stress_util2d_for_joe_the_file_king(ml,10,10,10)
     os.chdir(base_dir)
 
+
 def test_util3d():
     ml = flopy.modflow.Modflow()
     u3d = Util3d(ml, (10, 10, 10), np.float32, 10., 'test')
@@ -319,97 +325,72 @@ def test_util3d():
 
     return
 
-
-def test_arrayformat():
-    ml = flopy.modflow.Modflow(model_ws=out_dir)
-    u2d = Util2d(ml, (15, 2), np.float32, np.ones((15,2)), 'test')
-
-    fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
-    parsed = Util2d.parse_control_record(cr)
-    print(fmt_fort,parsed["fmtin"])
-    assert fmt_fort.upper() == parsed["fmtin"].upper()
-
-    u2d.format.npl = 1
-    fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
-    parsed = Util2d.parse_control_record(cr)
-    print(fmt_fort,parsed["fmtin"])
-    assert fmt_fort.upper() == parsed["fmtin"].upper()
-
-    u2d.format.npl = 2
-    u2d.format.width = 8
-    fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
-    parsed = Util2d.parse_control_record(cr)
-    print(fmt_fort,parsed["fmtin"])
-    assert fmt_fort.upper() == parsed["fmtin"].upper()
-
-    u2d.format.free = True
-    u2d.format.width = 8
-    fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
-    parsed = Util2d.parse_control_record(cr)
-    print(fmt_fort,parsed["fmtin"])
-    assert fmt_fort.upper() == parsed["fmtin"].upper()
-
-    u2d.format.free = False
-    fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
-    parsed = Util2d.parse_control_record(cr)
-    print(fmt_fort,parsed["fmtin"])
-    assert fmt_fort.upper() == parsed["fmtin"].upper()
-
-    u2d.fmtin = "(10G15.6)"
-    fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
-    parsed = Util2d.parse_control_record(cr)
-    print(fmt_fort,parsed["fmtin"])
-    assert fmt_fort.upper() == parsed["fmtin"].upper()
-
-    u2d.format.binary = True
-    fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
-    parsed = Util2d.parse_control_record(cr)
-    print(fmt_fort,parsed["fmtin"])
-    assert fmt_fort.upper() == parsed["fmtin"].upper()
-    assert u2d.get_file_array() == ''
-
-
-def test_new_get_file_entry():
-    ml = flopy.modflow.Modflow(model_ws=out_dir)
-    u2d = Util2d(ml, (5, 2), np.float32, np.ones((5,2)), 'test',locat=99)
-    print(u2d.get_file_entry2(how="internal"))
-    print(u2d.get_file_entry2(how="constant"))
-    print(u2d.get_file_entry2(how="external"))
-    u2d.format.binary = True
-    print(u2d.get_file_entry2(how="external"))
-    u2d.format.binary = False
-    print(u2d.get_file_entry2(how="openclose"))
-    u2d.format.binary = True
-    print(u2d.get_file_entry2(how="openclose"))
-
-
-    ml.free_format = False
-    u2d = Util2d(ml, (5, 2), np.float32, np.ones((5,2)), 'test',locat=99)
-    print(u2d.get_file_entry2(how="internal"))
-    print(u2d.get_file_entry2(how="constant"))
-    print(u2d.get_file_entry2(how="external"))
-    u2d.format.binary = True
-    print(u2d.get_file_entry2(how="external"))
+# def test_arrayformat():
+#     ml = flopy.modflow.Modflow(model_ws=out_dir)
+#     u2d = Util2d(ml, (15, 2), np.float32, np.ones((15,2)), 'test')
+#
+#     fmt_fort = u2d.format.fortran
+#     cr = u2d.get_control_record()
+#     parsed = Util2d.parse_control_record(cr)
+#     print(fmt_fort,parsed["fmtin"])
+#     assert fmt_fort.upper() == parsed["fmtin"].upper()
+#
+#     u2d.format.npl = 1
+#     fmt_fort = u2d.format.fortran
+#     cr = u2d.get_control_record()
+#     parsed = Util2d.parse_control_record(cr)
+#     print(fmt_fort,parsed["fmtin"])
+#     assert fmt_fort.upper() == parsed["fmtin"].upper()
+#
+#     u2d.format.npl = 2
+#     u2d.format.width = 8
+#     fmt_fort = u2d.format.fortran
+#     cr = u2d.get_control_record()
+#     parsed = Util2d.parse_control_record(cr)
+#     print(fmt_fort,parsed["fmtin"])
+#     assert fmt_fort.upper() == parsed["fmtin"].upper()
+#
+#     u2d.format.free = True
+#     u2d.format.width = 8
+#     fmt_fort = u2d.format.fortran
+#     cr = u2d.get_control_record()
+#     parsed = Util2d.parse_control_record(cr)
+#     print(fmt_fort,parsed["fmtin"])
+#     assert fmt_fort.upper() == parsed["fmtin"].upper()
+#
+#     u2d.format.free = False
+#     fmt_fort = u2d.format.fortran
+#     cr = u2d.get_control_record()
+#     parsed = Util2d.parse_control_record(cr)
+#     print(fmt_fort,parsed["fmtin"])
+#     assert fmt_fort.upper() == parsed["fmtin"].upper()
+#
+#     u2d.fmtin = "(10G15.6)"
+#     fmt_fort = u2d.format.fortran
+#     cr = u2d.get_control_record()
+#     parsed = Util2d.parse_control_record(cr)
+#     print(fmt_fort,parsed["fmtin"])
+#     assert fmt_fort.upper() == parsed["fmtin"].upper()
+#
+#     u2d.format.binary = True
+#     fmt_fort = u2d.format.fortran
+#     cr = u2d.get_control_record()
+#     parsed = Util2d.parse_control_record(cr)
+#     print(fmt_fort,parsed["fmtin"])
+#     assert fmt_fort.upper() == parsed["fmtin"].upper()
+#     assert u2d.get_file_array() == ''
 
 
 if __name__ == '__main__':
-    test_new_get_file_entry()
-    # test_arrayformat()
-    # test_util2d_external_free_nomodelws()
-    # test_util2d_external_free_path_nomodelws()
-    # test_util2d_external_free()
-    # test_util2d_external_free_path()
-    # test_util2d_external_fixed()
-    # test_util2d_external_fixed_path()
-    # test_util2d_external_fixed_nomodelws()
-    # test_util2d_external_fixed_path_nomodelws()
-    # test_transient2d()
-    # test_util2d()
-    # test_util3d()
+    #test_arrayformat()
+    test_util2d_external_free_nomodelws()
+    test_util2d_external_free_path_nomodelws()
+    test_util2d_external_free()
+    test_util2d_external_free_path()
+    test_util2d_external_fixed()
+    test_util2d_external_fixed_path()
+    test_util2d_external_fixed_nomodelws()
+    test_util2d_external_fixed_path_nomodelws()
+    test_transient2d()
+    test_util2d()
+    test_util3d()
