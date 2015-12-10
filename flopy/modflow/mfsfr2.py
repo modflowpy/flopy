@@ -207,7 +207,7 @@ class ModflowSfr2(Package):
         """
         Package constructor
         """
-        Package.__init__(self, model, extension, 'SFR2',
+        Package.__init__(self, model, extension, 'SFR',
                          unitnumber)  # Call ancestor's init to set self.parent, extension, name, and unit number
 
         self.url = 'sfr2.htm'
@@ -455,7 +455,7 @@ class ModflowSfr2(Package):
         # item 1c
         nstrm, nss, nsfrpar, nparseg, const, dleak, istcb1, istcb2, \
         isfropt, nstrail, isuzn, nsfrsets, \
-        irtflg, numtim, weight, flwtol, option = parse_1c(line, reachinput=reachinput, transroute=transroute)
+        irtflg, numtim, weight, flwtol, option = _parse_1c(line, reachinput=reachinput, transroute=transroute)
 
         # item 2
         # set column names, dtypes
@@ -499,12 +499,12 @@ class ModflowSfr2(Package):
                 current_6e = {}
                 for j in range(itmp):
 
-                    dataset_6a = parse_6a(next(f), option)
+                    dataset_6a = _parse_6a(next(f), option)
                     current_aux[j] = dataset_6a[-1]
                     dataset_6a = dataset_6a[:-1]  # drop xyz
                     icalc = dataset_6a[1]
-                    dataset_6b = parse_6bc(next(f), icalc, nstrm, isfropt, reachinput, per=i)
-                    dataset_6c = parse_6bc(next(f), icalc, nstrm, isfropt, reachinput, per=i)
+                    dataset_6b = _parse_6bc(next(f), icalc, nstrm, isfropt, reachinput, per=i)
+                    dataset_6c = _parse_6bc(next(f), icalc, nstrm, isfropt, reachinput, per=i)
 
                     current[j] = dataset_6a + dataset_6b + dataset_6c
 
@@ -753,86 +753,44 @@ class ModflowSfr2(Package):
         return all_upsegs
 
     def renumber_segments(self):
-        """Renumber segments so that segment numbers always increase in the downstream direction.
-        Experience suggests that this can substantially speed convergence for some models using the NWT solver."""
-
-        # first check for numbering continuity and order
-        chk = check(self, verbose=False, level=1)
-        chk.numbering()
-
-        if 'continuity in segment and reach numbering' in chk.failed:
-            self._enforce_segment_number_continuity()
-
-        if 'segment numbering order' in chk.failed:
-            self._enforce_segment_number_order()
-
-    def _enforce_segment_number_continuity(self, segment_numbers=None):
-        """Renumber segments to remove gaps in numbering.
-
-        Parameters
-        ----------
-        segment_numbers : list or 1-D array, optional
-            List of segment numbers to renumber.
-            If omitted, all segments in segment_data are renumbered.
-
-        Returns
-        -------
-        newsegs : 1-D array
-            List of renumbered segments. Only returned if segment_numbers are provided.
-
+        """Renumber segments so that segment numbering is continuous and always increases
+        in the downstream direction. Experience suggests that this can substantially speed
+        convergence for some models using the NWT solver.
         """
-        if segment_numbers is not None:
-            newsegs = np.array(sorted(segment_numbers))
-            diffs = np.diff(np.append(0, newsegs))
-            for i, d in enumerate(diffs):
-                newsegs[i:] -= (d-1) if d > 1 else 0
-            return newsegs
 
+        # get renumbering info from per=0
+        nseg = self.segment_data[0].nseg
+        outseg = self.segment_data[0].outseg
+
+        def reassign_upsegs(r, nexts, upsegs):
+            nextupsegs = []
+            for u in upsegs:
+                r[u] = nexts if u > 0 else u # handle lakes
+                nexts -= 1
+                nextupsegs += list(nseg[outseg == u])
+            return r, nexts, nextupsegs
+
+        ns = len(nseg)
+
+        nexts = ns
+        r = {0: 0}
+        nextupsegs = nseg[outseg == 0]
+        for i in range(ns):
+            r, nexts, nextupsegs = reassign_upsegs(r, nexts, nextupsegs)
+            if len(nextupsegs) == 0:
+                break
+
+        # renumber segments in all stress period data
         for per in self.segment_data.keys():
-
+            self.segment_data[per]['nseg'] = [r[s] for s in nseg]
+            self.segment_data[per]['outseg'] = [r[s] for s in outseg]
             self.segment_data[per].sort(order='nseg')
-            newsegs = self.segment_data[per].nseg.copy()
-            diffs = np.diff(np.append(0, newsegs))
-            for i, d in enumerate(diffs):
-                newsegs[i:] -= (d-1) if d > 1 else 0
-            renumbering = dict(zip(self.segment_data[per].nseg, newsegs))
-            self._replace_segment_numbers(per, renumbering)
+            inds = (outseg > 0) & (nseg > outseg)
+            assert not np.any(inds)
+            assert len(self.segment_data[per]['nseg']) == self.segment_data[per]['nseg'].max()
 
-    def _enforce_segment_number_order(self):
-        """Renumber segments so that the numbers always increase in the downstream direction."""
-
-        if len(self.outsegs) == 0:
-            self.get_outlets()
-
-        for per in self.segment_data.keys():
-
-            headwaters = self._get_headwaters(per=per)
-            unique_seg_sequences = self.outsegs[per][:, headwaters - 1]
-
-            uss = unique_seg_sequences.copy()
-            segnums = {} # dictionary mapping old numbers to new numbers
-            nexts = 1
-
-            for i in range(uss.shape[0]):
-                for j in range(uss.shape[1]):
-                    s = unique_seg_sequences[i, j]
-                    if s <= 0:
-                        continue
-                    elif s not in segnums.keys() or s < nexts:
-                        all_instances = unique_seg_sequences == s
-                        uss[all_instances] = nexts
-                        segnums[s] = nexts
-                        nexts += 1
-                    else:
-                        continue
-
-            newsegnums = self._enforce_segment_number_continuity(segment_numbers=sorted(segnums.values()))
-            newsegnums = dict(zip(sorted(segnums.values()), newsegnums))
-            renumbering = {s: newsegnums[v] for s, v in segnums.items()}
-
-            # update segment data
-            self._replace_segment_numbers(per, renumbering)
-
+        # renumber segments in reach_data
+        self.reach_data['iseg'] = [r[s] for s in self.reach_data.iseg]
 
     def _get_headwaters(self, per=0):
         """List all segments that are not outsegs (that do not have any segments upstream).
@@ -900,25 +858,6 @@ class ModflowSfr2(Package):
                 xp = [dist[0], dist[-1]]
                 reach_values += np.interp(dist, xp, fp).tolist()
         return np.array(reach_values)
-
-    def _replace_segment_numbers(self, per, renumbering):
-        """Replace all instances of segment numbers in segment_data and
-        reach_data attributes using a dictionary.
-
-        Parameters
-        ----------
-        renumbering : dict
-            Dictionary of {old number: newnumber} key, value pairs for each segment.
-        """
-        self.segment_data[per]['nseg'] = [renumbering[s] for s in self.segment_data[per].nseg]
-        self.segment_data[per]['outseg'] = [renumbering[s] if s > 0 else s for s in self.segment_data[per].outseg]
-        self.segment_data[per]['iupseg'] = [renumbering[s] if s != self.default_value else s
-                                            for s in self.segment_data[per].iupseg]
-        # update reach data
-        self.reach_data['iseg'] = [renumbering[s] for s in self.reach_data.iseg]
-
-        self.segment_data[0].sort(order='nseg')
-        self.reach_data.sort(order=['iseg', 'ireach'])
 
     def _write_1c(self, f_sfr):
 
@@ -1183,7 +1122,8 @@ class check:
         self.verbose = verbose
         self.level = level
         self.passed = []
-        self.failed = []
+        self.warnings = []
+        self.errors = []
         self.txt = '\n{} ERRORS:\n'.format(self.sfr.name[0])
 
     def _boolean_compare(self, array, col1, col2,
@@ -1265,12 +1205,14 @@ class check:
             txt += '\n'
         return txt
 
-    def _txt_footer(self, headertxt, txt, testname, passed=False):
+    def _txt_footer(self, headertxt, txt, testname, passed=False, warning=True):
         if len(txt) == 0 or passed:
             txt += 'passed.'
             self.passed.append(testname)
+        elif warning:
+            self.warnings.append(testname)
         else:
-            self.failed.append(testname)
+            self.errors.append(testname)
         if self.verbose:
             print(txt + '\n')
         self.txt += headertxt + txt + '\n'
@@ -1305,9 +1247,9 @@ class check:
                                datatype='reach')
             if len(t) > 0:
                 txt += 'Segment {} has {}'.format(segment, t)
-            else:
-                passed = True
-        self._txt_footer(headertxt, txt, 'continuity in segment and reach numbering', passed)
+        if txt == '':
+            passed = True
+        self._txt_footer(headertxt, txt, 'continuity in segment and reach numbering', passed, warning=False)
 
         headertxt = 'Checking for increasing segment numbers in downstream direction...\n'
         txt = ''
@@ -1341,7 +1283,7 @@ class check:
             print(headertxt.strip())
 
         txt += self.sfr.get_outlets(level=self.level, verbose=False)  # will print twice if verbose=True
-        self._txt_footer(headertxt, txt, 'circular routing')
+        self._txt_footer(headertxt, txt, 'circular routing', warning=False)
 
     def overlapping_conductance(self, tol=1e-6):
         """checks for multiple SFR reaches in one cell; and whether more than one reach has Cond > 0
@@ -1521,6 +1463,7 @@ class check:
             self._txt_footer(headertxt, txt, '')
             return
         passed = False
+        warning = True
         if self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]:  # see SFR input instructions
             reach_data = self.reach_data
             i, j, k = reach_data.i, reach_data.j, reach_data.k
@@ -1541,7 +1484,8 @@ class check:
                                          level0txt='{} reaches encountered with streambed bottom below layer bottom.',
                                          level1txt='Layer bottom violations:',
                                          )
-
+            if len(txt) > 0:
+                warning = False # this constitutes an error (MODFLOW won't run)
             # check streambed elevations in relation to model top
             tops = self.sfr.parent.dis.top.array[i, j]
             reach_data = recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
@@ -1559,7 +1503,7 @@ class check:
             txt += 'Reach strtop, strthick not specified for nstrm={}, reachinput={} and isfropt={}\n' \
                 .format(self.sfr.nstrm, self.sfr.reachinput, self.sfr.isfropt)
             passed = True
-        self._txt_footer(headertxt, txt, 'reach elevations vs. grid elevations', passed)
+        self._txt_footer(headertxt, txt, 'reach elevations vs. grid elevations', passed, warning=warning)
 
         # In cases where segment end elevations/thicknesses are used,
         # do these need to be checked for consistency with layer bottoms?
@@ -1841,7 +1785,7 @@ def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
     return txt
 
 
-def parse_1c(line, reachinput, transroute):
+def _parse_1c(line, reachinput, transroute):
     """Parse Data Set 1c for SFR2 package.
     See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
 
@@ -1897,7 +1841,7 @@ def parse_1c(line, reachinput, transroute):
            isfropt, nstrail, isuzn, nsfrsets, irtflg, numtim, weight, flwtol, option
 
 
-def parse_6a(line, option):
+def _parse_6a(line, option):
     """Parse Data Set 6a for SFR2 package.
     See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
 
@@ -1954,7 +1898,7 @@ def parse_6a(line, option):
            pptsw, roughch, roughbk, cdpth, fdpth, awdth, bwdth, xyz
 
 
-def parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
+def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     """Parse Data Set 6b for SFR2 package.
     See http://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?sfr.htm for more info
 
