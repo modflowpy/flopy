@@ -919,7 +919,8 @@ class ModflowSfr2(Package):
         fmts = _fmt_string_list(self.segment_data[i][cols][j])
 
         nseg, icalc, outseg, iupseg, iprior, nstrpts, flow, runoff, etsw, \
-        pptsw, roughch, roughbk, cdpth, fdpth, awdth, bwdth = self.segment_data[i][cols][j]
+        pptsw, roughch, roughbk, cdpth, fdpth, awdth, bwdth = \
+            [0 if v == self.default_value else v for v in self.segment_data[i][cols][j]]
 
         f_sfr.write(' '.join(fmts[0:4]).format(nseg, icalc, outseg, iupseg) + ' ')
 
@@ -948,7 +949,8 @@ class ModflowSfr2(Package):
 
         icalc = self.segment_data[i][j][1]
         fmts = _fmt_string_list(self.segment_data[i][cols][j])
-        hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = self.segment_data[i][cols][j]
+        hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = \
+            [0 if v == self.default_value else v for v in self.segment_data[i][cols][j]]
 
         if self.isfropt in [0, 4, 5] and icalc <= 0:
             f_sfr.write(' '.join(fmts[0:5]).format(hcond, thickm, elevupdn, width, depth) + ' ')
