@@ -1651,20 +1651,20 @@ class Util2d(object):
 
         if self.format.binary and how in ["constant","internal"]:
             print("Util2d:{0} warning: ".format(self.name) +\
-                  "resetting how to external since format is binary")
+                  "resetting 'how' to external since format is binary")
             if self.model.free_format:
                 how = "openclose"
             else:
                 how = "external"
         if how == "internal":
-            assert not self.format.binary,"Util2d error: how is internal, but" +\
+            assert not self.format.binary,"Util2d error: 'how' is internal, but" +\
                                           "format is binary"
             cr = self.get_internal_cr()
             return cr + self.string
 
         elif how == "external" or how == "openclose":
             if how == "openclose":
-                assert self.model.free_format,"Util2d error: how is openclose," +\
+                assert self.model.free_format,"Util2d error: 'how' is openclose," +\
                                               "but model doesn't support free fmt"
 
             # write a file if needed
@@ -1703,15 +1703,16 @@ class Util2d(object):
         elif how == "constant":
             if self.vtype not in [int,np.float32]:
                 u = np.unique(self._array)
-                assert u.shape[0] == 1,"Util2d error: how is constant, but array " +\
-                                       "array is not uniform"
+                assert u.shape[0] == 1,"Util2d error: 'how' is constant, but array " +\
+                                       "is not uniform"
                 value = u[0]
             else:
                 value = self.__value
             return self.get_constant_cr(value)
 
         else:
-            raise Exception
+            raise Exception("Util2d.get_file_entry() error: " +\
+                            "unrecognized 'how':{0}".format(how))
 
     @property
     def string(self):
