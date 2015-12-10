@@ -88,7 +88,7 @@ class ArrayFormat(object):
 
         self.default_float_width = 15
         self.default_int_width = 10
-        self.default_float_format = "G"
+        self.default_float_format = "E"
         self.default_int_format = "I"
         self.default_float_decimal = 6
         self.default_int_decimal = 0
@@ -192,6 +192,9 @@ class ArrayFormat(object):
                 self._format = value
                 self._decimal = None
             else:
+                if value == 'G':
+                    print("'G' format being reset to 'E'")
+                    value = 'E'
                 self._format = value
                 if self.decimal is None:
                     self._decimal = self.default_float_decimal
@@ -1601,11 +1604,11 @@ class Util2d(object):
 
     def _get_fixed_cr(self,locat):
         if self.dtype == np.int:
-            cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n' \
+            cr = '{0:>10.0f}{1:>10.0f}{2:>19s}{3:>10.0f} #{4}\n' \
                 .format(locat, self.cnstnt, self.format.fortran,
                         self.iprn, self.name)
         elif self.dtype == np.float32:
-            cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n' \
+            cr = '{0:>10.0f}{1:>10.5G}{2:>19s}{3:>10.0f} #{4}\n' \
                 .format(locat, self.cnstnt, self.format.fortran,
                         self.iprn, self.name)
         else:
