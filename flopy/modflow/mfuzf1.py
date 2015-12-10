@@ -1,7 +1,17 @@
-﻿import sys
+﻿"""
+mfuzf1 module.  Contains the ModflowUzf1 class. Note that the user can access
+the ModflowUzf1 class as `flopy.modflow.ModflowUzf1`.
+
+Additional information for this MODFLOW package can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/uzf___unsaturated_zone_flow_pa_3.htm>`_.
+
+"""
+
+import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
+from flopy.utils import Util2d
 
 
 class ModflowUzf1(Package):
@@ -15,13 +25,13 @@ class ModflowUzf1(Package):
         this package will be added.
     nuztop : integer
         used to define which cell in a vertical column that recharge and discharge is simulated.
-            1 Recharge to and discharge from only the top model layer. This option assumes land surface is defined
-              as top of layer 1.
-            2 Recharge to and discharge from the specified layer in variable IUZFBND. This option assumes land
-              surface is defined as top of layer specified in IUZFBND.
-            3 Recharge to and discharge from the highest active cell in each vertical column. Land surface is
-              determined as top of layer specified in IUZFBND. A constant head node intercepts any recharge and
-              prevents deeper percolation.
+        1   Recharge to and discharge from only the top model layer. This option assumes land surface is defined
+            as top of layer 1.
+        2   Recharge to and discharge from the specified layer in variable IUZFBND. This option assumes land
+            surface is defined as top of layer specified in IUZFBND.
+        3   Recharge to and discharge from the highest active cell in each vertical column. Land surface is
+            determined as top of layer specified in IUZFBND. A constant head node intercepts any recharge and
+            prevents deeper percolation.
         (default is 1)
     iuzfopt : integer
         equal to 1 or 2. A value of 1 indicates that the vertical hydraulic conductivity will be
@@ -107,12 +117,13 @@ class ModflowUzf1(Package):
     row_col_iftunit_iuzopt : list
         used to specify where information will be printed for each time step. IUZOPT specifies what that information
         will be. IUZOPT is
-        1 Prints time, ground-water head, and thickness of unsaturated zone, and cumulative volumes of
-          infiltration, recharge, storage, change in storage and ground-water discharge to land surface.
-        2 Same as option 1 except rates of infiltration, recharge, change in storage, and ground-water discharge
-          also are printed.
-        3 Prints time, ground-water head, thickness of unsaturated zone, followed by a series of depths and
-          water contents in the unsaturated zone.
+
+        1   Prints time, ground-water head, and thickness of unsaturated zone, and cumulative volumes of
+            infiltration, recharge, storage, change in storage and ground-water discharge to land surface.
+        2   Same as option 1 except rates of infiltration, recharge, change in storage, and ground-water discharge
+            also are printed.
+        3   Prints time, ground-water head, thickness of unsaturated zone, followed by a series of depths and
+            water contents in the unsaturated zone.
         (default is [])
     specifythtr : boolean
         key word for specifying optional input variable THTR
@@ -229,31 +240,31 @@ class ModflowUzf1(Package):
         self.surfdep = surfdep
         # Data Set 2
         # IUZFBND (NCOL, NROW) -- U2DINT
-        self.iuzfbnd = util_2d(model, (nrow, ncol), np.int, iuzfbnd, name='iuzfbnd')
+        self.iuzfbnd = Util2d(model, (nrow, ncol), np.int, iuzfbnd, name='iuzfbnd')
         # If IRUNFLG > 0: Read item 3
         # Data Set 3
         # [IRUNBND (NCOL, NROW)] -- U2DINT
         if irunflg > 0:
-            self.irunbnd = util_2d(model, (nrow, ncol), np.int, irunbnd, name='irunbnd')
+            self.irunbnd = Util2d(model, (nrow, ncol), np.int, irunbnd, name='irunbnd')
         # IF the absolute value of IUZFOPT = 1: Read item 4.
         # Data Set 4
         # [VKS (NCOL, NROW)] -- U2DREL
         if abs(iuzfopt) == 1:
-            self.vks = util_2d(model, (nrow, ncol), np.float32, vks, name='vks')
+            self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
         if iuzfopt > 0:
             # Data Set 5
             # EPS (NCOL, NROW) -- U2DREL
-            self.eps = util_2d(model, (nrow, ncol), np.float32, eps, name='eps')
+            self.eps = Util2d(model, (nrow, ncol), np.float32, eps, name='eps')
             # Data Set 6a
             # THTS (NCOL, NROW) -- U2DREL
-            self.thts = util_2d(model, (nrow, ncol), np.float32, thts, name='thts')
+            self.thts = Util2d(model, (nrow, ncol), np.float32, thts, name='thts')
             # Data Set 6b
             # THTS (NCOL, NROW) -- U2DREL
             if self.specifythtr > 0:
-                self.thtr = util_2d(model, (nrow, ncol), np.float32, thtr, name='thtr')
+                self.thtr = Util2d(model, (nrow, ncol), np.float32, thtr, name='thtr')
             # Data Set 7
             # [THTI (NCOL, NROW)] -- U2DREL
-            self.thti = util_2d(model, (nrow, ncol), np.float32, thti, name='thti')
+            self.thti = Util2d(model, (nrow, ncol), np.float32, thti, name='thti')
         # Data Set 8
         # [IUZROW] [IUZCOL] IFTUNIT [IUZOPT]
         if len(row_col_iftunit_iuzopt) != nuzgag:
@@ -278,7 +289,7 @@ class ModflowUzf1(Package):
         if (not isinstance(finf, list)):
             finf = [finf]
         for i, a in enumerate(finf):
-            b = util_2d(model, (nrow, ncol), np.float32, a, name='finf_' + str(i + 1))
+            b = Util2d(model, (nrow, ncol), np.float32, a, name='finf_' + str(i + 1))
             self.finf.append(b)
         if ietflg > 0:
             # Data Set 12
@@ -287,7 +298,7 @@ class ModflowUzf1(Package):
             if (not isinstance(pet, list)):
                 pet = [pet]
             for i, a in enumerate(pet):
-                b = util_2d(model, (nrow, ncol), np.float32, a, name='pet_' + str(i + 1))
+                b = Util2d(model, (nrow, ncol), np.float32, a, name='pet_' + str(i + 1))
                 self.pet.append(b)
             # Data Set 14
             # [EXTDP (NCOL, NROW)] – U2DREL
@@ -295,7 +306,7 @@ class ModflowUzf1(Package):
             if (not isinstance(extdp, list)):
                 extdp = [extdp]
             for i, a in enumerate(extdp):
-                b = util_2d(model, (nrow, ncol), np.float32, a, name='extdp_' + str(i + 1))
+                b = Util2d(model, (nrow, ncol), np.float32, a, name='extdp_' + str(i + 1))
                 self.extdp.append(b)
             # Data Set 16
             # [EXTWC (NCOL, NROW)] – U2DREL
@@ -304,12 +315,9 @@ class ModflowUzf1(Package):
                 if (not isinstance(extwc, list)):
                     extwc = [extwc]
                 for i, a in enumerate(extwc):
-                    b = util_2d(model, (nrow, ncol), np.float32, a, name='extwc_' + str(i + 1))
+                    b = Util2d(model, (nrow, ncol), np.float32, a, name='extwc_' + str(i + 1))
                     self.extwc.append(b)
         self.parent.add_package(self)
-
-    def __repr__(self):
-        return 'UZF1 class'
 
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developped for MT3DMS SSM package)
@@ -317,10 +325,18 @@ class ModflowUzf1(Package):
         return (nrow * ncol)
 
     def write_file(self):
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_uzf = open(self.fn_path, 'w')
-        f_uzf.write('%s\n' % self.heading)
+        f_uzf.write('{}\n'.format(self.heading))
         # Dataset 1a
         specify_temp = ''
         if self.specifythtr > 0:

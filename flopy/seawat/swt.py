@@ -3,22 +3,23 @@ from .swtvdf import SeawatVdf
 import os
 
 class SeawatList(Package):
-    '''
+    """
     List Package class
-    '''
+    """
     def __init__(self, model, extension='list'):
         #Call ancestor's init to set self.parent, extension, name and 
         #unit number
         Package.__init__(self, model, extension, 'LIST', 7) 
         #self.parent.add_package(self) This package is not added to the base 
         #model so that it is not included in get_name_file_entries()
+        return
 
     def __repr__( self ):
         return 'List package class'
 
     def write_file(self):
-    	# Not implemented for list class
-    	return
+        # Not implemented for list class
+        return
 
 class Seawat(BaseModel):
     '''
@@ -60,6 +61,14 @@ class Seawat(BaseModel):
     vdf = property(getvdf) # Property has no setter, so read-only
 
     def write_name_file(self):
+        """
+        Write the name file
+
+        Returns
+        -------
+        None
+
+        """
         fn_path = os.path.join(self.model_ws,self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('%s\n' % (self.heading) )

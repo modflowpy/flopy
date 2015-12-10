@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils.util_list import mflist
+from flopy.utils.util_list import MfList
 
 
 class ModflowChd(Package):
@@ -105,19 +105,24 @@ class ModflowChd(Package):
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        self.stress_period_data = mflist(self, stress_period_data)
+        self.stress_period_data = MfList(self, stress_period_data)
 
         self.np = 0
         self.parent.add_package(self)
-
-    def __repr__(self):
-        return 'CHD package class'
 
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
     def write_file(self):
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
         f_chd = open(self.fn_path, 'w')
         f_chd.write('{0:s}\n'.format(self.heading))
         f_chd.write(' {0:9d}\n'.format(self.stress_period_data.mxact))

@@ -1,6 +1,6 @@
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_3d
+from flopy.utils import Util3d
 
 
 class SeawatVsc(Package):
@@ -149,12 +149,20 @@ class SeawatVsc(Package):
             amucoeff = [0.001, 1, 0.015512, -20., -1.572]
         self.amucoeff = amucoeff
         self.invisc = invisc
-        self.visc = util_3d(model, (nlay, nrow, ncol), np.float32, visc,
+        self.visc = Util3d(model, (nlay, nrow, ncol), np.float32, visc,
                             name='visc')
         self.parent.add_package(self)
         return
 
     def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         f_vsc = open(self.fn_path, 'w')
 

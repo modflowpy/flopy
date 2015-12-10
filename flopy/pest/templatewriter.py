@@ -1,7 +1,7 @@
 from __future__ import print_function
 from ..pest import tplarray as tplarray
-from ..utils.util_array import util_3d as util_3d
-from ..utils.util_array import transient_2d as transient_2d
+from ..utils.util_array import Util3d as Util3d
+from ..utils.util_array import Transient2d as Transient2d
 
 class TemplateWriter(object):
     """

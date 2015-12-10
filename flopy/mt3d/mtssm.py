@@ -2,9 +2,9 @@ import sys
 import numpy as np
 import warnings
 from flopy.mbase import Package
-from flopy.utils import util_2d
-from flopy.utils.util_list import mflist
-from flopy.utils.util_array import transient_2d
+from flopy.utils import Util2d
+from flopy.utils.util_list import MfList
+from flopy.utils.util_array import Transient2d
 
 # Note: Order matters as first 6 need logical flag on line 1 of SSM file
 SsmLabels = ['WEL', 'DRN', 'RCH', 'EVT', 'RIV', 'GHB', 'BAS6', 'CHD', 'PBC']
@@ -172,7 +172,7 @@ class Mt3dSsm(Package):
         if stress_period_data is None:
             self.stress_period_data = None
         else:
-            self.stress_period_data = mflist(self, model=model,
+            self.stress_period_data = MfList(self, model=model,
                                          data=stress_period_data)
 
         if mxss is None and self.parent.mf is None:
@@ -201,7 +201,7 @@ class Mt3dSsm(Package):
         # Note: list is used for multi-species, NOT for stress periods!
         if crch is not None:
             self.crch = []
-            t2d = transient_2d(model, (nrow, ncol), np.float32,
+            t2d = Transient2d(model, (nrow, ncol), np.float32,
                                crch, name='crch1',
                                locat=self.unit_number[0])
             self.crch.append(t2d)
@@ -215,7 +215,7 @@ class Mt3dSsm(Package):
                         print("SSM: setting crch for component " +\
                               str(icomp) + " to zero. kwarg name " +\
                               name)
-                    t2d = transient_2d(model, (nrow, ncol), np.float32,
+                    t2d = Transient2d(model, (nrow, ncol), np.float32,
                                        val, name=name,
                                        locat=self.unit_number[0])
                     self.crch.append(t2d)
@@ -224,7 +224,7 @@ class Mt3dSsm(Package):
 
         if cevt is not None:
             self.cevt = []
-            t2d = transient_2d(model, (nrow, ncol), np.float32,
+            t2d = Transient2d(model, (nrow, ncol), np.float32,
                                cevt, name='cevt1',
                                locat=self.unit_number[0])
             self.cevt.append(t2d)
@@ -239,7 +239,7 @@ class Mt3dSsm(Package):
                         print("SSM: setting cevt for component " +\
                               str(icomp) + " to zero, kwarg name " +\
                               name)
-                    t2d = transient_2d(model, (nrow, ncol), np.float32,
+                    t2d = Transient2d(model, (nrow, ncol), np.float32,
                                        val, name=name,
                                        locat=self.unit_number[0])
                     self.cevt.append(t2d)
@@ -295,10 +295,13 @@ class Mt3dSsm(Package):
 
     def write_file(self):
         """
-        Write the SSM file
+        Write the package file
+
+        Returns
+        -------
+        None
 
         """
-
         # Open file for writing
         f_ssm = open(self.fn_path, 'w')
         for p in self.__SsmPackages:
@@ -467,7 +470,7 @@ class Mt3dSsm(Package):
             if incrch >= 0:
                 if model.verbose:
                     print('   loading CRCH...')
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, 'crch',
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'crch',
                                  ext_unit_dict)
                 crch[iper] = t
 
@@ -483,7 +486,7 @@ class Mt3dSsm(Package):
             if incevt >= 0:
                 if model.verbose:
                     print('   loading CEVT...')
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, 'cevt',
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'cevt',
                                  ext_unit_dict)
                 cevt[iper] = t
 

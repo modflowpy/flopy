@@ -11,7 +11,7 @@ import sys
 import collections
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
+from flopy.utils import Util2d
 
 class ModflowMlt(Package):
     """
@@ -74,8 +74,15 @@ class ModflowMlt(Package):
 
     def write_file(self):
         """
-        Write the package input file.
-        Nothing is written since parameters are only supported on load
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Not implemented because parameters are only supported on load
 
         """
         pass
@@ -156,7 +163,7 @@ class ModflowMlt(Package):
                     kwrd = t[1].lower()
             # load data
             if readArray:
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, mltnam,
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, mltnam,
                                  ext_unit_dict)
                 # add unit number to list of external files in ext_unit_dict to remove.
                 if t.locat is not None:

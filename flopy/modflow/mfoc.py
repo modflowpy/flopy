@@ -192,12 +192,13 @@ class ModflowOc(Package):
 
         self.parent.add_package(self)
 
-    def __repr__( self ):
-        return 'Output control package class'
-
     def write_file(self):
         """
-        Write the file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         f_oc = open(self.fn_path, 'w')

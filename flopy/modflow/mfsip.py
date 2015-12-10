@@ -1,3 +1,13 @@
+"""
+mfsip module.  Contains the ModflowSip class. Note that the user can access
+the ModflowSip class as `flopy.modflow.ModflowSip`.
+
+Additional information for this MODFLOW package can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?sip.htm>`_.
+
+"""
+
 import sys
 from flopy.mbase import Package
 
@@ -21,20 +31,20 @@ class ModflowSip(Package):
         it is changed to one. (default is 1)
     hclose : float > 0
         The head change criterion for convergence. When the maximum absolute value of head change from all nodes
-        during an iteration is less than or equal to HCLOSE, iteration stops. (default is 1e-5)
+        during an iteration is less than or equal to hclose, iteration stops. (default is 1e-5)
     ipcalc : 0 or 1
         A flag indicating where the seed for calculating iteration variables will come from.
             0 is the seed entered by the user will be used.
             1 is the seed will be calculated at the start of the simulation from problem variables.
         (default is 0)
     wseed : float > 0
-        The seed for calculating iteration variables. WSEED is always read,
-        but is used only if IPCALC is equal to zero. (default is 0)
+        The seed for calculating iteration variables. wseed is always read,
+        but is used only if ipcalc is equal to zero. (default is 0)
     iprsip : integer > 0
-        the printout interval for SIP. IPRSIP, if equal to zero, is changed to 999.
+        the printout interval for sip. iprsip, if equal to zero, is changed to 999.
         The maximum head change (positive or negative) is printed for each iteration of
-        a time step whenever the time step is an even multiple of IPRSIP. This printout
-        also occurs at the end of each stress period regardless of the value of IPRSIP.
+        a time step whenever the time step is an even multiple of iprsip. This printout
+        also occurs at the end of each stress period regardless of the value of iprsip.
         (default is 0)
     extension : string
         Filename extension (default is 'sip')
@@ -82,7 +92,11 @@ class ModflowSip(Package):
 
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         # Open file for writing

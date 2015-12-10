@@ -7,7 +7,7 @@ the ModflowDisU class as `flopy.modflow.ModflowDisU`.
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d, read1d
+from flopy.utils import Util2d, Util3d, read1d
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
@@ -223,45 +223,45 @@ class ModflowDisU(Package):
         self.idsymrd = idsymrd
 
         # LAYCBD
-        self.laycbd = util_2d(model, (self.nlay,), np.int, laycbd,
+        self.laycbd = Util2d(model, (self.nlay,), np.int, laycbd,
                               name='laycbd')
         self.laycbd[-1] = 0  # bottom layer must be zero
 
         # NODELAY
         if nodelay is None:
             nodelay = nodes / nlay
-        self.nodelay = util_2d(model, (self.nlay,), np.int, nodelay,
+        self.nodelay = Util2d(model, (self.nlay,), np.int, nodelay,
                                name='nodelay', locat=self.unit_number[0])
 
         # Top and bot are both 1d arrays of size nodes
-        self.top = util_3d(model, (nlay, 1, nodes), np.float32, top, name='top',
+        self.top = Util3d(model, (nlay, 1, nodes), np.float32, top, name='top',
                            locat=self.unit_number[0])
-        self.bot = util_3d(model, (nlay, 1, nodes), np.float32, bot, name='bot',
+        self.bot = Util3d(model, (nlay, 1, nodes), np.float32, bot, name='bot',
                            locat=self.unit_number[0])
 
 
-        # Area is util_2d if ivsd == -1, otherwise it is util_3d
+        # Area is Util2d if ivsd == -1, otherwise it is Util3d
         if ivsd == -1:
-            self.area = util_2d(model, (self.nodelay[0],), np.float32, area,
+            self.area = Util2d(model, (self.nodelay[0],), np.float32, area,
                                 'area', locat=self.unit_number[0])
         else:
-            self.area = util_3d(model, (nlay, 1, nodes), np.float32, area,
+            self.area = Util3d(model, (nlay, 1, nodes), np.float32, area,
                                 name='area', locat=self.unit_number[0])
 
         # Connectivity and ivc
         if iac is None:
             raise Exception('iac must be provided')
-        self.iac = util_2d(model, (self.nodes,), np.int,
+        self.iac = Util2d(model, (self.nodes,), np.int,
                            iac, name='iac', locat=self.unit_number[0])
         if ja is None:
             raise Exception('ja must be provided')
-        self.ja = util_2d(model, (self.njag,), np.int,
+        self.ja = Util2d(model, (self.njag,), np.int,
                           ja, name='ja', locat=self.unit_number[0])
         self.ivc = None
         if self.ivsd == 1:
             if ivc is None:
                 raise Exception('ivc must be provided if ivsd is 1.')
-            self.ivc = util_2d(model, (self.njag,), np.int,
+            self.ivc = Util2d(model, (self.njag,), np.int,
                                ivc, name='ivc', locat=self.unit_number[0])
 
         # Connection lengths
@@ -271,15 +271,15 @@ class ModflowDisU(Package):
                 raise Exception('idsymrd is 1 but cl1 was not specified.')
             if cl2 is None:
                 raise Exception('idsymrd is 1 but cl2 was not specified.')
-            self.cl1 = util_2d(model, (njags,), np.float32,
+            self.cl1 = Util2d(model, (njags,), np.float32,
                                cl1, name='cl1', locat=self.unit_number[0])
-            self.cl2 = util_2d(model, (njags,), np.float32,
+            self.cl2 = Util2d(model, (njags,), np.float32,
                                cl2, name='cl2', locat=self.unit_number[0])
 
         if idsymrd == 0:
             if cl12 is None:
                 raise Exception('idsymrd is 0 but cl12 was not specified')
-            self.cl12 = util_2d(model, (self.njag,), np.float32,
+            self.cl12 = Util2d(model, (self.njag,), np.float32,
                                 cl12, name='cl12', locat=self.unit_number[0])
 
         # Flow area (set size of array to njag or njags depending on idsymrd)
@@ -289,16 +289,16 @@ class ModflowDisU(Package):
             n = njags
         elif idsymrd == 0:
             n = self.njag
-        self.fahl = util_2d(model, (n,), np.float32,
+        self.fahl = Util2d(model, (n,), np.float32,
                             fahl, name='fahl', locat=self.unit_number[0])
 
         # Stress period information
-        self.perlen = util_2d(model, (self.nper,), np.float32, perlen,
+        self.perlen = Util2d(model, (self.nper,), np.float32, perlen,
                               name='perlen')
-        self.nstp = util_2d(model, (self.nper,), np.int, nstp, name='nstp')
-        self.tsmult = util_2d(model, (self.nper,), np.float32, tsmult,
+        self.nstp = Util2d(model, (self.nper,), np.int, nstp, name='nstp')
+        self.tsmult = Util2d(model, (self.nper,), np.float32, tsmult,
                               name='tsmult')
-        self.steady = util_2d(model, (self.nper,), np.bool,
+        self.steady = Util2d(model, (self.nper,), np.bool,
                               steady, name='steady')
 
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
@@ -320,14 +320,14 @@ class ModflowDisU(Package):
         thk = []
         for k in range(self.nlay):
             thk.append(self.top[k] - self.bot[k])
-        self.__thickness = util_3d(self.parent, (self.nlay, 1, self.nodes),
+        self.__thickness = Util3d(self.parent, (self.nlay, 1, self.nodes),
                                    np.float32, thk, name='thickness')
         return
 
     @property
     def thickness(self):
         """
-        Get a util_2d array of cell thicknesses.
+        Get a Util2d array of cell thicknesses.
 
         Returns
         -------
@@ -457,7 +457,7 @@ class ModflowDisU(Package):
         # dataset 3 -- nodelay
         if model.verbose:
             print('   loading NODELAY...')
-        nodelay = util_2d.load(f, model, (1, nlay), np.int, 'nodelay',
+        nodelay = Util2d.load(f, model, (1, nlay), np.int, 'nodelay',
                                ext_unit_dict)
         if model.verbose:
             print('   NODELAY {}'.format(nodelay))
@@ -467,7 +467,7 @@ class ModflowDisU(Package):
             print('   loading TOP...')
         top = [0] * nlay
         for k in range(nlay):
-            tpk = util_2d.load(f, model, (1, nodelay[k]), np.float32, 'top',
+            tpk = Util2d.load(f, model, (1, nodelay[k]), np.float32, 'top',
                                ext_unit_dict)
             top[k] = tpk
         if model.verbose:
@@ -479,7 +479,7 @@ class ModflowDisU(Package):
             print('   loading BOT...')
         bot = [0] * nlay
         for k in range(nlay):
-            btk = util_2d.load(f, model, (1, nodelay[k]), np.float32, 'btk',
+            btk = Util2d.load(f, model, (1, nodelay[k]), np.float32, 'btk',
                                ext_unit_dict)
             bot[k] = btk
         if model.verbose:
@@ -490,14 +490,14 @@ class ModflowDisU(Package):
         if model.verbose:
             print('   loading AREA...')
         if ivsd == -1:
-            area = util_2d.load(f, model, (1, nodelay[0]), np.float32, 'area',
+            area = Util2d.load(f, model, (1, nodelay[0]), np.float32, 'area',
                                    ext_unit_dict)
         else:
             area = [0] * nlay
             #area = np.empty((nodes), dtype=np.float32)
             #istart = 0
             for k in range(nlay):
-                ak = util_2d.load(f, model, (1, nodelay[k]), np.float32, 'ak',
+                ak = Util2d.load(f, model, (1, nodelay[k]), np.float32, 'ak',
                                    ext_unit_dict)
                 #area[istart : istart + nodelay[k]] = ak.array.reshape((nodelay[k]))
                 #istart += nodelay[k]
@@ -508,7 +508,7 @@ class ModflowDisU(Package):
         # dataset 7 -- iac
         if model.verbose:
             print('   loading IAC...')
-        iac = util_2d.load(f, model, (1, nodes), np.int, 'iac',
+        iac = Util2d.load(f, model, (1, nodes), np.int, 'iac',
                                ext_unit_dict)
         iac = iac.array.reshape((nodes))
         if model.verbose:
@@ -517,7 +517,7 @@ class ModflowDisU(Package):
         # dataset 8 -- ja
         if model.verbose:
             print('   loading JA...')
-        ja = util_2d.load(f, model, (1, njag), np.int, 'ja',
+        ja = Util2d.load(f, model, (1, njag), np.int, 'ja',
                                ext_unit_dict)
         ja = ja.array.reshape((njag))
         if model.verbose:
@@ -528,7 +528,7 @@ class ModflowDisU(Package):
         if ivsd == 1:
             if model.verbose:
                 print('   loading IVC...')
-            ivc = util_2d.load(f, model, (1, njag), np.int, 'ivc',
+            ivc = Util2d.load(f, model, (1, njag), np.int, 'ivc',
                                    ext_unit_dict)
             ivc = ivc.array.reshape((njag))
             if model.verbose:
@@ -539,7 +539,7 @@ class ModflowDisU(Package):
         if idsymrd == 1:
             if model.verbose:
                 print('   loading CL1...')
-            cl1 = util_2d.load(f, model, (1, njags), np.float32, 'cl1',
+            cl1 = Util2d.load(f, model, (1, njags), np.float32, 'cl1',
                                    ext_unit_dict)
             cl1 = cl1.array.reshape((njags))
             if model.verbose:
@@ -550,7 +550,7 @@ class ModflowDisU(Package):
         if idsymrd == 1:
             if model.verbose:
                 print('   loading CL2...')
-            cl2 = util_2d.load(f, model, (1, njags), np.float32, 'cl2',
+            cl2 = Util2d.load(f, model, (1, njags), np.float32, 'cl2',
                                    ext_unit_dict)
             cl2 = cl2.array.reshape((njags))
             if model.verbose:
@@ -561,7 +561,7 @@ class ModflowDisU(Package):
         if idsymrd == 0:
             if model.verbose:
                 print('   loading CL12...')
-            cl12 = util_2d.load(f, model, (1, njag), np.float32, 'cl12',
+            cl12 = Util2d.load(f, model, (1, njag), np.float32, 'cl12',
                                    ext_unit_dict)
             cl12 = cl12.array.reshape((njag))
             if model.verbose:
@@ -575,7 +575,7 @@ class ModflowDisU(Package):
             n = njags
         if model.verbose:
             print('   loading FAHL...')
-        fahl = util_2d.load(f, model, (1, n), np.float32, 'fahl',
+        fahl = Util2d.load(f, model, (1, n), np.float32, 'fahl',
                                ext_unit_dict)
         fahl = fahl.array.reshape((n))
         if model.verbose:
@@ -622,7 +622,11 @@ class ModflowDisU(Package):
 
     def write_file(self):
         """
-        Write the file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         # Open file for writing
@@ -839,11 +843,11 @@ class ModflowDisU(Package):
     #         self.nrow = cnf_nrow
     #         self.ncol = cnf_ncol
     #
-    #         self.delr = util_2d(model, (self.ncol,), np.float32, cnf_delr,
+    #         self.delr = Util2d(model, (self.ncol,), np.float32, cnf_delr,
     #                             name='delr', locat=self.unit_number[0])
-    #         self.delc = util_2d(model, (self.nrow,), np.float32, cnf_delc,
+    #         self.delc = Util2d(model, (self.nrow,), np.float32, cnf_delc,
     #                             name='delc', locat=self.unit_number[0])
-    #         self.top = util_2d(model, (self.nrow, self.ncol), np.float32,
+    #         self.top = Util2d(model, (self.nrow, self.ncol), np.float32,
     #                            cnf_top, name='model_top',
     #                            locat=self.unit_number[0])
     #
@@ -856,7 +860,7 @@ class ModflowDisU(Package):
     #         for l in range(1, self.nlay):
     #             cnf_botm[l, :, :] = cnf_botm[l - 1, :, :] - cnf_dz[l, :, :]
     #
-    #         self.botm = util_3d(model, (self.nlay + sum(self.laycbd),
+    #         self.botm = Util3d(model, (self.nlay + sum(self.laycbd),
     #                                     self.nrow, self.ncol), np.float32,
     #                             cnf_botm, 'botm',
     #                             locat=self.unit_number[0])

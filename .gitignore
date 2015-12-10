@@ -64,6 +64,7 @@ examples/Notebooks/.ipynb_checkpoints
 examples/Testing/.idea
 examples/Testing/data
 examples/Testing/.ipynb_checkpoints
+examples/scripts/data
 
 
 autotest/*.bin

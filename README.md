@@ -3,6 +3,9 @@
 
 ### Version 3.2.3
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
+[![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/flopy.png)](https://pypi.python.org/pypi/flopy)
+
 
 ## Introduction
 
@@ -30,6 +33,12 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of the options to enter *layer, row, column, data* values for packages such as the wel and ghb packages is given in the [flopy3boundaries](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3boundaries.ipynb) Notebook
 
++ An overview of how to control the format of numeric arrays written by FloPy to MODFLOW-based input files is given in the [flopy3_array_outputformat_options](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_array_outputformat_options.ipynb) Notebook.
+
++ An overview of how FloPy3 handles external files for numeric arrays written by FloPy to MODFLOW-based input files is given in the [flopy3_external_file_handling](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_external_file_handling.ipynb) Notebook.
+
++ An overview of FloPy3 capabilities to load a SFR2 file and evaluate data contained in the file is given in the [flopy3_SFR2_load](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_SFR2_load.ipynb) Notebook.
+
 + The [lake example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/lake_example.ipynb), a very simple *FloPy<sub>3</sub>* example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
 
 + A variant of the [water-table example](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_WatertableRecharge_example.ipynb), a very simple example of one-dimensional groundwater flow in an unconfined aquifer with recharge, from the MODFLOW-NWT documentation (http://pubs.usgs.gov/tm/tm6a37/). This IPython Notebook build files for MODFLOW-NWT.
@@ -49,7 +58,12 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 #### Plotting examples
 
 + An overview of the *FloPy<sub>3</sub>* [map and cross-section plotting capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_MapExample.ipynb).
+
 + An overview of the *FloPy<sub>3</sub>*  [model input and output data `plot()` method capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_PlotArrayExample.ipynb)
+
+#### Export examples
+
++ An overview of the *FloPy<sub>3</sub>* [netCDF export capabilities](http://nbviewer.ipython.org/github/modflowpy/flopy/blob/master/examples/Notebooks/flopy3_netCDF.ipynb).
 
 #### Parameter Estimation examples
 
@@ -59,9 +73,11 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + Example problems from the 2015 2nd edition of [Applied Groundwater Modeling](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt (https://github.com/Applied-Groundwater-Modeling-2nd-Ed)
 
-### SWI2 Test Problems for *FloPy<sub>3</sub>*
+### Python Script Examples
 
-*FloPy<sub>3</sub>* scripts for running and post-processing the SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) are available:
+*FloPy<sub>3</sub>* scripts for running and post-processing the lake example and SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) are available:
+
++ [Lake Example](https://github.com/modflowpy/flopy/blob/master/examples/scripts/lake_example.py)
 
 + [SWI2 Example 1](https://github.com/modflowpy/flopy/blob/master/examples/scripts/flopy_swi2_ex1.py)
 
@@ -92,7 +108,7 @@ A few simple *FloPy<sub>3</sub>* tutorials are available at:
 
 **Dependencies:**
 
-*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the flopy.plot submodule require **Pyshp** 1.2 (or higher).
+*FloPy<sub>3</sub>* requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the `flopy.plot` submodule and shapefile export capabilities (`to_shapefile()`) require **Pyshp** 1.2 (or higher). The NetCDF export capabilities in the `flopy.export` submodule require **python-dateutil** 2.4 (or higher), **netcdf4** 1.1 (or higher), and **pyproj** 1.9 (or higher). Other NetCDF dependencies are detailed on the [UniData](http://unidata.github.io/netcdf4-python/) website. The `get_dataframes` method in the `ListBudget` class in the `flopy.utils` submodule require **pandas** 0.15 (or higher).
 
 
 **For base Python distributions:**
@@ -141,18 +157,13 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Direct Solver (DE4)                            | Supported            | Supported            | Not supported        |
 | Discretization (DIS)                           | Supported            | Supported            | Not supported        |
 | Drain (DRN)                                    | Supported            | Supported            | Not supported        |
-| Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
 | Drain Return (DRT)                             | Not supported        | Not supported        | Not supported        |
 | Evapotranspiration (EVT)                       | Supported            | Supported            | Not supported        |
 | Evapotranspiration Segments (ETS)              | Not supported        | Not supported        | Not supported        |
 | Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
-| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
 | General Head Boundary (GHB)                    | Supported            | Supported            | Not supported        |
-| General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
 | Geometric Multi-Grid (GMG)                     | Supported            | Supported            | Not supported        |
-| Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
 | Horizontal Flow Barrier (HFB)                  | Supported            | Supported            | Not supported        |
-| HYDMOD (HYD)                                   | Not supported        | Not supported        | Not supported        |
 | Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
 | Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
@@ -171,18 +182,15 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
 | Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
 | River (RIV)                                    | Supported            | Supported            | Not supported        |
-| River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
 | Streamflow Routing (SFR2)                      | Supported            | Supported            | Not supported        |
 | Strongly Implicit Procedure (SIP)              | Supported            | Not supported        | Not supported        |
 | Slice-successive Overrelaxation (SOR)          | Supported            | Not supported        | Not supported        |
 | Stream (STR)                                   | Supported            | Supported            | Not supported        |
-| Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
 | Seawater Intrusion (SWI)                       | Supported            | Not supported        | Not supported        |
 | Seawater Intrusion (SWI2)                      | Supported            | Supported            | Not supported        |
 | Surface-Water Routing (SWR)                    | Not supported        | Not supported        | Not supported        |
 | Subsidence (SUB)                               | Supported            | Supported            | Not supported        |
 | Subsidence and Aquifer-System <br />Compaction (SWT) | Supported            | Supported            | Not supported        |
-| Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
 | Upstream Weighted (UPW)                        | Supported            | Supported            | Not supported        |
 | Unzaturated Zone Flow (UZF)                    | Supported            | Not supported        | Not supported        |
 | Well (WEL)                                     | Supported            | Supported            | Not supported        |
@@ -191,7 +199,8 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 ### MODFLOW-USG
 | Package                                      | Creation and Write   | Load Available       | Template Creation    |
 | -------------------------------------------- | -------------------- | -------------------- | -------------------- |
-| Sparse Matrix Solver (SMS)                   | Supported            | Not supported        | Not supported        |
+| Unstructured Discretization (DISU)           | Supported            | Supported            | Not supported        |
+| Sparse Matrix Solver (SMS)                   | Supported            | Supported            | Not supported        |
 
 ### MODPATH
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
@@ -217,16 +226,30 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 | Variable Density Flow (VDF)              | Supported            | Supported            | Not supported        |
 | Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
 
+### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT Observations
+| Package                                        | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
+| Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
+| HYDMOD (HYD)                                   | Supported            | Supported            | Not supported        |
+| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
+| General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
+| Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
+| River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
+| Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
+| Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
+
 
 --------------------------------
 
 ## FloPy<sub>3</sub> Changes
 
 ### Version 3.2.3
-* `flopy.utils.CellBudgetFile` returns a numpy recarray for list based budget data. Previously a dictionary with the `node` number and `q` were returned. The recarray will return the `node` number, `q`, and the `aux` variables for list based budget data.
 * Added support for the SEAWAT viscosity (VSC) package.
+* Added support for the MODFLOW Stream (STR), Streamflow-Routing (SFR2), Subsidence (SUB), and Subsidence and Aquifer-System Compaction Package for Water-Table Aquifers (SWT) Packages.
 * Mt3d model was redesigned based on recent changes to the Modflow model.  Mt3d packages rewritten to support multi-species.  Primary packages can be loaded (btn, adv, dsp, ssm, gcg).  Array utilities modified to read some MT3D RARRAY formats.
 * Fixed array loading functionality for case when the CNSTNT value is zero.  If CNSTNT is zero and is used as an array multiplier, it is changed to 1 (as done in MODFLOW).
+* Added support for the MODFLOW HYDMOD (HYD) Package and reading binary files created by the HYDMOD Package (`HydmodObs` Class) in the `flopy.utils` submodule.
+* `flopy.utils.CellBudgetFile` returns a numpy recarray for list based budget data. Previously a dictionary with the `node` number and `q` were returned. The recarray will return the `node` number, `q`, and the `aux` variables for list based budget data.
 * Added travis-ci automated testing.
 
 ### Version 3.2.2

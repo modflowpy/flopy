@@ -11,7 +11,7 @@ import sys
 import collections
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d
+from flopy.utils import Util2d
 
 class ModflowPval(Package):
     """
@@ -72,8 +72,15 @@ class ModflowPval(Package):
 
     def write_file(self):
         """
-        Write the package input file.
-        Nothing is written since parameters are only supported on load
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Not implemented because parameters are only supported on load
 
         """
         pass

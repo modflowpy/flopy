@@ -108,12 +108,13 @@ class ModflowPcg(Package):
         self.ihcofadd = ihcofadd
         self.parent.add_package(self)
 
-    def __repr__( self ):
-        return 'Preconditioned conjugate gradient solver package class'
-
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file.
+
+        Returns
+        -------
+        None
 
         """
         f = open(self.fn_path, 'w')

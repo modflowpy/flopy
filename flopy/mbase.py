@@ -11,8 +11,8 @@ from numpy.lib.recfunctions import stack_arrays
 import sys
 import os
 import subprocess as sp
+import copy
 import webbrowser as wb
-import warnings
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from flopy import utils
 
@@ -89,7 +89,7 @@ class BaseModel(object):
                 # print '\n%s not valid, workspace-folder was changed to %s\n' % (model_ws, os.getcwd())
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd()))
                 model_ws = os.getcwd()
-        self.model_ws = model_ws
+        self._model_ws = model_ws
         self.structured = structured
         self.pop_key_list = []
         self.cl_params = ''
@@ -99,18 +99,6 @@ class BaseModel(object):
         for pak in self.packagelist:
            f = pak.export(f)
         return f
-
-    def set_exename(self, exe_name):
-        """
-        Set the name of the executable.
-
-        Parameters
-        ----------
-        exe_name : name of the executable
-
-        """
-        self.exe_name = exe_name
-        return
 
     def add_package(self, p):
         """
@@ -168,39 +156,6 @@ class BaseModel(object):
         """
         return self.get_package(item)
 
-    def build_array_name(self, num, prefix):
-        """
-        Build array name
-
-        Parameters
-        ----------
-        num : int
-            array number
-        prefix : string
-            array prefix
-
-        """
-        return self.external_path + prefix + '_' + str(num) + '.' + self.external_extension
-
-    def assign_external(self, num, prefix):
-        """
-        Assign external file
-
-        Parameters
-        ----------
-        num : int
-            array number
-        prefix : string
-            array prefix
-
-        """
-        fname = self.build_array_name(num, prefix)
-        unit = (self.next_ext_unit())
-        self.external_fnames.append(fname)
-        self.external_units.append(unit)
-        self.external_binflag.append(False)
-        return fname, unit
-
     def add_external(self, fname, unit, binflag=False):
         """
         Assign an external array so that it will be listed as a DATA or
@@ -217,6 +172,14 @@ class BaseModel(object):
             binary or not. (default is False)
 
         """
+        if fname in self.external_fnames:
+            print ("BaseModel.add_external() warning: " +
+                   "replacing existing filename {0}".format(fname))
+            idx = self.external_fnames.index(fname)
+            self.external_fnames.pop(idx)
+            self.external_units.pop(idx)
+            self.external_binflag.pop(idx)
+
         self.external_fnames.append(fname)
         self.external_units.append(unit)
         self.external_binflag.append(binflag)
@@ -338,13 +301,49 @@ class BaseModel(object):
                 print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd()))
                 new_pth = os.getcwd()
         # --reset the model workspace
-        self.model_ws = new_pth
+        self._model_ws = new_pth
         sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
         # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
+        # create the external path (if needed)
+        if hasattr(self,"external_path") and self.external_path is not None\
+                and not os.path.exists(os.path.join(self._model_ws,
+                                                    self.external_path)):
+            os.makedirs(os.path.join(self._model_ws,self.external_path))
         return None
+
+    @property
+    def model_ws(self):
+        return copy.deepcopy(self._model_ws)
+
+    def _set_name(self, value):
+        """
+        Set model name
+
+        Parameters
+        ----------
+        value : str
+            Name to assign to model.
+
+        """
+        self.__name = value
+        self.namefile = self.__name + '.' + self.namefile_ext
+        for p in self.packagelist:
+            for i in range(len(p.extension)):
+                p.file_name[i] = self.__name + '.' + p.extension[i]
+            p.fn_path = os.path.join(self.model_ws, p.file_name[0])
+
+
+    def __setattr__(self,key,value):
+
+        if key == "name":
+            self._set_name(value)
+        elif key == "model_ws":
+            self.change_model_ws(value)
+        else:
+            super(BaseModel,self).__setattr__(key,value)
 
     def run_model(self, silent=False, pause=False, report=False,
                   normal_msg='normal termination'):
@@ -422,7 +421,8 @@ class BaseModel(object):
         """
         raise Exception('IMPLEMENTATION ERROR: writenamefile must be overloaded')
 
-    def get_name(self):
+    @property
+    def name(self):
         """
         Get model name
 
@@ -432,26 +432,10 @@ class BaseModel(object):
             name of model
 
         """
-        return self.__name
+        return copy.deepcopy(self.__name)
 
-    def set_name(self, value):
-        """
-        Set model name
 
-        Parameters
-        ----------
-        value : str
-            Name to assign to model.
 
-        """
-        self.__name = value
-        self.namefile = self.__name + '.' + self.namefile_ext
-        for p in self.packagelist:
-            for i in range(len(p.extension)):
-                p.file_name[i] = self.__name + '.' + p.extension[i]
-            p.fn_path = os.path.join(self.model_ws, p.file_name[0])
-
-    name = property(get_name, set_name)
 
     def add_pop_key_list(self, key):
         """
@@ -513,7 +497,7 @@ class BaseModel(object):
 
     def plot(self, SelPackList=None, **kwargs):
         """
-        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
         model input data
 
         Parameters
@@ -535,7 +519,7 @@ class BaseModel(object):
             kper : int
                 MODFLOW zero-based stress period number to return. (default is zero)
             key : str
-                mflist dictionary key. (default is None)
+                MfList dictionary key. (default is None)
 
         Returns
         ----------
@@ -625,9 +609,9 @@ class BaseModel(object):
 
     def to_shapefile(self, filename, package_names=None, **kwargs):
         """
-        Wrapper function for writing a shapefile for the model grid.  If package_names
-        is not None, then search through the requested packages looking for arrays
-        that can be added to the shapefile as attributes
+        Wrapper function for writing a shapefile for the model grid.  If
+        package_names is not None, then search through the requested packages
+        looking for arrays that can be added to the shapefile as attributes
 
         Parameters
         ----------
@@ -642,7 +626,6 @@ class BaseModel(object):
 
         Examples
         --------
-
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> m.to_shapefile('model.shp', SelPackList)
@@ -650,7 +633,9 @@ class BaseModel(object):
         """
         from flopy.utils import model_attributes_to_shapefile
 
-        model_attributes_to_shapefile(filename, self, package_names=package_names, **kwargs)
+        model_attributes_to_shapefile(filename, self,
+                                      package_names=package_names, **kwargs)
+        return
 
 
 class Package(object):
@@ -659,8 +644,8 @@ class Package(object):
 
     """
 
-    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1, extra='',
-                 allowDuplicates=False):
+    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1,
+                 extra='', allowDuplicates=False):
         """
         Package init
 
@@ -729,41 +714,42 @@ class Package(object):
         var_dict = vars(self)
         if key in list(var_dict.keys()):
             old_value = var_dict[key]
-            if isinstance(old_value, utils.util_2d):
-                value = utils.util_2d(self.parent, old_value.shape,
+            if isinstance(old_value, utils.Util2d):
+                value = utils.Util2d(self.parent, old_value.shape,
                                       old_value.dtype, value,
                                       name=old_value.name,
                                       fmtin=old_value.fmtin,
                                       locat=old_value.locat)
-            elif isinstance(old_value, utils.util_3d):
-                 value = utils.util_3d(self.parent, old_value.shape,
+            elif isinstance(old_value, utils.Util3d):
+                 value = utils.Util3d(self.parent, old_value.shape,
                                           old_value.dtype, value,
                                           name=old_value.name_base,
                                           fmtin=old_value.fmtin,
                                           locat=old_value.locat)
-            elif isinstance(old_value, utils.transient_2d):
-                value = utils.transient_2d(self.parent, old_value.shape,
+            elif isinstance(old_value, utils.Transient2d):
+                value = utils.Transient2d(self.parent, old_value.shape,
                                                old_value.dtype, value,
                                                name=old_value.name_base,
                                                fmtin=old_value.fmtin,
                                                locat=old_value.locat)
-            elif isinstance(old_value, utils.mflist):
-                value = utils.mflist(self.parent, dtype=old_value.dtype, data=value)
+            elif isinstance(old_value, utils.MfList):
+                value = utils.MfList(self.parent, dtype=old_value.dtype,
+                                     data=value)
             elif isinstance(old_value, list):
                 if len(old_value) > 0:
-                    if isinstance(old_value[0], utils.util_3d):
+                    if isinstance(old_value[0], utils.Util3d):
                         new_list = []
                         for vo, v in zip(old_value, value):
-                            new_list.append(utils.util_3d(self.parent, vo.shape,
+                            new_list.append(utils.Util3d(self.parent, vo.shape,
                                                           vo.dtype, v,
                                                           name=vo.name_base,
                                                           fmtin=vo.fmtin,
                                                           locat=vo.locat))
                         value = new_list
-                    elif isinstance(old_value[0], utils.util_2d):
+                    elif isinstance(old_value[0], utils.Util2d):
                         new_list = []
                         for vo, v in zip(old_value, value):
-                            new_list.append(utils.util_2d(self.parent, vo.shape,
+                            new_list.append(utils.Util2d(self.parent, vo.shape,
                                                           vo.dtype, v,
                                                           name=vo.name,
                                                           fmtin=vo.fmtin,
@@ -772,29 +758,29 @@ class Package(object):
 
         super(Package, self).__setattr__(key, value)
 
-
     def export(self,f):
         from flopy import export
-        from flopy.utils import util_2d,util_3d,transient_2d,mflist
+        from flopy.utils import Util2d,Util3d,Transient2d,MfList
 
         attrs = dir(self)
         for attr in attrs:
             if '__' in attr:
                 continue
             a = self.__getattribute__(attr)
-            if isinstance(a, util_2d) and len(a.shape) == 2:
+            if isinstance(a, Util2d) and len(a.shape) == 2:
                 f = export.utils.util2d_helper(f,a)
-            elif isinstance(a, util_3d):
+            elif isinstance(a, Util3d):
                 f = export.utils.util3d_helper(f,a)
-            elif isinstance(a, transient_2d):
+            elif isinstance(a, Transient2d):
                 f = export.utils.transient2d_helper(f,a)
-            elif isinstance(a, mflist):
+            elif isinstance(a, MfList):
                 f = export.utils.mflist_helper(f,a)
             elif isinstance(a, list):
                 for v in a:
-                    if isinstance(v, util_3d):
+                    if isinstance(v, Util3d):
                         f = export.utils.util3d_helper(f,v)
         return f
+
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
         if not isinstance(field_names, list):
@@ -808,7 +794,6 @@ class Package(object):
         newdtype = sum((dtype.descr for dtype in newdtypes), [])
         newdtype = np.dtype(newdtype)
         return newdtype
-
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -838,6 +823,7 @@ class Package(object):
         >>> import flopy
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.dis.check()
+
         """
         if f is not None:
             if isinstance(f, str):
@@ -849,16 +835,9 @@ class Package(object):
             f.write('{}\n'.format(txt))
         if verbose:
             print(txt)
+        return
 
     def level1_arraylist(self, idx, v, name, txt):
-        """
-
-        :param idx:
-        :param v:
-        :param txt:
-        :param name:
-        :return:
-        """
         ndim = v.ndim
         if ndim == 3:
             kon = -1
@@ -881,7 +860,7 @@ class Package(object):
 
     def plot(self, **kwargs):
         """
-        Plot 2-D, 3-D, transient 2-D, and stress period list (mflist)
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
         package input data
 
         Parameters
@@ -898,9 +877,10 @@ class Package(object):
                 MODFLOW zero-based layer number to return.  If None, then all
                 all layers will be included. (default is None)
             kper : int
-                MODFLOW zero-based stress period number to return. (default is zero)
+                MODFLOW zero-based stress period number to return. (default is
+                zero)
             key : str
-                mflist dictionary key. (default is None)
+                MfList dictionary key. (default is None)
 
         Returns
         ----------
@@ -961,9 +941,9 @@ class Package(object):
         axes = []
         for item, value in self.__dict__.items():
             caxs = []
-            if isinstance(value, utils.mflist):
+            if isinstance(value, utils.MfList):
                 if self.parent.verbose:
-                    print('plotting {} package mflist instance: {}'.format(self.name[0], item))
+                    print('plotting {} package MfList instance: {}'.format(self.name[0], item))
                 if key is None:
                     names = ['{} location stress period {} layer {}'.format(self.name[0], kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
@@ -979,34 +959,34 @@ class Package(object):
                                        filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=colorbar, **kwargs))
 
-            elif isinstance(value, utils.util_3d):
+            elif isinstance(value, utils.Util3d):
                 if self.parent.verbose:
-                    print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                    print('plotting {} package Util3d instance: {}'.format(self.name[0], item))
                 #fignum = list(range(ifig, ifig + inc))
                 fignum = list(range(ifig, ifig + value.shape[0]))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
                                        fignum=fignum, colorbar=True))
-            elif isinstance(value, utils.util_2d):
+            elif isinstance(value, utils.Util2d):
                 if len(value.shape) == 2:
                     if self.parent.verbose:
-                        print('plotting {} package util_2d instance: {}'.format(self.name[0], item))
+                        print('plotting {} package Util2d instance: {}'.format(self.name[0], item))
                     fignum = list(range(ifig, ifig + 1))
                     ifig = fignum[-1] + 1
                     caxs.append(value.plot(filename_base=fileb, file_extension=fext,
                                            fignum=fignum, colorbar=True))
-            elif isinstance(value, utils.transient_2d):
+            elif isinstance(value, utils.Transient2d):
                 if self.parent.verbose:
-                    print('plotting {} package transient_2d instance: {}'.format(self.name[0], item))
+                    print('plotting {} package Transient2d instance: {}'.format(self.name[0], item))
                 fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(value.plot(filename_base=fileb, file_extension=fext, kper=kper,
                                        fignum=fignum, colorbar=True))
             elif isinstance(value, list):
                 for v in value:
-                    if isinstance(v, utils.util_3d):
+                    if isinstance(v, utils.Util3d):
                         if self.parent.verbose:
-                            print('plotting {} package util_3d instance: {}'.format(self.name[0], item))
+                            print('plotting {} package Util3d instance: {}'.format(self.name[0], item))
                         fignum = list(range(ifig, ifig + inc))
                         ifig = fignum[-1] + 1
                         caxs.append(v.plot(filename_base=fileb, file_extension=fext, mflay=mflay,
@@ -1030,8 +1010,8 @@ class Package(object):
 
     def to_shapefile(self, filename, **kwargs):
         """
-        Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).  Adds an
-            attribute for each layer in each data array
+        Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).
+        Adds an attribute for each layer in each data array
 
         Parameters
         ----------
@@ -1053,6 +1033,7 @@ class Package(object):
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.lpf.to_shapefile('test_hk.shp')
+
         """
 
         from flopy.utils import model_attributes_to_shapefile
@@ -1345,7 +1326,7 @@ def run_model(exe_name, namefile, model_ws='./',
         line = proc.stdout.readline()
         c = line.decode('utf-8')
         if c != '':
-            if 'normal termination' in c.lower():
+            if normal_msg in c.lower():
                 success = True
             c = c.rstrip('\r\n')
             if not silent:

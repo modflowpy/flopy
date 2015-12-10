@@ -1,4 +1,3 @@
-from numpy import empty
 from flopy.mbase import Package
 
 class Mt3dTob(Package):
@@ -26,6 +25,14 @@ class Mt3dTob(Package):
         return 'Transport Observation package class'
 
     def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
         # Open file for writing
         f_tob = open(self.fn_path, 'w')
         f_tob.write('%s\n' % (self.heading))

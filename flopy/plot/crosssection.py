@@ -534,7 +534,7 @@ class ModelCrossSection(object):
         except:
             raise Exception('Not a list-style boundary package')
 
-        # Return if mflist is None
+        # Return if MfList is None
         if mflist is None:
             return None
 

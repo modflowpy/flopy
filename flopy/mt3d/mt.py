@@ -328,7 +328,7 @@ class Mt3dms(BaseModel):
 
     def write_name_file(self):
         """
-        Write the model files.
+        Write the name file.
 
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
@@ -342,6 +342,7 @@ class Mt3dms(BaseModel):
         for u, f in zip(self.external_units, self.external_fnames):
             f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
         f_nam.close()
+        return
 
     def load_results(self, **kwargs):
         return

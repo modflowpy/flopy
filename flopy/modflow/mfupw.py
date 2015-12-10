@@ -1,16 +1,132 @@
+"""
+mfupw module.  Contains the ModflowUpw class. Note that the user can access
+the ModflowUpw class as `flopy.modflow.ModflowUpw`.
+
+Additional information for this MODFLOW package can be found at the `Online
+MODFLOW Guide
+<http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/upw_upstream_weighting_package.htm>`_.
+
+"""
+
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import Util2d, Util3d
 from flopy.modflow.mfpar import ModflowPar as mfpar
 
 
 class ModflowUpw(Package):
     """
     Upstream weighting package class
+
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    ipakcb : int
+        A flag that is used to determine if cell-by-cell budget data should be
+        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
+        (default is 53)
+    hdry : float
+        Is the head that is assigned to cells that are converted to dry during
+        a simulation. Although this value plays no role in the model
+        calculations, it is useful as an indicator when looking at the
+        resulting heads that are output from the model. HDRY is thus similar
+        to HNOFLO in the Basic Package, which is the value assigned to cells
+        that are no-flow cells at the start of a model simulation. (default
+        is -1.e30).
+    iphdry : int
+        iphdry is a flag that indicates whether groundwater head will be set to
+        hdry when the groundwater head is less than 0.0001 above the cell bottom
+        (units defined by lenuni in the discretization package). If iphdry=0,
+        then head will not be set to hdry. If iphdry>0, then head will be set to
+        hdry. If the head solution from one simulation will be used as starting
+        heads for a subsequent simulation, or if the Observation Process is used
+        (Harbaugh and others, 2000), then hdry should not be printed to the output
+        file for dry cells (that is, the upw package input variable should be set
+        as iphdry=0). (default is 0)
+    noparcheck : bool
+        noparcheck turns off the checking that a value is defined for all cells
+        when parameters are used to define layer data.
+    laytyp : int or array of ints (nlay)
+        Layer type (default is 0).
+    layavg : int or array of ints (nlay)
+        Layer average (default is 0).
+        0 is harmonic mean
+        1 is logarithmic mean
+        2 is arithmetic mean of saturated thickness and logarithmic mean of
+        of hydraulic conductivity
+    chani : float or array of floats (nlay)
+        contains a value for each layer that is a flag or the horizontal
+        anisotropy. If CHANI is less than or equal to 0, then variable HANI
+        defines horizontal anisotropy. If CHANI is greater than 0, then CHANI
+        is the horizontal anisotropy for the entire layer, and HANI is not
+        read. If any HANI parameters are used, CHANI for all layers must be
+        less than or equal to 0. Use as many records as needed to enter a
+        value of CHANI for each layer. The horizontal anisotropy is the ratio
+        of the hydraulic conductivity along columns (the Y direction) to the
+        hydraulic conductivity along rows (the X direction).
+    layvka : float or array of floats (nlay)
+        a flag for each layer that indicates whether variable VKA is vertical
+        hydraulic conductivity or the ratio of horizontal to vertical
+        hydraulic conductivity.
+    laywet : float or array of floats (nlay)
+        contains a flag for each layer that indicates if wetting is active.
+        laywet should always be zero for the UPW Package because all cells
+        initially active are wettable.
+    hk : float or array of floats (nlay, nrow, ncol)
+        is the hydraulic conductivity along rows. HK is multiplied by
+        horizontal anisotropy (see CHANI and HANI) to obtain hydraulic
+        conductivity along columns. (default is 1.0).
+    hani : float or array of floats (nlay, nrow, ncol)
+        is the ratio of hydraulic conductivity along columns to hydraulic
+        conductivity along rows, where HK of item 10 specifies the hydraulic
+        conductivity along rows. Thus, the hydraulic conductivity along
+        columns is the product of the values in HK and HANI.
+        (default is 1.0).
+    vka : float or array of floats (nlay, nrow, ncol)
+        is either vertical hydraulic conductivity or the ratio of horizontal
+        to vertical hydraulic conductivity depending on the value of LAYVKA.
+        (default is 1.0).
+    ss : float or array of floats (nlay, nrow, ncol)
+        is specific storage unless the STORAGECOEFFICIENT option is used.
+        When STORAGECOEFFICIENT is used, Ss is confined storage coefficient.
+        (default is 1.e-5).
+    sy : float or array of floats (nlay, nrow, ncol)
+        is specific yield. (default is 0.15).
+    vkcb : float or array of floats (nlay, nrow, ncol)
+        is the vertical hydraulic conductivity of a Quasi-three-dimensional
+        confining bed below a layer. (default is 0.0).
+    extension : string
+        Filename extension (default is 'upw')
+    unitnumber : int
+        File unit number (default is 31).
+
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> m = flopy.modflow.Modflow()
+    >>> lpf = flopy.modflow.ModflowLpf(m)
+
     """
 
-    def __init__(self, model, laytyp=0, layavg=0, chani=1.0, layvka=0, laywet=0, iupwcb=53, hdry=-1E+30, iphdry=0,
+    def __init__(self, model, laytyp=0, layavg=0, chani=1.0, layvka=0, laywet=0, ipakcb=53, hdry=-1E+30, iphdry=0,
                  hk=1.0, hani=1.0, vka=1.0, ss=1e-5, sy=0.15, vkcb=0.0, noparcheck=False,
                  extension='upw', unitnumber=31):
         Package.__init__(self, model, extension, 'UPW',
@@ -19,41 +135,51 @@ class ModflowUpw(Package):
         self.url = 'upw_upstream_weighting_package.htm'
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # item 1
-        self.iupwcb = iupwcb  # Unit number for file with cell-by-cell flow terms
+        if ipakcb != 0:
+            self.ipakcb = 53
+        else:
+            self.ipakcb = 0  # 0: no cell by cell terms are written
         self.hdry = hdry  # Head in cells that are converted to dry during a simulation
         self.npupw = 0  # number of UPW parameters
         self.iphdry = iphdry
-        self.laytyp = util_2d(model, (nlay,), np.int, laytyp, name='laytyp')
-        self.layavg = util_2d(model, (nlay,), np.int, layavg, name='layavg')
-        self.chani = util_2d(model, (nlay,), np.int, chani, name='chani')
-        self.layvka = util_2d(model, (nlay,), np.int, layvka, name='vka')
-        self.laywet = util_2d(model, (nlay,), np.int, laywet, name='laywet')
+        self.laytyp = Util2d(model, (nlay,), np.int, laytyp, name='laytyp')
+        self.layavg = Util2d(model, (nlay,), np.int, layavg, name='layavg')
+        self.chani = Util2d(model, (nlay,), np.int, chani, name='chani')
+        self.layvka = Util2d(model, (nlay,), np.int, layvka, name='vka')
+        self.laywet = Util2d(model, (nlay,), np.int, laywet, name='laywet')
 
         self.options = ' '
         if noparcheck: self.options = self.options + 'NOPARCHECK  '
 
-        self.hk = util_3d(model, (nlay, nrow, ncol), np.float32, hk, name='hk', locat=self.unit_number[0])
-        self.hani = util_3d(model, (nlay, nrow, ncol), np.float32, hani, name='hani', locat=self.unit_number[0])
+        self.hk = Util3d(model, (nlay, nrow, ncol), np.float32, hk, name='hk', locat=self.unit_number[0])
+        self.hani = Util3d(model, (nlay, nrow, ncol), np.float32, hani, name='hani', locat=self.unit_number[0])
         keys = []
         for k in range(nlay):
             key = 'vka'
             if self.layvka[k] != 0:
                 key = 'vani'
             keys.append(key)
-        self.vka = util_3d(model, (nlay, nrow, ncol), np.float32, vka, name=keys, locat=self.unit_number[0])
-        self.ss = util_3d(model, (nlay, nrow, ncol), np.float32, ss, name='ss', locat=self.unit_number[0])
-        self.sy = util_3d(model, (nlay, nrow, ncol), np.float32, sy, name='sy', locat=self.unit_number[0])
-        self.vkcb = util_3d(model, (nlay, nrow, ncol), np.float32, vkcb, name='vkcb', locat=self.unit_number[0])
+        self.vka = Util3d(model, (nlay, nrow, ncol), np.float32, vka, name=keys, locat=self.unit_number[0])
+        self.ss = Util3d(model, (nlay, nrow, ncol), np.float32, ss, name='ss', locat=self.unit_number[0])
+        self.sy = Util3d(model, (nlay, nrow, ncol), np.float32, sy, name='sy', locat=self.unit_number[0])
+        self.vkcb = Util3d(model, (nlay, nrow, ncol), np.float32, vkcb, name='vkcb', locat=self.unit_number[0])
         self.parent.add_package(self)
 
     def write_file(self):
-        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        # Open file for writing
+        """
+        Write the package file.
+
+        Returns
+        -------
+        None
+
+        """
+        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper  # Open file for writing
         f_upw = open(self.fn_path, 'w')
         # Item 0: text
-        f_upw.write('%s\n' % self.heading)
-        # Item 1: IBCFCB, HDRY, NPLPF        
-        f_upw.write('{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n'.format(self.iupwcb, self.hdry, self.npupw, self.iphdry,
+        f_upw.write('{}\n'.format(self.heading))
+        # Item 1: IBCFCB, HDRY, NPLPF
+        f_upw.write('{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n'.format(self.ipakcb, self.hdry, self.npupw, self.iphdry,
                                                                    self.options))
         # LAYTYP array
         f_upw.write(self.laytyp.string);
@@ -114,7 +240,7 @@ class ModflowUpw(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> lpf = flopy.modflow.ModflowUpw.load('test.upw', m)
+        >>> upw = flopy.modflow.ModflowUpw.load('test.upw', m)
 
         """
 
@@ -133,12 +259,12 @@ class ModflowUpw(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
-            print('   loading IUPWCB, HDRY, NPUPW, IPHDRY...')
+            print('   loading ipakcb, HDRY, NPUPW, IPHDRY...')
         t = line.strip().split()
-        iupwcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
-        if iupwcb != 0:
-            model.add_pop_key_list(iupwcb)
-            iupwcb = 53
+        ipakcb, hdry, npupw, iphdry = int(t[0]), float(t[1]), int(t[2]), int(t[3])
+        if ipakcb != 0:
+            model.add_pop_key_list(ipakcb)
+            ipakcb = 53
         # options
         noparcheck = False
         if len(t) > 3:
@@ -198,7 +324,7 @@ class ModflowUpw(Package):
             if model.verbose:
                 print('   loading hk layer {0:3d}...'.format(k + 1))
             if 'hk' not in par_types:
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, 'hk',
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'hk',
                                  ext_unit_dict)
             else:
                 line = f.readline()
@@ -208,7 +334,7 @@ class ModflowUpw(Package):
                 if model.verbose:
                     print('   loading hani layer {0:3d}...'.format(k + 1))
                 if 'hani' not in par_types:
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'hani',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'hani',
                                      ext_unit_dict)
                 else:
                     line = f.readline()
@@ -220,7 +346,7 @@ class ModflowUpw(Package):
                 key = 'vka'
                 if layvka[k] != 0:
                     key = 'vani'
-                t = util_2d.load(f, model, (nrow, ncol), np.float32, key,
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, key,
                                  ext_unit_dict)
             else:
                 line = f.readline()
@@ -233,7 +359,7 @@ class ModflowUpw(Package):
                 if model.verbose:
                     print('   loading ss layer {0:3d}...'.format(k + 1))
                 if 'ss' not in par_types:
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'ss',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'ss',
                                      ext_unit_dict)
                 else:
                     line = f.readline()
@@ -243,7 +369,7 @@ class ModflowUpw(Package):
                     if model.verbose:
                         print('   loading sy layer {0:3d}...'.format(k + 1))
                     if 'sy' not in par_types:
-                        t = util_2d.load(f, model, (nrow, ncol), np.float32, 'sy',
+                        t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sy',
                                          ext_unit_dict)
                     else:
                         line = f.readline()
@@ -253,7 +379,7 @@ class ModflowUpw(Package):
                 if model.verbose:
                     print('   loading vkcb layer {0:3d}...'.format(k + 1))
                 if 'vkcb' not in par_types:
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32, 'vkcb',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'vkcb',
                                      ext_unit_dict)
                 else:
                     line = f.readline()
@@ -261,7 +387,7 @@ class ModflowUpw(Package):
                 vkcb[k] = t
 
         # create upw object
-        upw = ModflowUpw(model, iupwcb=iupwcb, iphdry=iphdry, hdry=hdry,
+        upw = ModflowUpw(model, ipakcb=ipakcb, iphdry=iphdry, hdry=hdry,
                          noparcheck=noparcheck,
                          laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet,
@@ -269,5 +395,3 @@ class ModflowUpw(Package):
 
         # return upw object
         return upw
-
-

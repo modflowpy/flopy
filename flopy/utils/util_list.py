@@ -15,7 +15,7 @@ import numpy as np
 from flopy.utils import reference
 
 
-class mflist(object):
+class MfList(object):
     """
     a generic object for handling transient boundary condition lists
 
@@ -23,7 +23,7 @@ class mflist(object):
     ----------
     package : package object
         The package object (of type :class:`flopy.mbase.Package`) to which
-        this mflist will be added.
+        this MfList will be added.
     data : varies
         the data of the transient list (optional). (the default is None)
 
@@ -54,7 +54,7 @@ class mflist(object):
 
     def __init__(self, package, data=None, dtype=None, model=None):
 
-        if isinstance(data, mflist):
+        if isinstance(data, MfList):
             for attr in data.__dict__.items():
                 setattr(self, attr[0], attr[1])
             if model is None:
@@ -136,11 +136,11 @@ class mflist(object):
             elif (vtype == 'o'):
                 fmt_string += ' %s'
             elif (vtype == 's'):
-                raise Exception("mflist error: '\str\' type found it dtype." + \
+                raise Exception("MfList error: '\str\' type found it dtype." + \
                                 " This gives unpredictable results when " + \
                                 "recarray to file - change to \'object\' type")
             else:
-                raise Exception("mflist.fmt_string error: unknown vtype " + \
+                raise Exception("MfList.fmt_string error: unknown vtype " + \
                                 "in dtype:" + vtype)
         return fmt_string
 
@@ -151,32 +151,32 @@ class mflist(object):
         # If data is a list, then all we can do is try to cast it to
         # an ndarray, then cast again to a recarray
         if isinstance(data, list):
-            # warnings.warn("mflist casting list to array")
+            # warnings.warn("MfList casting list to array")
             try:
                 data = np.array(data)
             except Exception as e:
-                raise Exception("mflist error: casting list to ndarray: " + \
+                raise Exception("MfList error: casting list to ndarray: " + \
                                 str(e))
 
         # If data is a dict, the we have to assume it is keyed on kper
         if isinstance(data, dict):
             if len(list(data.keys())) == 0:
-                raise Exception("mflist error: data dict is empty")
+                raise Exception("MfList error: data dict is empty")
             for kper, d in data.items():
                 try:
                     kper = int(kper)
                 except Exception as e:
-                    raise Exception("mflist error: data dict key " + \
+                    raise Exception("MfList error: data dict key " + \
                                               "{0:s} not integer: ".format(kper) + \
                                               str(type(kper)) + "\n" + str(e))
                 # Same as before, just try...
                 if isinstance(d, list):
-                    # warnings.warn("mflist: casting list to array at " +\
+                    # warnings.warn("MfList: casting list to array at " +\
                     #               "kper {0:d}".format(kper))
                     try:
                         d = np.array(d)
                     except Exception as e:
-                        raise Exception("mflist error: casting list " + \
+                        raise Exception("MfList error: casting list " + \
                                         "to ndarray: " + str(e))
 
                 if isinstance(d, np.recarray):
@@ -188,11 +188,11 @@ class mflist(object):
                 elif isinstance(d, str):
                     self.__cast_str(kper, d)
                 else:
-                    raise Exception("mflist error: unsupported data type: " +
+                    raise Exception("MfList error: unsupported data type: " +
                                     str(type(d)) + " at kper " +
                                     "{0:d}".format(kper))
 
-        # A single recarray - same mflist for all stress periods
+        # A single recarray - same MfList for all stress periods
         elif isinstance(data, np.recarray):
             self.__cast_recarray(0, data)
         # A single ndarray
@@ -202,12 +202,12 @@ class mflist(object):
         elif isinstance(data, str):
             self.__cast_str(0, data)
         else:
-            raise Exception("mflist error: unsupported data type: " + \
+            raise Exception("MfList error: unsupported data type: " + \
                             str(type(data)))
 
     def __cast_str(self, kper, d):
         # If d is a string, assume it is a filename and check that it exists
-        assert os.path.exists(d), "mflist error: dict filename (string) \'" + \
+        assert os.path.exists(d), "MfList error: dict filename (string) \'" + \
                                   d + "\' value for " + \
                                   "kper {0:d} not found".format(kper)
         self.__data[kper] = d
@@ -216,7 +216,7 @@ class mflist(object):
     def __cast_int(self, kper, d):
         # If d is an integer, then it must be 0 or -1
         if (d > 0):
-            raise Exception("mflist error: dict integer value for " + \
+            raise Exception("MfList error: dict integer value for " + \
                             "kper {0:10d} must be 0 or -1, " + \
                             "not {1:10d}".format(kper, d))
         if (d == 0):
@@ -224,13 +224,13 @@ class mflist(object):
             self.__vtype[kper] = None
         else:
             if (kper == 0):
-                raise Exception("mflist error: dict integer value for " + \
+                raise Exception("MfList error: dict integer value for " + \
                                 "kper 0 for cannot be negative")
             self.__data[kper] = -1
             self.__vtype[kper] = None
 
     def __cast_recarray(self, kper, d):
-        assert d.dtype == self.__dtype, "mflist error: recarray dtype: " + \
+        assert d.dtype == self.__dtype, "MfList error: recarray dtype: " + \
                                         str(d.dtype) + " doesn't match " + \
                                         "self dtype: " + str(self.dtype)
         self.__data[kper] = d
@@ -239,18 +239,18 @@ class mflist(object):
     def __cast_ndarray(self, kper, d):
         d = np.atleast_2d(d)
         if (d.dtype != self.__dtype):
-            assert d.shape[1] == len(self.dtype), "mflist error: ndarray " + \
+            assert d.shape[1] == len(self.dtype), "MfList error: ndarray " + \
                                                   "shape " + str(d.shape) + \
                                                   " doesn't match dtype " + \
                                                   "len: " + \
                                                   str(len(self.dtype))
-            # warnings.warn("mflist: ndarray dtype does not match self " +\
+            # warnings.warn("MfList: ndarray dtype does not match self " +\
             #               "dtype, trying to cast")
         try:
             self.__data[kper] = np.core.records.fromarrays(d.transpose(),
                                                            dtype=self.dtype)
         except Exception as e:
-            raise Exception("mflist error: casting ndarray to recarray: " + \
+            raise Exception("MfList error: casting ndarray to recarray: " + \
                             str(e))
         self.__vtype[kper] = np.recarray
 
@@ -261,7 +261,7 @@ class mflist(object):
         # The length of index + values must be equal to the number of names
         # in dtype
         assert len(index) + len(values) == len(self.dtype), \
-            "mflist.add_record() error: length of index arg +" + \
+            "MfList.add_record() error: length of index arg +" + \
             "length of value arg != length of self dtype"
         # If we already have something for this kper, then add to it
         if (kper in list(self.__data.keys())):
@@ -287,7 +287,7 @@ class mflist(object):
         try:
             self.__data[kper][-1] = tuple(rec)
         except Exception as e:
-            raise Exception("mflist.add_record() error: adding record to " + \
+            raise Exception("MfList.add_record() error: adding record to " + \
                             "recarray: " + str(e))
 
     def __getitem__(self, kper):
@@ -295,12 +295,12 @@ class mflist(object):
         # If the data entry for kper is a string, 
         # return the corresponding recarray,
         # but don't reset the value in the data dict
-        #assert kper in list(self.data.keys()), "mflist.__getitem__() kper " + \
+        #assert kper in list(self.data.keys()), "MfList.__getitem__() kper " + \
         #                                       str(kper) + " not in data.keys()"
         try:
             kper = int(kper)
         except Exception as e:
-            raise Exception("mflist error: _getitem__() passed invalid kper index:"
+            raise Exception("MfList error: _getitem__() passed invalid kper index:"
                             + str(kper))
         if kper not in list(self.data.keys()):
             return self.get_empty()
@@ -322,11 +322,11 @@ class mflist(object):
         # If data is a list, then all we can do is try to cast it to
         # an ndarray, then cast again to a recarray
         if isinstance(data, list):
-            # warnings.warn("mflist casting list to array")
+            # warnings.warn("MfList casting list to array")
             try:
                 data = np.array(data)
             except Exception as e:
-                raise Exception("mflist error: casting list to ndarray: " + \
+                raise Exception("MfList error: casting list to ndarray: " + \
                                 str(e))
         # cast data
         if isinstance(data, int):
@@ -340,30 +340,30 @@ class mflist(object):
         elif isinstance(data, str):
             self.__cast_str(kper, data)
         else:
-            raise Exception("mflist error: unsupported data type: " + \
+            raise Exception("MfList error: unsupported data type: " + \
                             str(type(data)))
 
-            # raise NotImplementedError("mflist.__setitem__() not implemented")
+            # raise NotImplementedError("MfList.__setitem__() not implemented")
 
     def __fromfile(self, f):
         # d = np.fromfile(f,dtype=self.dtype,count=count)
         try:
             d = np.genfromtxt(f, dtype=self.dtype)
         except Exception as e:
-            raise Exception("mflist.__fromfile() error reading recarray " + \
+            raise Exception("MfList.__fromfile() error reading recarray " + \
                             "from file " + str(e))
         return d
 
     def write_transient(self, f, single_per=None):
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
-        # assert isinstance(f, file), "mflist.write() error: " +\
+        # assert isinstance(f, file), "MfList.write() error: " +\
         #                             "f argument must be a file handle"
-        assert hasattr(f, "read"), "mflist.write() error: " + \
+        assert hasattr(f, "read"), "MfList.write() error: " + \
                                    "f argument must be a file handle"
         kpers = list(self.data.keys())
         kpers.sort()
-        # Assert 0 in kpers,"mflist.write() error: kper 0 not defined"
+        # Assert 0 in kpers,"MfList.write() error: kper 0 not defined"
         first = kpers[0]
         if (single_per == None):
             loop_over_kpers = list(range(0, max(nper, max(kpers) + 1)))
@@ -411,7 +411,7 @@ class mflist(object):
 
     def __tofile(self, f, data):
         # Write the recarray (data) to the file (or file handle) f
-        assert isinstance(data, np.recarray), "mflist.__tofile() data arg " + \
+        assert isinstance(data, np.recarray), "MfList.__tofile() data arg " + \
                                               "not a recarray"
 
         # Add one to the kij indices
@@ -426,12 +426,12 @@ class mflist(object):
     def check_kij(self):
         names = self.dtype.names
         if ('k' not in names) or ('i' not in names) or ('j' not in names):
-            warnings.warn("mflist.check_kij(): index fieldnames \'k,i,j\' " +
+            warnings.warn("MfList.check_kij(): index fieldnames \'k,i,j\' " +
                           "not found in self.dtype names: " + str(names))
             return
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
         if (nl == 0):
-            warnings.warn("mflist.check_kij(): unable to get dis info from " +
+            warnings.warn("MfList.check_kij(): unable to get dis info from " +
                           "model")
             return
         for kper in list(self.data.keys()):
@@ -452,7 +452,7 @@ class mflist(object):
                     out_idx.extend(list(j_idx[0]))
 
                 if (len(out_idx) > 0):
-                    warn_str = "mflist.check_kij(): warning the following " + \
+                    warn_str = "MfList.check_kij(): warning the following " + \
                                "indices are out of bounds in kper " + \
                                str(kper) + ':\n'
                     for idx in out_idx:
@@ -480,7 +480,7 @@ class mflist(object):
         lnames = []
         [lnames.append(name.lower()) for name in names]
         if 'k' not in lnames or 'j' not in lnames:
-            raise NotImplementedError("mflist.get_indices requires kij")
+            raise NotImplementedError("MfList.get_indices requires kij")
         kpers = list(self.data.keys())
         kpers.sort()
         indices = None
@@ -524,13 +524,13 @@ class mflist(object):
              filename_base=None, file_extension=None, mflay=None,
              **kwargs):
         """
-        Plot stress period boundary condition (mflist) data for a specified
+        Plot stress period boundary condition (MfList) data for a specified
         stress period
 
         Parameters
         ----------
         key : str
-            mflist dictionary key. (default is None)
+            MfList dictionary key. (default is None)
         names : list
             List of names for figure titles. (default is None)
         kper : int
@@ -645,7 +645,7 @@ class mflist(object):
 
     def to_shapefile(self, filename, kper=None):
         """
-        Export stress period boundary condition (mflist) data for a specified
+        Export stress period boundary condition (MfList) data for a specified
         stress period
 
         Parameters
@@ -673,7 +673,7 @@ class mflist(object):
         """
 
         if self.sr is None:
-            raise Exception("mflist.to_shapefile: SpatialReference not set")
+            raise Exception("MfList.to_shapefile: SpatialReference not set")
         import flopy.utils.flopy_io as fio
         if kper is None:
             keys = self.data.keys()
@@ -693,7 +693,7 @@ class mflist(object):
 
     def to_array(self, kper=0, mask=False):
         """
-        Convert stress period boundary condition (mflist) data for a
+        Convert stress period boundary condition (MfList) data for a
         specified stress period to a 3-D numpy array
 
         Parameters
@@ -706,7 +706,7 @@ class mflist(object):
         ----------
         out : dict of numpy.ndarrays
             Dictionary of 3-D numpy arrays containing the stress period data for
-            a selected stress period. The dictonary keys are the mflist dtype
+            a selected stress period. The dictonary keys are the MfList dtype
             names for the stress period data ('cond', 'flux', 'bhead', etc.).
 
         See Also
@@ -755,7 +755,7 @@ class mflist(object):
                         arrays[name][:] = np.NaN
                 return arrays
             else:
-                raise Exception("mflist: something bad happened")
+                raise Exception("MfList: something bad happened")
 
 
         for name, arr in arrays.items():

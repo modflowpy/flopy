@@ -10,7 +10,7 @@ MODFLOW Guide
 import numpy as np
 from numpy import empty, array
 from flopy.mbase import Package
-from flopy.utils import util_2d, util_3d
+from flopy.utils import Util2d, Util3d
 
 class ModpathBas(Package):
     """
@@ -83,20 +83,24 @@ class ModpathBas(Package):
         self.bud_label = bud_label
         self.def_iface = def_iface
         self.laytyp = laytyp
-        self.ibound = util_3d(model, (nlay, nrow, ncol), np.int, ibound,
+        self.ibound = Util3d(model, (nlay, nrow, ncol), np.int, ibound,
                               name='ibound', locat=self.unit_number[0])
         
         self.prsity = prsity
         self.prsityCB = prsityCB
-        self.prsity = util_3d(model,(nlay,nrow,ncol),np.float32,\
+        self.prsity = Util3d(model,(nlay,nrow,ncol),np.float32,\
                               prsity,name='prsity',locat=self.unit_number[0])        
-        self.prsityCB = util_3d(model,(nlay,nrow,ncol),np.float32,\
+        self.prsityCB = Util3d(model,(nlay,nrow,ncol),np.float32,\
                                 prsityCB,name='prsityCB',locat=self.unit_number[0])        
         self.parent.add_package(self)
 
     def write_file(self):
         """
-        Write the package input file.
+        Write the package file
+
+        Returns
+        -------
+        None
 
         """
         nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
@@ -116,19 +120,19 @@ class ModpathBas(Package):
   
         flow_package = self.parent.mf.get_package('BCF6')
         if (flow_package != None):
-            lc = util_2d(self.parent,(nlay,),np.int,\
+            lc = Util2d(self.parent,(nlay,),np.int,\
                          flow_package.laycon.get_value(),name='bas - laytype',\
                          locat=self.unit_number[0])
         else:
             flow_package = self.parent.mf.get_package('LPF')
             if (flow_package != None):
-                lc = util_2d(self.parent,(nlay,),\
+                lc = Util2d(self.parent,(nlay,),\
                              np.int,flow_package.laytyp.get_value(),\
                              name='bas - laytype',locat=self.unit_number[0])
             else:
                 flow_package = self.parent.mf.get_package('UPW')
                 if (flow_package != None):
-                    lc = util_2d(self.parent,(nlay,),\
+                    lc = Util2d(self.parent,(nlay,),\
                                  np.int,flow_package.laytyp.get_value(),\
                                  name='bas - laytype', locat=self.unit_number[0])
         # need to reset lc fmtin

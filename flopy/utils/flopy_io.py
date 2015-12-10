@@ -2,7 +2,7 @@
 Module for exporting and importing flopy model attributes
 """
 import numpy as np
-from flopy.utils import util_2d, util_3d, transient_2d, mflist
+from flopy.utils import Util2d, Util3d, Transient2d, MfList
 
 
 def line_parse(line):
@@ -18,7 +18,9 @@ def line_parse(line):
 
 def write_gridlines_shapefile(filename, sr):
     """
-    Write a polyline shapefile of the grid lines - a lightweight alternative to polygons
+    Write a polyline shapefile of the grid lines - a lightweight alternative
+    to polygons.
+
     Parameters
     ----------
     filename : string
@@ -47,16 +49,16 @@ def write_gridlines_shapefile(filename, sr):
 def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     """
     Write a grid shapefile array_dict attributes.
+
     Parameters
     ----------
     filename : string
         name of the shapefile to write
     sr : spatial reference instance
-    package_names : (optional) list of package names (e.g. ["dis","lpf"])
-        packages to scrap arrays out of for adding to shapefile
-    array_dict : (optional) dict of {name:2D array} pairs
-       additional 2D arrays to add as attributes to the grid shapefile
-
+        spatial reference object for model grid
+    array_dict : dict
+       Dictionary of name and 2D array pairs.  Additional 2D arrays to add as
+       attributes to the grid shapefile.
 
     Returns
     -------
@@ -145,17 +147,17 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
             attrs = dir(pak)
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if isinstance(a, util_2d) and a.shape == (ml.nrow,
+                if isinstance(a, Util2d) and a.shape == (ml.nrow,
                                                           ml.ncol):
                     name = a.name.lower()
                     array_dict[name] = a.array
-                elif isinstance(a, util_3d):
+                elif isinstance(a, Util3d):
                     for i, u2d in enumerate(a):
                         # name = u2d.name.lower().replace(' ', '_')
                         name = shape_attr_name(u2d.name)
                         name += '_{:03d}'.format(i + 1)
                         array_dict[name] = u2d.array
-                elif isinstance(a, transient_2d):
+                elif isinstance(a, Transient2d):
                     kpers = list(a.transient_2ds.keys())
                     kpers.sort()
                     for kper in kpers:
@@ -164,7 +166,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                         name = shape_attr_name(u2d.name)
                         name = "{}_{:03d}".format(name, kper + 1)
                         array_dict[name] = u2d.array
-                elif isinstance(a, mflist):
+                elif isinstance(a, MfList):
                     kpers = a.data.keys()
                     for kper in kpers:
                         arrays = a.to_array(kper)
@@ -176,7 +178,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                                 array_dict[aname] = array[k]
                 elif isinstance(a, list):
                     for v in a:
-                        if isinstance(v, util_3d):
+                        if isinstance(v, Util3d):
                             for i, u2d in enumerate(v):
                                 # name = u2d.name.lower().replace(' ', '_')
                                 name = shape_attr_name(u2d.name)
