@@ -20,9 +20,7 @@ If you think you have found a bug in *FloPy<sub>3</sub>*, or if you would like t
 Documentation
 -----------------------------------------------
 
-Documentation for *FloPy<sub>3</sub>* is a work in progress. *FloPy<sub>3</sub>* code documentation is available at:
-
-+ [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
+Documentation for *FloPy<sub>3</sub>* is a work in progress. *FloPy<sub>3</sub>* code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
 
 Examples
@@ -32,11 +30,7 @@ Examples
 
 ### [Python Script Examples](docs/script_examples.md)
 
-### Tutorials
-
-A few simple *FloPy<sub>3</sub>* tutorials are available at:
-
-+ [http://modflowpy.github.io/flopydoc/tutorials.html](http://modflowpy.github.io/flopydoc/tutorials.html)
+### [Tutorials](http://modflowpy.github.io/flopydoc/tutorials.html)
 
 
 Installation
@@ -92,13 +86,13 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
 FloPy<sub>3</sub> Supported Packages
 -----------------------------------------------
 
-A list of supported packages in *FloPy<sub>3</sub>* is available in following [markdown document](docs/supported_packages.md) on the github repo.
+A list of supported packages in *FloPy<sub>3</sub>* is available in [docs/supported_packages.md](docs/supported_packages.md) on the github repo.
 
 
 FloPy<sub>3</sub> Changes
 -----------------------------------------------
 
-A summary of changes in each *FloPy<sub>3</sub>* version is available in the following [markdown document](doc/version_changes.md) on the github repo.
+A summary of changes in each *FloPy<sub>3</sub>* version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
 
 
 MODFLOW Resources

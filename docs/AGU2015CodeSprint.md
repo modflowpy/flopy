@@ -1,11 +1,5 @@
-
-<img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
-
-### Version 3.2.3
-[![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
-
-##AGU 2015 coding sprint focus
-###Let's list items here and we can sort later
+## AGU 2015 coding sprint focus
+### Let's list items here and we can sort later
 - refactor namespaces so that `flopy.modflow.ModflowWel` becomes `flopy.ModflowWel` etc
 - develop a standard SpatialReference file that `flopy` can write and read
 - unstructured grid support
