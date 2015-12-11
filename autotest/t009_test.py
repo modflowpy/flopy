@@ -36,14 +36,14 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
 def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
 
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
-    sfr = m.get_package('SFR2')
+    sfr = m.get_package('SFR')
 
     if not os.path.exists(outfolder):
         os.makedirs(outfolder)
     outpath = os.path.join(outfolder, sfrfile)
     sfr.write_file(outpath)
 
-    m.remove_package('SFR2')
+    m.remove_package('SFR')
     sfr2 = flopy.modflow.ModflowSfr2.load(outpath, m)
 
     assert np.all(sfr2.reach_data == sfr.reach_data)
@@ -119,7 +119,33 @@ def test_sfr():
     sfr.get_slopes()
     assert sfr.reach_data.slope[29] == (sfr.reach_data.strtop[29] - sfr.reach_data.strtop[107])\
                                        /sfr.reach_data.rchlen[29]
-    sfr.check()
+    chk = sfr.check()
+    assert sfr.reach_data.slope.min() < 0.0001 and 'minimum slope' in chk.warnings
+    sfr.reach_data.slope[0] = 1.1
+    chk.slope(maximum_slope=1.0)
+    assert 'maximum slope' in chk.warnings
+
+def test_sfr_renumbering():
+    # test segment renumbering
+
+    r = np.zeros((27, 2), dtype=[('iseg', int), ('ireach', int)])
+    r = np.core.records.fromarrays(r.transpose(), dtype=[('iseg', int), ('ireach', int)])
+    r['iseg'] = sorted(list(range(1, 10)) * 3)
+    r['ireach'] = [1, 2, 3] * 9
+
+    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
+    d = np.core.records.fromarrays(d.transpose(), dtype=[('nseg', int), ('outseg', int)])
+    d['nseg'] = range(1, 10)
+    d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
+    m = flopy.modflow.Modflow()
+    sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
+    chk = sfr.check()
+    assert 'segment numbering order' in chk.warnings
+    sfr.renumber_segments()
+    chk = sfr.check()
+    assert 'continuity in segment and reach numbering' in chk.passed
+    assert 'segment numbering order' in chk.passed
 
 if __name__ == '__main__':
     test_sfr()
+    test_sfr_renumbering()
