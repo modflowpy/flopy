@@ -1,3 +1,6 @@
+### Version 3.2.4
+* AGU Code Jam
+
 ### Version 3.2.3
 * Added support for the SEAWAT viscosity (VSC) package.
 * Added support for the MODFLOW Stream (STR), Streamflow-Routing (SFR2), Subsidence (SUB), and Subsidence and Aquifer-System Compaction Package for Water-Table Aquifers (SWT) Packages.

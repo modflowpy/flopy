@@ -1,13 +1,14 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.3
-[![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=build)](https://travis-ci.org/modflowpy/flopy)
+### Version 3.2.4
+[![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/flopy.png)](https://pypi.python.org/pypi/flopy)
 
 
-## Introduction
+Introduction
+-----------------------------------------------
 
 *FloPy<sub>3</sub>* includes support for MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
 
@@ -23,30 +24,13 @@ Documentation for *FloPy<sub>3</sub>* is a work in progress. *FloPy<sub>3</sub>*
 
 + [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
-## Examples
 
-### IPython Notebook Examples
+Examples
+-----------------------------------------------
 
-[*FloPy<sub>3</sub>* Example IPython Notebooks](doc/notebook_examples.md)
+### [IPython Notebook Examples](docs/notebook_examples.md)
 
-### Python Script Examples
-
-*FloPy<sub>3</sub>* scripts for running and post-processing the lake example and SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) are available:
-
-+ [Lake Example](examples/scripts/lake_example.py)
-
-+ [SWI2 Example 1](examples/scripts/flopy_swi2_ex1.py)
-
-+ [SWI2 Example 2](examples/scripts/flopy_swi2_ex2.py)
-
-+ [SWI2 Example 3](examples/scripts/flopy_swi2_ex3.py)
-
-+ [SWI2 Example 4](examples/scripts/flopy_swi2_ex4.py)
-
-+ [SWI2 Example 5](examples/scripts/flopy_swi2_ex5.py)
-
-Note that examples 2 and 5 also include *FloPy<sub>3</sub>* code for running and post-processing SEAWAT models.
-
+### [Python Script Examples](docs/script_examples.md)
 
 ### Tutorials
 
@@ -55,7 +39,8 @@ A few simple *FloPy<sub>3</sub>* tutorials are available at:
 + [http://modflowpy.github.io/flopydoc/tutorials.html](http://modflowpy.github.io/flopydoc/tutorials.html)
 
 
-## Installation
+Installation
+-----------------------------------------------
 
 **Python versions:**
 
@@ -104,21 +89,20 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
     pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
-## FloPy<sub>3</sub> Supported Packages
+FloPy<sub>3</sub> Supported Packages
+-----------------------------------------------
 
 A list of supported packages in *FloPy<sub>3</sub>* is available in following [markdown document](docs/supported_packages.md) on the github repo.
 
 
---------------------------------
-
-## FloPy<sub>3</sub> Changes
+FloPy<sub>3</sub> Changes
+-----------------------------------------------
 
 A summary of changes in each *FloPy<sub>3</sub>* version is available in the following [markdown document](doc/version_changes.md) on the github repo.
 
 
---------------------------------
-
-### MODFLOW Resources
+MODFLOW Resources
+-----------------------------------------------
 
 + [MODFLOW and Related Programs](http://water.usgs.gov/ogw/modflow/)
 + [Online guide for MODFLOW-2000](http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/index.html)
