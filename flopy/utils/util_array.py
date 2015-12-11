@@ -548,9 +548,9 @@ class Util3d(object):
             # set the attribute for u3d
             super(Util3d, self).__setattr__(key, value)
 
-    def export(self, f):
+    def export(self, f, **kwargs):
         from flopy import export
-        return export.utils.util3d_helper(f, self)
+        return export.utils.util3d_helper(f, self, **kwargs)
 
     def to_shapefile(self, filename):
         """
@@ -578,16 +578,20 @@ class Util3d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.lpf.hk.to_shapefile('test_hk.shp')
         """
+        import warnings
+        warnings.warn("Deprecation warning: to_shapefile() is deprecated. use .export()")
 
-        from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
+        # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
+        #
+        # array_dict = {}
+        # for ilay in range(self.model.nlay):
+        #     u2d = self[ilay]
+        #     name = '{}_{:03d}'.format(shape_attr_name(u2d.name), ilay + 1)
+        #     array_dict[name] = u2d.array
+        # write_grid_shapefile(filename, self.model.dis.sr,
+        #                      array_dict)
 
-        array_dict = {}
-        for ilay in range(self.model.nlay):
-            u2d = self[ilay]
-            name = '{}_{:03d}'.format(shape_attr_name(u2d.name), ilay + 1)
-            array_dict[name] = u2d.array
-        write_grid_shapefile(filename, self.model.dis.sr,
-                             array_dict)
+        self.export(filename)
 
     def plot(self, filename_base=None, file_extension=None, mflay=None,
              fignum=None, **kwargs):
@@ -948,14 +952,18 @@ class Transient2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.rch.rech.as_shapefile('test_rech.shp')
         """
-        from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
+        import warnings
+        warnings.warn("Deprecation warning: to_shapefile() is deprecated. use .export()")
 
-        array_dict = {}
-        for kper in range(self.model.nper):
-            u2d = self[kper]
-            name = '{}_{:03d}'.format(shape_attr_name(u2d.name), kper + 1)
-            array_dict[name] = u2d.array
-        write_grid_shapefile(filename, self.model.dis.sr, array_dict)
+        # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
+        #
+        # array_dict = {}
+        # for kper in range(self.model.nper):
+        #     u2d = self[kper]
+        #     name = '{}_{:03d}'.format(shape_attr_name(u2d.name), kper + 1)
+        #     array_dict[name] = u2d.array
+        # write_grid_shapefile(filename, self.model.dis.sr, array_dict)
+        self.export(filename)
 
     def plot(self, filename_base=None, file_extension=None, **kwargs):
         """
@@ -1096,9 +1104,9 @@ class Transient2d(object):
             arr[kper, :, :] = u2d.array
         return arr
 
-    def export(self, f):
+    def export(self, f, **kwargs):
         from flopy import export
-        return export.utils.transient2d_helper(f, self)
+        return export.utils.transient2d_helper(f, self, **kwargs)
 
     def get_kper_entry(self, kper):
         """
@@ -1409,9 +1417,9 @@ class Util2d(object):
                                      names=title, filenames=filename,
                                      fignum=fignum, **kwargs)
 
-    def export(self, f):
+    def export(self, f, **kwargs):
         from flopy import export
-        return export.utils.util2d_helper(f, self)
+        return export.utils.util2d_helper(f, self, **kwargs)
 
     def to_shapefile(self, filename):
         """
@@ -1438,9 +1446,13 @@ class Util2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.dis.top.as_shapefile('test_top.shp')
         """
-        from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
-        name = shape_attr_name(self.name, keep_layer=True)
-        write_grid_shapefile(filename, self.model.dis.sr, {name: self.array})
+
+        import warnings
+        warnings.warn("Deprecation warning: to_shapefile() is deprecated. use .export()")
+        #from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
+        #name = shape_attr_name(self.name, keep_layer=True)
+        #write_grid_shapefile(filename, self.model.dis.sr, {name: self.array})
+        self.export(filename)
 
     def set_fmtin(self, fmtin):
         self._format = ArrayFormat(self,fortran=fmtin)

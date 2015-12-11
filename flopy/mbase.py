@@ -95,10 +95,12 @@ class BaseModel(object):
         self.cl_params = ''
         return
 
-    def export(self,f):
-        for pak in self.packagelist:
-           f = pak.export(f)
-        return f
+    def export(self, f, **kwargs):
+        # for pak in self.packagelist:
+        #    f = pak.export(f)
+        # return f
+        from .export import utils
+        return utils.model_helper(f, self, **kwargs)
 
     def add_package(self, p):
         """
@@ -335,7 +337,6 @@ class BaseModel(object):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
 
-
     def __setattr__(self,key,value):
 
         if key == "name":
@@ -434,9 +435,6 @@ class BaseModel(object):
         """
         return copy.deepcopy(self.__name)
 
-
-
-
     def add_pop_key_list(self, key):
         """
         Add a external file unit number to a list that will be used to remove
@@ -456,7 +454,6 @@ class BaseModel(object):
         """
         if key not in self.pop_key_list:
             self.pop_key_list.append(key)
-
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -493,7 +490,6 @@ class BaseModel(object):
                 f = open(pth, 'w', 0)
         for p in self.packagelist:
             p.check(f=f, verbose=verbose, level=level)
-
 
     def plot(self, SelPackList=None, **kwargs):
         """
@@ -631,10 +627,13 @@ class BaseModel(object):
         >>> m.to_shapefile('model.shp', SelPackList)
 
         """
-        from flopy.utils import model_attributes_to_shapefile
+        import warnings
+        warnings.warn("to_shapefile() is deprecated. use .export()")
+        #from flopy.utils import model_attributes_to_shapefile
 
-        model_attributes_to_shapefile(filename, self,
-                                      package_names=package_names, **kwargs)
+        #model_attributes_to_shapefile(filename, self,
+        #                              package_names=package_names, **kwargs)
+        self.export(filename,package_names=package_names)
         return
 
 
@@ -758,7 +757,7 @@ class Package(object):
 
         super(Package, self).__setattr__(key, value)
 
-    def export(self,f):
+    def export(self, f, **kwargs):
         from flopy import export
         from flopy.utils import Util2d,Util3d,Transient2d,MfList
 
@@ -768,17 +767,17 @@ class Package(object):
                 continue
             a = self.__getattribute__(attr)
             if isinstance(a, Util2d) and len(a.shape) == 2:
-                f = export.utils.util2d_helper(f,a)
+                f = export.utils.util2d_helper(f, a, **kwargs)
             elif isinstance(a, Util3d):
-                f = export.utils.util3d_helper(f,a)
+                f = export.utils.util3d_helper(f, a, **kwargs)
             elif isinstance(a, Transient2d):
-                f = export.utils.transient2d_helper(f,a)
+                f = export.utils.transient2d_helper(f, a, **kwargs)
             elif isinstance(a, MfList):
-                f = export.utils.mflist_helper(f,a)
+                f = export.utils.mflist_helper(f, a, **kwargs)
             elif isinstance(a, list):
                 for v in a:
                     if isinstance(v, Util3d):
-                        f = export.utils.util3d_helper(f,v)
+                        f = export.utils.util3d_helper(f, v, **kwargs)
         return f
 
     @staticmethod
@@ -1007,7 +1006,6 @@ class Package(object):
 
         return axes
 
-
     def to_shapefile(self, filename, **kwargs):
         """
         Export 2-D, 3-D, and transient 2-D model data to shapefile (polygons).
@@ -1035,10 +1033,11 @@ class Package(object):
         >>> ml.lpf.to_shapefile('test_hk.shp')
 
         """
-
-        from flopy.utils import model_attributes_to_shapefile
-
-        model_attributes_to_shapefile(filename, self.parent, package_names=self.name, **kwargs)
+        import warnings
+        warnings.warn("to_shapefile() is deprecated. use .export()")
+        #from flopy.utils import model_attributes_to_shapefile
+        #model_attributes_to_shapefile(filename, self.parent, package_names=self.name, **kwargs)
+        self.export(filename)
 
     def webdoc(self):
         if self.parent.version == 'mf2k':
@@ -1139,7 +1138,6 @@ class Package(object):
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-
 
         #read data for every stress period
         bnd_output = None
