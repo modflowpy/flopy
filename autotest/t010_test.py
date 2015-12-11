@@ -17,7 +17,7 @@ def load_check_sfr(mfnam, model_ws, checker_output_path):
     m.model_ws = checker_output_path
     checker_outfile = 'SFRcheck_{}.txt'.format(m.name)
     
-    return m.sfr2.check(checker_outfile, level=1)
+    return m.sfr.check(checker_outfile, level=1)
 
 
 def test_sfrcheck():
@@ -34,35 +34,35 @@ def test_sfrcheck():
     # run level=0 check
     m.model_ws= cpth
     fpth = 'SFRchecker_results.txt'
-    m.sfr2.check(fpth, level=0)
+    m.sfr.check(fpth, level=0)
     
     # test checks without modifications
-    chk = check(m.sfr2)
+    chk = check(m.sfr)
     chk.numbering()
     assert 'continuity in segment and reach numbering' in chk.passed
     chk.routing()
     assert 'circular routing' in chk.passed
     chk.overlapping_conductance()
-    assert 'overlapping conductance' in chk.failed # this example model has overlapping conductance
+    assert 'overlapping conductance' in chk.warnings # this example model has overlapping conductance
     chk.elevations()
     for test in ['segment elevations', 'reach elevations', 'reach elevations vs. grid elevations']:
         assert test in chk.passed
     chk.slope()
-    assert 'slope' in chk.passed
+    assert 'minimum slope' in chk.passed
     
     # create gaps in segment numbering
-    m.sfr2.segment_data[0]['nseg'][-1] += 1
-    m.sfr2.reach_data['ireach'][3] += 1
+    m.sfr.segment_data[0]['nseg'][-1] += 1
+    m.sfr.reach_data['ireach'][3] += 1
     
     # create circular routing instance
-    m.sfr2.segment_data[0]['outseg'][1] = 1
-    m.sfr2.segment_data[0]['outseg']
+    m.sfr.segment_data[0]['outseg'][1] = 1
+    m.sfr.segment_data[0]['outseg']
     
-    chk = check(m.sfr2)
+    chk = check(m.sfr)
     chk.numbering()
-    assert 'continuity in segment and reach numbering' in chk.failed
+    assert 'continuity in segment and reach numbering' in chk.errors
     chk.routing()
-    assert 'circular routing' in chk.failed
+    assert 'circular routing' in chk.errors
     
     sfr_items = {0: {'mfnam': 'test1ss.nam',
                      'sfrfile': 'test1ss.sfr'},
@@ -80,14 +80,14 @@ def test_sfrcheck():
     
 
     passed = {}
-    failed = {}
+    warnings = {}
     
     for i, case in sfr_items.items():
         chk = load_check_sfr(case['mfnam'], model_ws=path, checker_output_path=cpth)
         passed[i] = chk.passed
-        failed[i] = chk.failed
-    assert 'overlapping conductance' in failed[1]
-    assert 'segment elevations vs. model grid' in failed[2]
+        warnings[i] = chk.warnings
+    assert 'overlapping conductance' in warnings[1]
+    assert 'segment elevations vs. model grid' in warnings[2]
 
 
 if __name__ == '__main__':
