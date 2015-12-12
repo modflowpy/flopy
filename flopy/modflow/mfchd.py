@@ -23,17 +23,18 @@ class ModflowChd(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    stress_period_data : list of boundaries or
-                         recarray of boundaries or
-                         dictionary of boundaries
-    Each chd cell is defined through definition of
+    stress_period_data : list of boundaries, recarrays, or dictionary of
+        boundaries.
+
+        Each chd cell is defined through definition of
         layer (int), row (int), column (int), shead (float), ehead (float)
         shead is the head at the start of the stress period, and ehead is the
         head at the end of the stress period.
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. This gives the form of
+        period. This gives the form of::
+
             stress_period_data =
             {0: [
                 [lay, row, col, shead, ehead],
