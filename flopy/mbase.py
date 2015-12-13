@@ -1,20 +1,15 @@
 """
 mbase module
-  This module contains the base model and base package classes from which
-  all of the other models and packages inherit from.
+  This module contains the base model class from which
+  all of the other models inherit from.
 
 """
 
 from __future__ import print_function
-import numpy as np
-from numpy.lib.recfunctions import stack_arrays
 import sys
 import os
 import subprocess as sp
 import copy
-import webbrowser as wb
-from .modflow.mfparbc import ModflowParBc as mfparbc
-from flopy import utils
 
 
 # Global variables
@@ -628,10 +623,6 @@ class BaseModel(object):
         """
         import warnings
         warnings.warn("to_shapefile() is deprecated. use .export()")
-        #from flopy.utils import model_attributes_to_shapefile
-
-        #model_attributes_to_shapefile(filename, self,
-        #                              package_names=package_names, **kwargs)
         self.export(filename,package_names=package_names)
         return
 

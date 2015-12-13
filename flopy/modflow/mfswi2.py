@@ -12,7 +12,7 @@ import copy
 import numpy as np
 # from numpy import ones, zeros, empty
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d
+from ..utils import Util2d, Util3d
 
 
 class ModflowSwi2(Package):
@@ -49,37 +49,49 @@ class ModflowSwi2(Package):
     iprsol : int
         solver print out interval. (default is 0).
     mutsol : int
-        If MUTSOL = 0, tables of maximum head change and residual will be printed each iteration.
+        If MUTSOL = 0, tables of maximum head change and residual will be
+        printed each iteration.
         If MUTSOL = 1, only the total number of iterations will be printed.
         If MUTSOL = 2, no information will be printed.
         If MUTSOL = 3, information will only be printed if convergence fails.
         (default is 3).
     solver2parameters : dict
         only used if nsolver = 2
+
         mxiter : int
             maximum number of outer iterations. (default is 100)
+
         iter1 : int
             maximum number of inner iterations. (default is 20)
+
         npcond : int
             flag used to select the matrix conditioning method. (default is 1).
             specify NPCOND = 1 for Modified Incomplete Cholesky.
             specify NPCOND = 2 for Polynomial.
+
         zclose : float
             is the ZETA change criterion for convergence. (default is 1e-3).
+
         rclose : float
             is the residual criterion for convergence. (default is 1e-4)
+
         relax : float
             is the relaxation parameter used with NPCOND = 1. (default is 1.0)
+
         nbpol : int
-            is only used when NPCOND = 2 to indicate whether the estimate of the
-            upper bound on the maximum eigenvalue is 2.0, or whether the estimate
-            will be calculated. NBPOL = 2 is used to specify the value is 2.0;
-            for any other value of NBPOL, the estimate is calculated. Convergence
-            is generally insensitive to this parameter. (default is 2).
+            is only used when NPCOND = 2 to indicate whether the estimate of
+            the upper bound on the maximum eigenvalue is 2.0, or whether the
+            estimate will be calculated. NBPOL = 2 is used to specify the
+            value is 2.0; for any other value of NBPOL, the estimate is
+            calculated. Convergence is generally insensitive to this
+            parameter. (default is 2).
+
         damp : float
             is the steady-state damping factor. (default is 1.)
+
         dampt : float
             is the transient damping factor. (default is 1.)
+
     toeslope : float
         Maximum slope of toe cells. (default is 0.05)
     tipslope : float
@@ -117,17 +129,17 @@ class ModflowSwi2(Package):
     isource : integer or array of integers (nlay, nrow, ncol)
         Source type of any external sources or sinks, specified with any outside package
         (i.e. WEL Package, RCH Package, GHB Package). (default is 0).
-            If ISOURCE > 0 sources and sinks have the same fluid density as the zone
-                ISOURCE. If such a zone is not present in the cell, sources and sinks
-                have the same fluid density as the active zone at the top of the aquifer.
-            If ISOURCE = 0 sources and sinks have the same fluid density as the active
-                zone at the top of the aquifer.
-            If ISOURCE < 0 sources have the same fluid density as the zone with a
-                number equal to the absolute value of ISOURCE. Sinks have the same
-                fluid density as the active zone at the top of the aquifer. This
-                option is useful for the modeling of the ocean bottom where infiltrating
-                water is salt, yet exfiltrating water is of the same type as the water
-                at the top of the aquifer.
+        If ISOURCE > 0 sources and sinks have the same fluid density as the
+        zone ISOURCE. If such a zone is not present in the cell, sources and
+        sinks have the same fluid density as the active zone at the top of
+        the aquifer. If ISOURCE = 0 sources and sinks have the same fluid
+        density as the active zone at the top of the aquifer. If ISOURCE < 0
+        sources have the same fluid density as the zone with a number equal
+        to the absolute value of ISOURCE. Sinks have the same fluid density
+        as the active zone at the top of the aquifer. This option is useful
+        for the modeling of the ocean bottom where infiltrating water is
+        salt, yet exfiltrating water is of the same type as the water at the
+        top of the aquifer.
     obsnam : list of strings
         names for nobs observations.
     obslrc : list of lists

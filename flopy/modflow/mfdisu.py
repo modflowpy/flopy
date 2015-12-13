@@ -7,7 +7,7 @@ the ModflowDisU class as `flopy.modflow.ModflowDisU`.
 import sys
 import numpy as np
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d
+from ..utils import Util2d, Util3d, read1d
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}

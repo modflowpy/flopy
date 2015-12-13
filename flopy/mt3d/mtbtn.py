@@ -10,7 +10,7 @@ User's Manual.
 import numpy as np
 # from numpy import empty,array
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d
+from ..utils import Util2d, Util3d, read1d
 import warnings
 
 class Mt3dBtn(Package):

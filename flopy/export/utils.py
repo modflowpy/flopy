@@ -1,6 +1,5 @@
-import os
 import numpy as np
-from flopy.utils import Util2d, Util3d, Transient2d, MfList
+from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..mbase import BaseModel
 from ..pakbase import Package
 from . import NetCdf
