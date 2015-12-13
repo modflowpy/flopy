@@ -37,20 +37,23 @@ class ModflowHfb(Package):
         is calculated automatically by FloPy based on the information in
         layer_row_column_data (default is 0).
     hfb_data : list of records
-        In its most general form, this is a list of horizontal-flow 
+
+        In its most general form, this is a list of horizontal-flow
         barrier records. A barrier is conceptualized as being located on 
         the boundary between two adjacent finite difference cells in the 
         same layer. The innermost list is the layer, row1, column1, row2, 
         column2, and hydrologic characteristics for a single hfb between
         the cells. The hydraulic characteristic is the barrier hydraulic 
         conductivity divided by the width of the horizontal-flow barrier.
-        This gives the form of
+        (default is None).
+        This gives the form of::
+
             hfb_data = [
                         [lay, row1, col1, row2, col2, hydchr],
                         [lay, row1, col1, row2, col2, hydchr],
                         [lay, row1, col1, row2, col2, hydchr],
                        ].
-        (default is None).
+
     nacthfb : int
         The number of active horizontal-flow barrier parameters 
         (default is 0).
