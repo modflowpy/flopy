@@ -58,7 +58,7 @@ class ModflowChd(Package):
         periods, then the last list of chds will apply until the end of the
         simulation. Full details of all options to specify stress_period_data
         can be found in the flopy3 boundaries Notebook in the basic
-        subdirectory of the examples directory
+        subdirectory of the examples directory.
 
     extension : string
         Filename extension (default is 'chd')

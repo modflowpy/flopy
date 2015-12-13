@@ -20,3 +20,4 @@
 - Modify run_model to return a tuple.  Use psutil to calculate the memory usage, and return that as well (if requested), or perhaps make it more general to get at anything that psutil can get at.
 - Within the flopy code base, we should always use relative imports and NOT use 'import flopy.utils' for example.  Importing from flopy can cause problems with autotesting and other cases where there may be multple flopy installs.
 - utility to convert mf88 and mf96 (really, really old) models into mf2005 model - what can be converted...
+- Develop flopy versions of all the EPA MODFLOW models described by Peter Anderson.  Do we need to structure a library of flopy models somehow?  Should we put them somewhere else?
