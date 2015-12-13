@@ -14,7 +14,7 @@ from ..utils.flopy_io import line_parse
 
 class ModflowSfr2(Package):
     """
-    'Streamflow-Routing (SFR2) Package Class'
+    Streamflow-Routing (SFR2) Package Class
 
     Parameters
     ----------
@@ -67,7 +67,8 @@ class ModflowSfr2(Package):
         each reach will be saved to a file whenever the cell-by-cell budget has been specified in Output Control.
     isfropt : integer
         An integer value that defines the format of the input data and whether or not unsaturated flow is simulated
-        beneath streams. Values of ISFROPT are defined as follows:
+        beneath streams. Values of ISFROPT are defined as follows
+
         0   No vertical unsaturated flow beneath streams. Streambed elevations, stream slope, streambed thickness,
             and streambed hydraulic conductivity are read for each stress period using variables defined in Items 6b
             and 6c; the optional variables in Item 2 are not used.
@@ -89,6 +90,7 @@ class ModflowSfr2(Package):
             and input variable UHC1 is not read.
         5   Same as 4 except saturated vertical hydraulic conductivity for the unsaturated zone (input variable UHC1)
             is read for each segment at the beginning of the first stress period only.
+
     nstrail : integer
         An integer value that is the number of trailing wave increments used to represent a trailing wave. Trailing
         waves are used to represent a decrease in the surface infiltration rate. The value can be increased to improve
