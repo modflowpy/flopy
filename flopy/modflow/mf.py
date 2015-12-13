@@ -119,15 +119,15 @@ class Modflow(BaseModel):
         # external option stuff
         self.free_format = True
         self.array_format = 'modflow'
-        self.external_fnames = []
-        self.external_units = []
-        self.external_binflag = []
+        #self.external_fnames = []
+        #self.external_units = []
+        #self.external_binflag = []
 
         self.verbose = verbose
 
         self.load_fail = False
         # the starting external data unit number
-        self.__next_ext_unit = 1000
+        #self.__next_ext_unit = 1000
         if external_path is not None:
             if os.path.exists(os.path.join(model_ws, external_path)):
                 print("Note: external_path " + str(external_path) +
@@ -181,15 +181,15 @@ class Modflow(BaseModel):
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
         return 'MODFLOW %d layer(s), %d row(s), %d column(s), %d stress period(s)' % (nlay, nrow, ncol, nper)
-
-    def next_ext_unit(self):
-        """
-        Function to encapsulate next_ext_unit attribute
-
-        """
-        next_unit = self.__next_ext_unit + 1
-        self.__next_ext_unit += 1
-        return next_unit
+    #
+    # def next_ext_unit(self):
+    #     """
+    #     Function to encapsulate next_ext_unit attribute
+    #
+    #     """
+    #     next_unit = self.__next_ext_unit + 1
+    #     self.__next_ext_unit += 1
+    #     return next_unit
 
     @property
     def nlay(self):
