@@ -76,7 +76,7 @@ def test_mflist_reference():
     assert isinstance(ghb, fmf.ModflowGhb)
 
     test = os.path.join('temp', 'test3.shp')
-    ml.to_shapefile(test, kper=0)
+    ml.export(test, kper=0)
     shp = shapefile.Reader(test)
     assert shp.numRecords == nrow * ncol
 

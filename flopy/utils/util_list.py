@@ -88,9 +88,9 @@ class MfList(object):
         d[:,:] = -1.0E+10
         return d
 
-    def export(self,f):
+    def export(self, f, **kwargs):
         from flopy import export
-        return export.utils.mflist_helper(f,self)
+        return export.utils.mflist_helper(f, self, **kwargs)
 
     @property
     def data(self):
@@ -671,25 +671,28 @@ class MfList(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.wel.to_shapefile('test_hk.shp', kper=1)
         """
+        import warnings
+        warnings.warn("Deprecation warning: to_shapefile() is deprecated. use .export()")
 
-        if self.sr is None:
-            raise Exception("MfList.to_shapefile: SpatialReference not set")
-        import flopy.utils.flopy_io as fio
-        if kper is None:
-            keys = self.data.keys()
-            keys.sort()
-        else:
-            keys = [kper]
-        array_dict = {}
-        for kk in keys:
-            arrays = self.to_array(kk)
-            for name, array in arrays.items():
-                for k in range(array.shape[0]):
-                    #aname = name+"{0:03d}_{1:02d}".format(kk, k)
-                    n = fio.shape_attr_name(name, length=4)
-                    aname = "{}{:03d}{:03d}".format(n, k+1, int(kk)+1)
-                    array_dict[aname] = array[k]
-        fio.write_grid_shapefile(filename, self.sr, array_dict)
+        # if self.sr is None:
+        #     raise Exception("MfList.to_shapefile: SpatialReference not set")
+        # import flopy.utils.flopy_io as fio
+        # if kper is None:
+        #     keys = self.data.keys()
+        #     keys.sort()
+        # else:
+        #     keys = [kper]
+        # array_dict = {}
+        # for kk in keys:
+        #     arrays = self.to_array(kk)
+        #     for name, array in arrays.items():
+        #         for k in range(array.shape[0]):
+        #             #aname = name+"{0:03d}_{1:02d}".format(kk, k)
+        #             n = fio.shape_attr_name(name, length=4)
+        #             aname = "{}{:03d}{:03d}".format(n, k+1, int(kk)+1)
+        #             array_dict[aname] = array[k]
+        # fio.write_grid_shapefile(filename, self.sr, array_dict)
+        self.export(filename,kper=kper)
 
     def to_array(self, kper=0, mask=False):
         """
