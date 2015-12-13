@@ -32,22 +32,23 @@ class ModflowSip(Package):
         and is generally equal to one. If a zero is entered,
         it is changed to one. (default is 1)
     hclose : float > 0
-        The head change criterion for convergence. When the maximum absolute value of head change from all nodes
-        during an iteration is less than or equal to hclose, iteration stops. (default is 1e-5)
+        The head change criterion for convergence. When the maximum absolute
+        value of head change from all nodes during an iteration is less than
+        or equal to hclose, iteration stops. (default is 1e-5)
     ipcalc : 0 or 1
-        A flag indicating where the seed for calculating iteration variables will come from.
-            0 is the seed entered by the user will be used.
-            1 is the seed will be calculated at the start of the simulation from problem variables.
-        (default is 0)
+        A flag indicating where the seed for calculating iteration variables
+        will come from. 0 is the seed entered by the user will be used.
+        1 is the seed will be calculated at the start of the simulation from
+        problem variables. (default is 0)
     wseed : float > 0
         The seed for calculating iteration variables. wseed is always read,
         but is used only if ipcalc is equal to zero. (default is 0)
     iprsip : integer > 0
-        the printout interval for sip. iprsip, if equal to zero, is changed to 999.
-        The maximum head change (positive or negative) is printed for each iteration of
-        a time step whenever the time step is an even multiple of iprsip. This printout
-        also occurs at the end of each stress period regardless of the value of iprsip.
-        (default is 0)
+        the printout interval for sip. iprsip, if equal to zero, is changed
+        to 999. The maximum head change (positive or negative) is printed for
+        each iteration of a time step whenever the time step is an even
+        multiple of iprsip. This printout also occurs at the end of each
+        stress period regardless of the value of iprsip. (default is 0)
     extension : string
         Filename extension (default is 'sip')
     unitnumber : int

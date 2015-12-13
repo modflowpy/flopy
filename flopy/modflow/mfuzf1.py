@@ -24,15 +24,21 @@ class ModflowUzf1(Package):
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
     nuztop : integer
-        used to define which cell in a vertical column that recharge and discharge is simulated.
-        1   Recharge to and discharge from only the top model layer. This option assumes land surface is defined
-            as top of layer 1.
-        2   Recharge to and discharge from the specified layer in variable IUZFBND. This option assumes land
-            surface is defined as top of layer specified in IUZFBND.
-        3   Recharge to and discharge from the highest active cell in each vertical column. Land surface is
-            determined as top of layer specified in IUZFBND. A constant head node intercepts any recharge and
-            prevents deeper percolation.
-        (default is 1)
+        used to define which cell in a vertical column that recharge and
+        discharge is simulated. (default is 1)
+
+        1 Recharge to and discharge from only the top model layer. This
+        option assumes land surface is defined as top of layer 1.
+
+        2 Recharge to and discharge from the specified layer in variable
+        IUZFBND. This option assumes land surface is defined as top of layer
+        specified in IUZFBND.
+
+        3 Recharge to and discharge from the highest active cell in each
+        vertical column. Land surface is determined as top of layer specified
+        in IUZFBND. A constant head node intercepts any recharge and
+        prevents deeper percolation.
+
     iuzfopt : integer
         equal to 1 or 2. A value of 1 indicates that the vertical hydraulic conductivity will be
         specified within the UZF1 Package input file using array VKS. A value of 2 indicates that the vertical
@@ -44,7 +50,7 @@ class ModflowUzf1(Package):
         discharge is removed from the model simulation and accounted for in the ground-water budget as a loss of
         water (IRUNFLG=0). The Streamflow-Routing (SFR2) and(or) the Lake (LAK3) Packages must be active if
         IRUNFLG is not zero.
-        (default is 0
+        (default is 0)
     ietflg : integer
         specifies whether or not evapotranspiration (ET) will be simulated. ET will not be
         simulated if IETFLG is zero, otherwise it will be simulated.
@@ -115,16 +121,21 @@ class ModflowUzf1(Package):
         steady-state simulations.
        (default is 0.20)
     row_col_iftunit_iuzopt : list
-        used to specify where information will be printed for each time step. IUZOPT specifies what that information
-        will be. IUZOPT is
+        used to specify where information will be printed for each time step.
+        IUZOPT specifies what that information will be. (default is [])
+        IUZOPT is
 
-        1   Prints time, ground-water head, and thickness of unsaturated zone, and cumulative volumes of
-            infiltration, recharge, storage, change in storage and ground-water discharge to land surface.
-        2   Same as option 1 except rates of infiltration, recharge, change in storage, and ground-water discharge
-            also are printed.
-        3   Prints time, ground-water head, thickness of unsaturated zone, followed by a series of depths and
-            water contents in the unsaturated zone.
-        (default is [])
+        1 Prints time, ground-water head, and thickness of unsaturated zone,
+        and cumulative volumes of infiltration, recharge, storage, change in
+        storage and ground-water discharge to land surface.
+
+        2 Same as option 1 except rates of infiltration, recharge, change in
+        storage, and ground-water discharge also are printed.
+
+        3 Prints time, ground-water head, thickness of unsaturated zone,
+        followed by a series of depths and water contents in the unsaturated
+        zone.
+
     specifythtr : boolean
         key word for specifying optional input variable THTR
         (default is 0)
