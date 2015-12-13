@@ -1,5 +1,5 @@
 from numpy import empty,zeros
-from flopy.mbase import Package
+from ..pakbase import Package
 
 class ModflowMnw1(Package):
     """

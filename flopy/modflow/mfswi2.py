@@ -11,7 +11,7 @@ import sys
 import copy
 import numpy as np
 # from numpy import ones, zeros, empty
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils import Util2d, Util3d
 
 

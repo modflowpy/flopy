@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import warnings
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils import Util2d
 from flopy.utils.util_list import MfList
 from flopy.utils.util_array import Transient2d

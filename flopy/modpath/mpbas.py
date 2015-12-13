@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import numpy as np
 from numpy import empty, array
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils import Util2d, Util3d
 
 class ModpathBas(Package):

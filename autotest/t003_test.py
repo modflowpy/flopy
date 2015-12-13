@@ -31,7 +31,7 @@ def test_loadtwrip():
     assert(os.path.isdir(pth))
     os.chdir(pth)
     namefile = 'twrip.nam'
-    ml = flopy.modflow.Modflow.load(namefile)
+    ml = flopy.modflow.Modflow.load(namefile, verbose=True)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False

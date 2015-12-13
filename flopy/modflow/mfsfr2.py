@@ -7,7 +7,7 @@ import textwrap
 import os
 import numpy as np
 from numpy.lib import recfunctions
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils.util_list import MfList
 from ..utils.flopy_io import line_parse
 
