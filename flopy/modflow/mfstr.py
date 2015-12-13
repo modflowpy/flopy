@@ -84,7 +84,8 @@ class ModflowStr(Package):
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. For example, if mxacts=3 this gives the form of
+        period. For example, if mxacts=3 this gives the form of::
+
             stress_period_data =
             {0: [
                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough],
@@ -103,6 +104,7 @@ class ModflowStr(Package):
                 [lay, row, col, seg, reach, flow, stage, cond, sbot, stop, width, slope, rough]]
                 ]
             }
+
     segment_data : dictionary of str segment data
         Each dictionary contains a list of segment str data for a stress period.
 
@@ -134,7 +136,9 @@ class ModflowStr(Package):
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. For example, if nss=2 and ntrib>0 and/or ndiv>0 this gives the form of
+        period. For example, if nss=2 and ntrib>0 and/or ndiv>0 this gives the
+        form of::
+
             segment_data =
             {0: [
                 [itrib1, itrib2, itrib3, itrib4, itrib5, itrib6, itrib7, itrib8, itrib9, itrib10, iupseg],

@@ -12,6 +12,7 @@ from __future__ import division, print_function
 import os
 import warnings
 import numpy as np
+from flopy.utils import reference
 
 
 class MfList(object):
@@ -105,12 +106,12 @@ class MfList(object):
 
     # Get the itmp for a given kper
     def get_itmp(self, kper):
-        if (kper not in list(self.__data.keys())):
+        if kper not in list(self.__data.keys()):
             return None
         # If an external file, have to load it
-        if (self.__vtype[kper] == str):
+        if self.__vtype[kper] == str:
             return self.__fromfile(self.__data[kper]).shape[0]
-        if (self.__vtype[kper] == np.recarray):
+        if self.__vtype[kper] == np.recarray:
             return self.__data[kper].shape[0]
         # If not any of the above, it must be an int
         return self.__data[kper]
@@ -128,13 +129,13 @@ class MfList(object):
         fmt_string = ''
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if (vtype == 'i'):
+            if vtype == 'i':
                 fmt_string += ' %9d'
-            elif (vtype == 'f'):
+            elif vtype == 'f':
                 fmt_string += ' %9f'
-            elif (vtype == 'o'):
+            elif vtype == 'o':
                 fmt_string += ' %s'
-            elif (vtype == 's'):
+            elif vtype == 's':
                 raise Exception("MfList error: '\str\' type found it dtype." + \
                                 " This gives unpredictable results when " + \
                                 "recarray to file - change to \'object\' type")
@@ -356,13 +357,10 @@ class MfList(object):
     def write_transient(self, f, single_per=None):
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
-        # assert isinstance(f, file), "MfList.write() error: " +\
-        #                             "f argument must be a file handle"
         assert hasattr(f, "read"), "MfList.write() error: " + \
                                    "f argument must be a file handle"
         kpers = list(self.data.keys())
         kpers.sort()
-        # Assert 0 in kpers,"MfList.write() error: kper 0 not defined"
         first = kpers[0]
         if (single_per == None):
             loop_over_kpers = list(range(0, max(nper, max(kpers) + 1)))
@@ -395,6 +393,22 @@ class MfList(object):
 
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
                     .format(itmp, 0, kper))
+
+            if self.model.free_format and self.model.external_path is not None:
+                if kper_vtype == np.recarray:
+                    py_filepath = ''
+                    if self.model.model_ws is not None:
+                        py_filepath = self.model.model_ws
+                    py_filepath = os.path.join(py_filepath,
+                                               self.model.external_path)
+                    filename = self.package.name[0] + \
+                               "_{0:04d}.dat".format(kper)
+                    py_filepath = os.path.join(py_filepath,filename)
+                    model_filepath = os.path.join(self.model.external_path,
+                                                  filename)
+                    self.__tofile(py_filepath,kper_data)
+                    kper_vtype = str
+                    kper_data = model_filepath
 
             if (kper_vtype == np.recarray):
                 name = f.name
@@ -620,11 +634,11 @@ class MfList(object):
         if names is None:
             if key is None:
                 names = ['{} location stress period: {} layer: {}'.format(
-                        self.package.name[0], kper + 1, k + 1)
+                    self.package.name[0], kper + 1, k + 1)
                          for k in range(self.model.nlay)]
             else:
                 names = ['{} {} stress period: {} layer: {}'.format(
-                        self.package.name[0], key, kper + 1, k + 1)
+                    self.package.name[0], key, kper + 1, k + 1)
                          for k in range(self.model.nlay)]
 
         if key is None:
