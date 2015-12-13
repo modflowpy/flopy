@@ -1,6 +1,6 @@
 import numpy as np
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d
+from ..utils import Util2d, Util3d
 
 
 class ModflowSwi(Package):

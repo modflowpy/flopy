@@ -5,8 +5,6 @@ import matplotlib.colors
 from . import plotutil
 from .plotutil import bc_color_dict
 
-from flopy.utils import Util2d, Util3d, Transient2d
-
 class ModelMap(object):
     """
     Class to create a map of the model.

@@ -2,7 +2,7 @@
 Module for exporting and importing flopy model attributes
 """
 import numpy as np
-from flopy.utils import Util2d, Util3d, Transient2d, MfList
+from ..utils import Util2d, Util3d, Transient2d, MfList
 
 
 def write_gridlines_shapefile(filename, sr):

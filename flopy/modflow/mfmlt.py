@@ -11,7 +11,7 @@ import sys
 import collections
 import numpy as np
 from ..pakbase import Package
-from flopy.utils import Util2d
+from ..utils import Util2d
 
 class ModflowMlt(Package):
     """

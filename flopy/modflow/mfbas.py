@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from flopy.utils import Util3d
+from ..utils import Util3d
 
 class ModflowBas(Package):
     """

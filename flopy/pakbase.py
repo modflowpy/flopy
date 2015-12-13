@@ -1,7 +1,7 @@
 """
 pakbase module
-  This module contains the base package classe from which
-  all of the other models and packages inherit from.
+  This module contains the base package classs from which
+  all of the other packages inherit from.
 
 """
 
@@ -449,8 +449,6 @@ class Package(object):
         """
         import warnings
         warnings.warn("to_shapefile() is deprecated. use .export()")
-        # from flopy.utils import model_attributes_to_shapefile
-        # model_attributes_to_shapefile(filename, self.parent, package_names=self.name, **kwargs)
         self.export(filename)
 
     def webdoc(self):

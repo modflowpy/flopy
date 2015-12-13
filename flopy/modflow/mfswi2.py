@@ -12,7 +12,7 @@ import copy
 import numpy as np
 # from numpy import ones, zeros, empty
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d
+from ..utils import Util2d, Util3d
 
 
 class ModflowSwi2(Package):

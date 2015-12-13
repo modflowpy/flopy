@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, reference
+from ..utils import Util2d, Util3d, reference
 
 
 ITMUNI = {"u":0,"s":1,"m":2,"h":3,"d":4,"y":5}
