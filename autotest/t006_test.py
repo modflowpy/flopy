@@ -23,8 +23,8 @@ def test_dis_reference():
                          top=10, botm=botm, steady=False, rotation=45,
                          xul=999.9,yul=-999.9,proj4_str="some_proj4_str")
     ml.write_input()
-    ml1 = fmf.Modflow.load(ml.namefile,model_ws=ml.model_ws)
-    #assert ml1.dis.sr == ml.dis.sr
+    ml1 = fmf.Modflow.load(ml.namefile,model_ws=ml.model_ws,forgive=False)
+    assert ml1.dis.sr == ml.dis.sr
 
 
 def test_binaryfile_reference():

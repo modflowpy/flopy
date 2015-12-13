@@ -410,9 +410,8 @@ class ModflowDis(Package):
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        
         f_dis.write('{0:s}\n'.format(self.heading))
-        f_dis.write('#{0:s}\n'.format(str(self.sr)))
-        f_dis.write('#start:{0:s}\n'.format(self.start_datetime))
-        # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI        
+        f_dis.write('#{0:s},start:{1}\n'.format(str(self.sr),self.start_datetime))
+        # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n' \
                     .format(self.nlay, self.nrow, self.ncol, self.nper, self.itmuni,
                             self.lenuni))
@@ -548,10 +547,48 @@ class ModflowDis(Package):
             filename = f
             f = open(filename, 'r')
         # dataset 0 -- header
+        header = ''
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
+            header += line.strip()
+
+
+        header = header.replace('#','')
+        xul, yul = None, None
+        rotation = 0.0
+        proj4_str = "EPSG:4326"
+        start_datetime = "1/1/1970"
+
+        for item in header.split(','):
+            item = item.lower()
+            if "xul" in item:
+                try:
+                    xul = float(item.split(':')[1])
+                except:
+                    pass
+            elif "yul" in item:
+                try:
+                    yul = float(item.split(':')[1])
+                except:
+                    pass
+            elif "rotation" in item:
+                try:
+                    rotation = float(item.split(':')[1])
+                except:
+                    pass
+            elif "proj4_str" in item:
+                try:
+                    proj4_str = item.split(':')[1]
+                except:
+                    pass
+            elif "start" in item:
+                try:
+                    start_datetime = item.split(':')[1]
+                except:
+                    pass
+
         # dataset 1
         nlay, nrow, ncol, nper, itmuni, lenuni = line.strip().split()[0:6]
         nlay = int(nlay)
@@ -629,7 +666,8 @@ class ModflowDis(Package):
         # create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
-                         lenuni)
+                         lenuni, xul=xul, yul=yul, rotation=rotation,
+                         proj4_str=proj4_str, start_datetime=start_datetime)
         # return dis object instance
         return dis
 
