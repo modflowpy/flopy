@@ -470,6 +470,7 @@ class Mt3dBtn(Package):
             timprs = Util2d(self.parent, (len(self.timprs),),
                              np.float32, self.timprs, name='timprs',
                              fmtin='(8G10.4)')
+            timprs.format.fortran = '(8G10.4)'
             f_btn.write(timprs.string)
 
         # A18, A19
