@@ -3,6 +3,30 @@ import matplotlib
 matplotlib.use('agg')
 
 
+def test_dis_reference():
+    import os
+    import numpy as np
+    import flopy.modflow as fmf
+    ml = fmf.Modflow(modelname="dis_test", model_ws="temp")
+    assert isinstance(ml, fmf.Modflow)
+    perlen = np.arange(1, 20, 1)
+    nstp = np.flipud(perlen) + 3
+    tsmult = 1.2
+    nlay = 10
+    nrow, ncol = 50, 40
+    botm = np.arange(0, -100, -10)
+    hk = np.random.random((nrow, ncol))
+    dis = fmf.ModflowDis(ml, delr=100.0, delc=100.0,
+                         nrow=nrow, ncol=ncol, nlay=nlay,
+                         nper=perlen.shape[0], perlen=perlen,
+                         nstp=nstp, tsmult=tsmult,
+                         top=10, botm=botm, steady=False, rotation=45,
+                         xul=999.9,yul=-999.9,proj4_str="some_proj4_str")
+    ml.write_input()
+    ml1 = fmf.Modflow.load(ml.namefile,model_ws=ml.model_ws)
+    assert ml1.dis.sr == ml.dis.sr
+
+
 def test_binaryfile_reference():
     import os
     import flopy
@@ -82,6 +106,7 @@ def test_mflist_reference():
 
 
 if __name__ == '__main__':
-    test_mflist_reference()
-    test_formattedfile_reference()
-    test_binaryfile_reference()
+    test_dis_reference()
+    #test_mflist_reference()
+    #test_formattedfile_reference()
+    #test_binaryfile_reference()

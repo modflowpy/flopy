@@ -96,7 +96,7 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=11, xul=None, yul=None, rotation=0.0,
+                 unitnumber=11, xul=None, yul=None, rotation=0.0, proj4_str="EPSG:4326",
                  start_datetime="1/1/1970"):
 
         # Call ancestor's init to set self.parent, extension, name and unit
@@ -143,8 +143,9 @@ class ModflowDis(Package):
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
 
-        self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni, xul=xul,
-                                             yul=yul, rotation=rotation)
+        self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni,
+                                             xul=xul, yul=yul, rotation=rotation,
+                                             proj4_str=proj4_str)
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
@@ -409,6 +410,8 @@ class ModflowDis(Package):
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        
         f_dis.write('{0:s}\n'.format(self.heading))
+        f_dis.write('#{0:s}\n'.format(self.sr))
+        f_dis.write('#start:{0:s}\n'.format(self.start_datetime))
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI        
         f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n' \
                     .format(self.nlay, self.nrow, self.ncol, self.nper, self.itmuni,
@@ -436,7 +439,6 @@ class ModflowDis(Package):
             else:
                 f_dis.write(' {0:3s}\n'.format('TR'))
         f_dis.close()
-
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -505,7 +507,6 @@ class ModflowDis(Package):
         # write errors to stdout
         if verbose:
             print(txt)
-
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):

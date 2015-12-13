@@ -4,7 +4,6 @@ from flopy.utils import Util2d, Util3d, Transient2d, MfList
 from flopy.mbase import Package, BaseModel
 from . import NetCdf
 from . import shapefile_utils
-import shapefile
 
 NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", "strt": "{0}",
                    "wel_flux": "{0}^3/{1}", "top": "{0}", "botm": "{0}", "thickness": "{0}",

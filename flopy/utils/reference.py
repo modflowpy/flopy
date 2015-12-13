@@ -90,6 +90,19 @@ class SpatialReference(object):
         self.set_spatialreference(xul, yul, rotation)
 
 
+    def __eq__(self, other):
+        if not isinstance(other,SpatialReference):
+            return False
+        if other.xul != self.xul:
+            return False
+        if other.yul != self.yul:
+            return False
+        if other.rotation != self.rotation:
+            return False
+        if other.proj4_str != self.proj4_str:
+            return False
+        return True
+
     @classmethod
     def from_gridspec(cls,gridspec_file,lenuni=0):
         f = open(gridspec_file,'r')
@@ -152,10 +165,9 @@ class SpatialReference(object):
 
 
     def __repr__(self):
-        s = "spatialReference:xul:{0:<G}, yul:{1:<G},rotation:{2:<G}\n".\
+        s = "xul:{0:<G}, yul:{1:<G}, rotation:{2:<G}".\
             format(self.xul,self.yul,self.rotation)
-        s += "delr:" + str(self.delr) + "\n"
-        s += "delc:" + str(self.delc) + "\n"
+        s += "proj4_str:{0}".format(self.proj4_str)
         return s
 
 
