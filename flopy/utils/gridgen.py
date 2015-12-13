@@ -309,7 +309,7 @@ class Gridgen(object):
         Plot the grid.  This method will plot the grid using the shapefile
         that was created as part of the build method.
 
-        Note that the layer option is not working yet!
+        Note that the layer option is not working yet.
 
         Parameters
         ----------
@@ -330,9 +330,9 @@ class Gridgen(object):
         masked_values : iterable of floats, ints
             Values to mask.
         kwargs : dictionary
-            Keyword arguments that are passed to PatchCollection.set(**kwargs).
-            Some common kwargs would be 'linewidths', 'linestyles', 'alpha',
-            etc.
+            Keyword arguments that are passed to
+            PatchCollection.set(``**kwargs``).  Some common kwargs would be
+            'linewidths', 'linestyles', 'alpha', etc.
 
         Returns
         -------
