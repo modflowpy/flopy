@@ -63,7 +63,7 @@ class MfList(object):
                 self.model = model
             self.package = package
             return
-        
+
         self.package = package
         if model is None:
             self.model = package.parent
@@ -84,8 +84,8 @@ class MfList(object):
             self.__cast_data(data)
 
     def get_empty(self, ncell=0):
-        d = np.zeros((ncell,len(self.dtype)),dtype=self.dtype)
-        d[:,:] = -1.0E+10
+        d = np.zeros((ncell, len(self.dtype)), dtype=self.dtype)
+        d[:, :] = -1.0E+10
         return d
 
     def export(self, f, **kwargs):
@@ -106,12 +106,12 @@ class MfList(object):
 
     # Get the itmp for a given kper
     def get_itmp(self, kper):
-        if (kper not in list(self.__data.keys())):
+        if kper not in list(self.__data.keys()):
             return None
         # If an external file, have to load it
-        if (self.__vtype[kper] == str):
+        if self.__vtype[kper] == str:
             return self.__fromfile(self.__data[kper]).shape[0]
-        if (self.__vtype[kper] == np.recarray):
+        if self.__vtype[kper] == np.recarray:
             return self.__data[kper].shape[0]
         # If not any of the above, it must be an int
         return self.__data[kper]
@@ -129,13 +129,13 @@ class MfList(object):
         fmt_string = ''
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if (vtype == 'i'):
+            if vtype == 'i':
                 fmt_string += ' %9d'
-            elif (vtype == 'f'):
+            elif vtype == 'f':
                 fmt_string += ' %9f'
-            elif (vtype == 'o'):
+            elif vtype == 'o':
                 fmt_string += ' %s'
-            elif (vtype == 's'):
+            elif vtype == 's':
                 raise Exception("MfList error: '\str\' type found it dtype." + \
                                 " This gives unpredictable results when " + \
                                 "recarray to file - change to \'object\' type")
@@ -143,7 +143,6 @@ class MfList(object):
                 raise Exception("MfList.fmt_string error: unknown vtype " + \
                                 "in dtype:" + vtype)
         return fmt_string
-
 
     # Private method to cast the data argument
     # Should only be called by the constructor
@@ -167,8 +166,8 @@ class MfList(object):
                     kper = int(kper)
                 except Exception as e:
                     raise Exception("MfList error: data dict key " + \
-                                              "{0:s} not integer: ".format(kper) + \
-                                              str(type(kper)) + "\n" + str(e))
+                                    "{0:s} not integer: ".format(kper) + \
+                                    str(type(kper)) + "\n" + str(e))
                 # Same as before, just try...
                 if isinstance(d, list):
                     # warnings.warn("MfList: casting list to array at " +\
@@ -295,13 +294,14 @@ class MfList(object):
         # If the data entry for kper is a string, 
         # return the corresponding recarray,
         # but don't reset the value in the data dict
-        #assert kper in list(self.data.keys()), "MfList.__getitem__() kper " + \
+        # assert kper in list(self.data.keys()), "MfList.__getitem__() kper " + \
         #                                       str(kper) + " not in data.keys()"
         try:
             kper = int(kper)
         except Exception as e:
-            raise Exception("MfList error: _getitem__() passed invalid kper index:"
-                            + str(kper))
+            raise Exception(
+                "MfList error: _getitem__() passed invalid kper index:"
+                + str(kper))
         if kper not in list(self.data.keys()):
             return self.get_empty()
         if (self.vtype[kper] == int):
@@ -357,13 +357,10 @@ class MfList(object):
     def write_transient(self, f, single_per=None):
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
-        # assert isinstance(f, file), "MfList.write() error: " +\
-        #                             "f argument must be a file handle"
         assert hasattr(f, "read"), "MfList.write() error: " + \
                                    "f argument must be a file handle"
         kpers = list(self.data.keys())
         kpers.sort()
-        # Assert 0 in kpers,"MfList.write() error: kper 0 not defined"
         first = kpers[0]
         if (single_per == None):
             loop_over_kpers = list(range(0, max(nper, max(kpers) + 1)))
@@ -395,17 +392,33 @@ class MfList(object):
                 kper_vtype = int
 
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
-                    .format(itmp,0, kper))
+                    .format(itmp, 0, kper))
+
+            if self.model.free_format and self.model.external_path is not None:
+                if kper_vtype == np.recarray:
+                    py_filepath = ''
+                    if self.model.model_ws is not None:
+                        py_filepath = self.model.model_ws
+                    py_filepath = os.path.join(py_filepath,
+                                               self.model.external_path)
+                    filename = self.package.name[0] + \
+                               "_{0:04d}.dat".format(kper)
+                    py_filepath = os.path.join(py_filepath,filename)
+                    model_filepath = os.path.join(self.model.external_path,
+                                                  filename)
+                    self.__tofile(py_filepath,kper_data)
+                    kper_vtype = str
+                    kper_data = model_filepath
 
             if (kper_vtype == np.recarray):
                 name = f.name
                 f.close()
                 f = open(name, 'ab+')
-                #print(f)
+                # print(f)
                 self.__tofile(f, kper_data)
                 f.close()
                 f = open(name, 'a')
-                #print(f)
+                # print(f)
             elif (kper_vtype == str):
                 f.write("         open/close " + kper_data + '\n')
 
@@ -458,7 +471,10 @@ class MfList(object):
                     for idx in out_idx:
                         d = data[idx]
                         warn_str += " {0:9d} {1:9d} {2:9d}\n".format(d['k']
-                                                                     + 1, d['i'] + 1, d['j'] + 1)
+                                                                     + 1, d[
+                                                                         'i'] + 1,
+                                                                     d[
+                                                                         'j'] + 1)
                     warnings.warn(warn_str)
 
     def __find_last_kper(self, kper):
@@ -603,7 +619,7 @@ class MfList(object):
         if filename_base is not None:
             if mflay is not None:
                 i0 = int(mflay)
-                if i0+1 >= self.model.nlay:
+                if i0 + 1 >= self.model.nlay:
                     i0 = self.model.nlay - 1
                 i1 = i0 + 1
             else:
@@ -611,14 +627,18 @@ class MfList(object):
                 i1 = self.model.nlay
             # build filenames
             pn = self.package.name[0].upper()
-            filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
-                                                                  kper+1, k+1, fext) for k in range(i0, i1)]
+            filenames = [
+                '{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
+                                                         kper + 1, k + 1, fext)
+                for k in range(i0, i1)]
         if names is None:
             if key is None:
-                names = ['{} location stress period: {} layer: {}'.format(self.package.name[0], kper+1, k+1)
+                names = ['{} location stress period: {} layer: {}'.format(
+                    self.package.name[0], kper + 1, k + 1)
                          for k in range(self.model.nlay)]
             else:
-                names = ['{} {} stress period: {} layer: {}'.format(self.package.name[0], key, kper+1, k+1)
+                names = ['{} {} stress period: {} layer: {}'.format(
+                    self.package.name[0], key, kper + 1, k + 1)
                          for k in range(self.model.nlay)]
 
         if key is None:
@@ -672,7 +692,8 @@ class MfList(object):
         >>> ml.wel.to_shapefile('test_hk.shp', kper=1)
         """
         import warnings
-        warnings.warn("Deprecation warning: to_shapefile() is deprecated. use .export()")
+        warnings.warn(
+            "Deprecation warning: to_shapefile() is deprecated. use .export()")
 
         # if self.sr is None:
         #     raise Exception("MfList.to_shapefile: SpatialReference not set")
@@ -692,7 +713,7 @@ class MfList(object):
         #             aname = "{}{:03d}{:03d}".format(n, k+1, int(kk)+1)
         #             array_dict[aname] = array[k]
         # fio.write_grid_shapefile(filename, self.sr, array_dict)
-        self.export(filename,kper=kper)
+        self.export(filename, kper=kper)
 
     def to_array(self, kper=0, mask=False):
         """
@@ -760,7 +781,6 @@ class MfList(object):
             else:
                 raise Exception("MfList: something bad happened")
 
-
         for name, arr in arrays.items():
             cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol),
                            dtype=np.float)
@@ -781,18 +801,18 @@ class MfList(object):
 
     @property
     def masked_4D_arrays(self):
-        #get the first kper
-        arrays = self.to_array(kper=0,mask=True)
+        # get the first kper
+        arrays = self.to_array(kper=0, mask=True)
 
         # initialize these big arrays
         m4ds = {}
-        for name,array in arrays.items():
-            m4d = np.zeros((self.model.nper,self.model.nlay,
-                            self.model.nrow,self.model.ncol))
-            m4d[0,:,:,:] = array
+        for name, array in arrays.items():
+            m4d = np.zeros((self.model.nper, self.model.nlay,
+                            self.model.nrow, self.model.ncol))
+            m4d[0, :, :, :] = array
             m4ds[name] = m4d
-        for kper in range(1,self.model.nper):
-            arrays = self.to_array(kper=kper,mask=True)
-            for name,array in arrays.items():
-                m4ds[name][kper,:,:,:] = array
+        for kper in range(1, self.model.nper):
+            arrays = self.to_array(kper=kper, mask=True)
+            for name, array in arrays.items():
+                m4ds[name][kper, :, :, :] = array
         return m4ds
