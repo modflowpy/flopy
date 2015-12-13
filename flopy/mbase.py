@@ -11,7 +11,6 @@ import os
 import subprocess as sp
 import copy
 
-
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
 iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
@@ -81,13 +80,36 @@ class BaseModel(object):
             try:
                 os.makedirs(model_ws)
             except:
-                print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(model_ws, os.getcwd()))
+                print(
+                    '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(
+                        model_ws, os.getcwd()))
                 model_ws = os.getcwd()
         self._model_ws = model_ws
         self.structured = structured
         self.pop_key_list = []
         self.cl_params = ''
+
+        # Model file information
+        # external option stuff
+        self.free_format = True
+        self.array_format = None
+        self.external_fnames = []
+        self.external_units = []
+        self.external_binflag = []
+
+        # the starting external data unit number
+        self.__next_ext_unit = 1000
+
         return
+
+    def next_ext_unit(self):
+        """
+        Function to encapsulate next_ext_unit attribute
+
+        """
+        next_unit = self.__next_ext_unit + 1
+        self.__next_ext_unit += 1
+        return next_unit
 
     def export(self, f, **kwargs):
         # for pak in self.packagelist:
@@ -108,8 +130,9 @@ class BaseModel(object):
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
                 continue
-            elif (isinstance(p, type(pp))):
-                print('****Warning -- two packages of the same type: ', type(p), type(pp))
+            elif isinstance(p, type(pp)):
+                print('****Warning -- two packages of the same type: ',
+                      type(p), type(pp))
                 print('replacing existing Package...')
                 self.packagelist[i] = p
                 return
@@ -133,7 +156,8 @@ class BaseModel(object):
                     print('removing Package: ', pp.name)
                 self.packagelist.pop(i)
                 return
-        raise StopIteration('Package name ' + pname + ' not found in Package list')
+        raise StopIteration(
+            'Package name ' + pname + ' not found in Package list')
 
     def __getattr__(self, item):
         """
@@ -169,8 +193,8 @@ class BaseModel(object):
 
         """
         if fname in self.external_fnames:
-            print ("BaseModel.add_external() warning: " +
-                   "replacing existing filename {0}".format(fname))
+            print("BaseModel.add_external() warning: " +
+                  "replacing existing filename {0}".format(fname))
             idx = self.external_fnames.index(fname)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
@@ -207,7 +231,8 @@ class BaseModel(object):
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
         else:
-            raise Exception(' either fname or unit must be passed to remove_external()')
+            raise Exception(
+                ' either fname or unit must be passed to remove_external()')
         return
 
     def get_name_file_entries(self):
@@ -224,7 +249,8 @@ class BaseModel(object):
                 if p.unit_number[i] == 0:
                     continue
                 s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                               p.unit_number[i],
+                                                               p.unit_number[
+                                                                   i],
                                                                p.file_name[i],
                                                                p.extra[i]))
         return s
@@ -290,24 +316,28 @@ class BaseModel(object):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                sys.stdout.write('\ncreating model workspace...\n   {}\n'.format(new_pth))
+                sys.stdout.write(
+                    '\ncreating model workspace...\n   {}\n'.format(new_pth))
                 os.makedirs(new_pth)
             except:
                 # print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
-                print('\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(new_pth, os.getcwd()))
+                print(
+                    '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(
+                        new_pth, os.getcwd()))
                 new_pth = os.getcwd()
         # --reset the model workspace
         self._model_ws = new_pth
-        sys.stdout.write('\nchanging model workspace...\n   {}\n'.format(new_pth))
+        sys.stdout.write(
+            '\nchanging model workspace...\n   {}\n'.format(new_pth))
         # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
 
         # create the external path (if needed)
-        if hasattr(self,"external_path") and self.external_path is not None\
+        if hasattr(self, "external_path") and self.external_path is not None \
                 and not os.path.exists(os.path.join(self._model_ws,
                                                     self.external_path)):
-            os.makedirs(os.path.join(self._model_ws,self.external_path))
+            os.makedirs(os.path.join(self._model_ws, self.external_path))
         return None
 
     @property
@@ -331,14 +361,14 @@ class BaseModel(object):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
 
-    def __setattr__(self,key,value):
+    def __setattr__(self, key, value):
 
         if key == "name":
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
         else:
-            super(BaseModel,self).__setattr__(key,value)
+            super(BaseModel, self).__setattr__(key, value)
 
     def run_model(self, silent=False, pause=False, report=False,
                   normal_msg='normal termination'):
@@ -406,7 +436,7 @@ class BaseModel(object):
             print(' ')
         # write name file
         self.write_name_file()
-        #os.chdir(org_dir)
+        # os.chdir(org_dir)
         return
 
     def write_name_file(self):
@@ -414,7 +444,8 @@ class BaseModel(object):
         Every Package needs its own writenamefile function
 
         """
-        raise Exception('IMPLEMENTATION ERROR: writenamefile must be overloaded')
+        raise Exception(
+            'IMPLEMENTATION ERROR: writenamefile must be overloaded')
 
     @property
     def name(self):
@@ -507,7 +538,8 @@ class BaseModel(object):
                 MODFLOW zero-based layer number to return.  If None, then all
                 all layers will be included. (default is None)
             kper : int
-                MODFLOW zero-based stress period number to return. (default is zero)
+                MODFLOW zero-based stress period number to return.
+                (default is zero)
             key : str
                 MfList dictionary key. (default is None)
 
@@ -623,10 +655,8 @@ class BaseModel(object):
         """
         import warnings
         warnings.warn("to_shapefile() is deprecated. use .export()")
-        self.export(filename,package_names=package_names)
+        self.export(filename, package_names=package_names)
         return
-
-
 
 
 def run_model(exe_name, namefile, model_ws='./',
@@ -675,11 +705,13 @@ def run_model(exe_name, namefile, model_ws='./',
             if not exe_name.lower().endswith('.exe'):
                 exe = which(exe_name + '.exe')
     if exe is None:
-        s = 'The program {} does not exist or is not executable.'.format(exe_name)
+        s = 'The program {} does not exist or is not executable.'.format(
+            exe_name)
         raise Exception(s)
     else:
         if not silent:
-            s = 'FloPy is using the following executable to run the model: {}'.format(exe)
+            s = 'FloPy is using the following executable to run the model: {}'.format(
+                exe)
             print(s)
 
     if not os.path.isfile(os.path.join(model_ws, namefile)):
