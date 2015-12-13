@@ -7,9 +7,10 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 import os
 import sys
 import flopy
-from flopy.mbase import BaseModel, Package
-from flopy.utils import mfreadnam
-from flopy.modflow.mfpar import ModflowPar
+from ..mbase import BaseModel
+from ..pakbase import Package
+from ..utils import mfreadnam
+from .mfpar import ModflowPar
 
 
 class ModflowGlobal(Package):

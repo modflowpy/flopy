@@ -10,8 +10,8 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils import Util2d
+from ..pakbase import Package
+from ..utils import Util2d
 
 
 class ModflowUzf1(Package):

@@ -1,4 +1,5 @@
-from flopy.mbase import BaseModel, Package
+from ..mbase import BaseModel
+from ..pakbase import Package
 from .swtvdf import SeawatVdf
 import os
 

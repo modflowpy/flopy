@@ -8,7 +8,7 @@ MODFLOW Guide
 
 """
 import sys
-from flopy.mbase import Package
+from ..pakbase import Package
 
 
 class ModflowDe4(Package):

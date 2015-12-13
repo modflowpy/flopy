@@ -1,6 +1,6 @@
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils import Util3d
+from ..pakbase import Package
+from ..utils import Util3d
 
 
 class SeawatVsc(Package):

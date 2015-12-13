@@ -10,7 +10,7 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils.util_list import MfList
 
 class ModflowWel(Package):

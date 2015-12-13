@@ -7,7 +7,7 @@ the ModflowSms class as `flopy.modflow.ModflowSms`.
 """
 
 import sys
-from flopy.mbase import Package
+from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 
 class ModflowSms(Package):

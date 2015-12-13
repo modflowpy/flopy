@@ -9,8 +9,8 @@ MODFLOW Guide
 """
 import sys
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils.util_list import MfList
+from ..pakbase import Package
+from ..utils.util_list import MfList
 
 
 class ModflowDrn(Package):

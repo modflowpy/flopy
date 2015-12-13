@@ -1,5 +1,5 @@
 import sys
-from flopy.mbase import Package
+from ..pakbase import Package
 
 class Mt3dAdv(Package):
     """

@@ -4,7 +4,7 @@ the ModflowPks class as `flopy.modflow.ModflowPks`.
 
 """
 import sys
-from flopy.mbase import Package
+from ..pakbase import Package
 
 
 class ModflowPks(Package):

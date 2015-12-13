@@ -11,8 +11,8 @@ import sys
 import copy
 import numpy as np
 # from numpy import ones, zeros, empty
-from flopy.mbase import Package
-from flopy.utils import Util2d, Util3d
+from ..pakbase import Package
+from ..utils import Util2d, Util3d
 
 
 class ModflowSwi2(Package):

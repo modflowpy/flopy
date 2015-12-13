@@ -10,11 +10,9 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils import Util2d
-from flopy.utils.util_array import Transient2d
-from flopy.modflow.mfparbc import ModflowParBc as mfparbc
-
+from ..pakbase import Package
+from ..utils import Util2d, Transient2d
+from ..modflow.mfparbc import  ModflowParBc as mfparbc
 
 class ModflowRch(Package):
     """

@@ -1,6 +1,6 @@
 # from numpy import empty, zeros, ones, where
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 
 
 class ModflowMnw2(Package):

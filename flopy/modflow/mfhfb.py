@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import sys
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 from numpy import atleast_2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 from numpy.lib.recfunctions import stack_arrays

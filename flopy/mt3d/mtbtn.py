@@ -9,8 +9,8 @@ User's Manual.
 
 import numpy as np
 # from numpy import empty,array
-from flopy.mbase import Package
-from flopy.utils import Util2d, Util3d, read1d
+from ..pakbase import Package
+from ..utils import Util2d, Util3d, read1d
 import warnings
 
 class Mt3dBtn(Package):
