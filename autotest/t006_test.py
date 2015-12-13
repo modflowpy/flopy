@@ -39,6 +39,7 @@ def test_binaryfile_reference():
     assert isinstance(h.plot(), matplotlib.axes.Axes)
     return
 
+
 def test_formattedfile_reference():
     import os
     import flopy
