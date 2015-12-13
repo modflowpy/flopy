@@ -18,10 +18,12 @@ class ModflowSip(Package):
     Parameters
     ----------
     model : model object
-        The model object (of type :class:flopy.modflow.mf.Modflow) to which this package will be added.
+        The model object (of type :class:flopy.modflow.mf.Modflow) to which
+        this package will be added.
     mxiter : integer
-        The maximum number of times through the iteration loop in one time step in an attempt to solve the
-        system of finite-difference equations. (default is 200)
+        The maximum number of times through the iteration loop in one time
+        step in an attempt to solve the system of finite-difference equations.
+        (default is 200)
     nparm : integer
         The number of iteration variables to be used.
         Five variables are generally sufficient. (default is 5)

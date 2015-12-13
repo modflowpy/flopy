@@ -68,7 +68,19 @@ class ModflowDis(Package):
         Filename extension (default is 'dis')
     unitnumber : int
         File unit number (default is 11).
-
+    xul : float
+        x coordinate of upper left corner of the grid, default is None
+    yul : float
+        y coordinate of upper left corner of the grid, default is None
+    rotation : float
+        clockwise rotation (in degrees) of the grid about the upper left
+        corner. default is 0.0
+    proj4_str : str
+        PROJ4 string that defines the xul-yul coordinate system
+        (.e.g. '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ').
+        Can be an EPSG code (e.g. 'EPSG:4326'). Default is 'EPSG:4326'
+    start_dateteim : str
+        starting datetime of the simulation. default is '1/1/1970'
 
     Attributes
     ----------
@@ -96,8 +108,8 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=11, xul=None, yul=None, rotation=0.0, proj4_str="EPSG:4326",
-                 start_datetime="1/1/1970"):
+                 unitnumber=11, xul=None, yul=None, rotation=0.0,
+                 proj4_str="EPSG:4326", start_datetime="1/1/1970"):
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
@@ -143,8 +155,9 @@ class ModflowDis(Package):
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
 
-        self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni,
-                                             xul=xul, yul=yul, rotation=rotation,
+        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
+                                             self.lenuni,xul=xul, yul=yul,
+                                             rotation=rotation,
                                              proj4_str=proj4_str)
         self.start_datetime = start_datetime
         # calculate layer thicknesses
@@ -410,11 +423,12 @@ class ModflowDis(Package):
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        
         f_dis.write('{0:s}\n'.format(self.heading))
-        f_dis.write('#{0:s},start:{1}\n'.format(str(self.sr),self.start_datetime))
+        f_dis.write('#{0:s}'.format(str(self.sr)))
+        f_dis.write(",{0:s}\n".format(self.start_datetime))
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n' \
-                    .format(self.nlay, self.nrow, self.ncol, self.nper, self.itmuni,
-                            self.lenuni))
+                    .format(self.nlay, self.nrow, self.ncol, self.nper,
+                            self.itmuni, self.lenuni))
         # Item 2: LAYCBD
         for l in range(0, self.nlay):
             f_dis.write('{0:3d}'.format(self.laycbd[l]))

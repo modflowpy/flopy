@@ -1,4 +1,4 @@
-from numpy import empty,zeros
+from numpy import empty, zeros
 from ..pakbase import Package
 
 class ModflowMnw1(Package):
@@ -45,8 +45,6 @@ class ModflowMnw1(Package):
 
     Methods
     -------
-    write_file : Writes Modflow input file for the drain package
-    load : no load method for this class
 
     See Also
     --------
