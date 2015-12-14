@@ -22,7 +22,7 @@ class MfList(object):
     Parameters
     ----------
     package : package object
-        The package object (of type :class:`flopy.mbase.Package`) to which
+        The package object (of type :class:`flopy.pakbase.Package`) to which
         this MfList will be added.
     data : varies
         the data of the transient list (optional). (the default is None)

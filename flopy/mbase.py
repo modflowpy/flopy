@@ -171,7 +171,7 @@ class BaseModel(object):
         Returns
         -------
         pp : Package object
-            Package object of type :class:`flopy.mbase.Package`
+            Package object of type :class:`flopy.pakbase.Package`
 
         """
         return self.get_package(item)
@@ -267,7 +267,7 @@ class BaseModel(object):
         Returns
         -------
         pp : Package object
-            Package object of type :class:`flopy.mbase.Package`
+            Package object of type :class:`flopy.pakbase.Package`
 
         """
         for pp in (self.packagelist):

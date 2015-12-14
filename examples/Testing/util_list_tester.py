@@ -48,8 +48,8 @@ model1 = flopy.modflow.Modflow("test")
 dis1 = flopy.modflow.ModflowDis(model1,nlay=1,nrow=1,ncol=1,nper=3)
 riv1 = flopy.modflow.ModflowRiv.load("modflowtest.riv",model1,nper=10)
 
-riv2 = flopy.mbase.Package.load(model,flopy.modflow.ModflowRiv,"modflowtest.riv")
-ghb = flopy.mbase.Package.load(model,flopy.modflow.ModflowGhb,"modflowtest.ghb")
+riv2 = flopy.pakbase.Package.load(model,flopy.modflow.ModflowRiv,"modflowtest.riv")
+ghb = flopy.pakbase.Package.load(model,flopy.modflow.ModflowGhb,"modflowtest.ghb")
 riv1.write_file()
 #get the recarray from sp 10
 sp10_rec = riv[9]

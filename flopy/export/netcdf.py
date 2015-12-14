@@ -110,13 +110,9 @@ class NetCdf(object):
 
     Notes
     -----
-    this class relies heavily on the ModflowDis object,
-    including these attributes:
-                lenuni
-                itmuni
-                start_datetime
-                sr (SpatialReference)
-    make sure these attributes have meaningful values
+    This class relies heavily on the ModflowDis object,
+    including these attributes: lenuni, itmuni, start_datetime, sr
+    (SpatialReference).  Make sure these attributes have meaningful values.
 
     """
 

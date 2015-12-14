@@ -11,7 +11,7 @@ from .utils import Util2d, Util3d, Transient2d, MfList
 from numpy.lib.recfunctions import stack_arrays
 import os
 from .modflow.mfparbc import ModflowParBc as mfparbc
-
+import webbrowser as wb
 
 class Package(object):
     """
