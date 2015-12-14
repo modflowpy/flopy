@@ -74,7 +74,7 @@ class SeawatVsc(Package):
         value must be between 1 and NCOMP and should not be listed in
         MTMUSPEC of item 3c.
     amucoeff : float
-        is the coefficient array of size MUNCOEFF. AMUCOEFF is ``A'' in
+        is the coefficient array of size MUNCOEFF. AMUCOEFF is A in
         equations 18, 19, and 20.
     muncoef : int
         is the size of the AMUCOEFF array.

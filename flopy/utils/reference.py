@@ -59,26 +59,17 @@ class SpatialReference(object):
     ycentergrid : ndarray
         numpy meshgrid of row centers
 
-    Note:
-    ----
+    Notes
+    -----
 
-    xul and yul can be explicitly (re)set after SpatialReference instantiation, but only before
-    any of the other attributes and methods are accessed
+    xul and yul can be explicitly (re)set after SpatialReference
+    instantiation, but only before any of the other attributes and methods are
+    accessed
         
     """
 
     def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0,
                  proj4_str="EPSG:4326"):
-        """
-
-            delr: delr array
-            delc: delc array
-            lenuni: lenght unit code
-            xul: x coord of upper left corner of grid
-            yul: y coord of upper left corner of grid
-            rotation_degrees: grid rotation
-
-        """
         self.delc = delc
         self.delr = delr
 
@@ -343,8 +334,8 @@ class SpatialReference(object):
     def get_xedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid in model space - not offset or rotated.
-          Array is of size (ncol + 1)
+        coordinates for every column in the grid in model space - not offset
+        or rotated.  Array is of size (ncol + 1)
 
         """
         xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
@@ -353,8 +344,8 @@ class SpatialReference(object):
     def get_yedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid in model space - not offset or rotated.
-          Array is of size (nrow + 1)
+        coordinates for every row in the grid in model space - not offset or
+        rotated. Array is of size (nrow + 1)
 
         """
         length_y = np.add.reduce(self.delc)
