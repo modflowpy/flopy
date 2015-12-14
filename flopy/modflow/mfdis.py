@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import Util2d, Util3d, reference
+from flopy.utils import Util2d, Util3d, reference, check
 
 
 ITMUNI = {"u":0,"s":1,"m":2,"h":3,"d":4,"y":5}
@@ -467,6 +467,20 @@ class ModflowDis(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.dis.check()
         """
+        chk = check(self, f=f, verbose=verbose, level=level)
+        active = self.parent.bas6.ibound.array != 0
+        chk.values(self.thickness.array[active],
+                   self.thickness.array[active] <= 0, 'zero or negative thickness', 'Error')
+        chk.values(self.top.array[active[0, :, :]],
+                   np.isnan(self.top.array)[active[0, :, :]], 'nan values in top array', 'Error')
+        chk.values(self.botm.array[active],
+                   np.isnan(self.botm.array)[active], 'nan values in bottom array', 'Error')
+        chk.summarize()
+
+        if verbose:
+            print(chk.txt)
+
+        '''
         if f is not None:
             if isinstance(f, str):
                 pth = os.path.join(self.parent.model_ws, f)
@@ -505,7 +519,7 @@ class ModflowDis(Package):
         # write errors to stdout
         if verbose:
             print(txt)
-
+        '''
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):

@@ -491,9 +491,11 @@ class BaseModel(object):
             if isinstance(f, str):
                 pth = os.path.join(self.model_ws, f)
                 f = open(pth, 'w', 0)
-        for p in self.packagelist:
-            p.check(f=f, verbose=verbose, level=level)
 
+        results = {}
+        for p in self.packagelist:
+            results[p.name[0]] = p.check(f=f, verbose=verbose, level=level)
+        return results
 
     def plot(self, SelPackList=None, **kwargs):
         """
@@ -829,13 +831,33 @@ class Package(object):
             if isinstance(f, str):
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, 'w', 0)
+        chk = None
+        if self.name[0] in utils.check.bc_elev_names.keys():
 
-        txt = 'check method not implemented for {} Package.'.format(self.name[0])
+            chk = utils.check(self, f=f, verbose=verbose, level=level)
+            active = self.parent.bas6.ibound.array != 0
+
+            for per in range(self.parent.nper):
+                spd = self.stress_period_data[per]
+
+                # check that bc elevations are above model cell bottoms
+                # also checks for nan values
+                elev_name = chk.bc_elev_names[self.name[0]]
+                botms = self.parent.dis.botm.array[spd.k, spd.i, spd.j]
+                chk.stress_period_data(spd, spd[elev_name] < botms,
+                                       col=elev_name,
+                                       error_name='BC elevation below cell bottom',
+                                       error_type='Error')
+            chk.summarize()
+            txt = chk.txt
+
+        else:
+            txt = 'check method not implemented for {} Package.'.format(self.name[0])
         if f is not None:
             f.write('{}\n'.format(txt))
         if verbose:
             print(txt)
-        return
+        return chk
 
     def level1_arraylist(self, idx, v, name, txt):
         ndim = v.ndim
