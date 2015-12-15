@@ -470,15 +470,17 @@ class ModflowDis(Package):
         chk = check(self, f=f, verbose=verbose, level=level)
         active = self.parent.bas6.ibound.array != 0
         chk.values(self.thickness.array[active],
-                   self.thickness.array[active] <= 0, 'zero or negative thickness', 'Error')
+                   self.thickness.array[active] <= 0,
+                   'zero or negative thickness', 'Error')
+        thin_cells = (self.thickness.array[active] < 1) & (self.thickness.array[active] > 0)
+        chk.values(self.thickness.array[active], thin_cells,
+                   'thin cells (less than checker threshold of {:.1f})'
+                   .format(chk.thin_cell_threshold), 'Error')
         chk.values(self.top.array[active[0, :, :]],
                    np.isnan(self.top.array)[active[0, :, :]], 'nan values in top array', 'Error')
         chk.values(self.botm.array[active],
                    np.isnan(self.botm.array)[active], 'nan values in bottom array', 'Error')
         chk.summarize()
-
-        if verbose:
-            print(chk.txt)
 
         '''
         if f is not None:

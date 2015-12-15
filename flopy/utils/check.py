@@ -5,50 +5,60 @@ from numpy.lib import recfunctions
 
 class check:
     """
-    Check SFR2 package for common errors
+    Check package for common errors
 
     Parameters
     ----------
-    sfrpackage : object
-        Instance of Flopy ModflowSfr2 class.
+    package : object
+        Instance of Package class.
     verbose : bool
         Boolean flag used to determine if check method results are
         written to the screen
     level : int
         Check method analysis level. If level=0, summary checks are
         performed. If level=1, full checks are performed.
+    property_threshold_values : dict
+        hk : tuple
+            Reasonable minimum/maximum hydraulic conductivity value; values below this will be flagged.
+            Default is (10e-10, 10e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+        vka : tuple
+            Reasonable minimum/maximum hydraulic conductivity value;
+            Default is (10e-10, 10e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+        vkcb : tuple
+            Reasonable minimum/maximum hydraulic conductivity value for quasi-3D confining bed;
+            Default is (10e-10, 10e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+        sy : tuple
+            Reasonable minimum/maximum specific yield values;
+            Default is (0.01,0.5) after Anderson, Woessner and Hunt (2015, Table 5.2).
+        sy : tuple
+            Reasonable minimum/maximum specific storage values;
+            Default is (3.3e-6, 2e-2) after Anderson, Woessner and Hunt (2015, Table 5.2).
 
     Notes
     -----
 
-    Daniel Feinstein's top 10 SFR problems (7/16/2014):
-    1) cell gaps btw adjacent reaches in a single segment
-    2) cell gaps btw routed segments. possibly because of re-entry problems at domain edge
-    3) adjacent reaches with STOP sloping the wrong way
-    4) routed segments with end/start sloping the wrong way
-    5) STOP>TOP1 violations, i.e.,floaters
-    6) STOP<<TOP1 violations, i.e., exaggerated incisions
-    7) segments that end within one diagonal cell distance from another segment, inviting linkage
-    8) circular routing of segments
-    9) multiple reaches with non-zero conductance in a single cell
-    10) reaches in inactive cells
-
-    Also after running the model they will want to check for backwater effects.
     """
 
     bc_elev_names = {'GHB': 'bhead', # all names in lower case
                      'RIV': 'stage',
                      'DRN': 'elev'}
 
-    def __init__(self, package, f=None, verbose=True, level=1):
+    property_threshold_values = {'hk': (1e-10, 1e5),
+                                 'hani': None,
+                                 'vka': (1e-10, 1e5),
+                                 'vkcb': (1e-10, 1e5),
+                                 'ss': (3.3e-6, 2e-2),
+                                 'sy': (0.01, 0.5)}
+    thin_cell_threshold = 1.0 # cells thickness less than this value will be flagged
+
+    def __init__(self, package, f=None, verbose=True, level=1, property_threshold_values={}):
 
         self.package = package
         self.structured = self.package.parent.structured
         self.verbose = verbose
         self.level = level
         self.passed = []
-        self.warnings = []
-        self.errors = []
+        property_threshold_values.update(property_threshold_values)
 
         self.summary_array = self._get_summary_array()
 
@@ -57,6 +67,14 @@ class check:
                 pth = os.path.join(self.parent.model_ws, f)
                 f = open(pth, 'w', 0)
         self.txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.package.name[0])
+
+    def _add_to_summary(self, type='Warning', k=0, i=0, j=0, node=0,
+                        value=0, desc=''):
+        col_list = [type, self.package.name[0]]
+        col_list += [k, i, j] if self.structured else [node]
+        col_list += [value, desc]
+        sa = self._get_summary_array(np.array(col_list))
+        self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
 
     def _boolean_compare(self, array, col1, col2,
                          level0txt='{} violations encountered.',
@@ -181,11 +199,11 @@ class check:
             col = self.bc_elev_names[self.package.name[0]]
             sa = self._list_spd_check_violations(stress_period_data,
                                                  row_has_nan, col,
-                                                 error_name='Not a Number entries',
+                                                 error_name='Not a number',
                                                  error_type='Error')
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
         else:
-            self.passed.append('Not a Number entries')
+            self.passed.append('not a number (Nan) entries')
 
     def _stress_period_data_inactivecells(self, stress_period_data):
         """Check for and list any stress period data in cells with ibound=0."""
@@ -200,7 +218,7 @@ class check:
                                                  error_type='Warning')
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
         else:
-            self.passed.append('BC in inactive cell')
+            self.passed.append('BCs in inactive cells')
 
     def _list_spd_check_violations(self, stress_period_data, criteria, col,
                                   error_name='', error_type='Warning'):
@@ -259,12 +277,15 @@ class check:
                     n = len(a[a.desc == e])
                     txt += '  {} instances of {}\n'.format(n, e)
         if txt == '':
-            'No errors or warnings encountered.\n'
+            txt += 'No errors or warnings encountered.\n'
 
-        txt += '  Checks that passed:\n'
-        for chkname in self.passed:
-            txt += '    {}\n'.format(chkname)
+        if len(self.passed) > 0:
+            txt += '  Checks that passed:\n'
+            for chkname in self.passed:
+                txt += '    {}\n'.format(chkname)
         self.txt += txt
+        if self.verbose:
+            print(self.txt)
 
 
 def _fmt_string_list(array, float_format='{}'):
@@ -314,3 +335,30 @@ def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
     txt += delimiter.join(cols) + '\n'
     txt += '\n'.join([delimiter.join(fmts).format(*r) for r in array[cols].copy().tolist()])
     return txt
+
+def get_neighbors(a):
+    """Returns the 6 neighboring values for each value in a.
+
+    Parameters
+    ----------
+    a : 3-D array
+        Model array in layer, row, column order.
+
+    Returns
+    -------
+    neighbors : 4-D array
+        Array of neighbors, where axis 0 contains the 6 neighboring
+        values for each value in a, and subsequent axes are in layer, row, column order.
+        Nan is returned for values at edges.
+    """
+    nk, ni, nj = a.shape
+    tmp = np.empty((nk+2, ni+2, nj+2), dtype=float)
+    tmp[:, :, :] = np.nan
+    tmp[1:-1, 1:-1, 1:-1] = a[:, :, :]
+    neighbors = np.vstack([tmp[0:-2, 1:-1, 1:-1].ravel(),
+                           tmp[2:, 1:-1, 1:-1].ravel(),
+                           tmp[1:-1, 0:-2, 1:-1].ravel(),
+                           tmp[1:-1, 2:, 1:-1].ravel(),
+                           tmp[1:-1, 1:-1, :-2].ravel(),
+                           tmp[1:-1, 1:-1, 2:].ravel()])
+    return neighbors.reshape(6, nk, ni, nj)

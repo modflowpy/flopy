@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from flopy.mbase import Package
-from flopy.utils import Util2d
+from flopy.utils import Util2d, check
 from flopy.utils.util_array import Transient2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 
@@ -103,6 +103,64 @@ class ModflowRch(Package):
             self.irch = None
         self.np = 0
         self.parent.add_package(self)
+
+    def check(self, f=None, verbose=True, level=1, RTmin=2e-8, RTmax=2e-4):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.rch.check()
+
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+        active = self.parent.bas6.ibound.array.sum(axis=0) != 0
+
+        # check for unusually high or low values of mean R/T
+        hk_package = {'UPW', 'LPF'}.intersection(set(self.parent.get_package_list()))
+        if len(hk_package) > 0:
+            pkg = list(hk_package)[0]
+            for per in range(self.parent.nper):
+                Rmean = self.rech.array[0][active].mean()
+                Tmean = (self.parent.get_package(pkg).hk.array[:, active] *
+                         self.parent.dis.thickness.array[:, active]).sum(axis=0).mean()
+                if Rmean/Tmean < RTmin:
+                    chk._add_to_summary(type='Warning', value=Rmean/Tmean,
+                                         desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
+                elif Rmean/Tmean > RTmax:
+                    chk._add_to_summary(type='Warning', value=Rmean/Tmean,
+                                         desc='\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax))
+                else:
+                    chk.passed.append('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+
+        # check for NRCHOP values != 3
+        if self.nrchop != 3:
+            chk._add_to_summary(type='Warning', value=self.nrchop,
+                                 desc='\r    Variable NRCHOP is set to value other than 3'.format(RTmin))
+        else:
+            chk.passed.append('Variable NRCHOP is equal to 3.')
+        chk.summarize()
 
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)

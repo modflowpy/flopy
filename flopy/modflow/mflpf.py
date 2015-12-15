@@ -261,7 +261,8 @@ class ModflowLpf(Package):
         f.close()
         return
 
-    def check(self, f=None, verbose=True, level=1):
+        '''
+        def check(self, f=None, verbose=True, level=1):
         """
         Check lpf package data for common errors.
 
@@ -412,7 +413,7 @@ class ModflowLpf(Package):
         # write errors to stdout
         if verbose:
             print(txt)
-
+        '''
     @staticmethod
     def load(f, model, ext_unit_dict=None):
         """
