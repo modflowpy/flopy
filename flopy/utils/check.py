@@ -2,7 +2,6 @@ import os
 import numpy as np
 from numpy.lib import recfunctions
 
-
 class check:
     """
     Check package for common errors
@@ -51,22 +50,34 @@ class check:
                                  'sy': (0.01, 0.5)}
     thin_cell_threshold = 1.0 # cells thickness less than this value will be flagged
 
-    def __init__(self, package, f=None, verbose=True, level=1, property_threshold_values={}):
+    def __init__(self, package, f=None, verbose=True, level=1,
+                 property_threshold_values={}):
 
+        # allow for instantiation with model or package
+        #if isinstance(package, BaseModel): didn't work
+        if package.parent is not None:
+            self.model = package.parent
+            self.prefix = '{} PACKAGE DATA VALIDATION'.format(package.name[0])
+        else:
+            self.model = package
+            self.prefix = '{} MODEL DATA VALIDATION SUMMARY'.format(self.model.name)
         self.package = package
-        self.structured = self.package.parent.structured
+        self.structured = self.model.structured
         self.verbose = verbose
         self.level = level
         self.passed = []
-        property_threshold_values.update(property_threshold_values)
+        self.property_threshold_values.update(property_threshold_values)
 
         self.summary_array = self._get_summary_array()
 
+        self.f = None
         if f is not None:
             if isinstance(f, str):
-                pth = os.path.join(self.parent.model_ws, f)
-                f = open(pth, 'w', 0)
-        self.txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.package.name[0])
+               pth = os.path.join(self.model.model_ws, f)
+               self.f = open(pth, 'w')
+            else:
+                self.f = f
+        self.txt = '\n{}:\n'.format(self.prefix)
 
     def _add_to_summary(self, type='Warning', k=0, i=0, j=0, node=0,
                         value=0, desc=''):
@@ -233,6 +244,11 @@ class check:
         tp = [error_type] * len(v)
         return self._get_summary_array(np.column_stack([tp, pn, inds, v, en]))
 
+    def print_summary(self, cols=None, delimiter=',', float_format='{:.6f}'):
+        # strip description column
+        self.summary_array['desc'] = [s.strip() for s in self.summary_array.desc]
+        return _print_rec_array(self.summary_array, cols=cols, delimiter=delimiter,
+                                float_format=float_format)
 
     def stress_period_data(self, stress_period_data, criteria, col,
                                   error_name='', error_type='Warning'):
@@ -268,24 +284,50 @@ class check:
             self.passed.append(error_name)
 
     def summarize(self):
+
+        # write the summary array to text file (all levels)
+        if self.f is not None:
+            self.f.write(self.print_summary())
+            self.f.close()
+
+        # print the screen output depending on level
         txt = ''
+        if 'MODEL' in self.prefix: # add package name for model summary output
+            self.summary_array['desc'] = \
+                ['\r    {} package: {}'.format(self.summary_array.package[i], d.strip())
+                 for i, d in enumerate(self.summary_array.desc)]
+
         for etype in ['Error', 'Warning']:
             a = self.summary_array[self.summary_array.type == etype]
+            t = ''
             if len(a) > 0:
-                txt += ' {} {}s:\n'.format(len(a), etype)
+                t += '  {} {}s:\n'.format(len(a), etype)
+                if len(a) == 1:
+                    t = t.replace('s', '') #grammer
                 for e in np.unique(a.desc):
                     n = len(a[a.desc == e])
-                    txt += '  {} instances of {}\n'.format(n, e)
+                    if n > 1:
+                        t += '    {} instances of {}\n'.format(n, e)
+                    else:
+                        t += '    {} instance of {}\n'.format(n, e)
+                txt += t
         if txt == '':
-            txt += 'No errors or warnings encountered.\n'
+            txt += '  No errors or warnings encountered.\n'
 
-        if len(self.passed) > 0:
+        if len(self.passed) > 0 and self.level > 0:
             txt += '  Checks that passed:\n'
             for chkname in self.passed:
                 txt += '    {}\n'.format(chkname)
         self.txt += txt
+
+        if self.level > 1:
+            # kludge to improve screen printing
+            self.summary_array['package'] = ['{} '.format(s) for s in self.summary_array['package']]
+            self.txt += '\nDETAILED SUMMARY:\n{}'.format(self.print_summary(float_format='{:.2e}', delimiter='\t'))
+
         if self.verbose:
             print(self.txt)
+
 
 
 def _fmt_string_list(array, float_format='{}'):
@@ -329,7 +371,7 @@ def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
         cols = list(array.dtype.names)
     # drop columns with no data
     if np.shape(array)[0] > 1:
-        cols = [c for c in cols if array[c].min() > -999999]
+        cols = [c for c in cols if array['type'].dtype.kind == 'O' or array[c].min() > -999999]
     # add _fmt_string call here
     fmts = _fmt_string_list(array[cols], float_format=float_format)
     txt += delimiter.join(cols) + '\n'

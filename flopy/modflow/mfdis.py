@@ -468,19 +468,35 @@ class ModflowDis(Package):
         >>> m.dis.check()
         """
         chk = check(self, f=f, verbose=verbose, level=level)
-        active = self.parent.bas6.ibound.array != 0
-        chk.values(self.thickness.array[active],
-                   self.thickness.array[active] <= 0,
+
+        # make ibound of same shape as thicknesses/botm for quasi-3D models
+        if self.laycbd.sum() > 0:
+            ncbd = np.sum(self.laycbd.array > 0)
+            active = np.empty((self.nlay+ncbd, self.nrow, self.ncol), dtype=int)
+            l = 0
+            for cbd in self.laycbd:
+                active[l, :, :] = self.parent.bas6.ibound.array[l, :, :] != 0
+                if cbd > 0:
+                    active[l+1, :, :] = active[l, :, :]
+                l += 1
+            active[-1, :, :] = self.parent.bas6.ibound.array[-1, :, :] != 0
+        else:
+            active = self.parent.bas6.ibound.array != 0
+        assert active.shape == self.botm.shape
+
+        chk.values(self.thickness.array,
+                   active & (self.thickness.array <= 0),
                    'zero or negative thickness', 'Error')
-        thin_cells = (self.thickness.array[active] < 1) & (self.thickness.array[active] > 0)
-        chk.values(self.thickness.array[active], thin_cells,
+        thin_cells = (self.thickness.array < 1) & (self.thickness.array > 0)
+        chk.values(self.thickness.array, active & thin_cells,
                    'thin cells (less than checker threshold of {:.1f})'
                    .format(chk.thin_cell_threshold), 'Error')
-        chk.values(self.top.array[active[0, :, :]],
-                   np.isnan(self.top.array)[active[0, :, :]], 'nan values in top array', 'Error')
-        chk.values(self.botm.array[active],
-                   np.isnan(self.botm.array)[active], 'nan values in bottom array', 'Error')
+        chk.values(self.top.array,
+                   active[0, :, :] & np.isnan(self.top.array), 'nan values in top array', 'Error')
+        chk.values(self.botm.array,
+                   active & np.isnan(self.botm.array), 'nan values in bottom array', 'Error')
         chk.summarize()
+        return chk
 
         '''
         if f is not None:

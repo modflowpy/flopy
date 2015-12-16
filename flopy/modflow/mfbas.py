@@ -127,7 +127,7 @@ class ModflowBas(Package):
         >>> m.bas6.check()
 
         """
-        chk = check(self, f=None, verbose=True, level=1)
+        chk = check(self, f=f, verbose=verbose, level=level)
 
         neighbors = get_neighbors(self.ibound.array)
         neighbors[np.isnan(neighbors)] = 0 # set neighbors at edges to 0 (inactive)

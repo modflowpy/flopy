@@ -335,7 +335,6 @@ class BaseModel(object):
                 p.file_name[i] = self.__name + '.' + p.extension[i]
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
 
-
     def __setattr__(self,key,value):
 
         if key == "name":
@@ -487,15 +486,23 @@ class BaseModel(object):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.check()
         """
-        if f is not None:
-            if isinstance(f, str):
-                pth = os.path.join(self.model_ws, f)
-                f = open(pth, 'w', 0)
-
+        # if we want to set package check output by level
+        package_chk_verbose = True
+        if level == 0:
+            package_chk_verbose = False
         results = {}
         for p in self.packagelist:
-            results[p.name[0]] = p.check(f=f, verbose=verbose, level=level)
-        return results
+            results[p.name[0]] = p.check(f=None, verbose=0, level=level)
+
+        chk = utils.check(self, f=f, verbose=verbose, level=level)
+        passed = []
+        for k, r in results.items():
+            if r is not None and r.summary_array is not None: # currently SFR doesn't have one
+                chk.summary_array = np.append(chk.summary_array, r.summary_array).view(np.recarray)
+                passed += ['{} package: {}'.format(r.package.name[0], psd) for psd in r.passed]
+        chk.passed = passed
+        chk.summarize()
+        return chk
 
     def plot(self, SelPackList=None, **kwargs):
         """
@@ -882,18 +889,6 @@ class Package(object):
             chk.values(self.__dict__['hani'].array, active & (self.__dict__['hani'].array < 0),
                            'negative horizontal anisotropy values', 'Error')
 
-            # check vkcb if there are any quasi-3D layers
-            if self.parent.dis.laycbd.sum() > 0:
-                # pad non-quasi-3D layers in vkcb array with ones so they won't fail checker
-                vkcb = self.vkcb.array.copy()
-                for l in range(self.vkcb.shape[0]):
-                    if self.parent.dis.laycbd[l] == 0:
-                        vkcb[l, :, :] = 1 # assign 1 instead of zero as default value that won't violate checker
-                        # (allows for same structure as other checks)
-
-                # check for zero or negative vkcb
-                chk.values(vkcb, active & (vkcb <= 0), 'zero or negative quasi-3D confining bed Kv values', 'Error')
-
             def check_thresholds(array, active, thresholds, name):
                 """Checks array against min and max threshold values."""
                 mn, mx = thresholds
@@ -914,30 +909,46 @@ class Package(object):
                 check_thresholds(self.__dict__[kp].array, active, chk.property_threshold_values[kp],
                                  name)
 
-            # check for unusual values in vkcb if there are any quasi-3D layers
+            # check vkcb if there are any quasi-3D layers
             if self.parent.dis.laycbd.sum() > 0:
+                # pad non-quasi-3D layers in vkcb array with ones so they won't fail checker
+                vkcb = self.vkcb.array.copy()
+                for l in range(self.vkcb.shape[0]):
+                    if self.parent.dis.laycbd[l] == 0:
+                        vkcb[l, :, :] = 1 # assign 1 instead of zero as default value that won't violate checker
+                        # (allows for same structure as other checks)
+
+                chk.values(vkcb, active & (vkcb <= 0), 'zero or negative quasi-3D confining bed Kv values', 'Error')
                 check_thresholds(vkcb, active, chk.property_threshold_values['vkcb'],
                                  'quasi-3D confining bed Kv')
 
-
-            # do the same for storage if the model is transient
-            sparams = {'ss': 'specific storage',
-                       'sy': 'specific yield'}
-            sarrays = {'ss': self.ss, 'sy': self.sy}
-            if 'STORAGECOEFFICIENT' in self.options: # convert to specific for checking
-                chk._add_to_summary(type='Warning',
-                                    desc='\r    STORAGECOEFFICIENT option is activated, \
-                                          storage values are read storage coefficients')
-                sarrays['ss'] /= self.parent.dis.thickness.array
-                sarrays['sy'] /= self.parent.dis.thickness.array
-
             if self.parent.dis.nper > 1: # only check storage if model is transient
-                for sp, name in sparams.items():
-                    chk.values(sarrays[sp], active & (sarrays[sp] <= 0),
-                               'zero or negative {} values'.format(name), 'Error')
-                for sp, name in sparams.items():
-                    check_thresholds(sarrays[sp], active, chk.property_threshold_values[sp],
-                                     name)
+
+                # do the same for storage if the model is transient
+                sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
+                if 'STORAGECOEFFICIENT' in self.options: # convert to specific for checking
+                    chk._add_to_summary(type='Warning',
+                                        desc='\r    STORAGECOEFFICIENT option is activated, \
+                                              storage values are read storage coefficients')
+                    sarrays['ss'] /= self.parent.dis.thickness.array
+                    sarrays['sy'] /= self.parent.dis.thickness.array
+
+                chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
+                           'zero or negative specific storage values', 'Error')
+                check_thresholds(sarrays['ss'], active, chk.property_threshold_values['ss'],
+                                 'specific storace')
+
+                # only check specific yield for convertible layers
+                inds = np.array([True if l > 0 or l < 0 and 'THICKSRT' in self.options
+                                 else False for l in self.laytyp])
+                sarrays['sy'] = sarrays['sy'][inds, :, :]
+                active = active[inds, :, :]
+                chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
+                           'zero or negative specific yield values', 'Error')
+                check_thresholds(sarrays['sy'], active, chk.property_threshold_values['sy'],
+                                 'specific yield')
+
+
             chk.summarize()
             txt = chk.txt
 

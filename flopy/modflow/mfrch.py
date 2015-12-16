@@ -157,10 +157,11 @@ class ModflowRch(Package):
         # check for NRCHOP values != 3
         if self.nrchop != 3:
             chk._add_to_summary(type='Warning', value=self.nrchop,
-                                 desc='\r    Variable NRCHOP is set to value other than 3'.format(RTmin))
+                                 desc='\r    Variable NRCHOP set to value other than 3'.format(RTmin))
         else:
-            chk.passed.append('Variable NRCHOP is equal to 3.')
+            chk.passed.append('Variable NRCHOP set to 3.')
         chk.summarize()
+        return chk
 
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)

@@ -1137,6 +1137,7 @@ class check:
         self.warnings = []
         self.errors = []
         self.txt = '\n{} ERRORS:\n'.format(self.sfr.name[0])
+        self.summary_array = None
 
     def _boolean_compare(self, array, col1, col2,
                          level0txt='{} violations encountered.',
