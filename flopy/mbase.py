@@ -10,6 +10,7 @@ import sys
 import os
 import subprocess as sp
 import copy
+import numpy as np
 from flopy import utils
 
 # Global variables

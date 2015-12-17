@@ -7,7 +7,7 @@ pakbase module
 
 from __future__ import print_function
 import numpy as np
-from .utils import Util2d, Util3d, Transient2d, MfList
+from .utils import Util2d, Util3d, Transient2d, MfList, check
 from numpy.lib.recfunctions import stack_arrays
 import os
 from .modflow.mfparbc import ModflowParBc as mfparbc
@@ -209,18 +209,126 @@ class Package(object):
         >>> m.dis.check()
 
         """
-        if f is not None:
-            if isinstance(f, str):
-                pth = os.path.join(self.parent.model_ws, f)
-                f = open(pth, 'w', 0)
+        chk = None
+        # check elevations in the ghb, drain, and riv packages
+        if self.name[0] in check.bc_elev_names.keys():
 
-        txt = 'check method not implemented for {} Package.'.format(
-                self.name[0])
-        if f is not None:
-            f.write('{}\n'.format(txt))
-        if verbose:
-            print(txt)
-        return
+            chk = check(self, f=f, verbose=verbose, level=level)
+            active = self.parent.bas6.ibound.array != 0
+
+            for per in range(self.parent.nper):
+                spd = self.stress_period_data[per]
+
+                # check that bc elevations are above model cell bottoms
+                # also checks for nan values
+                elev_name = chk.bc_elev_names[self.name[0]]
+                botms = self.parent.dis.botm.array[spd.k, spd.i, spd.j]
+                chk.stress_period_data(spd, spd[elev_name] < botms,
+                                       col=elev_name,
+                                       error_name='BC elevation below cell bottom',
+                                       error_type='Error')
+            chk.summarize()
+
+        # check property values in upw and lpf packages
+        elif self.name[0] in ['UPW', 'LPF']:
+
+            chk = check(self, f=f, verbose=verbose, level=level)
+            active = self.parent.bas6.ibound.array != 0
+
+            # check for confined layers above convertable layers
+            confined = False
+            for i, l in enumerate(self.laytyp.array.tolist()):
+                if l == 0 or l < 0 and self.thickstrt:
+                    confined=True
+                    continue
+                if confined and l > 0:
+                    chk._add_to_summary(type='Warning',
+                                        desc='\r    LAYTYP: unconfined (convertible) '+\
+                                             'layer below confined layer')
+
+            # check for zero or negative values of hydraulic conductivity, anisotropy,
+            # and quasi-3D confining beds
+            kparams = {'hk': 'horizontal hydraulic conductivity',
+                       'vka': 'vertical hydraulic conductivity'}
+            for kp, name in kparams.items():
+                chk.values(self.__dict__[kp].array, active & (self.__dict__[kp].array <= 0),
+                           'zero or negative {} values'.format(name), 'Error')
+
+            # check for negative hani
+            chk.values(self.__dict__['hani'].array, active & (self.__dict__['hani'].array < 0),
+                           'negative horizontal anisotropy values', 'Error')
+
+            def check_thresholds(array, active, thresholds, name):
+                """Checks array against min and max threshold values."""
+                mn, mx = thresholds
+                chk.values(array, active & (array < mn), '{} values below checker threshold of {}'
+                           .format(name, mn), 'Warning')
+                chk.values(array, active & (array > mx), '{} values above checker threshold of {}'
+                           .format(name, mx), 'Warning')
+
+            # check for unusually high or low values of hydraulic conductivity
+            if self.layvka.sum() > 0: # convert vertical anistropy to Kv for checking
+                vka = self.vka.array.copy()
+                for l in range(vka.shape[0]):
+                    vka[l] *= self.hk.array[l] if self.layvka.array[l] != 0 else 1
+                check_thresholds(vka, active, chk.property_threshold_values['vka'],
+                                 kparams.pop('vka'))
+
+            for kp, name in kparams.items():
+                check_thresholds(self.__dict__[kp].array, active, chk.property_threshold_values[kp],
+                                 name)
+
+            # check vkcb if there are any quasi-3D layers
+            if self.parent.dis.laycbd.sum() > 0:
+                # pad non-quasi-3D layers in vkcb array with ones so they won't fail checker
+                vkcb = self.vkcb.array.copy()
+                for l in range(self.vkcb.shape[0]):
+                    if self.parent.dis.laycbd[l] == 0:
+                        vkcb[l, :, :] = 1 # assign 1 instead of zero as default value that won't violate checker
+                        # (allows for same structure as other checks)
+
+                chk.values(vkcb, active & (vkcb <= 0), 'zero or negative quasi-3D confining bed Kv values', 'Error')
+                check_thresholds(vkcb, active, chk.property_threshold_values['vkcb'],
+                                 'quasi-3D confining bed Kv')
+
+            if self.parent.dis.nper > 1: # only check storage if model is transient
+
+                # do the same for storage if the model is transient
+                sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
+                if 'STORAGECOEFFICIENT' in self.options: # convert to specific for checking
+                    chk._add_to_summary(type='Warning',
+                                        desc='\r    STORAGECOEFFICIENT option is activated, \
+                                              storage values are read storage coefficients')
+                    sarrays['ss'] /= self.parent.dis.thickness.array
+                    sarrays['sy'] /= self.parent.dis.thickness.array
+
+                chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
+                           'zero or negative specific storage values', 'Error')
+                check_thresholds(sarrays['ss'], active, chk.property_threshold_values['ss'],
+                                 'specific storage')
+
+                # only check specific yield for convertible layers
+                inds = np.array([True if l > 0 or l < 0 and 'THICKSRT' in self.options
+                                 else False for l in self.laytyp])
+                sarrays['sy'] = sarrays['sy'][inds, :, :]
+                active = active[inds, :, :]
+                chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
+                           'zero or negative specific yield values', 'Error')
+                check_thresholds(sarrays['sy'], active, chk.property_threshold_values['sy'],
+                                 'specific yield')
+            chk.summarize()
+
+        else:
+            txt = 'check method not implemented for {} Package.'.format(self.name[0])
+            if f is not None:
+                if isinstance(f, str):
+                    pth = os.path.join(self.parent.model_ws, f)
+                    f = open(pth, 'w')
+                    f.write(txt)
+                    f.close()
+            if verbose:
+                print(txt)
+        return chk
 
     def level1_arraylist(self, idx, v, name, txt):
         ndim = v.ndim

@@ -80,8 +80,11 @@ class check:
         self.f = None
         if f is not None:
             if isinstance(f, str):
-               self.summaryfile = os.path.join(self.model.model_ws, f)
-               self.f = open(self.summaryfile, 'w')
+                if os.path.split(f)[0] == '':
+                    self.summaryfile = os.path.join(self.model.model_ws, f)
+                else: # if a path is supplied with summary file, save there
+                    self.summaryfile = f
+                self.f = open(self.summaryfile, 'w')
             else:
                 self.f = f
         self.txt = '\n{}:\n'.format(self.prefix)
@@ -255,8 +258,9 @@ class check:
 
     def print_summary(self, cols=None, delimiter=',', float_format='{:.6f}'):
         # strip description column
-        self.summary_array['desc'] = [s.strip() for s in self.summary_array.desc]
-        return _print_rec_array(self.summary_array, cols=cols, delimiter=delimiter,
+        sa = self.summary_array.copy()
+        sa['desc'] = [s.strip() for s in self.summary_array.desc]
+        return _print_rec_array(sa, cols=cols, delimiter=delimiter,
                                 float_format=float_format)
 
     def stress_period_data(self, stress_period_data, criteria, col,

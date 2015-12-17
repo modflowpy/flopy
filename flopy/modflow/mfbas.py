@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util3d
+from ..utils import Util3d, check, get_neighbors
 
 class ModflowBas(Package):
     """
