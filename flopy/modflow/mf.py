@@ -443,8 +443,8 @@ class Modflow(BaseModel):
                     if not forgive:
                         try: # For package load methods that don't have a check argument
                             pck = item.package.load(item.filename, ml,
-                                                    ext_unit_dict=ext_unit_dict, check=True)
-                        except:
+                                                    ext_unit_dict=ext_unit_dict, check=False)
+                        except TypeError:
                             pck = item.package.load(item.filename, ml,
                                                     ext_unit_dict=ext_unit_dict)
                         files_succesfully_loaded.append(item.filename)
@@ -455,8 +455,8 @@ class Modflow(BaseModel):
                         try:
                             try:
                                 pck = item.package.load(item.filename, ml,
-                                                        ext_unit_dict=ext_unit_dict, check=True)
-                            except:
+                                                        ext_unit_dict=ext_unit_dict, check=False)
+                            except TypeError:
                                 pck = item.package.load(item.filename, ml,
                                                         ext_unit_dict=ext_unit_dict)
                             files_succesfully_loaded.append(item.filename)

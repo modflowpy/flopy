@@ -180,7 +180,7 @@ class ModflowUpw(Package):
 
         """
         if check: # allows turning off package checks when writing files at model level
-            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper  # Open file for writing
         f_upw = open(self.fn_path, 'w')
         # Item 0: text

@@ -425,7 +425,7 @@ class ModflowDis(Package):
 
         """
         if check: # allows turning off package checks when writing files at model level
-            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         # Open file for writing
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        

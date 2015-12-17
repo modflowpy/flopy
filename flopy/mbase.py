@@ -417,7 +417,7 @@ class BaseModel(object):
 
         """
         # run check prior to writing input
-        self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=0)
+        self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=1)
 
         # org_dir = os.getcwd()
         # os.chdir(self.model_ws)
@@ -434,7 +434,7 @@ class BaseModel(object):
                 # or default for package level check would have to be False
                 try:
                     p.write_file(check=False)
-                except:
+                except TypeError:
                     p.write_file()
         else:
             for pon in SelPackList:
@@ -444,7 +444,7 @@ class BaseModel(object):
                             print('   Package: ', p.name[0])
                     try:
                         p.write_file(check=False)
-                    except:
+                    except TypeError:
                         p.write_file()
                         break
         if self.verbose:
@@ -530,7 +530,7 @@ class BaseModel(object):
             package_chk_verbose = False
         results = {}
         for p in self.packagelist:
-            results[p.name[0]] = p.check(f=None, verbose=False, level=level)
+            results[p.name[0]] = p.check(f=None, verbose=False, level=level-1)
 
         # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)

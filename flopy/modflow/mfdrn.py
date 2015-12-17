@@ -145,7 +145,7 @@ class ModflowDrn(Package):
 
         """
         if check: # allows turning off package checks when writing files at model level
-            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         f_drn = open(self.fn_path, 'w')
         f_drn.write('{0}\n'.format(self.heading))
         # f_drn.write('%10i%10i\n' % (self.mxactd, self.idrncb))

@@ -336,6 +336,7 @@ class check:
                 txt += t
         if txt == '':
             txt += '  No errors or warnings encountered.\n'
+
         elif self.f is not None and self.verbose and self.summary_array.shape[0] > 0:
             txt += '  see {} for details.\n'.format(self.summaryfile)
 
@@ -354,6 +355,10 @@ class check:
 
         if self.verbose:
             print(self.txt)
+        elif self.summary_array.shape[0] > 0 and self.level > 0:
+            print('Errors and/or Warnings encountered.')
+            if self.f is not None:
+                print('  see {} for details.\n'.format(self.summaryfile))
 
 
 
