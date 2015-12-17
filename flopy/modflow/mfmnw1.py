@@ -1,5 +1,5 @@
-from numpy import empty,zeros
-from flopy.mbase import Package
+from numpy import empty, zeros
+from ..pakbase import Package
 
 class ModflowMnw1(Package):
     """
@@ -21,15 +21,18 @@ class ModflowMnw1(Package):
     nomoiter : integer
         the number of iterations for which flow in MNW wells is calculated
     kspref : string
-        which set of water levels are to be used as reference values for calculating drawdown
+        which set of water levels are to be used as reference values for
+        calculating drawdown
     losstype : string
         head loss type for each well
     wel1_bynode_qsum : list of lists
-        nested list containing file names, unit numbers, and ALLTIME flag for auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        nested list containing file names, unit numbers, and ALLTIME flag for
+        auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
     itmp : array
         number of wells to be simulated for each stress period (shape : (NPER))
     lay_row_col_qdes_mn_multi : list of arrays
-        lay, row, col, qdes, and MN or MULTI flag for all well nodes (length : NPER)
+        lay, row, col, qdes, and MN or MULTI flag for all well nodes
+        (length : NPER)
     mnwname : string
         prefix name of file for outputting time series data from MNW1
     extension : string
@@ -42,8 +45,6 @@ class ModflowMnw1(Package):
 
     Methods
     -------
-    write_file : Writes Modflow input file for the drain package
-    load : no load method for this class
 
     See Also
     --------
@@ -52,10 +53,10 @@ class ModflowMnw1(Package):
     -----
     Parameters are not supported in FloPy.
 
-    The functionality of the ADD flag in data set 4 is not supported. Also not supported
-    are all water-quality parameters (Qwval Iqwgrp), water-level limitations (Hlim, Href, DD),
-    non-linear well losses, and pumping limitations (QCUT, Q-%CUT, Qfrcmn, Qfrcmx, DEFAULT).
-
+    The functionality of the ADD flag in data set 4 is not supported. Also
+    not supported are all water-quality parameters (Qwval Iqwgrp), water-level
+    limitations (Hlim, Href, DD), non-linear well losses, and pumping
+    limitations (QCUT, Q-%CUT, Qfrcmn, Qfrcmx, DEFAULT).
 
     Examples
     --------
@@ -66,12 +67,12 @@ class ModflowMnw1(Package):
 
     """
 
-    def __init__( self, model, mxmnw=0, ipakcb=0, iwelpt=0, nomoiter=0, kspref=1,
-                  wel1_bynode_qsum=None,
-                  itmp=0,
-                  lay_row_col_qdes_mn_multi=None,
-                  mnwname=None,
-                  extension='mnw1', unitnumber=33 ):
+    def __init__(self, model, mxmnw=0, ipakcb=0, iwelpt=0, nomoiter=0,
+                 kspref=1, wel1_bynode_qsum=None,
+                 itmp=0,
+                 lay_row_col_qdes_mn_multi=None,
+                 mnwname=None,
+                 extension='mnw1', unitnumber=33 ):
         Package.__init__(self, model, extension, 'MNW1', unitnumber) # Call ancestor's init to set self.parent, extension, name, and unit number
         self.url = 'mnw1.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
@@ -109,7 +110,7 @@ class ModflowMnw1(Package):
         
         self.parent.add_package(self)
 
-    def write_file( self ):
+    def write_file(self):
         """
         Write the package file.
 

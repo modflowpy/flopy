@@ -9,8 +9,8 @@ User's Manual.
 
 import numpy as np
 # from numpy import empty,array
-from flopy.mbase import Package
-from flopy.utils import Util2d, Util3d, read1d
+from ..pakbase import Package
+from ..utils import Util2d, Util3d, read1d
 import warnings
 
 class Mt3dBtn(Package):
@@ -49,7 +49,7 @@ class Mt3dBtn(Package):
         cell; If icbund > 0, the cell is an active concentration cell where the
         concentration value will be calculated. (default is 1).
     sconc : float, array of (nlay, nrow, ncol), or filename, or a list (length
-            ncomp) of these for multi-species simulations
+        ncomp) of these for multi-species simulations
         The starting concentration for the solute transport simulation.
     cinact : float
         The value for indicating an inactive concentration cell. (default is
@@ -470,6 +470,7 @@ class Mt3dBtn(Package):
             timprs = Util2d(self.parent, (len(self.timprs),),
                              np.float32, self.timprs, name='timprs',
                              fmtin='(8G10.4)')
+            timprs.format.fortran = '(8G10.4)'
             f_btn.write(timprs.string)
 
         # A18, A19

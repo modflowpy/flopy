@@ -1,5 +1,5 @@
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 
 
 class ModflowPbc(Package):

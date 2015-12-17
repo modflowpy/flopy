@@ -59,26 +59,17 @@ class SpatialReference(object):
     ycentergrid : ndarray
         numpy meshgrid of row centers
 
-    Note:
-    ----
+    Notes
+    -----
 
-    xul and yul can be explicitly (re)set after SpatialReference instantiation, but only before
-    any of the other attributes and methods are accessed
+    xul and yul can be explicitly (re)set after SpatialReference
+    instantiation, but only before any of the other attributes and methods are
+    accessed
         
     """
 
     def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0,
                  proj4_str="EPSG:4326"):
-        """
-
-            delr: delr array
-            delc: delc array
-            lenuni: lenght unit code
-            xul: x coord of upper left corner of grid
-            yul: y coord of upper left corner of grid
-            rotation_degrees: grid rotation
-
-        """
         self.delc = delc
         self.delr = delr
 
@@ -89,6 +80,19 @@ class SpatialReference(object):
         self.proj4_str = proj4_str
         self.set_spatialreference(xul, yul, rotation)
 
+
+    def __eq__(self, other):
+        if not isinstance(other,SpatialReference):
+            return False
+        if other.xul != self.xul:
+            return False
+        if other.yul != self.yul:
+            return False
+        if other.rotation != self.rotation:
+            return False
+        if other.proj4_str != self.proj4_str:
+            return False
+        return True
 
     @classmethod
     def from_gridspec(cls,gridspec_file,lenuni=0):
@@ -144,20 +148,16 @@ class SpatialReference(object):
         else:
             self.yul = yul
         self.rotation = rotation
-
         self._xgrid = None
         self._ygrid = None
         self._ycentergrid = None
         self._xcentergrid = None
 
-
     def __repr__(self):
-        s = "spatialReference:xul:{0:<G}, yul:{1:<G},rotation:{2:<G}\n".\
+        s = "xul:{0:<G}, yul:{1:<G}, rotation:{2:<G}, ".\
             format(self.xul,self.yul,self.rotation)
-        s += "delr:" + str(self.delr) + "\n"
-        s += "delc:" + str(self.delc) + "\n"
+        s += "proj4_str:{0}".format(self.proj4_str)
         return s
-
 
     @property
     def xedge(self):
@@ -334,8 +334,8 @@ class SpatialReference(object):
     def get_xedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid in model space - not offset or rotated.
-          Array is of size (ncol + 1)
+        coordinates for every column in the grid in model space - not offset
+        or rotated.  Array is of size (ncol + 1)
 
         """
         xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
@@ -344,8 +344,8 @@ class SpatialReference(object):
     def get_yedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid in model space - not offset or rotated.
-          Array is of size (nrow + 1)
+        coordinates for every row in the grid in model space - not offset or
+        rotated. Array is of size (nrow + 1)
 
         """
         length_y = np.add.reduce(self.delc)

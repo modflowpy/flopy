@@ -29,7 +29,6 @@ from .modpathfile import PathlineFile, EndpointFile
 from .binaryswrfile import SwrObs, SwrFile
 from .binaryhydmodfile import HydmodObs
 from .reference import SpatialReference  # , TemporalReference
-from .flopy_io import model_attributes_to_shapefile, shape_attr_name, write_grid_shapefile
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget
 from .check import check, get_neighbors

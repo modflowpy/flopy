@@ -10,7 +10,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 
-from flopy.mbase import Package
+from ..pakbase import Package
 
 
 class ModflowHyd(Package):
@@ -51,7 +51,9 @@ class ModflowHyd(Package):
         hydlbl is used to form a label for the hydrograph.
 
 
-        The simplest form is a list of lists. For example, if nhyd=3 this gives the form of
+        The simplest form is a list of lists. For example, if nhyd=3 this
+        gives the form of::
+
             obsdata =
             [
                 [pckg, arr, intyp, klay, xl, yl, hydlbl],

@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import sys
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils.util_array import Transient2d, Util2d
 from flopy.modflow.mfparbc import ModflowParBc as mfparbc
 

@@ -1604,11 +1604,11 @@ class Util2d(object):
                     assert self.locat != None, 'Util2d:a non-constant value ' + \
                                                ' for an internal fixed-format requires LOCAT to be passed'
                 if self.dtype == np.int:
-                    cr = '{0:>10.0f}{1:>10.0f}{2:>20s}{3:>10.0f} #{4}\n' \
+                    cr = '{0:10.0f}{1:10.0f}{2:20s}{3:10.0f} #{4}\n' \
                         .format(self.locat, self.cnstnt, self.format.fortran,
                                 self.iprn, self.name)
                 elif self.dtype == np.float32:
-                    cr = '{0:>10.0f}{1:>10.5G}{2:>20s}{3:>10.0f} #{4}\n' \
+                    cr = '{0:10.0f}{1:10.5G}{2:20s}{3:10.0f} #{4}\n' \
                         .format(self.locat, self.cnstnt, self.format.fortran,
                                 self.iprn, self.name)
                 else:

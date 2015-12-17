@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import sys
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils.util_list import MfList
 
 
@@ -26,15 +26,16 @@ class ModflowGhb(Package):
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is 0).
-    stress_period_data : list of boundaries or
-                         recarray of boundaries or
-                         dictionary of boundaries
+    stress_period_data : list of boundaries, recarray of boundaries or,
+        dictionary of boundaries.
+
         Each ghb cell is defined through definition of
         layer(int), row(int), column(int), stage(float), conductance(float)
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. This gives the form of
+        period. This gives the form of::
+
             stress_period_data =
             {0: [
                 [lay, row, col, stage, cond],
@@ -53,6 +54,7 @@ class ModflowGhb(Package):
                 [lay, row, col, stage, cond],
                 ]
             }
+
         Note that if no values are specified for a certain stress period, then
         the list of boundaries for the previous stress period for which values
         were defined is used. Full details of all options to specify

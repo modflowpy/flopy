@@ -1,6 +1,7 @@
 import flopy
-from flopy.mbase import BaseModel, Package
-from flopy.utils import mfreadnam
+from ..mbase import BaseModel
+from ..pakbase import Package
+from ..utils import mfreadnam
 from .mtadv import Mt3dAdv
 from .mtbtn import Mt3dBtn
 from .mtdsp import Mt3dDsp

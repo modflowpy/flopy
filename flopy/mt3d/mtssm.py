@@ -1,10 +1,8 @@
 import sys
 import numpy as np
 import warnings
-from flopy.mbase import Package
-from flopy.utils import Util2d
-from flopy.utils.util_list import MfList
-from flopy.utils.util_array import Transient2d
+from ..pakbase import Package
+from ..utils import Util2d, MfList, Transient2d
 
 # Note: Order matters as first 6 need logical flag on line 1 of SSM file
 SsmLabels = ['WEL', 'DRN', 'RCH', 'EVT', 'RIV', 'GHB', 'BAS6', 'CHD', 'PBC']

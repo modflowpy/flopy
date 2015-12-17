@@ -32,4 +32,4 @@ from . import modpath
 from . import utils
 from . import plot
 from . import export
-from .mbase import run_model
+from .mbase import run_model, which
