@@ -165,7 +165,7 @@ class ModflowUpw(Package):
         self.vkcb = Util3d(model, (nlay, nrow, ncol), np.float32, vkcb, name='vkcb', locat=self.unit_number[0])
         self.parent.add_package(self)
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
 
@@ -174,6 +174,8 @@ class ModflowUpw(Package):
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper  # Open file for writing
         f_upw = open(self.fn_path, 'w')
         # Item 0: text

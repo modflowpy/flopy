@@ -143,8 +143,24 @@ class ModflowRch(Package):
             pkg = list(hk_package)[0]
             for per in range(self.parent.nper):
                 Rmean = self.rech.array[0][active].mean()
-                Tmean = (self.parent.get_package(pkg).hk.array[:, active] *
-                         self.parent.dis.thickness.array[:, active]).sum(axis=0).mean()
+
+                # handle quasi-3D layers
+                # (ugly, would be nice to put this else where in a general function)
+                if self.parent.dis.laycbd.sum() != 0:
+                    thickness = np.empty((self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
+                                          dtype=float)
+                    l = 0
+                    for i, cbd in enumerate(self.parent.dis.laycbd):
+                        thickness[i, :, :] = self.parent.dis.thickness.array[l, :, :]
+                        if cbd > 0:
+                            l += 1
+                        l += 1
+                    assert l == self.parent.dis.thickness.shape[0]
+                else:
+                    thickness = self.parent.dis.thickness.array
+                assert thickness.shape == self.parent.get_package(pkg).hk.shape
+                Tmean = (self.parent.get_package(pkg).hk.array *
+                         thickness)[:, active].sum(axis=0).mean()
                 if Rmean/Tmean < RTmin:
                     chk._add_to_summary(type='Warning', value=Rmean/Tmean,
                                          desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
@@ -168,7 +184,7 @@ class ModflowRch(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
 
@@ -177,6 +193,8 @@ class ModflowRch(Package):
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_rch = open(self.fn_path, 'w')

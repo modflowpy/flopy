@@ -132,7 +132,7 @@ class ModflowDrn(Package):
         # print 'Function must be implemented properly for drn package'
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
 
@@ -141,6 +141,8 @@ class ModflowDrn(Package):
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
         f_drn = open(self.fn_path, 'w')
         f_drn.write('{0}\n'.format(self.heading))
         # f_drn.write('%10i%10i\n' % (self.mxactd, self.idrncb))

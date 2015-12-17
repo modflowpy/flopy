@@ -152,7 +152,7 @@ class ModflowRiv(Package):
         # (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
 
@@ -161,6 +161,8 @@ class ModflowRiv(Package):
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
         f_riv = open(self.fn_path, 'w')
         f_riv.write('{0}\n'.format(self.heading))
         line = '{0:10d}{1:10d}'.format(self.stress_period_data.mxact, self.ipakcb)

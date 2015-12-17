@@ -42,12 +42,19 @@ class check:
                      'RIV': 'stage',
                      'DRN': 'elev'}
 
-    property_threshold_values = {'hk': (1e-10, 1e5),
+    property_threshold_values = {'hk': (1e-11, 1e5), # after Schwartz and Zhang, table 4.4
                                  'hani': None,
-                                 'vka': (1e-10, 1e5),
-                                 'vkcb': (1e-10, 1e5),
-                                 'ss': (3.3e-6, 2e-2),
+                                 'vka': (1e-11, 1e5),
+                                 'vkcb': (1e-11, 1e5),
+                                 'ss': (1e-6, 1e-2),
                                  'sy': (0.01, 0.5)}
+
+    # which versions is pks compatible with?
+    solver_packages = {'mf2k': ['DE4', 'SIP', 'SOR', 'GMG', 'PCG', 'PCGN'],
+                       'mf2005': ['DE4', 'SIP', 'GMG', 'PCG', 'PCGN'],
+                       'mfnwt': ['DE4', 'SIP', 'PCG', 'NWT'],
+                       'mfusg': ['SMS']}
+
     thin_cell_threshold = 1.0 # cells thickness less than this value will be flagged
 
     def __init__(self, package, f=None, verbose=True, level=1,
@@ -73,15 +80,17 @@ class check:
         self.f = None
         if f is not None:
             if isinstance(f, str):
-               pth = os.path.join(self.model.model_ws, f)
-               self.f = open(pth, 'w')
+               self.summaryfile = os.path.join(self.model.model_ws, f)
+               self.f = open(self.summaryfile, 'w')
             else:
                 self.f = f
         self.txt = '\n{}:\n'.format(self.prefix)
 
     def _add_to_summary(self, type='Warning', k=0, i=0, j=0, node=0,
-                        value=0, desc=''):
-        col_list = [type, self.package.name[0]]
+                        value=0, desc='', package=None):
+        if package is None:
+            package = self.package.name[0]
+        col_list = [type, package]
         col_list += [k, i, j] if self.structured else [node]
         col_list += [value, desc]
         sa = self._get_summary_array(np.array(col_list))
@@ -295,6 +304,7 @@ class check:
         if 'MODEL' in self.prefix: # add package name for model summary output
             self.summary_array['desc'] = \
                 ['\r    {} package: {}'.format(self.summary_array.package[i], d.strip())
+                 if self.summary_array.package[i] != 'model' else d
                  for i, d in enumerate(self.summary_array.desc)]
 
         for etype in ['Error', 'Warning']:
@@ -313,9 +323,11 @@ class check:
                 txt += t
         if txt == '':
             txt += '  No errors or warnings encountered.\n'
+        elif self.f is not None and self.verbose and self.summary_array.shape[0] > 0:
+            txt += '  see {} for details.\n'.format(self.summaryfile)
 
         if len(self.passed) > 0 and self.level > 0:
-            txt += '  Checks that passed:\n'
+            txt += '\n  Checks that passed:\n'
             for chkname in self.passed:
                 txt += '    {}\n'.format(chkname)
         self.txt += txt

@@ -209,7 +209,7 @@ class ModflowLpf(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
 
@@ -218,6 +218,8 @@ class ModflowLpf(Package):
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f = open(self.fn_path, 'w')

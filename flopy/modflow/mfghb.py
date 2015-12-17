@@ -126,7 +126,7 @@ class ModflowGhb(Package):
         """
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
 
@@ -135,6 +135,8 @@ class ModflowGhb(Package):
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
         f_ghb = open(self.fn_path, 'w')
         f_ghb.write('{}\n'.format(self.heading))
         f_ghb.write('{:10d}{:10d}'.format(self.stress_period_data.mxact, self.ipakcb))

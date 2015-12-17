@@ -389,6 +389,9 @@ class BaseModel(object):
         SelPackList : False or list of packages
 
         """
+        # run check prior to writing input
+        self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=0)
+
         # org_dir = os.getcwd()
         # os.chdir(self.model_ws)
         if self.verbose:
@@ -397,13 +400,24 @@ class BaseModel(object):
             for p in self.packagelist:
                 if self.verbose:
                     print('   Package: ', p.name[0])
-                p.write_file()
+                # prevent individual package checks from running after model-level package check above
+                # otherwise checks are run twice
+                # or the model level check proceedure would have to be split up
+                # or each package would need a check arguemnt,
+                # or default for package level check would have to be False
+                try:
+                    p.write_file(check=False)
+                except:
+                    p.write_file()
         else:
             for pon in SelPackList:
                 for i, p in enumerate(self.packagelist):
                     if pon in p.name:
                         if self.verbose:
                             print('   Package: ', p.name[0])
+                    try:
+                        p.write_file(check=False)
+                    except:
                         p.write_file()
                         break
         if self.verbose:
@@ -492,15 +506,47 @@ class BaseModel(object):
             package_chk_verbose = False
         results = {}
         for p in self.packagelist:
-            results[p.name[0]] = p.check(f=None, verbose=0, level=level)
+            results[p.name[0]] = p.check(f=None, verbose=False, level=level)
 
+        # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)
-        passed = []
+
+        # model level checks
+        # solver check
+        if self.version in chk.solver_packages.keys():
+            solvers = set(chk.solver_packages[self.version]).intersection(set(self.get_package_list()))
+            if not solvers:
+                chk._add_to_summary('Error', desc='\r    No solver package',
+                                    package='model')
+            elif len(list(solvers)) > 1:
+                for s in solvers:
+                    chk._add_to_summary('Error', desc='\r    Multiple solver packages',
+                                        package=s)
+            else:
+                chk.passed.append('Compatible solver package')
+
+        # check for unit number conflicts
+        package_units = {}
+        duplicate_units = {}
+        for p in self.packagelist:
+            for i in range(len(p.name)):
+                if p.unit_number[i] != 0:
+                    if p.unit_number[i] in package_units.values():
+                        duplicate_units[p.name[i]] = p.unit_number[i]
+                        otherpackage = [k for k, v in package_units.items()
+                                        if v == p.unit_number[i]][0]
+                        duplicate_units[otherpackage] = p.unit_number[i]
+        if len(duplicate_units) > 0:
+            for k, v in duplicate_units.items():
+                chk._add_to_summary('Error', package=k, value=v, desc='unit number conflict')
+        else:
+            chk.passed.append('Unit number conflicts')
+
+        # add package check results to model level check summary
         for k, r in results.items():
             if r is not None and r.summary_array is not None: # currently SFR doesn't have one
                 chk.summary_array = np.append(chk.summary_array, r.summary_array).view(np.recarray)
-                passed += ['{} package: {}'.format(r.package.name[0], psd) for psd in r.passed]
-        chk.passed = passed
+                chk.passed += ['{} package: {}'.format(r.package.name[0], psd) for psd in r.passed]
         chk.summarize()
         return chk
 
@@ -834,12 +880,7 @@ class Package(object):
         >>> m.dis.check()
 
         """
-        if f is not None:
-            if isinstance(f, str):
-                pth = os.path.join(self.parent.model_ws, f)
-                f = open(pth, 'w', 0)
         chk = None
-
         # check elevations in the ghb, drain, and riv packages
         if self.name[0] in utils.check.bc_elev_names.keys():
 
@@ -858,7 +899,6 @@ class Package(object):
                                        error_name='BC elevation below cell bottom',
                                        error_type='Error')
             chk.summarize()
-            txt = chk.txt
 
         # check property values in upw and lpf packages
         elif self.name[0] in ['UPW', 'LPF']:
@@ -936,7 +976,7 @@ class Package(object):
                 chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
                            'zero or negative specific storage values', 'Error')
                 check_thresholds(sarrays['ss'], active, chk.property_threshold_values['ss'],
-                                 'specific storace')
+                                 'specific storage')
 
                 # only check specific yield for convertible layers
                 inds = np.array([True if l > 0 or l < 0 and 'THICKSRT' in self.options
@@ -947,17 +987,18 @@ class Package(object):
                            'zero or negative specific yield values', 'Error')
                 check_thresholds(sarrays['sy'], active, chk.property_threshold_values['sy'],
                                  'specific yield')
-
-
             chk.summarize()
-            txt = chk.txt
 
         else:
             txt = 'check method not implemented for {} Package.'.format(self.name[0])
+            if f is not None:
+                if isinstance(f, str):
+                    pth = os.path.join(self.parent.model_ws, f)
+                    f = open(pth, 'w')
+                    f.write(txt)
+                    f.close()
             if verbose:
                 print(txt)
-        if f is not None:
-            f.write('{}\n'.format(txt))
         return chk
 
     def level1_arraylist(self, idx, v, name, txt):

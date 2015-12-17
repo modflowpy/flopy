@@ -396,7 +396,7 @@ class ModflowDis(Package):
         """
         return self.__thickness
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
 
@@ -405,6 +405,8 @@ class ModflowDis(Package):
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=0)
         # Open file for writing
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        
