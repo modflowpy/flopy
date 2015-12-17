@@ -186,6 +186,11 @@ class ModflowRch(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
+
         Returns
         -------
         None
@@ -214,7 +219,7 @@ class ModflowRch(Package):
         f_rch.close()
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -234,6 +239,8 @@ class ModflowRch(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -334,4 +341,6 @@ class ModflowRch(Package):
                 irch[iper] = current_irch
         rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb, rech=rech,
                          irch=irch)
+        if check:
+            rch.check(f='{}.chk'.format(rch.name[0]), verbose=rch.parent.verbose, level=0)
         return rch

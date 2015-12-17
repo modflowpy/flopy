@@ -579,7 +579,7 @@ class Package(object):
         return
 
     @staticmethod
-    def load(model, pack_type, f, nper=None, pop_key_list=None):
+    def load(model, pack_type, f, nper=None, pop_key_list=None, check=True):
         """
         The load method has not been implemented for this package.
 
@@ -797,4 +797,6 @@ class Package(object):
                         dtype=pack_type.get_empty(0, aux_names=aux_names,
                                                   structured=model.structured).dtype, \
                         options=options)
+        if check:
+            pak.check(f='{}.chk'.format(pak.name[0]), verbose=pak.parent.verbose, level=0)
         return pak

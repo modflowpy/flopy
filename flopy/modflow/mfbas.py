@@ -143,6 +143,11 @@ class ModflowBas(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
+
         Returns
         -------
         None
@@ -176,7 +181,7 @@ class ModflowBas(Package):
         f_bas.close()
 
     @staticmethod
-    def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None):
+    def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -196,7 +201,8 @@ class ModflowBas(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
-
+        check : boolean
+            Check package data for common errors. (default True)
         Returns
         -------
         bas : ModflowBas object
@@ -265,4 +271,6 @@ class ModflowBas(Package):
         bas = ModflowBas(model, ibound=ibound, strt=strt,
                          ixsec=ixsec, ifrefm=ifrefm, ichflg=ichflg,
                          stoper=stoper, hnoflo=hnoflo)
+        if check:
+            bas.check(f='{}.chk'.format(bas.name[0]), verbose=bas.parent.verbose, level=0)
         return bas

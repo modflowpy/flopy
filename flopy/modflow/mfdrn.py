@@ -134,6 +134,11 @@ class ModflowDrn(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
+
         Returns
         -------
         None
@@ -170,7 +175,7 @@ class ModflowDrn(Package):
         return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -187,6 +192,8 @@ class ModflowDrn(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -205,4 +212,4 @@ class ModflowDrn(Package):
         if model.verbose:
             sys.stdout.write('loading drn package file...\n')
 
-        return Package.load(model, ModflowDrn, f, nper)
+        return Package.load(model, ModflowDrn, f, nper, check=check)

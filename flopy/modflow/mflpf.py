@@ -212,6 +212,11 @@ class ModflowLpf(Package):
     def write_file(self, check=True):
         """
         Write the package file.
+        
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -417,7 +422,7 @@ class ModflowLpf(Package):
             print(txt)
         '''
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -434,6 +439,8 @@ class ModflowLpf(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -618,5 +625,7 @@ class ModflowLpf(Package):
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb,
                          wetdry=wetdry, storagecoefficient=storagecoefficient,
                          constantcv=constantcv, thickstrt=thickstrt, novfc=novfc)
+        if check:
+            lpf.check(f='{}.chk'.format(lpf.name[0]), verbose=lpf.parent.verbose, level=0)
         return lpf
 

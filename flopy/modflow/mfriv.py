@@ -156,6 +156,11 @@ class ModflowRiv(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
+
         Returns
         -------
         None
@@ -180,7 +185,7 @@ class ModflowRiv(Package):
             raise Exception("mfriv error adding record to list: " + str(e))
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -200,6 +205,8 @@ class ModflowRiv(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -218,4 +225,4 @@ class ModflowRiv(Package):
         if model.verbose:
             sys.stdout.write('loading riv package file...\n')
 
-        return Package.load(model, ModflowRiv, f, nper)
+        return Package.load(model, ModflowRiv, f, nper, check=check)

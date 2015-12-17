@@ -414,6 +414,11 @@ class ModflowDis(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
+
         Returns
         -------
         None
@@ -557,7 +562,7 @@ class ModflowDis(Package):
         '''
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -574,6 +579,8 @@ class ModflowDis(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -717,6 +724,8 @@ class ModflowDis(Package):
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
                          lenuni, xul=xul, yul=yul, rotation=rotation,
                          proj4_str=proj4_str, start_datetime=start_datetime)
+        if check:
+            dis.check(f='{}.chk'.format(dis.name[0]), verbose=dis.parent.verbose, level=0)
         # return dis object instance
         return dis
 

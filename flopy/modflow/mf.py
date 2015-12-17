@@ -325,7 +325,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
-             model_ws='.', load_only=None,forgive=True):
+             model_ws='.', load_only=None, forgive=True, check=True):
         """
         Load an existing model.
 
@@ -340,6 +340,8 @@ class Modflow(BaseModel):
 
         forgive : flag to raise exception(s) on package load failure - good for debugging
 
+        check : boolean
+            Check model input for common errors. (default True)
         Returns
         -------
         ml : Modflow object
@@ -394,7 +396,7 @@ class Modflow(BaseModel):
                 break
         try:
             pck = dis.package.load(dis.filename, ml,
-                                   ext_unit_dict=ext_unit_dict)
+                                   ext_unit_dict=ext_unit_dict, check=False)
             files_succesfully_loaded.append(dis.filename)
             if ml.verbose:
                 sys.stdout.write('   {:4s} package load...success\n'
@@ -439,16 +441,24 @@ class Modflow(BaseModel):
             if item.package is not None:
                 if item.filetype in load_only and item.filetype != "DIS":
                     if not forgive:
-                        pck = item.package.load(item.filename, ml,
-                                                ext_unit_dict=ext_unit_dict)
+                        try: # For package load methods that don't have a check argument
+                            pck = item.package.load(item.filename, ml,
+                                                    ext_unit_dict=ext_unit_dict, check=True)
+                        except:
+                            pck = item.package.load(item.filename, ml,
+                                                    ext_unit_dict=ext_unit_dict)
                         files_succesfully_loaded.append(item.filename)
                         if ml.verbose:
                             sys.stdout.write('   {:4s} package load...success\n'
                                              .format(pck.name[0]))
                     else:
                         try:
-                            pck = item.package.load(item.filename, ml,
-                                                    ext_unit_dict=ext_unit_dict)
+                            try:
+                                pck = item.package.load(item.filename, ml,
+                                                        ext_unit_dict=ext_unit_dict, check=True)
+                            except:
+                                pck = item.package.load(item.filename, ml,
+                                                        ext_unit_dict=ext_unit_dict)
                             files_succesfully_loaded.append(item.filename)
                             if ml.verbose:
                                 sys.stdout.write('   {:4s} package load...success\n'
@@ -506,6 +516,9 @@ class Modflow(BaseModel):
                 for fname in files_not_loaded:
                     print('      ' + os.path.basename(fname))
                 print('\n')
+
+        if check:
+            ml.check(f='{}.chk'.format(ml.name), verbose=ml.verbose, level=0)
 
         # return model object
         return ml

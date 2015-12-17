@@ -169,6 +169,11 @@ class ModflowUpw(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
+
         Returns
         -------
         None
@@ -214,7 +219,7 @@ class ModflowUpw(Package):
         f_upw.close()
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -231,6 +236,8 @@ class ModflowUpw(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -394,6 +401,7 @@ class ModflowUpw(Package):
                          laytyp=laytyp, layavg=layavg, chani=chani,
                          layvka=layvka, laywet=laywet,
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb)
-
+        if check:
+            upw.check(f='{}.chk'.format(upw.name[0]), verbose=upw.parent.verbose, level=0)
         # return upw object
         return upw

@@ -19,23 +19,31 @@ class check:
     property_threshold_values : dict
         hk : tuple
             Reasonable minimum/maximum hydraulic conductivity value; values below this will be flagged.
-            Default is (10e-10, 10e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+            Default is (1e-11, 1e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+            and Schwartz and Zhang (2003, Table 4.4).
         vka : tuple
             Reasonable minimum/maximum hydraulic conductivity value;
-            Default is (10e-10, 10e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+            Default is (1e-11, 1e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+            and Schwartz and Zhang (2003, Table 4.4).
         vkcb : tuple
             Reasonable minimum/maximum hydraulic conductivity value for quasi-3D confining bed;
-            Default is (10e-10, 10e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+            Default is (1e-11, 1e5), after Bear, 1972 (see https://en.wikipedia.org/wiki/Hydraulic_conductivity)
+            and Schwartz and Zhang (2003, Table 4.4).
         sy : tuple
             Reasonable minimum/maximum specific yield values;
             Default is (0.01,0.5) after Anderson, Woessner and Hunt (2015, Table 5.2).
         sy : tuple
             Reasonable minimum/maximum specific storage values;
             Default is (3.3e-6, 2e-2) after Anderson, Woessner and Hunt (2015, Table 5.2).
+    thin_cell_threshold : float
+        Minimum cell thickness in model units. Thicknesses below this value will be flagged (default 1.0).
 
     Notes
     -----
-
+    Anderson, M.P, Woessner, W.W. and Hunt, R.J., 2015. Applied Groundwater Modeling: Simulation of Flow
+        and Advective Transport, Elsevier, 564p.
+    Bear, J., 1972. Dynamics of Fluids in Porous Media. Dover Publications.
+    Schwartz, F.W. and Zhang, H., 2003. Fundamentals of Groundwater, Wiley, 583 p.
     """
 
     bc_elev_names = {'GHB': 'bhead', # all names in lower case
@@ -305,6 +313,7 @@ class check:
 
         # print the screen output depending on level
         txt = ''
+        # tweak screen output for model-level to report package for each error
         if 'MODEL' in self.prefix: # add package name for model summary output
             self.summary_array['desc'] = \
                 ['\r    {} package: {}'.format(self.summary_array.package[i], d.strip())
@@ -330,12 +339,14 @@ class check:
         elif self.f is not None and self.verbose and self.summary_array.shape[0] > 0:
             txt += '  see {} for details.\n'.format(self.summaryfile)
 
+        # print checks that past for higher levels
         if len(self.passed) > 0 and self.level > 0:
             txt += '\n  Checks that passed:\n'
             for chkname in self.passed:
                 txt += '    {}\n'.format(chkname)
         self.txt += txt
 
+        # for level 2, print the whole summary table at the bottom
         if self.level > 1:
             # kludge to improve screen printing
             self.summary_array['package'] = ['{} '.format(s) for s in self.summary_array['package']]

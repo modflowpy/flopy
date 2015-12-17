@@ -132,6 +132,11 @@ class ModflowGhb(Package):
         """
         Write the package file.
 
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
+
         Returns
         -------
         None
@@ -176,7 +181,7 @@ class ModflowGhb(Package):
         return dtype
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -196,6 +201,8 @@ class ModflowGhb(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -214,4 +221,4 @@ class ModflowGhb(Package):
         if model.verbose:
             sys.stdout.write('loading ghb package file...\n')
 
-        return Package.load(model, ModflowGhb, f, nper)
+        return Package.load(model, ModflowGhb, f, nper, check=check)
