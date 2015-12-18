@@ -5,6 +5,7 @@ import subprocess
 import flopy
 from flopy.modflow.mfdisu import ModflowDisU
 from flopy.utils.util_array import read1d, Util2d
+from flopy.mbase import which
 
 try:
     import shapefile
@@ -86,6 +87,9 @@ class Gridgen(object):
         self._vertdict = {}
         self.dis = dis
         self.model_ws = model_ws
+        exe_name = which(exe_name)
+        if exe_name is None:
+            raise Exception('Cannot find gridgen binary executable')
         self.exe_name = os.path.abspath(exe_name)
 
         # surface interpolation method
@@ -220,7 +224,6 @@ class Gridgen(object):
         f.write(2 * '\n')
         f.close()
 
-        # Build the grid
         # Command: gridgen quadtreebuilder _gridgen_build.dfn
         qtgfname = os.path.join(self.model_ws, 'quadtreegrid.dfn')
         if os.path.isfile(qtgfname):
