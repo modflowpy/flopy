@@ -6,6 +6,12 @@ import flopy
 from flopy.modflow.mfdisu import ModflowDisU
 from flopy.utils.util_array import read1d, Util2d
 
+try:
+    import shapefile
+except:
+    raise Exception('Error importing shapefile: ' +
+                    'try pip install pyshp')
+
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
@@ -32,12 +38,6 @@ def features_to_shapefile(features, featuretype, filename):
     None
 
     """
-    try:
-        import shapefile
-    except:
-        raise Exception('Error importing shapefile: ' +
-                        'try pip install pyshp')
-
     if featuretype.lower() not in ['point', 'line', 'polygon']:
         raise Exception('Unrecognized feature type: {}'.format(featuretype))
 
@@ -83,9 +83,10 @@ class Gridgen(object):
                  surface_interpolation='replicate'):
         self.nodes = 0
         self.nja = 0
+        self._vertdict = {}
         self.dis = dis
         self.model_ws = model_ws
-        self.exe_name = exe_name
+        self.exe_name = os.path.abspath(exe_name)
 
         # surface interpolation method
         self.surface_interpolation = surface_interpolation.upper()
@@ -231,7 +232,46 @@ class Gridgen(object):
         # Export the grid to shapefiles, usgdata, and vtk files
         self.export()
 
+        # Create a dictionary that relates nodenumber to vertices
+        self._mkvertdict()
+
         return
+
+    def get_vertices(self, nodenumber):
+        """
+        Return a list of 5 vertices for the cell.  The first vertex should
+        be the same as the last vertex.
+
+        Parameters
+        ----------
+        nodenumber
+
+        Returns
+        -------
+        list of vertices : list
+
+        """
+        return self._vertdict[nodenumber]
+
+    def get_center(self, nodenumber):
+        """
+        Return the cell center x and y coordinates
+
+        Parameters
+        ----------
+        nodenumber
+
+        Returns
+        -------
+         (x, y) : tuple
+
+        """
+        vts = self.get_vertices(nodenumber)
+        xmin = vts[0][0]
+        xmax = vts[1][0]
+        ymin = vts[2][1]
+        ymax = vts[0][1]
+        return ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5)
 
     def export(self):
         """
@@ -714,3 +754,25 @@ class Gridgen(object):
         s += '  SHARE_VERTEX = True\n'
         s += 'END GRID_TO_VTKFILE\n'
         return s
+
+    def _mkvertdict(self):
+        """
+        Create the self._vertdict dictionary that maps the nodenumber to
+        the vertices
+
+        Returns
+        -------
+        None
+
+        """
+        fname = os.path.join(self.model_ws, 'qtgrid.shp')
+        sf = shapefile.Reader(fname)
+        shapes = sf.shapes()
+        fields = sf.fields
+        attributes = [l[0] for l in fields[1:]]
+        records = sf.records()
+        idx = attributes.index('nodenumber')
+        for i in range(len(shapes)):
+            nodenumber = int(records[i][idx]) - 1
+            self._vertdict[nodenumber] = shapes[i].points
+        return
