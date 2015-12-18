@@ -214,7 +214,7 @@ class Package(object):
         if self.name[0] in check.bc_elev_names.keys():
 
             chk = check(self, f=f, verbose=verbose, level=level)
-            active = self.parent.bas6.ibound.array != 0
+            active = chk.get_active()
 
             for per in range(self.parent.nper):
                 spd = self.stress_period_data[per]
@@ -233,7 +233,7 @@ class Package(object):
         elif self.name[0] in ['UPW', 'LPF']:
 
             chk = check(self, f=f, verbose=verbose, level=level)
-            active = self.parent.bas6.ibound.array != 0
+            active = chk.get_active()
 
             # check for confined layers above convertable layers
             confined = False

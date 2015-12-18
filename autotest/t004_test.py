@@ -400,7 +400,7 @@ if __name__ == '__main__':
     # test_arrayformat()
     # test_util2d_external_free_nomodelws()
     # test_util2d_external_free_path_nomodelws()
-    # test_util2d_external_free()
+    test_util2d_external_free()
     # test_util2d_external_free_path()
     # test_util2d_external_fixed()
     # test_util2d_external_fixed_path()

@@ -492,19 +492,7 @@ class ModflowDis(Package):
         chk = check(self, f=f, verbose=verbose, level=level)
 
         # make ibound of same shape as thicknesses/botm for quasi-3D models
-        if self.laycbd.sum() > 0:
-            ncbd = np.sum(self.laycbd.array > 0)
-            active = np.empty((self.nlay+ncbd, self.nrow, self.ncol), dtype=int)
-            l = 0
-            for cbd in self.laycbd:
-                active[l, :, :] = self.parent.bas6.ibound.array[l, :, :] != 0
-                if cbd > 0:
-                    active[l+1, :, :] = active[l, :, :]
-                l += 1
-            active[-1, :, :] = self.parent.bas6.ibound.array[-1, :, :] != 0
-        else:
-            active = self.parent.bas6.ibound.array != 0
-        assert active.shape == self.botm.shape
+        active = chk.get_active(include_cbd=True)
 
         chk.values(self.thickness.array,
                    active & (self.thickness.array <= 0),

@@ -264,6 +264,38 @@ class check:
         tp = [error_type] * len(v)
         return self._get_summary_array(np.column_stack([tp, pn, inds, v, en]))
 
+    def get_active(self, include_cbd=False):
+        """Returns a boolean array of active cells for the model.
+
+        Parameters
+        ----------
+        include_cbd : boolean
+            If True, active is of same dimmension as the thickness array
+            in the DIS module (includes quasi 3-D confining beds). Default False.
+
+        Returns
+        -------
+        active : 3-D array
+        """
+        dis = self.model.dis
+        if 'BAS6' in self.model.get_package_list():
+            # make ibound of same shape as thicknesses/botm for quasi-3D models
+            if include_cbd and dis.laycbd.sum() > 0:
+                ncbd = np.sum(dis.laycbd.array > 0)
+                active = np.empty((dis.nlay+ncbd, dis.nrow, dis.ncol), dtype=int)
+                l = 0
+                for cbd in dis.laycbd:
+                    active[l, :, :] = self.model.bas6.ibound.array[l, :, :] != 0
+                    if cbd > 0:
+                        active[l+1, :, :] = active[l, :, :]
+                    l += 1
+                active[-1, :, :] = self.model.bas6.ibound.array[-1, :, :] != 0
+            else:
+                active = self.model.bas6.ibound.array != 0
+        else: # if bas package is missing
+            active = np.ones((dis.nlay, dis.nrow, dis.ncol), dtype=bool)
+        return active
+
     def print_summary(self, cols=None, delimiter=',', float_format='{:.6f}'):
         # strip description column
         sa = self.summary_array.copy()
@@ -359,8 +391,6 @@ class check:
             print('Errors and/or Warnings encountered.')
             if self.f is not None:
                 print('  see {} for details.\n'.format(self.summaryfile))
-
-
 
 def _fmt_string_list(array, float_format='{}'):
     fmt_string = []
