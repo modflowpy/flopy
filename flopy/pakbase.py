@@ -210,23 +210,60 @@ class Package(object):
 
         """
         chk = None
-        # check elevations in the ghb, drain, and riv packages
-        if self.name[0] in check.bc_elev_names.keys():
 
-            chk = check(self, f=f, verbose=verbose, level=level)
-            active = chk.get_active()
-
+        if 'stress_period_data' in self.__dict__:
+            spd_inds_valid = True
+            chk = check(self, f=f, verbose=True, level=level)
             for per in range(self.parent.nper):
                 spd = self.stress_period_data[per]
+                inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
 
-                # check that bc elevations are above model cell bottoms
-                # also checks for nan values
-                elev_name = chk.bc_elev_names[self.name[0]]
-                botms = self.parent.dis.botm.array[spd.k, spd.i, spd.j]
-                chk.stress_period_data(spd, spd[elev_name] < botms,
-                                       col=elev_name,
-                                       error_name='BC elevation below cell bottom',
-                                       error_type='Error')
+                # General BC checks
+                # check for valid cell indices
+                spd_inds_valid = chk._stress_period_data_valid_indices(spd)
+
+                # first check for and list nan values
+                chk._stress_period_data_nans(spd)
+
+                if spd_inds_valid:
+                    # next check for BCs in inactive cells
+                    chk._stress_period_data_inactivecells(spd)
+                    '''
+                    spd = self.stress_period_data[per]
+                    inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
+
+                    # check that BCs indices are compatible with grid
+                    if 'DIS' in self.parent.get_package_list() and\
+                            {'k', 'i', 'j'}.intersection(set(spd.dtype.names)) != {'k', 'i', 'j'}:
+                        chk._add_to_summary(type='Error',
+                                            desc='\r    Stress period data missing k, i, j for structured grid.')
+                        spd_inds_valid = False
+                    elif 'DISU' in self.parent.get_package_list() and 'node' not in spd.dtype.names:
+                        chk._add_to_summary(type='Error',
+                                            desc='\r    Stress period data missing node number for unstructured grid.')
+                        spd_inds_valid = False
+
+                    # check for BCs indices that are invalid for grid
+                    isvalid = chk.isvalid(inds)
+                    if not np.all(isvalid):
+                        chk.stress_period_data(spd, isvalid,
+                                               error_type='Error',
+                                               error_name='index not valid for model grid')
+                        spd_inds_valid = False
+                    '''
+                    # More specific BC checks
+                    # check elevations in the ghb, drain, and riv packages
+                    if self.name[0] in check.bc_elev_names.keys():
+
+                        # check that bc elevations are above model cell bottoms
+                        # also checks for nan values
+                        elev_name = chk.bc_elev_names[self.name[0]]
+                        botms = self.parent.dis.botm.array[inds]
+                        chk.stress_period_data_values(spd, spd[elev_name] < botms,
+                                               col=elev_name,
+                                               error_name='BC elevation below cell bottom',
+                                               error_type='Error')
+
             chk.summarize()
 
         # check property values in upw and lpf packages

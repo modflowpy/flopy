@@ -221,15 +221,45 @@ class check:
             print(txt + '\n')
         self.txt += headertxt + txt + '\n'
 
+
+    def _stress_period_data_valid_indices(self, stress_period_data):
+        """Check that stress period data inds are valid for model grid."""
+        spd_inds_valid = True
+        if 'DIS' in self.model.get_package_list() and\
+                {'k', 'i', 'j'}.intersection(set(stress_period_data.dtype.names)) != {'k', 'i', 'j'}:
+            self._add_to_summary(type='Error',
+                                desc='\r    Stress period data missing k, i, j for structured grid.')
+            spd_inds_valid = False
+        elif 'DISU' in self.model.get_package_list() and \
+                        'node' not in stress_period_data.dtype.names:
+            self._add_to_summary(type='Error',
+                                desc='\r    Stress period data missing node number for unstructured grid.')
+            spd_inds_valid = False
+
+        # check for BCs indices that are invalid for grid
+        inds = (stress_period_data.k,
+                stress_period_data.i,
+                stress_period_data.j) if self.structured else (stress_period_data.node)
+
+        isvalid = self.isvalid(inds)
+        if not np.all(isvalid):
+            sa = self._list_spd_check_violations(stress_period_data, ~isvalid,
+                                                 error_name='invalid BC index',
+                                                 error_type='Error')
+            self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
+            spd_inds_valid = False
+        if spd_inds_valid:
+            self.passed.append('BC indices valid')
+        return spd_inds_valid
+
     def _stress_period_data_nans(self, stress_period_data):
         """Check for and list any nans in stress period data."""
         isnan = np.array([np.isnan(stress_period_data[c])
                           for c in stress_period_data.dtype.names]).transpose()
         if np.any(isnan):
             row_has_nan = np.any(isnan, axis=1)
-            col = self.bc_elev_names[self.package.name[0]]
             sa = self._list_spd_check_violations(stress_period_data,
-                                                 row_has_nan, col,
+                                                 row_has_nan,
                                                  error_name='Not a number',
                                                  error_type='Error')
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
@@ -238,31 +268,64 @@ class check:
 
     def _stress_period_data_inactivecells(self, stress_period_data):
         """Check for and list any stress period data in cells with ibound=0."""
-        ibnd = self.package.parent.bas6.ibound.array[stress_period_data.k,
-                                                     stress_period_data.i,
-                                                     stress_period_data.j]
+        spd = stress_period_data
+        inds = (spd.k, spd.i, spd.j) if self.structured else (spd.node)
+        ibnd = self.package.parent.bas6.ibound.array[inds]
+
         if np.any(ibnd == 0):
-            col = self.bc_elev_names[self.package.name[0]]
             sa = self._list_spd_check_violations(stress_period_data,
-                                                 ibnd == 0, col,
+                                                 ibnd == 0,
                                                  error_name='BC in inactive cell',
                                                  error_type='Warning')
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
         else:
             self.passed.append('BCs in inactive cells')
 
-    def _list_spd_check_violations(self, stress_period_data, criteria, col,
+    def _list_spd_check_violations(self, stress_period_data, criteria, col=None,
                                   error_name='', error_type='Warning'):
         """If criteria contains any true values, return the error_type, package name, k,i,j indicies,
         values, and description of error for each row in stress_period_data where criteria=True.
         """
-        inds = stress_period_data[criteria][['k', 'i', 'j']].view(int)\
+        inds_col = ['k', 'i', 'j'] if self.structured else ['node']
+        inds = stress_period_data[criteria][inds_col].view(int)\
             .reshape(stress_period_data[criteria].shape + (-1,))
-        v = stress_period_data[criteria][col]
+        if col is not None:
+            v = stress_period_data[criteria][col]
+        else:
+            v = np.zeros(len(stress_period_data[criteria]))
         pn = [self.package.name] * len(v)
         en = [error_name] * len(v)
         tp = [error_type] * len(v)
         return self._get_summary_array(np.column_stack([tp, pn, inds, v, en]))
+
+    def isvalid(self, inds):
+        """Check that indices are valid for model grid
+
+        Parameters
+        ----------
+        inds : tuple or lists or arrays; or a 1-D array
+            (k, i, j) for structured grids; (node) for unstructured.
+
+        Returns
+        -------
+        isvalid : 1-D boolean array
+            True for each index in inds that is valid for the model grid.
+        """
+        if isinstance(inds, np.ndarray):
+            inds = [inds]
+
+        if 'DIS' in self.model.get_package_list() and len(inds) == 3:
+            dis = self.model.dis
+            k = inds[0] < dis.nlay
+            i = inds[1] < dis.nrow
+            j = inds[2] < dis.ncol
+            return k | i | j
+
+        elif 'DISU' in self.model.get_package_list() and len(inds) == 1:
+            return inds < self.model.disu.nodes
+
+        else:
+            return np.zeros(inds[0].shape, dtype=bool)
 
     def get_active(self, include_cbd=False):
         """Returns a boolean array of active cells for the model.
@@ -275,9 +338,17 @@ class check:
 
         Returns
         -------
-        active : 3-D array
+        active : 3-D boolean array
+            True where active.
         """
-        dis = self.model.dis
+        if 'DIS' in self.model.get_package_list():
+            dis = self.model.dis
+            inds = (dis.nlay, dis.nrow, dis.ncol)
+        else:
+            dis = self.model.disu
+            inds = dis.nodes
+            include_cbd=False
+
         if 'BAS6' in self.model.get_package_list():
             # make ibound of same shape as thicknesses/botm for quasi-3D models
             if include_cbd and dis.laycbd.sum() > 0:
@@ -293,7 +364,7 @@ class check:
             else:
                 active = self.model.bas6.ibound.array != 0
         else: # if bas package is missing
-            active = np.ones((dis.nlay, dis.nrow, dis.ncol), dtype=bool)
+            active = np.ones(inds, dtype=bool)
         return active
 
     def print_summary(self, cols=None, delimiter=',', float_format='{:.6f}'):
@@ -303,16 +374,19 @@ class check:
         return _print_rec_array(sa, cols=cols, delimiter=delimiter,
                                 float_format=float_format)
 
-    def stress_period_data(self, stress_period_data, criteria, col,
+    def stress_period_data_values(self, stress_period_data, criteria, col=None,
                                   error_name='', error_type='Warning'):
         """If criteria contains any true values, return the error_type, package name, k,i,j indicies,
         values, and description of error for each row in stress_period_data where criteria=True.
         """
+        # check for valid cell indices
+        #self._stress_period_data_valid_indices(stress_period_data)
+
         # first check for and list nan values
-        self._stress_period_data_nans(stress_period_data)
+        #self._stress_period_data_nans(stress_period_data)
 
         # next check for BCs in inactive cells
-        self._stress_period_data_inactivecells(stress_period_data)
+        #self._stress_period_data_inactivecells(stress_period_data)
 
         if np.any(criteria):
             # list the values that met the criteria
