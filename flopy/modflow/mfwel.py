@@ -183,7 +183,7 @@ class ModflowWel(Package):
         return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -221,7 +221,7 @@ class ModflowWel(Package):
         if model.verbose:
             sys.stdout.write('loading wel package file...\n')
 
-        return Package.load(model, ModflowWel, f, nper)
+        return Package.load(model, ModflowWel, f, nper, check=check)
 
 
 

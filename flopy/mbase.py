@@ -524,10 +524,7 @@ class BaseModel(object):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.check()
         """
-        # if we want to set package check output by level
-        package_chk_verbose = True
-        if level == 0:
-            package_chk_verbose = False
+
         results = {}
         for p in self.packagelist:
             results[p.name[0]] = p.check(f=None, verbose=False, level=level-1)

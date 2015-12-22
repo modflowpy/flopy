@@ -23,5 +23,5 @@ def test_bcs_check():
     chk = ghb.check()
     assert chk.summary_array['desc'][0] == 'BC in inactive cell'
 if __name__ == '__main__':
-    #test_checker_on_load()
+    test_checker_on_load()
     test_bcs_check()
