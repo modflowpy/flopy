@@ -89,8 +89,8 @@ class ModflowNwt(Package):
     momfact : float
         is the momentum coefficient and ranges between 0.0 and 1.0. Greater values apply
         more weight to the head change for the current iteration. (default is 0.1).
-    backflag : int
-        s a flag used to specify whether residual control will be used. A value of 1
+    backflg : int
+        is a flag used to specify whether residual control will be used. A value of 1
         indicates that residual control is active and a value of 0 indicates residual
         control is inactive. (default is 1).
     maxbackiter : int
@@ -270,7 +270,7 @@ class ModflowNwt(Package):
             if self.linmeth == 1:
                 f.write('{0:10d}'.format(self.maxitinner))
                 f.write('{0:10d}'.format(self.ilumethod))
-                f.write('{0:10d}'.format(self.levfil))
+                f.write('{0:10d}'.format(self.levfill))
                 f.write('{0:10.4g}'.format(self.stoptol))
                 f.write('{0:10d}'.format(self.msdr))
             elif self.linmeth == 2:
