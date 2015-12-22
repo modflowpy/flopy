@@ -79,6 +79,12 @@ def stress_util2d(ml, nlay, nrow, ncol):
     lpf = flopy.modflow.ModflowLpf(ml, hk=fnames, vka=vk)
     ml.lpf.vka[0].format.binary = True
     ml.write_input()
+
+    # The following line raises an exception because .array is trying to
+    # read the binary file as ascii.  There is no exception if this statement
+    # comes before ml.write_input
+    a = ml.lpf.vka[0].array
+
     if ml.external_path is not None:
         files = os.listdir(os.path.join(ml.model_ws, ml.external_path))
     else:
