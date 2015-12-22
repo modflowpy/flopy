@@ -145,7 +145,7 @@ class Package(object):
     def export(self, f, **kwargs):
         from flopy import export
         return export.utils.package_helper(f, self, **kwargs)
-        
+
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
         if not isinstance(field_names, list):

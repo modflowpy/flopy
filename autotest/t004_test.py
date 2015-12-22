@@ -77,26 +77,36 @@ def stress_util2d(ml, nlay, nrow, ncol):
         vk[i] = i + 1.
 
     lpf = flopy.modflow.ModflowLpf(ml, hk=fnames, vka=vk)
+    # util2d binary check
     ml.lpf.vka[0].format.binary = True
+
+    # util3d cnstnt propogation test
+    ml.lpf.vka.cnstnt = 2.0
     ml.write_input()
 
-    # The following line raises an exception because .array is trying to
-    # read the binary file as ascii.  There is no exception if this statement
-    # comes before ml.write_input
-    a = ml.lpf.vka[0].array
+    # check that binary is being respect - it can't get no respect!
+    vka_1 = ml.lpf.vka[0]
+    a = vka_1.array
+    vka_1_2 = vka_1 * 2.0
+    assert np.array_equal(a * 2.0,vka_1_2.array)
 
     if ml.external_path is not None:
         files = os.listdir(os.path.join(ml.model_ws, ml.external_path))
     else:
         files = os.listdir(ml.model_ws)
+
     print("\n\nexternal files: " + ','.join(files) + '\n\n')
     ml1 = flopy.modflow.Modflow.load(ml.namefile,
                                      model_ws=ml.model_ws,
                                      verbose=True, forgive=False)
     print("testing load")
     assert ml1.load_fail == False
-    assert np.array_equal(ml1.lpf.vka.array, vk)
+    # check that both binary and cnstnt are being respected through
+    # out the write and load process.
+    assert np.array_equal(ml1.lpf.vka.array, vk * 2.0)
+    assert np.array_equal(ml1.lpf.vka.array, ml.lpf.vka.array)
     assert np.array_equal(ml1.lpf.hk.array, hk)
+    assert np.array_equal(ml1.lpf.hk.array, ml.lpf.hk.array)
 
     print("change model_ws")
     ml.model_ws = out_dir
@@ -111,9 +121,17 @@ def stress_util2d(ml, nlay, nrow, ncol):
                                      verbose=True, forgive=False)
     print("testing load")
     assert ml1.load_fail == False
-    assert np.array_equal(ml1.lpf.vka.array, vk)
+    assert np.array_equal(ml1.lpf.vka.array, vk * 2.0)
     assert np.array_equal(ml1.lpf.hk.array, hk)
 
+    # more binary testing
+    ml.lpf.vka[0]._array[0,0] *= 3.0
+    ml.write_input()
+    ml1 = flopy.modflow.Modflow.load(ml.namefile,
+                                     model_ws=ml.model_ws,
+                                     verbose=True, forgive=False)
+    assert np.array_equal(ml.lpf.vka.array,ml1.lpf.vka.array)
+    assert np.array_equal(ml.lpf.hk.array,ml1.lpf.hk.array)
 
 def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
     dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol)
@@ -129,15 +147,32 @@ def stress_util2d_for_joe_the_file_king(ml, nlay, nrow, ncol):
 
     lpf = flopy.modflow.ModflowLpf(ml, hk=fnames, vka=vk)
     ml.lpf.vka[0].format.binary = True
-
+    ml.lpf.vka.cnstnt = 2.0
     ml.write_input()
+
+    assert np.array_equal(ml.lpf.hk.array,hk)
+    assert np.array_equal(ml.lpf.vka.array,vk * 2.0)
+
     ml1 = flopy.modflow.Modflow.load(ml.namefile,
                                      model_ws=ml.model_ws,
                                      verbose=True, forgive=False)
     print("testing load")
     assert ml1.load_fail == False
-    assert np.array_equal(ml1.lpf.vka.array, vk)
+    assert np.array_equal(ml1.lpf.vka.array, vk * 2.0)
     assert np.array_equal(ml1.lpf.hk.array, hk)
+    assert np.array_equal(ml1.lpf.vka.array, ml.lpf.vka.array)
+    assert np.array_equal(ml1.lpf.hk.array, ml.lpf.hk.array)
+
+
+
+    # more binary testing
+    ml.lpf.vka[0]._array[0,0] *= 3.0
+    ml.write_input()
+    ml1 = flopy.modflow.Modflow.load(ml.namefile,
+                                     model_ws=ml.model_ws,
+                                     verbose=True, forgive=False)
+    assert np.array_equal(ml.lpf.vka.array,ml1.lpf.vka.array)
+    assert np.array_equal(ml.lpf.hk.array,ml1.lpf.hk.array)
 
 
 def test_util2d_external_free():
@@ -207,6 +242,8 @@ def test_util2d_external_free_path_nomodelws():
     if os.path.exists(ext_path):
         shutil.rmtree(ext_path)
     ml = flopy.modflow.Modflow(external_path=ext_path)
+
+    stress_util2d_for_joe_the_file_king(ml, 1, 1, 1)
 
     stress_util2d_for_joe_the_file_king(ml, 10, 1, 1)
     stress_util2d_for_joe_the_file_king(ml, 1, 10, 1)
@@ -402,16 +439,16 @@ def test_new_get_file_entry():
 
 
 if __name__ == '__main__':
-    test_new_get_file_entry()
-    # test_arrayformat()
-    # test_util2d_external_free_nomodelws()
-    # test_util2d_external_free_path_nomodelws()
-    # test_util2d_external_free()
-    # test_util2d_external_free_path()
-    # test_util2d_external_fixed()
-    # test_util2d_external_fixed_path()
-    # test_util2d_external_fixed_nomodelws()
-    # test_util2d_external_fixed_path_nomodelws()
-    # test_transient2d()
-    # test_util2d()
-    # test_util3d()
+    # test_new_get_file_entry()
+    #test_arrayformat()
+    #test_util2d_external_free_nomodelws()
+    #test_util2d_external_free_path_nomodelws()
+    test_util2d_external_free()
+    test_util2d_external_free_path()
+    test_util2d_external_fixed()
+    test_util2d_external_fixed_path()
+    test_util2d_external_fixed_nomodelws()
+    test_util2d_external_fixed_path_nomodelws()
+    test_transient2d()
+    test_util2d()
+    test_util3d()

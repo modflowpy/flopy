@@ -13,7 +13,7 @@ import shutil
 import copy
 import numbers
 import numpy as np
-from flopy.utils.binaryfile import BinaryHeader
+from .binaryfile import BinaryHeader
 
 
 class ArrayFormat(object):
@@ -1541,8 +1541,9 @@ class Util2d(object):
     @property
     def filename(self):
         if self.vtype != str:
-            filename = self.ext_filename
-            if filename is None:
+            if self.ext_filename is not None:
+                filename = os.path.split(self.ext_filename)[-1]
+            else:
                 filename = self._ext_filename
         else:
             filename = os.path.split(self.__value)[-1]
@@ -1767,6 +1768,8 @@ class Util2d(object):
                     # a.tofile(self.python_file_path)
                     Util2d.write_bin(self.shape, self.python_file_path, a,
                                      bintype="head")
+                    self.__value = a
+                    self.__value_built = a
                 return ''
 
             # this internal array or constant
@@ -1868,10 +1871,16 @@ class Util2d(object):
         """
         if self.vtype == str:
             if self.__value_built is None:
-                file_in = open(self.__value, 'r')
-                self.__value_built = \
-                    Util2d.load_txt(self.shape, file_in, self.dtype,
-                                    self.format.fortran).astype(self.dtype)
+                if self.format.binary:
+                    file_in = open(self.__value, 'rb')
+                    header_data, self.__value_built = \
+                        Util2d.load_bin(self.shape,self.__value,
+                                        self.dtype,bintype="head")
+                else:
+                    file_in = open(self.__value, 'r')
+                    self.__value_built = \
+                        Util2d.load_txt(self.shape, file_in, self.dtype,
+                                        self.format.fortran).astype(self.dtype)
                 file_in.close()
             return self.__value_built
         elif self.vtype != np.ndarray:
@@ -2145,7 +2154,9 @@ class Util2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
-            fname = os.path.join(model.model_ws, fname)
+            #fname = os.path.join(model.model_ws, fname)
+            if model.model_ws != '.':
+                fname = os.path.join(model.model_ws, fname)
             # load_txt(shape, file_in, dtype, fmtin):
             assert os.path.exists(fname), "Util2d.load() error: open/close " + \
                                           "file " + str(fname) + " not found"
