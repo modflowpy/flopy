@@ -365,14 +365,14 @@ def test_arrayformat():
     u2d = Util2d(ml, (15, 2), np.float32, np.ones((15, 2)), 'test')
 
     fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
+    cr = u2d.get_internal_cr()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
     u2d.format.npl = 1
     fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
+    cr = u2d.get_internal_cr()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
@@ -380,7 +380,7 @@ def test_arrayformat():
     u2d.format.npl = 2
     u2d.format.width = 8
     fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
+    cr = u2d.get_internal_cr()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
@@ -388,59 +388,58 @@ def test_arrayformat():
     u2d.format.free = True
     u2d.format.width = 8
     fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
+    cr = u2d.get_internal_cr()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
     u2d.format.free = False
     fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
+    cr = u2d.get_internal_cr()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
     u2d.fmtin = "(10G15.6)"
     fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
+    cr = u2d.get_internal_cr()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
 
     u2d.format.binary = True
     fmt_fort = u2d.format.fortran
-    cr = u2d.get_control_record()
+    cr = u2d.get_internal_cr()
     parsed = Util2d.parse_control_record(cr)
     print(fmt_fort, parsed["fmtin"])
     assert fmt_fort.upper() == parsed["fmtin"].upper()
-    assert u2d.get_file_array() == ''
 
 
 def test_new_get_file_entry():
     ml = flopy.modflow.Modflow(model_ws=out_dir)
     u2d = Util2d(ml, (5, 2), np.float32, np.ones((5, 2)), 'test', locat=99)
-    print(u2d.get_file_entry2(how="internal"))
-    print(u2d.get_file_entry2(how="constant"))
-    print(u2d.get_file_entry2(how="external"))
+    print(u2d.get_file_entry(how="internal"))
+    print(u2d.get_file_entry(how="constant"))
+    print(u2d.get_file_entry(how="external"))
     u2d.format.binary = True
-    print(u2d.get_file_entry2(how="external"))
+    print(u2d.get_file_entry(how="external"))
     u2d.format.binary = False
-    print(u2d.get_file_entry2(how="openclose"))
+    print(u2d.get_file_entry(how="openclose"))
     u2d.format.binary = True
-    print(u2d.get_file_entry2(how="openclose"))
+    print(u2d.get_file_entry(how="openclose"))
 
     ml.free_format = False
     u2d = Util2d(ml, (5, 2), np.float32, np.ones((5, 2)), 'test', locat=99)
-    print(u2d.get_file_entry2(how="internal"))
-    print(u2d.get_file_entry2(how="constant"))
-    print(u2d.get_file_entry2(how="external"))
+    print(u2d.get_file_entry(how="internal"))
+    print(u2d.get_file_entry(how="constant"))
+    print(u2d.get_file_entry(how="external"))
     u2d.format.binary = True
-    print(u2d.get_file_entry2(how="external"))
+    print(u2d.get_file_entry(how="external"))
 
 
 if __name__ == '__main__':
-    # test_new_get_file_entry()
-    #test_arrayformat()
+    test_new_get_file_entry()
+    test_arrayformat()
     #test_util2d_external_free_nomodelws()
     #test_util2d_external_free_path_nomodelws()
     test_util2d_external_free()
