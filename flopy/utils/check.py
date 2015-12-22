@@ -270,16 +270,17 @@ class check:
         """Check for and list any stress period data in cells with ibound=0."""
         spd = stress_period_data
         inds = (spd.k, spd.i, spd.j) if self.structured else (spd.node)
-        ibnd = self.package.parent.bas6.ibound.array[inds]
+        if 'BAS6' in self.model.get_package_list():
+            ibnd = self.package.parent.bas6.ibound.array[inds]
 
-        if np.any(ibnd == 0):
-            sa = self._list_spd_check_violations(stress_period_data,
-                                                 ibnd == 0,
-                                                 error_name='BC in inactive cell',
-                                                 error_type='Warning')
-            self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
-        else:
-            self.passed.append('BCs in inactive cells')
+            if np.any(ibnd == 0):
+                sa = self._list_spd_check_violations(stress_period_data,
+                                                     ibnd == 0,
+                                                     error_name='BC in inactive cell',
+                                                     error_type='Warning')
+                self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
+            else:
+                self.passed.append('BCs in inactive cells')
 
     def _list_spd_check_violations(self, stress_period_data, criteria, col=None,
                                   error_name='', error_type='Warning'):

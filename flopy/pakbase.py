@@ -211,7 +211,7 @@ class Package(object):
         """
         chk = None
 
-        if 'stress_period_data' in self.__dict__ and self.name[0] != 'OC':
+        if self.__dict__.get('stress_period_data', None) is not None and self.name[0] != 'OC':
             spd_inds_valid = True
             chk = check(self, f=f, verbose=verbose, level=level)
             for per in self.stress_period_data.data.keys():
@@ -261,9 +261,9 @@ class Package(object):
                             elev_name = chk.bc_elev_names[self.name[0]]
                             botms = self.parent.dis.botm.array[inds]
                             chk.stress_period_data_values(spd, spd[elev_name] < botms,
-                                                   col=elev_name,
-                                                   error_name='BC elevation below cell bottom',
-                                                   error_type='Error')
+                                                          col=elev_name,
+                                                          error_name='BC elevation below cell bottom',
+                                                          error_type='Error')
 
             chk.summarize()
 
