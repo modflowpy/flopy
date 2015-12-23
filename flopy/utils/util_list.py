@@ -12,7 +12,6 @@ from __future__ import division, print_function
 import os
 import warnings
 import numpy as np
-from flopy.utils import reference
 
 
 class MfList(object):
