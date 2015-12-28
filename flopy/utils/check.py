@@ -509,11 +509,19 @@ def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
     # drop columns with no data
     if np.shape(array)[0] > 1:
         cols = [c for c in cols if array['type'].dtype.kind == 'O' or array[c].min() > -999999]
-    # add _fmt_string call here
-    fmts = _fmt_string_list(array[cols], float_format=float_format)
+    # edit dtypes
+    array_cols = fields_view(array, cols)
+    fmts = _fmt_string_list(array_cols, float_format=float_format)
     txt += delimiter.join(cols) + '\n'
-    txt += '\n'.join([delimiter.join(fmts).format(*r) for r in array[cols].copy().tolist()])
+    txt += '\n'.join([delimiter.join(fmts).format(*r) for r in array_cols.copy().tolist()])
     return txt
+
+def fields_view(arr, fields):
+    """creates view of array that only contains the fields in fields.
+    http://stackoverflow.com/questions/15182381/how-to-return-a-view-of-several-columns-in-numpy-structured-array
+    """
+    dtype2 = np.dtype({name:arr.dtype.fields[name] for name in fields})
+    return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
 
 def get_neighbors(a):
     """Returns the 6 neighboring values for each value in a.
