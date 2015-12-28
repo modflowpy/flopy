@@ -102,7 +102,7 @@ class Package(object):
                 value = Util2d(self.parent, old_value.shape,
                                old_value.dtype, value,
                                name=old_value.name,
-                               fmtin=old_value.fmtin,
+                               fmtin=old_value.format.fortran,
                                locat=old_value.locat)
             elif isinstance(old_value, Util3d):
                 value = Util3d(self.parent, old_value.shape,
