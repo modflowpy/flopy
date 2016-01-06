@@ -815,3 +815,35 @@ class MfList(object):
             for name, array in arrays.items():
                 m4ds[name][kper, :, :, :] = array
         return m4ds
+
+
+    @staticmethod
+    def masked4D_arrays_to_stress_period_data(dtype, m4ds):
+        assert isinstance(m4ds,dict)
+        for name,m4d in m4ds.items():
+            assert isinstance(m4d,np.ndarray)
+            assert name in dtype.names
+            assert m4d.ndim == 4
+
+        sp_data = {}
+        for kper in range(m4d.shape[0]):
+            vals = {}
+            for name, m4d in m4ds.items():
+                arr = m4d[kper, :, :, :]
+                isnan = np.argwhere(~np.isnan(arr))
+                v = []
+                for k, i, j in isnan:
+                    v.append(arr[k, i, j])
+                vals[name] = v
+                kk = isnan[:, 0]
+                ii = isnan[:, 1]
+                jj = isnan[:, 2]
+
+            spd = np.recarray(shape=isnan.shape[0], dtype=dtype)
+            spd["i"] = ii
+            spd["k"] = kk
+            spd["j"] = jj
+            for n,v in vals.items():
+                spd[n] = v
+            sp_data[kper] = spd
+        return sp_data

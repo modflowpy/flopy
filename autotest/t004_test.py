@@ -437,17 +437,27 @@ def test_new_get_file_entry():
     print(u2d.get_file_entry(how="external"))
 
 
+def test_mflist():
+    pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    ml = flopy.modflow.Modflow.load(os.path.join(pth,"swi2ex4sww.nam"),
+                                    verbose=True)
+    m4ds = ml.wel.stress_period_data.masked_4D_arrays
+
+    sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data(flopy.modflow.ModflowWel.get_default_dtype(),m4ds)
+    print(sp_data)
+
 if __name__ == '__main__':
-    test_new_get_file_entry()
-    test_arrayformat()
+    test_mflist()
+    # test_new_get_file_entry()
+    # test_arrayformat()
     #test_util2d_external_free_nomodelws()
     #test_util2d_external_free_path_nomodelws()
-    test_util2d_external_free()
-    test_util2d_external_free_path()
-    test_util2d_external_fixed()
-    test_util2d_external_fixed_path()
-    test_util2d_external_fixed_nomodelws()
-    test_util2d_external_fixed_path_nomodelws()
-    test_transient2d()
-    test_util2d()
-    test_util3d()
+    # test_util2d_external_free()
+    # test_util2d_external_free_path()
+    # test_util2d_external_fixed()
+    # test_util2d_external_fixed_path()
+    # test_util2d_external_fixed_nomodelws()
+    # test_util2d_external_fixed_path_nomodelws()
+    # test_transient2d()
+    # test_util2d()
+    # test_util3d()
