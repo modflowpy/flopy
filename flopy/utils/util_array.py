@@ -548,6 +548,12 @@ class Util3d(object):
             # set the attribute for u3d
             super(Util3d, self).__setattr__(key, value)
 
+    def __getattr__(self, item):
+        if item == "how":
+            return [u2d.how for u2d in self.util_2ds]
+        else:
+            return super(Util3d, self).__getattr(item)
+
     def export(self, f, **kwargs):
         from flopy import export
         return export.utils.util3d_helper(f, self, **kwargs)
@@ -904,6 +910,13 @@ class Transient2d(object):
                              self.name_base.replace(' ', '_'))
         self.transient_2ds = self.build_transient_sequence()
         return
+
+    def __getattr__(self, item):
+        if item == "how":
+            return {i:u2d.how for i,u2d in self.transient_2ds.items()}
+        else:
+            return super(Transient2d, self).__getattr(item)
+
 
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":
@@ -2049,7 +2062,7 @@ class Util2d(object):
 
         if cr_dict['type'] == 'constant':
             u2d = Util2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+                          iprn=cr_dict['iprn'], fmtin="(FREE)")
 
         elif cr_dict['type'] == 'open/close':
             # clean up the filename a little
@@ -2074,14 +2087,14 @@ class Util2d(object):
                                                     bintype='Head')
             f.close()
             u2d = Util2d(model, shape, dtype, data, name=name,
-                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
                          cnstnt=cr_dict['cnstnt'])
 
 
         elif cr_dict['type'] == 'internal':
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
-                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
                          cnstnt=cr_dict['cnstnt'])
 
         elif cr_dict['type'] == 'external':
@@ -2101,7 +2114,7 @@ class Util2d(object):
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
                     bintype='Head')
             u2d = Util2d(model, shape, dtype, data, name=name,
-                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
                          cnstnt=cr_dict['cnstnt'])
             # track this unit number so we can remove it from the external
             # file list later
