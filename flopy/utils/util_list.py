@@ -479,13 +479,14 @@ class MfList(object):
     def __find_last_kper(self, kper):
         kpers = list(self.data.keys())
         kpers.sort()
-        last = kpers[0]
-        for kper in kpers:
-            if (kper >= last):
-                break
-            if (self.vtype[kper] != int) or (self.data[kper] != -1):
-                last = kper
-        return kper
+        last = 0
+        for kkper in kpers[::-1]:
+            # if this entry is valid
+            if self.vtype[kkper] != int or self.data[kkper] != -1:
+                last = kkper
+                if kkper <= kper:
+                    break
+        return kkper
 
     def get_indices(self):
         """
@@ -819,6 +820,17 @@ class MfList(object):
 
     @staticmethod
     def masked4D_arrays_to_stress_period_data(dtype, m4ds):
+        """ convert a dictionary of 4-dim masked arrays to
+            a stress_period_data style dict of recarray
+        Parameters:
+        ----------
+            dtype : numpy dtype
+
+            m4ds : dict {name:masked numpy 4-dim ndarray}
+        Returns:
+        -------
+            dict {kper:recarray}
+        """
         assert isinstance(m4ds,dict)
         for name,m4d in m4ds.items():
             assert isinstance(m4d,np.ndarray)

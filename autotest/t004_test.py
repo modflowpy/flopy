@@ -438,13 +438,39 @@ def test_new_get_file_entry():
 
 
 def test_mflist():
+
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    dis = flopy.modflow.ModflowDis(ml,10,10,10,10)
+    sp_data = {0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],1:[1,2,4,4.0]}
+    wel = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data)
+    m4ds = ml.wel.stress_period_data.masked_4D_arrays
+
+    sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data\
+        (flopy.modflow.ModflowWel.get_default_dtype(),m4ds)
+    assert np.array_equal(sp_data[0],ml.wel.stress_period_data[0])
+    assert np.array_equal(sp_data[1],ml.wel.stress_period_data[1])
+    # the last entry in sp_data (kper==9) should equal the last entry
+    # with actual data in the well file (kper===1)
+    assert np.array_equal(sp_data[9],ml.wel.stress_period_data[1])
+
     pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
     ml = flopy.modflow.Modflow.load(os.path.join(pth,"swi2ex4sww.nam"),
                                     verbose=True)
     m4ds = ml.wel.stress_period_data.masked_4D_arrays
 
-    sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data(flopy.modflow.ModflowWel.get_default_dtype(),m4ds)
-    print(sp_data)
+    sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data\
+        (flopy.modflow.ModflowWel.get_default_dtype(),m4ds)
+
+    # make a new wel file
+    wel = flopy.modflow.ModflowWel(ml,stress_period_data=sp_data)
+    flx1 = m4ds["flux"]
+    flx2 = wel.stress_period_data.masked_4D_arrays["flux"]
+
+    flx1 = np.nan_to_num(flx1)
+    flx2 = np.nan_to_num(flx2)
+
+    assert flx1.sum() == flx2.sum()
+
 
 if __name__ == '__main__':
     test_mflist()
