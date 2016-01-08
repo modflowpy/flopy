@@ -102,7 +102,7 @@ class Package(object):
                 value = Util2d(self.parent, old_value.shape,
                                old_value.dtype, value,
                                name=old_value.name,
-                               fmtin=old_value.fmtin,
+                               fmtin=old_value.format.fortran,
                                locat=old_value.locat)
             elif isinstance(old_value, Util3d):
                 value = Util3d(self.parent, old_value.shape,
@@ -144,26 +144,7 @@ class Package(object):
 
     def export(self, f, **kwargs):
         from flopy import export
-        from .utils import Util2d, Util3d, Transient2d, MfList
-
-        attrs = dir(self)
-        for attr in attrs:
-            if '__' in attr:
-                continue
-            a = self.__getattribute__(attr)
-            if isinstance(a, Util2d) and len(a.shape) == 2:
-                f = export.utils.util2d_helper(f, a, **kwargs)
-            elif isinstance(a, Util3d):
-                f = export.utils.util3d_helper(f, a, **kwargs)
-            elif isinstance(a, Transient2d):
-                f = export.utils.transient2d_helper(f, a, **kwargs)
-            elif isinstance(a, MfList):
-                f = export.utils.mflist_helper(f, a, **kwargs)
-            elif isinstance(a, list):
-                for v in a:
-                    if isinstance(v, Util3d):
-                        f = export.utils.util3d_helper(f, v, **kwargs)
-        return f
+        return export.utils.package_helper(f, self, **kwargs)
 
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):

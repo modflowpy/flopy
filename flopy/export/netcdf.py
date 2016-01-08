@@ -139,7 +139,7 @@ class NetCdf(object):
         self.start_datetime = dateutil.parser.parse(
             self.model.dis.start_datetime).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        self.grid_units = LENUNI[self.model.dis.lenuni]
+        self.grid_units = LENUNI[self.model.dis.sr.lenuni]
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
@@ -391,9 +391,9 @@ class NetCdf(object):
                    "origin_crs": self.nc_epsg_str}
         delc = self.create_variable('delc', attribs, dimensions=('y',))
         if self.grid_units.lower().startswith('f'):
-            delc[:] = self.model.dis.delc.array[::-1] * 0.3048
+            delc[:] = self.model.dis.sr.delc[::-1] * 0.3048
         else:
-            delc[:] = self.model.dis.delc.array[::-1]
+            delc[:] = self.model.dis.sr.delc[::-1]
         if self.model.dis.sr.rotation != 0:
             delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
@@ -405,9 +405,9 @@ class NetCdf(object):
                    "origin_crs": self.nc_epsg_str}
         delr = self.create_variable('delr', attribs, dimensions=('x',))
         if self.grid_units.lower().startswith('f'):
-            delr[:] = self.model.dis.delr.array[::-1] * 0.3048
+            delr[:] = self.model.dis.sr.delr[::-1] * 0.3048
         else:
-            delr[:] = self.model.dis.delr.array[::-1]
+            delr[:] = self.model.dis.sr.delr[::-1]
         if self.model.dis.sr.rotation != 0:
             delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
