@@ -26,6 +26,32 @@ def test_util2d():
     a1 = u2d.array
     a2 = np.ones((10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
+
+    # test external filenames - ascii and binary
+    fname_ascii = os.path.join(out_dir, 'test_a.dat')
+    fname_bin = os.path.join(out_dir, 'test_b.dat')
+    np.savetxt(fname_ascii,a1,fmt="%15.6E")
+    u2d.write_bin(a1.shape,fname_bin,a1,bintype="head")
+    dis = flopy.modflow.ModflowDis(ml,2,10,10)
+    lpf = flopy.modflow.ModflowLpf(ml,hk=[fname_ascii,fname_bin])
+    ml.lpf.hk[1].fmtin = "(BINARY)"
+    assert np.array_equal(lpf.hk[0].array,a1)
+    assert np.array_equal(lpf.hk[1].array,a1)
+
+
+    # test external filenames - ascii and binary with model_ws and external_path
+    ml = flopy.modflow.Modflow(model_ws="temp",external_path="ref")
+    u2d = Util2d(ml, (10, 10), np.float32, 10., "test")
+    fname_ascii = os.path.join(out_dir, 'test_a.dat')
+    fname_bin = os.path.join(out_dir, 'test_b.dat')
+    np.savetxt(fname_ascii,a1,fmt="%15.6E")
+    u2d.write_bin(a1.shape,fname_bin,a1,bintype="head")
+    dis = flopy.modflow.ModflowDis(ml,2,10,10)
+    lpf = flopy.modflow.ModflowLpf(ml,hk=[fname_ascii,fname_bin])
+    ml.lpf.hk[1].fmtin = "(BINARY)"
+    assert np.array_equal(lpf.hk[0].array,a1)
+    assert np.array_equal(lpf.hk[1].array,a1)
+
     # bin read write test
     fname = os.path.join(out_dir, 'test.bin')
     u2d.write_bin((10, 10), fname, u2d.array)
@@ -473,11 +499,11 @@ def test_mflist():
 
 
 if __name__ == '__main__':
-    test_mflist()
+    #test_mflist()
     # test_new_get_file_entry()
     # test_arrayformat()
-    #test_util2d_external_free_nomodelws()
-    #test_util2d_external_free_path_nomodelws()
+    # test_util2d_external_free_nomodelws()
+    # test_util2d_external_free_path_nomodelws()
     # test_util2d_external_free()
     # test_util2d_external_free_path()
     # test_util2d_external_fixed()
@@ -485,5 +511,5 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
     # test_transient2d()
-    # test_util2d()
-    # test_util3d()
+    test_util2d()
+    #test_util3d()

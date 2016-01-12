@@ -36,6 +36,17 @@ def export_netcdf(namfile):
     return
 
 
+def test_well_flux_extras():
+    import os
+    import flopy
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    dis = flopy.modflow.ModflowDis(ml,10,10,10,10)
+    sp_data = {0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],1:[1,2,4,4.0]}
+    wel = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data)
+    wel.export(os.path.join("temp","wel_test.nc"))
+
+
+
 def test_netcdf():
     for namfile in namfiles:
         yield export_netcdf, namfile
@@ -45,3 +56,4 @@ if __name__ == '__main__':
     for namfile in namfiles:
     #for namfile in ["fhb.nam"]:
         export_netcdf(namfile)
+    test_well_flux_extras()

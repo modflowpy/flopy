@@ -548,12 +548,6 @@ class Util3d(object):
             # set the attribute for u3d
             super(Util3d, self).__setattr__(key, value)
 
-    def __getattr__(self, item):
-        if item == "how":
-            return [u2d.how for u2d in self.util_2ds]
-        else:
-            return super(Util3d, self).__getattr(item)
-
     def export(self, f, **kwargs):
         from flopy import export
         return export.utils.util3d_helper(f, self, **kwargs)
@@ -910,13 +904,6 @@ class Transient2d(object):
                              self.name_base.replace(' ', '_'))
         self.transient_2ds = self.build_transient_sequence()
         return
-
-    def __getattr__(self, item):
-        if item == "how":
-            return {i:u2d.how for i,u2d in self.transient_2ds.items()}
-        else:
-            return super(Transient2d, self).__getattr(item)
-
 
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":
@@ -1313,6 +1300,8 @@ class Util2d(object):
         self.name = name
         self.locat = locat
         self.parse_value(value)
+        if self.vtype == str:
+            fmtin = "(FREE)"
         self.__value_built = None
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
@@ -1796,9 +1785,13 @@ class Util2d(object):
         if self.vtype == str:
             if self.__value_built is None:
                 file_in = open(self.__value, 'r')
-                self.__value_built = \
-                    Util2d.load_txt(self.shape, file_in, self.dtype,
-                                     self.format.fortran).astype(self.dtype)
+
+                if self.format.binary:
+                    header, self.__value_built = Util2d.load_bin(self.shape,file_in,self.dtype,
+                                    bintype="head")
+                else:
+                    self.__value_built = Util2d.load_txt(self.shape, file_in, self.dtype,
+                                 self.format.fortran).astype(self.dtype)
                 file_in.close()
             return self.__value_built
         elif self.vtype != np.ndarray:
