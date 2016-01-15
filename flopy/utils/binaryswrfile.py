@@ -13,42 +13,56 @@ class SwrBinaryStatements:
     textbyte = 4
 
     def read_integer(self):
-        intvalue = strct.unpack('i', self.file.read(1 * SwrBinaryStatements.integerbyte))[0]
+        intvalue = \
+            strct.unpack('i',
+                         self.file.read(1 * SwrBinaryStatements.integerbyte))[
+                0]
         return intvalue
 
     def read_real(self):
-        realvalue = strct.unpack('d', self.file.read(1 * SwrBinaryStatements.realbyte))[0]
+        realvalue = \
+            strct.unpack('d',
+                         self.file.read(1 * SwrBinaryStatements.realbyte))[0]
         return realvalue
 
     def read_text(self):
-        textvalue = np.fromfile(file=self.file, dtype=SwrBinaryStatements.character, count=16).tostring()
+        textvalue = np.fromfile(file=self.file,
+                                dtype=SwrBinaryStatements.character,
+                                count=16).tostring()
         return textvalue
 
     def read_obs_text(self, nchar=20):
-        textvalue = np.fromfile(file=self.file, dtype=SwrBinaryStatements.character, count=nchar).tostring()
+        textvalue = np.fromfile(file=self.file,
+                                dtype=SwrBinaryStatements.character,
+                                count=nchar).tostring()
         return textvalue
 
     def read_record(self):
         if self.skip == True:
-            lpos = self.file.tell() + (self.nrecord * self.items * SwrBinaryStatements.realbyte)
+            lpos = self.file.tell() + (
+                self.nrecord * self.items * SwrBinaryStatements.realbyte)
             self.file.seek(lpos)
             x = np.zeros((self.nrecord * self.items), SwrBinaryStatements.real)
         else:
-            x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real, count=self.nrecord * self.items)
+            x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real,
+                            count=self.nrecord * self.items)
         x.resize(self.nrecord, self.items)
         return x
 
     def read_items(self):
         if self.skip == True:
-            lpos = self.file.tell() + (self.items * SwrBinaryStatements.realbyte)
+            lpos = self.file.tell() + (
+                self.items * SwrBinaryStatements.realbyte)
             self.file.seek(lpos)
             x = np.zeros((self.items), SwrBinaryStatements.real)
         else:
-            x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real, count=self.items)
+            x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real,
+                            count=self.items)
         return x
 
     def read_1dintegerarray(self):
-        i = np.fromfile(file=self.file, dtype=SwrBinaryStatements.integer, count=self.nrecord)
+        i = np.fromfile(file=self.file, dtype=SwrBinaryStatements.integer,
+                        count=self.nrecord)
         return i
 
 
@@ -128,7 +142,7 @@ class SwrObs(SwrBinaryStatements):
         while True:
             current_position = self.file.tell()
             totim, v, success = next(self)
-            if success == True:
+            if success:
                 times.append([totim, current_position])
             else:
                 self.file.seek(self.datastart)
@@ -161,7 +175,7 @@ class SwrObs(SwrBinaryStatements):
         iposition = int(self.times[idx, 1])
         self.file.seek(iposition)
         totim, v, success = next(self)
-        if success == True:
+        if success:
             return totim, v, True
         else:
             self.v.fill(1.0E+32)
@@ -172,13 +186,17 @@ class SwrObs(SwrBinaryStatements):
         try:
             idx = int(record) - 1
             if self.verbose == True:
-                print('retrieving SWR observation record [{0}]'.format(idx + 1))
+                print(
+                        'retrieving SWR observation record [{0}]'.format(
+                                idx + 1))
         except:
             for icnt, cid in enumerate(self.obsnames):
                 if record.strip().lower() == cid.strip().lower():
                     idx = icnt
                     if self.verbose == True:
-                        print('retrieving SWR observation record [{0}] {1}'.format(idx + 1, record.strip().lower()))
+                        print(
+                                'retrieving SWR observation record [{0}] {1}'.format(
+                                        idx + 1, record.strip().lower()))
                     break
         gage_record = np.zeros((2))  # tottime plus observation
         if idx != -1 and idx < self.nobs:
@@ -246,53 +264,39 @@ class SwrFile(SwrBinaryStatements):
         Class constructor.
 
         """
-        # --swrtype =  0 = stage record
-        # swrtype = -1 = reach group record
-        # swrtype = -2 = reach group connection velocity record
-        # swrtype >  0 = aq-reach exchange record type = nlay
         self.file = open(filename, 'rb')
-        self.type = None
-        try:
-            ctype = swrtype.lower()
-        except:
-            ctype = None
-            pass
-        if ctype is not None:
-            self.type = ctype
+        self.types = ('stage', 'reachgroup', 'qm', 'qaq')
+        if swrtype.lower() in self.types:
+            self.type = swrtype.lower()
         else:
-            try:
-                itype = int(swrtype)
-            except:
-                print('SWR data type not defined')
-                raise
-            if itype == 0:
-                self.type = 'stage'
-            elif itype == -1:
-                self.type = 'reachgroup'
-            elif itype == -2:
-                self.type = 'qm'
-            elif itype > 0:
-                self.type = 'qaq'
-        if self.type is None:
-            print('undefined SWR data type')
-            raise
-
+            err = 'SWR type ({}) is not defined. '.format(type) + \
+                  'Available types are:\n'
+            for t in self.types:
+                err = '{}  {}\n'.format(err, t)
+            raise Exception(err)
         self.verbose = verbose
+        
+        # Read the dimension data
         self.nrgout = 0
         if self.type == 'qm':
             self.nrgout = self.read_integer()
         self.nrecord = self.read_integer()
+        
+        # set-up 
         self.items = self.get_num_items()
         self.null_record = np.zeros((self.nrecord, self.items)) + 1.0E+32
         #
         self.missingData = -9999.9
         self.dataAvailable = True
         self.skip = False
+        
         # read connectivity for velocity data if necessary
-        if self.type == 'qm':
+        if self.type is 'qm':
             self.connectivity = self._read_connectivity()
-            if self.verbose == True:
+            if self.verbose:
+                print('Connectivity: ')
                 print(self.connectivity)
+        
         # initialize reachlayers and nqaqentries for qaq data
         if self.type == 'qaq':
             self.reachlayers = np.zeros((self.nrecord), np.int)
@@ -305,13 +309,13 @@ class SwrFile(SwrBinaryStatements):
 
         self.datastart = self.file.tell()
         # get times
-        self.times = self.time_list()
+        self._times = self._read_times()
 
     def get_nrecords(self):
         return self.nrgout, self.nrecord
 
-    def get_time_list(self):
-        return self.times
+    def get_times(self):
+        return self._times
 
     def _read_connectivity(self):
         conn = np.zeros((self.nrecord, 3), np.int)
@@ -346,12 +350,13 @@ class SwrFile(SwrBinaryStatements):
     def get_header_items(self):
         return ['totim', 'dt', 'kper', 'kstp', 'swrstp', 'success_flag']
 
-    def get_item_list(self):
+    def list_records(self):
         if self.type == 'stage':
             list = ['stage']
         if self.type == 'reachgroup':
             list = ['stage', 'qsflow', 'qlatflow', 'quzflow', 'rain', 'evap',
-                    'qbflow', 'qeflow', 'qexflow', 'qbcflow', 'qcrflow', 'dv', 'inf-out', 'volume']
+                    'qbflow', 'qeflow', 'qexflow', 'qbcflow', 'qcrflow', 'dv',
+                    'inf-out', 'volume']
         if self.type == 'qm':
             list = ['flow', 'velocity']
         if self.type == 'qaq':
@@ -359,20 +364,20 @@ class SwrFile(SwrBinaryStatements):
                     'wetper', 'cond', 'headdiff', 'qaq']
         return list
 
-    def get_temporal_list(self):
+    def list_temporal(self):
         list = ['totim', 'dt', 'kper', 'kstp', 'swrstp', 'success']
         return list
 
     def get_item_number(self, value, isTimeSeriesOutput=True):
-        l = self.get_item_list()
+        l = self.list_records()
         ioff = 6
-        if isTimeSeriesOutput == False:
+        if not isTimeSeriesOutput:
             ioff = 0
         try:
             i = l.index(value.lower())
             i += ioff
         except ValueError:
-            l = self.get_temporal_list()
+            l = self.list_temporal()
             try:
                 i = l.index(value.lower())
             except ValueError:
@@ -391,7 +396,7 @@ class SwrFile(SwrBinaryStatements):
         return v
 
     def _read_header(self):
-        if self.type == 'qaq':
+        if self.type is 'qaq':
             try:
                 self.nqaqentries = 0
                 for i in range(0, self.nrecord):
@@ -400,7 +405,7 @@ class SwrFile(SwrBinaryStatements):
                     # print i+1, self.reachlayers[i]
                     # print self.nqaqentries
             except:
-                if self.verbose == True:
+                if self.verbose:
                     sys.stdout.write('\nCould not read reachlayers')
                 return 0.0, 0.0, 0, 0, 0, False
         try:
@@ -420,9 +425,9 @@ class SwrFile(SwrBinaryStatements):
             kkper = args[1]
             while True:
                 totim, dt, kper, kstp, swrstp, success, r = next(self)
-                if success == True:
+                if success:
                     if kkspt == kstp and kkper == kper:
-                        if self.verbose == True:
+                        if self.verbose:
                             print(totim, dt, kper, kstp, swrstp, True)
                         return totim, dt, kper, kstp, swrstp, True, r
                 else:
@@ -435,7 +440,7 @@ class SwrFile(SwrBinaryStatements):
                 ttotim = float(args[0])
                 while True:
                     totim, dt, kper, kstp, swrstp, r, success = next(self)
-                    if success == True:
+                    if success:
                         if ttotim <= totim:
                             return totim, dt, kper, kstp, swrstp, True, r
                     else:
@@ -450,36 +455,38 @@ class SwrFile(SwrBinaryStatements):
                     else:
                         previous = this_record
 
-    def get_gage(self, rec_num=0, iconn=0, rec_lay=1):
-        if self.type == 'qaq':
-            gage_record = np.zeros((self.items + 6))  # items plus 6 header values, reach number, and layer value
+    def get_ts(self, rec_num=0, iconn=0, rec_lay=0):
+        if self.type is 'qaq':
+            gage_record = np.zeros((
+                self.items + 6))  # items plus 6 header values, reach number, and layer value
         else:
-            gage_record = np.zeros((self.items + 6))  # items plus 6 header values
+            gage_record = np.zeros(
+                    (self.items + 6))  # items plus 6 header values
         while True:
             totim, dt, kper, kstp, swrstp, success, r = next(self)
-            if success == True:
+            if success:
                 this_entry = np.array([totim, dt, kper, kstp, swrstp, success])
-                irec = rec_num - 1
+                irec = rec_num  # zero-based index
                 # find correct entry for record and layer
-                if self.type == 'qaq':
+                if self.type is 'qaq':
                     ifound = 0
                     ilay = rec_lay
                     ilen = np.shape(r)[0]
                     # print np.shape(r)
                     for i in range(0, ilen):
-                        ir = int(r[i, 0])
-                        il = int(r[i, 1])
+                        ir = int(r[i, 0]) - 1
+                        il = int(r[i, 1]) - 1
                         if ir == rec_num and il == ilay:
                             ifound = 1
                             irec = i
                             break
                     if ifound < 1:
                         r[irec, :] = 0.0
-                elif self.type == 'qm':
+                elif self.type is 'qm':
                     ifound = 0
                     for i in range(0, self.nrecord):
-                        inode = self.connectivity[i, 1]
-                        ic = self.connectivity[i, 2]
+                        inode = self.connectivity[i, 1] - 1
+                        ic = self.connectivity[i, 2] - 1
                         if rec_num == inode and ic == iconn:
                             ifound = 1
                             irec = i
@@ -491,32 +498,35 @@ class SwrFile(SwrBinaryStatements):
                 gage_record = np.vstack((gage_record, this_entry))
 
             else:
-                gage_record = np.delete(gage_record, 0, axis=0)  # delete the first 'zeros' element
+                gage_record = np.delete(gage_record, 0,
+                                        axis=0)  # delete the first 'zeros' element
                 return gage_record
 
     def __next__(self):
         totim, dt, kper, kstp, swrstp, success = self._read_header()
         if success == False:
-            if self.verbose == True:
+            if self.verbose:
                 print('SWR_Record.next() object reached end of file')
             return 0.0, 0.0, 0, 0, 0, False, self.null_record
         else:
             if self.type == 'qaq':
-                r = self.read_qaq()
+                r = self._read_qaq()
                 return totim, dt, kper, kstp, swrstp, True, r
             else:
                 r = self.read_record()
         return totim, dt, kper, kstp, swrstp, True, r
 
-    def read_qaq(self):
+    def _read_qaq(self):
         x = np.zeros((self.nqaqentries, self.items), SwrBinaryStatements.real)
         if self.skip == True:
-            bytes = self.nqaqentries * (SwrBinaryStatements.integerbyte + 8 * SwrBinaryStatements.realbyte)
+            bytes = self.nqaqentries * (
+                SwrBinaryStatements.integerbyte + 8 * SwrBinaryStatements.realbyte)
             lpos = self.file.tell() + (bytes)
             self.file.seek(lpos)
         else:
             qaq_list = self.get_item_list()
-            bd = np.fromfile(self.file, dtype=self.qaq_dtype, count=self.nqaqentries)
+            bd = np.fromfile(self.file, dtype=self.qaq_dtype,
+                             count=self.nqaqentries)
             ientry = 0
             for irch in range(self.nrecord):
                 klay = self.reachlayers[irch]
@@ -532,7 +542,7 @@ class SwrFile(SwrBinaryStatements):
         self.file.seek(self.datastart)
         return True
 
-    def time_list(self):
+    def _read_times(self):
         self.skip = True
         self.file.seek(self.datastart)
         idx = 0
@@ -548,7 +558,7 @@ class SwrFile(SwrBinaryStatements):
             # get current position
             current_position = self.file.tell()
             totim, dt, kper, kstp, swrstp, success, r = next(self)
-            if success == True:
+            if success:
                 times.append([totim, dt, kper, kstp, swrstp, current_position])
             else:
                 self.file.seek(self.datastart)
@@ -558,10 +568,10 @@ class SwrFile(SwrBinaryStatements):
                 return times
 
     def get_time_record(self, time_index=0):
-        self.file.seek(int(self.times[time_index][5]))
+        self.file.seek(int(self._times[time_index][5]))
         totim, dt, kper, kstp, swrstp, success, r = next(self)
-        if success == True:
-            if self.verbose == True:
+        if success:
+            if self.verbose:
                 print(totim, dt, kper, kstp, swrstp, True)
             return totim, dt, kper, kstp, swrstp, True, r
         else:
@@ -573,17 +583,18 @@ class SwrFile(SwrBinaryStatements):
         point_offset = int(0)
         totim, dt, kper, kstp, swrstp, success = self._read_header()
         # --qaq terms
-        if self.type == 'qaq':
-            sys.stdout.write('MFBinaryClass::_get_point_offset can not be used to extract QAQ data')
+        if self.type is 'qaq':
+            sys.stdout.write(
+                    'MFBinaryClass::_get_point_offset can not be used to extract QAQ data')
             sys.exit(1)
         # stage and reach group terms
-        elif self.type == 'stage' or self.type == 'reachgroup':
+        elif self.type is 'stage' or self.type is 'reachgroup':
             idx = (rec_num - 1) * self.items
             lpos1 = self.file.tell() + idx * SwrBinaryStatements.realbyte
             self.file.seek(lpos1)
             point_offset = self.file.tell() - lpos0
         # connection flux and velocity terms
-        elif self.type == 'qm':
+        elif self.type is 'qm':
             frec = -999
             for i in range(0, self.nrecord):
                 inode = self.connectivity[i, 1]
@@ -602,8 +613,9 @@ class SwrFile(SwrBinaryStatements):
         return point_offset
 
     def get_time_gage(self, rec_num=0, iconn=0):
-        if self.type == 'qaq':
-            sys.stdout.write('MFBinaryClass::get_time_gage can not be used to extract QAQ data\n')
+        if self.type is 'qaq':
+            sys.stdout.write(
+                    'MFBinaryClass::get_time_gage can not be used to extract QAQ data\n')
             sys.exit(1)
         num_records = self.items + 6  # items plus 6 header values
         gage_record = np.zeros((num_records), np.float)
@@ -613,14 +625,17 @@ class SwrFile(SwrBinaryStatements):
             ilen = self._get_point_offset(rec_num, iconn)
         else:
             self.dataAvailable = False
-        if self.dataAvailable == False:
-            sys.stdout.write('  Error: data is not available for reach {0} '.format(rec_num))
-            if self.type == 'qm':
+        if not self.dataAvailable:
+            sys.stdout.write(
+                    '  Error: data is not available for reach {0} '.format(
+                            rec_num))
+            if self.type is 'qm':
                 sys.stdout.write('connected to reach {0}'.format(iconn))
             sys.stdout.write('\n')
+
         # get data
-        if len(self.times) > 0:
-            for time_data in self.times:
+        if len(self._times) > 0:
+            for time_data in self._times:
                 totim = time_data[0]
                 dt = time_data[1]
                 kper = time_data[2]
@@ -628,7 +643,7 @@ class SwrFile(SwrBinaryStatements):
                 swrstp = time_data[4]
                 success = True
                 # get data
-                if self.dataAvailable == True:
+                if self.dataAvailable:
                     self.file.seek(int(time_data[5]) + ilen)
                     r = self.read_items()
                 else:
@@ -640,5 +655,6 @@ class SwrFile(SwrBinaryStatements):
                 this_entry = np.hstack((this_entry, r))
                 gage_record = np.vstack((gage_record, this_entry))
         # delete first empty entry and return gage_record
-        gage_record = np.delete(gage_record, 0, axis=0)  # delete the first 'zeros' element
+        gage_record = np.delete(gage_record, 0,
+                                axis=0)  # delete the first 'zeros' element
         return gage_record
