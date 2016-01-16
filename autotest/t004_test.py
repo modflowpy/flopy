@@ -15,9 +15,9 @@ def test_transient2d():
     dis = flopy.modflow.ModflowDis(ml, nlay=10, nrow=10, ncol=10, nper=3)
     t2d = Transient2d(ml, (10, 10), np.float32, 10., "fake")
     a1 = t2d.array
-    assert a1.shape == (3, 10, 10), a1.shape
+    assert a1.shape == (3, 1, 10, 10), a1.shape
     t2d.cnstnt = 2.0
-    assert np.array_equal(t2d.array, np.zeros((3, 10, 10)) + 20.0)
+    assert np.array_equal(t2d.array, np.zeros((3, 1, 10, 10)) + 20.0)
 
 
 def test_util2d():
@@ -510,6 +510,6 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path()
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
-    # test_transient2d()
-    test_util2d()
+    test_transient2d()
+    # test_util2d()
     #test_util3d()

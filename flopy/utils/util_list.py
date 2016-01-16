@@ -817,6 +817,9 @@ class MfList(object):
                 m4ds[name][kper, :, :, :] = array
         return m4ds
 
+    @property
+    def array(self):
+        return self.masked_4D_arrays
 
     @staticmethod
     def masked4D_arrays_to_stress_period_data(dtype, m4ds):

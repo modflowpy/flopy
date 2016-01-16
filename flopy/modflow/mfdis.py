@@ -594,7 +594,7 @@ class ModflowDis(Package):
                     pass
             elif "proj4_str" in item:
                 try:
-                    proj4_str = item.split(':')[1]
+                    proj4_str = ':'.join(item.split(':')[1:])
                 except:
                     pass
             elif "start" in item:

@@ -234,7 +234,7 @@ def transient2d_helper(f, t2d, **kwargs):
         f.log("getting 4D array for {0}".format(t2d.name_base))
 
         if t2d.model.bas6 is not None:
-            array[:, t2d.model.bas6.ibound.array[0] == 0] = f.fillvalue
+            array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = f.fillvalue
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
 
@@ -248,13 +248,13 @@ def transient2d_helper(f, t2d, **kwargs):
         attribs["units"] = units
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
-                                    dimensions=("time", "y", "x"))
+                                    dimensions=("time", "layer", "y", "x"))
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
             raise Exception(estr)
         try:
-            var[:] = array
+            var[:,0] = array
         except Exception as e:
             estr = "error setting array to variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -357,12 +357,13 @@ def util2d_helper(f, u2d, **kwargs):
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
 
+    if isinstance(f, str) and f.lower().endswith(".nc"):
+        f = NetCdf(f, u2d.model)
+
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
         shapefile_utils.write_grid_shapefile(f, u2d.model.dis.sr, {name: u2d.array})
-
-    if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, u2d.model)
+        return
 
     elif isinstance(f, NetCdf):
 
