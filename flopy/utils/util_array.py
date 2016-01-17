@@ -1286,6 +1286,12 @@ class Util2d(object):
                 setattr(self, attr[0], attr[1])
             self.model = model
             return
+
+        # some defense
+        if dtype not in [np.int, np.int32, np.float32, np.bool]:
+            raise Exception('Util2d:unsupported dtype: ' + str(dtype))
+
+
         if name is not None:
             name = name.lower()
         if ext_filename is not None:
@@ -1312,9 +1318,7 @@ class Util2d(object):
 
         self._acceptable_hows = ["constant","internal","external","openclose"]
 
-        # some defense
-        if dtype not in [np.int, np.int32, np.float32, np.bool]:
-            raise Exception('Util2d:unsupported dtype: ' + str(dtype))
+
 
         if how is not None:
             how = how.lower()
@@ -1322,6 +1326,15 @@ class Util2d(object):
             self._how = how
         else:
             self._decide_how()
+
+        if not model.free_format and self.how == "internal" and self.locat is None:
+            #raise Exception("Util2d error: locat is None, but model does not " +\
+            #      "support free format and the external array option " +\
+            #      "is not being used")
+            print("Util2d warning: locat is None, but model does not "+\
+                  "support free format and how is internal..."+\
+                  "resetting how = external")
+            self.how = "external"
 
     def _decide_how(self):
         #if a constant was passed in

@@ -498,6 +498,22 @@ def test_mflist():
     assert flx1.sum() == flx2.sum()
 
 
+def test_how():
+    import numpy as np
+    import flopy
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    ml.free_format = False
+    dis = flopy.modflow.ModflowDis(ml,nlay=2,nrow=10,ncol=10)
+
+    arr = np.ones((ml.nrow,ml.ncol))
+    u2d = flopy.utils.Util2d(ml,arr.shape,np.float32,arr,"test",locat=1)
+    print(u2d.get_file_entry())
+    u2d.how = "constant"
+    print(u2d.get_file_entry())
+    u2d.fmtin = "(binary)"
+    print(u2d.get_file_entry())
+
+
 if __name__ == '__main__':
     #test_mflist()
     # test_new_get_file_entry()
@@ -510,6 +526,7 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path()
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
-    test_transient2d()
+    # test_transient2d()
     # test_util2d()
     #test_util3d()
+    test_how()
