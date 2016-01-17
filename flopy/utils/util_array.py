@@ -1097,9 +1097,9 @@ class Transient2d(object):
 
     @property
     def array(self):
-        arr = np.zeros((self.model.dis.nper, 1, self.shape[0], self.shape[1]),
+        arr = np.zeros((self.model.nper, 1, self.shape[0], self.shape[1]),
                        dtype=self.dtype)
-        for kper in range(self.model.dis.nper):
+        for kper in range(self.model.nper):
             u2d = self[kper]
             arr[kper, 0, :, :] = u2d.array
         return arr
