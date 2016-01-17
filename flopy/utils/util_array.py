@@ -924,7 +924,7 @@ class Transient2d(object):
     def get_zero_2d(self, kper):
         name = self.name_base + str(kper + 1) + '(filled zero)'
         return Util2d(self.model, self.shape,
-                       self.dtype, 0.0, name=name).get_file_entry()
+                       self.dtype, 0.0, name=name)
 
     def to_shapefile(self, filename):
         """
@@ -1116,7 +1116,7 @@ class Transient2d(object):
         if kper in self.transient_2ds:
             return (1, self.transient_2ds[kper].get_file_entry())
         elif kper < min(self.transient_2ds.keys()):
-            return (1, self.get_zero_2d(kper))
+            return (1, self.get_zero_2d(kper).get_file_entry())
         else:
             return (-1, '')
 
@@ -1613,17 +1613,19 @@ class Util2d(object):
             cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
                                                 self.name)
         else:
-            cr = self._get_fixed_cr(0)
+            cr = self._get_fixed_cr(0, value=value)
         return cr
 
-    def _get_fixed_cr(self,locat):
+    def _get_fixed_cr(self, locat, value=None):
+        if value is None:
+            value = self.cnstnt
         if self.dtype == np.int:
             cr = '{0:>10.0f}{1:>10.0f}{2:>19s}{3:>10.0f} #{4}\n' \
-                .format(locat, self.cnstnt, self.format.fortran,
+                .format(locat, value, self.format.fortran,
                         self.iprn, self.name)
         elif self.dtype == np.float32:
             cr = '{0:>10.0f}{1:>10.5G}{2:>19s}{3:>10.0f} #{4}\n' \
-                .format(locat, self.cnstnt, self.format.fortran,
+                .format(locat, value, self.format.fortran,
                         self.iprn, self.name)
         else:
             raise Exception('Util2d: error generating fixed-format ' +
