@@ -114,13 +114,14 @@ class Util3dTpl(object):
         """
 
         if 'layers' in p.span and 'idx' in p.span:
-            raise Exception('For a Util3d object, cannot have layers and idx in parameter.span')
+            if p.span['idx'] is not None:
+                raise Exception('For a Util3d object, cannot have layers and idx in parameter.span')
 
         if 'layers' in p.span:
             for l in p.span['layers']:
                 self.multipliers[l] = '~ {0:^13s} ~'.format(p.name)
 
-        if 'idx' in p.span:
+        if 'idx' in p.span and p.span['idx'] is not None:
             idx = p.span['idx']
             self.chararray[idx] = '~{0:^13s}~'.format(p.name)
             self.indexed_params = True

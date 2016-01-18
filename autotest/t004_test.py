@@ -15,9 +15,9 @@ def test_transient2d():
     dis = flopy.modflow.ModflowDis(ml, nlay=10, nrow=10, ncol=10, nper=3)
     t2d = Transient2d(ml, (10, 10), np.float32, 10., "fake")
     a1 = t2d.array
-    assert a1.shape == (3, 10, 10), a1.shape
+    assert a1.shape == (3, 1, 10, 10), a1.shape
     t2d.cnstnt = 2.0
-    assert np.array_equal(t2d.array, np.zeros((3, 10, 10)) + 20.0)
+    assert np.array_equal(t2d.array, np.zeros((3, 1, 10, 10)) + 20.0)
 
 
 def test_util2d():
@@ -26,6 +26,32 @@ def test_util2d():
     a1 = u2d.array
     a2 = np.ones((10, 10), dtype=np.float32) * 10.
     assert np.array_equal(a1, a2)
+
+    # test external filenames - ascii and binary
+    fname_ascii = os.path.join(out_dir, 'test_a.dat')
+    fname_bin = os.path.join(out_dir, 'test_b.dat')
+    np.savetxt(fname_ascii,a1,fmt="%15.6E")
+    u2d.write_bin(a1.shape,fname_bin,a1,bintype="head")
+    dis = flopy.modflow.ModflowDis(ml,2,10,10)
+    lpf = flopy.modflow.ModflowLpf(ml,hk=[fname_ascii,fname_bin])
+    ml.lpf.hk[1].fmtin = "(BINARY)"
+    assert np.array_equal(lpf.hk[0].array,a1)
+    assert np.array_equal(lpf.hk[1].array,a1)
+
+
+    # test external filenames - ascii and binary with model_ws and external_path
+    ml = flopy.modflow.Modflow(model_ws="temp",external_path="ref")
+    u2d = Util2d(ml, (10, 10), np.float32, 10., "test")
+    fname_ascii = os.path.join(out_dir, 'test_a.dat')
+    fname_bin = os.path.join(out_dir, 'test_b.dat')
+    np.savetxt(fname_ascii,a1,fmt="%15.6E")
+    u2d.write_bin(a1.shape,fname_bin,a1,bintype="head")
+    dis = flopy.modflow.ModflowDis(ml,2,10,10)
+    lpf = flopy.modflow.ModflowLpf(ml,hk=[fname_ascii,fname_bin])
+    ml.lpf.hk[1].fmtin = "(BINARY)"
+    assert np.array_equal(lpf.hk[0].array,a1)
+    assert np.array_equal(lpf.hk[1].array,a1)
+
     # bin read write test
     fname = os.path.join(out_dir, 'test.bin')
     u2d.write_bin((10, 10), fname, u2d.array)
@@ -436,17 +462,70 @@ def test_new_get_file_entry():
     print(u2d.get_file_entry(how="external"))
 
 
+def test_mflist():
+
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    dis = flopy.modflow.ModflowDis(ml,10,10,10,10)
+    sp_data = {0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],1:[1,2,4,4.0]}
+    wel = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data)
+    m4ds = ml.wel.stress_period_data.masked_4D_arrays
+
+    sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data\
+        (flopy.modflow.ModflowWel.get_default_dtype(),m4ds)
+    assert np.array_equal(sp_data[0],ml.wel.stress_period_data[0])
+    assert np.array_equal(sp_data[1],ml.wel.stress_period_data[1])
+    # the last entry in sp_data (kper==9) should equal the last entry
+    # with actual data in the well file (kper===1)
+    assert np.array_equal(sp_data[9],ml.wel.stress_period_data[1])
+
+    pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    ml = flopy.modflow.Modflow.load(os.path.join(pth,"swi2ex4sww.nam"),
+                                    verbose=True)
+    m4ds = ml.wel.stress_period_data.masked_4D_arrays
+
+    sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data\
+        (flopy.modflow.ModflowWel.get_default_dtype(),m4ds)
+
+    # make a new wel file
+    wel = flopy.modflow.ModflowWel(ml,stress_period_data=sp_data)
+    flx1 = m4ds["flux"]
+    flx2 = wel.stress_period_data.masked_4D_arrays["flux"]
+
+    flx1 = np.nan_to_num(flx1)
+    flx2 = np.nan_to_num(flx2)
+
+    assert flx1.sum() == flx2.sum()
+
+
+def test_how():
+    import numpy as np
+    import flopy
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    ml.free_format = False
+    dis = flopy.modflow.ModflowDis(ml,nlay=2,nrow=10,ncol=10)
+
+    arr = np.ones((ml.nrow,ml.ncol))
+    u2d = flopy.utils.Util2d(ml,arr.shape,np.float32,arr,"test",locat=1)
+    print(u2d.get_file_entry())
+    u2d.how = "constant"
+    print(u2d.get_file_entry())
+    u2d.fmtin = "(binary)"
+    print(u2d.get_file_entry())
+
+
 if __name__ == '__main__':
-    test_new_get_file_entry()
-    test_arrayformat()
-    #test_util2d_external_free_nomodelws()
-    #test_util2d_external_free_path_nomodelws()
-    test_util2d_external_free()
-    test_util2d_external_free_path()
-    test_util2d_external_fixed()
-    test_util2d_external_fixed_path()
-    test_util2d_external_fixed_nomodelws()
-    test_util2d_external_fixed_path_nomodelws()
-    test_transient2d()
-    test_util2d()
-    test_util3d()
+    #test_mflist()
+    # test_new_get_file_entry()
+    # test_arrayformat()
+    # test_util2d_external_free_nomodelws()
+    # test_util2d_external_free_path_nomodelws()
+    # test_util2d_external_free()
+    # test_util2d_external_free_path()
+    # test_util2d_external_fixed()
+    # test_util2d_external_fixed_path()
+    # test_util2d_external_fixed_nomodelws()
+    # test_util2d_external_fixed_path_nomodelws()
+    # test_transient2d()
+    # test_util2d()
+    #test_util3d()
+    test_how()

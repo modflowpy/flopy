@@ -1,27 +1,35 @@
-import sys
-sys.path.insert(0, '..')
+# Test modflow write adn run
 import os
-import glob
-import numpy as np
-import flopy
+# import matplotlib.pyplot as plt
 
-def test_checker_on_load():
-    # load all of the models in the mf2005_test folder
-    # model level checks are performed by default on load()
-    model_ws = '../examples/data/mf2005_test/'
-    testmodels = [os.path.split(f)[-1] for f in glob.glob(model_ws + '*.nam')]
+pth = os.path.join('..', 'examples', 'data', 'swr_test')
+files = [('SWR004.stg', 'stage'),
+         ('SWR004.flow', 'reachgroup'),
+         ('SWR004.vel', 'qm')]
 
-    for mfnam in testmodels:
-        m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws)
 
-def test_bcs_check():
-    mf = flopy.modflow.Modflow(version='mf2005',
-                               model_ws='temp')
-    dis = flopy.modflow.ModflowDis(mf)
-    bas = flopy.modflow.ModflowBas(mf, ibound=np.array([[0, 1], [1, 1]]))
-    ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0: [0, 0, 0, 100, 1]})
-    chk = ghb.check()
-    assert chk.summary_array['desc'][0] == 'BC in inactive cell'
+def test_swr_binary_stage(ipos=0):
+    import flopy
+
+    fpth = os.path.join(pth, files[ipos][0])
+    swrtype = files[ipos][1]
+
+    sobj = flopy.utils.SwrFile(fpth, swrtype=swrtype)
+    assert isinstance(sobj, flopy.utils.SwrFile), 'SwrFile object not created'
+
+    nrecords = sobj.get_nrecords()
+    assert nrecords == (0, 18), 'SwrFile records does not equal (0, 18)'
+
+    times = sobj.get_times()
+    assert times.shape == (336, 6), 'SwrFile times shape does not equal (336, 6)'
+
+    ts = sobj.get_ts(rec_num=17)
+    assert ts.shape == (336, 7), 'SwrFile timeseries shape does not equal (336, 7)'
+
+    # plt.plot(ts[:, 0], ts[:, -1])
+    # plt.show()
+
+    return
+
 if __name__ == '__main__':
-    test_checker_on_load()
-    test_bcs_check()
+    test_swr_binary_stage()

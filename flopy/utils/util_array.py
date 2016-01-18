@@ -924,7 +924,7 @@ class Transient2d(object):
     def get_zero_2d(self, kper):
         name = self.name_base + str(kper + 1) + '(filled zero)'
         return Util2d(self.model, self.shape,
-                       self.dtype, 0.0, name=name).get_file_entry()
+                       self.dtype, 0.0, name=name)
 
     def to_shapefile(self, filename):
         """
@@ -1097,11 +1097,11 @@ class Transient2d(object):
 
     @property
     def array(self):
-        arr = np.zeros((self.model.dis.nper, self.shape[0], self.shape[1]),
+        arr = np.zeros((self.model.nper, 1, self.shape[0], self.shape[1]),
                        dtype=self.dtype)
-        for kper in range(self.model.dis.nper):
+        for kper in range(self.model.nper):
             u2d = self[kper]
-            arr[kper, :, :] = u2d.array
+            arr[kper, 0, :, :] = u2d.array
         return arr
 
     def export(self, f, **kwargs):
@@ -1116,7 +1116,7 @@ class Transient2d(object):
         if kper in self.transient_2ds:
             return (1, self.transient_2ds[kper].get_file_entry())
         elif kper < min(self.transient_2ds.keys()):
-            return (1, self.get_zero_2d(kper))
+            return (1, self.get_zero_2d(kper).get_file_entry())
         else:
             return (-1, '')
 
@@ -1286,6 +1286,12 @@ class Util2d(object):
                 setattr(self, attr[0], attr[1])
             self.model = model
             return
+
+        # some defense
+        if dtype not in [np.int, np.int32, np.float32, np.bool]:
+            raise Exception('Util2d:unsupported dtype: ' + str(dtype))
+
+
         if name is not None:
             name = name.lower()
         if ext_filename is not None:
@@ -1300,6 +1306,8 @@ class Util2d(object):
         self.name = name
         self.locat = locat
         self.parse_value(value)
+        if self.vtype == str:
+            fmtin = "(FREE)"
         self.__value_built = None
         self.cnstnt = float(cnstnt)
         self.iprn = iprn
@@ -1310,9 +1318,7 @@ class Util2d(object):
 
         self._acceptable_hows = ["constant","internal","external","openclose"]
 
-        # some defense
-        if dtype not in [np.int, np.int32, np.float32, np.bool]:
-            raise Exception('Util2d:unsupported dtype: ' + str(dtype))
+
 
         if how is not None:
             how = how.lower()
@@ -1320,6 +1326,15 @@ class Util2d(object):
             self._how = how
         else:
             self._decide_how()
+
+        if not model.free_format and self.how == "internal" and self.locat is None:
+            #raise Exception("Util2d error: locat is None, but model does not " +\
+            #      "support free format and the external array option " +\
+            #      "is not being used")
+            print("Util2d warning: locat is None, but model does not "+\
+                  "support free format and how is internal..."+\
+                  "resetting how = external")
+            self.how = "external"
 
     def _decide_how(self):
         #if a constant was passed in
@@ -1611,17 +1626,19 @@ class Util2d(object):
             cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
                                                 self.name)
         else:
-            cr = self._get_fixed_cr(0)
+            cr = self._get_fixed_cr(0, value=value)
         return cr
 
-    def _get_fixed_cr(self,locat):
+    def _get_fixed_cr(self, locat, value=None):
+        if value is None:
+            value = self.cnstnt
         if self.dtype == np.int:
             cr = '{0:>10.0f}{1:>10.0f}{2:>19s}{3:>10.0f} #{4}\n' \
-                .format(locat, self.cnstnt, self.format.fortran,
+                .format(locat, value, self.format.fortran,
                         self.iprn, self.name)
         elif self.dtype == np.float32:
             cr = '{0:>10.0f}{1:>10.5G}{2:>19s}{3:>10.0f} #{4}\n' \
-                .format(locat, self.cnstnt, self.format.fortran,
+                .format(locat, value, self.format.fortran,
                         self.iprn, self.name)
         else:
             raise Exception('Util2d: error generating fixed-format ' +
@@ -1783,9 +1800,13 @@ class Util2d(object):
         if self.vtype == str:
             if self.__value_built is None:
                 file_in = open(self.__value, 'r')
-                self.__value_built = \
-                    Util2d.load_txt(self.shape, file_in, self.dtype,
-                                     self.format.fortran).astype(self.dtype)
+
+                if self.format.binary:
+                    header, self.__value_built = Util2d.load_bin(self.shape,file_in,self.dtype,
+                                    bintype="head")
+                else:
+                    self.__value_built = Util2d.load_txt(self.shape, file_in, self.dtype,
+                                 self.format.fortran).astype(self.dtype)
                 file_in.close()
             return self.__value_built
         elif self.vtype != np.ndarray:
@@ -2049,7 +2070,7 @@ class Util2d(object):
 
         if cr_dict['type'] == 'constant':
             u2d = Util2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
-                          iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'])
+                          iprn=cr_dict['iprn'], fmtin="(FREE)")
 
         elif cr_dict['type'] == 'open/close':
             # clean up the filename a little
@@ -2074,14 +2095,14 @@ class Util2d(object):
                                                     bintype='Head')
             f.close()
             u2d = Util2d(model, shape, dtype, data, name=name,
-                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
                          cnstnt=cr_dict['cnstnt'])
 
 
         elif cr_dict['type'] == 'internal':
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
-                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
                          cnstnt=cr_dict['cnstnt'])
 
         elif cr_dict['type'] == 'external':
@@ -2101,7 +2122,7 @@ class Util2d(object):
                     shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
                     bintype='Head')
             u2d = Util2d(model, shape, dtype, data, name=name,
-                         iprn=cr_dict['iprn'], fmtin=cr_dict['fmtin'],
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
                          cnstnt=cr_dict['cnstnt'])
             # track this unit number so we can remove it from the external
             # file list later

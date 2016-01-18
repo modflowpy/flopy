@@ -479,13 +479,14 @@ class MfList(object):
     def __find_last_kper(self, kper):
         kpers = list(self.data.keys())
         kpers.sort()
-        last = kpers[0]
-        for kper in kpers:
-            if (kper >= last):
-                break
-            if (self.vtype[kper] != int) or (self.data[kper] != -1):
-                last = kper
-        return kper
+        last = 0
+        for kkper in kpers[::-1]:
+            # if this entry is valid
+            if self.vtype[kkper] != int or self.data[kkper] != -1:
+                last = kkper
+                if kkper <= kper:
+                    break
+        return kkper
 
     def get_indices(self):
         """
@@ -815,3 +816,49 @@ class MfList(object):
             for name, array in arrays.items():
                 m4ds[name][kper, :, :, :] = array
         return m4ds
+
+    @property
+    def array(self):
+        return self.masked_4D_arrays
+
+    @staticmethod
+    def masked4D_arrays_to_stress_period_data(dtype, m4ds):
+        """ convert a dictionary of 4-dim masked arrays to
+            a stress_period_data style dict of recarray
+        Parameters:
+        ----------
+            dtype : numpy dtype
+
+            m4ds : dict {name:masked numpy 4-dim ndarray}
+        Returns:
+        -------
+            dict {kper:recarray}
+        """
+        assert isinstance(m4ds,dict)
+        for name,m4d in m4ds.items():
+            assert isinstance(m4d,np.ndarray)
+            assert name in dtype.names
+            assert m4d.ndim == 4
+
+        sp_data = {}
+        for kper in range(m4d.shape[0]):
+            vals = {}
+            for name, m4d in m4ds.items():
+                arr = m4d[kper, :, :, :]
+                isnan = np.argwhere(~np.isnan(arr))
+                v = []
+                for k, i, j in isnan:
+                    v.append(arr[k, i, j])
+                vals[name] = v
+                kk = isnan[:, 0]
+                ii = isnan[:, 1]
+                jj = isnan[:, 2]
+
+            spd = np.recarray(shape=isnan.shape[0], dtype=dtype)
+            spd["i"] = ii
+            spd["k"] = kk
+            spd["j"] = jj
+            for n,v in vals.items():
+                spd[n] = v
+            sp_data[kper] = spd
+        return sp_data
