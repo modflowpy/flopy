@@ -4,6 +4,7 @@ import os.path
 def test_loadfreyberg():
     cwd = os.getcwd()
     pth = os.path.join('..', 'examples', 'data', 'freyberg')
+    print(pth)
     assert(os.path.isdir(pth))
     os.chdir(pth)
     namefile = 'freyberg.nam'

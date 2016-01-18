@@ -275,7 +275,6 @@ def test_util2d_external_free_path_nomodelws():
     ml = flopy.modflow.Modflow(external_path=ext_path)
 
     stress_util2d_for_joe_the_file_king(ml, 1, 1, 1)
-
     stress_util2d_for_joe_the_file_king(ml, 10, 1, 1)
     stress_util2d_for_joe_the_file_king(ml, 1, 10, 1)
     stress_util2d_for_joe_the_file_king(ml, 1, 1, 10)

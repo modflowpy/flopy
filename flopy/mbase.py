@@ -10,6 +10,8 @@ import sys
 import os
 import subprocess as sp
 import copy
+import numpy as np
+from flopy import utils
 
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
@@ -249,8 +251,7 @@ class BaseModel(object):
                 if p.unit_number[i] == 0:
                     continue
                 s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                               p.unit_number[
-                                                                   i],
+                                                               p.unit_number[i],
                                                                p.file_name[i],
                                                                p.extra[i]))
         return s
@@ -415,6 +416,9 @@ class BaseModel(object):
         SelPackList : False or list of packages
 
         """
+        # run check prior to writing input
+        self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=1)
+
         # org_dir = os.getcwd()
         # os.chdir(self.model_ws)
         if self.verbose:
@@ -423,13 +427,24 @@ class BaseModel(object):
             for p in self.packagelist:
                 if self.verbose:
                     print('   Package: ', p.name[0])
-                p.write_file()
+                # prevent individual package checks from running after model-level package check above
+                # otherwise checks are run twice
+                # or the model level check proceedure would have to be split up
+                # or each package would need a check arguemnt,
+                # or default for package level check would have to be False
+                try:
+                    p.write_file(check=False)
+                except TypeError:
+                    p.write_file()
         else:
             for pon in SelPackList:
                 for i, p in enumerate(self.packagelist):
                     if pon in p.name:
                         if self.verbose:
                             print('   Package: ', p.name[0])
+                    try:
+                        p.write_file(check=False)
+                    except TypeError:
                         p.write_file()
                         break
         if self.verbose:
@@ -509,12 +524,52 @@ class BaseModel(object):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.check()
         """
-        if f is not None:
-            if isinstance(f, str):
-                pth = os.path.join(self.model_ws, f)
-                f = open(pth, 'w', 0)
+
+        results = {}
         for p in self.packagelist:
-            p.check(f=f, verbose=verbose, level=level)
+            results[p.name[0]] = p.check(f=None, verbose=False, level=level-1)
+
+        # check instance for model-level check
+        chk = utils.check(self, f=f, verbose=verbose, level=level)
+
+        # model level checks
+        # solver check
+        if self.version in chk.solver_packages.keys():
+            solvers = set(chk.solver_packages[self.version]).intersection(set(self.get_package_list()))
+            if not solvers:
+                chk._add_to_summary('Error', desc='\r    No solver package',
+                                    package='model')
+            elif len(list(solvers)) > 1:
+                for s in solvers:
+                    chk._add_to_summary('Error', desc='\r    Multiple solver packages',
+                                        package=s)
+            else:
+                chk.passed.append('Compatible solver package')
+
+        # check for unit number conflicts
+        package_units = {}
+        duplicate_units = {}
+        for p in self.packagelist:
+            for i in range(len(p.name)):
+                if p.unit_number[i] != 0:
+                    if p.unit_number[i] in package_units.values():
+                        duplicate_units[p.name[i]] = p.unit_number[i]
+                        otherpackage = [k for k, v in package_units.items()
+                                        if v == p.unit_number[i]][0]
+                        duplicate_units[otherpackage] = p.unit_number[i]
+        if len(duplicate_units) > 0:
+            for k, v in duplicate_units.items():
+                chk._add_to_summary('Error', package=k, value=v, desc='unit number conflict')
+        else:
+            chk.passed.append('Unit number conflicts')
+
+        # add package check results to model level check summary
+        for k, r in results.items():
+            if r is not None and r.summary_array is not None: # currently SFR doesn't have one
+                chk.summary_array = np.append(chk.summary_array, r.summary_array).view(np.recarray)
+                chk.passed += ['{} package: {}'.format(r.package.name[0], psd) for psd in r.passed]
+        chk.summarize()
+        return chk
 
     def plot(self, SelPackList=None, **kwargs):
         """
