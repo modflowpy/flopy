@@ -24,6 +24,10 @@ def test_transient2d():
     assert np.array_equal(t2d[0].array,np.ones((ml.nrow,ml.ncol)))
     assert np.array_equal(t2d[2].array,np.ones((ml.nrow,ml.ncol))*999)
 
+    m4d = t2d.array
+    t2d2 = Transient2d.from_4d(ml,{"rech":m4d})
+    m4d2 = t2d2.array
+    assert np.array_equal(m4d,m4d2)
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
@@ -520,7 +524,7 @@ def test_how():
 
 
 if __name__ == '__main__':
-    #test_mflist()
+    # test_mflist()
     # test_new_get_file_entry()
     # test_arrayformat()
     # test_util2d_external_free_nomodelws()

@@ -905,6 +905,50 @@ class Transient2d(object):
         self.transient_2ds = self.build_transient_sequence()
         return
 
+
+    @staticmethod
+    def masked4d_array_to_kper_dict(m4d):
+        assert m4d.ndim == 4
+        kper_dict = {}
+        for kper,arr in enumerate(m4d):
+            if np.all(np.isnan(arr)):
+                continue
+            elif np.any(np.isnan(arr)):
+                raise Exception("masked value found in array")
+            kper_dict[kper] = arr.copy()
+        return kper_dict
+
+    @classmethod
+    def from_4d(cls,model,m4ds):
+        """construct a Transient2d instance from a
+        dict(name: (masked) 4d numpy.ndarray
+        Parameters:
+        ----------
+            model : flopy.mbase derived type
+            m4ds : dict(name,(masked) 4d numpy.ndarray)
+                each ndarray must have shape (nper,1,nrow,ncol).
+                if an entire (nrow,ncol) slice is np.NaN, then
+                that kper is skipped.
+        Returns:
+        -------
+            Transient2d instance
+        """
+
+        assert isinstance(m4ds,dict)
+        keys = list(m4ds.keys())
+        assert len(keys) == 1
+        name = keys[0]
+        m4d = m4ds[name]
+
+        assert m4d.ndim == 4
+        assert m4d.shape[0] == model.nper
+        assert m4d.shape[1] == 1
+        assert m4d.shape[2] == model.nrow
+        assert m4d.shape[3] == model.ncol
+        kper_dict = Transient2d.masked4d_array_to_kper_dict(m4d)
+        return cls(model=model,shape=(model.nrow,model.ncol),value=kper_dict,
+                   dtype=m4d.dtype,name=name)
+
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":
             # set cnstnt for each u2d

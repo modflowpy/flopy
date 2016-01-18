@@ -821,6 +821,21 @@ class MfList(object):
     def array(self):
         return self.masked_4D_arrays
 
+    @classmethod
+    def from_4d(cls, package, m4ds):
+        """construct an MfList instance from a dict of
+        (attribute_name,masked 4D ndarray
+        Parameters:
+        ----------
+            package : PakBase dervied
+            m4ds : {attibute name:4d masked numpy.ndarray}
+        Returns:
+        -------
+            MfList instance
+        """
+        sp_data = MfList.masked4D_arrays_to_stress_period_data(m4ds)
+        return cls(package, data=sp_data, model=model)
+
     @staticmethod
     def masked4D_arrays_to_stress_period_data(dtype, m4ds):
         """ convert a dictionary of 4-dim masked arrays to
@@ -839,6 +854,17 @@ class MfList(object):
             assert isinstance(m4d,np.ndarray)
             assert name in dtype.names
             assert m4d.ndim == 4
+        keys = list(m4ds.keys())
+
+        for i1,key1 in enumerate(keys):
+            a1 = np.isnan(m4ds[key1])
+            for i2,key2 in enumerate(keys[i1:]):
+                a2 = np.isnan(m4ds[key2])
+                if not np.array_equal(a1,a2):
+                    raise Exception("Transient2d error: masking not equal" +\
+                                    " for {0} and {1}".format(key1,key2))
+
+
 
         sp_data = {}
         for kper in range(m4d.shape[0]):
