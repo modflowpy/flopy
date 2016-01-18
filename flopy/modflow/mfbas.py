@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util3d
+from ..utils import Util3d, check, get_neighbors
 
 class ModflowBas(Package):
     """
@@ -97,15 +97,64 @@ class ModflowBas(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self):
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.bas6.check()
+
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+
+        neighbors = get_neighbors(self.ibound.array)
+        neighbors[np.isnan(neighbors)] = 0 # set neighbors at edges to 0 (inactive)
+        chk.values(self.ibound.array[self.ibound.array > 0],
+                   ~np.any(neighbors > 0, axis=0)[self.ibound.array > 0],
+                   'isolated cells in ibound array', 'Warning')
+        chk.values(self.ibound.array, np.isnan(self.ibound.array),
+                   error_name='Not a number', error_type='Error')
+        chk.summarize()
+        return chk
+
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         # Open file for writing
         f_bas = open(self.fn_path, 'w')
         # First line: heading
@@ -132,7 +181,7 @@ class ModflowBas(Package):
         f_bas.close()
 
     @staticmethod
-    def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None):
+    def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -152,7 +201,8 @@ class ModflowBas(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
-
+        check : boolean
+            Check package data for common errors. (default True)
         Returns
         -------
         bas : ModflowBas object
@@ -221,4 +271,6 @@ class ModflowBas(Package):
         bas = ModflowBas(model, ibound=ibound, strt=strt,
                          ixsec=ixsec, ifrefm=ifrefm, ichflg=ichflg,
                          stoper=stoper, hnoflo=hnoflo)
+        if check:
+            bas.check(f='{}.chk'.format(bas.name[0]), verbose=bas.parent.verbose, level=0)
         return bas

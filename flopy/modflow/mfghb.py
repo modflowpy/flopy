@@ -128,15 +128,22 @@ class ModflowGhb(Package):
         """
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         f_ghb = open(self.fn_path, 'w')
         f_ghb.write('{}\n'.format(self.heading))
         f_ghb.write('{:10d}{:10d}'.format(self.stress_period_data.mxact, self.ipakcb))
@@ -174,7 +181,7 @@ class ModflowGhb(Package):
         return dtype
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -194,6 +201,8 @@ class ModflowGhb(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -212,4 +221,4 @@ class ModflowGhb(Package):
         if model.verbose:
             sys.stdout.write('loading ghb package file...\n')
 
-        return Package.load(model, ModflowGhb, f, nper)
+        return Package.load(model, ModflowGhb, f, nper, check=check)

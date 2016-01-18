@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util2d, Transient2d
+from ..utils import Util2d, Transient2d, check
 from ..modflow.mfparbc import  ModflowParBc as mfparbc
 
 class ModflowRch(Package):
@@ -102,20 +102,105 @@ class ModflowRch(Package):
         self.np = 0
         self.parent.add_package(self)
 
+    def check(self, f=None, verbose=True, level=1, RTmin=2e-8, RTmax=2e-4):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.rch.check()
+
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+        if self.parent.bas6 is not None:
+            active = self.parent.bas6.ibound.array.sum(axis=0) != 0
+        else:
+            active = np.ones(self.rech.array[0][0].shape, dtype=bool)
+
+        # check for unusually high or low values of mean R/T
+        hk_package = {'UPW', 'LPF'}.intersection(set(self.parent.get_package_list()))
+        if len(hk_package) > 0:
+            pkg = list(hk_package)[0]
+            for per in range(self.parent.nper):
+                Rmean = self.rech.array[per].sum(axis=0)[active].mean()
+
+                # handle quasi-3D layers
+                # (ugly, would be nice to put this else where in a general function)
+                if self.parent.dis.laycbd.sum() != 0:
+                    thickness = np.empty((self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
+                                          dtype=float)
+                    l = 0
+                    for i, cbd in enumerate(self.parent.dis.laycbd):
+                        thickness[i, :, :] = self.parent.dis.thickness.array[l, :, :]
+                        if cbd > 0:
+                            l += 1
+                        l += 1
+                    assert l == self.parent.dis.thickness.shape[0]
+                else:
+                    thickness = self.parent.dis.thickness.array
+                assert thickness.shape == self.parent.get_package(pkg).hk.shape
+                Tmean = (self.parent.get_package(pkg).hk.array *
+                         thickness)[:, active].sum(axis=0).mean()
+                if Rmean/Tmean < RTmin:
+                    chk._add_to_summary(type='Warning', value=Rmean/Tmean,
+                                         desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
+                elif Rmean/Tmean > RTmax:
+                    chk._add_to_summary(type='Warning', value=Rmean/Tmean,
+                                         desc='\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax))
+                else:
+                    chk.passed.append('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+
+        # check for NRCHOP values != 3
+        if self.nrchop != 3:
+            chk._add_to_summary(type='Warning', value=self.nrchop,
+                                 desc='\r    Variable NRCHOP set to value other than 3'.format(RTmin))
+        else:
+            chk.passed.append('Variable NRCHOP set to 3.')
+        chk.summarize()
+        return chk
+
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f_rch = open(self.fn_path, 'w')
@@ -137,7 +222,7 @@ class ModflowRch(Package):
         f_rch.close()
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -157,6 +242,8 @@ class ModflowRch(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -257,4 +344,6 @@ class ModflowRch(Package):
                 irch[iper] = current_irch
         rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb, rech=rech,
                          irch=irch)
+        if check:
+            rch.check(f='{}.chk'.format(rch.name[0]), verbose=rch.parent.verbose, level=0)
         return rch

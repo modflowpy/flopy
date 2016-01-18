@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, reference
+from ..utils import Util2d, Util3d, reference, check
 
 
 ITMUNI = {"u":0,"s":1,"m":2,"h":3,"d":4,"y":5}
@@ -410,15 +410,22 @@ class ModflowDis(Package):
         """
         return self.__thickness
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         # Open file for writing
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        
@@ -482,6 +489,26 @@ class ModflowDis(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.dis.check()
         """
+        chk = check(self, f=f, verbose=verbose, level=level)
+
+        # make ibound of same shape as thicknesses/botm for quasi-3D models
+        active = chk.get_active(include_cbd=True)
+
+        chk.values(self.thickness.array,
+                   active & (self.thickness.array <= 0),
+                   'zero or negative thickness', 'Error')
+        thin_cells = (self.thickness.array < 1) & (self.thickness.array > 0)
+        chk.values(self.thickness.array, active & thin_cells,
+                   'thin cells (less than checker threshold of {:.1f})'
+                   .format(chk.thin_cell_threshold), 'Error')
+        chk.values(self.top.array,
+                   active[0, :, :] & np.isnan(self.top.array), 'nan values in top array', 'Error')
+        chk.values(self.botm.array,
+                   active & np.isnan(self.botm.array), 'nan values in bottom array', 'Error')
+        chk.summarize()
+        return chk
+
+        '''
         if f is not None:
             if isinstance(f, str):
                 pth = os.path.join(self.parent.model_ws, f)
@@ -520,9 +547,10 @@ class ModflowDis(Package):
         # write errors to stdout
         if verbose:
             print(txt)
+        '''
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -539,6 +567,8 @@ class ModflowDis(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -682,6 +712,8 @@ class ModflowDis(Package):
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
                          lenuni, xul=xul, yul=yul, rotation=rotation,
                          proj4_str=proj4_str, start_datetime=start_datetime)
+        if check:
+            dis.check(f='{}.chk'.format(dis.name[0]), verbose=dis.parent.verbose, level=0)
         # return dis object instance
         return dis
 
