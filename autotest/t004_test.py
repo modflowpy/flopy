@@ -19,6 +19,11 @@ def test_transient2d():
     t2d.cnstnt = 2.0
     assert np.array_equal(t2d.array, np.zeros((3, 1, 10, 10)) + 20.0)
 
+    t2d[0] = 1.0
+    t2d[2] = 999
+    assert np.array_equal(t2d[0].array,np.ones((ml.nrow,ml.ncol)))
+    assert np.array_equal(t2d[2].array,np.ones((ml.nrow,ml.ncol))*999)
+
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
@@ -526,7 +531,7 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path()
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
-    # test_transient2d()
+    test_transient2d()
     # test_util2d()
-    #test_util3d()
-    test_how()
+    # test_util3d()
+    # test_how()

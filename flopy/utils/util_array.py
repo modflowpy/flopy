@@ -1095,6 +1095,19 @@ class Transient2d(object):
                             " could not find an entry before kper {0:d}".format(
                                 kper))
 
+    def __setitem__(self, key, value):
+        try:
+            key = int(key)
+        except Exception as e:
+            raise Exception("Transient2d.__setitem__() error: " +\
+                            "'key'could not be cast to int:{0}".format(str(e)))
+        nper = self.model.nper
+        if key > self.model.nper or key < 0:
+            raise Exception("Transient2d.__setitem__() error: " +\
+                            "key {0} not in nper range {1}:{2}".format(key,0,nper))
+
+        self.transient_2ds[key] = self.__get_2d_instance(key,value)
+
     @property
     def array(self):
         arr = np.zeros((self.model.nper, 1, self.shape[0], self.shape[1]),
