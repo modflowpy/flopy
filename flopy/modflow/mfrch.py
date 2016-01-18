@@ -133,14 +133,17 @@ class ModflowRch(Package):
 
         """
         chk = check(self, f=f, verbose=verbose, level=level)
-        active = self.parent.bas6.ibound.array.sum(axis=0) != 0
+        if self.parent.bas6 is not None:
+            active = self.parent.bas6.ibound.array.sum(axis=0) != 0
+        else:
+            active = np.ones(self.rech.array[0][0].shape, dtype=bool)
 
         # check for unusually high or low values of mean R/T
         hk_package = {'UPW', 'LPF'}.intersection(set(self.parent.get_package_list()))
         if len(hk_package) > 0:
             pkg = list(hk_package)[0]
             for per in range(self.parent.nper):
-                Rmean = self.rech.array[0][active].mean()
+                Rmean = self.rech.array[per].sum(axis=0)[active].mean()
 
                 # handle quasi-3D layers
                 # (ugly, would be nice to put this else where in a general function)
