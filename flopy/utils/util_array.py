@@ -919,12 +919,13 @@ class Transient2d(object):
         return kper_dict
 
     @classmethod
-    def from_4d(cls,model,m4ds):
+    def from_4d(cls,model,pak_name,m4ds):
         """construct a Transient2d instance from a
         dict(name: (masked) 4d numpy.ndarray
         Parameters:
         ----------
             model : flopy.mbase derived type
+            pak_name : str package name (e.g. RCH)
             m4ds : dict(name,(masked) 4d numpy.ndarray)
                 each ndarray must have shape (nper,1,nrow,ncol).
                 if an entire (nrow,ncol) slice is np.NaN, then

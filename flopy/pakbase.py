@@ -117,7 +117,7 @@ class Package(object):
                                     fmtin=old_value.fmtin,
                                     locat=old_value.locat)
             elif isinstance(old_value, MfList):
-                value = MfList(self.parent, dtype=old_value.dtype,
+                value = MfList(self, dtype=old_value.dtype,
                                data=value)
             elif isinstance(old_value, list):
                 if len(old_value) > 0:

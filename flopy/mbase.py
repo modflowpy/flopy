@@ -407,7 +407,7 @@ class BaseModel(object):
 
         return None
 
-    def write_input(self, SelPackList=False):
+    def write_input(self, SelPackList=False, check=False):
         """
         Write the input.
 
@@ -416,8 +416,9 @@ class BaseModel(object):
         SelPackList : False or list of packages
 
         """
-        # run check prior to writing input
-        self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=1)
+        if check:
+            # run check prior to writing input
+            self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=1)
 
         # org_dir = os.getcwd()
         # os.chdir(self.model_ws)

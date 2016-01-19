@@ -822,19 +822,21 @@ class MfList(object):
         return self.masked_4D_arrays
 
     @classmethod
-    def from_4d(cls, package, m4ds):
+    def from_4d(cls, model, pak_name, m4ds):
         """construct an MfList instance from a dict of
         (attribute_name,masked 4D ndarray
         Parameters:
         ----------
-            package : PakBase dervied
+            model : mbase dervied type
+            pak_name : str package name (e.g GHB)
             m4ds : {attibute name:4d masked numpy.ndarray}
         Returns:
         -------
             MfList instance
         """
-        sp_data = MfList.masked4D_arrays_to_stress_period_data(m4ds)
-        return cls(package, data=sp_data, model=model)
+        sp_data = MfList.masked4D_arrays_to_stress_period_data(
+                model.get_package(pak_name).get_default_dtype(), m4ds)
+        return cls(model.get_package(pak_name), data=sp_data)
 
     @staticmethod
     def masked4D_arrays_to_stress_period_data(dtype, m4ds):
