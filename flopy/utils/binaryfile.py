@@ -443,8 +443,18 @@ class CellBudgetFile(object):
         else:
             raise Exception('Unknown precision specified: ' + precision)
 
+        if 'model' in kwargs.keys():
+            self.model = kwargs.pop('model')
+            self.sr = self.model.dis.sr
+            self.dis = self.model.dis
+        if 'dis' in kwargs.keys():
+            self.dis = kwargs.pop('dis')
+            self.sr = self.dis.sr
+        if 'sr' in kwargs.keys():
+            self.sr = kwargs.pop('sr')
         if len(kwargs.keys()) > 0:
-            raise NotImplementedError()
+            args = ','.join(kwargs.keys())
+            raise Exception('LayerFile error: unrecognized kwargs: '+args)
 
         self.header1_dtype = np.dtype(h1dt)
         self.header2_dtype = np.dtype(h2dt)
