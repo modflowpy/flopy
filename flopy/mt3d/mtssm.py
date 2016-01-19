@@ -520,7 +520,7 @@ class Mt3dSsm(Package):
 
             # Item D5: INCEVT
             incevt = -1
-            if 't' in frch.lower():
+            if 't' in fevt.lower():
                 if model.verbose:
                     print('   loading INCEVT...')
                 line = f.readline()
