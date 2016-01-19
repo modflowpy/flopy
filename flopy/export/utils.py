@@ -10,13 +10,147 @@ NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", 
                    "ghb_cond": "{0}/{1}^2", "ghb_bhead": "{0}", "transmissivity": "{0}^2/{1}",
                    "vertical_conductance": "{0}/{1}^2", "primary_storage_coefficient": "1/{1}",
                    "horizontal_hydraulic_conductivity": "{0}/{1}", "riv_cond": "1/{1}",
-                   "riv_stage": "{0}", "riv_rbot": "{0}"}
+                   "riv_stage": "{0}", "riv_rbot": "{0}", "head":"{0}",
+                   "drawdown":"{0}","cell_by_cell_flow":"{0}^3/{1}"}
 NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4"}
 
 
 def datafile_helper(f, df):
     raise NotImplementedError()
 
+
+def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''):
+    if logger:
+        logger.log("creating array for {0}".format(var_name))
+
+    array = np.zeros((len(times),shape3d[0],shape3d[1],shape3d[2]),
+                     dtype=np.float32)
+    array[:] = np.NaN
+    for i,t in enumerate(times):
+        if t in out_obj.times:
+            try:
+                if text:
+                    a = out_obj.get_data(totim=t,full3D=True,text=text)
+                    if isinstance(a,list):
+                        a = a[0]
+                else:
+                    a = out_obj.get_data(totim=t)
+            except Exception as e:
+                estr = "error getting data for {0} at time {1}:{2}".format(
+                        var_name+text.decode(),t,str(e))
+                if logger:
+                    logger.warn(estr)
+                else:
+                    print(estr)
+                continue
+            try:
+                array[i,:,:,:] = a.astype(np.float32)
+            except Exception as e:
+                estr = "error assigning {0} data to array for time {1}:{2}".format(
+                    var_name+text.decode(),t,str(e))
+                if logger:
+                    logger.warn(estr)
+                else:
+                    print(estr)
+                continue
+
+    if logger:
+        logger.log("creating array for {0}".format(var_name))
+
+    array[np.isnan(array)] = f.fillvalue
+
+    units = None
+    if var_name in NC_UNITS_FORMAT:
+        units = NC_UNITS_FORMAT[var_name].format(
+                f.grid_units, f.time_units)
+    precision_str = "f4"
+
+    if text:
+        var_name += '_' + text.decode()
+
+    attribs = {"long_name": var_name}
+    attribs["coordinates"] = "time layer latitude longitude"
+    if units is not None:
+        attribs["units"] = units
+    try:
+        var = f.create_variable(var_name, attribs,
+                                precision_str=precision_str,
+                                dimensions=("time", "layer", "y", "x"))
+    except Exception as e:
+        estr = "error creating variable {0}:\n{1}".format(
+                var_name, str(e))
+        if logger:
+            logger.logger_raise(estr)
+        else:
+            raise Exception(estr)
+
+    try:
+        var[:] = array
+    except Exception as e:
+        estr = "error setting array to variable {0}:\n{1}".format(
+                var_name, str(e))
+        if logger:
+            logger.logger_raise(estr)
+        else:
+            raise Exception(estr)
+
+
+def output_helper(f,ml,oudic,**kwargs):
+    """export model outputs using the model spatial reference
+    info.
+    Parameters:
+    ----------
+        f : filename for output - must have .shp or .nc extension
+        ml : BaseModel derived type
+        oudic : dict {output_filename,flopy datafile/cellbudgetfile instance}
+    Returns:
+    -------
+        None
+    Note:
+    ----
+        casts down double precision to single precision for netCDF files
+
+    """
+    assert isinstance(ml,BaseModel)
+
+    logger = kwargs.pop("logger",None)
+    if len(kwargs) > 0:
+        str_args = ','.join(kwargs)
+        raise NotImplementedError("unsupported kwargs:{0}".format(str_args))
+
+    times = []
+    for filename,df in oudic.items():
+        [times.append(t) for t in df.times if t not in times]
+
+    if isinstance(f, str) and f.lower().endswith(".nc"):
+        shape3d = (ml.nlay,ml.nrow,ml.ncol)
+        f = NetCdf(f, ml, time_values=times,logger=logger)
+        for filename,out_obj in oudic.items():
+            filename = filename.lower()
+
+            if filename.endswith(ml.hext):
+                _add_output_nc_variable(f,times,shape3d,out_obj,
+                                        "head",logger=logger)
+            elif filename.endswith(ml.dext):
+                _add_output_nc_variable(f,times,shape3d,out_obj,
+                                        "drawdown",logger=logger)
+            elif filename.endswith(ml.cext):
+                var_name = "cell_by_cell_flow"
+                for text in out_obj.textlist:
+                    _add_output_nc_variable(f,times,shape3d,out_obj,
+                                            var_name,logger=logger,text=text)
+
+            else:
+                estr = "unrecognized file extention:{0}".format(filename)
+                if logger:
+                    logger.logger_raise(estr)
+                else:
+                    raise Exception(estr)
+
+    #if isinstance(f, str) and f.lower().endswith(".shp"):
+
+    else:
+        raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 def model_helper(f, ml, **kwargs):
     assert isinstance(ml,BaseModel)

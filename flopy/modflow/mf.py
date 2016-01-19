@@ -138,6 +138,15 @@ class Modflow(BaseModel):
         self.verbose = verbose
         self.mfpar = ModflowPar()
 
+        # output file info
+        self.hext = 'hds'
+        self.dext = 'ddn'
+        self.cext = 'cbc'
+        self.hpth = None
+        self.dpath = None
+        self.cpath = None
+
+
         # Create a dictionary to map package with package object.
         # This is used for loading models.
         self.mfnam_packages = {
@@ -277,9 +286,11 @@ class Modflow(BaseModel):
         if 'model' in kwargs:
             kwargs.pop('model')
 
-        hext = 'hds'
-        dext = 'ddn'
-        cext = 'cbc'
+        as_dict = False
+        if "as_dict" in kwargs:
+            as_dict = bool(kwargs.pop("as_dict"))
+
+
 
         savehead = False
         saveddn = False
@@ -288,10 +299,9 @@ class Modflow(BaseModel):
         # check for oc
         try:
             oc = self.get_package('OC')
-            print(oc)
-            hext = oc.extension[1]
-            dext = oc.extension[2]
-            cext = oc.extension[3]
+            self.hext = oc.extension[1]
+            self.dext = oc.extension[2]
+            self.cext = oc.extension[3]
             for k, lst in oc.stress_period_data.items():
                 for v in lst:
                     if v.lower() == 'save head':
@@ -303,28 +313,38 @@ class Modflow(BaseModel):
         except:
             pass
 
-        hpth = os.path.join(self.model_ws, '{}.{}'.format(self.name, hext))
-        dpth = os.path.join(self.model_ws, '{}.{}'.format(self.name, dext))
-        cpth = os.path.join(self.model_ws, '{}.{}'.format(self.name, cext))
+        self.hpth = os.path.join(self.model_ws, '{}.{}'.format(self.name, self.hext))
+        self.dpth = os.path.join(self.model_ws, '{}.{}'.format(self.name, self.dext))
+        self.cpth = os.path.join(self.model_ws, '{}.{}'.format(self.name, self.cext))
 
         hdObj = None
         ddObj = None
         bdObj = None
 
-        if savehead and os.path.exists(hpth):
-            hdObj = flopy.utils.HeadFile(hpth, model=self, **kwargs)
+        if savehead and os.path.exists(self.hpth):
+            hdObj = flopy.utils.HeadFile(self.hpth, model=self, **kwargs)
 
-        if saveddn and os.path.exists(dpth):
-            ddObj = flopy.utils.HeadFile(dpth, model=self, **kwargs)
+        if saveddn and os.path.exists(self.dpth):
+            ddObj = flopy.utils.HeadFile(self.dpth, model=self, **kwargs)
 
-        if savebud and os.path.exists(cpth):
-            bdObj = flopy.utils.CellBudgetFile(cpth, model=self, **kwargs)
+        if savebud and os.path.exists(self.cpth):
+            bdObj = flopy.utils.CellBudgetFile(self.cpth, model=self, **kwargs)
 
-        return hdObj, ddObj, bdObj
+        if as_dict:
+            oudic = {}
+            if savehead and hdObj:
+                oudic[self.hpth] = hdObj
+            if saveddn and ddObj:
+                oudic[self.dpth] = ddObj
+            if savebud and bdObj:
+                oudic[self.cpth] = bdObj
+            return oudic
+        else:
+            return hdObj, ddObj, bdObj
 
 
     @staticmethod
-    def load(f, version='mf2k', exe_name='mf2005.exe', verbose=False,
+    def load(f, version='mf2005', exe_name='mf2005.exe', verbose=False,
              model_ws='.', load_only=None, forgive=True, check=True):
         """
         Load an existing model.
