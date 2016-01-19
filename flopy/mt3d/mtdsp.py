@@ -1,7 +1,7 @@
 import sys
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils import Util2d,Util3d
+from ..pakbase import Package
+from ..utils import Util2d, Util3d
 
 class Mt3dDsp(Package):
     """

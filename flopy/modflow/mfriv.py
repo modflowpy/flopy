@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import sys
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils.util_list import MfList
 
 
@@ -26,16 +26,16 @@ class ModflowRiv(Package):
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is 0).
-    stress_period_data : list of boundaries or
-                         recarray of boundaries or
-                         dictionary of boundaries
+    stress_period_data : list of boundaries, or recarray of boundaries, or
+        dictionary of boundaries.
         Each river cell is defined through definition of
         layer (int), row (int), column (int), stage (float), cond (float),
         rbot (float).
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. This gives the form of
+        period. This gives the form of::
+
             stress_period_data =
             {0: [
                 [lay, row, col, stage, cond, rbot],
@@ -152,15 +152,22 @@ class ModflowRiv(Package):
         # (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         f_riv = open(self.fn_path, 'w')
         f_riv.write('{0}\n'.format(self.heading))
         line = '{0:10d}{1:10d}'.format(self.stress_period_data.mxact, self.ipakcb)
@@ -178,7 +185,7 @@ class ModflowRiv(Package):
             raise Exception("mfriv error adding record to list: " + str(e))
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -198,6 +205,8 @@ class ModflowRiv(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -216,4 +225,4 @@ class ModflowRiv(Package):
         if model.verbose:
             sys.stdout.write('loading riv package file...\n')
 
-        return Package.load(model, ModflowRiv, f, nper)
+        return Package.load(model, ModflowRiv, f, nper, check=check)

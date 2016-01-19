@@ -59,26 +59,17 @@ class SpatialReference(object):
     ycentergrid : ndarray
         numpy meshgrid of row centers
 
-    Note:
-    ----
+    Notes
+    -----
 
-    xul and yul can be explicitly (re)set after SpatialReference instantiation, but only before
-    any of the other attributes and methods are accessed
+    xul and yul can be explicitly (re)set after SpatialReference
+    instantiation, but only before any of the other attributes and methods are
+    accessed
         
     """
 
     def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0,
                  proj4_str="EPSG:4326"):
-        """
-
-            delr: delr array
-            delc: delc array
-            lenuni: lenght unit code
-            xul: x coord of upper left corner of grid
-            yul: y coord of upper left corner of grid
-            rotation_degrees: grid rotation
-
-        """
         self.delc = delc
         self.delr = delr
 
@@ -89,6 +80,19 @@ class SpatialReference(object):
         self.proj4_str = proj4_str
         self.set_spatialreference(xul, yul, rotation)
 
+
+    def __eq__(self, other):
+        if not isinstance(other,SpatialReference):
+            return False
+        if other.xul != self.xul:
+            return False
+        if other.yul != self.yul:
+            return False
+        if other.rotation != self.rotation:
+            return False
+        if other.proj4_str != self.proj4_str:
+            return False
+        return True
 
     @classmethod
     def from_gridspec(cls,gridspec_file,lenuni=0):
@@ -144,20 +148,16 @@ class SpatialReference(object):
         else:
             self.yul = yul
         self.rotation = rotation
-
         self._xgrid = None
         self._ygrid = None
         self._ycentergrid = None
         self._xcentergrid = None
 
-
     def __repr__(self):
-        s = "spatialReference:xul:{0:<G}, yul:{1:<G},rotation:{2:<G}\n".\
+        s = "xul:{0:<G}, yul:{1:<G}, rotation:{2:<G}, ".\
             format(self.xul,self.yul,self.rotation)
-        s += "delr:" + str(self.delr) + "\n"
-        s += "delc:" + str(self.delc) + "\n"
+        s += "proj4_str:{0}".format(self.proj4_str)
         return s
-
 
     @property
     def xedge(self):
@@ -334,8 +334,8 @@ class SpatialReference(object):
     def get_xedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge x
-        coordinates for every column in the grid in model space - not offset or rotated.
-          Array is of size (ncol + 1)
+        coordinates for every column in the grid in model space - not offset
+        or rotated.  Array is of size (ncol + 1)
 
         """
         xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
@@ -344,8 +344,8 @@ class SpatialReference(object):
     def get_yedge_array(self):
         """
         Return a numpy one-dimensional float array that has the cell edge y
-        coordinates for every row in the grid in model space - not offset or rotated.
-          Array is of size (nrow + 1)
+        coordinates for every row in the grid in model space - not offset or
+        rotated. Array is of size (nrow + 1)
 
         """
         length_y = np.add.reduce(self.delc)
@@ -376,16 +376,49 @@ class SpatialReference(object):
         pts.append([xgrid[i+1, j+1], ygrid[i+1, j+1]])
         pts.append([xgrid[i, j+1], ygrid[i, j+1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
-
-        # pts.append([xgrid[i-1, j-1], ygrid[i-1, j-1]])
-        # pts.append([xgrid[i, j-1], ygrid[i, j-1]])
-        # pts.append([xgrid[i, j], ygrid[i, j]])
-        # pts.append([xgrid[i-1, j], ygrid[i-1, j]])
-        # pts.append([xgrid[i-1, j-1], ygrid[i-1, j-1]])
-
-
         return pts
 
+    def interpolate(self, a, xi, method='nearest'):
+        """
+        Use the griddata method to interpolate values from an array onto the
+        points defined in xi.  For any values outside of the grid, use
+        'nearest' to find a value for them.
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            array to interpolate from.  It must be of size nrow, ncol
+        xi : numpy.ndarray
+            array containing x and y point coordinates of size (npts, 2). xi
+            also works with broadcasting so that if a is a 2d array, then
+            xi can be passed in as (xgrid, ygrid).
+        method : {'linear', 'nearest', 'cubic'}
+            method to use for interpolation (default is 'nearest')
+
+        Returns
+        -------
+        b : numpy.ndarray
+            array of size (npts)
+
+        """
+        from scipy.interpolate import griddata
+
+        # Create a 2d array of points for the grid centers
+        points = np.empty((self.ncol * self.nrow, 2))
+        points[:, 0] = self.xcentergrid.flatten()
+        points[:, 1] = self.ycentergrid.flatten()
+
+        # Use the griddata function to interpolate to the xi points
+        b = griddata(points, a.flatten(), xi, method=method, fill_value=np.nan)
+
+        # if method is linear or cubic, then replace nan's with a value
+        # interpolated using nearest
+        if method != 'nearest':
+            bn = griddata(points, a.flatten(), xi, method='nearest')
+            idx = np.isnan(b)
+            b[idx] = bn[idx]
+
+        return b
 
 # class TemporalReference(object):
 #

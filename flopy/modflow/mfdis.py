@@ -10,8 +10,8 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils import Util2d, Util3d, reference
+from ..pakbase import Package
+from ..utils import Util2d, Util3d, reference, check
 
 
 ITMUNI = {"u":0,"s":1,"m":2,"h":3,"d":4,"y":5}
@@ -68,7 +68,19 @@ class ModflowDis(Package):
         Filename extension (default is 'dis')
     unitnumber : int
         File unit number (default is 11).
-
+    xul : float
+        x coordinate of upper left corner of the grid, default is None
+    yul : float
+        y coordinate of upper left corner of the grid, default is None
+    rotation : float
+        clockwise rotation (in degrees) of the grid about the upper left
+        corner. default is 0.0
+    proj4_str : str
+        PROJ4 string that defines the xul-yul coordinate system
+        (.e.g. '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ').
+        Can be an EPSG code (e.g. 'EPSG:4326'). Default is 'EPSG:4326'
+    start_dateteim : str
+        starting datetime of the simulation. default is '1/1/1970'
 
     Attributes
     ----------
@@ -97,7 +109,7 @@ class ModflowDis(Package):
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
                  unitnumber=11, xul=None, yul=None, rotation=0.0,
-                 start_datetime="1/1/1970"):
+                 proj4_str="EPSG:4326", start_datetime="1/1/1970"):
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
@@ -143,8 +155,10 @@ class ModflowDis(Package):
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
 
-        self.sr = reference.SpatialReference(self.delr.array, self.delc.array, self.lenuni, xul=xul,
-                                             yul=yul, rotation=rotation)
+        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
+                                             self.lenuni,xul=xul, yul=yul,
+                                             rotation=rotation,
+                                             proj4_str=proj4_str)
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
@@ -396,23 +410,32 @@ class ModflowDis(Package):
         """
         return self.__thickness
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         # Open file for writing
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        
         f_dis.write('{0:s}\n'.format(self.heading))
-        # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI        
+        f_dis.write('#{0:s}'.format(str(self.sr)))
+        f_dis.write(",{0:s}\n".format(self.start_datetime))
+        # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n' \
-                    .format(self.nlay, self.nrow, self.ncol, self.nper, self.itmuni,
-                            self.lenuni))
+                    .format(self.nlay, self.nrow, self.ncol, self.nper,
+                            self.itmuni, self.lenuni))
         # Item 2: LAYCBD
         for l in range(0, self.nlay):
             f_dis.write('{0:3d}'.format(self.laycbd[l]))
@@ -436,7 +459,6 @@ class ModflowDis(Package):
             else:
                 f_dis.write(' {0:3s}\n'.format('TR'))
         f_dis.close()
-
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -467,6 +489,26 @@ class ModflowDis(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.dis.check()
         """
+        chk = check(self, f=f, verbose=verbose, level=level)
+
+        # make ibound of same shape as thicknesses/botm for quasi-3D models
+        active = chk.get_active(include_cbd=True)
+
+        chk.values(self.thickness.array,
+                   active & (self.thickness.array <= 0),
+                   'zero or negative thickness', 'Error')
+        thin_cells = (self.thickness.array < 1) & (self.thickness.array > 0)
+        chk.values(self.thickness.array, active & thin_cells,
+                   'thin cells (less than checker threshold of {:.1f})'
+                   .format(chk.thin_cell_threshold), 'Error')
+        chk.values(self.top.array,
+                   active[0, :, :] & np.isnan(self.top.array), 'nan values in top array', 'Error')
+        chk.values(self.botm.array,
+                   active & np.isnan(self.botm.array), 'nan values in bottom array', 'Error')
+        chk.summarize()
+        return chk
+
+        '''
         if f is not None:
             if isinstance(f, str):
                 pth = os.path.join(self.parent.model_ws, f)
@@ -505,10 +547,10 @@ class ModflowDis(Package):
         # write errors to stdout
         if verbose:
             print(txt)
-
+        '''
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -525,6 +567,8 @@ class ModflowDis(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -547,10 +591,48 @@ class ModflowDis(Package):
             filename = f
             f = open(filename, 'r')
         # dataset 0 -- header
+        header = ''
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
+            header += line.strip()
+
+
+        header = header.replace('#','')
+        xul, yul = None, None
+        rotation = 0.0
+        proj4_str = "EPSG:4326"
+        start_datetime = "1/1/1970"
+
+        for item in header.split(','):
+            item = item.lower()
+            if "xul" in item:
+                try:
+                    xul = float(item.split(':')[1])
+                except:
+                    pass
+            elif "yul" in item:
+                try:
+                    yul = float(item.split(':')[1])
+                except:
+                    pass
+            elif "rotation" in item:
+                try:
+                    rotation = float(item.split(':')[1])
+                except:
+                    pass
+            elif "proj4_str" in item:
+                try:
+                    proj4_str = ':'.join(item.split(':')[1:])
+                except:
+                    pass
+            elif "start" in item:
+                try:
+                    start_datetime = item.split(':')[1]
+                except:
+                    pass
+
         # dataset 1
         nlay, nrow, ncol, nper, itmuni, lenuni = line.strip().split()[0:6]
         nlay = int(nlay)
@@ -628,7 +710,10 @@ class ModflowDis(Package):
         # create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
-                         lenuni)
+                         lenuni, xul=xul, yul=yul, rotation=rotation,
+                         proj4_str=proj4_str, start_datetime=start_datetime)
+        if check:
+            dis.check(f='{}.chk'.format(dis.name[0]), verbose=dis.parent.verbose, level=0)
         # return dis object instance
         return dis
 

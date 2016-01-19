@@ -50,6 +50,8 @@ class ListBudget(object):
         elif sys.version_info[0] == 3:
             self.f = open(file_name, 'r', encoding='ascii', errors='replace')
 
+        self.tssp_lines = 0
+
         # Assign the budgetkey, which should have been overriden
         if budgetkey is None:
             self.set_budget_key()
@@ -61,7 +63,6 @@ class ListBudget(object):
         self.idx_map = []
         self.entries = []
         self.null_entries = []
-        self.tssp_lines = 0
 
         self.time_line_idx = 20
         if timeunit.upper() == 'SECONDS':
@@ -86,10 +87,35 @@ class ListBudget(object):
 
         # Fill budget recarrays
         self._load()
+        self._isvalid = False
+        if len(self.idx_map) > 0:
+            self._isvalid = True
+
+        # Close the open file
+        self.f.close()
+
+        # return
         return
 
     def set_budget_key(self):
         raise Exception('Must be overridden...')
+
+    def isvalid(self):
+        """
+        Get a boolean indicating if budget data are available in the file.
+
+        Returns
+        -------
+        out : boolean
+            Boolean indicating if budget data are available in the file.
+
+        Examples
+        --------
+        >>> mf_list = MfListBudget('my_model.list')
+        >>> valid = mf_list.isvalid()
+
+        """
+        return self._isvalid
 
     def get_record_names(self):
         """
@@ -106,6 +132,8 @@ class ListBudget(object):
         >>> names = mf_list.get_record_names()
 
         """
+        if not self._isvalid:
+            return None
         return self.inc.dtype.names
 
     def get_times(self):
@@ -123,6 +151,8 @@ class ListBudget(object):
         >>> times = mf_list.get_times()
 
         """
+        if not self._isvalid:
+            return None
         return self.inc['totim'].tolist()
 
     def get_kstpkper(self):
@@ -142,6 +172,8 @@ class ListBudget(object):
         >>> kstpkper = mf_list.get_kstpkper()
 
         """
+        if not self._isvalid:
+            return None
         kstpkper = []
         for kstp, kper in zip(self.inc['time_step'],
                               self.inc['stress_period']):
@@ -171,6 +203,8 @@ class ListBudget(object):
         >>> incremental = mf_list.get_incremental()
 
         """
+        if not self._isvalid:
+            return None
         if names is None:
             return self.inc
         else:
@@ -204,6 +238,8 @@ class ListBudget(object):
         >>> cumulative = mf_list.get_cumulative()
 
        """
+        if not self._isvalid:
+            return None
         if names is None:
             return self.cum
         else:
@@ -240,6 +276,8 @@ class ListBudget(object):
         >>> budget = mf_list.get_budget()
 
         """
+        if not self._isvalid:
+            return None
         if names is None:
             return self.inc, self.cum
         else:
@@ -296,6 +334,8 @@ class ListBudget(object):
         >>> plt.show()
 
         """
+        if not self._isvalid:
+            return None
         ipos = None
         if kstpkper is not None:
             try:
@@ -367,6 +407,8 @@ class ListBudget(object):
                 "ListBudget.get_dataframe() error import pandas: " + \
                 str(e))
 
+        if not self._isvalid:
+            return None
         totim = self.get_times()
         if start_datetime is not None:
             totim = self._totim_to_datetime(totim,
@@ -457,6 +499,8 @@ class ListBudget(object):
         return ts, sp
 
     def _set_entries(self):
+        if len(self.idx_map) < 1:
+            return None, None
         if len(self.entries) > 0:
             raise Exception('entries already set:' + str(self.entries))
         if not self.idx_map:
@@ -482,6 +526,8 @@ class ListBudget(object):
     def _load(self, maxentries=None):
         self._build_index(maxentries)
         incdict, cumdict = self._set_entries()
+        if incdict is None and cumdict is None:
+            return
         totim = []
         for ts, sp, seekpoint in self.idx_map:
             tinc, tcum = self._get_sp(ts, sp, seekpoint)
@@ -741,4 +787,5 @@ class SwrListBudget(ListBudget):
 
     def set_budget_key(self):
         self.budgetkey = 'VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL'
+        self.tssp_lines = 1
         return

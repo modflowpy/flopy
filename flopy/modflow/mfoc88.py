@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 
 import sys
-from flopy.mbase import Package
+from ..pakbase import Package
 
 
 class ModflowOc88(Package):
@@ -50,11 +50,15 @@ class ModflowOc88(Package):
         Time step interval for printing and/or saving results
         (default is None).
     words : list of instructions
-        Can be specified as a 2d list of the following form:
+        Can be specified as a 2d list of the following form::
+
             [[per,stp,'head','drawdown','budget','pbudget', 'phead']]
+
         In this 2d form, phead, pbudget will print the head and budget.
-        Words can also be a 1d list of data items, such as
+        Words can also be a 1d list of data items, such as::
+
             ['head','drawdown','budget'].
+
         With a 1d list, the save_head_every option is used to determine the
         output frequency.
         (default is None).
@@ -116,16 +120,6 @@ class ModflowOc88(Package):
                  item3=[[0, 0, 1, 0]], extension=['oc', 'hds', 'ddn', 'cbc'], \
                  unitnumber=[14, 51, 52, 53], save_head_every=None, \
                  words=None, compact=False, chedfm=None, cddnfm=None):
-
-        '''
-           words = list containing any of ['head','drawdown','budget']
-           optionally, words in a 2-D list of shape:
-           [[per,stp,'head','drawdown','budget']], where
-           per,stp is the stress period,time step of output.
-           To print heads/drawdowns, ihedfm/iddnfm must be non-zero
-
-        '''
-
         # Call ancestor's init to set self.parent,
         # extension, name and unit number
         hds_fmt = 'DATA(BINARY)'

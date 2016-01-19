@@ -10,8 +10,8 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils import Util2d, Util3d, read1d
+from ..pakbase import Package
+from ..utils import Util2d, Util3d, read1d
 from flopy.modflow.mfpar import ModflowPar as mfpar
 
 
@@ -209,15 +209,22 @@ class ModflowLpf(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check: # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f = open(self.fn_path, 'w')
@@ -261,7 +268,8 @@ class ModflowLpf(Package):
         f.close()
         return
 
-    def check(self, f=None, verbose=True, level=1):
+        '''
+        def check(self, f=None, verbose=True, level=1):
         """
         Check lpf package data for common errors.
 
@@ -412,9 +420,9 @@ class ModflowLpf(Package):
         # write errors to stdout
         if verbose:
             print(txt)
-
+        '''
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -431,6 +439,8 @@ class ModflowLpf(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -615,5 +625,7 @@ class ModflowLpf(Package):
                          hk=hk, hani=hani, vka=vka, ss=ss, sy=sy, vkcb=vkcb,
                          wetdry=wetdry, storagecoefficient=storagecoefficient,
                          constantcv=constantcv, thickstrt=thickstrt, novfc=novfc)
+        if check:
+            lpf.check(f='{}.chk'.format(lpf.name[0]), verbose=lpf.parent.verbose, level=0)
         return lpf
 

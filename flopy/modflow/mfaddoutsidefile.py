@@ -1,5 +1,5 @@
 from numpy import atleast_2d
-from flopy.mbase import Package
+from ..pakbase import Package
 
 
 class mfaddoutsidefile(Package):

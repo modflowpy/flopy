@@ -26,7 +26,7 @@ def test_modflow_unstructured():
     wel2 = flopy.modflow.ModflowWel.load(os.path.join('temp', '{}.wel'.format(mf.name)), mf)
     assert wel2.stress_period_data[0] == wel.stress_period_data[0]
     # ghb file
-    ghb.write_file()
+    ghb.write_file(check=False)
     assert os.path.isfile(os.path.join('temp', '{}.ghb'.format(mf.name))) is True
     ghb2 = flopy.modflow.ModflowGhb.load(os.path.join('temp', '{}.ghb'.format(mf.name)), mf)
     assert ghb2.stress_period_data[0] == ghb.stress_period_data[0]

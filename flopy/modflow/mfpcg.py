@@ -8,7 +8,7 @@ MODFLOW Guide
 
 """
 import sys
-from flopy.mbase import Package
+from ..pakbase import Package
 
 class ModflowPcg(Package):
     """
@@ -42,7 +42,8 @@ class ModflowPcg(Package):
     iprpcg : int
         solver print out interval. (default is 0).
     mutpcg : int
-        If mutpcg = 0, tables of maximum head change and residual will be printed each iteration.
+        If mutpcg = 0, tables of maximum head change and residual will be
+        printed each iteration.
         If mutpcg = 1, only the total number of iterations will be printed.
         If mutpcg = 2, no information will be printed.
         If mutpcg = 3, information will only be printed if convergence fails.
@@ -52,12 +53,12 @@ class ModflowPcg(Package):
     dampt : float
         is the transient damping factor. (default is 1.)
     ihcofadd : int
-        is a flag that determines what happens to an active cell that is surrounded by dry cells.
-        (default is 0).
-            ihcofadd=0, cell converts to dry regardless of HCOF value. This is the default,
-                which is the way PCG2 worked prior to the addition of this option.
-            ihcofadd<>0, cell converts to dry only if HCOF has no head-dependent stresses or
-                storage terms
+        is a flag that determines what happens to an active cell that is
+        surrounded by dry cells.  (default is 0). If ihcofadd=0, cell
+        converts to dry regardless of HCOF value. This is the default, which
+        is the way PCG2 worked prior to the addition of this option. If
+        ihcofadd<>0, cell converts to dry only if HCOF has no head-dependent
+        stresses or storage terms.
     extension : list string
         Filename extension (default is 'pcg')
     unitnumber : int

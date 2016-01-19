@@ -163,7 +163,7 @@ class LayerFile(object):
            for k in range(plotarray.shape[0]):
                name = attrib_name+'{0:03d}'.format(k)
                attrib_dict[name] = plotarray[k]
-       from flopy.utils.flopy_io import write_grid_shapefile
+       from flopy.export.shapefile_utils import write_grid_shapefile
        write_grid_shapefile(filename, self.sr, attrib_dict)
 
 

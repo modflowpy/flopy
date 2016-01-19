@@ -2,6 +2,7 @@
 Module containing helper functions for plotting model data
 using ModelMap and ModelCrossSection. Functions for plotting
 shapefiles are also included.
+
 """
 from __future__ import print_function
 import os
@@ -334,6 +335,7 @@ class SwiConcentration():
     """
     The binary_header class is a class to create headers for MODFLOW
     binary files
+
     """
     def __init__(self, model=None, botm=None, istrat=1, nu=None):
         if model is None:
@@ -585,7 +587,7 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     masked_values : iterable of floats, ints
         Values to mask.
     kwargs : dictionary
-        Keyword arguments that are passed to PatchCollection.set(**kwargs).
+        Keyword arguments that are passed to PatchCollection.set(``**kwargs``).
         Some common kwargs would be 'linewidths', 'linestyles', 'alpha', etc.
 
     Returns
@@ -775,7 +777,7 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
 
 
 def findrowcolumn(pt, xedge, yedge):
-    '''
+    """
     Find the MODFLOW cell containing the x- and y- point provided.
 
     Parameters
@@ -801,7 +803,7 @@ def findrowcolumn(pt, xedge, yedge):
     >>> import flopy
     >>> irow, jcol = flopy.plotutil.findrowcolumn(pt, xedge, yedge)
 
-    '''
+    """
 
     # make sure xedge and yedge are numpy arrays
     if not isinstance(xedge, np.ndarray):
@@ -826,7 +828,7 @@ def findrowcolumn(pt, xedge, yedge):
 
 
 def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
-    '''
+    """
     Intersect a list of polyline vertices with a rectilinear MODFLOW
     grid. Vertices at the intersection of the polyline with the grid
     cell edges is returned. Optionally the original polyline vertices
@@ -863,7 +865,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
     >>> import flopy
     >>> ptsout = flopy.plotutil.line_intersect_grid(ptsin, xedge, yedge)
 
-    '''
+    """
 
     small_value = 1.0e-1
 
@@ -1276,6 +1278,3 @@ cm_data = [[ 0.26700401,  0.00487433,  0.32941519],
 
 viridis = LinearSegmentedColormap.from_list(__file__, cm_data)
 
-
-
-    

@@ -1,6 +1,6 @@
 import numpy as np
-from flopy.mbase import Package
-from flopy.utils import Util2d, Util3d
+from ..pakbase import Package
+from ..utils import Util2d, Util3d
 
 
 class ModflowSwi(Package):
@@ -20,38 +20,42 @@ class ModflowSwi(Package):
     iswizt : int
         unit number for zeta output. (default is 53).
     nprn : int
-        Number of steps between ZETA recordings; ZETA is recorded every NPRN steps.
-        (default is 1)
+        Number of steps between ZETA recordings; ZETA is recorded every NPRN
+        steps. (default is 1)
     toeslope : float
         Maximum slope of toe cells. (default is 0.05)
     tipslope : float
         Maximum slope of tip cells. (default is 0.05)
     zetamin : float
-        Minimum elevation of a plane before it is removed from a cell. (default is 0.005)
+        Minimum elevation of a plane before it is removed from a cell.
+        (default is 0.005)
     delzeta : float
         Elevation for a plane when it is moved into an adjacent empty cell.
         (default is 0.05)
     nu : float or array of floats
-        if istart = 1, density of each zone (nsrf + 1 values). if istrat = 0, density along
-        top of layer, each surface, and bottom of layer (nsrf + 2 values). (default is 0.025)
-    zeta : list of floats or list of array of floats [(nlay, nrow, ncol), (nlay, nrow, ncol)]
+        if istart = 1, density of each zone (nsrf + 1 values). if istrat = 0,
+        density along top of layer, each surface, and bottom of layer
+        (nsrf + 2 values). (default is 0.025)
+    zeta : list of floats or list of array of floats
+        [(nlay, nrow, ncol), (nlay, nrow, ncol)]
         initial elevations of the active surfaces. (default is 0.)
     ssz : float or array of floats (nlay, nrow, ncol)
         effective porosity. (default is 0.25)
     isource : integer or array of integers (nlay, nrow, ncol)
-        Source type of any external sources or sinks, specified with any outside package
+        Source type of any external sources or sinks, specified with any
+        outside package.
         (i.e. WEL Package, RCH Package, GHB Package). (default is 0).
-            If ISOURCE > 0 sources and sinks have the same fluid density as the zone
-                ISOURCE. If such a zone is not present in the cell, sources and sinks
-                have the same fluid density as the active zone at the top of the aquifer.
-            If ISOURCE = 0 sources and sinks have the same fluid density as the active
-                zone at the top of the aquifer.
-            If ISOURCE < 0 sources have the same fluid density as the zone with a
-                number equal to the absolute value of ISOURCE. Sinks have the same
-                fluid density as the active zone at the top of the aquifer. This
-                option is useful for the modeling of the ocean bottom where infiltrating
-                water is salt, yet exfiltrating water is of the same type as the water
-                at the top of the aquifer.
+        If ISOURCE > 0 sources and sinks have the same fluid density as the
+        zone ISOURCE. If such a zone is not present in the cell, sources and
+        sinks have the same fluid density as the active zone at the top of
+        the aquifer. If ISOURCE = 0 sources and sinks have the same fluid
+        density as the active zone at the top of the aquifer. If ISOURCE < 0
+        sources have the same fluid density as the zone with a number equal
+        to the absolute value of ISOURCE. Sinks have the same fluid density
+        as the active zone at the top of the aquifer. This option is useful
+        for the modeling of the ocean bottom where infiltrating water is
+        salt, yet exfiltrating water is of the same type as the water at the
+        top of the aquifer.
     extension : str
         Filename extension (default is 'swi')
     fname_output : str
@@ -61,8 +65,9 @@ class ModflowSwi(Package):
 
     """
 
-    def __init__(self, model, npln=1, istrat=1, iswizt=53, nprn=1, toeslope=0.05, tipslope=0.05, \
-                 zetamin=0.005, delzeta=0.05, nu=0.025, zeta=[], ssz=[], isource=0, extension='swi',
+    def __init__(self, model, npln=1, istrat=1, iswizt=53, nprn=1,
+                 toeslope=0.05, tipslope=0.05, zetamin=0.005, delzeta=0.05,
+                 nu=0.025, zeta=[], ssz=[], isource=0, extension='swi',
                  fname_output='swi.zta'):
         """
         Package constructor.

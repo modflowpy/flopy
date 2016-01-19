@@ -10,7 +10,7 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from flopy.mbase import Package
+from ..pakbase import Package
 from flopy.utils.util_list import MfList
 
 
@@ -23,17 +23,18 @@ class ModflowChd(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    stress_period_data : list of boundaries or
-                         recarray of boundaries or
-                         dictionary of boundaries
-    Each chd cell is defined through definition of
+    stress_period_data : list of boundaries, recarrays, or dictionary of
+        boundaries.
+
+        Each chd cell is defined through definition of
         layer (int), row (int), column (int), shead (float), ehead (float)
         shead is the head at the start of the stress period, and ehead is the
         head at the end of the stress period.
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. This gives the form of
+        period. This gives the form of::
+
             stress_period_data =
             {0: [
                 [lay, row, col, shead, ehead],
@@ -57,7 +58,7 @@ class ModflowChd(Package):
         periods, then the last list of chds will apply until the end of the
         simulation. Full details of all options to specify stress_period_data
         can be found in the flopy3 boundaries Notebook in the basic
-        subdirectory of the examples directory
+        subdirectory of the examples directory.
 
     extension : string
         Filename extension (default is 'chd')

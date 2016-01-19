@@ -11,8 +11,8 @@ def export_netcdf(namfile):
         return
     print(namfile)
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
-    if m.dis.lenuni == 0:
-        m.dis.lenuni = 1
+    if m.dis.sr.lenuni == 0:
+        m.dis.sr.lenuni = 1
         #print('skipping...lenuni==0 (undefined)')
         #return
     #if sum(m.dis.laycbd) != 0:
@@ -27,14 +27,60 @@ def export_netcdf(namfile):
         import netCDF4
     except:
         return
-
+    fnc = m.export(os.path.join('temp', m.name + '.nc'))
+    fnc.write()
+    fnc_name = os.path.join('temp', m.name + '.nc')
     try:
-        fnc = m.export(os.path.join('temp', m.name + '.nc'))
+        fnc = m.export(fnc_name)
         fnc.write()
     except Exception as e:
         raise Exception('ncdf export fail for namfile {0}:\n{1}  '.format(namfile,str(e)))
+    try:
+        nc = netCDF4.Dataset(fnc_name,'r')
+    except Exception as e:
+        raise Exception('ncdf import fail for nc file {0}'.format(fnc_name))
+    return
+def export_shapefile(namfile):
+
+    try:
+        import shapefile as shp
+    except:
+        return
+
+    print(namfile)
+    m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
+
+    assert m, 'Could not load namefile {}'.format(namfile)
+    assert isinstance(m, flopy.modflow.Modflow)
+    fnc_name = os.path.join('temp', m.name + '.shp')
+    try:
+        fnc = m.export(fnc_name)
+
+    except Exception as e:
+        raise Exception('shapefile export fail for namfile {0}:\n{1}  '.format(namfile,str(e)))
+    try:
+        s = shp.Reader(fnc_name)
+    except Exception as e:
+        raise Exception(' shapefile import fail for {0}:{1}'.format(fnc_name,str(e)))
+    assert s.numRecords == m.nrow * m.ncol,"wrong number of records in " +\
+                                           "shapefile {0}:{1:d}".format(fnc_name,s.numRecords)
     return
 
+
+def test_well_flux_extras():
+    import os
+    import flopy
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    dis = flopy.modflow.ModflowDis(ml,10,10,10,10)
+    sp_data = {0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],1:[1,2,4,4.0]}
+    wel = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data)
+    wel.export(os.path.join("temp","wel_test.nc"))
+
+
+def test_shapefile():
+    for namfile in namfiles:
+        yield export_shapefile, namfile
+    return
 
 def test_netcdf():
     for namfile in namfiles:
@@ -43,5 +89,7 @@ def test_netcdf():
 
 if __name__ == '__main__':
     for namfile in namfiles:
-    #for namfile in ["MNW2-Fig28.nam"]:
-        export_netcdf(namfile)
+    #for namfile in ["fhb.nam"]:
+        #export_netcdf(namfile)
+        export_shapefile(namfile)
+    test_well_flux_extras()
