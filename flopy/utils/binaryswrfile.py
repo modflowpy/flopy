@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import struct as strct
-import string
+from collections import OrderedDict
 
 
 class SwrBinaryStatements:
@@ -120,9 +120,9 @@ class SwrObs(SwrBinaryStatements):
         # set position
         self.datastart = self.file.tell()
         # get times
-        self.times = self.time_list()
+        self.times = self._set_time_list()
 
-    def get_time_list(self):
+    def get_times(self):
         return self.times
 
     def get_num_items(self):
@@ -135,7 +135,7 @@ class SwrObs(SwrBinaryStatements):
         self.file.seek(self.datastart)
         return True
 
-    def time_list(self):
+    def _set_time_list(self):
         self.skip = True
         self.file.seek(self.datastart)
         times = []
@@ -264,8 +264,14 @@ class SwrFile(SwrBinaryStatements):
         Class constructor.
 
         """
+        self.floattype = 'f8'
+        self.header_dtype = np.dtype([('totim', self.floattype),
+                                      ('kswr', 'i4'), ('kstp', 'i4'),
+                                      ('kper', 'i4')])
+        self._recordarray = []
+
         self.file = open(filename, 'rb')
-        self.types = ('stage', 'reachgroup', 'qm', 'qaq')
+        self.types = ('stage', 'budget', 'qm', 'qaq')
         if swrtype.lower() in self.types:
             self.type = swrtype.lower()
         else:
@@ -274,33 +280,35 @@ class SwrFile(SwrBinaryStatements):
             for t in self.types:
                 err = '{}  {}\n'.format(err, t)
             raise Exception(err)
+
+        # set data dtypes
+        self._set_dtypes()
+
+        # debug
         self.verbose = verbose
-        
+
         # Read the dimension data
         self.nrgout = 0
         if self.type == 'qm':
             self.nrgout = self.read_integer()
         self.nrecord = self.read_integer()
-        
+
+
         # set-up 
-        self.items = self.get_num_items()
-        self.null_record = np.zeros((self.nrecord, self.items)) + 1.0E+32
-        #
-        self.missingData = -9999.9
-        self.dataAvailable = True
-        self.skip = False
-        
+        self.items = len(self.dtype) - 1
+
         # read connectivity for velocity data if necessary
-        if self.type is 'qm':
+        self.conn_dtype = None
+        if self.type == 'qm':
             self.connectivity = self._read_connectivity()
             if self.verbose:
                 print('Connectivity: ')
                 print(self.connectivity)
-        
+
         # initialize reachlayers and nqaqentries for qaq data
+        self.nqaqentries = []
         if self.type == 'qaq':
             self.reachlayers = np.zeros((self.nrecord), np.int)
-            self.nqaqentries = 0
         self.qaq_dtype = np.dtype([('layer', 'i4'),
                                    ('bottom', 'f8'), ('stage', 'f8'),
                                    ('depth', 'f8'), ('head', 'f8'),
@@ -308,26 +316,9 @@ class SwrFile(SwrBinaryStatements):
                                    ('headdiff', 'f8'), ('qaq', 'f8')])
 
         self.datastart = self.file.tell()
-        # get times
-        self._times = self._read_times()
 
-    def get_nrecords(self):
-        return self.nrgout, self.nrecord
-
-    def get_times(self):
-        return self._times
-
-    def _read_connectivity(self):
-        conn = np.zeros((self.nrecord, 3), np.int)
-        icount = 0
-        for nrg in range(0, self.nrgout):
-            nconn = self.read_integer()
-            for ic in range(0, nconn):
-                conn[icount, 0] = nrg
-                conn[icount, 1] = self.read_integer()
-                conn[icount, 2] = self.read_integer()
-                icount += 1
-        return conn
+        # build index
+        self._build_index()
 
     def get_connectivity(self):
         if self.type == 'qm':
@@ -335,75 +326,173 @@ class SwrFile(SwrBinaryStatements):
         else:
             return None
 
-    def get_num_items(self):
-        if self.type == 'stage':
-            return 1
-        elif self.type == 'reachgroup':
-            return 14
-        elif self.type == 'qm':
-            return 2
-        elif self.type == 'qaq':
-            return 10
+    def get_nrecords(self):
+        return self.nrgout, self.nrecord
+
+    def get_kswrkstpkper(self):
+        return self._kswrkstpkper
+
+    def get_ntimes(self):
+        return self._ntimes
+
+    def get_times(self):
+        return self._times
+
+    def get_record_names(self):
+        return self.dtype.names
+
+    def get_data(self, kswrkstpkper=None, idx=None, totim=None):
+
+        if kswrkstpkper is not None:
+            kswr1 = kswrkstpkper[0]
+            kstp1 = kswrkstpkper[1]
+            kper1 = kswrkstpkper[2]
+
+            totim1 = self._recordarray[np.where(
+                    (self._recordarray['kswr'] == kswr1) &
+                    (self._recordarray['kstp'] == kstp1) &
+                    (self._recordarray['kper'] == kper1))]["totim"][0]
+        elif totim is not None:
+            totim1 = totim
+        elif idx is not None:
+            totim1 = self._recordarray['totim'][idx]
         else:
-            return -1
+            totim1 = self._times[-1]
 
-    def get_header_items(self):
-        return ['totim', 'dt', 'kper', 'kstp', 'swrstp', 'success_flag']
-
-    def list_records(self):
-        if self.type == 'stage':
-            list = ['stage']
-        if self.type == 'reachgroup':
-            list = ['stage', 'qsflow', 'qlatflow', 'quzflow', 'rain', 'evap',
-                    'qbflow', 'qeflow', 'qexflow', 'qbcflow', 'qcrflow', 'dv',
-                    'inf-out', 'volume']
-        if self.type == 'qm':
-            list = ['flow', 'velocity']
-        if self.type == 'qaq':
-            list = ['reach', 'layer', 'bottom', 'stage', 'depth', 'head',
-                    'wetper', 'cond', 'headdiff', 'qaq']
-        return list
-
-    def list_temporal(self):
-        list = ['totim', 'dt', 'kper', 'kstp', 'swrstp', 'success']
-        return list
-
-    def get_item_number(self, value, isTimeSeriesOutput=True):
-        l = self.list_records()
-        ioff = 6
-        if not isTimeSeriesOutput:
-            ioff = 0
         try:
-            i = l.index(value.lower())
-            i += ioff
-        except ValueError:
-            l = self.list_temporal()
-            try:
-                i = l.index(value.lower())
-            except ValueError:
-                i = -1  # -no match
-                print('no match to: ', value.lower())
-        return i
+            ipos = self.recorddict[totim1]
+            self.file.seek(ipos)
+            r = self._get_data()
+            # expand data to add totim so that self.dtype can be
+            # used to return a numpy recarry
+            s = np.zeros((r.shape[0], r.shape[1]+1), np.float)
+            s[:, 1:] = r[:, :]
+            s[:, 0] = totim1
+            return s.view(dtype=self.dtype)
+        except:
+            return None
 
-    def return_gage_item_from_list(self, r, citem, scale=1.0):
-        ipos = self.get_item_number(citem)
-        n = r.shape[0]
-        if n < 1:
-            return self.null_record
-        v = np.zeros((n), np.float)
-        for i in range(0, n):
-            v[i] = r[i, ipos] * scale
-        return v
+    def get_ts(self, irec=0, iconn=0, klay=0):
+        """
+        Get a time series from a swr binary file.
+
+        Parameters
+        ----------
+        irec : int
+            is the zero-based reach (stage, qm, qaq) or reach group number
+            (budget) to retrieve. (default is 0)
+        iconn : int
+            is the zero-based connection number for reach (irch) to retrieve
+            qm data. iconn is only used if qm data is being read.
+            (default is 0)
+        klay : int
+            is the zero-based layer number for reach (irch) to retrieve
+            qaq data . klay is only used if qaq data is being read.
+            (default is 0)
+
+        Returns
+        ----------
+        out : numpy recarray
+            Array has size (ntimes, nitems).  The first column in the
+            data array will contain time (totim). nitems is 2 for stage
+            data, 15 for budget data, 3 for qm data, and 11 for qaq
+            data.
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        The irec, iconn, and klay values must be zero-based.
+
+        Examples
+        --------
+
+        """
+
+        if irec + 1 > self.nrecord:
+            err = 'Error: specified irec ({}) '.format(irec) + \
+                  'exceeds the total number of records ()'.format(self.nrecord)
+            raise Exception(err)
+
+        gage_record = None
+        # stage and budget
+        if self.type == self.types[0] or self.type == self.types[1]:
+            gage_record = self._get_ts(irec=irec)
+        # qm
+        elif self.type == self.types[2]:
+            gage_record = self._get_ts_qm(irec=irec, iconn=iconn)
+        # qaq
+        elif self.type == self.types[3]:
+            gage_record = self._get_ts_qaq(irec=irec, klay=klay)
+
+        return gage_record
+
+    def _read_connectivity(self):
+        self.conn_dtype = np.dtype([('reach', 'i4'),
+                                    ('from', 'i4'), ('to', 'i4')])
+        conn = np.zeros((self.nrecord, 3), np.int)
+        icount = 0
+        for nrg in range(self.nrgout):
+            nconn = self.read_integer()
+            for ic in range(nconn):
+                conn[icount, 0] = nrg
+                conn[icount, 1] = self.read_integer() - 1
+                conn[icount, 2] = self.read_integer() - 1
+                icount += 1
+        return conn
+
+
+    def _set_dtypes(self):
+        if self.type == self.types[0]:
+            self.dtype = np.dtype([('totim', self.floattype),
+                                   ('stage', self.floattype)])
+        elif self.type == self.types[1]:
+            self.dtype = np.dtype([('totim', self.floattype),
+                                   ('stage', self.floattype),
+                                   ('qsflow', self.floattype),
+                                   ('qlatflow', self.floattype),
+                                   ('quzflow', self.floattype),
+                                   ('rain', self.floattype),
+                                   ('evap', self.floattype),
+                                   ('qbflow', self.floattype),
+                                   ('qeflow', self.floattype),
+                                   ('qexflow', self.floattype),
+                                   ('qbcflow', self.floattype),
+                                   ('qcrflow', self.floattype),
+                                   ('dv', self.floattype),
+                                   ('inf-out', self.floattype),
+                                   ('volume', self.floattype)])
+        elif self.type == self.types[2]:
+            self.dtype = np.dtype([('totim', self.floattype),
+                                   ('flow', self.floattype),
+                                   ('velocity', self.floattype)])
+        elif self.type == self.types[3]:
+            self.dtype = np.dtype([('totim', self.floattype),
+                                   ('reach', self.floattype),
+                                   ('layer', self.floattype),
+                                   ('bottom', self.floattype),
+                                   ('stage', self.floattype),
+                                   ('depth', self.floattype),
+                                   ('head', self.floattype),
+                                   ('wetper', self.floattype),
+                                   ('cond', self.floattype),
+                                   ('headdiff', self.floattype),
+                                   ('qaq', self.floattype)])
+        return
 
     def _read_header(self):
-        if self.type is 'qaq':
+        if self.type == 'qaq':
             try:
-                self.nqaqentries = 0
-                for i in range(0, self.nrecord):
+                nqaq = 0
+                for i in range(self.nrecord):
                     self.reachlayers[i] = self.read_integer()
-                    self.nqaqentries += self.reachlayers[i]
+                    nqaq += self.reachlayers[i]
                     # print i+1, self.reachlayers[i]
                     # print self.nqaqentries
+                self.nqaq = nqaq
+                self.nqaqentries.append(nqaq)
             except:
                 if self.verbose:
                     sys.stdout.write('\nCould not read reachlayers')
@@ -411,250 +500,163 @@ class SwrFile(SwrBinaryStatements):
         try:
             totim = self.read_real()
             dt = self.read_real()
-            kper = self.read_integer()
-            kstp = self.read_integer()
-            swrstp = self.read_integer()
-            return totim, dt, kper, kstp, swrstp, True
+            kper = self.read_integer() - 1
+            kstp = self.read_integer() - 1
+            kswr = self.read_integer() - 1
+            return totim, dt, kper, kstp, kswr, True
         except:
             return 0.0, 0.0, 0, 0, 0, False
 
-    def get_record(self, *args):
-        # --pass a tuple of timestep,stress period
-        try:
-            kkspt = args[0]
-            kkper = args[1]
-            while True:
-                totim, dt, kper, kstp, swrstp, success, r = self._get_data()
-                if success:
-                    if kkspt == kstp and kkper == kper:
-                        if self.verbose:
-                            print(totim, dt, kper, kstp, swrstp, True)
-                        return totim, dt, kper, kstp, swrstp, True, r
-                else:
-                    return 0.0, 0.0, 0, 0, 0, False, self.null_record
-        except:
-            # pass a scalar of target totim -
-            # returns either a match or the first
-            # record that exceeds target totim
-            try:
-                ttotim = float(args[0])
-                while True:
-                    totim, dt, kper, kstp, swrstp, r, success = self._get_data()
-                    if success:
-                        if ttotim <= totim:
-                            return totim, dt, kper, kstp, swrstp, True, r
-                    else:
-                        return 0.0, 0.0, 0, 0, 0, False, self.null_record
-            except:
-                # get the last successful record
-                previous = self._get_data()
-                while True:
-                    this_record = self._get_data()
-                    if this_record[-2] == False:
-                        return previous
-                    else:
-                        previous = this_record
+    def _get_ts(self, irec=0):
 
-    def get_ts(self, rec_num=0, iconn=0, rec_lay=0):
-        if self.type is 'qaq':
-            gage_record = np.zeros((
-                self.items + 6))  # items plus 6 header values, reach number, and layer value
-        else:
-            gage_record = np.zeros(
-                    (self.items + 6))  # items plus 6 header values
-        while True:
-            totim, dt, kper, kstp, swrstp, success, r = self._get_data()
-            if success:
-                this_entry = np.array([totim, dt, kper, kstp, swrstp, success])
-                irec = rec_num  # zero-based index
-                # find correct entry for record and layer
-                if self.type is 'qaq':
-                    ifound = 0
-                    ilay = rec_lay
-                    ilen = np.shape(r)[0]
-                    # print np.shape(r)
-                    for i in range(0, ilen):
-                        ir = int(r[i, 0]) - 1
-                        il = int(r[i, 1]) - 1
-                        if ir == rec_num and il == ilay:
-                            ifound = 1
-                            irec = i
-                            break
-                    if ifound < 1:
-                        r[irec, :] = 0.0
-                elif self.type is 'qm':
-                    ifound = 0
-                    for i in range(0, self.nrecord):
-                        inode = self.connectivity[i, 1] - 1
-                        ic = self.connectivity[i, 2] - 1
-                        if rec_num == inode and ic == iconn:
-                            ifound = 1
-                            irec = i
-                            break
-                    if ifound < 1:
-                        r[irec, :] = 0.0
+        # create array
+        gage_record = np.zeros((self._ntimes, self.items + 1), dtype=np.float)
 
-                this_entry = np.hstack((this_entry, r[irec]))
-                gage_record = np.vstack((gage_record, this_entry))
+        # iterate through the record dictionary
+        idx = 0
+        for key, value in self.recorddict.items():
+            self.file.seek(value)
+            r = self._get_data()
+            header = np.array(key)
+            this_entry = np.hstack((header, r[irec]))
+            gage_record[idx, :] = this_entry
+            idx += 1
 
-            else:
-                gage_record = np.delete(gage_record, 0,
-                                        axis=0)  # delete the first 'zeros' element
-                return gage_record
+        return gage_record.view(dtype=self.dtype)
+
+    def _get_ts_qm(self, irec=0, iconn=0):
+
+        # create array
+        gage_record = np.zeros((self._ntimes, self.items + 1), dtype=np.float)
+
+        # iterate through the record dictionary
+        idx = 0
+        for key, value in self.recorddict.items():
+            self.file.seek(value)
+            r = self._get_data()
+            header = np.array(key)
+            ipos = irec
+
+            # find correct entry for reach and connection
+            ifound = 0
+            for i in range(self.nrecord):
+                inode = self.connectivity[i, 1]
+                ic = self.connectivity[i, 2]
+                if irec == inode and ic == iconn:
+                    ifound = 1
+                    ipos = i
+                    break
+            if ifound < 1:
+                r[ipos, :] = 0.0
+
+            this_entry = np.hstack((header, r[ipos]))
+            gage_record[idx, :] = this_entry
+            idx += 1
+
+        return gage_record.view(dtype=self.dtype)
+
+
+    def _get_ts_qaq(self, irec=0, klay=0):
+
+        # create array
+        gage_record = np.zeros((self._ntimes, self.items + 1), dtype=np.float)
+
+        # iterate through the record dictionary
+        idx = 0
+        for key, value in self.recorddict.items():
+            self.file.seek(value)
+            r = self._get_data()
+            header = np.array(key)
+            ipos = irec
+
+            # find correct entry for record and layer
+            ifound = 0
+            ilen = np.shape(r)[0]
+            # print np.shape(r)
+            for i in range(0, ilen):
+                ir = int(r[i, 0]) - 1
+                il = int(r[i, 1]) - 1
+                if ir == irec and il == klay:
+                    ifound = 1
+                    ipos = i
+                    break
+            if ifound < 1:
+                r[ipos, :] = 0.0
+
+            this_entry = np.hstack((header, r[ipos]))
+            gage_record[idx, :] = this_entry
+            idx += 1
+
+        return gage_record.view(dtype=self.dtype)
 
     def _get_data(self):
-        totim, dt, kper, kstp, swrstp, success = self._read_header()
-        if success == False:
-            if self.verbose:
-                print('SWR_Record._get_data() object reached end of file')
-            return 0.0, 0.0, 0, 0, 0, False, self.null_record
+        if self.type == 'qaq':
+            return self._read_qaq()
         else:
-            if self.type == 'qaq':
-                r = self._read_qaq()
-                return totim, dt, kper, kstp, swrstp, True, r
-            else:
-                r = self.read_record()
-        return totim, dt, kper, kstp, swrstp, True, r
+            return self.read_record()
 
     def _read_qaq(self):
-        x = np.zeros((self.nqaqentries, self.items), SwrBinaryStatements.real)
-        if self.skip == True:
-            bytes = self.nqaqentries * (
-                SwrBinaryStatements.integerbyte + 8 * SwrBinaryStatements.realbyte)
-            lpos = self.file.tell() + (bytes)
-            self.file.seek(lpos)
-        else:
-            qaq_list = self.get_item_list()
-            bd = np.fromfile(self.file, dtype=self.qaq_dtype,
-                             count=self.nqaqentries)
-            ientry = 0
-            for irch in range(self.nrecord):
-                klay = self.reachlayers[irch]
-                for k in range(klay):
-                    x[ientry, 0] = irch + 1
-                    ientry += 1
-            for idx, k in enumerate(qaq_list[1:]):
-                x[:, idx + 1] = bd[k]
+        r = np.zeros((self.nqaq, self.items), SwrBinaryStatements.real)
+
+        bd = np.fromfile(self.file, dtype=self.qaq_dtype,
+                         count=self.nqaq)
+        ientry = 0
+        for irch in range(self.nrecord):
+            klay = self.reachlayers[irch]
+            for k in range(klay):
+                r[ientry, 0] = irch + 1
+                ientry += 1
+        for idx, k in enumerate(self.qaq_dtype.names):
+            r[:, idx + 1] = bd[k]
         # print 'shape x: {}'.format(x.shape)
-        return x
+        return r
 
-    def _rewind_file(self):
-        self.file.seek(self.datastart)
-        return True
-
-    def _read_times(self):
+    def _build_index(self):
+        """
+        Build the recordarray recarray and recorddict dictionary, which map
+        the header information to the position in the binary file.
+        """
         self.skip = True
         self.file.seek(self.datastart)
         idx = 0
         sys.stdout.write('Generating SWR binary data time list\n')
-        times = []
+        self._ntimes = 0
+        self._times = []
+        self._kswrkstpkper = []
+        self.recorddict = OrderedDict()
         while True:
             # --output something to screen so it is possible to determine
             #  that the time list is being created
             idx += 1
-            v = divmod(float(idx), 100.)
-            if v[1] == 0.0:
-                sys.stdout.write('.')
-            # get current position
-            current_position = self.file.tell()
-            totim, dt, kper, kstp, swrstp, success, r = self._get_data()
-            if success:
-                times.append([totim, dt, kper, kstp, swrstp, current_position])
-            else:
-                self.file.seek(self.datastart)
-                times = np.array(times)
-                self.skip = False
-                sys.stdout.write('\n')
-                return times
-
-    def get_time_record(self, time_index=0):
-        self.file.seek(int(self._times[time_index][5]))
-        totim, dt, kper, kstp, swrstp, success, r = self._get_data()
-        if success:
             if self.verbose:
-                print(totim, dt, kper, kstp, swrstp, True)
-            return totim, dt, kper, kstp, swrstp, True, r
-        else:
-            return 0.0, 0.0, 0, 0, 0, False, self.null_record
-
-    def _get_point_offset(self, rec_num, iconn):
-        self.file.seek(self.datastart)
-        lpos0 = self.file.tell()
-        point_offset = int(0)
-        totim, dt, kper, kstp, swrstp, success = self._read_header()
-        # --qaq terms
-        if self.type is 'qaq':
-            sys.stdout.write(
-                    'MFBinaryClass::_get_point_offset can not be used to extract QAQ data')
-            sys.exit(1)
-        # stage and reach group terms
-        elif self.type is 'stage' or self.type is 'reachgroup':
-            idx = (rec_num - 1) * self.items
-            lpos1 = self.file.tell() + idx * SwrBinaryStatements.realbyte
-            self.file.seek(lpos1)
-            point_offset = self.file.tell() - lpos0
-        # connection flux and velocity terms
-        elif self.type is 'qm':
-            frec = -999
-            for i in range(0, self.nrecord):
-                inode = self.connectivity[i, 1]
-                ic = self.connectivity[i, 2]
-                if rec_num == inode and ic == iconn:
-                    frec = i
-                    break
-            if frec == -999:
-                self.dataAvailable = False
-            else:
-                self.dataAvailable = True
-                idx = (frec) * self.items
-                lpos1 = self.file.tell() + idx * SwrBinaryStatements.realbyte
-                self.file.seek(lpos1)
-                point_offset = self.file.tell() - lpos0
-        return point_offset
-
-    def get_time_gage(self, rec_num=0, iconn=0):
-        if self.type is 'qaq':
-            sys.stdout.write(
-                    'MFBinaryClass::get_time_gage can not be used to extract QAQ data\n')
-            sys.exit(1)
-        num_records = self.items + 6  # items plus 6 header values
-        gage_record = np.zeros((num_records), np.float)
-        # --find offset to position
-        ilen = int(0)
-        if rec_num > 0:
-            ilen = self._get_point_offset(rec_num, iconn)
-        else:
-            self.dataAvailable = False
-        if not self.dataAvailable:
-            sys.stdout.write(
-                    '  Error: data is not available for reach {0} '.format(
-                            rec_num))
-            if self.type is 'qm':
-                sys.stdout.write('connected to reach {0}'.format(iconn))
-            sys.stdout.write('\n')
-
-        # get data
-        if len(self._times) > 0:
-            for time_data in self._times:
-                totim = time_data[0]
-                dt = time_data[1]
-                kper = time_data[2]
-                kstp = time_data[3]
-                swrstp = time_data[4]
-                success = True
-                # get data
-                if self.dataAvailable:
-                    self.file.seek(int(time_data[5]) + ilen)
-                    r = self.read_items()
+                v = divmod(float(idx), 72.)
+                if v[1] == 0.0:
+                    sys.stdout.write('.')
+            # read header
+            totim, dt, kper, kstp, kswr, success = self._read_header()
+            if success:
+                if self.type == 'qaq':
+                    bytes = self.nqaq * \
+                            (SwrBinaryStatements.integerbyte +
+                             8 * SwrBinaryStatements.realbyte)
                 else:
-                    r = np.empty((self.items), np.float)
-                    r.fill(self.missingData)
-                # push the data to the data structure
-                this_entry = np.array([totim, dt, kper, kstp, swrstp, success])
-                # update this_entry and current gage_record
-                this_entry = np.hstack((this_entry, r))
-                gage_record = np.vstack((gage_record, this_entry))
-        # delete first empty entry and return gage_record
-        gage_record = np.delete(gage_record, 0,
-                                axis=0)  # delete the first 'zeros' element
-        return gage_record
+                    bytes = self.nrecord * self.items * \
+                            SwrBinaryStatements.realbyte
+                ipos = self.file.tell()
+                self.file.seek(bytes, 1)
+                # save data
+                self._ntimes += 1
+                self._times.append(totim)
+                self._kswrkstpkper.append((kswr, kstp, kper))
+                header = (totim, kswr, kstp, kper)
+                self.recorddict[totim] = ipos
+                self._recordarray.append(header)
+            else:
+                self.skip = False
+                if self.verbose:
+                    sys.stdout.write('\n')
+                self._recordarray = np.array(self._recordarray,
+                                             dtype=self.header_dtype)
+                self._times = np.array(self._times)
+                self._kswrkstpkper = np.array(self._kswrkstpkper)
+                return

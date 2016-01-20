@@ -186,7 +186,7 @@ class ModflowNwt(Package):
 
     """
 
-    def __init__(self, model, headtol=1E-4, fluxtol=500, maxiterout=100, \
+    def __init__(self, model, headtol=1E-2, fluxtol=500, maxiterout=100, \
                  thickfact=1E-5, linmeth=1, iprnwt=0, ibotav=0, \
                  options='COMPLEX', Continue=False, \
                  dbtheta=0.4, dbkappa=1.e-5, dbgamma=0., momfact=0.1, \

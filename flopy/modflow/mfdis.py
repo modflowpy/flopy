@@ -606,28 +606,27 @@ class ModflowDis(Package):
         start_datetime = "1/1/1970"
 
         for item in header.split(','):
-            item = item.lower()
-            if "xul" in item:
+            if "xul" in item.lower():
                 try:
                     xul = float(item.split(':')[1])
                 except:
                     pass
-            elif "yul" in item:
+            elif "yul" in item.lower():
                 try:
                     yul = float(item.split(':')[1])
                 except:
                     pass
-            elif "rotation" in item:
+            elif "rotation" in item.lower():
                 try:
                     rotation = float(item.split(':')[1])
                 except:
                     pass
-            elif "proj4_str" in item:
+            elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ':'.join(item.split(':')[1:])
                 except:
                     pass
-            elif "start" in item:
+            elif "start" in item.lower():
                 try:
                     start_datetime = item.split(':')[1]
                 except:

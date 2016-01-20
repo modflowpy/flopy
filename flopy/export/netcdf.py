@@ -116,12 +116,17 @@ class NetCdf(object):
 
     """
 
-    def __init__(self, output_filename, model, time_values=None, verbose=None):
+    def __init__(self, output_filename, model, time_values=None, verbose=None,
+                 logger=None):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
             verbose = model.verbose
-        self.logger = Logger(verbose)
+        if logger is not None:
+            self.logger = logger
+        else:
+            self.logger = Logger(verbose)
+
         self.log = self.logger.log
         if os.path.exists(output_filename):
             self.logger.warn("removing existing nc file: " + output_filename)
@@ -451,7 +456,8 @@ class NetCdf(object):
         AssertionError if one of more dimensions do not exist
 
         """
-
+        # Normalize variable name
+        name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
         self.log("creating variable: " + str(name))
         assert precision_str in PRECISION_STRS, \
             "netcdf.create_variable() error: precision string {0} not in {1}". \
