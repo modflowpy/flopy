@@ -456,7 +456,8 @@ class NetCdf(object):
         AssertionError if one of more dimensions do not exist
 
         """
-
+        # Normalize variable name
+        name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
         self.log("creating variable: " + str(name))
         assert precision_str in PRECISION_STRS, \
             "netcdf.create_variable() error: precision string {0} not in {1}". \

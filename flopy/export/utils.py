@@ -14,6 +14,22 @@ NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", 
                    "drawdown":"{0}","cell_by_cell_flow":"{0}^3/{1}"}
 NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4"}
 
+NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
+                 "vka":"vertical hydraulic conductivity",
+                 "sy": "specific yield",
+                 "ss": "specific storage",
+                 "rech": " recharge",
+                 "strt": "starting heads",
+                 "wel_flux": "well flux",
+                 "top": "model top",
+                 "botm": "layer bottom",
+                 "thickness": "layer thickness",
+                 "ghb_cond": "GHB boundary conductance",
+                 "ghb_bhead": "GHB boundary head",
+                 "riv_cond": "river bed conductance",
+                 "riv_stage": "river stage",
+                 "riv_rbot": "river bottom elevation"}
+
 
 def datafile_helper(f, df):
     raise NotImplementedError()
@@ -21,7 +37,8 @@ def datafile_helper(f, df):
 
 def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''):
     if logger:
-        logger.log("creating array for {0}".format(var_name))
+        logger.log("creating array for {0}".format(
+                var_name))
 
     array = np.zeros((len(times),shape3d[0],shape3d[1],shape3d[2]),
                      dtype=np.float32)
@@ -37,7 +54,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                     a = out_obj.get_data(totim=t)
             except Exception as e:
                 estr = "error getting data for {0} at time {1}:{2}".format(
-                        var_name+text.decode(),t,str(e))
+                        var_name+text.decode().strip().lower(),t,str(e))
                 if logger:
                     logger.warn(estr)
                 else:
@@ -47,7 +64,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                 array[i,:,:,:] = a.astype(np.float32)
             except Exception as e:
                 estr = "error assigning {0} data to array for time {1}:{2}".format(
-                    var_name+text.decode(),t,str(e))
+                    var_name+text.decode().strip().lower(),t,str(e))
                 if logger:
                     logger.warn(estr)
                 else:
@@ -55,7 +72,8 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                 continue
 
     if logger:
-        logger.log("creating array for {0}".format(var_name))
+        logger.log("creating array for {0}".format(
+                var_name))
 
     array[np.isnan(array)] = f.fillvalue
 
@@ -66,8 +84,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
     precision_str = "f4"
 
     if text:
-        var_name += '_' + text.decode()
-
+        var_name = text.decode().strip().lower()
     attribs = {"long_name": var_name}
     attribs["coordinates"] = "time layer latitude longitude"
     if units is not None:
@@ -159,7 +176,7 @@ def model_helper(f, ml, **kwargs):
         package_names = [pak.name[0] for pak in ml.packagelist]
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, ml)
+        f = NetCdf(f, ml, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         shapefile_utils.model_attributes_to_shapefile(f, ml,
@@ -262,8 +279,10 @@ def mflist_helper(f, mfl, **kwargs):
 
             if base_name == "wel" and name == "flux":
                 well_flux_extras(f,array,precision_str)
-
-            attribs = {"long_name": "flopy.MfList instance of {0}".format(var_name)}
+            if var_name in NC_LONG_NAMES:
+                attribs = {"long_name":NC_LONG_NAMES[var_name]}
+            else:
+                attribs = {"long_name":var_name}
             attribs["coordinates"] = "time layer latitude longitude"
             if units is not None:
                 attribs["units"] = units
@@ -377,7 +396,10 @@ def transient2d_helper(f, t2d, **kwargs):
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[t2d.dtype]
-        attribs = {"long_name": "flopy.Transient2d instance of {0}".format(var_name)}
+        if var_name in NC_LONG_NAMES:
+            attribs = {"long_name": NC_LONG_NAMES[var_name]}
+        else:
+            attribs = {"long_name": var_name}
         attribs["coordinates"] = "time latitude longitude"
         attribs["units"] = units
         try:
@@ -452,7 +474,10 @@ def util3d_helper(f, u3d, **kwargs):
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[u3d.dtype]
-        attribs = {"long_name": "flopy.Util3d instance of {0}".format(var_name)}
+        if var_name in NC_LONG_NAMES:
+            attribs = {"long_name": NC_LONG_NAMES[var_name]}
+        else:
+            attribs = {"long_name": var_name}
         attribs["coordinates"] = "layer latitude longitude"
         attribs["units"] = units
         try:
@@ -516,7 +541,10 @@ def util2d_helper(f, u2d, **kwargs):
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[u2d.dtype]
-        attribs = {"long_name": "flopy.Util2d instance of {0}".format(var_name)}
+        if var_name in NC_LONG_NAMES:
+            attribs = {"long_name":NC_LONG_NAMES[var_name]}
+        else:
+            attribs = {"long_name": var_name}
         attribs["coordinates"] = "latitude longitude"
         attribs["units"] = units
         try:
