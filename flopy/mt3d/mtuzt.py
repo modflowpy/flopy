@@ -318,11 +318,47 @@ class Mt3dUzt(Package):
         sdh = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'sdh',
                           ext_unit_dict)
 
+        # kwargs needed to construct cuzinf2, cuzinf3, etc. for multispecies
+        kwargs = {}
+
+        cuzinf = None
+        # At least one species being simulated, so set up a place holder
+        t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cuzinf',
+                          locat=0)
+        cuzinf = {0 : t2d}
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = 'cuzinf' + str(icomp)
+                t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
+                                  name=name, locat=0)
+                kwargs[name] = {0 : t2d}
+
+        # Repeat cuzinf initialization procedure for cuzet
+        cuzet = None
+        t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cuzet',
+                          locat=0)
+        cuzet = {0 : t2d}
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = 'cuzet' + str(icomp)
+                t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
+                                  name=name, locat=0)
+                kwargs[name] = {0 : t2d}
+
+        # Repeat cuzinf initialization procedures for cgwet
+        cgwet = None
+        t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cgwet',
+                          locat=0)
+        cgwet = {0 : t2d}
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = 'cgwet' + str(icomp)
+                t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
+                                  name=name, locat=0)
+                kwargs[name] = {0 : t2d}
+
         # Start of transient data
         stress_period_data = {}
-        cuzinf = {0:0}
-        cuzet = {0:0}
-        cgwet = {0:0}
 
         for iper in range(nper):
 
@@ -335,27 +371,42 @@ class Mt3dUzt(Package):
             incuzinf = m_arr[0]
 
             # Item 7 (CUZINF)
-            if model.verbose:
-                if incuzinf >= 0:
+            if incuzinf >= 0:
+                if model.verbose:
                     print('   Reading CUZINF array for kper ' \
                           '{0:5d}'.format(iper + 1))
-                elif incuzinf < 0 and iper == 0:
+                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'cuzinf',
+                                ext_unit_dict)
+                cuzinf[iper] = t.copy()     # This stores species 1
+
+                # Load each multispecies array
+                if ncomp > 1:
+                    for icomp in range(2, ncomp + 1):
+                        name = 'cuzinf' + str(icomp)
+                        if model.verbose:
+                            print('   loading {}...'.format(name))
+                        t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                        name=name, ext_unit_dict)
+                        cuzinficomp = kwargs[name]
+                        cuzinficomp[iper] = t.copy()
+
+            elif incuzinf < 0 and iper == 0:
+                if model.verbose:
                     print('   INCUZINF < 0 in first stress period. Setting ' \
                           'CUZINF to default value of 0.00 for all calls')
-                else:
+                # This is already taken care of by the lines of code following
+                # the initialization of kwargs: "kwargs = {}"  That is, the
+                # initialization defaults the first stress period to values of
+                # 0.0
+                pass
+
+            elif incuzinf < 0 and iper > 0:
+                if model.verbose:
                     print('   Reusing CUZINF array from kper ' \
                           '{0:5d}'.format(iper) + ' in kper ' \
                           '{0:5d}'.format(iper + 1))
 
-            t = []  # The first index of the t object will be species number
-            for icomp in range(ncomp):
-                if incuzinf >= 0:
-                    t.append(Util2d.load(f, model, (nrow, ncol), np.float32,
-                            'cuzinf', ext_unit_dict))
-                elif incuzinf < 0 and iper == 0:
-                    t.append(np.zeros((nrow, ncol), dtype=np.float32))
-                elif incuzinf < 0 and iper > 0:
-                    t.append(cuzinf[iper - 1].copy())
+
             t = np.array(t)
             cuzinf[iper] = t.copy()
 
