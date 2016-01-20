@@ -141,9 +141,10 @@ class NetCdf(object):
         # self.start_datetime = pd.to_datetime(self.model.dis.start_datetime).\
         #                          isoformat().split('.')[0].split('+')[0] + "Z"
         import dateutil.parser
-        self.start_datetime = dateutil.parser.parse(
-            self.model.dis.start_datetime).strftime("%Y-%m-%dT%H:%M:%SZ")
-
+        #self.start_datetime = dateutil.parser.parse(
+        #    self.model.dis.start_datetime).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.start_datetime = self._dt_str(dateutil.parser.parse(
+            self.model.dis.start_datetime))
         self.grid_units = LENUNI[self.model.dis.sr.lenuni]
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
@@ -160,6 +161,14 @@ class NetCdf(object):
             self.log("time_values != None, initializing file")
             self.initialize_file(time_values=time_values)
             self.log("time_values != None, initializing file")
+
+
+    def _dt_str(self,dt):
+        """ for datetime to string for year < 1900
+        """
+        dt_str = '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02}Z'.format(
+                dt.year,dt.month,dt.day,dt.hour,dt.minute,dt.second)
+        return dt_str
 
     def write(self):
         """write the nc object to disk"""
@@ -495,3 +504,28 @@ class NetCdf(object):
                                  "{0} for variable {1}".format(k, name))
         self.log("creating variable: " + str(name))
         return var
+
+
+    def add_global_attributes(self,attr_dict):
+        """ add global attribute to an initialized file
+        Parameters:
+        ----------
+            attr_dict : dict(attribute name, attribute value)
+        Returns:
+        -------
+            None
+        Raises:
+        ------
+            Exception of self.nc is None (initialize_file()
+            has not been called)
+        """
+        if self.nc is None:
+            #self.initialize_file()
+            mess = "NetCDF.add_global_attributes() should only "+\
+                   "be called after the file has been initialized"
+            self.logger.warn(mess)
+            raise Exception(mess)
+
+        self.log("setting global attributes")
+        self.nc.setncatts(attr_dict)
+        self.log("setting global attributes")

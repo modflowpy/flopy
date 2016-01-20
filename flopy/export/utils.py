@@ -35,7 +35,8 @@ def datafile_helper(f, df):
     raise NotImplementedError()
 
 
-def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''):
+def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text='',
+                            mask_vals=[]):
     if logger:
         logger.log("creating array for {0}".format(
                 var_name))
@@ -75,8 +76,11 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
         logger.log("creating array for {0}".format(
                 var_name))
 
-    array[np.isnan(array)] = f.fillvalue
+    for mask_val in mask_vals:
+        array[np.where(array==mask_val)] = np.NaN
 
+    array[np.isnan(array)] = f.fillvalue
+    mx,mn = np.nanmax(array),np.nanmin(array)
     units = None
     if var_name in NC_UNITS_FORMAT:
         units = NC_UNITS_FORMAT[var_name].format(
@@ -87,6 +91,8 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
         var_name = text.decode().strip().lower()
     attribs = {"long_name": var_name}
     attribs["coordinates"] = "time layer latitude longitude"
+    attribs["min"] = mn
+    attribs["max"] = mx
     if units is not None:
         attribs["units"] = units
     try:
@@ -97,7 +103,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
         estr = "error creating variable {0}:\n{1}".format(
                 var_name, str(e))
         if logger:
-            logger.logger_raise(estr)
+            logger.lraise(estr)
         else:
             raise Exception(estr)
 
@@ -107,7 +113,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
         estr = "error setting array to variable {0}:\n{1}".format(
                 var_name, str(e))
         if logger:
-            logger.logger_raise(estr)
+            logger.lraise(estr)
         else:
             raise Exception(estr)
 
@@ -141,33 +147,49 @@ def output_helper(f,ml,oudic,**kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
+        mask_vals = []
+        if ml.bas6:
+            mask_vals.append(ml.bas6.hnoflo)
+        if ml.bcf:
+            mask_vals.append(ml.bcf.hdry)
+        if ml.lpf:
+            mask_vals.append(ml.lpf.hdry)
+
         f = NetCdf(f, ml, time_values=times,logger=logger)
         for filename,out_obj in oudic.items():
             filename = filename.lower()
 
             if filename.endswith(ml.hext):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
-                                        "head",logger=logger)
+                                        "head",logger=logger,
+                                        mask_vals=mask_vals)
             elif filename.endswith(ml.dext):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
-                                        "drawdown",logger=logger)
+                                        "drawdown",logger=logger,
+                                        mask_vals=mask_vals)
             elif filename.endswith(ml.cext):
                 var_name = "cell_by_cell_flow"
                 for text in out_obj.textlist:
                     _add_output_nc_variable(f,times,shape3d,out_obj,
-                                            var_name,logger=logger,text=text)
+                                            var_name,logger=logger,text=text,
+                                            mask_vals=mask_vals)
 
             else:
                 estr = "unrecognized file extention:{0}".format(filename)
                 if logger:
-                    logger.logger_raise(estr)
+                    logger.lraise(estr)
                 else:
                     raise Exception(estr)
 
-    #if isinstance(f, str) and f.lower().endswith(".shp"):
-
     else:
-        raise NotImplementedError("unrecognized export argument:{0}".format(f))
+        if logger:
+            logger.lraise("unrecognized export argument:{0}".format(f))
+        else:
+            raise NotImplementedError("unrecognized export argument" +\
+                                      ":{0}".format(f))
+
+    return f
+
 
 def model_helper(f, ml, **kwargs):
     assert isinstance(ml,BaseModel)
@@ -276,14 +298,13 @@ def mflist_helper(f, mfl, **kwargs):
             if var_name in NC_UNITS_FORMAT:
                 units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
             precision_str = NC_PRECISION_TYPE[mfl.dtype[name].type]
-
-            if base_name == "wel" and name == "flux":
-                well_flux_extras(f,array,precision_str)
             if var_name in NC_LONG_NAMES:
                 attribs = {"long_name":NC_LONG_NAMES[var_name]}
             else:
                 attribs = {"long_name":var_name}
             attribs["coordinates"] = "time layer latitude longitude"
+            attribs["min"] = np.nanmin(array)
+            attribs["max"] = np.nanmax(array)
             if units is not None:
                 attribs["units"] = units
             try:
@@ -305,51 +326,6 @@ def mflist_helper(f, mfl, **kwargs):
         return f
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
-
-
-def well_flux_extras(f,m4d_flux, precision_str):
-    cumu_flux = np.nan_to_num(m4d_flux).sum(axis=0)
-    attribs = {"long_name": "cumulative well flux"}
-    attribs["coordinates"] = "layer latitude longitude"
-    try:
-        var = f.create_variable("cumulative_well_flux",
-                                attribs, precision_str=precision_str,
-                                dimensions=("layer", "y", "x"))
-    except Exception as e:
-        estr = "error creating variable {0}:\n{1}".format("cumulative well flux",
-                                                          str(e))
-        f.logger.warn(estr)
-        raise Exception(estr)
-
-    try:
-        var[:] = cumu_flux
-    except Exception as e:
-        estr = "error setting array to cumulative flux variable :\n" +\
-               "{0}".format(str(e))
-        f.logger.warn(estr)
-        raise Exception(estr)
-
-    well_2d = cumu_flux.sum(axis=0)
-    attribs = {"long_name": "well_cell_2d"}
-    attribs["coordinates"] = "latitude longitude"
-    try:
-        var = f.create_variable("well_cell_2d",
-                                attribs, precision_str=precision_str,
-                                dimensions=("y", "x"))
-    except Exception as e:
-        estr = "error creating variable {0}:\n{1}".format("well cell 2d",
-                                                          str(e))
-        f.logger.warn(estr)
-        raise Exception(estr)
-
-    try:
-        var[:] = well_2d
-    except Exception as e:
-        estr = "error setting array to well_cell_2d variable :\n" +\
-               "{0}".format(str(e))
-        f.logger.warn(estr)
-        raise Exception(estr)
-
 
 def transient2d_helper(f, t2d, **kwargs):
     """ export helper for Transient2d instances
@@ -402,6 +378,8 @@ def transient2d_helper(f, t2d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "time latitude longitude"
         attribs["units"] = units
+        attribs["min"] = np.nanmin(array)
+        attribs["max"] = np.nanmax(array)
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("time", "layer", "y", "x"))
@@ -465,7 +443,9 @@ def util3d_helper(f, u3d, **kwargs):
             f.log("broadcasting 3D array for {0}".format(var_name))
         f.log("getting 3D array for {0}".format(var_name))
 
-        if u3d.model.bas6 is not None:
+        mx,mn = np.nanmax(array),np.nanmin(array)
+
+        if u3d.model.bas6 is not None and "ibound" not in var_name:
             array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
@@ -480,6 +460,8 @@ def util3d_helper(f, u3d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "layer latitude longitude"
         attribs["units"] = units
+        attribs["min"] = mn
+        attribs["max"] = mx
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("layer", "y", "x"))
@@ -531,7 +513,9 @@ def util2d_helper(f, u2d, **kwargs):
         array = u2d.array
         f.log("getting 2D array for {0}".format(u2d.name))
 
-        if u2d.model.bas6 is not None:
+        mx,mn = np.nanmax(array),np.nanmin(array)
+
+        if u2d.model.bas6 is not None and "ibound" not in u2d.name.lower():
             array[u2d.model.bas6.ibound.array[0, :, :] == 0] = f.fillvalue
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
@@ -547,6 +531,8 @@ def util2d_helper(f, u2d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "latitude longitude"
         attribs["units"] = units
+        attribs["min"] = mn
+        attribs["max"] = mx
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("y", "x"))

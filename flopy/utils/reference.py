@@ -133,6 +133,12 @@ class SpatialReference(object):
         return cls(np.array(delr), np.array(delc),
                    lenuni, xul=xul, yul=yul, rotation=rot)
 
+
+    @property
+    def attribute_dict(self):
+        return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
+                "proj4_str":self.proj4_str}
+
     def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
         """
             set spatial reference - can be called from model instance

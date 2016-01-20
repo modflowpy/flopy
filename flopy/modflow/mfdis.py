@@ -431,7 +431,8 @@ class ModflowDis(Package):
         # Item 0: heading        
         f_dis.write('{0:s}\n'.format(self.heading))
         f_dis.write('#{0:s}'.format(str(self.sr)))
-        f_dis.write(",{0:s}\n".format(self.start_datetime))
+        f_dis.write(" ,{0:s}:{1:s}\n".format("start_datetime",
+                                            self.start_datetime))
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n' \
                     .format(self.nlay, self.nrow, self.ncol, self.nper,
