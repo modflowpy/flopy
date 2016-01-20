@@ -76,7 +76,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                 var_name))
 
     array[np.isnan(array)] = f.fillvalue
-
+    mx,mn = np.nanmax(array),np.nanmin(array)
     units = None
     if var_name in NC_UNITS_FORMAT:
         units = NC_UNITS_FORMAT[var_name].format(
@@ -87,6 +87,8 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
         var_name = text.decode().strip().lower()
     attribs = {"long_name": var_name}
     attribs["coordinates"] = "time layer latitude longitude"
+    attribs["min"] = mn
+    attribs["max"] = mx
     if units is not None:
         attribs["units"] = units
     try:
@@ -97,7 +99,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
         estr = "error creating variable {0}:\n{1}".format(
                 var_name, str(e))
         if logger:
-            logger.logger_raise(estr)
+            logger.lraise(estr)
         else:
             raise Exception(estr)
 
@@ -107,7 +109,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
         estr = "error setting array to variable {0}:\n{1}".format(
                 var_name, str(e))
         if logger:
-            logger.logger_raise(estr)
+            logger.lraise(estr)
         else:
             raise Exception(estr)
 
@@ -284,6 +286,8 @@ def mflist_helper(f, mfl, **kwargs):
             else:
                 attribs = {"long_name":var_name}
             attribs["coordinates"] = "time layer latitude longitude"
+            attribs["min"] = np.nanmin(array)
+            attribs["max"] = np.nanmax(array)
             if units is not None:
                 attribs["units"] = units
             try:
@@ -402,6 +406,8 @@ def transient2d_helper(f, t2d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "time latitude longitude"
         attribs["units"] = units
+        attribs["min"] = np.nanmin(array)
+        attribs["max"] = np.nanmax(array)
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("time", "layer", "y", "x"))
@@ -465,7 +471,9 @@ def util3d_helper(f, u3d, **kwargs):
             f.log("broadcasting 3D array for {0}".format(var_name))
         f.log("getting 3D array for {0}".format(var_name))
 
-        if u3d.model.bas6 is not None:
+        mx,mn = np.nanmax(array),np.nanmin(array)
+
+        if u3d.model.bas6 is not None and "ibound" not in var_name:
             array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
@@ -480,6 +488,8 @@ def util3d_helper(f, u3d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "layer latitude longitude"
         attribs["units"] = units
+        attribs["min"] = mn
+        attribs["max"] = mx
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("layer", "y", "x"))
@@ -531,7 +541,9 @@ def util2d_helper(f, u2d, **kwargs):
         array = u2d.array
         f.log("getting 2D array for {0}".format(u2d.name))
 
-        if u2d.model.bas6 is not None:
+        mx,mn = np.nanmax(array),np.nanmin(array)
+
+        if u2d.model.bas6 is not None and "ibound" not in u2d.name.lower():
             array[u2d.model.bas6.ibound.array[0, :, :] == 0] = f.fillvalue
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
@@ -547,6 +559,8 @@ def util2d_helper(f, u2d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "latitude longitude"
         attribs["units"] = units
+        attribs["min"] = mn
+        attribs["max"] = mx
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("y", "x"))

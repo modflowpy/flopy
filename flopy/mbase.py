@@ -355,7 +355,7 @@ class BaseModel(object):
             Name to assign to model.
 
         """
-        self.__name = value
+        self.__name = str(value)
         self.namefile = self.__name + '.' + self.namefile_ext
         for p in self.packagelist:
             for i in range(len(p.extension)):
