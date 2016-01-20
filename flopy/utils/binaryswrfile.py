@@ -293,8 +293,7 @@ class SwrFile(SwrBinaryStatements):
             self.nrgout = self.read_integer()
         self.nrecord = self.read_integer()
 
-
-        # set-up 
+        # set-up
         self.items = len(self.dtype) - 1
 
         # read connectivity for velocity data if necessary
@@ -306,9 +305,7 @@ class SwrFile(SwrBinaryStatements):
                 print(self.connectivity)
 
         # initialize reachlayers and nqaqentries for qaq data
-        self.nqaqentries = []
-        if self.type == 'qaq':
-            self.reachlayers = np.zeros((self.nrecord), np.int)
+        self.nqaqentries = {}
         self.qaq_dtype = np.dtype([('layer', 'i4'),
                                    ('bottom', 'f8'), ('stage', 'f8'),
                                    ('depth', 'f8'), ('head', 'f8'),
@@ -362,10 +359,14 @@ class SwrFile(SwrBinaryStatements):
         try:
             ipos = self.recorddict[totim1]
             self.file.seek(ipos)
-            r = self._get_data()
+            if self.type == 'qaq':
+                self.nqaq, self.reachlayers = self.nqaqentries[totim1]
+                r = self._read_qaq()
+            else:
+                r = self.read_record()
             # expand data to add totim so that self.dtype can be
             # used to return a numpy recarry
-            s = np.zeros((r.shape[0], r.shape[1]+1), np.float)
+            s = np.zeros((r.shape[0], r.shape[1] + 1), np.float)
             s[:, 1:] = r[:, :]
             s[:, 0] = totim1
             return s.view(dtype=self.dtype)
@@ -443,12 +444,26 @@ class SwrFile(SwrBinaryStatements):
                 icount += 1
         return conn
 
-
     def _set_dtypes(self):
         if self.type == self.types[0]:
+            self.read_dtype = np.dtype([('stage', self.floattype)])
             self.dtype = np.dtype([('totim', self.floattype),
                                    ('stage', self.floattype)])
         elif self.type == self.types[1]:
+            self.read_dtype = np.dtype([('stage', self.floattype),
+                                        ('qsflow', self.floattype),
+                                        ('qlatflow', self.floattype),
+                                        ('quzflow', self.floattype),
+                                        ('rain', self.floattype),
+                                        ('evap', self.floattype),
+                                        ('qbflow', self.floattype),
+                                        ('qeflow', self.floattype),
+                                        ('qexflow', self.floattype),
+                                        ('qbcflow', self.floattype),
+                                        ('qcrflow', self.floattype),
+                                        ('dv', self.floattype),
+                                        ('inf-out', self.floattype),
+                                        ('volume', self.floattype)])
             self.dtype = np.dtype([('totim', self.floattype),
                                    ('stage', self.floattype),
                                    ('qsflow', self.floattype),
@@ -465,10 +480,17 @@ class SwrFile(SwrBinaryStatements):
                                    ('inf-out', self.floattype),
                                    ('volume', self.floattype)])
         elif self.type == self.types[2]:
+            self.read_dtype = np.dtype([('flow', self.floattype),
+                                        ('velocity', self.floattype)])
             self.dtype = np.dtype([('totim', self.floattype),
                                    ('flow', self.floattype),
                                    ('velocity', self.floattype)])
         elif self.type == self.types[3]:
+            self.read_dtype = np.dtype([('layer', 'i4'),
+                                        ('bottom', 'f8'), ('stage', 'f8'),
+                                        ('depth', 'f8'), ('head', 'f8'),
+                                        ('wetper', 'f8'), ('cond', 'f8'),
+                                        ('headdiff', 'f8'), ('qaq', 'f8')])
             self.dtype = np.dtype([('totim', self.floattype),
                                    ('reach', self.floattype),
                                    ('layer', self.floattype),
@@ -483,16 +505,16 @@ class SwrFile(SwrBinaryStatements):
         return
 
     def _read_header(self):
+        nqaq = 0
         if self.type == 'qaq':
+            reachlayers = np.zeros(self.nrecord, np.int)
             try:
-                nqaq = 0
                 for i in range(self.nrecord):
-                    self.reachlayers[i] = self.read_integer()
-                    nqaq += self.reachlayers[i]
+                    reachlayers[i] = self.read_integer()
+                    nqaq += reachlayers[i]
                     # print i+1, self.reachlayers[i]
                     # print self.nqaqentries
                 self.nqaq = nqaq
-                self.nqaqentries.append(nqaq)
             except:
                 if self.verbose:
                     sys.stdout.write('\nCould not read reachlayers')
@@ -503,6 +525,8 @@ class SwrFile(SwrBinaryStatements):
             kper = self.read_integer() - 1
             kstp = self.read_integer() - 1
             kswr = self.read_integer() - 1
+            if self.type == 'qaq':
+                self.nqaqentries[totim] = (nqaq, reachlayers)
             return totim, dt, kper, kstp, kswr, True
         except:
             return 0.0, 0.0, 0, 0, 0, False
@@ -555,7 +579,6 @@ class SwrFile(SwrBinaryStatements):
 
         return gage_record.view(dtype=self.dtype)
 
-
     def _get_ts_qaq(self, irec=0, klay=0):
 
         # create array
@@ -565,6 +588,7 @@ class SwrFile(SwrBinaryStatements):
         idx = 0
         for key, value in self.recorddict.items():
             self.file.seek(value)
+            self.nqaq, self.reachlayers = self.nqaqentries[key]
             r = self._get_data()
             header = np.array(key)
             ipos = irec
@@ -598,7 +622,9 @@ class SwrFile(SwrBinaryStatements):
     def _read_qaq(self):
         r = np.zeros((self.nqaq, self.items), SwrBinaryStatements.real)
 
-        bd = np.fromfile(self.file, dtype=self.qaq_dtype,
+        #bd = np.fromfile(self.file, dtype=self.qaq_dtype,
+        #                 count=self.nqaq)
+        bd = np.fromfile(self.file, dtype=self.read_dtype,
                          count=self.nqaq)
         ientry = 0
         for irch in range(self.nrecord):
