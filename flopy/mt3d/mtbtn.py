@@ -426,7 +426,7 @@ class Mt3dBtn(Package):
             str1 += ' MODFLOWSTYLEARRAYS'
         if self.DRYCell:
             str1 += ' DRYCELL'
-        if self.Legacy99stor:
+        if self.Legacy99Stor:
             str1 += ' LEGACY99STORAGE'
         if self.FTLPrint:
             str1 += ' FTLPRINT'
