@@ -495,3 +495,28 @@ class NetCdf(object):
                                  "{0} for variable {1}".format(k, name))
         self.log("creating variable: " + str(name))
         return var
+
+
+    def add_global_attributes(self,attr_dict):
+        """ add global attribute to an initialized file
+        Parameters:
+        ----------
+            attr_dict : dict(attribute name, attribute value)
+        Returns:
+        -------
+            None
+        Raises:
+        ------
+            Exception of self.nc is None (initialize_file()
+            has not been called)
+        """
+        if self.nc is None:
+            #self.initialize_file()
+            mess = "NetCDF.add_global_attributes() should only "+\
+                   "be called after the file has been initialized"
+            self.logger.warn(mess)
+            raise Exception(mess)
+
+        self.log("setting global attributes")
+        self.nc.setncatts(attr_dict)
+        self.log("setting global attributes")
