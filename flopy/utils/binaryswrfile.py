@@ -38,26 +38,30 @@ class SwrBinaryStatements:
         return textvalue
 
     def read_record(self):
-        if self.skip == True:
-            lpos = self.file.tell() + (
-                self.nrecord * self.items * SwrBinaryStatements.realbyte)
-            self.file.seek(lpos)
-            x = np.zeros((self.nrecord * self.items), SwrBinaryStatements.real)
-        else:
-            x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real,
-                            count=self.nrecord * self.items)
-        x.resize(self.nrecord, self.items)
+        # if self.skip == True:
+        #     lpos = self.file.tell() + (
+        #         self.nrecord * self.items * SwrBinaryStatements.realbyte)
+        #     self.file.seek(lpos)
+        #     x = np.zeros((self.nrecord * self.items), SwrBinaryStatements.real)
+        # else:
+        #     x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real,
+        #                     count=self.nrecord * self.items)
+        # x.resize(self.nrecord, self.items)
+        x = np.fromfile(self.file, dtype=self.read_dtype, count=self.nrecord)
+
         return x
 
     def read_items(self):
-        if self.skip == True:
-            lpos = self.file.tell() + (
-                self.items * SwrBinaryStatements.realbyte)
-            self.file.seek(lpos)
-            x = np.zeros((self.items), SwrBinaryStatements.real)
-        else:
-            x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real,
-                            count=self.items)
+        # if self.skip == True:
+        #     lpos = self.file.tell() + (
+        #         self.items * SwrBinaryStatements.realbyte)
+        #     self.file.seek(lpos)
+        #     x = np.zeros((self.items), SwrBinaryStatements.real)
+        # else:
+        #     x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real,
+        #                     count=self.items)
+        x = np.fromfile(file=self.file, dtype=SwrBinaryStatements.real,
+                        count=self.items)
         return x
 
     def read_1dintegerarray(self):
@@ -103,7 +107,7 @@ class SwrObs(SwrBinaryStatements):
 
         """
         # initialize class information
-        self.skip = False
+        #self.skip = False
         self.verbose = verbose
         # open binary head file
         self.file = open(filename, 'rb')
@@ -136,7 +140,7 @@ class SwrObs(SwrBinaryStatements):
         return True
 
     def _set_time_list(self):
-        self.skip = True
+        #self.skip = True
         self.file.seek(self.datastart)
         times = []
         while True:
@@ -147,7 +151,7 @@ class SwrObs(SwrBinaryStatements):
             else:
                 self.file.seek(self.datastart)
                 times = np.array(times)
-                self.skip = False
+                #self.skip = False
                 return times
 
     def __iter__(self):
@@ -366,9 +370,16 @@ class SwrFile(SwrBinaryStatements):
                 r = self.read_record()
             # expand data to add totim so that self.dtype can be
             # used to return a numpy recarry
-            s = np.zeros((r.shape[0], r.shape[1] + 1), np.float)
-            s[:, 1:] = r[:, :]
-            s[:, 0] = totim1
+
+            #s = np.zeros((r.shape[0], self.items + 1), np.float)
+            #for idx, name in enumerate(r.dtype.names):
+            #    s[:, idx + 2] = r[name]
+            #s[:, 0] = totim1
+            #return s.view(dtype=self.dtype)
+            s = np.zeros(r.shape[0], dtype=self.dtype)
+            s['totim'] = totim1
+            for name in r.dtype.names:
+                s[name] = r[name]
             return s.view(dtype=self.dtype)
         except:
             return None
@@ -445,63 +456,38 @@ class SwrFile(SwrBinaryStatements):
         return conn
 
     def _set_dtypes(self):
+        self.vtotim = ('totim', self.floattype)
         if self.type == self.types[0]:
-            self.read_dtype = np.dtype([('stage', self.floattype)])
-            self.dtype = np.dtype([('totim', self.floattype),
-                                   ('stage', self.floattype)])
+            vtype = [('stage', self.floattype)]
         elif self.type == self.types[1]:
-            self.read_dtype = np.dtype([('stage', self.floattype),
-                                        ('qsflow', self.floattype),
-                                        ('qlatflow', self.floattype),
-                                        ('quzflow', self.floattype),
-                                        ('rain', self.floattype),
-                                        ('evap', self.floattype),
-                                        ('qbflow', self.floattype),
-                                        ('qeflow', self.floattype),
-                                        ('qexflow', self.floattype),
-                                        ('qbcflow', self.floattype),
-                                        ('qcrflow', self.floattype),
-                                        ('dv', self.floattype),
-                                        ('inf-out', self.floattype),
-                                        ('volume', self.floattype)])
-            self.dtype = np.dtype([('totim', self.floattype),
-                                   ('stage', self.floattype),
-                                   ('qsflow', self.floattype),
-                                   ('qlatflow', self.floattype),
-                                   ('quzflow', self.floattype),
-                                   ('rain', self.floattype),
-                                   ('evap', self.floattype),
-                                   ('qbflow', self.floattype),
-                                   ('qeflow', self.floattype),
-                                   ('qexflow', self.floattype),
-                                   ('qbcflow', self.floattype),
-                                   ('qcrflow', self.floattype),
-                                   ('dv', self.floattype),
-                                   ('inf-out', self.floattype),
-                                   ('volume', self.floattype)])
+            vtype = [('stage', self.floattype),
+                     ('qsflow', self.floattype),
+                     ('qlatflow', self.floattype),
+                     ('quzflow', self.floattype),
+                     ('rain', self.floattype),
+                     ('evap', self.floattype),
+                     ('qbflow', self.floattype),
+                     ('qeflow', self.floattype),
+                     ('qexflow', self.floattype),
+                     ('qbcflow', self.floattype),
+                     ('qcrflow', self.floattype),
+                     ('dv', self.floattype),
+                     ('inf-out', self.floattype),
+                     ('volume', self.floattype)]
         elif self.type == self.types[2]:
-            self.read_dtype = np.dtype([('flow', self.floattype),
-                                        ('velocity', self.floattype)])
-            self.dtype = np.dtype([('totim', self.floattype),
-                                   ('flow', self.floattype),
-                                   ('velocity', self.floattype)])
+            vtype = [('flow', self.floattype),
+                     ('velocity', self.floattype)]
         elif self.type == self.types[3]:
-            self.read_dtype = np.dtype([('layer', 'i4'),
-                                        ('bottom', 'f8'), ('stage', 'f8'),
-                                        ('depth', 'f8'), ('head', 'f8'),
-                                        ('wetper', 'f8'), ('cond', 'f8'),
-                                        ('headdiff', 'f8'), ('qaq', 'f8')])
-            self.dtype = np.dtype([('totim', self.floattype),
-                                   ('reach', self.floattype),
-                                   ('layer', self.floattype),
-                                   ('bottom', self.floattype),
-                                   ('stage', self.floattype),
-                                   ('depth', self.floattype),
-                                   ('head', self.floattype),
-                                   ('wetper', self.floattype),
-                                   ('cond', self.floattype),
-                                   ('headdiff', self.floattype),
-                                   ('qaq', self.floattype)])
+            vtype = [('layer', 'i4'), ('bottom', 'f8'), ('stage', 'f8'),
+                     ('depth', 'f8'), ('head', 'f8'), ('wetper', 'f8'),
+                     ('cond', 'f8'), ('headdiff', 'f8'), ('qaq', 'f8')]
+        self.read_dtype = np.dtype(vtype)
+        temp = list(vtype)
+        if self.type == self.types[3]:
+            temp.insert(0, ('reach', 'i4'))
+            self.qaq2_dtype = np.dtype(temp)
+        temp.insert(0, self.vtotim)
+        self.dtype = np.dtype(temp)
         return
 
     def _read_header(self):
@@ -512,8 +498,6 @@ class SwrFile(SwrBinaryStatements):
                 for i in range(self.nrecord):
                     reachlayers[i] = self.read_integer()
                     nqaq += reachlayers[i]
-                    # print i+1, self.reachlayers[i]
-                    # print self.nqaqentries
                 self.nqaq = nqaq
             except:
                 if self.verbose:
@@ -534,16 +518,18 @@ class SwrFile(SwrBinaryStatements):
     def _get_ts(self, irec=0):
 
         # create array
-        gage_record = np.zeros((self._ntimes, self.items + 1), dtype=np.float)
+        gage_record = np.zeros(self._ntimes, dtype=self.dtype)
 
         # iterate through the record dictionary
         idx = 0
         for key, value in self.recorddict.items():
+            totim = np.array(key)
+            gage_record['totim'][idx] = totim
+
             self.file.seek(value)
             r = self._get_data()
-            header = np.array(key)
-            this_entry = np.hstack((header, r[irec]))
-            gage_record[idx, :] = this_entry
+            for name in r.dtype.names:
+                 gage_record[name][idx] = r[name][irec]
             idx += 1
 
         return gage_record.view(dtype=self.dtype)
@@ -551,30 +537,25 @@ class SwrFile(SwrBinaryStatements):
     def _get_ts_qm(self, irec=0, iconn=0):
 
         # create array
-        gage_record = np.zeros((self._ntimes, self.items + 1), dtype=np.float)
+        gage_record = np.zeros(self._ntimes, dtype=self.dtype)
 
         # iterate through the record dictionary
         idx = 0
         for key, value in self.recorddict.items():
+            totim = key
+            gage_record['totim'][idx] = totim
+
             self.file.seek(value)
             r = self._get_data()
-            header = np.array(key)
-            ipos = irec
 
             # find correct entry for reach and connection
-            ifound = 0
             for i in range(self.nrecord):
                 inode = self.connectivity[i, 1]
                 ic = self.connectivity[i, 2]
                 if irec == inode and ic == iconn:
-                    ifound = 1
-                    ipos = i
+                    for name in r.dtype.names:
+                         gage_record[name][idx] = r[name][i]
                     break
-            if ifound < 1:
-                r[ipos, :] = 0.0
-
-            this_entry = np.hstack((header, r[ipos]))
-            gage_record[idx, :] = this_entry
             idx += 1
 
         return gage_record.view(dtype=self.dtype)
@@ -582,33 +563,28 @@ class SwrFile(SwrBinaryStatements):
     def _get_ts_qaq(self, irec=0, klay=0):
 
         # create array
-        gage_record = np.zeros((self._ntimes, self.items + 1), dtype=np.float)
+        gage_record = np.zeros(self._ntimes, dtype=self.dtype)
 
         # iterate through the record dictionary
         idx = 0
         for key, value in self.recorddict.items():
+            totim = key
+            gage_record['totim'][idx] = totim
+
             self.file.seek(value)
-            self.nqaq, self.reachlayers = self.nqaqentries[key]
             r = self._get_data()
-            header = np.array(key)
-            ipos = irec
+
+            self.nqaq, self.reachlayers = self.nqaqentries[key]
 
             # find correct entry for record and layer
-            ifound = 0
             ilen = np.shape(r)[0]
-            # print np.shape(r)
-            for i in range(0, ilen):
-                ir = int(r[i, 0]) - 1
-                il = int(r[i, 1]) - 1
+            for i in range(ilen):
+                ir = r['reach'][i]
+                il = r['layer'][i]
                 if ir == irec and il == klay:
-                    ifound = 1
-                    ipos = i
+                    for name in r.dtype.names:
+                         gage_record[name][idx] = r[name][i]
                     break
-            if ifound < 1:
-                r[ipos, :] = 0.0
-
-            this_entry = np.hstack((header, r[ipos]))
-            gage_record[idx, :] = this_entry
             idx += 1
 
         return gage_record.view(dtype=self.dtype)
@@ -620,21 +596,27 @@ class SwrFile(SwrBinaryStatements):
             return self.read_record()
 
     def _read_qaq(self):
-        r = np.zeros((self.nqaq, self.items), SwrBinaryStatements.real)
 
-        #bd = np.fromfile(self.file, dtype=self.qaq_dtype,
+        # bd = np.fromfile(self.file, dtype=self.qaq_dtype,
         #                 count=self.nqaq)
         bd = np.fromfile(self.file, dtype=self.read_dtype,
                          count=self.nqaq)
-        ientry = 0
+        bd['layer'] -= 1
+
+        #r = np.zeros((self.nqaq, self.items), SwrBinaryStatements.real)
+        r = np.zeros(self.nqaq, dtype=self.qaq2_dtype)
+        reaches = np.zeros(self.nqaq, dtype=np.int32)
+        idx = 0
         for irch in range(self.nrecord):
             klay = self.reachlayers[irch]
             for k in range(klay):
-                r[ientry, 0] = irch + 1
-                ientry += 1
-        for idx, k in enumerate(self.qaq_dtype.names):
-            r[:, idx + 1] = bd[k]
-        # print 'shape x: {}'.format(x.shape)
+                #r[idx, 0] = irch
+                reaches[idx] = irch
+                idx += 1
+        r['reach'] = reaches.copy()
+        for idx, k in enumerate(self.read_dtype.names):
+            #r[:, idx + 1] = bd[k]
+            r[k] = bd[k]
         return r
 
     def _build_index(self):
@@ -642,7 +624,7 @@ class SwrFile(SwrBinaryStatements):
         Build the recordarray recarray and recorddict dictionary, which map
         the header information to the position in the binary file.
         """
-        self.skip = True
+        #self.skip = True
         self.file.seek(self.datastart)
         idx = 0
         sys.stdout.write('Generating SWR binary data time list\n')
@@ -678,7 +660,7 @@ class SwrFile(SwrBinaryStatements):
                 self.recorddict[totim] = ipos
                 self._recordarray.append(header)
             else:
-                self.skip = False
+                #self.skip = False
                 if self.verbose:
                     sys.stdout.write('\n')
                 self._recordarray = np.array(self._recordarray,
