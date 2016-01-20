@@ -35,7 +35,8 @@ def datafile_helper(f, df):
     raise NotImplementedError()
 
 
-def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''):
+def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text='',
+                            mask_vals=[]):
     if logger:
         logger.log("creating array for {0}".format(
                 var_name))
@@ -74,6 +75,9 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
     if logger:
         logger.log("creating array for {0}".format(
                 var_name))
+
+    for mask_val in mask_vals:
+        array[np.where(array==mask_val)] = np.NaN
 
     array[np.isnan(array)] = f.fillvalue
     mx,mn = np.nanmax(array),np.nanmin(array)
@@ -143,21 +147,32 @@ def output_helper(f,ml,oudic,**kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
+        mask_vals = []
+        if ml.bas6:
+            mask_vals.append(ml.bas6.hnoflo)
+        if ml.bcf:
+            mask_vals.append(ml.bcf.hdry)
+        if ml.lpf:
+            mask_vals.append(ml.lpf.hdry)
+
         f = NetCdf(f, ml, time_values=times,logger=logger)
         for filename,out_obj in oudic.items():
             filename = filename.lower()
 
             if filename.endswith(ml.hext):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
-                                        "head",logger=logger)
+                                        "head",logger=logger,
+                                        mask_vals=mask_vals)
             elif filename.endswith(ml.dext):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
-                                        "drawdown",logger=logger)
+                                        "drawdown",logger=logger,
+                                        mask_vals=mask_vals)
             elif filename.endswith(ml.cext):
                 var_name = "cell_by_cell_flow"
                 for text in out_obj.textlist:
                     _add_output_nc_variable(f,times,shape3d,out_obj,
-                                            var_name,logger=logger,text=text)
+                                            var_name,logger=logger,text=text,
+                                            mask_vals=mask_vals)
 
             else:
                 estr = "unrecognized file extention:{0}".format(filename)
