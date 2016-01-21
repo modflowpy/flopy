@@ -152,9 +152,9 @@ class ModflowLmt(Package):
             elif t[0].lower() == 'output_file_header':
                 output_file_header = t[1]
             elif t[0].lower() == 'output_file_format':
-                output_file_unit = t[1]
+                output_file_format = t[1]
 
         lmt = ModflowLmt(model, output_file_name, output_file_unit,
-                         output_file_header, output_file_unit)
+                         output_file_header, output_file_format)
         return lmt
 
