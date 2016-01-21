@@ -624,12 +624,12 @@ class ModflowDis(Package):
                     pass
             elif "proj4_str" in item.lower():
                 try:
-                    proj4_str = ':'.join(item.split(':')[1:])
+                    proj4_str = ':'.join(item.split(':')[1:]).strip()
                 except:
                     pass
             elif "start" in item.lower():
                 try:
-                    start_datetime = item.split(':')[1]
+                    start_datetime = item.split(':')[1].strip()
                 except:
                     pass
 
