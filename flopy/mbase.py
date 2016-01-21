@@ -98,9 +98,7 @@ class BaseModel(object):
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
-
-        # the starting external data unit number
-        self.__next_ext_unit = 1000
+        self.package_units = []
 
         return
 
@@ -109,8 +107,8 @@ class BaseModel(object):
         Function to encapsulate next_ext_unit attribute
 
         """
-        next_unit = self.__next_ext_unit + 1
-        self.__next_ext_unit += 1
+        next_unit = self._next_ext_unit + 1
+        self._next_ext_unit += 1
         return next_unit
 
     def export(self, f, **kwargs):
@@ -129,6 +127,11 @@ class BaseModel(object):
         p : Package object
 
         """
+        for u in p.unit_number:
+            if u in self.package_units or u in self.external_units:
+                print("WARNING: unit {0} of package {1} already in use".format(
+                      u,p.name))
+            self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
                 continue
@@ -295,7 +298,7 @@ class BaseModel(object):
             val.append(pp.name[0].upper())
         return val
 
-    def change_model_ws(self, new_pth=None):
+    def change_model_ws(self, new_pth=None,reset_external=False):
         """
         Change the model work space.
 
@@ -338,8 +341,20 @@ class BaseModel(object):
         if hasattr(self, "external_path") and self.external_path is not None \
                 and not os.path.exists(os.path.join(self._model_ws,
                                                     self.external_path)):
-            os.makedirs(os.path.join(self._model_ws, self.external_path))
+            pth = os.path.join(self._model_ws, self.external_path)
+            os.makedirs(pth)
+            if reset_external:
+                self._reset_external(pth)
+        elif reset_external:
+            self._reset_external(self._model_ws)
         return None
+
+    def _reset_external(self,pth):
+        new_ext_fnames = []
+        for ext_file in self.external_fnames:
+            new_ext_file = os.path.join(pth,os.path.split(ext_file)[-1])
+            new_ext_fnames.append(new_ext_file)
+        self.external_fnames = new_ext_fnames
 
     @property
     def model_ws(self):

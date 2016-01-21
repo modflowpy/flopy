@@ -127,7 +127,8 @@ class Modflow(BaseModel):
 
         self.load_fail = False
         # the starting external data unit number
-        #self.__next_ext_unit = 1000
+        self._next_ext_unit = 1000
+
         if external_path is not None:
             if os.path.exists(os.path.join(model_ws, external_path)):
                 print("Note: external_path " + str(external_path) +

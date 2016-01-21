@@ -1739,9 +1739,10 @@ class Util2d(object):
         else:
             how = self._how
 
-        if self.format.binary and how in ["constant","internal"]:
-            print("Util2d:{0} warning: ".format(self.name) +\
-                  "resetting 'how' to external since format is binary")
+        if (self.format.binary or self.model.external_path)\
+                and how in ["constant","internal"]:
+            print("Util2d:{0}: ".format(self.name) +\
+                  "resetting 'how' to external")
             if self.model.free_format:
                 how = "openclose"
             else:
