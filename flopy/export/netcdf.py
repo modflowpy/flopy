@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import copy
 import numpy as np
@@ -157,10 +158,15 @@ class NetCdf(object):
         self.log("initializing attributes")
 
         # if time_values were passed, lets get things going
-        if time_values is not None:
-            self.log("time_values != None, initializing file")
-            self.initialize_file(time_values=time_values)
-            self.log("time_values != None, initializing file")
+
+        #if time_values is not None:
+        #    self.log("time_values != None, initializing file")
+        #    self.initialize_file(time_values=time_values)
+        #    self.log("time_values != None, initializing file")
+        self.log("initializing file")
+        self.initialize_file(time_values=time_values)
+        self.log("initializing file")
+
 
 
     def _dt_str(self,dt):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..mbase import BaseModel
