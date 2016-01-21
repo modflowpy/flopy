@@ -1385,14 +1385,7 @@ class Util2d(object):
         else:
             self._decide_how()
 
-        if not model.free_format and self.how == "internal" and self.locat is None:
-            #raise Exception("Util2d error: locat is None, but model does not " +\
-            #      "support free format and the external array option " +\
-            #      "is not being used")
-            print("Util2d warning: locat is None, but model does not "+\
-                  "support free format and how is internal..."+\
-                  "resetting how = external")
-            self.how = "external"
+
 
     def _decide_how(self):
         #if a constant was passed in
@@ -1738,6 +1731,14 @@ class Util2d(object):
             how = how.lower()
         else:
             how = self._how
+
+
+        if not self.model.free_format and self.how == "internal" and self.locat is None:
+            print("Util2d {0}: locat is None, but ".format(self.name) +\
+                  "model does not "+\
+                  "support free format and how is internal..."+\
+                  "resetting how = external")
+            how = "external"
 
         if (self.format.binary or self.model.external_path)\
                 and how in ["constant","internal"]:
@@ -2162,7 +2163,7 @@ class Util2d(object):
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
-                         cnstnt=cr_dict['cnstnt'])
+                         cnstnt=cr_dict['cnstnt'],locat=cr_dict["nunit"])
 
         elif cr_dict['type'] == 'external':
 
