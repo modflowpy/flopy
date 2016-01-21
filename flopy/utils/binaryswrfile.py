@@ -129,7 +129,7 @@ class SwrObs(SwrBinaryStatements):
         #
         vdata = [('totim', self.floattype)]
         for name in obsnames:
-            vdata.append((name, self.floattype))
+            vdata.append((str(name), self.floattype))
         self.read_dtype = np.dtype(vdata)
 
         # set position of data start
