@@ -297,7 +297,7 @@ class ModflowSub(Package):
         # add package to model
         self.parent.add_package(self)
 
-    def write_file(self):
+    def write_file(self,check=False):
         """
         Write the package file.
 
@@ -306,6 +306,8 @@ class ModflowSub(Package):
         None
 
         """
+        if check:
+            print("warning: check not implemented for sub")
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         f = open(self.fn_path, 'w')
@@ -321,10 +323,11 @@ class ModflowSub(Package):
         for tt in t:
             f.write('{} '.format(tt + 1))
         f.write('\n')
-        t = self.ldn.array
-        for tt in t:
-            f.write('{} '.format(tt + 1))
-        f.write('\n')
+        if self.ndb > 0:
+            t = self.ldn.array
+            for tt in t:
+                f.write('{} '.format(tt + 1))
+            f.write('\n')
 
         # write dataset 4
         if self.ndb > 0:

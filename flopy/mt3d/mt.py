@@ -234,7 +234,7 @@ class Mt3dms(BaseModel):
         self.verbose = verbose
         self.load = load
         # the starting external data unit number
-        self.__next_ext_unit = 1000
+        self._next_ext_unit = 2000
         if external_path is not None:
             assert model_ws == '.', "ERROR: external cannot be used " + \
                                     "with model_ws"
@@ -268,13 +268,6 @@ class Mt3dms(BaseModel):
     def __repr__(self):
         return 'MT3DMS model'
 
-    def next_ext_unit(self):
-        """
-        Function to encapsulate next_ext_unit attribute
-
-        """
-        self.__next_ext_unit += 1
-        return self.__next_ext_unit
 
     @property
     def nlay(self):

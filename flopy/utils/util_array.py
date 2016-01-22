@@ -1385,15 +1385,6 @@ class Util2d(object):
         else:
             self._decide_how()
 
-        if not model.free_format and self.how == "internal" and self.locat is None:
-            #raise Exception("Util2d error: locat is None, but model does not " +\
-            #      "support free format and the external array option " +\
-            #      "is not being used")
-            print("Util2d warning: locat is None, but model does not "+\
-                  "support free format and how is internal..."+\
-                  "resetting how = external")
-            self.how = "external"
-
     def _decide_how(self):
         #if a constant was passed in
         if self.vtype in [np.int,np.float32]:
@@ -1739,9 +1730,21 @@ class Util2d(object):
         else:
             how = self._how
 
-        if self.format.binary and how in ["constant","internal"]:
-            print("Util2d:{0} warning: ".format(self.name) +\
-                  "resetting 'how' to external since format is binary")
+        if not self.model.free_format and self.format.free:
+            print("Util2d {0}: can't free format...resetting".format(self.name))
+            self.format.free = False
+
+        if not self.model.free_format and self.how == "internal" and self.locat is None:
+            print("Util2d {0}: locat is None, but ".format(self.name) +\
+                  "model does not "+\
+                  "support free format and how is internal..."+\
+                  "resetting how = external")
+            how = "external"
+
+        if (self.format.binary or self.model.external_path)\
+                and how in ["constant","internal"]:
+            print("Util2d:{0}: ".format(self.name) +\
+                  "resetting 'how' to external")
             if self.model.free_format:
                 how = "openclose"
             else:
@@ -2161,7 +2164,7 @@ class Util2d(object):
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
-                         cnstnt=cr_dict['cnstnt'])
+                         cnstnt=cr_dict['cnstnt'],locat=cr_dict["nunit"])
 
         elif cr_dict['type'] == 'external':
 

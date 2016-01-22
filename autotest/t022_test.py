@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 pth = os.path.join('..', 'examples', 'data', 'swr_test')
 files = [('SWR004.stg', 'stage'),
          ('SWR004.flow', 'budget'),
-         ('SWR004.vel', 'qm'),
-         ('swr005.qaq', 'qaq'),
+         ('SWR004.vel', 'flow'),
+         ('swr005.qaq', 'exchange'),
+         ('SWR004.str', 'structure'),
          ('SWR004.obs', 'obs')]
 
 
@@ -41,6 +42,7 @@ def test_swr_binary_stage(ipos=0):
         assert len(r.dtype.names) == 2, 'SwrFile stage data dtype does not have 2 entries'
 
     times = sobj.get_times()
+    print(times)
     assert times.shape == (336,), 'SwrFile times shape does not equal (336,)'
 
     for time in times:
@@ -182,7 +184,7 @@ def test_swr_binary_qaq(ipos=3):
     assert nrecords == (0, 19), 'SwrFile records does not equal (0, 19)'
 
     ntimes = sobj.get_ntimes()
-    assert ntimes == 350, 'SwrFile ntimes does not equal 331'
+    assert ntimes == 350, 'SwrFile ntimes does not equal 350'
 
     for idx in range(ntimes):
         r = sobj.get_data(idx=idx)
@@ -221,11 +223,62 @@ def test_swr_binary_qaq(ipos=3):
     return
 
 
-def test_swr_binary_obs(ipos=4):
+def test_swr_binary_structure(ipos=4):
     import flopy
 
     fpth = os.path.join(pth, files[ipos][0])
     swrtype = files[ipos][1]
+
+    sobj = flopy.utils.SwrFile(fpth, swrtype=swrtype, verbose=True)
+    assert isinstance(sobj, flopy.utils.SwrFile), 'SwrFile object not created'
+
+    nrecords = sobj.get_nrecords()
+    assert nrecords == (0, 18), 'SwrFile records does not equal (0, 18)'
+
+    ntimes = sobj.get_ntimes()
+    assert ntimes == 336, 'SwrFile ntimes does not equal 336'
+
+    for idx in range(ntimes):
+        r = sobj.get_data(idx=idx)
+        assert r is not None, 'SwrFile could not read data with get_data(idx=)'
+        assert r.shape == (2,), 'SwrFile structure data shape does not equal (2,)'
+        assert len(r.dtype.names) == 8, 'SwrFile structure data dtype does not have 8 entries'
+
+    kswrkstpkper = sobj.get_kswrkstpkper()
+    assert kswrkstpkper.shape == (336, 3), 'SwrFile kswrkstpkper shape does not equal (336, 3)'
+
+    for kkk in kswrkstpkper:
+        r = sobj.get_data(kswrkstpkper=kkk)
+        assert r is not None, 'SwrFile could not read data with get_data(kswrkstpkper=)'
+        assert r.shape == (2,), 'SwrFile structure data shape does not equal (2,)'
+        assert len(r.dtype.names) == 8, 'SwrFile structure data dtype does not have 8 entries'
+
+    times = sobj.get_times()
+    assert times.shape == (336,), 'SwrFile times shape does not equal (350,)'
+
+    for time in times:
+        r = sobj.get_data(totim=time)
+        assert r is not None, 'SwrFile could not read data with get_data(tottim=)'
+        assert r.shape == (2,), 'SwrFile structure data shape does not equal (2,)'
+        assert len(r.dtype.names) == 8, 'SwrFile structure data dtype does not have 8 entries'
+
+    ts = sobj.get_ts(irec=17, istr=0)
+    assert ts.shape == (336,), 'SwrFile timeseries shape does not equal (336,)'
+    assert len(ts.dtype.names) == 8, 'SwrFile time series structure data dtype does not have 8 entries'
+
+    #plt.plot(ts['totim'], ts['strflow'])
+    #plt.show()
+
+
+    obs3 = sobj.get_ts(irec=17, istr=0)
+
+    return
+
+
+def test_swr_binary_obs(ipos=5):
+    import flopy
+
+    fpth = os.path.join(pth, files[ipos][0])
 
     sobj = flopy.utils.SwrObs(fpth)
     assert isinstance(sobj, flopy.utils.SwrObs), 'SwrObs object not created'
@@ -265,6 +318,7 @@ def test_swr_binary_obs(ipos=4):
     return
 
 if __name__ == '__main__':
+    test_swr_binary_structure()
     test_swr_binary_obs()
     test_swr_binary_stage()
     test_swr_binary_budget()
