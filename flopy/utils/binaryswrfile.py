@@ -10,31 +10,23 @@ class SwrBinaryStatements:
     character = np.uint8
     integerbyte = 4
     realbyte = 8
-    textbyte = 4
-
-    def read_integer(self):
-        intvalue = \
-            strct.unpack('i',
-                         self.file.read(1 * SwrBinaryStatements.integerbyte))[
-                0]
-        return intvalue
-
-    def read_real(self):
-        realvalue = \
-            strct.unpack('d',
-                         self.file.read(1 * SwrBinaryStatements.realbyte))[0]
-        return realvalue
 
     def read_obs_text(self, nchar=20):
-        textvalue = np.fromfile(file=self.file,
-                                dtype=SwrBinaryStatements.character,
-                                count=nchar).tostring()
-        return textvalue
+        return self._read_values(self.character, nchar).tostring()
+
+    def read_integer(self):
+        return self._read_values(self.integer, 1)[0]
+
+    def read_real(self):
+        return self._read_values(self.real, 1)[0]
 
     def read_record(self, count=None):
         if count is None:
             count = self.nrecord
-        return np.fromfile(self.file, dtype=self.read_dtype, count=count)
+        return self._read_values(self.read_dtype, count)
+
+    def _read_values(self, dtype, count):
+        return np.fromfile(self.file, dtype, count)
 
 
 class SwrObs(SwrBinaryStatements):
@@ -117,8 +109,6 @@ class SwrObs(SwrBinaryStatements):
     def _read_header(self):
         # NOBS
         self.nobs = self.read_integer()
-        self.v = np.empty((self.nobs), dtype='float')
-        self.v.fill(1.0E+32)
         # read obsnames
         obsnames = []
         for idx in range(0, self.nobs):
@@ -155,8 +145,10 @@ class SwrObs(SwrBinaryStatements):
     def _get_selection(self, names):
         if not isinstance(names, list):
             names = [names]
-        dtype2 = np.dtype({name:self.data.dtype.fields[name] for name in names})
-        return np.ndarray(self.data.shape, dtype2, self.data, 0, self.data.strides)
+        dtype2 = np.dtype(
+                {name: self.data.dtype.fields[name] for name in names})
+        return np.ndarray(self.data.shape, dtype2, self.data, 0,
+                          self.data.strides)
 
 
 class SwrFile(SwrBinaryStatements):
@@ -205,7 +197,7 @@ class SwrFile(SwrBinaryStatements):
         self._recordarray = []
 
         self.file = open(filename, 'rb')
-        self.types = ('stage', 'budget', 'qm', 'qaq')
+        self.types = ('stage', 'budget', 'qm', 'qaq', 'structure')
         if swrtype.lower() in self.types:
             self.type = swrtype.lower()
         else:
@@ -238,8 +230,8 @@ class SwrFile(SwrBinaryStatements):
                 print('Connectivity: ')
                 print(self.connectivity)
 
-        # initialize reachlayers and nqaqentries for qaq data
-        self.nqaqentries = {}
+        # initialize itemlist and nentries for qaq data
+        self.nentries = {}
 
         self.datastart = self.file.tell()
 
@@ -289,8 +281,10 @@ class SwrFile(SwrBinaryStatements):
             ipos = self.recorddict[totim1]
             self.file.seek(ipos)
             if self.type == 'qaq':
-                self.nqaq, self.reachlayers = self.nqaqentries[totim1]
+                self.nitems, self.itemlist = self.nentries[totim1]
                 r = self._read_qaq()
+            elif self.type == 'structure':
+                qq = 0.
             else:
                 r = self.read_record()
 
@@ -403,17 +397,17 @@ class SwrFile(SwrBinaryStatements):
         return
 
     def _read_header(self):
-        nqaq = 0
+        nitems = 0
         if self.type == 'qaq':
-            reachlayers = np.zeros(self.nrecord, np.int)
+            itemlist = np.zeros(self.nrecord, np.int)
             try:
                 for i in range(self.nrecord):
-                    reachlayers[i] = self.read_integer()
-                    nqaq += reachlayers[i]
-                self.nqaq = nqaq
+                    itemlist[i] = self.read_integer()
+                    nitems += itemlist[i]
+                self.nitems = nitems
             except:
                 if self.verbose:
-                    sys.stdout.write('\nCould not read reachlayers')
+                    sys.stdout.write('\nCould not read itemlist')
                 return 0.0, 0.0, 0, 0, 0, False
         try:
             totim = self.read_real()
@@ -422,7 +416,7 @@ class SwrFile(SwrBinaryStatements):
             kstp = self.read_integer() - 1
             kswr = self.read_integer() - 1
             if self.type == 'qaq':
-                self.nqaqentries[totim] = (nqaq, reachlayers)
+                self.nentries[totim] = (nitems, itemlist)
             return totim, dt, kper, kstp, kswr, True
         except:
             return 0.0, 0.0, 0, 0, 0, False
@@ -486,7 +480,7 @@ class SwrFile(SwrBinaryStatements):
             self.file.seek(value)
             r = self._get_data()
 
-            self.nqaq, self.reachlayers = self.nqaqentries[key]
+            self.nitems, self.itemlist = self.nentries[key]
 
             # find correct entry for record and layer
             ilen = np.shape(r)[0]
@@ -510,17 +504,17 @@ class SwrFile(SwrBinaryStatements):
     def _read_qaq(self):
 
         # read qaq data using standard record reader
-        bd = self.read_record(count=self.nqaq)
+        bd = self.read_record(count=self.nitems)
         bd['layer'] -= 1
 
         # add reach number to qaq data
-        r = np.zeros(self.nqaq, dtype=self.qaq_dtype)
+        r = np.zeros(self.nitems, dtype=self.qaq_dtype)
 
         # build array with reach numbers
-        reaches = np.zeros(self.nqaq, dtype=np.int32)
+        reaches = np.zeros(self.nitems, dtype=np.int32)
         idx = 0
         for irch in range(self.nrecord):
-            klay = self.reachlayers[irch]
+            klay = self.itemlist[irch]
             for k in range(klay):
                 # r[idx, 0] = irch
                 reaches[idx] = irch
@@ -560,9 +554,9 @@ class SwrFile(SwrBinaryStatements):
             totim, dt, kper, kstp, kswr, success = self._read_header()
             if success:
                 if self.type == 'qaq':
-                    bytes = self.nqaq * \
-                            (SwrBinaryStatements.integerbyte +
-                             8 * SwrBinaryStatements.realbyte)
+                    bytes = self.nitems * \
+                            (self.integerbyte +
+                             8 * self.realbyte)
                 else:
                     bytes = self.nrecord * self.items * \
                             SwrBinaryStatements.realbyte
