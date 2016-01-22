@@ -1385,8 +1385,6 @@ class Util2d(object):
         else:
             self._decide_how()
 
-
-
     def _decide_how(self):
         #if a constant was passed in
         if self.vtype in [np.int,np.float32]:
@@ -1732,6 +1730,9 @@ class Util2d(object):
         else:
             how = self._how
 
+        if not self.model.free_format and self.format.free:
+            print("Util2d {0}: can't free format...resetting".format(self.name))
+            self.format.free = False
 
         if not self.model.free_format and self.how == "internal" and self.locat is None:
             print("Util2d {0}: locat is None, but ".format(self.name) +\
