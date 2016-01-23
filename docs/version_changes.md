@@ -1,5 +1,8 @@
 ### Version 3.2.4
-* AGU Code Jam
+* Added support for reading SWR Process observation, stage, budget, flow (qm), reach-aquifer exchanges (qaq), and structure flows.
+
+* Bug fixes:
+  1. Fixed issue with right justified format statement for array control record for MT3DMS.
 
 ### Version 3.2.3
 * Added support for the SEAWAT viscosity (VSC) package.
@@ -22,7 +25,7 @@
 * Added `load()` method for MODFLOW GMG solver.
 
 * Bug fixes:
-  1. Multipler in array control record was not being applied to arrays
+  1. Multiplier in array control record was not being applied to arrays
   2. vani parameter was not supported
 
 ### Version 3.2.1
