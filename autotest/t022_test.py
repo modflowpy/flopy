@@ -21,7 +21,7 @@ def test_swr_binary_stage(ipos=0):
     assert isinstance(sobj, flopy.utils.SwrFile), 'SwrFile object not created'
 
     nrecords = sobj.get_nrecords()
-    assert nrecords == (0, 18), 'SwrFile records does not equal (0, 18)'
+    assert nrecords == (18, 0), 'SwrFile records does not equal (18, 0)'
 
     ntimes = sobj.get_ntimes()
     assert ntimes == 336, 'SwrFile ntimes does not equal 336'
@@ -42,8 +42,7 @@ def test_swr_binary_stage(ipos=0):
         assert len(r.dtype.names) == 2, 'SwrFile stage data dtype does not have 2 entries'
 
     times = sobj.get_times()
-    print(times)
-    assert times.shape == (336,), 'SwrFile times shape does not equal (336,)'
+    assert len(times) == 336, 'SwrFile times length does not equal 336'
 
     for time in times:
         r = sobj.get_data(totim=time)
@@ -70,7 +69,7 @@ def test_swr_binary_budget(ipos=1):
     assert isinstance(sobj, flopy.utils.SwrFile), 'SwrFile object not created'
 
     nrecords = sobj.get_nrecords()
-    assert nrecords == (0, 18), 'SwrFile records does not equal (0, 18)'
+    assert nrecords == (18, 0), 'SwrFile records does not equal (18, 0)'
 
     ntimes = sobj.get_ntimes()
     assert ntimes == 336, 'SwrFile ntimes does not equal 336'
@@ -94,7 +93,7 @@ def test_swr_binary_budget(ipos=1):
         assert len(r.dtype.names) == 15, 'SwrFile budget data dtype does not have 15 entries'
 
     times = sobj.get_times()
-    assert times.shape == (336,), 'SwrFile times shape does not equal (336,)'
+    assert len(times) == 336, 'SwrFile times length does not equal 336'
 
     for time in times:
         r = sobj.get_data(totim=time)
@@ -121,7 +120,7 @@ def test_swr_binary_qm(ipos=2):
     assert isinstance(sobj, flopy.utils.SwrFile), 'SwrFile object not created'
 
     nrecords = sobj.get_nrecords()
-    assert nrecords == (18, 40), 'SwrFile records does not equal (18, 40)'
+    assert nrecords == (40, 18), 'SwrFile records does not equal (40, 18)'
 
     connect = sobj.get_connectivity()
     assert connect.shape == (40, 3), 'SwrFile connectivity shape does not equal (40, 3)'
@@ -148,7 +147,7 @@ def test_swr_binary_qm(ipos=2):
         assert len(r.dtype.names) == 3, 'SwrFile qm data dtype does not have 3 entries'
 
     times = sobj.get_times()
-    assert times.shape == (336,), 'SwrFile times shape does not equal (336,)'
+    assert len(times) == 336, 'SwrFile times length does not equal 336'
 
     for time in times:
         r = sobj.get_data(totim=time)
@@ -181,7 +180,7 @@ def test_swr_binary_qaq(ipos=3):
     assert isinstance(sobj, flopy.utils.SwrFile), 'SwrFile object not created'
 
     nrecords = sobj.get_nrecords()
-    assert nrecords == (0, 19), 'SwrFile records does not equal (0, 19)'
+    assert nrecords == (19, 0), 'SwrFile records does not equal (19, 0)'
 
     ntimes = sobj.get_ntimes()
     assert ntimes == 350, 'SwrFile ntimes does not equal 350'
@@ -205,7 +204,7 @@ def test_swr_binary_qaq(ipos=3):
         assert len(r.dtype.names) == 11, 'SwrFile qaq data dtype does not have 11 entries'
 
     times = sobj.get_times()
-    assert times.shape == (350,), 'SwrFile times shape does not equal (350,)'
+    assert len(times) == 350, 'SwrFile times length does not equal 350'
 
     for time in times:
         r = sobj.get_data(totim=time)
@@ -233,7 +232,7 @@ def test_swr_binary_structure(ipos=4):
     assert isinstance(sobj, flopy.utils.SwrFile), 'SwrFile object not created'
 
     nrecords = sobj.get_nrecords()
-    assert nrecords == (0, 18), 'SwrFile records does not equal (0, 18)'
+    assert nrecords == (18, 0), 'SwrFile records does not equal (18, 0)'
 
     ntimes = sobj.get_ntimes()
     assert ntimes == 336, 'SwrFile ntimes does not equal 336'
@@ -254,7 +253,7 @@ def test_swr_binary_structure(ipos=4):
         assert len(r.dtype.names) == 8, 'SwrFile structure data dtype does not have 8 entries'
 
     times = sobj.get_times()
-    assert times.shape == (336,), 'SwrFile times shape does not equal (350,)'
+    assert len(times) == 336, 'SwrFile times length does not equal 336'
 
     for time in times:
         r = sobj.get_data(totim=time)
@@ -293,7 +292,7 @@ def test_swr_binary_obs(ipos=5):
     assert ntimes == 336, 'SwrObs numtimes does not equal 336'
 
     times = sobj.get_times()
-    assert times.shape == (336, 1), 'SwrObs length of totim array does not equal (336, 1)'
+    assert len(times) == 336, 'SwrFile times length does not equal 336'
 
     ts = sobj.get_data()
     assert ts.shape == (336, 1), 'SwrObs length of data array does not equal (336, 1)'

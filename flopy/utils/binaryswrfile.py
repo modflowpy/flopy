@@ -31,7 +31,8 @@ class SwrBinaryStatements:
 
 class SwrObs(SwrBinaryStatements):
     """
-    Read binary SWR observations output from MODFLOW SWR Process binary observation files
+    Read binary SWR observations output from MODFLOW SWR Process binary
+    observation files
 
     Parameters
     ----------
@@ -79,18 +80,86 @@ class SwrObs(SwrBinaryStatements):
         self._read_data()
 
     def get_times(self):
-        return self._get_selection(['totim'])
+        """
+        Get a list of unique times in the file
+
+        Returns
+        ----------
+        out : list of floats
+            List contains unique simulation times (totim) in binary file.
+
+        """
+        return self._get_selection(['totim']).tolist()
 
     def get_ntimes(self):
+        """
+        Get the number of times in the file
+
+        Returns
+        ----------
+        out : int
+            The number of simulation times (totim) in binary file.
+
+        """
         return self.data['totim'].shape[0]
 
     def get_nobs(self):
+        """
+        Get the number of observations in the file
+
+        Returns
+        ----------
+        out : tuple of int
+            A tupe with the number of records and number of flow items
+            in the file. The number of flow items is non-zero only if
+            swrtype='flow'.
+
+        """
         return self.nobs
 
     def get_obsnames(self):
+        """
+        Get a list of observation names in the file
+
+        Returns
+        ----------
+        out : list of strings
+            List of observation names in the binary file. totim is not
+            included in the list of observation names.
+
+        """
         return self.data.dtype.names[1:]
 
-    def get_data(self, obsname=None, idx=None):
+    def get_data(self, idx=None, obsname=None):
+        """
+        Get data from the observation file.
+
+        Parameters
+        ----------
+        idx : int
+            The zero-based record number.  The first record is record 0.
+            (default is None)
+        obsname : string
+            The name of the observation to return. (default is None)
+
+        Returns
+        ----------
+        data : numpy record array
+            Array has size (ntimes, nitems). totim is always returned. nitems
+            is 2 if idx or obsname is not None or nobs+1.
+
+        See Also
+        --------
+
+        Notes
+        -----
+        If both idx and obsname are None, will return all of the observation
+        data.
+
+        Examples
+        --------
+
+        """
         if obsname is None and idx is None:
             return self.data
         else:
@@ -214,9 +283,9 @@ class SwrFile(SwrBinaryStatements):
         self.verbose = verbose
 
         # Read the dimension data
-        self.nrgout = 0
+        self.flowitems = 0
         if self.type == 'flow':
-            self.nrgout = self.read_integer()
+            self.flowitems = self.read_integer()
         self.nrecord = self.read_integer()
 
         # set-up
@@ -239,28 +308,129 @@ class SwrFile(SwrBinaryStatements):
         self._build_index()
 
     def get_connectivity(self):
+        """
+        Get connectivity data from the file.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
+        data : numpy array
+            Array has size (nrecord, 3). None is returned if swrtype is not
+            'flow'
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        """
         if self.type == 'flow':
             return self.connectivity
         else:
             return None
 
     def get_nrecords(self):
-        return self.nrgout, self.nrecord
+        """
+        Get the number of records in the file
+
+        Returns
+        ----------
+        out : tuple of int
+            A tupe with the number of records and number of flow items
+            in the file. The number of flow items is non-zero only if
+            swrtype='flow'.
+
+        """
+        return self.nrecord, self.flowitems
 
     def get_kswrkstpkper(self):
+        """
+        Get a list of unique stress periods, time steps, and swr time steps
+        in the file
+
+        Returns
+        ----------
+        out : list of (kswr, kstp, kper) tuples
+            List of unique kswr, kstp, kper combinations in binary file.
+            kswr, kstp, and kper values are zero-based.
+
+        """
         return self._kswrkstpkper
 
     def get_ntimes(self):
+        """
+        Get the number of times in the file
+
+        Returns
+        ----------
+        out : int
+            The number of simulation times (totim) in binary file.
+
+        """
         return self._ntimes
 
     def get_times(self):
-        return self._times
+        """
+        Get a list of unique times in the file
+
+        Returns
+        ----------
+        out : list of floats
+            List contains unique simulation times (totim) in binary file.
+
+        """
+        return self._times.tolist()
 
     def get_record_names(self):
+        """
+        Get a list of unique record names in the file
+
+        Returns
+        ----------
+        out : list of strings
+            List of unique text names in the binary file.
+
+        """
         return self.dtype.names
 
-    def get_data(self, kswrkstpkper=None, idx=None, totim=None):
+    def get_data(self, idx=None, kswrkstpkper=None, totim=None):
+        """
+        Get data from the file for the specified conditions.
 
+        Parameters
+        ----------
+        idx : int
+            The zero-based record number.  The first record is record 0.
+            (default is None)
+        kswrkstpkper : tuple of ints
+            A tuple containing the swr time step, time step, and stress period 
+            (kswr, kstp, kper). These are zero-based kswr, kstp, and kper 
+            values. (default is None)
+        totim : float
+            The simulation time. (default is None)
+
+        Returns
+        ----------
+        data : numpy record array
+            Array has size (nitems).
+
+        See Also
+        --------
+
+        Notes
+        -----
+        if both kswrkstpkper and totim are None, will return the last entry
+        
+        Examples
+        --------
+
+        """
         if kswrkstpkper is not None:
             kswr1 = kswrkstpkper[0]
             kstp1 = kswrkstpkper[1]
@@ -363,9 +533,9 @@ class SwrFile(SwrBinaryStatements):
                                     ('from', 'i4'), ('to', 'i4')])
         conn = np.zeros((self.nrecord, 3), np.int)
         icount = 0
-        for nrg in range(self.nrgout):
-            nconn = self.read_integer()
-            for ic in range(nconn):
+        for nrg in range(self.flowitems):
+            flowitems = self.read_integer()
+            for ic in range(flowitems):
                 conn[icount, 0] = nrg
                 conn[icount, 1] = self.read_integer() - 1
                 conn[icount, 2] = self.read_integer() - 1
@@ -392,7 +562,7 @@ class SwrFile(SwrBinaryStatements):
                      ('depth', 'f8'), ('head', 'f8'), ('wetper', 'f8'),
                      ('cond', 'f8'), ('headdiff', 'f8'), ('exchange', 'f8')]
         elif self.type == 'structure':
-            vtype = [('usstage', 'f8'), ('dsstage', 'f8'),('gateelev', 'f8'),
+            vtype = [('usstage', 'f8'), ('dsstage', 'f8'), ('gateelev', 'f8'),
                      ('opening', 'f8'), ('strflow', 'f8')]
         self.read_dtype = np.dtype(vtype)
         temp = list(vtype)
