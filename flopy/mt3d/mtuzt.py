@@ -125,8 +125,10 @@ class Mt3dUzt(Package):
     --------
 
     >>> import flopy
-    >>> mt = flopy.mt3d.Mt3dms()
-    >>> lkt = flopy.mt3d.Mt3dUzt(mt)
+    >>> import os
+    >>> mt = flopy.mt3d.Mt3dms.load('Keat_UZF_mt.nam', exe_name = 'mt3d-usgs_1.0.00.exe',
+                            model_ws = r'C:\temp\Keating_UZF', load_only='btn')
+    >>> uzt = flopy.mt3d.Mt3dUzt(mt)
 
     """
 
@@ -160,13 +162,11 @@ class Mt3dUzt(Package):
                                   arr, name='iuzfbnd',
                                   locat=self.unit_number[0])
 
-        self.wc = Util3d(model, (self.nlay, self.nrow, self.ncol),
-                         np.float32, wc, name='wc',
+        self.wc = Util3d(model, (nlay, nrow, ncol), np.float32, wc, name='wc',
                          locat=self.unit_number[0])
 
-        self.sdh = Util3d(model, (self.nlay, self.nrow, self.ncol),
-                          np.float32, sdh, name='sdh',
-                          locat=self.unit_number[0])
+        self.sdh = Util3d(model, (nlay, nrow, ncol), np.float32, sdh,
+                          name='sdh', locat=self.unit_number[0])
 
         # Note: list is used for multi-species, NOT for stress periods!
         if cuzinf is not None:
@@ -296,14 +296,14 @@ class Mt3dUzt(Package):
             # Don't yet read the next line because the current line because it
             # contains the values in item 2
             m_arr = line.strip().split()
-            mxuzcon = m_arr[0]
-            icbcuz = m_arr[1]
-            iet = m_arr[2]
+            mxuzcon = int(m_arr[0])
+            icbcuz = int(m_arr[1])
+            iet = int(m_arr[2])
 
         # Item 3 [IUZFBND(NROW,NCOL) (one array for each layer)]
         if model.verbose:
             print('   loading IUZFBND...')
-        iuzfbnd = Util3d.load(f, model (nlay, nrow, ncol), np.int, 'iuzfbnd',
+        iuzfbnd = Util2d.load(f, model, (nrow, ncol), np.int, 'iuzfbnd',
                               ext_unit_dict)
 
         # Item 4 [WC(NROW,NCOL) (one array for each layer)]
@@ -333,29 +333,33 @@ class Mt3dUzt(Package):
                                   name=name, locat=0)
                 kwargs[name] = {0 : t2d}
 
-        # Repeat cuzinf initialization procedure for cuzet
-        cuzet = None
-        t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cuzet',
-                          locat=0)
-        cuzet = {0 : t2d}
-        if ncomp > 1:
-            for icomp in range(2, ncomp + 1):
-                name = 'cuzet' + str(icomp)
-                t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
-                                  name=name, locat=0)
-                kwargs[name] = {0 : t2d}
+        # Repeat cuzinf initialization procedure for cuzet only if iet != 0
+        if iet != 0:
+            cuzet = None
+            t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cuzet',
+                              locat=0)
+            cuzet = {0 : t2d}
+            if ncomp > 1:
+                for icomp in range(2, ncomp + 1):
+                    name = 'cuzet' + str(icomp)
+                    t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
+                                      name=name, locat=0)
+                    kwargs[name] = {0 : t2d}
 
-        # Repeat cuzinf initialization procedures for cgwet
-        cgwet = None
-        t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cgwet',
-                          locat=0)
-        cgwet = {0 : t2d}
-        if ncomp > 1:
-            for icomp in range(2, ncomp + 1):
-                name = 'cgwet' + str(icomp)
-                t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
-                                  name=name, locat=0)
-                kwargs[name] = {0 : t2d}
+            # Repeat cuzinf initialization procedures for cgwet
+            cgwet = None
+            t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cgwet',
+                              locat=0)
+            cgwet = {0 : t2d}
+            if ncomp > 1:
+                for icomp in range(2, ncomp + 1):
+                    name = 'cgwet' + str(icomp)
+                    t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
+                                      name=name, locat=0)
+                    kwargs[name] = {0 : t2d}
+        elif iet == 0:
+            cuzet = None
+            cgwet = None
 
         # Start of transient data
         for iper in range(nper):
@@ -366,7 +370,7 @@ class Mt3dUzt(Package):
             # Item 6 (INCUZINF)
             line = f.readline()
             m_arr = line.strip().split()
-            incuzinf = m_arr[0]
+            incuzinf = int(m_arr[0])
 
             # Item 7 (CUZINF)
             if incuzinf >= 0:
@@ -404,90 +408,90 @@ class Mt3dUzt(Package):
                           '{0:5d}'.format(iper) + ' in kper ' \
                           '{0:5d}'.format(iper + 1))
 
-            # Item 8 (INCUZET)
-            line = f.readline()
-            m_arr = line.strip().split()
-            incuzet = m_arr[0]
+            if iet != 0:
+                # Item 8 (INCUZET)
+                line = f.readline()
+                m_arr = line.strip().split()
+                incuzet = int(m_arr[0])
 
-            # Item 9 (CUZET)
-            if incuzet >= 0:
-                if model.verbose:
-                    print('   Reading CUZET array for kper ' \
-                          '{0:5d}'.format(iper + 1))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'cuzet',
-                                ext_unit_dict)
-                cuzet[iper] = t
-
-                # Load each multispecies array
-                if ncomp > 1:
-                    for icomp in range(2, ncomp + 1):
-                        name = 'cuzet' + str(icomp)
-                        if model.verbose:
-                            print('   loading {}'.format(name))
-                        t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                        name, ext_unit_dict)
-                        cuzeticomp = kwargs[name]
-                        cuzeticomp[iper] = t
-
-            elif incuzet < 0 and iper == 0:
-                if model.verbose:
-                    print('   INCUZET < 0 in first stress period. Setting ' \
-                          'CUZET to default value of 0.00 for all calls')
-                    # This happens implicitly and is taken care of my
-                    # existing functionality within flopy.  This elif
-                    # statement exist for the purpose of printing the message
-                    # above
-                pass
-            else:
-                if model.verbose:
-                    print('   Reusing CUZET array from kper ' \
-                          '{0:5d}'.format(iper) + ' in kper ' \
-                          '{0:5d}'.format(iper + 1))
-
-            # Item 10 (INCGWET)
-            line = f.readline()
-            m_arr = line.strip().split()
-            incgwet = m_arr[0]
-
-            # Item 11 (CGWET)
-            if model.verbose:
+                # Item 9 (CUZET)
                 if incuzet >= 0:
-                    print('   Reading CGWET array for kper ' \
-                          '{0:5d}'.format(iper + 1))
-                t = Util2d.load(f, model, (nrow,ncol), np.float32, 'cgwet',
-                                ext_unit_dict)
-                cgwet[iper] = t
+                    if model.verbose:
+                        print('   Reading CUZET array for kper ' \
+                              '{0:5d}'.format(iper + 1))
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'cuzet',
+                                    ext_unit_dict)
+                    cuzet[iper] = t
 
-                # Load each multispecies array
-                if ncomp > 1:
-                    for icomp in range(2, ncomp + 1):
-                        name = 'cgwet' + str(icomp)
-                        if model.verbose:
-                            print('   loading {}...'.format(name))
-                        t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                        name, ext_unit_dict)
-                        cgweticomp = kwargs[name]
-                        cgweticomp[iper] = t
+                    # Load each multispecies array
+                    if ncomp > 1:
+                        for icomp in range(2, ncomp + 1):
+                            name = 'cuzet' + str(icomp)
+                            if model.verbose:
+                                print('   loading {}'.format(name))
+                            t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                            name, ext_unit_dict)
+                            cuzeticomp = kwargs[name]
+                            cuzeticomp[iper] = t
 
-            elif incuzet < 0 and iper == 0:
-                if model.verbose:
-                    print('   INCGWET < 0 in first stress period. Setting ' \
-                          'CGWET to default value of 0.00 for all calls')
-                    # This happens implicitly and is taken care of my
-                    # existing functionality within flopy.  This elif
-                    # statement exist for the purpose of printing the message
-                    # above
+                elif incuzet < 0 and iper == 0:
+                    if model.verbose:
+                        print('   INCUZET < 0 in first stress period. Setting ' \
+                              'CUZET to default value of 0.00 for all calls')
+                        # This happens implicitly and is taken care of my
+                        # existing functionality within flopy.  This elif
+                        # statement exist for the purpose of printing the message
+                        # above
                     pass
+                else:
+                    if model.verbose:
+                        print('   Reusing CUZET array from kper ' \
+                              '{0:5d}'.format(iper) + ' in kper ' \
+                              '{0:5d}'.format(iper + 1))
 
-            elif incgwet < 0 and iper > 0:
+                # Item 10 (INCGWET)
+                line = f.readline()
+                m_arr = line.strip().split()
+                incgwet = int(m_arr[0])
+
+                # Item 11 (CGWET)
                 if model.verbose:
-                    print('   Reusing CGWET array from kper ' \
-                          '{0:5d}'.format(iper) + ' in kper ' \
-                          '{0:5d}'.format(iper + 1))
+                    if incuzet >= 0:
+                        print('   Reading CGWET array for kper ' \
+                              '{0:5d}'.format(iper + 1))
+                    t = Util2d.load(f, model, (nrow,ncol), np.float32, 'cgwet',
+                                    ext_unit_dict)
+                    cgwet[iper] = t
 
+                    # Load each multispecies array
+                    if ncomp > 1:
+                        for icomp in range(2, ncomp + 1):
+                            name = 'cgwet' + str(icomp)
+                            if model.verbose:
+                                print('   loading {}...'.format(name))
+                            t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                            name, ext_unit_dict)
+                            cgweticomp = kwargs[name]
+                            cgweticomp[iper] = t
+
+                elif incuzet < 0 and iper == 0:
+                    if model.verbose:
+                        print('   INCGWET < 0 in first stress period. Setting ' \
+                              'CGWET to default value of 0.00 for all calls')
+                        # This happens implicitly and is taken care of my
+                        # existing functionality within flopy.  This elif
+                        # statement exist for the purpose of printing the
+                        # message above
+                        pass
+
+                elif incgwet < 0 and iper > 0:
+                    if model.verbose:
+                        print('   Reusing CGWET array from kper ' \
+                              '{0:5d}'.format(iper) + ' in kper ' \
+                              '{0:5d}'.format(iper + 1))
 
         # Construct and return uzt package
         uzt = Mt3dUzt(model, mxuzcon=mxuzcon, icbcuz=icbcuz, iet=iet,
                       iuzfbnd=iuzfbnd, wc=wc, sdh=sdh, cuzinf=cuzinf,
-                      cuzet=cuzet, cgwet=cgwet)
+                      cuzet=cuzet, cgwet=cgwet, **kwargs)
         return uzt

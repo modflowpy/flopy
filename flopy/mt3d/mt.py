@@ -262,6 +262,9 @@ class Mt3dms(BaseModel):
             'gcg': flopy.mt3d.Mt3dGcg,
             'tob': flopy.mt3d.Mt3dTob,
             'phc': flopy.mt3d.Mt3dPhc,
+            'lkt': flopy.mt3d.Mt3dLkt,
+            'sft': flopy.mt3d.Mt3dSft,
+            'uzt': flopy.mt3d.Mt3dUzt
         }
         return
 
