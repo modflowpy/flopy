@@ -273,7 +273,8 @@ class Mt3dUzt(Package):
                     incuzinf = max(incuzinf, incuzinficomp)
                     if incuzinf == 1:
                         break
-                f_uzt.write('{:10d}\n'.format(incuzinf))
+                f_uzt.write('{0:10d}          # INCUZINF - SP {1:5d}\n'
+                            .format(incuzinf, kper+1))
                 if incuzinf == 1:
                     for t2d in self.cuzinf:
                         u2d = t2d[kper]
@@ -290,7 +291,8 @@ class Mt3dUzt(Package):
                         incuzet = max(incuzet, incuzeticomp)
                         if incuzet == 1:
                             break
-                    f_uzt.write('{:10d}\n'.format(incuzet))
+                    f_uzt.write('{0:10d}          # INCUZET - SP {1:5d}\n'
+                                .format(incuzet, kper+1))
                     if incuzet == 1:
                         for t2d in self.cuzet:
                             u2d = t2d[kper]
@@ -306,7 +308,8 @@ class Mt3dUzt(Package):
                         incgwet = max(incgwet, incgweticomp)
                         if incgwet == 1:
                             break
-                    f_uzt.write('{:10d}\n'.format(incgwet))
+                    f_uzt.write('{:10d}          # INCGWET - SP {1:5d}\n'
+                                .format(incgwet, kper+1))
                     if incgwet == 1:
                         for t2d in self.cgwet:
                             u2d = t2d[kper]
