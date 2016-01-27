@@ -32,7 +32,7 @@ class HydmodBinaryStatements:
 
     def _read_hyd_text(self, nchar=20):
         # textvalue=strct.unpack('cccccccccccccccc',self.file.read(16*self.textbyte))
-        textvalue = np.fromfile(file=self.file, dtype=self.character, count=nchar).tostring()
+        textvalue = np.fromfile(file=self.file, dtype=self.character, count=nchar).tostring().decode().strip()
         return textvalue
 
 
