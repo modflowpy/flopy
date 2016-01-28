@@ -227,6 +227,9 @@ class Mt3dUzt(Package):
                                       name=name, locat=self.unit_number[0])
                     self.cgwet.append(t2d)
 
+        self.parent.add_package(self)
+        return
+
     def write_file(self):
         """
         Write the package file

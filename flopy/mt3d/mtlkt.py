@@ -126,6 +126,9 @@ class Mt3dLkt(Package):
             self.lk_stress_period_data = MfList(self, model=model,
                                                 data=lk_stress_period_data)
 
+        self.parent.add_package(self)
+        return
+
     def write_file(self):
         """
         Write the package file

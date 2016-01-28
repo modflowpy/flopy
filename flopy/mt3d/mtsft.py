@@ -188,7 +188,7 @@ class Mt3dSft(Package):
         # Set 1D array values
         self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
                              name='coldsf', locat=self.unit_number[0])
-        self.dispsf = Util2d(model, (dispsf,), np.float32, dispsf,
+        self.dispsf = Util2d(model, (nsfinit,), np.float32, dispsf,
                              name='dispsf', locat=self.unit_number[0])
 
         # Set streamflow observation locations
@@ -206,6 +206,9 @@ class Mt3dSft(Package):
         else:
             self.sf_stress_period_data = MfList(self, model=model,
                                                 data=sf_stress_period_data)
+
+        self.parent.add_package(self)
+        return
 
     @staticmethod
     def get_default_dtype(ncomp=1):
