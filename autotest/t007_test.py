@@ -78,6 +78,6 @@ def test_netcdf():
 
 if __name__ == '__main__':
     for namfile in namfiles:
-    #for namfile in ["fhb.nam"]:
-        #export_netcdf(namfile)
-        export_shapefile(namfile)
+    #for namfile in ["str.nam"]:
+        export_netcdf(namfile)
+        #export_shapefile(namfile)

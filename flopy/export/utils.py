@@ -13,7 +13,7 @@ NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", 
                    "horizontal_hydraulic_conductivity": "{0}/{1}", "riv_cond": "1/{1}",
                    "riv_stage": "{0}", "riv_rbot": "{0}", "head":"{0}",
                    "drawdown":"{0}","cell_by_cell_flow":"{0}^3/{1}"}
-NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4"}
+NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4", np.int32:"i4"}
 
 NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
                  "vka":"vertical hydraulic conductivity",
