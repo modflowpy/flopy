@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d
+from flopy.utils import Util2d, Util3d, read1d, MfList
 class Mt3dLkt(Package):
     """
     MT3D-USGS LaKe Transport package class
@@ -107,7 +107,12 @@ class Mt3dLkt(Package):
         self.ietlak = ietlak
 
         # Set initial lake concentrations
-        self.coldlak = coldlak
+        if coldlak is not None:
+            self.coldlak = Util2d(self.parent, (nlkinit,), np.float32, coldlak,
+                                  name='coldlak', locat=self.unit_number[0])
+        else:
+            self.coldlak = Util2d(self.parent, (nlkinit,), np.float32, 0.0,
+                                  name='coldlak', locat=self.unit_number[0])
 
         # Set transient data
         if dtype is not None:
@@ -120,6 +125,45 @@ class Mt3dLkt(Package):
         else:
             self.lk_stress_period_data = MfList(self, model=model,
                                                 data=lk_stress_period_data)
+
+    def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Open file for writing
+        f_lkt = open(self.fn_path, 'w')
+
+        # Item 1
+        f_lkt.write('{0:10d}{1:10d}{2:10}{3:10}          '
+              .format(self.nlkinit, self.mxlkbc, self.icbclk, self.ietlak) +
+                    '# NLKINIT, MXLKBC, ICBCLK, IETLAK\n')
+
+        # Item 2
+        f_lkt.write(self.coldlak.get_file_entry())
+
+        # Items 3-4
+        # (Loop through each stress period and write LKT information)
+        nper = self.parent.nper
+        for kper in range(nper):
+            if f_lkt.closed == True:
+                f_lkt = open(f_lkt.name, 'a')
+
+            # List of concentrations associated with fluxes in/out of lake
+            # (Evap, precip, specified runoff into the lake, specified
+            # withdrawl directly from the lake
+            if self.lk_stress_period_data is not None:
+                self.lk_stress_period_data.write_transient(f_lkt, single_per=kper)
+            else:
+                f_lkt.write('{}\n'.format(0))
+
+        f_lkt.close()
+        return
 
     @staticmethod
     def load(f, model, nlak=None, nper=None, ncomp=None, ext_unit_dict=None):
@@ -226,8 +270,8 @@ class Mt3dLkt(Package):
             line = f.readline()
             
             # Next, read the values
-            lkconc = np.empty((nlkinit), dtype=np.float)
-            lkconc = read1d(f, lkconc)
+            coldlak = np.empty((nlkinit), dtype=np.float)
+            coldlak = read1d(f, coldlak)
 
         # dtype
         dtype = Mt3dLkt.get_default_dtype(ncomp)
@@ -237,7 +281,8 @@ class Mt3dLkt(Package):
 
         for iper in range(nper):
             if model.verbose:
-                print("   loading lkt boundary condition data for kper {0:5d}".format(iper + 1))
+                print('   loading lkt boundary condition data for kper {0:5d}'
+                      .format(iper + 1))
 
             # Item 3: NTMP: An integer value corresponding to the number of 
             #         specified lake boundary conditions to follow.  
@@ -259,7 +304,7 @@ class Mt3dLkt(Package):
                 current_lk = np.empty((ntmp), dtype=dtype)
                 for ilkbnd in range(ntmp):
                     line = f.readline()
-                    m_arr = line.strip().split()   #These items are free format
+                    m_arr = line.strip().split()   # These items are free format
                     t = []
                     for ivar in range(2):
                         t.append(m_arr[ivar])
@@ -277,10 +322,14 @@ class Mt3dLkt(Package):
                     print('   No transient boundary conditions specified')
                 pass
 
+        if len(lk_stress_period_data) == 0:
+            lk_stress_period_data = None
+
         # Construct and return LKT package
         lkt = Mt3dLkt(model, nlkinit=nlkinit, mxlkbc=mxlkbc, icbclk=icbclk,
                       ietlak=ietlak, coldlak=coldlak,
-                      lk_stress_period_data=lk_stress_period_dat)
+                      lk_stress_period_data=lk_stress_period_data)
+        return lkt
 
     @staticmethod
     def get_default_dtype(ncomp=1):

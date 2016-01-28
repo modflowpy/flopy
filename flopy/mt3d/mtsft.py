@@ -159,7 +159,7 @@ class Mt3dSft(Package):
                  ietsfr=0, isfsolv=0, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, coldsf=0.0, dispsf=0.0, nobssf=0,
                  obs_sf=None, sf_stress_period_data = None, dtype=None,
-                 extension='lkt',unitnumber=None, **kwargs):
+                 extension='sft',unitnumber=None, **kwargs):
         #unit number
         if unitnumber is None:
             unitnumber = self.unitnumber
@@ -182,12 +182,14 @@ class Mt3dSft(Package):
         self.wimp = wimp
         self.wups = wups
         self.cclosesf = cclosesf
+        self.mxitersf = mxitersf
+        self.crntsf = crntsf
 
         # Set 1D array values
-        self.coldsf = Util2d(model,(nsfinit,),np.float32,coldsf,name='coldsf',
-                             locat=self.unit_number[0])
-        self.dispsf = Util2d(model,(dispsf,),np.float32,dispsf,name='dispsf',
-                             locat=self.unit_number[0])
+        self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
+                             name='coldsf', locat=self.unit_number[0])
+        self.dispsf = Util2d(model, (dispsf,), np.float32, dispsf,
+                             name='dispsf', locat=self.unit_number[0])
 
         # Set streamflow observation locations
         self.nobssf = nobssf
@@ -219,6 +221,62 @@ class Mt3dSft(Package):
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
+
+    def write_file(self):
+        """
+        Write the package file
+
+        Returns
+        -------
+        None
+        """
+
+        # Open file for writing
+        f_sft = open(self.fn_path, 'w')
+
+        # Item 1
+        f_sft.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}'.format(self.nsfinit,
+                    self.mxsfbc, self.icbcsf, self.ioutobs, self.ietsfr) +
+                    '           # nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
+
+        # Item 2
+        f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.5f}{4:10d}{5:10.5f}'
+                    .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
+                            self.mxsfbc, self.crntsf) +
+                    ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf\n')
+
+        # Item 3
+        f_sft.write(self.coldsf.get_file_entry())
+
+        # Item 4
+        f_sft.write(self.dispsf.get_file_entry())
+
+        # Item 5
+        f_sft.write('{0:10d}          # nobssf\n'.format(self.nobssf))
+
+        # Item 6
+        if self.nobssf != 0:
+            for iobs in range(self.nobssf):
+                f_sft.write('{0:10d}{1:10d}          # isobs, irobs\n'
+                            .format(self.obs_sf[iobs][0], self.obs_sf[iobs][1]))
+
+        # Items 7, 8
+        # Loop through each stress period and write ssm information
+        nper = self.parent.nper
+        for kper in range(nper):
+            if f_sft.closed == True:
+                f_sft = open(f_sft.name, 'a')
+
+            # List of concentrations associated with various boundaries
+            # interacting with the stream network.
+            if self.sf_stress_period_data is not None:
+                self.sf_stress_period_data.write_transient(f_sft,
+                                                           single_per=kper)
+            else:
+                f_sft.write('{0:10d}       # ntmp - SP {1:5d}'.format(0, kper))
+
+        f_sft.close()
+        return
 
     @staticmethod
     def load(f, model, nsfinit=None, nper=None, ncomp=None, ext_unit_dict=None):
@@ -410,7 +468,7 @@ class Mt3dSft(Package):
             for i in range(nobssf):
                 line = f.readline()
                 m_arr = line.strip().split()
-                obs_sf.append([m_arr[0], m_arr[1]])
+                obs_sf.append([int(m_arr[0]), int(m_arr[1])])
             obs_sf = np.array(obs_sf)
             if model.verbose:
                 print('   Surface water concentration observation locations:')
