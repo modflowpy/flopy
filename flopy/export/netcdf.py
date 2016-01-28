@@ -127,7 +127,7 @@ class NetCdf(object):
             self.logger = logger
         else:
             self.logger = Logger(verbose)
-
+        self.var_attr_dict = {}
         self.log = self.logger.log
         if os.path.exists(output_filename):
             self.logger.warn("removing existing nc file: " + output_filename)
@@ -138,12 +138,8 @@ class NetCdf(object):
         self.model = model
         self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
 
-        # import pandas as pd
-        # self.start_datetime = pd.to_datetime(self.model.dis.start_datetime).\
         #                          isoformat().split('.')[0].split('+')[0] + "Z"
         import dateutil.parser
-        #self.start_datetime = dateutil.parser.parse(
-        #    self.model.dis.start_datetime).strftime("%Y-%m-%dT%H:%M:%SZ")
         self.start_datetime = self._dt_str(dateutil.parser.parse(
             self.model.dis.start_datetime))
         self.grid_units = LENUNI[self.model.dis.sr.lenuni]
@@ -166,6 +162,103 @@ class NetCdf(object):
         self.log("initializing file")
         self.initialize_file(time_values=time_values)
         self.log("initializing file")
+
+
+
+
+    def difference(self,other):
+        """make a new NetCDF instance that is the difference with
+        another netcdf file
+        Parameters:
+        ----------
+            other : either an str filename of a netcdf file or
+            a netCDF4 instance
+        Returns:
+        -------
+            net NetCDF instance
+        Note:
+        ----
+            assumes the current NetCDF instance has been populated.  The
+            variable names and dimensions between the two files must match
+             exactly. The name of the new .nc file is
+             <self.output_filename>.diff.nc.  The masks from both self and
+             other are carried through to the new instance
+        """
+
+        assert self.nc is not None,"can't call difference() if nc " +\
+                                   "hasn't been populated"
+        try:
+            import netCDF4
+        except Exception as e:
+            mess = "error import netCDF4: {0}".format(str(e))
+            self.logger.warn(mess)
+            raise Exception(mess)
+
+        if isinstance(other,str):
+            assert os.path.exists(other),"filename 'other' not found:" + \
+                                         "{0}".format(other)
+            other = netCDF4.Dataset(other,'r')
+
+        assert isinstance(other,netCDF4.Dataset)
+
+        # check for similar variables
+        self_vars = set(self.nc.variables.keys())
+        other_vars = set(other.variables)
+        diff = self_vars.symmetric_difference(other_vars)
+        if len(diff) > 0:
+            self.logger.warn("variables are not the same between the two " +\
+                             "nc files: " + ','.join(diff))
+            return
+
+        # check for similar dimensions
+        self_dimens = self.nc.dimensions
+        other_dimens = other.dimensions
+        for d in self_dimens.keys():
+            if d not in other_dimens:
+                self.logger.warn("missing dimension in other:{0}".format(d))
+                return
+            if len(self_dimens[d]) != len(other_dimens[d]):
+                self.logger.warn("dimension not consistent: "+\
+                                 "{0}:{1}".format(self_dimens[d],other_dimens[d]))
+                return
+        # should be good to go
+        new_net = NetCdf(self.output_filename.replace(".nc",".diff.nc"),
+                         self.model)
+        # add the vars to the instance
+        for vname in self_vars:
+            if vname not in self.var_attr_dict or \
+                            new_net.nc.variables.get(vname) is not None:
+                self.logger.warn("skipping variable: {0}".format(vname))
+                continue
+            self.log("processing variable {0}".format(vname))
+            s_var = self.nc.variables[vname]
+            o_var = other.variables[vname]
+            s_data = s_var[:]
+            o_data = o_var[:]
+            o_mask, s_mask = None, None
+            # keep the masks to apply later
+            if isinstance(s_data,np.ma.MaskedArray):
+                self.logger.warn("masked array for {0}".format(vname))
+                s_mask = s_data.mask
+                o_mask = o_data.mask
+                s_data = np.array(s_data)
+                o_data = np.array(o_data)
+            # difference with self
+            d_data = s_data - o_data
+
+            # reapply masks
+            if s_mask is not None:
+                self.log("applying self mask")
+                d_data[s_mask] = np.NaN
+                self.log("applying self mask")
+            if o_mask is not None:
+                self.log("applying other mask")
+                d_data[o_mask] = np.NaN
+                self.log("applying other mask")
+
+            var = new_net.create_variable(vname,self.var_attr_dict[vname],s_var.dtype,dimensions=s_var.dimensions)
+            var[:] = d_data
+            self.log("processing variable {0}".format(vname))
 
 
 
@@ -497,6 +590,8 @@ class NetCdf(object):
         name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
         assert self.nc.variables.get(name) is None, \
             "netcdf.create_variable error: variable already exists:" + name
+
+        self.var_attr_dict[name] = attributes
 
         var = self.nc.createVariable(name, precision_str, dimensions,
                                      fill_value=self.fillvalue, zlib=True,
