@@ -32,7 +32,12 @@ class HydmodBinaryStatements:
 
     def _read_hyd_text(self, nchar=20):
         # textvalue=strct.unpack('cccccccccccccccc',self.file.read(16*self.textbyte))
-        textvalue = np.fromfile(file=self.file, dtype=self.character, count=nchar).tostring().decode().strip()
+        textvalue = np.fromfile(file=self.file, dtype=self.character, count=nchar).tostring()
+        if not isinstance(textvalue, str):
+            textvalue = textvalue.decode().strip()
+        else:
+            textvalue = textvalue.strip()
+
         return textvalue
 
 
@@ -180,13 +185,25 @@ class HydmodObs(HydmodBinaryStatements):
         if not self._allow_slurp:
             raise ValueError('Cannot use .slurp() method if slurp=False in instantiation.')
 
+        '''
         if self.double:
             float_type = np.float64
         else:
             float_type = np.float32
+        '''
+        if self.double:
+            float_type = 'f8'
+        else:
+            float_type = 'f4'
         dtype_list = [('totim', float_type)]
         for site in self.hydlbl:
+            '''
             if sys.version_info[0] == 3:
+                site_name = site.decode().strip()
+            else:
+                site_name = site.strip()
+            '''
+            if not isinstance(site, str):
                 site_name = site.decode().strip()
             else:
                 site_name = site.strip()
