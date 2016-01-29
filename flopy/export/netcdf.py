@@ -259,11 +259,11 @@ class NetCdf(object):
             # reapply masks
             if s_mask is not None:
                 self.log("applying self mask")
-                d_data[s_mask] = np.NaN
+                d_data[s_mask] = FILLVALUE
                 self.log("applying self mask")
             if o_mask is not None:
                 self.log("applying other mask")
-                d_data[o_mask] = np.NaN
+                d_data[o_mask] = FILLVALUE
                 self.log("applying other mask")
             var = new_net.create_variable(vname,self.var_attr_dict[vname],
                                           s_var.dtype,
