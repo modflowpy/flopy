@@ -134,11 +134,10 @@ class NetCdf(object):
             os.remove(output_filename)
         self.output_filename = output_filename
 
-        assert model.dis != None
+        assert model.dis is not None
         self.model = model
         self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
 
-        #                          isoformat().split('.')[0].split('+')[0] + "Z"
         import dateutil.parser
         self.start_datetime = self._dt_str(dateutil.parser.parse(
             self.model.dis.start_datetime))
@@ -148,31 +147,34 @@ class NetCdf(object):
 
         self.time_units = ITMUNI[self.model.dis.itmuni]
 
-        # this gives us confidence that every NetCdf instance has the same attributes
+        # this gives us confidence that every NetCdf instance
+        # has the same attributes
         self.log("initializing attributes")
         self._initialize_attributes()
         self.log("initializing attributes")
 
-        # if time_values were passed, lets get things going
-
-        #if time_values is not None:
-        #    self.log("time_values != None, initializing file")
-        #    self.initialize_file(time_values=time_values)
-        #    self.log("time_values != None, initializing file")
         self.log("initializing file")
         self.initialize_file(time_values=time_values)
         self.log("initializing file")
 
-
-
-
-    def difference(self,other):
+    def difference(self, other, diff_filename=None, minuend="self",
+                   mask_zero_diff=True):
         """make a new NetCDF instance that is the difference with
         another netcdf file
         Parameters:
         ----------
             other : either an str filename of a netcdf file or
             a netCDF4 instance
+
+            diff_filename : (optional) str of the nc file to create. If
+            None, then the name will be <self.output_filename>.diff.nc
+
+            minuend : (optional) the order of the difference operation.
+            Default is self (e.g. self - other).  Can be "self" or "other"
+
+            mask_zero_diff : bool flag to mask differences that are zero.  If
+            True, positions in the difference array that are zero will be set
+            to self.fillvalue
         Returns:
         -------
             net NetCDF instance
@@ -219,7 +221,8 @@ class NetCdf(object):
                 return
             if len(self_dimens[d]) != len(other_dimens[d]):
                 self.logger.warn("dimension not consistent: "+\
-                                 "{0}:{1}".format(self_dimens[d],other_dimens[d]))
+                                 "{0}:{1}".format(self_dimens[d],
+                                                  other_dimens[d]))
                 return
         # should be good to go
         new_net = NetCdf(self.output_filename.replace(".nc",".diff.nc"),
@@ -236,6 +239,7 @@ class NetCdf(object):
             s_data = s_var[:]
             o_data = o_var[:]
             o_mask, s_mask = None, None
+
             # keep the masks to apply later
             if isinstance(s_data,np.ma.MaskedArray):
                 self.logger.warn("masked array for {0}".format(vname))
@@ -243,8 +247,16 @@ class NetCdf(object):
                 o_mask = o_data.mask
                 s_data = np.array(s_data)
                 o_data = np.array(o_data)
+
             # difference with self
-            d_data = s_data - o_data
+            if minuend.lower() == "self":
+                d_data = s_data - o_data
+            elif minuend.lower() == "other":
+                d_data = o_data - s_data
+            else:
+                mess = "unrecognized minuend {0}".format(minuend)
+                self.logger.warn(mess)
+                raise Exception(mess)
 
             # reapply masks
             if s_mask is not None:
@@ -255,12 +267,14 @@ class NetCdf(object):
                 self.log("applying other mask")
                 d_data[o_mask] = np.NaN
                 self.log("applying other mask")
-
-            var = new_net.create_variable(vname,self.var_attr_dict[vname],s_var.dtype,dimensions=s_var.dimensions)
+            var = new_net.create_variable(vname,self.var_attr_dict[vname],
+                                          s_var.dtype,
+                                          dimensions=s_var.dimensions)
+            d_data[np.isnan(d_data)] = FILLVALUE
+            if mask_zero_diff:
+                d_data[np.where(d_data==0.0)] = FILLVALUE
             var[:] = d_data
             self.log("processing variable {0}".format(vname))
-
-
 
     def _dt_str(self,dt):
         """ for datetime to string for year < 1900
@@ -527,7 +541,8 @@ class NetCdf(object):
                             "To compute the unrotated grid, use the origin point and this array."
 
         # Workaround for CF/CDM.
-        # http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/reference/StandardCoordinateTransforms.html
+        # http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/
+        # reference/StandardCoordinateTransforms.html
         # "explicit_field"
         exp = self.nc.createVariable('VerticalTransform', 'S1')
         exp.transform_name = "explicit_field"

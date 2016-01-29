@@ -946,6 +946,7 @@ class Transient2d(object):
         assert m4d.shape[1] == 1
         assert m4d.shape[2] == model.nrow
         assert m4d.shape[3] == model.ncol
+        m4d = m4d.astype(np.float32)
         kper_dict = Transient2d.masked4d_array_to_kper_dict(m4d)
         return cls(model=model,shape=(model.nrow,model.ncol),value=kper_dict,
                    dtype=m4d.dtype,name=name)
