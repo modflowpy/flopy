@@ -372,7 +372,10 @@ def transient2d_helper(f, t2d, **kwargs):
         var_name = t2d.name_base.replace('_', '')
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
-        precision_str = NC_PRECISION_TYPE[t2d.dtype]
+        try:
+            precision_str = NC_PRECISION_TYPE[t2d.dtype]
+        except:
+            precision_str = NC_PRECISION_TYPE[t2d.dtype.type]
         if var_name in NC_LONG_NAMES:
             attribs = {"long_name": NC_LONG_NAMES[var_name]}
         else:
