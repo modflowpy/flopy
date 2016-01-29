@@ -136,7 +136,7 @@ def output_helper(f,ml,oudic,**kwargs):
 
     """
     assert isinstance(ml,BaseModel)
-
+    assert len(oudic.keys()) > 0
     logger = kwargs.pop("logger",None)
     if len(kwargs) > 0:
         str_args = ','.join(kwargs)
@@ -145,6 +145,7 @@ def output_helper(f,ml,oudic,**kwargs):
     times = []
     for filename,df in oudic.items():
         [times.append(t) for t in df.times if t not in times]
+    assert len(times) > 0
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
