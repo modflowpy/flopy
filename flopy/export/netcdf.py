@@ -157,8 +157,7 @@ class NetCdf(object):
         self.initialize_file(time_values=time_values)
         self.log("initializing file")
 
-    def difference(self, other, diff_filename=None, minuend="self",
-                   mask_zero_diff=True):
+    def difference(self, other, minuend="self", mask_zero_diff=True):
         """make a new NetCDF instance that is the difference with
         another netcdf file
         Parameters:
@@ -166,15 +165,13 @@ class NetCdf(object):
             other : either an str filename of a netcdf file or
             a netCDF4 instance
 
-            diff_filename : (optional) str of the nc file to create. If
-            None, then the name will be <self.output_filename>.diff.nc
-
             minuend : (optional) the order of the difference operation.
             Default is self (e.g. self - other).  Can be "self" or "other"
 
             mask_zero_diff : bool flag to mask differences that are zero.  If
             True, positions in the difference array that are zero will be set
             to self.fillvalue
+
         Returns:
         -------
             net NetCDF instance
@@ -225,8 +222,9 @@ class NetCdf(object):
                                                   other_dimens[d]))
                 return
         # should be good to go
+        time_values = self.nc.variables.get("time")[:]
         new_net = NetCdf(self.output_filename.replace(".nc",".diff.nc"),
-                         self.model)
+                         self.model,time_values=time_values)
         # add the vars to the instance
         for vname in self_vars:
             if vname not in self.var_attr_dict or \
@@ -261,11 +259,11 @@ class NetCdf(object):
             # reapply masks
             if s_mask is not None:
                 self.log("applying self mask")
-                d_data[s_mask] = np.NaN
+                d_data[s_mask] = FILLVALUE
                 self.log("applying self mask")
             if o_mask is not None:
                 self.log("applying other mask")
-                d_data[o_mask] = np.NaN
+                d_data[o_mask] = FILLVALUE
                 self.log("applying other mask")
             var = new_net.create_variable(vname,self.var_attr_dict[vname],
                                           s_var.dtype,
@@ -357,8 +355,8 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        ys = self.model.dis.sr.ycentergrid
-        xs = self.model.dis.sr.xcentergrid
+        ys = self.model.dis.sr.ycentergrid.copy()
+        xs = self.model.dis.sr.xcentergrid.copy()
 
         if self.grid_units.lower().startswith("f"):
             self.log("converting feet to meters")
