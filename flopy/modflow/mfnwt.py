@@ -329,10 +329,33 @@ class ModflowNwt(Package):
             f = open(filename, 'r')
         # dataset 0 -- header
 
-        print('  ...load method not completed. default nwt file created.')
+        #dataset 0 -- header
+        while True:
+            line = f.readline()
+            if line[0] != '#':
+                break
+        # dataset 1
+        ifrfm = model.get_ifrefm()
+        if model.version != 'mf2k':
+            ifrfm = True
+
+        vars = ["headtol","fluxtol","maxiterout","thickfact",
+                "linmeth","iprnwt","ibotav","options"]
+        cast = [float,float,int,float,int,int,int,str]
+        kwargs = {}
+        if ifrfm:
+            t = line.strip().split()
+            for i,(v,c) in enumerate(zip(vars,cast)):
+                kwargs[v] = c(t[i])
+        else:
+            for i,(v,c) in enumerate(zip(vars,cast)):
+                kwargs[v] = c(line[i * 10:(i+1) * 10])
 
         # close the open file
         f.close()
-
-        nwt = ModflowNwt(model)
+        if kwargs["options"].lower().strip() == "specified":
+            print("ModflowNwt.load() does not support 'SPECIFIED',"+\
+                  "...resetting to complex")
+            kwargs["options"] = "complex"
+        nwt = ModflowNwt(model,**kwargs)
         return nwt
