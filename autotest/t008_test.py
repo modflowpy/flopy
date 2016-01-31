@@ -40,7 +40,15 @@ def test_modflow_loadonly():
     return
 
 
+def test_nwt_load():
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    test_nwt_pth = os.path.join("..","examples","data","nwt_test")
+    nwt_files = [os.path.join(test_nwt_pth,f) for f in os.listdir(test_nwt_pth)]
+    for nwt_file in nwt_files:
+        nwt = flopy.modflow.ModflowNwt.load(nwt_file,ml)
+        nwt.write_file()
 if __name__ == '__main__':
-    for namfile in namfiles:
-        load_model(namfile)
-        load_only_bas6_model(namfile)
+    test_nwt_load()
+    # for namfile in namfiles:
+    #     load_model(namfile)
+    #     load_only_bas6_model(namfile)
