@@ -232,6 +232,18 @@ class Mt3dSft(Package):
         Returns
         -------
         None
+
+        Examples
+        --------
+        >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam',
+        >>>      exe_name = 'mt3d-usgs_1.0.00.exe',
+        >>>      model_ws = r'C:\EDM_LT\GitHub\mt3d-usgs\autotest\temp\CrnkNic',
+        >>>      verbose=True)
+        >>> mt.name = 'CrnkNic_rewrite'
+        >>>
+        >>> mt.sft.dispsf.fmtin = '(10F12.2)'
+        >>> mt.write_input()
+        
         """
 
         # Open file for writing
@@ -436,7 +448,7 @@ class Mt3dSft(Package):
 
         # Because SFT package is a new package, it only accepts free format
         # Don't need to worry about reading fixed format here
-        coldsf = Util2d.load(f, model, (nsfinit, 1), np.float32, 'nsfinit',
+        coldsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'nsfinit',
                                  ext_unit_dict)
 
         # Item 4 (DISPSF(NRCH)) Reach-by-reach dispersion
@@ -450,7 +462,7 @@ class Mt3dSft(Package):
 
         # Because SFT package is a new package, it only accepts free format.
         # Don't need to worry about reading fixed format here
-        dispsf = Util2d.load(f, model, (nsfinit, 1), np.float32, 'dispsf',
+        dispsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'dispsf',
                                  ext_unit_dict)
 
         # Item 5 NOBSSF
