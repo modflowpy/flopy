@@ -3,6 +3,8 @@
 
 * Added support for reading SWR Process observation, stage, budget, flow, reach-aquifer exchanges, and structure flows.
 
+* `flopy.utils.HydmodObs` returns a numpy recarray. Previously numpy arrays were returned except when the `slurp()` method was used. The slurp method has been deprecated but the same functionality is available using the `get_data()` method. The recarray returned from the `get_data()` method includes the `totim` value and one or all of the observations (`HYDLBL`).
+
 * Bug fixes:
   1. Fixed issue with right justified format statement for array control record for MT3DMS.
 
