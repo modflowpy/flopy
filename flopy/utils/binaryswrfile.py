@@ -223,14 +223,15 @@ class SwrObs(SwrBinaryStatements):
 class SwrFile(SwrBinaryStatements):
     """
     Read binary SWR output from MODFLOW SWR Process binary output files
+    This class should not be instantiated directly.
 
     Parameters
     ----------
     filename : string
         Name of the swr output file
     swrtype : str
-        swr data type. Valid data types are 'stage', 'reachgroup',
-        'flow', or 'exchange'. (default is 'stage')
+        swr data type. Valid data types are 'stage', 'budget',
+        'flow', 'exchange', or 'structure'. (default is 'stage')
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -819,3 +820,189 @@ class SwrFile(SwrBinaryStatements):
                 self._times = np.array(self._times)
                 self._kswrkstpkper = np.array(self._kswrkstpkper)
                 return
+
+
+class SwrStage(SwrFile):
+    """
+    Read binary SWR stage output from MODFLOW SWR Process binary output files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the swr stage output file
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> stageobj = flopy.utils.SwrStage('mymodel.swr.stg')
+
+    """
+
+    def __init__(self, filename, verbose=False):
+        super(SwrStage, self).__init__(filename, swrtype='stage',
+                                       verbose=verbose)
+        return
+
+
+class SwrBudget(SwrFile):
+    """
+    Read binary SWR budget output from MODFLOW SWR Process binary output files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the swr budget output file
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> stageobj = flopy.utils.SwrStage('mymodel.swr.bud')
+
+    """
+
+    def __init__(self, filename, verbose=False):
+        super(SwrBudget, self).__init__(filename, swrtype='budget',
+                                        verbose=verbose)
+        return
+
+
+class SwrFlow(SwrFile):
+    """
+    Read binary SWR flow output from MODFLOW SWR Process binary output files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the swr flow output file
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> stageobj = flopy.utils.SwrStage('mymodel.swr.flow')
+
+    """
+
+    def __init__(self, filename, verbose=False):
+        super(SwrFlow, self).__init__(filename, swrtype='flow',
+                                      verbose=verbose)
+        return
+
+
+class SwrExchange(SwrFile):
+    """
+    Read binary SWR surface-water groundwater exchange output from MODFLOW SWR Process binary output files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the swr surface-water groundwater exchange output file
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> stageobj = flopy.utils.SwrStage('mymodel.swr.qaq')
+
+    """
+
+    def __init__(self, filename, verbose=False):
+        super(SwrExchange, self).__init__(filename, swrtype='exchange',
+                                          verbose=verbose)
+        return
+
+
+class SwrStructure(SwrFile):
+    """
+    Read binary SWR structure output from MODFLOW SWR Process binary output
+    files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the swr structure output file
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> stageobj = flopy.utils.SwrStage('mymodel.swr.str')
+
+    """
+
+    def __init__(self, filename, verbose=False):
+        super(SwrStructure, self).__init__(filename, swrtype='structure',
+                                           verbose=verbose)
+        return

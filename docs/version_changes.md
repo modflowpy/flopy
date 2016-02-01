@@ -1,16 +1,26 @@
 ### Version 3.2.4
-* Added support for reading SWR Process observation, stage, budget, flow (qm), reach-aquifer exchanges (qaq), and structure flows.
+* Added preliminary model checking functionality (`check()`).
+
+* Added support for reading SWR Process observation, stage, budget, flow, reach-aquifer exchanges, and structure flows.
 
 * Bug fixes:
   1. Fixed issue with right justified format statement for array control record for MT3DMS.
 
 ### Version 3.2.3
+* Added template creation support for several packages for used with PEST (and UCODE).
+ 
 * Added support for the SEAWAT viscosity (VSC) package.
+
 * Added support for the MODFLOW Stream (STR), Streamflow-Routing (SFR2), Subsidence (SUB), and Subsidence and Aquifer-System Compaction Package for Water-Table Aquifers (SWT) Packages.
+
 * Mt3d model was redesigned based on recent changes to the Modflow model.  Mt3d packages rewritten to support multi-species.  Primary packages can be loaded (btn, adv, dsp, ssm, gcg).  Array utilities modified to read some MT3D RARRAY formats.
+
 * Fixed array loading functionality for case when the CNSTNT value is zero.  If CNSTNT is zero and is used as an array multiplier, it is changed to 1 (as done in MODFLOW).
+
 * Added support for the MODFLOW HYDMOD (HYD) Package and reading binary files created by the HYDMOD Package (`HydmodObs` Class) in the `flopy.utils` submodule.
+
 * `flopy.utils.CellBudgetFile` returns a numpy recarray for list based budget data. Previously a dictionary with the `node` number and `q` were returned. The recarray will return the `node` number, `q`, and the `aux` variables for list based budget data.
+
 * Added travis-ci automated testing.
 
 ### Version 3.2.2
