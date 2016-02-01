@@ -90,7 +90,7 @@ def test_mfnwt_run():
     stress_period_data[0] = (0, 0, 0, h1, c1)
     stress_period_data[1] = (0, 0, ncol - 1, h2, c2)
 
-    mf = flopy.modflow.Modflow(modelname=modelname, exe_name=exe, model_ws=model_ws, version='mf2005')
+    mf = flopy.modflow.Modflow(modelname=modelname, exe_name=exe, model_ws=model_ws, version='mfnwt')
     dis = flopy.modflow.ModflowDis(mf, nlay, nrow, ncol,
                                    delr=delr, delc=delc,
                                    top=top, botm=botm,

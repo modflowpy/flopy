@@ -1,0 +1,3 @@
+# MODFLOW-NWT data for Prob 2 from McDonald and others (1991)
+1.0E-4 1. 500 1.0e-5  2  1 1 SPECIFIED 0.97 1.0e-4 0.000  0.10 1  20 1.5 0.7  linmeth=1 (GMRES); =2 (xmd)  
+2 0 3 5 1 0.0 0 1.0E-4 1.0e-3  50       XMD

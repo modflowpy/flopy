@@ -102,6 +102,37 @@ class BaseModel(object):
 
         return
 
+    def set_free_format(self, value=True):
+        """
+        Set the free format flag for the model instance
+
+        Parameters
+        ----------
+        value : bool
+            Boolean value to set free format flag for model. (default is True)
+
+        Returns
+        -------
+
+        """
+        if not isinstance(value, bool):
+            print('Error: set_free_format passed value must be a boolean')
+            return False
+        self.free_format = value
+
+    def get_free_format(self):
+        """
+        Return the free format flag for the model
+
+        Returns
+        -------
+        out : bool
+            Free format flag for the model
+
+        """
+        return self.free_format
+
+
     def next_ext_unit(self):
         """
         Function to encapsulate next_ext_unit attribute
