@@ -4,12 +4,36 @@ import struct as strct
 from collections import OrderedDict
 
 
-class SwrBinaryStatements:
-    integer = np.int32
-    real = np.float64
-    character = np.uint8
-    integerbyte = 4
-    realbyte = 8
+class SwrBinaryData(object):
+    """
+    The SwrBinaryData class is a class to that defines the data types for
+    integer, floating point, and character data in SWR Process binary
+    files. The SwrBinaryDat class is the super class from which the
+    specific derived classes SwrObs and SwrFile are formed.  This class
+    should not be instantiated directly.
+
+    Parameters
+    ----------
+        precision : string
+            precision is the precision of the floating point data in the file.
+            (default is 'double')
+    """
+    def __init__(self, precision='double'):
+
+        self.precision = precision
+        if precision.lower() == 'double':
+            self.real = np.float64
+            self.floattype = 'f8'
+        else:
+            self.real = np.float32
+            self.floattype = 'f4'
+        self.realbyte = self.real(1).nbytes
+
+        self.integer = np.int32
+        self.integerbyte = self.integer(1).nbytes
+
+        self.character = np.uint8
+        return
 
     def read_obs_text(self, nchar=20):
         return self._read_values(self.character, nchar).tostring()
@@ -29,7 +53,7 @@ class SwrBinaryStatements:
         return np.fromfile(self.file, dtype, count)
 
 
-class SwrObs(SwrBinaryStatements):
+class SwrObs(SwrBinaryData):
     """
     Read binary SWR observations output from MODFLOW SWR Process binary
     observation files
@@ -38,6 +62,8 @@ class SwrObs(SwrBinaryStatements):
     ----------
     filename : string
         Name of the cell budget file
+    precision : string
+        'single' or 'double'.  Default is 'double'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -61,13 +87,13 @@ class SwrObs(SwrBinaryStatements):
 
     """
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename, precision='double', verbose=False):
         """
         Class constructor.
 
         """
+        super(SwrObs, self).__init__(precision=precision)
         # initialize class information
-        self.floattype = 'f8'
         self.verbose = verbose
         # open binary head file
         self.file = open(filename, 'rb')
@@ -220,10 +246,11 @@ class SwrObs(SwrBinaryStatements):
                           self.data.strides)
 
 
-class SwrFile(SwrBinaryStatements):
+class SwrFile(SwrBinaryData):
     """
     Read binary SWR output from MODFLOW SWR Process binary output files
-    This class should not be instantiated directly.
+    The SwrFile class is the super class from which specific derived
+    classes are formed.  This class should not be instantiated directly
 
     Parameters
     ----------
@@ -232,6 +259,8 @@ class SwrFile(SwrBinaryStatements):
     swrtype : str
         swr data type. Valid data types are 'stage', 'budget',
         'flow', 'exchange', or 'structure'. (default is 'stage')
+    precision : string
+        'single' or 'double'.  Default is 'double'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -255,12 +284,13 @@ class SwrFile(SwrBinaryStatements):
 
     """
 
-    def __init__(self, filename, swrtype='stage', verbose=False):
+    def __init__(self, filename, swrtype='stage', precision='double',
+                 verbose=False):
         """
         Class constructor.
 
         """
-        self.floattype = 'f8'
+        super(SwrFile, self).__init__(precision=precision)
         self.header_dtype = np.dtype([('totim', self.floattype),
                                       ('kswr', 'i4'), ('kstp', 'i4'),
                                       ('kper', 'i4')])
@@ -802,7 +832,7 @@ class SwrFile(SwrBinaryStatements):
                     bytes = self.nitems * (5 * self.realbyte)
                 else:
                     bytes = self.nrecord * self.items * \
-                            SwrBinaryStatements.realbyte
+                            self.realbyte
                 ipos = self.file.tell()
                 self.file.seek(bytes, 1)
                 # save data
@@ -830,6 +860,8 @@ class SwrStage(SwrFile):
     ----------
     filename : string
         Name of the swr stage output file
+    precision : string
+        'single' or 'double'.  Default is 'double'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -853,9 +885,9 @@ class SwrStage(SwrFile):
 
     """
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename, precision='double', verbose=False):
         super(SwrStage, self).__init__(filename, swrtype='stage',
-                                       verbose=verbose)
+                                       precision=precision, verbose=verbose)
         return
 
 
@@ -867,6 +899,8 @@ class SwrBudget(SwrFile):
     ----------
     filename : string
         Name of the swr budget output file
+    precision : string
+        'single' or 'double'.  Default is 'double'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -890,9 +924,9 @@ class SwrBudget(SwrFile):
 
     """
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename, precision='double', verbose=False):
         super(SwrBudget, self).__init__(filename, swrtype='budget',
-                                        verbose=verbose)
+                                        precision=precision, verbose=verbose)
         return
 
 
@@ -904,6 +938,8 @@ class SwrFlow(SwrFile):
     ----------
     filename : string
         Name of the swr flow output file
+    precision : string
+        'single' or 'double'.  Default is 'double'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -927,9 +963,9 @@ class SwrFlow(SwrFile):
 
     """
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename, precision='double', verbose=False):
         super(SwrFlow, self).__init__(filename, swrtype='flow',
-                                      verbose=verbose)
+                                      precision=precision, verbose=verbose)
         return
 
 
@@ -941,6 +977,8 @@ class SwrExchange(SwrFile):
     ----------
     filename : string
         Name of the swr surface-water groundwater exchange output file
+    precision : string
+        'single' or 'double'.  Default is 'double'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -964,9 +1002,9 @@ class SwrExchange(SwrFile):
 
     """
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename, precision='double', verbose=False):
         super(SwrExchange, self).__init__(filename, swrtype='exchange',
-                                          verbose=verbose)
+                                          precision=precision, verbose=verbose)
         return
 
 
@@ -979,6 +1017,8 @@ class SwrStructure(SwrFile):
     ----------
     filename : string
         Name of the swr structure output file
+    precision : string
+        'single' or 'double'.  Default is 'double'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -1002,7 +1042,7 @@ class SwrStructure(SwrFile):
 
     """
 
-    def __init__(self, filename, verbose=False):
+    def __init__(self, filename, precision='double', verbose=False):
         super(SwrStructure, self).__init__(filename, swrtype='structure',
-                                           verbose=verbose)
+                                           precision=precision, verbose=verbose)
         return
