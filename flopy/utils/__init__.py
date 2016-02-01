@@ -26,7 +26,8 @@ from .util_list import MfList
 from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
 from .formattedfile import FormattedHeadFile
 from .modpathfile import PathlineFile, EndpointFile
-from .binaryswrfile import SwrObs, SwrFile
+from .binaryswrfile import SwrObs, SwrStage, SwrBudget, SwrFlow, SwrExchange, \
+    SwrStructure
 from .binaryhydmodfile import HydmodObs
 from .reference import SpatialReference  # , TemporalReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \

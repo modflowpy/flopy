@@ -1,4 +1,9 @@
 # flopy version file
-#            created on......December 10, 2015
-__version__='3.2.3'
-__build__='3.2.3.1064'
+
+major = 3
+minor = 2
+micro = 4
+commit = 1215
+
+__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)
+__build__ = '{:d}.{:d}.{:d}.{:d}'.format(major, minor, micro, commit)

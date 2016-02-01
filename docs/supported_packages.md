@@ -23,7 +23,7 @@
 | Multi-Node Well 1 (MNW1)                       | Limited support      | Not supported        | Not supported        |
 | Multi-Node Well 2 (MNW1)                       | Limited support      | Not supported        | Not supported        |
 | Multi-Node Well Information (MNWI)             | Limited support      | Not supported        | Not supported        |
-| Newton (NWT)                                   | Supported            | Not supported        | Not supported        |
+| Newton (NWT)                                   | Supported            | Supported            | Not supported        |
 | Output Control (OC)                            | Supported            | Supported            | Not supported        |
 | Periodic Boundary Condition (PBC)              | Supported            | Not supported        | Not supported        |
 | Preconditioned Conjugate <br />Gradient (PCG)              | Supported            | Supported            | Not supported        |

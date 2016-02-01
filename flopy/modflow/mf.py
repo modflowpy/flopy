@@ -247,6 +247,17 @@ class Modflow(BaseModel):
         else:
             return False
 
+    def set_ifrefm(self, value=True):
+        if not isinstance(value, bool):
+            print('Error: set_ifrefm passed value must be a boolean')
+            return False
+        self.free_format = value
+        bas = self.get_package('BAS6')
+        if (bas):
+            bas.ifrefm = value
+        else:
+            return False
+
     def _set_name(self, value):
         # Overrides BaseModel's setter for name property
         BaseModel._set_name(self, value)

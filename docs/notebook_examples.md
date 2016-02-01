@@ -26,11 +26,17 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + [Example 4](../examples/Notebooks/swiex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
 
+#### Model checking examples
+
++ An overview of the *FloPy<sub>3</sub>*  [model input data `check()` method capabilities](../examples/Notebooks/flopy3_ModelCheckerExample.ipynb)
+
 #### Plotting examples
 
 + An overview of the *FloPy<sub>3</sub>* [map and cross-section plotting capabilities](../examples/Notebooks/flopy3_MapExample.ipynb).
 
 + An overview of the *FloPy<sub>3</sub>*  [model input and output data `plot()` method capabilities](../examples/Notebooks/flopy3_PlotArrayExample.ipynb)
+
++ An overview of SWR1 Process Output Processing and Plotting is given in the [flopy3_LoadSWRBinaryData](../examples/Notebooks/flopy3_LoadSWRBinaryData.ipynb) Notebook.
 
 #### Export examples
 
