@@ -10,6 +10,7 @@ MODFLOW Guide
 
 import sys
 import numpy as np
+import warnings
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, reference, check
 
@@ -108,8 +109,7 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=11, xul=None, yul=None, rotation=0.0,
-                 proj4_str="EPSG:4326", start_datetime="1/1/1970"):
+                 unitnumber=11):
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
@@ -155,13 +155,22 @@ class ModflowDis(Package):
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
 
-        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
-                                             self.lenuni,xul=xul, yul=yul,
-                                             rotation=rotation,
-                                             proj4_str=proj4_str)
-        self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
+
+
+    @property
+    def sr(self):
+        warnings.warn("ModflowDis.sr is deprecated. use Modflow.sr")
+        return self.parent.sr
+
+
+    @property
+    def start_datetime(self):
+        warnings.warn("ModflowDis.start_datetime is deprecated. "+
+                      "use Modflow.start_datetime")
+        return self.parent.start_datetime
+
 
     def checklayerthickness(self):
         """
@@ -430,9 +439,9 @@ class ModflowDis(Package):
         f_dis = open(self.fn_path, 'w')
         # Item 0: heading        
         f_dis.write('{0:s}\n'.format(self.heading))
-        f_dis.write('#{0:s}'.format(str(self.sr)))
-        f_dis.write(" ,{0:s}:{1:s}\n".format("start_datetime",
-                                            self.start_datetime))
+        #f_dis.write('#{0:s}'.format(str(self.sr)))
+        #f_dis.write(" ,{0:s}:{1:s}\n".format("start_datetime",
+        #                                    self.start_datetime))
         # Item 1: NLAY, NROW, NCOL, NPER, ITMUNI, LENUNI
         f_dis.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}\n' \
                     .format(self.nlay, self.nrow, self.ncol, self.nper,
@@ -605,33 +614,42 @@ class ModflowDis(Package):
         rotation = 0.0
         proj4_str = "EPSG:4326"
         start_datetime = "1/1/1970"
-
+        dep = False
         for item in header.split(','):
             if "xul" in item.lower():
                 try:
                     xul = float(item.split(':')[1])
+                    dep = True
                 except:
                     pass
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(':')[1])
+                    dep = True
                 except:
                     pass
             elif "rotation" in item.lower():
                 try:
                     rotation = float(item.split(':')[1])
+                    dep = True
                 except:
                     pass
             elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ':'.join(item.split(':')[1:]).strip()
+                    dep = True
                 except:
                     pass
             elif "start" in item.lower():
                 try:
                     start_datetime = item.split(':')[1].strip()
+                    dep = True
                 except:
                     pass
+        if dep:
+            warnings.warn("reference information found in" +\
+                          " ModflowDis header. This information " +\
+                          " is being ignored.  Please use the namfile")
 
         # dataset 1
         nlay, nrow, ncol, nper, itmuni, lenuni = line.strip().split()[0:6]
@@ -710,8 +728,9 @@ class ModflowDis(Package):
         # create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
-                         lenuni, xul=xul, yul=yul, rotation=rotation,
-                         proj4_str=proj4_str, start_datetime=start_datetime)
+                         lenuni)\
+            #, xul=xul, yul=yul, rotation=rotation,
+            #             proj4_str=proj4_str, start_datetime=start_datetime)
         if check:
             dis.check(f='{}.chk'.format(dis.name[0]), verbose=dis.parent.verbose, level=0)
         # return dis object instance
