@@ -217,10 +217,10 @@ class Mt3dSft(Package):
         water boundary conditions.
         """
         type_list = [("isegbc", np.int), ("irchbc", np.int), \
-                     ("isfbctyp", np.int), ("cbcsf", np.float32)]
+                     ("isfbctyp", np.int)]
         if ncomp > 1:
             for comp in range(1,ncomp+1):
-                comp_name = "".format(comp)
+                comp_name = "cbcsf{0:d}".format(comp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
