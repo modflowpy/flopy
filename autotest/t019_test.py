@@ -64,17 +64,41 @@ def test_hydmodfile_read():
     assert len(labels) == 8, 'Not enough labels in hydmod file ()...'.format(os.path.basename(pth))
     print(labels)
 
-    for idx in range(nitems):
+    for idx in range(ntimes):
         data = h.get_data(idx=idx)
-        assert data.shape == (len(times), 1), 'data shape is not ({}, 1)'.format(len(times))
+        assert data.shape == (1,), 'data shape is not (1,)'
+
+    for time in times:
+        data = h.get_data(totim=time)
+        assert data.shape == (1,), 'data shape is not (1,)'
 
     for label in labels:
         data = h.get_data(obsname=label)
-        assert data.shape == (len(times), 1), 'data shape is not ({}, 1)'.format(len(times))
+        assert data.shape == (len(times),), 'data shape is not ({},)'.format(len(times))
 
     data = h.get_data()
-    assert data.shape == (len(times), 1), 'data shape is not ({}, 1)'.format(len(times))
+    assert data.shape == (len(times),), 'data shape is not ({},)'.format(len(times))
     assert len(data.dtype.names) == nitems + 1, 'data column length is not {}'.format(len(nitems+1))
+
+    try:
+        import pandas as pd
+
+        for idx in range(ntimes):
+            df = h.get_dataframe(idx=idx, timeunit='S')
+            assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+            assert df.shape == (1, 9), 'data shape is not (1, 9)'
+
+        for time in times:
+            df = h.get_dataframe(totim=time, timeunit='S')
+            assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+            assert df.shape == (1, 9), 'data shape is not (1, 9)'
+
+        df = h.get_dataframe(timeunit='S')
+        assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+        assert df.shape == (101, 9), 'data shape is not (101, 9)'
+    except:
+        print('pandas not available...')
+        pass
 
     return
 

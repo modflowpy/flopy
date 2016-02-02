@@ -66,7 +66,7 @@ class BaseModel(object):
 
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
                  exe_name='mf2k.exe', model_ws=None,
-                 structured=True):
+                 structured=True,**kwargs):
         """
         BaseModel init
         """
@@ -90,6 +90,15 @@ class BaseModel(object):
         self.structured = structured
         self.pop_key_list = []
         self.cl_params = ''
+
+        # check for reference info in kwargs
+        xul = kwargs.pop("xul",None)
+        yul = kwargs.pop("yul",None)
+        rotation = kwargs.pop("rotation",0.0)
+        proj4_str = kwargs.pop("proj4_str","EPSG:4326")
+        self.start_datetime = kwargs.pop("start_datetime","1-1-1970")
+        self._sr = utils.SpatialReference(xul=xul,yul=yul,rotation=rotation,
+                                         proj4_str=proj4_str)
 
         # Model file information
         # external option stuff
@@ -202,14 +211,28 @@ class BaseModel(object):
         Parameters
         ----------
         item : str
-            3 character package name (case insensitive)
+            3 character package name (case insensitive) or "sr" to access
+            the SpatialReference instance
+
 
         Returns
         -------
+        sr : SpatialReference instance
         pp : Package object
             Package object of type :class:`flopy.pakbase.Package`
 
+        Note
+        ----
+        if self.dis is not None, then the spatial reference instance is updated
+        using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
+        returned
         """
+        if item == 'sr':
+            if self.dis is not None:
+                self._sr.reset(delr=self.dis.delr.array,delc=self.dis.delc.array,
+                              lenuni=self.dis.lenuni)
+            return self._sr
+
         return self.get_package(item)
 
     def add_external(self, fname, unit, binflag=False):
@@ -414,6 +437,9 @@ class BaseModel(object):
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
+        elif key == "sr":
+            assert isinstance(value,utils.SpatialReference)
+            self._sr = value
         else:
             super(BaseModel, self).__setattr__(key, value)
 
