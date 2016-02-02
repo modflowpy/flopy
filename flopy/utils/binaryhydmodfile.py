@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-import struct as strct
 
 
 class HydmodBinaryData(object):
@@ -12,6 +11,7 @@ class HydmodBinaryData(object):
     instantiated directly.
 
     """
+
     def __init__(self):
 
         self.integer = np.int32
@@ -32,7 +32,6 @@ class HydmodBinaryData(object):
             self.floattype = 'f4'
         self.realbyte = self.real(1).nbytes
         return
-
 
     def read_hyd_text(self, nchar=20):
         textvalue = self._read_values(self.character, nchar).tostring()
@@ -129,7 +128,7 @@ class HydmodObs(HydmodBinaryData):
             List contains unique simulation times (totim) in binary file.
 
         """
-        return self._get_selection(['totim']).tolist()
+        return self.data['totim'].reshape(self.get_ntimes()).tolist()
 
     def get_ntimes(self):
         """
@@ -168,9 +167,9 @@ class HydmodObs(HydmodBinaryData):
             included in the list of observation names.
 
         """
-        return self.data.dtype.names[1:]
+        return list(self.data.dtype.names[1:])
 
-    def get_data(self, idx=None, obsname=None):
+    def get_data(self, idx=None, obsname=None, totim=None):
         """
         Get data from the observation file.
 
@@ -178,9 +177,14 @@ class HydmodObs(HydmodBinaryData):
         ----------
         idx : int
             The zero-based record number.  The first record is record 0.
-            (default is None)
+            If idx is None and totim are None, data for all simulation times
+            are returned. (default is None)
         obsname : string
-            The name of the observation to return. (default is None)
+            The name of the observation to return. If obsname is None, all
+            observation data are returned. (default is None)
+        totim : float
+            The simulation time to return. If idx is None and totim are None,
+            data for all simulation times are returned. (default is None)
 
         Returns
         ----------
@@ -198,23 +202,122 @@ class HydmodObs(HydmodBinaryData):
 
         Examples
         --------
+        >>> hyd = HydmodObs("my_model.hyd")
+        >>> ts = hyd.get_data()
 
         """
-        if obsname is None and idx is None:
-            return self.data.view(dtype=self.dtype)
+        i0 = 0
+        i1 = self.data.shape[0]
+        if totim is not None:
+            idx = np.where(self.data['totim'] == totim)[0][0]
+            i0 = idx
+            i1 = idx + 1
+        elif idx is not None:
+            if idx < i1:
+                i0 = idx
+            i1 = i0 + 1
+        r = None
+        if obsname is None:
+            obsname = self.get_obsnames()
         else:
-            r = None
             if obsname is not None:
                 if obsname not in self.data.dtype.names:
                     obsname = None
-            elif idx is not None:
-                idx += 1
-                if idx < len(self.data.dtype.names):
-                    obsname = self.data.dtype.names[idx]
-            if obsname is not None:
-                r = self._get_selection(['totim', obsname])
-            return r
+                else:
+                    if not isinstance(obsname, list):
+                        obsname = [obsname]
+        if obsname is not None:
+            obsname.insert(0, 'totim')
+            r = self._get_selection(obsname)[i0:i1]
+        return r
 
+
+    def get_dataframe(self, start_datetime='1-1-1970',
+                      idx=None, obsname=None, totim=None, timeunit='D'):
+        """
+        Get pandas dataframe with the incremental and cumulative water budget
+        items in the hydmod file.
+
+        Parameters
+        ----------
+        start_datetime : str
+            If start_datetime is passed as None, the rows are indexed on totim.
+            Otherwise, a DatetimeIndex is set. (default is 1-1-1970).
+        idx : int
+            The zero-based record number.  The first record is record 0.
+            If idx is None and totim are None, a dataframe with all simulation
+            times is  returned. (default is None)
+        obsname : string
+            The name of the observation to return. If obsname is None, all
+            observation data are returned. (default is None)
+        totim : float
+            The simulation time to return. If idx is None and totim are None,
+            a dataframe with all simulation times is returned.
+            (default is None)
+        timeunit : string
+            time unit of the simulation time. Valid values are 'S'econds,
+            'M'inutes, 'H'ours, 'D'ays, 'Y'ears. (default is 'D').
+
+        Returns
+        -------
+        out : pandas dataframe
+            Pandas dataframe of selected data.
+
+        See Also
+        --------
+
+        Notes
+        -----
+        If both idx and obsname are None, will return all of the observation
+        data as a dataframe.
+
+        Examples
+        --------
+        >>> hyd = HydmodObs("my_model.hyd")
+        >>> df = hyd.get_dataframes()
+
+        """
+
+        try:
+            import pandas as pd
+            from ..utils.utils_def import totim_to_datetime
+        except Exception as e:
+            raise Exception(
+                    "HydmodObs.get_dataframe() error import pandas: " + \
+                    str(e))
+        i0 = 0
+        i1 = self.data.shape[0]
+        if totim is not None:
+            idx = np.where(self.data['totim'] == totim)[0][0]
+            i0 = idx
+            i1 = idx + 1
+        elif idx is not None:
+            if idx < i1:
+                i0 = idx
+            i1 = i0 + 1
+
+        if obsname is None:
+            obsname = self.get_obsnames()
+        else:
+            if obsname is not None:
+                if obsname not in self.data.dtype.names:
+                    obsname = None
+                else:
+                    if not isinstance(obsname, list):
+                        obsname = [obsname]
+        if obsname is None:
+            return None
+
+        obsname.insert(0, 'totim')
+
+        dti = self.get_times()[i0:i1]
+        if start_datetime is not None:
+            dti = totim_to_datetime(dti,
+                                    start=pd.to_datetime(start_datetime),
+                                    timeunit=timeunit)
+
+        df = pd.DataFrame(self.data[i0:i1], index=dti, columns=obsname)
+        return df
 
     def _read_data(self):
 
@@ -226,11 +329,13 @@ class HydmodObs(HydmodBinaryData):
                 r = self.read_record(count=1)
                 if self.data is None:
                     self.data = r.copy()
+                elif r.size == 0:
+                    break
                 else:
-                    self.data = np.vstack((self.data, r))
+                    # should be hstack based on (https://mail.scipy.org/pipermail/numpy-discussion/2010-June/051107.html)
+                    self.data = np.hstack((self.data, r))
             except:
                 break
-
         return
 
     def _get_selection(self, names):
@@ -240,4 +345,3 @@ class HydmodObs(HydmodBinaryData):
                 {name: self.data.dtype.fields[name] for name in names})
         return np.ndarray(self.data.shape, dtype2, self.data, 0,
                           self.data.strides)
-

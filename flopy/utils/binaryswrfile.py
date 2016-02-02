@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-import struct as strct
 from collections import OrderedDict
 
 
