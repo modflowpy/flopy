@@ -142,4 +142,114 @@ class Mt3dSft(Package):
 
     """
 
-    unitnumber
+    unitnumber = 48
+    def __init__(self,):
+        # unit number
+        if unitnumber is None:
+            unitnumber = self.unitnumber
+        Package.__init__(self, model, extension, 'CTS', self.unitnumber)
+
+        # Set dimensions
+        nrow = model.nrow
+        ncol = model.ncol
+        nlay = model.nlay
+        ncomp = model.ncomp
+        mcomp = model.mcomp
+
+        # Set package specific parameters
+
+
+    @staticmethod
+    def load(f, model, nlay=None, nrow=None, ncol=None, nper=None,
+             ncomp=None, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.mt3d.mt.Mt3dms`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        cts : Mt3dCts object
+            Mt3dCts object
+
+        Examples
+        --------
+
+        >>>
+
+        """
+
+        if model.verbose:
+            sys.stdout.write('loading cts package file...\n')
+
+        # Open file, if necessary
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+
+        # Set dimensions if necessary
+        if nlay is None:
+            nlay = model.nlay
+        if nrow is None:
+            nrow = model.nrow
+        if ncol is None:
+            ncol = model.ncol
+        if nper is None:
+            nper = model.nper
+        if ncomp is None:
+            ncomp = model.ncomp
+
+        # Item 1 (MXCTS, ICTSOUT, MXEXT, MXINJ, MXWEL, IFORCE)
+        line = f.readline()
+        if model.verbose:
+            print('   loading MXCTS, ICTSOUT, MXEXT, MXINJ, MXWEL, IFORCE...')
+            if line[0] == '#':
+                print('   "#" found in the first position.  CTS package does ',
+                      'not support comment lines\n')
+                print('   Stopping.')
+                sys.exit()
+
+        m_arr = line.strip().split()
+        mxcts = int(m_arr[0])
+        ictsout = int(m_arr[1])
+        mxext = int(m_arr[2])
+        mxinj = int(m_arr[3])
+        mxwel = int(m_arr[4])
+        iforce = int(m_arr[5])
+
+        # Start of transient data
+        for iper in range(nper):
+
+            if model.verbose:
+                print('   loading CTS data for kper {0:5d}'.format(iper + 1))
+
+            # Item 2 (NCTS)
+            line = f.readline()
+            m_arr = line.strip().split()
+            ncts = int(m_arr[0])
+
+            # Start of information for each CTS
+            for icts in range(ncts):
+
+                if model.verbose:
+                    print('   loading data for system #{0:5d}'
+                          .format(icts + 1))
+                # Item 3 (ICTS, NEXT, NINJ, ITRTINJ)
+                line = f.readline()
+                m_arr = line.strip().split()
+                icts = int(m_arr[0])
+                next = int(m_arr[1])
+                ninj = int(m_arr[2])
+                itrtinj = int(m_arr[3])

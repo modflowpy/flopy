@@ -132,7 +132,7 @@ class Mt3dUzt(Package):
 
     """
 
-    unitnumber = 46
+    unitnumber = 47
     def __init__(self, model, mxuzcon=0, icbcuz=0, iet=0, iuzfbnd=None,
                  wc=0., sdh=0., cuzinf=None, cuzet=None, cgwet=None,
                  extension='uzt', unitnumber=None, **kwargs):

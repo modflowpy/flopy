@@ -243,7 +243,7 @@ class Mt3dSft(Package):
         >>>
         >>> mt.sft.dispsf.fmtin = '(10F12.2)'
         >>> mt.write_input()
-        
+
         """
 
         # Open file for writing
