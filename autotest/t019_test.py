@@ -45,7 +45,6 @@ def test_hydmodfile_load():
 def test_hydmodfile_read():
     import os
     import flopy
-    import pandas as pd
 
     pth = os.path.join('..', 'examples', 'data', 'hydmod_test',
                        'test1tr.hyd.gitbin')
@@ -81,19 +80,25 @@ def test_hydmodfile_read():
     assert data.shape == (len(times),), 'data shape is not ({},)'.format(len(times))
     assert len(data.dtype.names) == nitems + 1, 'data column length is not {}'.format(len(nitems+1))
 
-    for idx in range(ntimes):
-        df = h.get_dataframe(idx=idx, timeunit='S')
-        assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
-        assert df.shape == (1, 9), 'data shape is not (1, 9)'
+    try:
+        import pandas as pd
 
-    for time in times:
-        df = h.get_dataframe(totim=time, timeunit='S')
-        assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
-        assert df.shape == (1, 9), 'data shape is not (1, 9)'
+        for idx in range(ntimes):
+            df = h.get_dataframe(idx=idx, timeunit='S')
+            assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+            assert df.shape == (1, 9), 'data shape is not (1, 9)'
 
-    df = h.get_dataframe(timeunit='S')
-    assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
-    assert df.shape == (101, 9), 'data shape is not (101, 9)'
+        for time in times:
+            df = h.get_dataframe(totim=time, timeunit='S')
+            assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+            assert df.shape == (1, 9), 'data shape is not (1, 9)'
+
+        df = h.get_dataframe(timeunit='S')
+        assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+        assert df.shape == (101, 9), 'data shape is not (101, 9)'
+    except:
+        print('pandas not available...')
+        pass
 
     return
 
