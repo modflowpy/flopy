@@ -2,57 +2,9 @@ import sys
 import numpy as np
 from collections import OrderedDict
 
+from ..utils.utils_def import FlopyBinaryData, get_selection
 
-class SwrBinaryData(object):
-    """
-    The SwrBinaryData class is a class to that defines the data types for
-    integer, floating point, and character data in SWR Process binary
-    files. The SwrBinaryDat class is the super class from which the
-    specific derived classes SwrObs and SwrFile are formed.  This class
-    should not be instantiated directly.
-
-    Parameters
-    ----------
-        precision : string
-            precision is the precision of the floating point data in the file.
-            (default is 'double')
-    """
-    def __init__(self, precision='double'):
-
-        self.precision = precision
-        if precision.lower() == 'double':
-            self.real = np.float64
-            self.floattype = 'f8'
-        else:
-            self.real = np.float32
-            self.floattype = 'f4'
-        self.realbyte = self.real(1).nbytes
-
-        self.integer = np.int32
-        self.integerbyte = self.integer(1).nbytes
-
-        self.character = np.uint8
-        return
-
-    def read_obs_text(self, nchar=20):
-        return self._read_values(self.character, nchar).tostring()
-
-    def read_integer(self):
-        return self._read_values(self.integer, 1)[0]
-
-    def read_real(self):
-        return self._read_values(self.real, 1)[0]
-
-    def read_record(self, count=None):
-        if count is None:
-            count = self.nrecord
-        return self._read_values(self.read_dtype, count)
-
-    def _read_values(self, dtype, count):
-        return np.fromfile(self.file, dtype, count)
-
-
-class SwrObs(SwrBinaryData):
+class SwrObs(FlopyBinaryData):
     """
     Read binary SWR observations output from MODFLOW SWR Process binary
     observation files
@@ -91,7 +43,8 @@ class SwrObs(SwrBinaryData):
         Class constructor.
 
         """
-        super(SwrObs, self).__init__(precision=precision)
+        super(SwrObs, self).__init__()
+        self.set_float(precision=precision)
         # initialize class information
         self.verbose = verbose
         # open binary head file
@@ -114,7 +67,7 @@ class SwrObs(SwrBinaryData):
             List contains unique simulation times (totim) in binary file.
 
         """
-        return self._get_selection(['totim']).tolist()
+        return self.data['totim'].reshape(self.get_ntimes()).tolist()
 
     def get_ntimes(self):
         """
@@ -153,9 +106,9 @@ class SwrObs(SwrBinaryData):
             included in the list of observation names.
 
         """
-        return self.data.dtype.names[1:]
+        return list(self.data.dtype.names[1:])
 
-    def get_data(self, idx=None, obsname=None):
+    def get_data(self, idx=None, obsname=None, totim=None):
         """
         Get data from the observation file.
 
@@ -163,9 +116,14 @@ class SwrObs(SwrBinaryData):
         ----------
         idx : int
             The zero-based record number.  The first record is record 0.
-            (default is None)
+            If idx is None and totim are None, data for all simulation times
+            are returned. (default is None)
         obsname : string
-            The name of the observation to return. (default is None)
+            The name of the observation to return. If obsname is None, all
+            observation data are returned. (default is None)
+        totim : float
+            The simulation time to return. If idx is None and totim are None,
+            data for all simulation times are returned. (default is None)
 
         Returns
         ----------
@@ -183,22 +141,122 @@ class SwrObs(SwrBinaryData):
 
         Examples
         --------
+        >>> hyd = HydmodObs("my_model.hyd")
+        >>> ts = hyd.get_data()
 
         """
-        if obsname is None and idx is None:
-            return self.data
+        i0 = 0
+        i1 = self.data.shape[0]
+        if totim is not None:
+            idx = np.where(self.data['totim'] == totim)[0][0]
+            i0 = idx
+            i1 = idx + 1
+        elif idx is not None:
+            if idx < i1:
+                i0 = idx
+            i1 = i0 + 1
+        r = None
+        if obsname is None:
+            obsname = self.get_obsnames()
         else:
-            r = None
             if obsname is not None:
                 if obsname not in self.data.dtype.names:
                     obsname = None
-            elif idx is not None:
-                idx += 1
-                if idx < len(self.data.dtype.names):
-                    obsname = self.data.dtype.names[idx]
+                else:
+                    if not isinstance(obsname, list):
+                        obsname = [obsname]
+        if obsname is not None:
+            obsname.insert(0, 'totim')
+            r = get_selection(self.data, obsname)[i0:i1]
+        return r
+
+
+    def get_dataframe(self, start_datetime='1-1-1970',
+                      idx=None, obsname=None, totim=None, timeunit='D'):
+        """
+        Get pandas dataframe with the incremental and cumulative water budget
+        items in the hydmod file.
+
+        Parameters
+        ----------
+        start_datetime : str
+            If start_datetime is passed as None, the rows are indexed on totim.
+            Otherwise, a DatetimeIndex is set. (default is 1-1-1970).
+        idx : int
+            The zero-based record number.  The first record is record 0.
+            If idx is None and totim are None, a dataframe with all simulation
+            times is  returned. (default is None)
+        obsname : string
+            The name of the observation to return. If obsname is None, all
+            observation data are returned. (default is None)
+        totim : float
+            The simulation time to return. If idx is None and totim are None,
+            a dataframe with all simulation times is returned.
+            (default is None)
+        timeunit : string
+            time unit of the simulation time. Valid values are 'S'econds,
+            'M'inutes, 'H'ours, 'D'ays, 'Y'ears. (default is 'D').
+
+        Returns
+        -------
+        out : pandas dataframe
+            Pandas dataframe of selected data.
+
+        See Also
+        --------
+
+        Notes
+        -----
+        If both idx and obsname are None, will return all of the observation
+        data as a dataframe.
+
+        Examples
+        --------
+        >>> hyd = HydmodObs("my_model.hyd")
+        >>> df = hyd.get_dataframes()
+
+        """
+
+        try:
+            import pandas as pd
+            from ..utils.utils_def import totim_to_datetime
+        except Exception as e:
+            raise Exception(
+                    "HydmodObs.get_dataframe() error import pandas: " + \
+                    str(e))
+        i0 = 0
+        i1 = self.data.shape[0]
+        if totim is not None:
+            idx = np.where(self.data['totim'] == totim)[0][0]
+            i0 = idx
+            i1 = idx + 1
+        elif idx is not None:
+            if idx < i1:
+                i0 = idx
+            i1 = i0 + 1
+
+        if obsname is None:
+            obsname = self.get_obsnames()
+        else:
             if obsname is not None:
-                r = self._get_selection(['totim', obsname])
-            return r
+                if obsname not in self.data.dtype.names:
+                    obsname = None
+                else:
+                    if not isinstance(obsname, list):
+                        obsname = [obsname]
+        if obsname is None:
+            return None
+
+        obsname.insert(0, 'totim')
+
+        dti = self.get_times()[i0:i1]
+        if start_datetime is not None:
+            dti = totim_to_datetime(dti,
+                                    start=pd.to_datetime(start_datetime),
+                                    timeunit=timeunit)
+
+        df = pd.DataFrame(self.data[i0:i1], index=dti, columns=obsname)
+        return df
 
     def _read_header(self):
         # NOBS
@@ -206,7 +264,7 @@ class SwrObs(SwrBinaryData):
         # read obsnames
         obsnames = []
         for idx in range(0, self.nobs):
-            cid = self.read_obs_text()
+            cid = self.read_text()
             if isinstance(cid, bytes):
                 cid = cid.decode()
             obsnames.append(cid.strip())
@@ -214,7 +272,7 @@ class SwrObs(SwrBinaryData):
         vdata = [('totim', self.floattype)]
         for name in obsnames:
             vdata.append((str(name), self.floattype))
-        self.read_dtype = np.dtype(vdata)
+        self.dtype = np.dtype(vdata)
 
         # set position of data start
         self.datastart = self.file.tell()
@@ -229,23 +287,18 @@ class SwrObs(SwrBinaryData):
                 r = self.read_record(count=1)
                 if self.data is None:
                     self.data = r.copy()
+                elif r.size == 0:
+                    break
                 else:
-                    self.data = np.vstack((self.data, r))
+                    # should be hstack based on (https://mail.scipy.org/pipermail/numpy-discussion/2010-June/051107.html)
+                    self.data = np.hstack((self.data, r))
             except:
                 break
 
         return
 
-    def _get_selection(self, names):
-        if not isinstance(names, list):
-            names = [names]
-        dtype2 = np.dtype(
-                {name: self.data.dtype.fields[name] for name in names})
-        return np.ndarray(self.data.shape, dtype2, self.data, 0,
-                          self.data.strides)
 
-
-class SwrFile(SwrBinaryData):
+class SwrFile(FlopyBinaryData):
     """
     Read binary SWR output from MODFLOW SWR Process binary output files
     The SwrFile class is the super class from which specific derived
@@ -289,7 +342,8 @@ class SwrFile(SwrBinaryData):
         Class constructor.
 
         """
-        super(SwrFile, self).__init__(precision=precision)
+        super(SwrFile, self).__init__()
+        self.set_float(precision=precision)
         self.header_dtype = np.dtype([('totim', self.floattype),
                                       ('kswr', 'i4'), ('kstp', 'i4'),
                                       ('kper', 'i4')])
@@ -319,7 +373,7 @@ class SwrFile(SwrBinaryData):
         self.nrecord = self.read_integer()
 
         # set-up
-        self.items = len(self.dtype) - 1
+        self.items = len(self.out_dtype) - 1
 
         # read connectivity for velocity data if necessary
         self.conn_dtype = None
@@ -427,7 +481,7 @@ class SwrFile(SwrBinaryData):
             List of unique text names in the binary file.
 
         """
-        return self.dtype.names
+        return self.out_dtype.names
 
     def get_data(self, idx=None, kswrkstpkper=None, totim=None):
         """
@@ -487,14 +541,14 @@ class SwrFile(SwrBinaryData):
                 self.nitems, self.itemlist = self.nentries[totim1]
                 r = self._read_structure()
             else:
-                r = self.read_record()
+                r = self.read_record(count=self.nrecord)
 
             # add totim to data record array
-            s = np.zeros(r.shape[0], dtype=self.dtype)
+            s = np.zeros(r.shape[0], dtype=self.out_dtype)
             s['totim'] = totim1
             for name in r.dtype.names:
                 s[name] = r[name]
-            return s.view(dtype=self.dtype)
+            return s.view(dtype=self.out_dtype)
         except:
             return None
 
@@ -594,7 +648,7 @@ class SwrFile(SwrBinaryData):
         elif self.type == 'structure':
             vtype = [('usstage', 'f8'), ('dsstage', 'f8'), ('gateelev', 'f8'),
                      ('opening', 'f8'), ('strflow', 'f8')]
-        self.read_dtype = np.dtype(vtype)
+        self.dtype = np.dtype(vtype)
         temp = list(vtype)
         if self.type == 'exchange':
             temp.insert(0, ('reach', 'i4'))
@@ -604,7 +658,7 @@ class SwrFile(SwrBinaryData):
             temp.insert(0, ('reach', 'i4'))
             self.str_dtype = np.dtype(temp)
         temp.insert(0, self.vtotim)
-        self.dtype = np.dtype(temp)
+        self.out_dtype = np.dtype(temp)
         return
 
     def _read_header(self):
@@ -635,7 +689,7 @@ class SwrFile(SwrBinaryData):
     def _get_ts(self, irec=0):
 
         # create array
-        gage_record = np.zeros(self._ntimes, dtype=self.dtype)
+        gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
         # iterate through the record dictionary
         idx = 0
@@ -649,12 +703,12 @@ class SwrFile(SwrBinaryData):
                 gage_record[name][idx] = r[name][irec]
             idx += 1
 
-        return gage_record.view(dtype=self.dtype)
+        return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_qm(self, irec=0, iconn=0):
 
         # create array
-        gage_record = np.zeros(self._ntimes, dtype=self.dtype)
+        gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
         # iterate through the record dictionary
         idx = 0
@@ -675,12 +729,12 @@ class SwrFile(SwrBinaryData):
                     break
             idx += 1
 
-        return gage_record.view(dtype=self.dtype)
+        return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_qaq(self, irec=0, klay=0):
 
         # create array
-        gage_record = np.zeros(self._ntimes, dtype=self.dtype)
+        gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
         # iterate through the record dictionary
         idx = 0
@@ -704,12 +758,12 @@ class SwrFile(SwrBinaryData):
                     break
             idx += 1
 
-        return gage_record.view(dtype=self.dtype)
+        return gage_record.view(dtype=self.out_dtype)
 
     def _get_ts_structure(self, irec=0, istr=0):
 
         # create array
-        gage_record = np.zeros(self._ntimes, dtype=self.dtype)
+        gage_record = np.zeros(self._ntimes, dtype=self.out_dtype)
 
         # iterate through the record dictionary
         idx = 0
@@ -733,7 +787,7 @@ class SwrFile(SwrBinaryData):
                     break
             idx += 1
 
-        return gage_record.view(dtype=self.dtype)
+        return gage_record.view(dtype=self.out_dtype)
 
     def _get_data(self):
         if self.type == 'exchange':
@@ -741,7 +795,7 @@ class SwrFile(SwrBinaryData):
         elif self.type == 'structure':
             return self._read_structure()
         else:
-            return self.read_record()
+            return self.read_record(count=self.nrecord)
 
     def _read_qaq(self):
 
@@ -766,7 +820,7 @@ class SwrFile(SwrBinaryData):
         r['reach'] = reaches.copy()
 
         # add read data to array returned
-        for idx, k in enumerate(self.read_dtype.names):
+        for idx, k in enumerate(self.dtype.names):
             r[k] = bd[k]
         return r
 
@@ -794,7 +848,7 @@ class SwrFile(SwrBinaryData):
         r['structure'] = struct.copy()
 
         # add read data to array returned
-        for idx, k in enumerate(self.read_dtype.names):
+        for idx, k in enumerate(self.dtype.names):
             r[k] = bd[k]
         return r
 

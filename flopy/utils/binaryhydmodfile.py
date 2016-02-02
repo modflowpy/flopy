@@ -1,60 +1,8 @@
-import sys
 import numpy as np
+from ..utils.utils_def import FlopyBinaryData, get_selection
 
 
-class HydmodBinaryData(object):
-    """
-    The HydmodBinaryData class is a class to that defines the data types for
-    integer, floating point, and character data in HYDMOD binary
-    files. The HydmodBinaryData class is the super class from which the
-    specific derived class HydmodObs is formed.  This class should not be
-    instantiated directly.
-
-    """
-
-    def __init__(self):
-
-        self.integer = np.int32
-        self.integerbyte = self.integer(1).nbytes
-
-        self.character = np.uint8
-        self.textbyte = 1
-
-        return
-
-    def set_float(self, precision):
-        self.precision = precision
-        if precision.lower() == 'double':
-            self.real = np.float64
-            self.floattype = 'f8'
-        else:
-            self.real = np.float32
-            self.floattype = 'f4'
-        self.realbyte = self.real(1).nbytes
-        return
-
-    def read_hyd_text(self, nchar=20):
-        textvalue = self._read_values(self.character, nchar).tostring()
-        if not isinstance(textvalue, str):
-            textvalue = textvalue.decode().strip()
-        else:
-            textvalue = textvalue.strip()
-        return textvalue
-
-    def read_integer(self):
-        return self._read_values(self.integer, 1)[0]
-
-    def read_real(self):
-        return self._read_values(self.real, 1)[0]
-
-    def read_record(self, count):
-        return self._read_values(self.dtype, count)
-
-    def _read_values(self, dtype, count):
-        return np.fromfile(self.file, dtype, count)
-
-
-class HydmodObs(HydmodBinaryData):
+class HydmodObs(FlopyBinaryData):
     """
     HydmodObs Class - used to read binary MODFLOW HYDMOD package output
 
@@ -96,12 +44,12 @@ class HydmodObs(HydmodBinaryData):
         self.itmuni = self.read_integer()
         self.v = np.empty(self.nhydtot, dtype=np.float)
         self.v.fill(1.0E+32)
-        ctime = self.read_hyd_text(nchar=4)
+        ctime = self.read_text(nchar=4)
         self.hydlbl_len = int(hydlbl_len)
         # read HYDLBL
         hydlbl = []
         for idx in range(0, self.nhydtot):
-            cid = self.read_hyd_text(self.hydlbl_len)
+            cid = self.read_text(self.hydlbl_len)
             hydlbl.append(cid)
         self.hydlbl = np.array(hydlbl)
 
@@ -228,7 +176,7 @@ class HydmodObs(HydmodBinaryData):
                         obsname = [obsname]
         if obsname is not None:
             obsname.insert(0, 'totim')
-            r = self._get_selection(obsname)[i0:i1]
+            r = get_selection(self.data, obsname)[i0:i1]
         return r
 
 
@@ -337,11 +285,3 @@ class HydmodObs(HydmodBinaryData):
             except:
                 break
         return
-
-    def _get_selection(self, names):
-        if not isinstance(names, list):
-            names = [names]
-        dtype2 = np.dtype(
-                {name: self.data.dtype.fields[name] for name in names})
-        return np.ndarray(self.data.shape, dtype2, self.data, 0,
-                          self.data.strides)

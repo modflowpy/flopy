@@ -12,6 +12,8 @@ import sys
 from datetime import timedelta
 import numpy as np
 
+from ..utils.utils_def import totim_to_datetime
+
 
 class ListBudget(object):
     """
@@ -287,7 +289,7 @@ class ListBudget(object):
             names.insert(0, 'time_step')
             names.insert(0, 'totim')
             return self.inc[names].view(np.recarray), self.cum[names].view(
-                np.recarray)
+                    np.recarray)
 
     def get_data(self, kstpkper=None, idx=None, totim=None, incremental=False):
         """
@@ -364,7 +366,7 @@ class ListBudget(object):
             t = self.cum[ipos]
 
         dtype = np.dtype(
-            [('index', np.int32), ('value', np.float32), ('name', '|S25')])
+                [('index', np.int32), ('value', np.float32), ('name', '|S25')])
         v = np.recarray(shape=(len(self.inc.dtype.names[3:])), dtype=dtype)
         for i, name in enumerate(self.inc.dtype.names[3:]):
             mult = 1.
@@ -404,15 +406,16 @@ class ListBudget(object):
             import pandas as pd
         except Exception as e:
             raise Exception(
-                "ListBudget.get_dataframe() error import pandas: " + \
-                str(e))
+                    "ListBudget.get_dataframe() error import pandas: " + \
+                    str(e))
 
         if not self._isvalid:
             return None
         totim = self.get_times()
         if start_datetime is not None:
-            totim = self._totim_to_datetime(totim,
-                                          start=pd.to_datetime(start_datetime))
+            totim = totim_to_datetime(totim,
+                                      start=pd.to_datetime(start_datetime),
+                                      timeunit=self.timeunit)
 
         df_flux = pd.DataFrame(self.inc, index=totim).loc[:, self.entries]
         df_vol = pd.DataFrame(self.cum, index=totim).loc[:, self.entries]
@@ -579,8 +582,8 @@ class ListBudget(object):
             line = self.f.readline()
             if line == '':
                 print(
-                'end of file found while seeking budget information for ts,sp',
-                ts, sp)
+                        'end of file found while seeking budget information for ts,sp',
+                        ts, sp)
                 return self.null_entries
 
             # --if there are two '=' in this line, then it is a budget line
@@ -595,8 +598,8 @@ class ListBudget(object):
             if line == '':
                 # raise Exception('end of file found while seeking budget information')
                 print(
-                'end of file found while seeking budget information for ts,sp',
-                ts, sp)
+                        'end of file found while seeking budget information for ts,sp',
+                        ts, sp)
                 return self.null_entries
             if len(re.findall('=', line)) == 2:
                 try:
@@ -606,13 +609,15 @@ class ListBudget(object):
                     return self.null_entries
                 if flux is None:
                     print(
-                    'error casting in flux for', entry, ' to float in ts,sp',
-                    ts, sp)
+                            'error casting in flux for', entry,
+                            ' to float in ts,sp',
+                            ts, sp)
                     return self.null_entries
                 if cumu is None:
                     print(
-                    'error casting in cumu for', entry, ' to float in ts,sp',
-                    ts, sp)
+                            'error casting in cumu for', entry,
+                            ' to float in ts,sp',
+                            ts, sp)
                     return self.null_entries
                 if tag.upper() in entry:
                     if ' - ' in entry.upper():
@@ -675,8 +680,8 @@ class ListBudget(object):
             ihead += 1
             if line == '':
                 print(
-                'end of file found while seeking time information for ts,sp',
-                ts, sp)
+                        'end of file found while seeking time information for ts,sp',
+                        ts, sp)
                 return np.NaN, np.NaN, np.Nan
             elif ihead == 2 and 'SECONDS     MINUTES      HOURS       DAYS        YEARS' not in line:
                 break
@@ -720,34 +725,6 @@ class ListBudget(object):
             print('error parsing tslen information', time_str)
             return None
         return tval
-
-    def _totim_to_datetime(self, totim, start):
-        if self.timeunit == 'S':
-            tdtotim = []
-            for to in totim:
-                t = timedelta(seconds=to)
-                tdtotim.append(start + t)
-        elif self.timeunit == 'M':
-            tdtotim = []
-            for to in totim:
-                t = timedelta(minutes=to)
-                tdtotim.append(start + t)
-        elif self.timeunit == 'H':
-            tdtotim = []
-            for to in totim:
-                t = timedelta(hours=to)
-                tdtotim.append(start + t)
-        elif self.timeunit == 'D':
-            tdtotim = []
-            for to in totim:
-                t = timedelta(days=to)
-                tdtotim.append(start + t)
-        elif self.timeunit == 'Y':
-            tdtotim = []
-            for to in totim:
-                t = timedelta(days=to * 365.25)
-                tdtotim.append(start + t)
-        return tdtotim
 
 
 class SwtListBudget(ListBudget):
