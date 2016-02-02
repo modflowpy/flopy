@@ -3,29 +3,44 @@ import matplotlib
 matplotlib.use('agg')
 
 
-def test_dis_reference():
-    import os
+def test_sr():
     import numpy as np
-    import flopy.modflow as fmf
-    ml = fmf.Modflow(modelname="dis_test", model_ws="temp")
-    assert isinstance(ml, fmf.Modflow)
-    perlen = np.arange(1, 20, 1)
-    nstp = np.flipud(perlen) + 3
-    tsmult = 1.2
-    nlay = 10
-    nrow, ncol = 50, 40
-    botm = np.arange(0, -100, -10)
-    hk = np.random.random((nrow, ncol))
-    dis = fmf.ModflowDis(ml, delr=100.0, delc=100.0,
-                         nrow=nrow, ncol=ncol, nlay=nlay,
-                         nper=perlen.shape[0], perlen=perlen,
-                         nstp=nstp, tsmult=tsmult,
-                         top=10, botm=botm, steady=False, rotation=45,
-                         xul=999.9,yul=-999.9,proj4_str="some_proj4_str")
-    ml.write_input()
-    ml1 = fmf.Modflow.load(ml.namefile,model_ws=ml.model_ws,forgive=False)
-    assert ml1.dis.sr == ml.dis.sr
+    import flopy
+    sr1 = flopy.utils.SpatialReference(1.0,1.0,1)
+    print(sr1.xcentergrid)
+    sr1.delr = np.ones((100))
+    print(sr1.xcentergrid)
+    sr1.rotation = 2.1
+    print(sr1.xcentergrid)
 
+    sr1.reset(delr=np.ones((20)),rotation=-5.0,lenuni=2,xul=200.0)
+    print(sr1.xcentergrid)
+
+    sr2 = flopy.utils.SpatialReference([1.0],[1.0],1)
+    print(sr2.nrow,sr2.ncol)
+
+    sr3 = flopy.utils.SpatialReference(np.ones((10)),np.ones((10)),1)
+    print(sr3.nrow,sr3.ncol)
+
+
+def test_mbase_sr():
+    import numpy as np
+    import flopy
+
+    ml = flopy.modflow.Modflow(modelname="test",xul=1000.0,yul=50.0,
+                               rotation=12.5,start_datetime="1/1/2016")
+    print(ml.sr.xcentergrid)
+
+    dis = flopy.modflow.ModflowDis(ml,nrow=10,ncol=5,delr=np.arange(5))
+    print(ml.sr.xcentergrid)
+
+    ml.model_ws = "temp"
+
+
+    ml.write_input()
+    ml1 = flopy.modflow.Modflow.load("test.nam",model_ws="temp")
+    assert ml1.sr == ml.sr
+    assert ml1.start_datetime == ml.start_datetime
 
 def test_binaryfile_reference():
     import os
@@ -74,7 +89,7 @@ def test_mflist_reference():
                          nrow=nrow, ncol=ncol, nlay=nlay,
                          nper=perlen.shape[0], perlen=perlen,
                          nstp=nstp, tsmult=tsmult,
-                         top=10, botm=botm, steady=False, rotation=45)
+                         top=10, botm=botm, steady=False)
     assert isinstance(dis, fmf.ModflowDis)
     lpf = fmf.ModflowLpf(ml, hk=hk, vka=10.0, laytyp=1)
     assert isinstance(lpf, fmf.ModflowLpf)
@@ -107,7 +122,9 @@ def test_mflist_reference():
 
 
 if __name__ == '__main__':
-    test_dis_reference()
+    test_mbase_sr()
+    #test_sr()
+    #test_dis_reference()
     #test_mflist_reference()
     #test_formattedfile_reference()
     #test_binaryfile_reference()
