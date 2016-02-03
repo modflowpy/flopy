@@ -156,7 +156,10 @@ class ModflowRiv(Package):
         >>> m.riv.check()
 
         """
+        basechk = super(ModflowRiv, self).check(verbose=False)
         chk = check(self, f=f, verbose=verbose, level=level)
+        chk.summary_array = basechk.summary_array
+
         for per in self.stress_period_data.data.keys():
             if isinstance(self.stress_period_data.data[per], np.recarray):
                 spd = self.stress_period_data.data[per]
