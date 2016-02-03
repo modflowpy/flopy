@@ -219,7 +219,7 @@ class Package(object):
 
                         # More specific BC checks
                         # check elevations in the ghb, drain, and riv packages
-                        if self.name[0] in check.bc_elev_names.keys():
+                        if self.name[0] in check.bc_stage_names.keys():
                             # check that bc elevations are above model cell bottoms
                             # also checks for nan values
                             elev_name = chk.bc_stage_names[self.name[0]]
