@@ -1,0 +1,2 @@
+       1100        40         1   MXITER  ITER1  NPCOND
+  1.00E-03  1000.00  1.01E+00         2         1         0 0.0080E+00  HCLOSE RCLOSE RELAX NPBOL IPRPCG MUTPCG DAMP

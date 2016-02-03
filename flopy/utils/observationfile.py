@@ -323,7 +323,7 @@ class HydmodObs(ObsFiles):
 
 class SwrObs(ObsFiles):
     """
-    Read binary SWR observations output from MODFLOW SWR Process 
+    Read binary SWR observations output from MODFLOW SWR Process
     observation files
 
     Parameters
