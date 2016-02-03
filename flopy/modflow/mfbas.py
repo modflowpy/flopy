@@ -131,8 +131,8 @@ class ModflowBas(Package):
 
         neighbors = get_neighbors(self.ibound.array)
         neighbors[np.isnan(neighbors)] = 0 # set neighbors at edges to 0 (inactive)
-        chk.values(self.ibound.array[self.ibound.array > 0],
-                   ~np.any(neighbors > 0, axis=0)[self.ibound.array > 0],
+        chk.values(self.ibound.array,
+                   self.ibound.array > 0 & ~np.any(neighbors > 0, axis=0),
                    'isolated cells in ibound array', 'Warning')
         chk.values(self.ibound.array, np.isnan(self.ibound.array),
                    error_name='Not a number', error_type='Error')
