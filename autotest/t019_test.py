@@ -42,65 +42,68 @@ def test_hydmodfile_load():
     return
 
 
-def test_hydmodfile_slurp():
-    import os
-    import flopy
-
-    pth = os.path.join('..', 'examples', 'data', 'hydmod_test', 'test1tr.hyd.gitbin')
-    h = flopy.utils.HydmodObs(pth, slurp=True)
-    assert isinstance(h, flopy.utils.HydmodObs)
-
-    nitems = h.get_num_items()
-    assert nitems == 8, 'Not enough records in hydmod file ()...'.format(os.path.basename(pth))
-
-    data = h.slurp()
-    assert len(data.dtype.names) == nitems + 1, 'Not enough records in hydmod file ()...'.format(os.path.basename(pth))
-    assert data.shape[0] == 101, 'Not enough times in hydmod file ()...'.format(os.path.basename(pth))
-
-    return
-
-
 def test_hydmodfile_read():
     import os
     import flopy
 
-    pth = os.path.join('..', 'examples', 'data', 'hydmod_test', 'test1tr.hyd.gitbin')
+    pth = os.path.join('..', 'examples', 'data', 'hydmod_test',
+                       'test1tr.hyd.gitbin')
     h = flopy.utils.HydmodObs(pth)
     assert isinstance(h, flopy.utils.HydmodObs)
 
-    times = h.get_time_list()
+    ntimes = h.get_ntimes()
+    assert ntimes == 101, 'Not enough times in hydmod file ()...'.format(os.path.basename(pth))
+
+    times = h.get_times()
     assert len(times) == 101, 'Not enough times in hydmod file ()...'.format(os.path.basename(pth))
 
-    nitems = h.get_num_items()
+    nitems = h.get_nobs()
     assert nitems == 8, 'Not enough records in hydmod file ()...'.format(os.path.basename(pth))
 
-    labels = h.get_hyd_labels()
+    labels = h.get_obsnames()
     assert len(labels) == 8, 'Not enough labels in hydmod file ()...'.format(os.path.basename(pth))
+    print(labels)
 
-    for idx in range(nitems):
-        data = h.get_time_gage(idx=idx, lblstrip=0)
-        assert data.shape == (len(times), 2), 'data shape is not ({}, 2)'.format(len(times))
-
-    for label in labels:
-        data = h.get_time_gage(record=label, lblstrip=0)
-        assert data.shape == (len(times), 2), 'data shape is not ({}, 2)'.format(len(times))
+    for idx in range(ntimes):
+        data = h.get_data(idx=idx)
+        assert data.shape == (1,), 'data shape is not (1,)'
 
     for time in times:
-        t, data, success = h.get_values(totim=time)
-        assert success, 'Could not access data for time {}'.format(time)
-        assert t == time, 'Data time ({}) does not passed time ({})'.format(t, time)
-        assert data.shape[0] == nitems, 'Data does not have {} items'.format(nitems)
+        data = h.get_data(totim=time)
+        assert data.shape == (1,), 'data shape is not (1,)'
 
-    for idx in range(len(times)):
-        t, data, success = h.get_values(idx=idx)
-        assert success, 'Could not access data for time {}'.format(time)
-        assert data.shape[0] == nitems, 'Data does not have {} items'.format(nitems)
+    for label in labels:
+        data = h.get_data(obsname=label)
+        assert data.shape == (len(times),), 'data shape is not ({},)'.format(len(times))
+
+    data = h.get_data()
+    assert data.shape == (len(times),), 'data shape is not ({},)'.format(len(times))
+    assert len(data.dtype.names) == nitems + 1, 'data column length is not {}'.format(len(nitems+1))
+
+    try:
+        import pandas as pd
+
+        for idx in range(ntimes):
+            df = h.get_dataframe(idx=idx, timeunit='S')
+            assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+            assert df.shape == (1, 9), 'data shape is not (1, 9)'
+
+        for time in times:
+            df = h.get_dataframe(totim=time, timeunit='S')
+            assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+            assert df.shape == (1, 9), 'data shape is not (1, 9)'
+
+        df = h.get_dataframe(timeunit='S')
+        assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+        assert df.shape == (101, 9), 'data shape is not (101, 9)'
+    except:
+        print('pandas not available...')
+        pass
 
     return
 
 
 if __name__ == '__main__':
+    test_hydmodfile_read()
     test_hydmodfile_create()
     test_hydmodfile_load()
-    test_hydmodfile_slurp()
-    test_hydmodfile_read()

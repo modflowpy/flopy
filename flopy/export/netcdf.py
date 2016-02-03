@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import copy
 import numpy as np
@@ -116,45 +117,169 @@ class NetCdf(object):
 
     """
 
-    def __init__(self, output_filename, model, time_values=None, verbose=None):
+    def __init__(self, output_filename, model, time_values=None, verbose=None,
+                 logger=None):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
             verbose = model.verbose
-        self.logger = Logger(verbose)
+        if logger is not None:
+            self.logger = logger
+        else:
+            self.logger = Logger(verbose)
+        self.var_attr_dict = {}
         self.log = self.logger.log
         if os.path.exists(output_filename):
             self.logger.warn("removing existing nc file: " + output_filename)
             os.remove(output_filename)
         self.output_filename = output_filename
 
-        assert model.dis != None
+        assert model.dis is not None
         self.model = model
         self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
 
-        # import pandas as pd
-        # self.start_datetime = pd.to_datetime(self.model.dis.start_datetime).\
-        #                          isoformat().split('.')[0].split('+')[0] + "Z"
         import dateutil.parser
-        self.start_datetime = dateutil.parser.parse(
-            self.model.dis.start_datetime).strftime("%Y-%m-%dT%H:%M:%SZ")
-
+        self.start_datetime = self._dt_str(dateutil.parser.parse(
+            self.model.dis.start_datetime))
         self.grid_units = LENUNI[self.model.dis.sr.lenuni]
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
         self.time_units = ITMUNI[self.model.dis.itmuni]
 
-        # this gives us confidence that every NetCdf instance has the same attributes
+        # this gives us confidence that every NetCdf instance
+        # has the same attributes
         self.log("initializing attributes")
         self._initialize_attributes()
         self.log("initializing attributes")
 
-        # if time_values were passed, lets get things going
-        if time_values is not None:
-            self.log("time_values != None, initializing file")
-            self.initialize_file(time_values=time_values)
-            self.log("time_values != None, initializing file")
+        self.log("initializing file")
+        self.initialize_file(time_values=time_values)
+        self.log("initializing file")
+
+    def difference(self, other, minuend="self", mask_zero_diff=True):
+        """make a new NetCDF instance that is the difference with
+        another netcdf file
+        Parameters:
+        ----------
+            other : either an str filename of a netcdf file or
+            a netCDF4 instance
+
+            minuend : (optional) the order of the difference operation.
+            Default is self (e.g. self - other).  Can be "self" or "other"
+
+            mask_zero_diff : bool flag to mask differences that are zero.  If
+            True, positions in the difference array that are zero will be set
+            to self.fillvalue
+
+        Returns:
+        -------
+            net NetCDF instance
+        Note:
+        ----
+            assumes the current NetCDF instance has been populated.  The
+            variable names and dimensions between the two files must match
+             exactly. The name of the new .nc file is
+             <self.output_filename>.diff.nc.  The masks from both self and
+             other are carried through to the new instance
+        """
+
+        assert self.nc is not None,"can't call difference() if nc " +\
+                                   "hasn't been populated"
+        try:
+            import netCDF4
+        except Exception as e:
+            mess = "error import netCDF4: {0}".format(str(e))
+            self.logger.warn(mess)
+            raise Exception(mess)
+
+        if isinstance(other,str):
+            assert os.path.exists(other),"filename 'other' not found:" + \
+                                         "{0}".format(other)
+            other = netCDF4.Dataset(other,'r')
+
+        assert isinstance(other,netCDF4.Dataset)
+
+        # check for similar variables
+        self_vars = set(self.nc.variables.keys())
+        other_vars = set(other.variables)
+        diff = self_vars.symmetric_difference(other_vars)
+        if len(diff) > 0:
+            self.logger.warn("variables are not the same between the two " +\
+                             "nc files: " + ','.join(diff))
+            return
+
+        # check for similar dimensions
+        self_dimens = self.nc.dimensions
+        other_dimens = other.dimensions
+        for d in self_dimens.keys():
+            if d not in other_dimens:
+                self.logger.warn("missing dimension in other:{0}".format(d))
+                return
+            if len(self_dimens[d]) != len(other_dimens[d]):
+                self.logger.warn("dimension not consistent: "+\
+                                 "{0}:{1}".format(self_dimens[d],
+                                                  other_dimens[d]))
+                return
+        # should be good to go
+        time_values = self.nc.variables.get("time")[:]
+        new_net = NetCdf(self.output_filename.replace(".nc",".diff.nc"),
+                         self.model,time_values=time_values)
+        # add the vars to the instance
+        for vname in self_vars:
+            if vname not in self.var_attr_dict or \
+                            new_net.nc.variables.get(vname) is not None:
+                self.logger.warn("skipping variable: {0}".format(vname))
+                continue
+            self.log("processing variable {0}".format(vname))
+            s_var = self.nc.variables[vname]
+            o_var = other.variables[vname]
+            s_data = s_var[:]
+            o_data = o_var[:]
+            o_mask, s_mask = None, None
+
+            # keep the masks to apply later
+            if isinstance(s_data,np.ma.MaskedArray):
+                self.logger.warn("masked array for {0}".format(vname))
+                s_mask = s_data.mask
+                o_mask = o_data.mask
+                s_data = np.array(s_data)
+                o_data = np.array(o_data)
+
+            # difference with self
+            if minuend.lower() == "self":
+                d_data = s_data - o_data
+            elif minuend.lower() == "other":
+                d_data = o_data - s_data
+            else:
+                mess = "unrecognized minuend {0}".format(minuend)
+                self.logger.warn(mess)
+                raise Exception(mess)
+
+            # reapply masks
+            if s_mask is not None:
+                self.log("applying self mask")
+                d_data[s_mask] = FILLVALUE
+                self.log("applying self mask")
+            if o_mask is not None:
+                self.log("applying other mask")
+                d_data[o_mask] = FILLVALUE
+                self.log("applying other mask")
+            var = new_net.create_variable(vname,self.var_attr_dict[vname],
+                                          s_var.dtype,
+                                          dimensions=s_var.dimensions)
+            d_data[np.isnan(d_data)] = FILLVALUE
+            if mask_zero_diff:
+                d_data[np.where(d_data==0.0)] = FILLVALUE
+            var[:] = d_data
+            self.log("processing variable {0}".format(vname))
+
+    def _dt_str(self,dt):
+        """ for datetime to string for year < 1900
+        """
+        dt_str = '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02}Z'.format(
+                dt.year,dt.month,dt.day,dt.hour,dt.minute,dt.second)
+        return dt_str
 
     def write(self):
         """write the nc object to disk"""
@@ -230,8 +355,8 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        ys = self.model.dis.sr.ycentergrid
-        xs = self.model.dis.sr.xcentergrid
+        ys = self.model.dis.sr.ycentergrid.copy()
+        xs = self.model.dis.sr.xcentergrid.copy()
 
         if self.grid_units.lower().startswith("f"):
             self.log("converting feet to meters")
@@ -414,7 +539,8 @@ class NetCdf(object):
                             "To compute the unrotated grid, use the origin point and this array."
 
         # Workaround for CF/CDM.
-        # http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/reference/StandardCoordinateTransforms.html
+        # http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/
+        # reference/StandardCoordinateTransforms.html
         # "explicit_field"
         exp = self.nc.createVariable('VerticalTransform', 'S1')
         exp.transform_name = "explicit_field"
@@ -451,7 +577,8 @@ class NetCdf(object):
         AssertionError if one of more dimensions do not exist
 
         """
-
+        # Normalize variable name
+        name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
         self.log("creating variable: " + str(name))
         assert precision_str in PRECISION_STRS, \
             "netcdf.create_variable() error: precision string {0} not in {1}". \
@@ -477,6 +604,8 @@ class NetCdf(object):
         assert self.nc.variables.get(name) is None, \
             "netcdf.create_variable error: variable already exists:" + name
 
+        self.var_attr_dict[name] = attributes
+
         var = self.nc.createVariable(name, precision_str, dimensions,
                                      fill_value=self.fillvalue, zlib=True,
                                      chunksizes=tuple(chunks))
@@ -489,3 +618,28 @@ class NetCdf(object):
                                  "{0} for variable {1}".format(k, name))
         self.log("creating variable: " + str(name))
         return var
+
+
+    def add_global_attributes(self,attr_dict):
+        """ add global attribute to an initialized file
+        Parameters:
+        ----------
+            attr_dict : dict(attribute name, attribute value)
+        Returns:
+        -------
+            None
+        Raises:
+        ------
+            Exception of self.nc is None (initialize_file()
+            has not been called)
+        """
+        if self.nc is None:
+            #self.initialize_file()
+            mess = "NetCDF.add_global_attributes() should only "+\
+                   "be called after the file has been initialized"
+            self.logger.warn(mess)
+            raise Exception(mess)
+
+        self.log("setting global attributes")
+        self.nc.setncatts(attr_dict)
+        self.log("setting global attributes")

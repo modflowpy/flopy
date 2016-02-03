@@ -13,6 +13,7 @@ import os
 from .modflow.mfparbc import ModflowParBc as mfparbc
 import webbrowser as wb
 
+
 class Package(object):
     """
     Base package class from which most other packages are derived.
@@ -62,7 +63,7 @@ class Package(object):
                     else:
                         s = s + ' {0:s} (list, items = {1:d}\n'.format(attr,
                                                                        len(
-                                                                           value))
+                                                                               value))
                 elif (isinstance(value, np.ndarray)):
                     s = s + ' {0:s} (array, shape = {1:s})\n'.format(attr,
                                                                      value.shape.__str__()[
@@ -75,21 +76,23 @@ class Package(object):
 
     def __getitem__(self, item):
         if hasattr(self, 'stress_period_data'):
-            if not isinstance(item, list) and not isinstance(item, tuple):
-                assert item in list(
-                    self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
-                        item) + " not in data.keys()"
-                return self.stress_period_data[item]
-            else:
-                if item[1] not in self.dtype.names:
-                    raise Exception(
-                            "package.__getitem(): item \'" + item + "\' not in dtype names " + str(
-                                self.dtype.names))
-                assert item[0] in list(
-                    self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
-                        item[0]) + " not in data.keys()"
-                if self.stress_period_data.vtype[item[0]] == np.recarray:
-                    return self.stress_period_data[item[0]][item[1]]
+            # added this check because stress_period_data also used in Oc and Oc88 but is not a MfList
+            if isinstance(item, MfList):
+                if not isinstance(item, list) and not isinstance(item, tuple):
+                    assert item in list(
+                            self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                            item) + " not in data.keys()"
+                    return self.stress_period_data[item]
+                else:
+                    if item[1] not in self.dtype.names:
+                        raise Exception(
+                                "package.__getitem(): item \'" + item + "\' not in dtype names " + str(
+                                        self.dtype.names))
+                    assert item[0] in list(
+                            self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                            item[0]) + " not in data.keys()"
+                    if self.stress_period_data.vtype[item[0]] == np.recarray:
+                        return self.stress_period_data[item[0]][item[1]]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("package.__setitem__() not implemented")
@@ -117,7 +120,7 @@ class Package(object):
                                     fmtin=old_value.fmtin,
                                     locat=old_value.locat)
             elif isinstance(old_value, MfList):
-                value = MfList(self.parent, dtype=old_value.dtype,
+                value = MfList(self, dtype=old_value.dtype,
                                data=value)
             elif isinstance(old_value, list):
                 if len(old_value) > 0:
@@ -192,13 +195,16 @@ class Package(object):
         """
         chk = None
 
-        if self.__dict__.get('stress_period_data', None) is not None and self.name[0] != 'OC':
+        if self.__dict__.get('stress_period_data', None) is not None and \
+                        self.name[0] != 'OC':
             spd_inds_valid = True
             chk = check(self, f=f, verbose=verbose, level=level)
             for per in self.stress_period_data.data.keys():
                 if isinstance(self.stress_period_data.data[per], np.recarray):
                     spd = self.stress_period_data.data[per]
-                    inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
+                    inds = (
+                    spd.k, spd.i, spd.j) if self.parent.structured else (
+                    spd.node)
 
                     # General BC checks
                     # check for valid cell indices
@@ -213,8 +219,7 @@ class Package(object):
 
                         # More specific BC checks
                         # check elevations in the ghb, drain, and riv packages
-                        if self.name[0] in check.bc_stage_names.keys():
-
+                        if self.name[0] in check.bc_elev_names.keys():
                             # check that bc elevations are above model cell bottoms
                             # also checks for nan values
                             elev_name = chk.bc_stage_names[self.name[0]]
@@ -236,11 +241,11 @@ class Package(object):
             confined = False
             for i, l in enumerate(self.laytyp.array.tolist()):
                 if l == 0 or l < 0 and self.thickstrt:
-                    confined=True
+                    confined = True
                     continue
                 if confined and l > 0:
                     chk._add_to_summary(type='Warning',
-                                        desc='\r    LAYTYP: unconfined (convertible) '+\
+                                        desc='\r    LAYTYP: unconfined (convertible) ' + \
                                              'layer below confined layer')
 
             # check for zero or negative values of hydraulic conductivity, anisotropy,
@@ -248,31 +253,38 @@ class Package(object):
             kparams = {'hk': 'horizontal hydraulic conductivity',
                        'vka': 'vertical hydraulic conductivity'}
             for kp, name in kparams.items():
-                chk.values(self.__dict__[kp].array, active & (self.__dict__[kp].array <= 0),
+                chk.values(self.__dict__[kp].array,
+                           active & (self.__dict__[kp].array <= 0),
                            'zero or negative {} values'.format(name), 'Error')
 
             # check for negative hani
-            chk.values(self.__dict__['hani'].array, active & (self.__dict__['hani'].array < 0),
-                           'negative horizontal anisotropy values', 'Error')
+            chk.values(self.__dict__['hani'].array,
+                       active & (self.__dict__['hani'].array < 0),
+                       'negative horizontal anisotropy values', 'Error')
 
             def check_thresholds(array, active, thresholds, name):
                 """Checks array against min and max threshold values."""
                 mn, mx = thresholds
-                chk.values(array, active & (array < mn), '{} values below checker threshold of {}'
+                chk.values(array, active & (array < mn),
+                           '{} values below checker threshold of {}'
                            .format(name, mn), 'Warning')
-                chk.values(array, active & (array > mx), '{} values above checker threshold of {}'
+                chk.values(array, active & (array > mx),
+                           '{} values above checker threshold of {}'
                            .format(name, mx), 'Warning')
 
             # check for unusually high or low values of hydraulic conductivity
-            if self.layvka.sum() > 0: # convert vertical anistropy to Kv for checking
+            if self.layvka.sum() > 0:  # convert vertical anistropy to Kv for checking
                 vka = self.vka.array.copy()
                 for l in range(vka.shape[0]):
-                    vka[l] *= self.hk.array[l] if self.layvka.array[l] != 0 else 1
-                check_thresholds(vka, active, chk.property_threshold_values['vka'],
+                    vka[l] *= self.hk.array[l] if self.layvka.array[
+                                                      l] != 0 else 1
+                check_thresholds(vka, active,
+                                 chk.property_threshold_values['vka'],
                                  kparams.pop('vka'))
 
             for kp, name in kparams.items():
-                check_thresholds(self.__dict__[kp].array, active, chk.property_threshold_values[kp],
+                check_thresholds(self.__dict__[kp].array, active,
+                                 chk.property_threshold_values[kp],
                                  name)
 
             # check vkcb if there are any quasi-3D layers
@@ -281,18 +293,22 @@ class Package(object):
                 vkcb = self.vkcb.array.copy()
                 for l in range(self.vkcb.shape[0]):
                     if self.parent.dis.laycbd[l] == 0:
-                        vkcb[l, :, :] = 1 # assign 1 instead of zero as default value that won't violate checker
+                        vkcb[l, :,
+                        :] = 1  # assign 1 instead of zero as default value that won't violate checker
                         # (allows for same structure as other checks)
 
-                chk.values(vkcb, active & (vkcb <= 0), 'zero or negative quasi-3D confining bed Kv values', 'Error')
-                check_thresholds(vkcb, active, chk.property_threshold_values['vkcb'],
+                chk.values(vkcb, active & (vkcb <= 0),
+                           'zero or negative quasi-3D confining bed Kv values',
+                           'Error')
+                check_thresholds(vkcb, active,
+                                 chk.property_threshold_values['vkcb'],
                                  'quasi-3D confining bed Kv')
 
-            if self.parent.dis.nper > 1: # only check storage if model is transient
+            if self.parent.dis.nper > 1:  # only check storage if model is transient
 
                 # do the same for storage if the model is transient
                 sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
-                if 'STORAGECOEFFICIENT' in self.options: # convert to specific for checking
+                if 'STORAGECOEFFICIENT' in self.options:  # convert to specific for checking
                     chk._add_to_summary(type='Warning',
                                         desc='\r    STORAGECOEFFICIENT option is activated, \
                                               storage values are read storage coefficients')
@@ -301,22 +317,26 @@ class Package(object):
 
                 chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
                            'zero or negative specific storage values', 'Error')
-                check_thresholds(sarrays['ss'], active, chk.property_threshold_values['ss'],
+                check_thresholds(sarrays['ss'], active,
+                                 chk.property_threshold_values['ss'],
                                  'specific storage')
 
                 # only check specific yield for convertible layers
-                inds = np.array([True if l > 0 or l < 0 and 'THICKSRT' in self.options
-                                 else False for l in self.laytyp])
+                inds = np.array(
+                        [True if l > 0 or l < 0 and 'THICKSRT' in self.options
+                         else False for l in self.laytyp])
                 sarrays['sy'] = sarrays['sy'][inds, :, :]
                 active = active[inds, :, :]
                 chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
                            'zero or negative specific yield values', 'Error')
-                check_thresholds(sarrays['sy'], active, chk.property_threshold_values['sy'],
+                check_thresholds(sarrays['sy'], active,
+                                 chk.property_threshold_values['sy'],
                                  'specific yield')
             chk.summarize()
 
         else:
-            txt = 'check method not implemented for {} Package.'.format(self.name[0])
+            txt = 'check method not implemented for {} Package.'.format(
+                    self.name[0])
             if f is not None:
                 if isinstance(f, str):
                     pth = os.path.join(self.parent.model_ws, f)
@@ -339,8 +359,8 @@ class Package(object):
                                                                        'column',
                                                                        name[
                                                                            k].lower().replace(
-                                                                           ' layer ',
-                                                                           ''))
+                                                                               ' layer ',
+                                                                               ''))
                 txt += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k + 1, i + 1,
                                                                  j + 1,
                                                                  v[k, i, j])
@@ -348,7 +368,7 @@ class Package(object):
             txt += '    {:>10s}{:>10s}{:>15s}\n'.format('row', 'column',
                                                         name[
                                                             0].lower().replace(
-                                                            ' layer ', ''))
+                                                                ' layer ', ''))
             for [i, j] in idx:
                 txt += '    {:10d}{:10d}{:15.7g}\n'.format(i + 1, j + 1,
                                                            v[i, j])
@@ -472,9 +492,9 @@ class Package(object):
                 fignum = list(range(ifig, ifig + value.shape[0]))
                 ifig = fignum[-1] + 1
                 caxs.append(
-                    value.plot(filename_base=fileb, file_extension=fext,
-                               mflay=mflay,
-                               fignum=fignum, colorbar=True))
+                        value.plot(filename_base=fileb, file_extension=fext,
+                                   mflay=mflay,
+                                   fignum=fignum, colorbar=True))
             elif isinstance(value, Util2d):
                 if len(value.shape) == 2:
                     if self.parent.verbose:
@@ -483,32 +503,34 @@ class Package(object):
                     fignum = list(range(ifig, ifig + 1))
                     ifig = fignum[-1] + 1
                     caxs.append(
-                        value.plot(filename_base=fileb, file_extension=fext,
-                                   fignum=fignum, colorbar=True))
+                            value.plot(filename_base=fileb,
+                                       file_extension=fext,
+                                       fignum=fignum, colorbar=True))
             elif isinstance(value, Transient2d):
                 if self.parent.verbose:
                     print(
-                        'plotting {} package Transient2d instance: {}'.format(
-                                self.name[0], item))
+                            'plotting {} package Transient2d instance: {}'.format(
+                                    self.name[0], item))
                 fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(
-                    value.plot(filename_base=fileb, file_extension=fext,
-                               kper=kper,
-                               fignum=fignum, colorbar=True))
+                        value.plot(filename_base=fileb, file_extension=fext,
+                                   kper=kper,
+                                   fignum=fignum, colorbar=True))
             elif isinstance(value, list):
                 for v in value:
                     if isinstance(v, Util3d):
                         if self.parent.verbose:
                             print(
-                                'plotting {} package Util3d instance: {}'.format(
-                                        self.name[0], item))
+                                    'plotting {} package Util3d instance: {}'.format(
+                                            self.name[0], item))
                         fignum = list(range(ifig, ifig + inc))
                         ifig = fignum[-1] + 1
                         caxs.append(
-                            v.plot(filename_base=fileb, file_extension=fext,
-                                   mflay=mflay,
-                                   fignum=fignum, colorbar=True))
+                                v.plot(filename_base=fileb,
+                                       file_extension=fext,
+                                       mflay=mflay,
+                                       fignum=fignum, colorbar=True))
             else:
                 pass
 
@@ -559,13 +581,13 @@ class Package(object):
     def webdoc(self):
         if self.parent.version == 'mf2k':
             wb.open(
-                'http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
+                    'http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
         elif self.parent.version == 'mf2005':
             wb.open(
-                'http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + self.url)
+                    'http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + self.url)
         elif self.parent.version == 'ModflowNwt':
             wb.open(
-                'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + self.url)
+                    'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + self.url)
 
     def write_file(self):
         """
@@ -668,8 +690,9 @@ class Package(object):
         for iper in range(nper):
             if model.verbose:
                 print(
-                    "   loading " + str(pack_type) + " for kper {0:5d}".format(
-                        iper + 1))
+                        "   loading " + str(
+                            pack_type) + " for kper {0:5d}".format(
+                                iper + 1))
             line = f.readline()
             if line == '':
                 break
@@ -695,22 +718,22 @@ class Package(object):
                         oc_filename = os.path.join(model.model_ws,
                                                    line.strip().split()[1])
                         assert os.path.exists(
-                            oc_filename), "Package.load() error: open/close filename " + \
-                                          oc_filename + " not found"
+                                oc_filename), "Package.load() error: open/close filename " + \
+                                              oc_filename + " not found"
                         try:
                             current = np.genfromtxt(oc_filename,
                                                     dtype=current.dtype)
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(
-                                "Package.load() error loading open/close file " + oc_filename + \
-                                " :" + str(e))
+                                    "Package.load() error loading open/close file " + oc_filename + \
+                                    " :" + str(e))
                         assert current.shape[
                                    0] == itmp, "Package.load() error: open/close rec array from file " + \
                                                oc_filename + " shape (" + str(
-                            current.shape) + \
+                                current.shape) + \
                                                ") does not match itmp: {0:d}".format(
-                                                   itmp)
+                                                       itmp)
                         break
                     try:
                         t = line.strip().split()
@@ -795,5 +818,6 @@ class Package(object):
                                                   structured=model.structured).dtype, \
                         options=options)
         if check:
-            pak.check(f='{}.chk'.format(pak.name[0]), verbose=pak.parent.verbose, level=0)
+            pak.check(f='{}.chk'.format(pak.name[0]),
+                      verbose=pak.parent.verbose, level=0)
         return pak

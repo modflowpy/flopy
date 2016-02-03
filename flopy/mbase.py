@@ -66,7 +66,7 @@ class BaseModel(object):
 
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
                  exe_name='mf2k.exe', model_ws=None,
-                 structured=True):
+                 structured=True,**kwargs):
         """
         BaseModel init
         """
@@ -91,6 +91,15 @@ class BaseModel(object):
         self.pop_key_list = []
         self.cl_params = ''
 
+        # check for reference info in kwargs
+        xul = kwargs.pop("xul",None)
+        yul = kwargs.pop("yul",None)
+        rotation = kwargs.pop("rotation",0.0)
+        proj4_str = kwargs.pop("proj4_str","EPSG:4326")
+        self.start_datetime = kwargs.pop("start_datetime","1-1-1970")
+        self._sr = utils.SpatialReference(xul=xul,yul=yul,rotation=rotation,
+                                         proj4_str=proj4_str)
+
         # Model file information
         # external option stuff
         self.free_format = True
@@ -98,19 +107,48 @@ class BaseModel(object):
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
-
-        # the starting external data unit number
-        self.__next_ext_unit = 1000
+        self.package_units = []
 
         return
+
+    def set_free_format(self, value=True):
+        """
+        Set the free format flag for the model instance
+
+        Parameters
+        ----------
+        value : bool
+            Boolean value to set free format flag for model. (default is True)
+
+        Returns
+        -------
+
+        """
+        if not isinstance(value, bool):
+            print('Error: set_free_format passed value must be a boolean')
+            return False
+        self.free_format = value
+
+    def get_free_format(self):
+        """
+        Return the free format flag for the model
+
+        Returns
+        -------
+        out : bool
+            Free format flag for the model
+
+        """
+        return self.free_format
+
 
     def next_ext_unit(self):
         """
         Function to encapsulate next_ext_unit attribute
 
         """
-        next_unit = self.__next_ext_unit + 1
-        self.__next_ext_unit += 1
+        next_unit = self._next_ext_unit + 1
+        self._next_ext_unit += 1
         return next_unit
 
     def export(self, f, **kwargs):
@@ -129,6 +167,11 @@ class BaseModel(object):
         p : Package object
 
         """
+        for u in p.unit_number:
+            if u in self.package_units or u in self.external_units:
+                print("WARNING: unit {0} of package {1} already in use".format(
+                      u,p.name))
+            self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
                 continue
@@ -168,14 +211,28 @@ class BaseModel(object):
         Parameters
         ----------
         item : str
-            3 character package name (case insensitive)
+            3 character package name (case insensitive) or "sr" to access
+            the SpatialReference instance
+
 
         Returns
         -------
+        sr : SpatialReference instance
         pp : Package object
             Package object of type :class:`flopy.pakbase.Package`
 
+        Note
+        ----
+        if self.dis is not None, then the spatial reference instance is updated
+        using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
+        returned
         """
+        if item == 'sr':
+            if self.dis is not None:
+                self._sr.reset(delr=self.dis.delr.array,delc=self.dis.delc.array,
+                              lenuni=self.dis.lenuni)
+            return self._sr
+
         return self.get_package(item)
 
     def add_external(self, fname, unit, binflag=False):
@@ -295,7 +352,7 @@ class BaseModel(object):
             val.append(pp.name[0].upper())
         return val
 
-    def change_model_ws(self, new_pth=None):
+    def change_model_ws(self, new_pth=None,reset_external=False):
         """
         Change the model work space.
 
@@ -338,8 +395,20 @@ class BaseModel(object):
         if hasattr(self, "external_path") and self.external_path is not None \
                 and not os.path.exists(os.path.join(self._model_ws,
                                                     self.external_path)):
-            os.makedirs(os.path.join(self._model_ws, self.external_path))
+            pth = os.path.join(self._model_ws, self.external_path)
+            os.makedirs(pth)
+            if reset_external:
+                self._reset_external(pth)
+        elif reset_external:
+            self._reset_external(self._model_ws)
         return None
+
+    def _reset_external(self,pth):
+        new_ext_fnames = []
+        for ext_file in self.external_fnames:
+            new_ext_file = os.path.join(pth,os.path.split(ext_file)[-1])
+            new_ext_fnames.append(new_ext_file)
+        self.external_fnames = new_ext_fnames
 
     @property
     def model_ws(self):
@@ -355,7 +424,7 @@ class BaseModel(object):
             Name to assign to model.
 
         """
-        self.__name = value
+        self.__name = str(value)
         self.namefile = self.__name + '.' + self.namefile_ext
         for p in self.packagelist:
             for i in range(len(p.extension)):
@@ -368,6 +437,9 @@ class BaseModel(object):
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
+        elif key == "sr":
+            assert isinstance(value,utils.SpatialReference)
+            self._sr = value
         else:
             super(BaseModel, self).__setattr__(key, value)
 
@@ -407,7 +479,7 @@ class BaseModel(object):
 
         return None
 
-    def write_input(self, SelPackList=False):
+    def write_input(self, SelPackList=False, check=False):
         """
         Write the input.
 
@@ -416,8 +488,9 @@ class BaseModel(object):
         SelPackList : False or list of packages
 
         """
-        # run check prior to writing input
-        self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=1)
+        if check:
+            # run check prior to writing input
+            self.check(f='{}.chk'.format(self.name), verbose=self.verbose, level=1)
 
         # org_dir = os.getcwd()
         # os.chdir(self.model_ws)

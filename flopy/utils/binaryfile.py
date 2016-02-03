@@ -423,6 +423,7 @@ class CellBudgetFile(object):
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0
+        self.nper = 0
         self.times = []
         self.kstpkper = []
         self.recordarray = []
@@ -443,8 +444,18 @@ class CellBudgetFile(object):
         else:
             raise Exception('Unknown precision specified: ' + precision)
 
+        if 'model' in kwargs.keys():
+            self.model = kwargs.pop('model')
+            self.sr = self.model.dis.sr
+            self.dis = self.model.dis
+        if 'dis' in kwargs.keys():
+            self.dis = kwargs.pop('dis')
+            self.sr = self.dis.sr
+        if 'sr' in kwargs.keys():
+            self.sr = kwargs.pop('sr')
         if len(kwargs.keys()) > 0:
-            raise NotImplementedError()
+            args = ','.join(kwargs.keys())
+            raise Exception('LayerFile error: unrecognized kwargs: '+args)
 
         self.header1_dtype = np.dtype(h1dt)
         self.header2_dtype = np.dtype(h2dt)
@@ -455,8 +466,8 @@ class CellBudgetFile(object):
         self._build_index()
         
         # allocate the value array
-        self.value = np.empty((self.nlay, self.nrow, self.ncol),
-                              dtype=self.realtype)
+        #self.value = np.empty((self.nlay, self.nrow, self.ncol),
+        #                      dtype=self.realtype)
         return
    
     def _build_index(self):
@@ -465,6 +476,9 @@ class CellBudgetFile(object):
         to the position in the binary file.
         """
         header = self._get_header()
+        self.nrow = header["nrow"]
+        self.ncol = header["ncol"]
+        self.nlay = np.abs(header["nlay"])
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
@@ -507,7 +521,7 @@ class CellBudgetFile(object):
         # convert to numpy arrays
         self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
         self.iposarray = np.array(self.iposarray, dtype=np.int64)
-
+        self.nper = self.recordarray["kper"].max()
         return
 
     def _skip_record(self, header):

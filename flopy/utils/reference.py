@@ -12,10 +12,10 @@ class SpatialReference(object):
     Parameters
     ----------
 
-    delr : Util2d
+    delr : numpy ndarray
         the model discretization delr vector
 
-    delc : Util2d
+    delc : numpy ndarray
         the model discretization delc vector
 
     lenuni : int
@@ -68,18 +68,106 @@ class SpatialReference(object):
         
     """
 
-    def __init__(self, delr, delc, lenuni, xul=None, yul=None, rotation=0.0,
+    def __init__(self, delr=1.0, delc=1.0, lenuni=1, xul=None, yul=None, rotation=0.0,
                  proj4_str="EPSG:4326"):
-        self.delc = delc
-        self.delr = delr
-
-        self.nrow = self.delc.shape[0]
-        self.ncol = self.delr.shape[0]
+        self.delc = np.atleast_1d(np.array(delc))
+        self.delr = np.atleast_1d(np.array(delr))
 
         self.lenuni = lenuni
         self.proj4_str = proj4_str
+        self._reset()
         self.set_spatialreference(xul, yul, rotation)
 
+
+    @classmethod
+    def from_namfile_header(cls,namefile):
+        # check for reference info in the nam file header
+        header = []
+        with open(namefile,'r') as f:
+            for line in f:
+                if not line.startswith('#'):
+                    break
+                header.extend(line.strip().replace('#','').split(','))
+
+        xul, yul = None, None
+        rotation = 0.0
+        proj4_str = "EPSG:4326"
+        start_datetime = "1/1/1970"
+
+        for item in header:
+            if "xul" in item.lower():
+                try:
+                    xul = float(item.split(':')[1])
+                except:
+                    pass
+            elif "yul" in item.lower():
+                try:
+                    yul = float(item.split(':')[1])
+                except:
+                    pass
+            elif "rotation" in item.lower():
+                try:
+                    rotation = float(item.split(':')[1])
+                except:
+                    pass
+            elif "proj4_str" in item.lower():
+                try:
+                    proj4_str = ':'.join(item.split(':')[1:]).strip()
+                except:
+                    pass
+            elif "start" in item.lower():
+                try:
+                    start_datetime = item.split(':')[1].strip()
+                except:
+                    pass
+
+        return cls(xul=xul,yul=yul,rotation=rotation,proj4_str=proj4_str),\
+               start_datetime
+
+    def __setattr__(self, key, value):
+        reset = True
+        if key == "delr":
+            super(SpatialReference,self).\
+                __setattr__("delr",np.atleast_1d(np.array(value)))
+        elif key == "delc":
+            super(SpatialReference,self).\
+                __setattr__("delc",np.atleast_1d(np.array(value)))
+        elif key == "xul":
+            super(SpatialReference,self).\
+                __setattr__("xul",float(value))
+        elif key == "yul":
+            super(SpatialReference,self).\
+                __setattr__("yul",float(value))
+        elif key == "rotation":
+            super(SpatialReference,self).\
+                __setattr__("rotation",float(value))
+        elif key == "lenuni":
+            super(SpatialReference,self).\
+                __setattr__("lenuni",int(value))
+        else:
+            super(SpatialReference,self).__setattr__(key,value)
+            reset = False
+        if reset:
+            self._reset()
+
+    def reset(self,**kwargs):
+        for key,value in kwargs.items():
+            setattr(self,key,value)
+
+
+    def _reset(self):
+        self._xgrid = None
+        self._ygrid = None
+        self._ycentergrid = None
+        self._xcentergrid = None
+
+    @property
+    def nrow(self):
+        return self.delc.shape[0]
+
+    @property
+    def ncol(self):
+        return self.delr.shape[0]
 
     def __eq__(self, other):
         if not isinstance(other,SpatialReference):
@@ -133,6 +221,12 @@ class SpatialReference(object):
         return cls(np.array(delr), np.array(delc),
                    lenuni, xul=xul, yul=yul, rotation=rot)
 
+
+    @property
+    def attribute_dict(self):
+        return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
+                "proj4_str":self.proj4_str}
+
     def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
         """
             set spatial reference - can be called from model instance
@@ -148,10 +242,7 @@ class SpatialReference(object):
         else:
             self.yul = yul
         self.rotation = rotation
-        self._xgrid = None
-        self._ygrid = None
-        self._ycentergrid = None
-        self._xcentergrid = None
+        self._reset()
 
     def __repr__(self):
         s = "xul:{0:<G}, yul:{1:<G}, rotation:{2:<G}, ".\
@@ -364,7 +455,7 @@ class SpatialReference(object):
             f.write("{0:15.6E} ".format(c))
         f.write('\n')
         for r in self.delr:
-            f.write("{0:15.6E} ".format(c))
+            f.write("{0:15.6E} ".format(r))
         f.write('\n')
         return
 
@@ -420,87 +511,4 @@ class SpatialReference(object):
 
         return b
 
-# class TemporalReference(object):
-#
-#     def __init__(self, perlen, steady, nstp, tsmult, itmuni, start_datetime=None):
-#         """
-#         :param perlen: stress period length array
-#         :param steady: array-like boolean steady-state flag array
-#         :param nstp: array of number of time steps per stress period
-#         :param tsmult: array of time step length multiplier per stress period
-#         :param itmuni: time unit
-#         :param start_datetime: datetime instance
-#         :return: none
-#
-#         stressperiod_start: date_range for start of stress periods
-#         stressperiod_end: date_range for end of stress periods
-#         stressperiod_deltas: timeoffset range for stress periods
-#
-#         timestep_start: date_range for start of time steps
-#         timestep_end: date_range for end of time steps
-#         timestep_delta: timeoffset range for time steps
-#
-#         kperkstp_loc: dict keyed on (kper,kstp) stores the index pos in the timestep ranges
-#
-#         """
-#         self.itmuni_daterange = {1: 's', 2: 'm', 3: 'h', 4: 'd', 5: 'y'}
-#         if start_datetime is None:
-#             self.start = datetime(1970, 1, 1)
-#             self.assumed = True
-#         else:
-#             assert isinstance(start_datetime, datetime)
-#             self.start = start_datetime
-#             self.assumed = False
-#         if itmuni == 0:
-#             print("temporalReference warning: time units (itmuni) undefined, assuming days")
-#         self.unit = self.itmuni_daterange[itmuni]
-#         # work out stress period lengths,starts and ends
-#         self.stressperiod_deltas = pd.to_timedelta(perlen, unit=self.unit)
-#         self.stressperiod_end = self.start + np.cumsum(self.stressperiod_deltas)
-#         self.stressperiod_start = self.stressperiod_end - self.stressperiod_deltas
-#
-#         # work out time step lengths - not very elegant
-#         offsets = []
-#         idt = 0
-#         self.kperkstp_loc = {}
-#         for kper, (plen, nts, tmult) in enumerate(zip(perlen, nstp, tsmult)):
-#             if tmult != 1.0:
-#                 dt1 = plen * ((tmult - 1.)/((tmult**nts) - 1.))
-#             else:
-#                 dt1 = float(plen) / float(nts)
-#             offsets.append(dt1)
-#             self.kperkstp_loc[(kper, 0)] = idt
-#             idt += 1
-#             for its in range(nts-1):
-#                 offsets.append(offsets[-1] * tmult)
-#                 self.kperkstp_loc[(kper, its + 1)] = idt
-#                 idt += 1
-#         self.timestep_deltas = pd.to_timedelta(offsets, unit=self.unit)
-#         self.timestep_end = self.start + np.cumsum(self.timestep_deltas)
-#         self.timestep_start = self.timestep_end - self.timestep_deltas
-#
-#         self.perlen = perlen
-#         self.steady = steady
-#         self.nstp = nstp
-#         self.tsmult = tsmult
-#
-#         if True in steady:
-#             #raise NotImplementedError("temporalReference: not dealing with steady state yet")
-#             print("temporalReference warning: not dealing with steady state yet")
-#         return
-#
-#
-#     def totim_to_datetime(self,totim):
-#         return self.start + pd.to_timedelta(totim,unit=self.unit)
-#     def __repr__(self):
-#         s = "TemporalReference:start_datetime:" + str(self.start)
-#         s += ", nper:{0:G}\n".format(self.perlen.shape[0])
-#         s += "perlen:" + str(self.perlen) + '\n'
-#         s += "nstp:" + str(self.nstp) + '\n'
-#         s += "steady:" + str(self.steady) + '\n'
-#         s += "tsmult:" + str(self.tsmult) + '\n'
-#
-#         return s
-#
-#     def get_datetimes_from_oc(self,oc):
-#         raise NotImplementedError()
+

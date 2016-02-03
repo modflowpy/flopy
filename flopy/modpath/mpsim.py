@@ -90,14 +90,14 @@ class ModpathSim(Package):
         self.face_ct = face_ct  
         self.ifaces = ifaces 
         self.part_ct = part_ct 
-        self.strt_file = '{}.{}'.format(model.get_name(), 'loc')
+        self.strt_file = '{}.{}'.format(model.name, 'loc')
         self.time_ct = time_ct  
         self.release_time_incr = release_time_incr	
         self.time_pts = time_pts
         self.particle_cell_cnt = particle_cell_cnt
         self.cell_bd_ct = cell_bd_ct 
         self.bud_loc = bud_loc  
-        self.trace_file = '{}.{}'.format(model.get_name(), 'trace_file.txt')
+        self.trace_file = '{}.{}'.format(model.name, 'trace_file.txt')
         self.trace_id = trace_id 
         self.stop_zone = stop_zone 
         self.zone = zone  

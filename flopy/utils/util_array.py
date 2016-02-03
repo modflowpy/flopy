@@ -905,6 +905,52 @@ class Transient2d(object):
         self.transient_2ds = self.build_transient_sequence()
         return
 
+
+    @staticmethod
+    def masked4d_array_to_kper_dict(m4d):
+        assert m4d.ndim == 4
+        kper_dict = {}
+        for kper,arr in enumerate(m4d):
+            if np.all(np.isnan(arr)):
+                continue
+            elif np.any(np.isnan(arr)):
+                raise Exception("masked value found in array")
+            kper_dict[kper] = arr.copy()
+        return kper_dict
+
+    @classmethod
+    def from_4d(cls,model,pak_name,m4ds):
+        """construct a Transient2d instance from a
+        dict(name: (masked) 4d numpy.ndarray
+        Parameters:
+        ----------
+            model : flopy.mbase derived type
+            pak_name : str package name (e.g. RCH)
+            m4ds : dict(name,(masked) 4d numpy.ndarray)
+                each ndarray must have shape (nper,1,nrow,ncol).
+                if an entire (nrow,ncol) slice is np.NaN, then
+                that kper is skipped.
+        Returns:
+        -------
+            Transient2d instance
+        """
+
+        assert isinstance(m4ds,dict)
+        keys = list(m4ds.keys())
+        assert len(keys) == 1
+        name = keys[0]
+        m4d = m4ds[name]
+
+        assert m4d.ndim == 4
+        assert m4d.shape[0] == model.nper
+        assert m4d.shape[1] == 1
+        assert m4d.shape[2] == model.nrow
+        assert m4d.shape[3] == model.ncol
+        m4d = m4d.astype(np.float32)
+        kper_dict = Transient2d.masked4d_array_to_kper_dict(m4d)
+        return cls(model=model,shape=(model.nrow,model.ncol),value=kper_dict,
+                   dtype=m4d.dtype,name=name)
+
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":
             # set cnstnt for each u2d
@@ -1094,6 +1140,19 @@ class Transient2d(object):
             raise Exception("Transient2d.__getitem__(): error:" + \
                             " could not find an entry before kper {0:d}".format(
                                 kper))
+
+    def __setitem__(self, key, value):
+        try:
+            key = int(key)
+        except Exception as e:
+            raise Exception("Transient2d.__setitem__() error: " +\
+                            "'key'could not be cast to int:{0}".format(str(e)))
+        nper = self.model.nper
+        if key > self.model.nper or key < 0:
+            raise Exception("Transient2d.__setitem__() error: " +\
+                            "key {0} not in nper range {1}:{2}".format(key,0,nper))
+
+        self.transient_2ds[key] = self.__get_2d_instance(key,value)
 
     @property
     def array(self):
@@ -1326,15 +1385,6 @@ class Util2d(object):
             self._how = how
         else:
             self._decide_how()
-
-        if not model.free_format and self.how == "internal" and self.locat is None:
-            #raise Exception("Util2d error: locat is None, but model does not " +\
-            #      "support free format and the external array option " +\
-            #      "is not being used")
-            print("Util2d warning: locat is None, but model does not "+\
-                  "support free format and how is internal..."+\
-                  "resetting how = external")
-            self.how = "external"
 
     def _decide_how(self):
         #if a constant was passed in
@@ -1681,9 +1731,21 @@ class Util2d(object):
         else:
             how = self._how
 
-        if self.format.binary and how in ["constant","internal"]:
-            print("Util2d:{0} warning: ".format(self.name) +\
-                  "resetting 'how' to external since format is binary")
+        if not self.model.free_format and self.format.free:
+            print("Util2d {0}: can't free format...resetting".format(self.name))
+            self.format.free = False
+
+        if not self.model.free_format and self.how == "internal" and self.locat is None:
+            print("Util2d {0}: locat is None, but ".format(self.name) +\
+                  "model does not "+\
+                  "support free format and how is internal..."+\
+                  "resetting how = external")
+            how = "external"
+
+        if (self.format.binary or self.model.external_path)\
+                and how in ["constant","internal"]:
+            print("Util2d:{0}: ".format(self.name) +\
+                  "resetting 'how' to external")
             if self.model.free_format:
                 how = "openclose"
             else:
@@ -2103,7 +2165,7 @@ class Util2d(object):
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
-                         cnstnt=cr_dict['cnstnt'])
+                         cnstnt=cr_dict['cnstnt'],locat=cr_dict["nunit"])
 
         elif cr_dict['type'] == 'external':
 

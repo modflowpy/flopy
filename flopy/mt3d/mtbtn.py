@@ -262,7 +262,7 @@ class Mt3dBtn(Package):
             self.nrow = self.parent.mf.dis.nrow
 
         if ncol is not None:
-            self.ncol = nrow
+            self.ncol = ncol
         else:
             self.ncol = self.parent.mf.dis.ncol
 
