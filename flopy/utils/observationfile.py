@@ -1,70 +1,12 @@
+
 import numpy as np
-from ..utils.utils_def import FlopyBinaryData, get_selection
 
+from ..utils.utils_def import FlopyBinaryData
 
-class HydmodObs(FlopyBinaryData):
-    """
-    HydmodObs Class - used to read binary MODFLOW HYDMOD package output
-
-    Parameters
-    ----------
-    filename : str
-        Name of the hydmod output file
-    verbose : boolean
-        If true, print additional information to to the screen during the
-        extraction.  (default is False)
-    hydlbl_len : int
-        Length of hydmod labels. (default is 20)
-
-    Returns
-    -------
-    None
-
-    """
-
-    def __init__(self, filename, verbose=False, hydlbl_len=20):
-        """
-        Class constructor.
-
-        """
-        super(HydmodObs, self).__init__()
-        # initialize class information
-        self.verbose = verbose
-        # --open binary head file
-        self.file = open(filename, 'rb')
-        # NHYDTOT,ITMUNI
-        self.nhydtot = self.read_integer()
-        precision = 'single'
-        if self.nhydtot < 0:
-            self.nhydtot = abs(self.nhydtot)
-            precision = 'double'
-        self.set_float(precision)
-
-        # continue reading the file
-        self.itmuni = self.read_integer()
-        self.v = np.empty(self.nhydtot, dtype=np.float)
-        self.v.fill(1.0E+32)
-        ctime = self.read_text(nchar=4)
-        self.hydlbl_len = int(hydlbl_len)
-        # read HYDLBL
-        hydlbl = []
-        for idx in range(0, self.nhydtot):
-            cid = self.read_text(self.hydlbl_len)
-            hydlbl.append(cid)
-        self.hydlbl = np.array(hydlbl)
-
-        # create dtype
-        dtype = [('totim', self.floattype)]
-        for site in self.hydlbl:
-            if not isinstance(site, str):
-                site_name = site.decode().strip()
-            else:
-                site_name = site.strip()
-            dtype.append((site_name, self.floattype))
-        self.dtype = np.dtype(dtype)
-
-        self.data = None
-        self._read_data()
+class ObsFiles(FlopyBinaryData):
+    def __init__(self):
+        super(ObsFiles, self).__init__()
+        return
 
     def get_times(self):
         """
@@ -102,7 +44,7 @@ class HydmodObs(FlopyBinaryData):
             swrtype='flow'.
 
         """
-        return self.nhydtot
+        return self.nobs
 
     def get_obsnames(self):
         """
@@ -178,7 +120,6 @@ class HydmodObs(FlopyBinaryData):
             obsname.insert(0, 'totim')
             r = get_selection(self.data, obsname)[i0:i1]
         return r
-
 
     def get_dataframe(self, start_datetime='1-1-1970',
                       idx=None, obsname=None, totim=None, timeunit='D'):
@@ -285,3 +226,205 @@ class HydmodObs(FlopyBinaryData):
             except:
                 break
         return
+
+    def _build_dtype(self):
+        """
+        Build the recordarray and iposarray, which maps the header information
+        to the position in the formatted file.
+        """
+        raise Exception(
+                'Abstract method _build_dtype called in BinaryFiles.  This method needs to be overridden.')
+
+    def _build_index(self):
+        """
+        Build the recordarray and iposarray, which maps the header information
+        to the position in the formatted file.
+        """
+        raise Exception(
+                'Abstract method _build_index called in BinaryFiles.  This method needs to be overridden.')
+
+
+class HydmodObs(ObsFiles):
+    """
+    HydmodObs Class - used to read binary MODFLOW HYDMOD package output
+
+    Parameters
+    ----------
+    filename : str
+        Name of the hydmod output file
+    verbose : boolean
+        If true, print additional information to to the screen during the
+        extraction.  (default is False)
+    hydlbl_len : int
+        Length of hydmod labels. (default is 20)
+
+    Returns
+    -------
+    None
+
+    """
+
+    def __init__(self, filename, verbose=False, hydlbl_len=20):
+        """
+        Class constructor.
+
+        """
+        super(HydmodObs, self).__init__()
+        # initialize class information
+        self.verbose = verbose
+        # --open binary head file
+        self.file = open(filename, 'rb')
+        # NHYDTOT,ITMUNI
+        self.nobs = self.read_integer()
+        precision = 'single'
+        if self.nobs < 0:
+            self.nobs = abs(self.nobs)
+            precision = 'double'
+        self.set_float(precision)
+
+        # continue reading the file
+        self.itmuni = self.read_integer()
+        self.v = np.empty(self.nobs, dtype=np.float)
+        self.v.fill(1.0E+32)
+        ctime = self.read_text(nchar=4)
+        self.hydlbl_len = int(hydlbl_len)
+        # read HYDLBL
+        hydlbl = []
+        for idx in range(0, self.nobs):
+            cid = self.read_text(self.hydlbl_len)
+            hydlbl.append(cid)
+        self.hydlbl = np.array(hydlbl)
+
+        # build dtype
+        self._build_dtype()
+
+        # build index
+        self._build_index()
+
+        self.data = None
+        self._read_data()
+
+    def _build_dtype(self):
+
+        # create dtype
+        dtype = [('totim', self.floattype)]
+        for site in self.hydlbl:
+            if not isinstance(site, str):
+                site_name = site.decode().strip()
+            else:
+                site_name = site.strip()
+            dtype.append((site_name, self.floattype))
+        self.dtype = np.dtype(dtype)
+        return
+
+    def _build_index(self):
+        return
+
+
+class SwrObs(ObsFiles):
+    """
+    Read binary SWR observations output from MODFLOW SWR Process 
+    observation files
+
+    Parameters
+    ----------
+    filename : string
+        Name of the cell budget file
+    precision : string
+        'single' or 'double'.  Default is 'double'.
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> so = flopy.utils.SwrObs('mymodel.swr.obs')
+
+    """
+
+    def __init__(self, filename, precision='double', verbose=False):
+        """
+        Class constructor.
+
+        """
+        super(SwrObs, self).__init__()
+        self.set_float(precision=precision)
+        # initialize class information
+        self.verbose = verbose
+        # open binary head file
+        self.file = open(filename, 'rb')
+
+        # NOBS
+        self.nobs = self.read_integer()
+        # read obsnames
+        obsnames = []
+        for idx in range(0, self.nobs):
+            cid = self.read_text()
+            if isinstance(cid, bytes):
+                cid = cid.decode()
+            obsnames.append(cid.strip())
+        self.obs = obsnames
+
+        # read header information
+        self._build_dtype()
+
+        # build index
+        self._build_index()
+
+        # read data
+        self.data = None
+        self._read_data()
+
+    def _build_dtype(self):
+        vdata = [('totim', self.floattype)]
+        for name in self.obs:
+            vdata.append((str(name), self.floattype))
+        self.dtype = np.dtype(vdata)
+        return
+
+    def _build_index(self):
+        return
+
+
+def get_selection(data, names):
+    """
+
+    Parameters
+    ----------
+    data : numpy recarray
+        recarray of data to make a selection from
+    names : string or list of strings
+        column names to return
+
+    Returns
+    -------
+    out : numpy recarry
+        recarray with selection
+
+    """
+    if not isinstance(names, list):
+        names = [names]
+    ierr = 0
+    for name in names:
+        if name not in data.dtype.names:
+            ierr += 1
+            print('Error: {} is not a valid column name'.format(name))
+    if ierr > 0:
+        raise Exception('Error: {} names did not match'.format(ierr))
+
+    # Valid list of names so make a selection
+    dtype2 = np.dtype({name: data.dtype.fields[name] for name in names})
+    return np.ndarray(data.shape, dtype2, data, 0, data.strides)

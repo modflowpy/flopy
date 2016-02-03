@@ -1,10 +1,9 @@
 """
-Generic utility functions
+Generic classes and utility functions
 """
 
 from datetime import timedelta
 import numpy as np
-
 
 class FlopyBinaryData(object):
     """
@@ -56,37 +55,6 @@ class FlopyBinaryData(object):
 
     def _read_values(self, dtype, count):
         return np.fromfile(self.file, dtype, count)
-
-
-def get_selection(data, names):
-    """
-
-    Parameters
-    ----------
-    data : numpy recarray
-        recarray of data to make a selection from
-    names : string or list of strings
-        column names to return
-
-    Returns
-    -------
-    out : numpy recarry
-        recarray with selection
-
-    """
-    if not isinstance(names, list):
-        names = [names]
-    ierr = 0
-    for name in names:
-        if name not in data.dtype.names:
-            ierr += 1
-            print('Error: {} is not a valid column name'.format(name))
-    if ierr > 0:
-        raise Exception('Error: {} names did not match'.format(ierr))
-
-    # Valid list of names so make a selection
-    dtype2 = np.dtype({name: data.dtype.fields[name] for name in names})
-    return np.ndarray(data.shape, dtype2, data, 0, data.strides)
 
 
 def totim_to_datetime(totim, start='1-1-1970', timeunit='D'):
