@@ -11,6 +11,7 @@ import sys
 import numpy as np
 from ..pakbase import Package
 from flopy.utils.util_list import MfList
+from flopy.utils import check
 
 
 class ModflowRiv(Package):
@@ -124,6 +125,64 @@ class ModflowRiv(Package):
         # self.stress_period_data = MfList(model, self.dtype, stress_period_data)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen.
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.riv.check()
+
+        """
+        basechk = super(ModflowRiv, self).check(verbose=False)
+        chk = check(self, f=f, verbose=verbose, level=level)
+        chk.summary_array = basechk.summary_array
+
+        for per in self.stress_period_data.data.keys():
+            if isinstance(self.stress_period_data.data[per], np.recarray):
+                spd = self.stress_period_data.data[per]
+                inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
+
+                # check that river stage and bottom are above model cell bottoms
+                # also checks for nan values
+                botms = self.parent.dis.botm.array[inds]
+
+                for elev in ['stage', 'rbot']:
+                    chk.stress_period_data_values(spd, spd[elev] < botms,
+                                                  col=elev,
+                                                  error_name='{} below cell bottom'.format(elev),
+                                                  error_type='Error')
+
+                # check that river stage is above the rbot
+                chk.stress_period_data_values(spd, spd['rbot'] > spd['stage'],
+                                              col='stage',
+                                              error_name='RIV stage below rbots',
+                                              error_type='Error')
+        chk.summarize()
+        return chk
+
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):

@@ -46,9 +46,8 @@ class check:
     Schwartz, F.W. and Zhang, H., 2003. Fundamentals of Groundwater, Wiley, 583 p.
     """
 
-    bc_elev_names = {'GHB': 'bhead', # all names in lower case
-                     'RIV': 'stage',
-                     'DRN': 'elev'}
+    bc_stage_names = {'GHB': 'bhead', # all names in lower case
+                      'DRN': 'elev'}
 
     property_threshold_values = {'hk': (1e-11, 1e5), # after Schwartz and Zhang, table 4.4
                                  'hani': None,
@@ -447,7 +446,7 @@ class check:
         elif self.f is not None and self.verbose and self.summary_array.shape[0] > 0:
             txt += '  see {} for details.\n'.format(self.summaryfile)
 
-        # print checks that past for higher levels
+        # print checks that passed for higher levels
         if len(self.passed) > 0 and self.level > 0:
             txt += '\n  Checks that passed:\n'
             for chkname in self.passed:
