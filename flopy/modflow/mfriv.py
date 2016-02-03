@@ -127,7 +127,35 @@ class ModflowRiv(Package):
         self.parent.add_package(self)
 
     def check(self, f=None, verbose=True, level=1):
+        """
+        Check package data for common errors.
 
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen.
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.riv.check()
+
+        """
         chk = check(self, f=f, verbose=verbose, level=level)
         for per in self.stress_period_data.data.keys():
             if isinstance(self.stress_period_data.data[per], np.recarray):

@@ -21,9 +21,9 @@ def test_bcs_check():
     bas = flopy.modflow.ModflowBas(mf, ibound=np.array([[0, 1], [1, 1]]))
     ghb = flopy.modflow.ModflowGhb(mf, stress_period_data={0: [0, 0, 0, 100, 1]})
     riv = flopy.modflow.ModflowRiv(mf, stress_period_data={0: [0, 0, 1, 80, 10, 90]})
-    chk = ghb.check()
+    chk = ghb.check(f='GHB.chk', verbose=False, level=0)
     assert chk.summary_array['desc'][0] == 'BC in inactive cell'
-    chk = riv.check()
+    chk = riv.check(f='RIV.chk', verbose=False, level=0)
     assert chk.summary_array['desc'][2] == 'RIV stage below rbots'
     assert np.array_equal(chk.summary_array['j'], np.array([1,1,1]))
 

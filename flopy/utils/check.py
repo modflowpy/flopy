@@ -446,7 +446,7 @@ class check:
         elif self.f is not None and self.verbose and self.summary_array.shape[0] > 0:
             txt += '  see {} for details.\n'.format(self.summaryfile)
 
-        # print checks that past for higher levels
+        # print checks that passed for higher levels
         if len(self.passed) > 0 and self.level > 0:
             txt += '\n  Checks that passed:\n'
             for chkname in self.passed:
