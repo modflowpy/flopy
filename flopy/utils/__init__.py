@@ -26,11 +26,11 @@ from .util_list import MfList
 from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
 from .formattedfile import FormattedHeadFile
 from .modpathfile import PathlineFile, EndpointFile
-from .binaryswrfile import SwrObs, SwrStage, SwrBudget, SwrFlow, SwrExchange, \
+from .swroutputfile import SwrStage, SwrBudget, SwrFlow, SwrExchange, \
     SwrStructure
-from .binaryhydmodfile import HydmodObs
+from .observationfile import HydmodObs, SwrObs
 from .reference import SpatialReference  # , TemporalReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget
 from .check import check, get_neighbors
-from .utils_def import FlopyBinaryData, get_selection, totim_to_datetime
+from .utils_def import FlopyBinaryData, totim_to_datetime

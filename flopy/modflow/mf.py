@@ -426,6 +426,16 @@ class Modflow(BaseModel):
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.
                   format(50 * '-', ext_unit_dict, 50 * '-'))
 
+        # reset version based on packages in the name file
+        ml.version = 'mf2005'
+        for k, v in ext_unit_dict.items():
+            if v.filetype == 'NWT' or v.filetype == 'UPW':
+                ml.version = 'mfnwt'
+            elif v.filetype == 'GLO':
+                ml.version = 'mf2k'
+            elif v.filetype == 'DISU' or v.filetype == 'SMS':
+                ml.version = 'mfusg'
+
         # load dis
         dis = None
         dis_key = None

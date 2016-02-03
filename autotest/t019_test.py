@@ -104,6 +104,6 @@ def test_hydmodfile_read():
 
 
 if __name__ == '__main__':
+    test_hydmodfile_read()
     test_hydmodfile_create()
     test_hydmodfile_load()
-    test_hydmodfile_read()

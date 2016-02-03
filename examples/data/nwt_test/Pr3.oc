@@ -1,0 +1,6 @@
+# MODFLOW2005 OC Input File
+# Test Problem 3 for UPW Package and NWT Solver
+HEAD PRINT FORMAT   12
+HEAD SAVE UNIT 30
+PERIOD   1 STEP   1    
+PRINT HEAD
