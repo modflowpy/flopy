@@ -11,6 +11,7 @@ import sys
 import numpy as np
 from ..pakbase import Package
 from flopy.utils.util_list import MfList
+from flopy.utils import check
 
 
 class ModflowRiv(Package):
@@ -124,6 +125,33 @@ class ModflowRiv(Package):
         # self.stress_period_data = MfList(model, self.dtype, stress_period_data)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
+
+    def check(self, f=None, verbose=True, level=1):
+
+        chk = check(self, f=f, verbose=verbose, level=level)
+        for per in self.stress_period_data.data.keys():
+            if isinstance(self.stress_period_data.data[per], np.recarray):
+                spd = self.stress_period_data.data[per]
+                inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
+
+                # check that river stage and bottom are above model cell bottoms
+                # also checks for nan values
+                botms = self.parent.dis.botm.array[inds]
+
+                for elev in ['stage', 'rbot']:
+                    chk.stress_period_data_values(spd, spd[elev] < botms,
+                                                  col=elev,
+                                                  error_name='{} below cell bottom'.format(elev),
+                                                  error_type='Error')
+
+                # check that river stage is above the rbot
+                chk.stress_period_data_values(spd, spd['rbot'] > spd['stage'],
+                                              col='stage',
+                                              error_name='RIV stage below rbots',
+                                              error_type='Error')
+        chk.summarize()
+        return chk
+
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):

@@ -46,9 +46,8 @@ class check:
     Schwartz, F.W. and Zhang, H., 2003. Fundamentals of Groundwater, Wiley, 583 p.
     """
 
-    bc_elev_names = {'GHB': 'bhead', # all names in lower case
-                     'RIV': 'stage',
-                     'DRN': 'elev'}
+    bc_stage_names = {'GHB': 'bhead', # all names in lower case
+                      'DRN': 'elev'}
 
     property_threshold_values = {'hk': (1e-11, 1e5), # after Schwartz and Zhang, table 4.4
                                  'hani': None,
