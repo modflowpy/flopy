@@ -67,13 +67,13 @@ def test_properties_check():
                                    vka=np.array([[1e10, 0], [1, 1e-20]]))
     chk = lpf.check()
     ind1 = np.array([True if list(inds) == [0, 1, 1]
-                     else False for inds in chk.summary_array[['k', 'i', 'j']]])
+                     else False for inds in chk.summary_array[['k', 'i', 'j']].tolist()])
     ind1_errors = chk.summary_array[ind1]['desc']
     ind2 = np.array([True if list(inds) == [0, 0, 1]
-                     else False for inds in chk.summary_array[['k', 'i', 'j']]])
+                     else False for inds in chk.summary_array[['k', 'i', 'j']].tolist()])
     ind2_errors = chk.summary_array[ind2]['desc']
     ind3 = np.array([True if list(inds) == [0, 0, 0]
-                     else False for inds in chk.summary_array[['k', 'i', 'j']]])
+                     else False for inds in chk.summary_array[['k', 'i', 'j']].tolist()])
     ind3_errors = chk.summary_array[ind3]['desc']
     assert 'zero or negative horizontal hydraulic conductivity values' in ind1_errors
     assert 'horizontal hydraulic conductivity values below checker threshold of 1e-11' in ind1_errors
