@@ -165,18 +165,21 @@ class ModflowRch(Package):
                 if Rmean/Tmean < RTmin:
                     chk._add_to_summary(type='Warning', value=Rmean/Tmean,
                                          desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
+                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
                 elif Rmean/Tmean > RTmax:
                     chk._add_to_summary(type='Warning', value=Rmean/Tmean,
                                          desc='\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax))
+                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
                 else:
-                    chk.passed.append('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                    chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
 
         # check for NRCHOP values != 3
         if self.nrchop != 3:
             chk._add_to_summary(type='Warning', value=self.nrchop,
                                  desc='\r    Variable NRCHOP set to value other than 3'.format(RTmin))
+            chk.remove_passed('Variable NRCHOP set to 3.')
         else:
-            chk.passed.append('Variable NRCHOP set to 3.')
+            chk.append_passed('Variable NRCHOP set to 3.')
         chk.summarize()
         return chk
 
