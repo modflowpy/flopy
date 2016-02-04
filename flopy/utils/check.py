@@ -541,10 +541,10 @@ def get_neighbors(a):
     tmp = np.empty((nk+2, ni+2, nj+2), dtype=float)
     tmp[:, :, :] = np.nan
     tmp[1:-1, 1:-1, 1:-1] = a[:, :, :]
-    neighbors = np.vstack([tmp[0:-2, 1:-1, 1:-1].ravel(),
-                           tmp[2:, 1:-1, 1:-1].ravel(),
-                           tmp[1:-1, 0:-2, 1:-1].ravel(),
-                           tmp[1:-1, 2:, 1:-1].ravel(),
-                           tmp[1:-1, 1:-1, :-2].ravel(),
-                           tmp[1:-1, 1:-1, 2:].ravel()])
+    neighbors = np.vstack([tmp[0:-2, 1:-1, 1:-1].ravel(), # k-1
+                           tmp[2:, 1:-1, 1:-1].ravel(), # k+1
+                           tmp[1:-1, 0:-2, 1:-1].ravel(), # i-1
+                           tmp[1:-1, 2:, 1:-1].ravel(), # i+1
+                           tmp[1:-1, 1:-1, :-2].ravel(), # j-1
+                           tmp[1:-1, 1:-1, 2:].ravel()]) # j+1
     return neighbors.reshape(6, nk, ni, nj)

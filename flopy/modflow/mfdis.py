@@ -518,47 +518,6 @@ class ModflowDis(Package):
         chk.summarize()
         return chk
 
-        '''
-        if f is not None:
-            if isinstance(f, str):
-                pth = os.path.join(self.parent.model_ws, f)
-                f = open(pth, 'w', 0)
-
-        errors = False
-        txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.name[0])
-        t = ''
-        t1 = ''
-        inactive = self.parent.bas6.ibound.array == 0
-        # thickness errors
-        d = self.thickness.array
-        d[inactive] = 1.
-        if d.min() <= 0:
-            errors = True
-            t = '{}  ERROR: Negative or zero cell thickness specified.\n'.format(t)
-            if level > 0:
-                idx = np.column_stack(np.where(d <= 0.))
-                t1 = self.level1_arraylist(idx, d, self.thickness.name, t1)
-        else:
-            t = '{}  Specified cell thickness is OK.\n'.format(t)
-
-        # add header to level 0 text
-        txt += t
-
-        if level > 0:
-            if errors:
-                txt += '\n  DETAILED SUMMARY OF {} ERRORS:\n'.format(self.name[0])
-                # add level 1 header to level 1 text
-                txt += t1
-
-        # write errors to summary file
-        if f is not None:
-            f.write('{}\n'.format(txt))
-
-        # write errors to stdout
-        if verbose:
-            print(txt)
-        '''
-
     @staticmethod
     def load(f, model, ext_unit_dict=None, check=True):
         """

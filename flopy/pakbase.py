@@ -304,7 +304,7 @@ class Package(object):
                                  chk.property_threshold_values['vkcb'],
                                  'quasi-3D confining bed Kv')
 
-            if self.parent.dis.nper > 1:  # only check storage if model is transient
+            if not np.all(self.parent.dis.steady):  # only check storage if model is transient
 
                 # do the same for storage if the model is transient
                 sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
