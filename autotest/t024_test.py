@@ -1,18 +1,26 @@
-import sys
-sys.path.insert(0, '..')
 import os
-import glob
 import numpy as np
 import flopy
 
-def test_checker_on_load():
+model_ws = os.path.join('..', 'examples', 'data', 'mf2005_test')
+testmodels = [os.path.join(model_ws, f) for f in os.listdir(model_ws)
+              if f.endswith('.nam')]
+
+
+def txest_checker_on_load():
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
-    model_ws = '../examples/data/mf2005_test/'
-    testmodels = [os.path.split(f)[-1] for f in glob.glob(model_ws + '*.nam')]
-
     for mfnam in testmodels:
-        m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws)
+        yield checker_on_load, mfnam
+
+
+def checker_on_load(mfnam):
+    f = os.path.basename(mfnam)
+    d = os.path.dirname(mfnam)
+    m = flopy.modflow.Modflow.load(f, model_ws=d)
+    assert isinstance(m,
+                      flopy.modflow.Modflow), 'Not a flopy.modflow.Modflow instance'
+
 
 def test_bcs_check():
     mf = flopy.modflow.Modflow(version='mf2005',
@@ -73,6 +81,7 @@ def test_properties_check():
     j=2
 
 if __name__ == '__main__':
-    #test_checker_on_load()
+    for mfnam in testmodels:
+        checker_on_load(mfnam)
     test_bcs_check()
     test_properties_check()
