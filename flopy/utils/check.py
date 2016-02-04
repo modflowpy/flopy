@@ -425,6 +425,11 @@ class check:
         else:
             self.append_passed(error_name)
 
+    def view_summary_array_fields(self, fields):
+        arr = self.summary_array
+        dtype2 = np.dtype({name:arr.dtype.fields[name] for name in fields})
+        return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
+
     def summarize(self):
 
         # write the summary array to text file (all levels)
