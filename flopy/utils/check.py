@@ -209,6 +209,7 @@ class check:
         return np.core.records.fromarrays(array.transpose(), dtype=dtype)
 
     def _txt_footer(self, headertxt, txt, testname, passed=False, warning=True):
+        '''
         if len(txt) == 0 or passed:
             txt += 'passed.'
             self.passed.append(testname)
@@ -219,7 +220,7 @@ class check:
         if self.verbose:
             print(txt + '\n')
         self.txt += headertxt + txt + '\n'
-
+        '''
 
     def _stress_period_data_valid_indices(self, stress_period_data):
         """Check that stress period data inds are valid for model grid."""
@@ -247,8 +248,9 @@ class check:
                                                  error_type='Error')
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
             spd_inds_valid = False
+            self.remove_passed('BC indices valid')
         if spd_inds_valid:
-            self.passed.append('BC indices valid')
+            self.append_passed('BC indices valid')
         return spd_inds_valid
 
     def _stress_period_data_nans(self, stress_period_data):
@@ -262,24 +264,27 @@ class check:
                                                  error_name='Not a number',
                                                  error_type='Error')
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
+            self.remove_passed('not a number (Nan) entries')
         else:
-            self.passed.append('not a number (Nan) entries')
+            self.append_passed('not a number (Nan) entries')
 
     def _stress_period_data_inactivecells(self, stress_period_data):
         """Check for and list any stress period data in cells with ibound=0."""
         spd = stress_period_data
         inds = (spd.k, spd.i, spd.j) if self.structured else (spd.node)
+        msg = 'BC in inactive cell'
         if 'BAS6' in self.model.get_package_list():
             ibnd = self.package.parent.bas6.ibound.array[inds]
 
             if np.any(ibnd == 0):
                 sa = self._list_spd_check_violations(stress_period_data,
                                                      ibnd == 0,
-                                                     error_name='BC in inactive cell',
+                                                     error_name=msg,
                                                      error_type='Warning')
                 self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
+                self.remove_passed(msg + 's')
             else:
-                self.passed.append('BCs in inactive cells')
+                self.append_passed(msg + 's')
 
     def _list_spd_check_violations(self, stress_period_data, criteria, col=None,
                                   error_name='', error_type='Warning'):
@@ -297,6 +302,14 @@ class check:
         en = [error_name] * len(v)
         tp = [error_type] * len(v)
         return self._get_summary_array(np.column_stack([tp, pn, inds, v, en]))
+
+    def append_passed(self, message):
+        """Add a check to the passed list if it isn't already in there."""
+        self.passed.append(message) if message not in self.passed else None
+
+    def remove_passed(self, message):
+        """Remove a check to the passed list if it failed in any stress period."""
+        self.passed.remove(message) if message in self.passed else None
 
     def isvalid(self, inds):
         """Check that indices are valid for model grid
@@ -393,8 +406,9 @@ class check:
             sa = self._list_spd_check_violations(stress_period_data, criteria, col,
                                                  error_name=error_name, error_type=error_type)
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
+            self.remove_passed(error_name)
         else:
-            self.passed.append(error_name)
+            self.append_passed(error_name)
 
     def values(self, a, criteria, error_name='', error_type='Warning'):
         """If criteria contains any true values, return the error_type, package name, indices,
@@ -407,8 +421,14 @@ class check:
             tp = [error_type] * len(v)
             sa = self._get_summary_array(np.column_stack([tp, pn, np.transpose(inds), v, en]))
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
+            self.remove_passed(error_name)
         else:
-            self.passed.append(error_name)
+            self.append_passed(error_name)
+
+    def view_summary_array_fields(self, fields):
+        arr = self.summary_array
+        dtype2 = np.dtype({name:arr.dtype.fields[name] for name in fields})
+        return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
 
     def summarize(self):
 
@@ -541,10 +561,10 @@ def get_neighbors(a):
     tmp = np.empty((nk+2, ni+2, nj+2), dtype=float)
     tmp[:, :, :] = np.nan
     tmp[1:-1, 1:-1, 1:-1] = a[:, :, :]
-    neighbors = np.vstack([tmp[0:-2, 1:-1, 1:-1].ravel(),
-                           tmp[2:, 1:-1, 1:-1].ravel(),
-                           tmp[1:-1, 0:-2, 1:-1].ravel(),
-                           tmp[1:-1, 2:, 1:-1].ravel(),
-                           tmp[1:-1, 1:-1, :-2].ravel(),
-                           tmp[1:-1, 1:-1, 2:].ravel()])
+    neighbors = np.vstack([tmp[0:-2, 1:-1, 1:-1].ravel(), # k-1
+                           tmp[2:, 1:-1, 1:-1].ravel(), # k+1
+                           tmp[1:-1, 0:-2, 1:-1].ravel(), # i-1
+                           tmp[1:-1, 2:, 1:-1].ravel(), # i+1
+                           tmp[1:-1, 1:-1, :-2].ravel(), # j-1
+                           tmp[1:-1, 1:-1, 2:].ravel()]) # j+1
     return neighbors.reshape(6, nk, ni, nj)
