@@ -252,7 +252,8 @@ class ModflowSwi2(Package):
         self.obsnam = obsnam
         if isinstance(obslrc, list):
             obslrc = np.array(obslrc, dtype=np.int)
-        if obslrc.ndim == 1:
+        print(obslrc.ndim, obslrc.size, obslrc.shape)
+        if obslrc.ndim == 1 and obslrc.size == 3:
             obslrc = obslrc.reshape((1, 3))
         self.obslrc = obslrc
         if nobs != 0:
