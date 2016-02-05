@@ -1732,7 +1732,7 @@ class Util2d(object):
             how = self._how
 
         if not self.model.array_free_format and self.format.free:
-            print("Util2d {0}: can't free format...resetting".format(self.name))
+            print("Util2d {0}: can't be free format...resetting".format(self.name))
             self.format.free = False
 
         if not self.model.array_free_format and self.how == "internal" and self.locat is None:
