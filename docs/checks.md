@@ -1,4 +1,5 @@
 ##Working list of FloPy checks  
+Please add checks and/or visualizations that you would like to see implemented!
 
 
 
