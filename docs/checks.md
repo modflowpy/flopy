@@ -20,7 +20,7 @@ Please add checks and/or visualizations that you would like to see implemented!
 | pakbase (LPF and UPW)| storage values <=0 (transient only) | :white_check_mark: | Error |
 | pakbase (LPF and UPW)| unusual values of storage (transient only) | :white_check_mark: | Error |
 | pakbase (LPF and UPW)| convertible layers below confined layers | :white_check_mark: | Warning |
-| pakbase | check for surface water BCs inconfined layers | :x: | Warning |
+| pakbase | check for surface water BCs in confined layers | :x: | Warning |
 | bas6 | isolated cells | :white_check_mark: | Warning |
 | bas6 | NaN values | :white_check_mark: | Error |
 | DIS | cell thicknesses <= 0 | :white_check_mark: | Error |
