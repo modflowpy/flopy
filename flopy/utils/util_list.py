@@ -825,12 +825,12 @@ class MfList(object):
     def from_4d(cls, model, pak_name, m4ds):
         """construct an MfList instance from a dict of
         (attribute_name,masked 4D ndarray
-        Parameters:
+        Parameters
         ----------
             model : mbase dervied type
             pak_name : str package name (e.g GHB)
             m4ds : {attibute name:4d masked numpy.ndarray}
-        Returns:
+        Returns
         -------
             MfList instance
         """
@@ -842,12 +842,12 @@ class MfList(object):
     def masked4D_arrays_to_stress_period_data(dtype, m4ds):
         """ convert a dictionary of 4-dim masked arrays to
             a stress_period_data style dict of recarray
-        Parameters:
+        Parameters
         ----------
             dtype : numpy dtype
 
             m4ds : dict {name:masked numpy 4-dim ndarray}
-        Returns:
+        Returns
         -------
             dict {kper:recarray}
         """
