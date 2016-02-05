@@ -160,6 +160,7 @@ class ModflowBas(Package):
         # First line: heading
         #f_bas.write('%s\n' % self.heading)
         f_bas.write('{0:s}\n'.format(self.heading))
+
         # Second line: format specifier
         self.options = ''
         if self.ixsec:
