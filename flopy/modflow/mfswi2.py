@@ -143,7 +143,7 @@ class ModflowSwi2(Package):
     obsnam : list of strings
         names for nobs observations.
     obslrc : list of lists
-        [layer, row, column] lists for nobs observations.
+        zero-based [layer, row, column] lists for nobs observations.
     naux : int
         number of auxiliary variables
     extension : list string
@@ -252,13 +252,22 @@ class ModflowSwi2(Package):
         self.obsnam = obsnam
         if isinstance(obslrc, list):
             obslrc = np.array(obslrc, dtype=np.int)
+        if obslrc.ndim == 1:
+            obslrc = obslrc.reshape((1, 3))
         self.obslrc = obslrc
+        if nobs != 0:
+            self.nobs = self.obslrc.shape[0]
         #
         self.parent.add_package(self)
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
@@ -326,7 +335,7 @@ class ModflowSwi2(Package):
                 # f.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
                 f.write('{} '.format(self.obsnam[i]))
                 for v in self.obslrc[i, :]:
-                    f.write('{:10d}'.format(v))
+                    f.write('{:10d}'.format(v+1))
                 f.write('\n')
 
         # close swi2 file
