@@ -122,12 +122,12 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
 def output_helper(f,ml,oudic,**kwargs):
     """export model outputs using the model spatial reference
     info.
-    Parameters:
+    Parameters
     ----------
         f : filename for output - must have .shp or .nc extension
         ml : BaseModel derived type
         oudic : dict {output_filename,flopy datafile/cellbudgetfile instance}
-    Returns:
+    Returns
     -------
         None
     Note:
@@ -255,7 +255,7 @@ def package_helper(f, pak, **kwargs):
 def mflist_helper(f, mfl, **kwargs):
     """ export helper for MfList instances
 
-    Parameters:
+    Parameters
     -----------
         f : string (filename) or existing export instance type (NetCdf only for now)
         mfl : MfList instance
@@ -332,7 +332,7 @@ def mflist_helper(f, mfl, **kwargs):
 def transient2d_helper(f, t2d, **kwargs):
     """ export helper for Transient2d instances
 
-    Parameters:
+    Parameters
     -----------
         f : string (filename) or existing export instance type (NetCdf only for now)
         t2d : Transient2d instance
@@ -407,7 +407,7 @@ def transient2d_helper(f, t2d, **kwargs):
 def util3d_helper(f, u3d, **kwargs):
     """ export helper for Transient2d instances
 
-    Parameters:
+    Parameters
     -----------
         f : string (filename) or existing export instance type (NetCdf only for now)
         u3d : Util3d instance
@@ -489,7 +489,7 @@ def util3d_helper(f, u3d, **kwargs):
 def util2d_helper(f, u2d, **kwargs):
     """ export helper for Util2d instances
 
-    Parameters:
+    Parameters
     ----------
         f : string (filename) or existing export instance type (NetCdf only for now)
         u2d : Util2d instance
