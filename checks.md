@@ -1,91 +1,51 @@
-##Working list of FloPy checks
-
-###Model level checks  
-**Errors** 
-
-* unit numbers conflicts
-* check for solver package compatible with model version
-* minimum packages needed to run the model
-
-###Package level checks
-####All packages
-**Errors**   
-
-* Check for NaN values  
-**Warnings**   
+##Working list of FloPy checks  
 
 
-####All BC packages
-**Errors**
-  
-* check that head/stage not set below cell bottom
-* zero or negative conductance values
-* overlapping boundary conditions
 
-**Warnings**   
+|Package  | Check | Implemented | Type |
+| :-----------| :------------| :------------------ | :-------------|  
+| mbase | unit number conflicts | :white_check_mark: | Error |
+| mbase | compatible solver package | :white_check_mark: | Error |
+| mbase | minimum packages needed to run the model | :x: | Error |
+| mbase | overlapping boundary conditions | :x: | Error |
+| pakbase (all BC packages) | NaN values in stress_period_data | :white_check_mark: | Error |
+| pakbase (all BC packages)| valid indices for stress_period_data | :white_check_mark: | Error |
+| pakbase (all BC packages)| stress_period_data in inactive cells | :white_check_mark: | Warning |
+| pakbase (LPF and UPW)| hk or vka <=0 | :white_check_mark: | Error |
+| pakbase (LPF and UPW)| hani < 0 | :white_check_mark: | Error |
+| pakbase (LPF and UPW)| vkcb (quasi-3D kv values) <=0 | :white_check_mark: | Error |
+| pakbase (LPF and UPW)| unusually high or low values in hk and vka arrays | :white_check_mark: | Warning |
+| pakbase (LPF and UPW)| unusually high or low values in vkcb (quasi-3D kv values) | :white_check_mark: | Warning |
+| pakbase (LPF and UPW)| storage values <=0 (transient only) | :white_check_mark: | Error |
+| pakbase (LPF and UPW)| unusual values of storage (transient only) | :white_check_mark: | Error |
+| pakbase (LPF and UPW)| convertible layers below confined layers | :white_check_mark: | Warning |
+| pakbase | check for surface water BCs inconfined layers | :x: | Warning |
+| bas6 | isolated cells | :white_check_mark: | Warning |
+| bas6 | NaN values | :white_check_mark: | Error |
+| DIS | cell thicknesses <= 0 | :white_check_mark: | Error |
+| DIS | cell thicknesses < thin_cell_threshold (default 1.0) | :white_check_mark: | Warning |
+| DIS | NaN values in top and bottom arrays | :white_check_mark: | Error |
+| DIS | discretization that violates the 1.5 rule | :x: | Warning |
+| DIS | large changes in elevation | :x: | Warning |
+| RCH | unusually high or low R/T ratios | :white_check_mark: | Warning |
+| RCH | NRCHOP not specified as 3 | :white_check_mark: | Warning |
+| SFR | continuity in segment and reach numbering | :white_check_mark: | Error |
+| SFR | segment number decreases in downstream direction | :white_check_mark: | Warning |
+| SFR | circular routing | :white_check_mark: | Error |
+| SFR | multiple non-zero conductances in a model cell | :white_check_mark: | Warning |
+| SFR | elevation increases in the downstream direction | :white_check_mark: | Error |
+| SFR | streambed elevations above model top | :white_check_mark: | Warning |
+| SFR | streambed elevations below cell bottom | :white_check_mark: | Error |
+| SFR | negative stream depth when icalc=0 | :x: | Error |
+| SFR | slopes above or below specified threshold | :white_check_mark: | Warning |
+| SFR | unusual values for manning's roughness and unit constant | :x: | Warning |
+| SFR | gaps in segment and reach routing | :x: | Warning |
+| SFR | outlets in interior of model domain | :x: | Warning |
+| WEL | PHIRAMP is < 1 and should be close to recommended value of 0.001 | :x: | Warning |
 
-* BCs in inactive cells
-* check that BCs are in all stress periods
-* check if surface water BCs are in a confined layer
-
-####BAS
-**Errors**  
- 
-
-**Warnings**   
 
 
-* check for isolated cells (surrounded by inactive)
-
-####DIS
-**Errors**   
-
-* Active cells whose top elevations are less than or equal to their bottom elevations.
-
-**Warnings**   
-
-* check for large changes in elevation
-* Warn if cell thicknesses are less than a specified threshold (default 1.0)
-* Warn if adjacent cell spacings differ by more than 50% (1.5 rule, e.g. Anderson, Woessner and Hunt 2015, p189-191)
-
-
-####LPF/UPW  
-**Errors**  
-
-* check all properties for zero or negative values  
-
-**Warnings**   
-
-* check that K and storage are approximately within their natural ranges
-     * Are there published reasonable ranges for anisotropy? Is this worth putting in the checker?
-* check for unconfined layer below confined layer
-
-####MNW
-
-####Recharge
-**Warnings**   
-* Warn if R/T ratio unusually high or low
-* warn if NRCHOP != 3
-
-####SFR, STR, SWR  
-**Errors**  
-
-* In the STR package, the segments must be numbered such that lower number segments only flow into higher number segments.  
-
-**Warnings**  
-
-* Streams that flow uphill
-* Sequential reaches in a stream segment that are not in adjacent cells.
-* Linked stream segments where the linked reaches are not in adjacent cells.
-* geographic proximity of segments and reaches
-* check for reasonable values of slope, Manning's roughness coefficient, and unit constant
-
-####Well  
-**Warnings**   
-
-* PHIRAMP is < 1 and should be close to recommended value of 0.001 
-
-###Visualizations  
+###Visualizations (not implemented yet)
 shapefiles:  
 
 * general method for writting check summary table to shapefile
