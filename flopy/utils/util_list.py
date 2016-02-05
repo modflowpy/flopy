@@ -377,7 +377,7 @@ class MfList(object):
                 kper_data = self.__data[kper]
                 kper_vtype = self.__vtype[kper]
                 if (kper_vtype == str):
-                    if (not self.model.free_format):
+                    if (not self.model.array_free_format):
                         kper_data = self.__fromfile(kper_data)
                         kper_vtype = np.recarray
                     itmp = self.get_itmp(kper)
@@ -393,7 +393,7 @@ class MfList(object):
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
                     .format(itmp, 0, kper))
 
-            if self.model.free_format and self.model.external_path is not None:
+            if self.model.array_free_format and self.model.external_path is not None:
                 if kper_vtype == np.recarray:
                     py_filepath = ''
                     if self.model.model_ws is not None:

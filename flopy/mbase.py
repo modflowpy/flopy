@@ -102,7 +102,7 @@ class BaseModel(object):
 
         # Model file information
         # external option stuff
-        self.free_format = True
+        self.array_free_format = True
         self.array_format = None
         self.external_fnames = []
         self.external_units = []
@@ -127,7 +127,7 @@ class BaseModel(object):
         if not isinstance(value, bool):
             print('Error: set_free_format passed value must be a boolean')
             return False
-        self.free_format = value
+        self.array_free_format = value
 
     def get_free_format(self):
         """
@@ -139,7 +139,7 @@ class BaseModel(object):
             Free format flag for the model
 
         """
-        return self.free_format
+        return self.array_free_format
 
     def next_ext_unit(self):
         """
