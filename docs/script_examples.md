@@ -1,3 +1,7 @@
+Examples
+-----------------------------------------------
+
+### [Python Script Examples]
 
 *FloPy<sub>3</sub>* scripts for running and post-processing the lake example and SWI2 Examples (examples 1 to 5) that are described in [Bakker et al. (2013)](http://pubs.usgs.gov/tm/6a46/) are available:
 

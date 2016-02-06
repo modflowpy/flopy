@@ -1,12 +1,26 @@
+FloPy<sub>3</sub> Changes
+-----------------------------------------------
+
 ### Version 3.2.4
-* Added preliminary model checking functionality (`check()`).
+* Added basic model checking functionality (`.check()`).
 
 * Added support for reading SWR Process observation, stage, budget, flow, reach-aquifer exchanges, and structure flows.
 
 * `flopy.utils.HydmodObs` returns a numpy recarray. Previously numpy arrays were returned except when the `slurp()` method was used. The slurp method has been deprecated but the same functionality is available using the `get_data()` method. The recarray returned from the `get_data()` method includes the `totim` value and one or all of the observations (`HYDLBL`).
 
+* Added class (`Gridgen`) for creating layered quadtree grids using GRIDGEN (`flopy.utils.gridgen`). See the flopy3_gridgen notebook for an example of how to use the `Gridgen` class.
+
+* Added user-specified control on use of `OPEN/CLOSE` array options (see flopy3_external_file_handling notebook).
+
+* Added user-specified control for array output formats (see flopy3_array_outputformat_options IPython notebook).
+
+* Added shapefile as optional output format to `.export()` method and deprecated `.to_shapefile()` method.
+
 * Bug fixes:
   1. Fixed issue with right justified format statement for array control record for MT3DMS.
+  2. Fixed bug writing PHIRAMP for MODFLOW-NWT well files.
+  3. Fixed bugs in NETCDF export methods.
+  4. Fixed bugs in LMT and BTN classes.
 
 ### Version 3.2.3
 * Added template creation support for several packages for used with PEST (and UCODE).

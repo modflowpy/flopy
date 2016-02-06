@@ -1,3 +1,8 @@
+Examples
+-----------------------------------------------
+
+### IPython Notebook Examples
+
 The following IPython Notebooks contain example FloPy scripts for a variety of models and FloPy features
 
 #### Basic examples

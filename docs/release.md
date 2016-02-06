@@ -1,10 +1,7 @@
-
-<img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
+!![FloPy](https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png)
 
 ### Version 3.2.4
-[![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
-[![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![Build Status](https://travis-ci.org/modflowpy/flopy.png?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 
 
 Introduction
@@ -21,16 +18,6 @@ Documentation
 -----------------------------------------------
 
 *FloPy<sub>3</sub>* code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
-
-
-Examples
------------------------------------------------
-
-### [IPython Notebook Examples](docs/notebook_examples.md)
-
-### [Python Script Examples](docs/script_examples.md)
-
-### [Tutorials](http://modflowpy.github.io/flopydoc/tutorials.html)
 
 
 Installation
@@ -83,28 +70,3 @@ To update your version of *FloPy<sub>3</sub>* with the bleeding edge code from t
     pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
-FloPy<sub>3</sub> Supported Packages
------------------------------------------------
-
-A list of supported packages in *FloPy<sub>3</sub>* is available in [docs/supported_packages.md](docs/supported_packages.md) on the github repo.
-
-
-FloPy<sub>3</sub> Model Checks
------------------------------------------------
-
-A table of the supported and proposed model checks implemented in  *FloPy<sub>3</sub>* is available in [docs/checks.md](docs/checks.md) on the github repo.
-
-
-FloPy<sub>3</sub> Changes
------------------------------------------------
-
-A summary of changes in each *FloPy<sub>3</sub>* version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
-
-
-MODFLOW Resources
------------------------------------------------
-
-+ [MODFLOW and Related Programs](http://water.usgs.gov/ogw/modflow/)
-+ [Online guide for MODFLOW-2000](http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/index.html)
-+ [Online guide for MODFLOW-2005](http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/)
-+ [Online guide for MODFLOW-NWT](http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/)
