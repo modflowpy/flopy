@@ -89,6 +89,12 @@ FloPy<sub>3</sub> Supported Packages
 A list of supported packages in *FloPy<sub>3</sub>* is available in [docs/supported_packages.md](docs/supported_packages.md) on the github repo.
 
 
+FloPy<sub>3</sub> Model Checks
+-----------------------------------------------
+
+A table of the supported and proposed model checks implemented in  *FloPy<sub>3</sub>* is available in [docs/checks.md](docs/checks.md) on the github repo.
+
+
 FloPy<sub>3</sub> Changes
 -----------------------------------------------
 
