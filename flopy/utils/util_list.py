@@ -131,7 +131,7 @@ class MfList(object):
             if vtype == 'i':
                 fmt_string += ' %9d'
             elif vtype == 'f':
-                fmt_string += ' %9f'
+                fmt_string += ' %9G'
             elif vtype == 'o':
                 fmt_string += ' %s'
             elif vtype == 's':

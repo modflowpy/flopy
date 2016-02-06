@@ -515,13 +515,17 @@ class Util3d(object):
         self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
+        self.ext_filename_base = []
         if model.external_path is not None:
-            self.ext_filename_base = []
             for k in range(shape[0]):
-                self.ext_filename_base.append(os.path.join(model.external_path,
-                                                           self.name_base[
-                                                               k].replace(' ',
-                                                                          '_')))
+                self.ext_filename_base.\
+                    append(os.path.join(model.external_path,
+                                        self.name_base[k].replace(' ','_')))
+        else:
+            for k in range(shape[0]):
+                self.ext_filename_base.\
+                    append(self.name_base[k].replace(' ','_'))
+
         self.util_2ds = self.build_2d_instances()
 
     def __setitem__(self, k, value):
@@ -731,6 +735,13 @@ class Util3d(object):
 
             for i, item in enumerate(self.__value):
                 if isinstance(item, Util2d):
+                    # we need to reset the external name because most of the
+                    # load() methods don't use layer-specific names
+                    item._ext_filename = self.ext_filename_base[i] + \
+                                         "{0}.ref".format(i+1)
+                    # reset the model instance in cases these Util2d's
+                    # came from another model instance
+                    item.model = self.model
                     u2ds.append(item)
                 else:
                     name = self.name_base[i] + str(i + 1)
@@ -902,6 +913,8 @@ class Transient2d(object):
             self.ext_filename_base = \
                 os.path.join(model.external_path,
                              self.name_base.replace(' ', '_'))
+        else:
+            self.ext_filename_base = self.name_base.replace(' ', '_')
         self.transient_2ds = self.build_transient_sequence()
         return
 
@@ -1232,8 +1245,7 @@ class Transient2d(object):
         """
         ext_filename = None
         name = self.name_base + str(kper + 1)
-        if self.model.external_path is not None:
-            ext_filename = self.ext_filename_base + str(kper) + '.ref'
+        ext_filename = self.ext_filename_base + str(kper) + '.ref'
         u2d = Util2d(self.model, self.shape, self.dtype, arg,
                      fmtin=self.fmtin, name=name,
                      ext_filename=ext_filename,
@@ -2165,11 +2177,9 @@ class Util2d(object):
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
-                         cnstnt=cr_dict['cnstnt'],locat=cr_dict["nunit"])
+                         cnstnt=cr_dict['cnstnt'],locat=None)
 
         elif cr_dict['type'] == 'external':
-
-
             if str('binary') not in str(cr_dict['fmtin'].lower()):
                 assert cr_dict['nunit'] in list(ext_unit_dict.keys())
                 data = Util2d.load_txt(shape,
