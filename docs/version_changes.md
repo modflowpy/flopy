@@ -1,6 +1,9 @@
 FloPy Changes
 -----------------------------------------------
 
+### Version 3.2.5
+* Added changes for this version.
+
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).
 
