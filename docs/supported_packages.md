@@ -1,4 +1,4 @@
-FloPy<sub>3</sub> Supported Packages
+FloPy Supported Packages
 -----------------------------------------------
 
 ### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT
@@ -77,28 +77,6 @@ FloPy<sub>3</sub> Supported Packages
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Variable Density Flow (VDF)              | Supported            | Supported            | Not supported        |
 | Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
-
-### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT Observations
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| Package                                        | Creation and Write   | Load Available       | Template Creation    |
-+================================================+======================+======================+======================+
-| Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| HYDMOD (HYD)                                   | Supported            | Supported            | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-| Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
-+------------------------------------------------+----------------------+----------------------+----------------------+
-
 
 ### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT Observations
 | Package                                        | Creation and Write   | Load Available       | Template Creation    |

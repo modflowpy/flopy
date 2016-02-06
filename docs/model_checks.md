@@ -1,14 +1,14 @@
-FloPy<sub>3</sub> Model Checks
+FloPy Model Checks
 -----------------------------------------------
 
 ## List of available FloPy model checks  
 
 |Package  | Check | Implemented | Type |
 | :-----------| :------------| :------------------ | :-------------|  
-| mbase | unit number conflicts | Supported | Error |
-| mbase | compatible solver package | Supported | Error |
-| mbase | minimum packages needed to run the model | Not supported | Error |
-| mbase | overlapping boundary conditions | Not supported | Error |
+| NAM | unit number conflicts | Supported | Error |
+| NAM | compatible solver package | Supported | Error |
+| NAM | minimum packages needed to run the model | Not supported | Error |
+| all BC packages | overlapping boundary conditions | Not supported | Error |
 | all BC packages | NaN values in stress_period_data | Supported | Error |
 | all BC packages | valid indices for stress_period_data | Supported | Error |
 | LPF/UPW | hk or vka <=0 | Supported | Error |
