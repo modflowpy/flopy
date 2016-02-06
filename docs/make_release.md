@@ -66,5 +66,6 @@ Instructions for making a FloPy release
     ```
     [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
     ```
-
-3.  Commit the modified `README.md` to the `develop` branch.
+2.  Update version number in `flopy/version.py` to the next major, minor, or micro number.
+3.  Add new section for next version number in `docs/version_changes.md`.
+4.  Commit the modified `README.md`, `flopy/version.py`, and `docs/version_changes.md` to the `develop` branch.
