@@ -1,4 +1,4 @@
-Instructions for making a FloPy<sub>3</sub> release
+Instructions for making a FloPy release
 -----------------------------------------------
 
 ## Finalizing the release
@@ -42,6 +42,15 @@ Instructions for making a FloPy<sub>3</sub> release
     ```  
     Paste pandoc results in PyPi text for release. 
 6.  Modify the link to the travis status in the PyPi text for the release (see version 3.2.3 for an example).
+
+## Build USGS release notes
+
+1.  Update information in `.\docs\USGS_release.md`
+2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
+
+    ```
+    pandoc -V geometry:margin=0.75in -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
+    ```
 
 ## Sync master and develop branches
 

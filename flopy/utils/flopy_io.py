@@ -19,16 +19,18 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
     """
     Convert flux in a binary cell budget file to a wel instance
 
-    Parameters:
+    Parameters
     ----------
-        cbc_file : (str) cell budget file name
-        text : (str) text string of the desired flux type (e.g. "drains")
-        precision : (optional str) precision of the cell budget file
-        model : (optional) BaseModel instance.  If passed, a new ModflowWel instance
-                will be added to model
-        verbose : bool flag passed to CellBudgetFile
-    Returns:
-        flopy.modflow.ModflowWel instance
+    cbc_file : (str) cell budget file name
+    text : (str) text string of the desired flux type (e.g. "drains")
+    precision : (optional str) precision of the cell budget file
+    model : (optional) BaseModel instance.  If passed, a new ModflowWel
+        instance will be added to model
+    verbose : bool flag passed to CellBudgetFile
+
+    Returns
+    -------
+    flopy.modflow.ModflowWel instance
 
     """
     from . import CellBudgetFile as CBF

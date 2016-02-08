@@ -54,7 +54,7 @@ class Mt3dms(BaseModel):
         self.__gcg = None
         self.__rct = None
         self.__ssm = None
-        self.free_format = False
+        self.array_free_format = False
         self.external_path = external_path
         self.external = False
         self.external_fnames = []
@@ -226,7 +226,7 @@ class Mt3dms(BaseModel):
         self.ftlfilename = ftlfilename
 
         # external option stuff
-        self.free_format = False
+        self.array_free_format = False
         self.array_format = 'mt3d'
         self.external_fnames = []
         self.external_units = []

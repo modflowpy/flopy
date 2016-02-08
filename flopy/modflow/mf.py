@@ -120,7 +120,7 @@ class Modflow(BaseModel):
             assert 'mfusg' in self.version, 'structured=False can only be specified for mfusg models'
 
         # external option stuff
-        self.free_format = True
+        self.array_free_format = True
         self.array_format = 'modflow'
         #self.external_fnames = []
         #self.external_units = []
@@ -254,7 +254,7 @@ class Modflow(BaseModel):
         if not isinstance(value, bool):
             print('Error: set_ifrefm passed value must be a boolean')
             return False
-        self.free_format = value
+        self.array_free_format = value
         bas = self.get_package('BAS6')
         if (bas):
             bas.ifrefm = value

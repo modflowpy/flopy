@@ -344,7 +344,7 @@ class ModflowUpw(Package):
         # get parameters
         par_types = []
         if npupw > 0:
-            par_types, parm_dict = mfpar.load(f, nplpf, model.verbose)
+            par_types, parm_dict = mfpar.load(f, npupw, model.verbose)
 
         # get arrays
         transient = not model.get_package('DIS').steady.all()

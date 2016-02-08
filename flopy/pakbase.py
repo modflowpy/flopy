@@ -588,7 +588,7 @@ class Package(object):
             wb.open(
                     'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + self.url)
 
-    def write_file(self):
+    def write_file(self, check=False):
         """
         Every Package needs its own write_file function
 

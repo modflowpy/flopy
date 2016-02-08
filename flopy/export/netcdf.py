@@ -158,30 +158,33 @@ class NetCdf(object):
         self.log("initializing file")
 
     def difference(self, other, minuend="self", mask_zero_diff=True):
-        """make a new NetCDF instance that is the difference with
-        another netcdf file
-        Parameters:
+        """make a new NetCDF instance that is the difference with another
+        netcdf file
+
+        Parameters
         ----------
-            other : either an str filename of a netcdf file or
+        other : either an str filename of a netcdf file or
             a netCDF4 instance
 
-            minuend : (optional) the order of the difference operation.
+        minuend : (optional) the order of the difference operation.
             Default is self (e.g. self - other).  Can be "self" or "other"
 
-            mask_zero_diff : bool flag to mask differences that are zero.  If
+        mask_zero_diff : bool flag to mask differences that are zero.  If
             True, positions in the difference array that are zero will be set
             to self.fillvalue
 
-        Returns:
+        Returns
         -------
-            net NetCDF instance
-        Note:
-        ----
-            assumes the current NetCDF instance has been populated.  The
-            variable names and dimensions between the two files must match
-             exactly. The name of the new .nc file is
-             <self.output_filename>.diff.nc.  The masks from both self and
-             other are carried through to the new instance
+        net NetCDF instance
+
+        Notes
+        -----
+        assumes the current NetCDF instance has been populated.  The
+        variable names and dimensions between the two files must match
+        exactly. The name of the new .nc file is
+        <self.output_filename>.diff.nc.  The masks from both self and
+        other are carried through to the new instance
+
         """
 
         assert self.nc is not None,"can't call difference() if nc " +\
@@ -622,16 +625,20 @@ class NetCdf(object):
 
     def add_global_attributes(self,attr_dict):
         """ add global attribute to an initialized file
-        Parameters:
+
+        Parameters
         ----------
-            attr_dict : dict(attribute name, attribute value)
-        Returns:
+        attr_dict : dict(attribute name, attribute value)
+
+        Returns
         -------
-            None
-        Raises:
+        None
+
+        Raises
         ------
-            Exception of self.nc is None (initialize_file()
-            has not been called)
+        Exception of self.nc is None (initialize_file()
+        has not been called)
+
         """
         if self.nc is None:
             #self.initialize_file()

@@ -603,7 +603,7 @@ class ModflowStr(Package):
                     for ibnd in range(itmp):
                         line = f.readline()
                         t = []
-                        if model.free_format:
+                        if model.array_free_format:
                             tt = line.strip().split()
                             #current[ibnd] = tuple(t[:len(current.dtype.names)])
                             for idx, v in enumerate(tt[:10]):
@@ -645,7 +645,7 @@ class ModflowStr(Package):
                         print("   reading str dataset 8")
                     for ibnd in range(itmp):
                         line = f.readline()
-                        if model.free_format:
+                        if model.array_free_format:
                             t = line.strip().split()
                             v = [float(vt) for vt in t[:3]]
                         else:
@@ -669,7 +669,7 @@ class ModflowStr(Package):
                         print("   reading str dataset 9")
                     for iseg in range(nss):
                         line = f.readline()
-                        if model.free_format:
+                        if model.array_free_format:
                             t = line.strip().split()
                             v = [float(vt) for vt in t[:ntrib]]
                         else:
@@ -692,7 +692,7 @@ class ModflowStr(Package):
                         print("   reading str dataset 10")
                     for iseg in range(nss):
                         line = f.readline()
-                        if model.free_format:
+                        if model.array_free_format:
                             t = line.strip().split()
                             v = float(t[0])
                         else:

@@ -255,12 +255,12 @@ class ModflowNwt(Package):
         # Open file for writing
         f = open(self.fn_path, 'w')
         f.write('%s\n' % self.heading)
-        f.write('{:10.1e}{:10.1e}{:10d}{:10.1e}{:10d}{:10d}{:10d} '.format(
+        f.write('{:10.3e}{:10.3e}{:10d}{:10.3e}{:10d}{:10d}{:10d}'.format(
                 self.headtol, self.fluxtol, self.maxiterout, self.thickfact,
                 self.linmeth, self.iprnwt, self.ibotav))
         isspecified = False
         for option in self.options:
-            f.write('{0} '.format(option.upper()))
+            f.write('{0:>10s}'.format(option.upper()))
             if option.lower() == 'specified':
                 isspecified = True
         if isspecified:
@@ -369,7 +369,7 @@ class ModflowNwt(Package):
                 pass
         try:
             for i, (v, c) in enumerate(vars.items()):
-                kwargs[v] = c(t[i])
+                kwargs[v] = c(t[i].strip())
         except:
             pass
         if "Continue" in kwargs:

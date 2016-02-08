@@ -295,7 +295,7 @@ def test_util2d_external_fixed():
         shutil.rmtree(model_ws)
     os.mkdir(model_ws)
     ml = flopy.modflow.Modflow(model_ws=model_ws)
-    ml.free_format = False
+    ml.array_free_format = False
 
     stress_util2d(ml, 1, 1, 1)
     stress_util2d(ml, 10, 1, 1)
@@ -316,7 +316,7 @@ def test_util2d_external_fixed_nomodelws():
     base_dir = os.getcwd()
     os.chdir(out_dir)
     ml = flopy.modflow.Modflow()
-    ml.free_format = False
+    ml.array_free_format = False
     stress_util2d_for_joe_the_file_king(ml, 1, 1, 1)
     stress_util2d_for_joe_the_file_king(ml, 10, 1, 1)
     stress_util2d_for_joe_the_file_king(ml, 1, 10, 1)
@@ -338,7 +338,7 @@ def test_util2d_external_fixed_path():
         shutil.rmtree(ext_path)
     ml = flopy.modflow.Modflow(model_ws=model_ws,
                                external_path=ext_path)
-    ml.free_format = False
+    ml.array_free_format = False
 
     stress_util2d(ml, 1, 1, 1)
     stress_util2d(ml, 10, 1, 1)
@@ -362,7 +362,7 @@ def test_util2d_external_fixed_path_nomodelws():
     base_dir = os.getcwd()
     os.chdir(out_dir)
     ml = flopy.modflow.Modflow(external_path=ext_path)
-    ml.free_format = False
+    ml.array_free_format = False
     stress_util2d_for_joe_the_file_king(ml, 1, 1, 1)
     stress_util2d_for_joe_the_file_king(ml, 10, 1, 1)
     stress_util2d_for_joe_the_file_king(ml, 1, 10, 1)
@@ -462,7 +462,7 @@ def test_new_get_file_entry():
     u2d.format.binary = True
     print(u2d.get_file_entry(how="openclose"))
 
-    ml.free_format = False
+    ml.array_free_format = False
     u2d = Util2d(ml, (5, 2), np.float32, np.ones((5, 2)), 'test', locat=99)
     print(u2d.get_file_entry(how="internal"))
     print(u2d.get_file_entry(how="constant"))
@@ -510,7 +510,7 @@ def test_how():
     import numpy as np
     import flopy
     ml = flopy.modflow.Modflow(model_ws="temp")
-    ml.free_format = False
+    ml.array_free_format = False
     dis = flopy.modflow.ModflowDis(ml,nlay=2,nrow=10,ncol=10)
 
     arr = np.ones((ml.nrow,ml.ncol))

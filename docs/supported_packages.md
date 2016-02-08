@@ -1,3 +1,6 @@
+FloPy Supported Packages
+-----------------------------------------------
+
 ### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT
 | Package                                        | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
@@ -27,7 +30,7 @@
 | Output Control (OC)                            | Supported            | Supported            | Not supported        |
 | Periodic Boundary Condition (PBC)              | Supported            | Not supported        | Not supported        |
 | Preconditioned Conjugate <br />Gradient (PCG)              | Supported            | Supported            | Not supported        |
-| Precondonditioned Conjugate <br />Gradient Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
+| Preconditioned Conjugate Gradient Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
 | Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
 | Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
 | River (RIV)                                    | Supported            | Supported            | Not supported        |
@@ -86,4 +89,3 @@
 | River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
 | Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
 | Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
-

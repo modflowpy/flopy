@@ -54,7 +54,7 @@ class Modpath(BaseModel):
         self.head_file = head_file
         self.budget_file = budget_file
         self.__sim = None
-        self.free_format = False
+        self.array_free_format = False
         self.array_format = 'modflow'
         self.external_path = external_path
         self.external = False

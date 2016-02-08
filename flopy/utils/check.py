@@ -44,6 +44,7 @@ class check:
         and Advective Transport, Elsevier, 564p.
     Bear, J., 1972. Dynamics of Fluids in Porous Media. Dover Publications.
     Schwartz, F.W. and Zhang, H., 2003. Fundamentals of Groundwater, Wiley, 583 p.
+
     """
 
     bc_stage_names = {'GHB': 'bhead', # all names in lower case
