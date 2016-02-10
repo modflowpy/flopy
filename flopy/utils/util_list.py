@@ -125,15 +125,28 @@ class MfList(object):
     # Get the numpy savetxt-style fmt string that corresponds to the dtype
     @property
     def fmt_string(self):
+        use_free = True
+        if self.package.parent.bas6 is not None:
+            use_free = self.package.parent.bas6.ifrefm
         fmt_string = ''
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
             if vtype == 'i':
-                fmt_string += ' %9d'
+                if use_free:
+                    fmt_string += ' %9d'
+                else:
+                    fmt_string += '%10d'
             elif vtype == 'f':
-                fmt_string += ' %9G'
+                if use_free:
+                    fmt_string += ' %15.7E'
+                else:
+                    fmt_string += '%10G'
+
             elif vtype == 'o':
-                fmt_string += ' %s'
+                if use_free:
+                    fmt_string += ' %9s'
+                else:
+                    fmt_string += '%10s'
             elif vtype == 's':
                 raise Exception("MfList error: '\str\' type found it dtype." + \
                                 " This gives unpredictable results when " + \
