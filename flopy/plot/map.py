@@ -55,10 +55,10 @@ class ModelMap(object):
             self.sr = copy.deepcopy(sr)
         elif dis is not None:
             #print("warning: the dis arg to model map is deprecated")
-            self.sr = copy.deepcopy(dis.sr)
+            self.sr = copy.deepcopy(dis.parent.sr)
         elif model is not None:
             #print("warning: the model arg to model map is deprecated")
-            self.sr = copy.deepcopy(model.dis.sr)
+            self.sr = copy.deepcopy(model.sr)
     
         # model map override spatial reference settings
         if xul is not None:
