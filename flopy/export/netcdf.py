@@ -140,7 +140,7 @@ class NetCdf(object):
 
         import dateutil.parser
         self.start_datetime = self._dt_str(dateutil.parser.parse(
-            self.model.dis.start_datetime))
+            self.model.start_datetime))
         self.grid_units = LENUNI[self.model.sr.lenuni]
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units

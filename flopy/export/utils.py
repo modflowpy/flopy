@@ -229,6 +229,10 @@ def package_helper(f, pak, **kwargs):
 
     elif isinstance(f, NetCdf):
         attrs = dir(pak)
+        if 'sr' in attrs:
+            attrs.remove('sr')
+        if 'start_datetime' in attrs:
+            attrs.remove('start_datetime')
         for attr in attrs:
             if '__' in attr:
                 continue
