@@ -45,10 +45,10 @@ class ModelCrossSection(object):
                 raise Exception('Cannot find discretization package')
             else:
                 self.dis = model.get_package('DIS')
-                self.sr = copy.deepcopy(self.dis.sr)
+                self.sr = copy.deepcopy(self.dis.parent.sr)
         else:
             self.dis = dis
-            self.sr = copy.deepcopy(dis.sr)
+            self.sr = copy.deepcopy(dis.parent.sr)
         if line == None:
             s = 'line must be specified.'
             raise Exception(s)
