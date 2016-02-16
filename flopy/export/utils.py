@@ -229,6 +229,10 @@ def package_helper(f, pak, **kwargs):
 
     elif isinstance(f, NetCdf):
         attrs = dir(pak)
+        if 'sr' in attrs:
+            attrs.remove('sr')
+        if 'start_datetime' in attrs:
+            attrs.remove('start_datetime')
         for attr in attrs:
             if '__' in attr:
                 continue
@@ -356,7 +360,7 @@ def transient2d_helper(f, t2d, **kwargs):
             u2d = t2d[kper]
             name = '{}_{:03d}'.format(shapefile_utils.shape_attr_name(u2d.name), kper + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, t2d.model.dis.sr, array_dict)
+        shapefile_utils.write_grid_shapefile(f, t2d.model.sr, array_dict)
 
     elif isinstance(f, NetCdf):
         # mask the array - assume layer 1 ibound is a good mask
@@ -431,7 +435,7 @@ def util3d_helper(f, u3d, **kwargs):
             u2d = u3d[ilay]
             name = '{}_{:03d}'.format(shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, u3d.model.dis.sr,
+        shapefile_utils.write_grid_shapefile(f, u3d.model.sr,
                              array_dict)
 
     elif isinstance(f, NetCdf):
@@ -508,7 +512,7 @@ def util2d_helper(f, u2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
-        shapefile_utils.write_grid_shapefile(f, u2d.model.dis.sr, {name: u2d.array})
+        shapefile_utils.write_grid_shapefile(f, u2d.model.sr, {name: u2d.array})
         return
 
     elif isinstance(f, NetCdf):

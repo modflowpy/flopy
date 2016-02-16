@@ -140,8 +140,8 @@ class NetCdf(object):
 
         import dateutil.parser
         self.start_datetime = self._dt_str(dateutil.parser.parse(
-            self.model.dis.start_datetime))
-        self.grid_units = LENUNI[self.model.dis.sr.lenuni]
+            self.model.start_datetime))
+        self.grid_units = LENUNI[self.model.sr.lenuni]
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
@@ -344,7 +344,7 @@ class NetCdf(object):
         except Exception as e:
             raise Exception("NetCdf error importing pyproj module:\n" + str(e))
 
-        proj4_str = self.model.dis.sr.proj4_str
+        proj4_str = self.model.sr.proj4_str
         if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
             proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
@@ -358,8 +358,8 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        ys = self.model.dis.sr.ycentergrid.copy()
-        xs = self.model.dis.sr.xcentergrid.copy()
+        ys = self.model.sr.ycentergrid.copy()
+        xs = self.model.sr.xcentergrid.copy()
 
         if self.grid_units.lower().startswith("f"):
             self.log("converting feet to meters")
@@ -382,8 +382,8 @@ class NetCdf(object):
                  "from {0} to {1}".format(str(self.grid_crs),
                                           str(nc_crs)))
 
-        base_x = self.model.dis.sr.xgrid[0, 0]
-        base_y = self.model.dis.sr.ygrid[0, 0]
+        base_x = self.model.sr.xgrid[0, 0]
+        base_y = self.model.sr.ygrid[0, 0]
         self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
                                                  base_y)
         pass
@@ -434,11 +434,11 @@ class NetCdf(object):
         self.nc.setncattr("geospatial_vertical_max", max_vertical)
         self.nc.setncattr("geospatial_vertical_resolution", "variable")
         self.nc.setncattr("featureType", "Grid")
-        self.nc.setncattr("origin_x", self.model.dis.sr.xul)
-        self.nc.setncattr("origin_y", self.model.dis.sr.yul)
-        self.nc.setncattr("origin_crs", self.model.dis.sr.proj4_str)
+        self.nc.setncattr("origin_x", self.model.sr.xul)
+        self.nc.setncattr("origin_y", self.model.sr.yul)
+        self.nc.setncattr("origin_crs", self.model.sr.proj4_str)
         self.nc.setncattr("grid_rotation_from_origin",
-                          self.model.dis.sr.rotation)
+                          self.model.sr.rotation)
         for k, v in self.global_attributes.items():
             try:
                 self.nc.setself.ncattr(k, v)
@@ -514,29 +514,29 @@ class NetCdf(object):
 
         # delc
         attribs = {"units": "meters", "long_names": "row spacing",
-                   "origin_x": self.model.dis.sr.xul,
-                   "origin_y": self.model.dis.sr.yul,
+                   "origin_x": self.model.sr.xul,
+                   "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
         delc = self.create_variable('delc', attribs, dimensions=('y',))
         if self.grid_units.lower().startswith('f'):
-            delc[:] = self.model.dis.sr.delc[::-1] * 0.3048
+            delc[:] = self.model.sr.delc[::-1] * 0.3048
         else:
-            delc[:] = self.model.dis.sr.delc[::-1]
-        if self.model.dis.sr.rotation != 0:
+            delc[:] = self.model.sr.delc[::-1]
+        if self.model.sr.rotation != 0:
             delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
         # delr
         attribs = {"units": "meters", "long_names": "col spacing",
-                   "origin_x": self.model.dis.sr.xul,
-                   "origin_y": self.model.dis.sr.yul,
+                   "origin_x": self.model.sr.xul,
+                   "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
         delr = self.create_variable('delr', attribs, dimensions=('x',))
         if self.grid_units.lower().startswith('f'):
-            delr[:] = self.model.dis.sr.delr[::-1] * 0.3048
+            delr[:] = self.model.sr.delr[::-1] * 0.3048
         else:
-            delr[:] = self.model.dis.sr.delr[::-1]
-        if self.model.dis.sr.rotation != 0:
+            delr[:] = self.model.sr.delr[::-1]
+        if self.model.sr.rotation != 0:
             delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."

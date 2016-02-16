@@ -69,7 +69,7 @@ class MfList(object):
         else:
             self.model = model
         try:
-            self.sr = self.model.dis.sr
+            self.sr = self.model.sr
         except:
             self.sr = None
         if dtype is None:

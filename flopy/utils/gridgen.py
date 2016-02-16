@@ -541,7 +541,8 @@ class Gridgen(object):
 
         Returns
         -------
-        None
+        result : np.recarray
+            Recarray of the intersection properties.
 
         """
         ifname = 'intersect_feature'
@@ -613,15 +614,15 @@ class Gridgen(object):
         # lower left corner, whereas flopy rotates around upper left.
         # gridgen rotation is counter clockwise, whereas flopy rotation is
         # clock wise.  Crazy.
-        xll = self.dis.sr.xul
-        yll = self.dis.sr.yedge[-1]
-        xllrot, yllrot = self.dis.sr.rotate(xll, yll, self.dis.sr.rotation,
-                                            xorigin=self.dis.sr.xul,
-                                            yorigin=self.dis.sr.yedge[0])
+        sr = self.dis.parent.sr
+        xll = sr.xul
+        yll = sr.yul - sr.yedge[0]
+        xllrot, yllrot = sr.rotate(xll, yll, sr.rotation, xorigin=sr.xul,
+                                   yorigin=sr.yul)
 
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(-self.dis.sr.rotation)
+        s += '  ROTATION_ANGLE = {}\n'.format(-sr.rotation)
         s += '  X_OFFSET = {}\n'.format(xllrot)
         s += '  Y_OFFSET = {}\n'.format(yllrot)
         s += '  NLAY = {}\n'.format(self.dis.nlay)
