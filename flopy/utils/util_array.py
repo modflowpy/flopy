@@ -1389,7 +1389,10 @@ class Util2d(object):
         if self.vtype == str:
             fmtin = "(FREE)"
         self.__value_built = None
-        self.cnstnt = float(cnstnt)
+        if isinstance(dtype, np.float) or isinstance(dtype, np.float32):
+            self.cnstnt = float(cnstnt)
+        else:
+            self.cnstnt = int(cnstnt)
         self.iprn = iprn
         self._format = ArrayFormat(self, fortran=fmtin)
         self._format.binary = bool(bin)
@@ -1868,10 +1871,13 @@ class Util2d(object):
             model - with the effects of the control record multiplier applied.
 
         """
-        if self.cnstnt == 0.0:
-            cnstnt = 1.0
-        else:
+        if isinstance(self.cnstnt, int):
             cnstnt = self.cnstnt
+        else:
+            if self.cnstnt == 0.0:
+                cnstnt = 1.0
+            else:
+                cnstnt = self.cnstnt
         # return a copy of self._array since it is being
         # multiplied
         return (self._array * cnstnt).astype(self.dtype)
@@ -2289,8 +2295,8 @@ class Util2d(object):
                     line[10:20].strip().lower().replace('d', 'e'))
             else:
                 cnstnt = np.int(line[10:20].strip())
-                if cnstnt == 0:
-                    cnstnt = 1
+                #if cnstnt == 0:
+                #    cnstnt = 1
             if locat != 0:
                 fmtin = line[20:40].strip()
                 try:

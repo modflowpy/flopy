@@ -34,3 +34,4 @@ from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget
 from .check import check, get_neighbors
 from .utils_def import FlopyBinaryData, totim_to_datetime
+from .flopy_io import read_fixed_var

@@ -9,7 +9,7 @@ import numpy as np
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp')
 
-mf_items = ['l1a2k.nam', 'l1b2k.nam']
+mf_items = ['l1b2k.nam', 'l1a2k.nam']
 pths = [path, path]
 
 def load_lak(mfnam, pth):

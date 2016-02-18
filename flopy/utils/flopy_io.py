@@ -15,6 +15,54 @@ def line_parse(line):
     return line.strip().split()
 
 
+def read_fixed_var(line, ncol=1, length=10, ipos=None):
+    """
+    Parse a fixed format line using user provided data
+
+    Parameters
+    ----------
+    line : str
+        text string to parse.
+    ncol : int
+        number of columns to parse from line
+    length : int
+        length of
+    ipos : list, int, or numpy array
+        a list
+
+    Returns
+    -------
+    out : list
+        padded list containing data parsed from the passed text string
+
+    """
+    # construct ipos if it was not passed
+    if ipos is None:
+        ipos = []
+        for i in range(ncol):
+            ipos.append(length)
+    else:
+        if isinstance(ipos, np.ndarray):
+            ipos = ipos.flatten().aslist()
+        elif isinstance(ipos, int):
+            ipos = [ipos]
+        ncol = len(ipos)
+    line = line.rstrip()
+    out = []
+    istart = 0
+    for ivar in range(ncol):
+        istop = istart + ipos[ivar]
+        try:
+            txt = line[istart:istop]
+            if len(txt.strip()) > 0:
+                out.append(txt)
+            else:
+                out.append(0)
+        except:
+            break
+        istart = istop
+    return out
+
 def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
     """
     Convert flux in a binary cell budget file to a wel instance
