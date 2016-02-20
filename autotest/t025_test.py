@@ -9,8 +9,11 @@ import numpy as np
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp')
 
-mf_items = ['lakeex3.nam', 'l1b2k.nam', 'l1a2k.nam']
-pths = [path, path, path]
+mf_items = ['l1b2k_bath.nam', 'lakeex3.nam', 'l1b2k.nam', 'l1a2k.nam']
+pths = [path, path, path, path]
+
+#mf_items = ['l1b2k_bath.nam']
+#pths = [path]
 
 run = False
 
@@ -27,7 +30,7 @@ def load_lak(mfnam, pth):
 
     # rewrite files
     #m.array_free_format = True
-    m.model_ws = cpth
+    m.change_model_ws(cpth, reset_external=True)
     m.write_input()
     if run:
         try:

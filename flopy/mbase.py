@@ -404,6 +404,7 @@ class BaseModel(object):
                         new_pth, os.getcwd()))
                 new_pth = os.getcwd()
         # --reset the model workspace
+        old_pth = self._model_ws
         self._model_ws = new_pth
         sys.stdout.write(
             '\nchanging model workspace...\n   {}\n'.format(new_pth))
@@ -418,15 +419,18 @@ class BaseModel(object):
             pth = os.path.join(self._model_ws, self.external_path)
             os.makedirs(pth)
             if reset_external:
-                self._reset_external(pth)
+                self._reset_external(pth, old_pth)
         elif reset_external:
-            self._reset_external(self._model_ws)
+            self._reset_external(self._model_ws, old_pth)
         return None
 
-    def _reset_external(self, pth):
+    def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
         for ext_file in self.external_fnames:
-            new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+            # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+            # this is a wicked mess
+            fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+            new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 
