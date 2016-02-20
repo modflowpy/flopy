@@ -9,17 +9,33 @@ import numpy as np
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp')
 
-mf_items = ['l1b2k.nam', 'l1a2k.nam']
-pths = [path, path]
+mf_items = ['lakeex3.nam', 'l1b2k.nam', 'l1a2k.nam']
+pths = [path, path, path]
+
+run = False
 
 def load_lak(mfnam, pth):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=pth, verbose=True)
     assert m.load_fail is False
+    m.exe_name = 'mf2005'
+    if run:
+        try:
+            success, buff = m.run_model(silent=True)
+        except:
+            pass
+        assert success, 'base model run did not terminate successfully'
 
     # rewrite files
     #m.array_free_format = True
     m.model_ws = cpth
     m.write_input()
+    if run:
+        try:
+            success, buff = m.run_model(silent=True)
+        except:
+            pass
+        assert success, 'base model run did not terminate successfully'
+
 
     # load files
     pth = os.path.join(cpth, '{}.lak'.format(m.name))

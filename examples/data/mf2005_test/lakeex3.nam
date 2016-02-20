@@ -1,0 +1,17 @@
+LIST  1 lakeex3.lst
+BAS6  7 lakeex3.ba6
+BCF6 10 lakeex3.bcf
+EVT  11 lakeex3.evt
+RCH  12 lakeex3.rch
+SIP  13 lakeex3.sip
+OC   17 lakeex3.oc
+FHB  21 lakeex3.fhb
+LAK  16 lakeex3.lak
+DIS  22 lakeex3.dis
+GAGE 24 lakeex3.gge
+DATA 26 lakeex3.gs1
+DATA 27 lakeex3.gs2
+DATA 28 lakeex3.gs3
+DATA 29 lakeex3.gs4
+
+

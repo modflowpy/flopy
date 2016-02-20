@@ -1929,17 +1929,20 @@ class Util2d(object):
         return cr
 
     def _get_fixed_cr(self, locat, value=None):
+        fformat = self.format.fortran
         if value is None:
             value = self.cnstnt
         if locat is None:
             locat = 0
+        if locat is 0:
+            fformat = ''
         if self.dtype == np.int:
             cr = '{0:>10.0f}{1:>10.0f}{2:>19s}{3:>10.0f} #{4}\n' \
-                .format(locat, value, self.format.fortran,
+                .format(locat, value, fformat,
                         self.iprn, self.name)
         elif self.dtype == np.float32:
             cr = '{0:>10.0f}{1:>10.5G}{2:>19s}{3:>10.0f} #{4}\n' \
-                .format(locat, value, self.format.fortran,
+                .format(locat, value, fformat,
                         self.iprn, self.name)
         else:
             raise Exception('Util2d: error generating fixed-format ' +
@@ -1988,7 +1991,7 @@ class Util2d(object):
                 self.name))
             self.format.free = False
 
-        if self.model.array_free_format and self.how == "internal" and self.locat is None:
+        if not self.model.array_free_format and self.how == "internal" and self.locat is None:
             print("Util2d {0}: locat is None, but ".format(self.name) + \
                   "model does not " + \
                   "support free format and how is internal..." + \
