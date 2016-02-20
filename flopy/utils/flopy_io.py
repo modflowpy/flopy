@@ -14,6 +14,61 @@ def line_parse(line):
     line = line.replace(',', ' ')
     return line.strip().split()
 
+def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
+    """
+
+    Parameters
+    ----------
+    v : list, int, float, bool, or numpy array
+        list, int, float, bool, or numpy array containing the data to be
+        written to a string.
+    length : int
+        length of each column for fixed column widths. (default is 10)
+    ipos : list, int, or numpy array
+        user-provided column widths. (default is None)
+    free : bool
+        boolean indicating if a free format string should be generated.
+        length and ipos are not used if free is True. (default is False)
+    comment : str
+        comment string to add to the end of the string
+
+    Returns
+    -------
+    out : str
+        fixed or free format string generated using user-provided data
+
+    """
+    if isinstance(v, np.ndarray):
+        v = v.aslist()
+    elif isinstance(v, int) or isinstance(v, float) or isinstance(v, bool):
+        v = [v]
+    ncol = len(v)
+    # construct ipos if it was not passed
+    if ipos is None:
+        ipos = []
+        for i in range(ncol):
+            ipos.append(length)
+    else:
+        if isinstance(ipos, np.ndarray):
+            ipos = ipos.flatten().aslist()
+        elif isinstance(ipos, int):
+            ipos = [ipos]
+        if len(ipos) < ncol:
+            err = 'user provided ipos length ({})'.format(len(ipos)) + \
+                  'should be greater than or equal ' + \
+                  'to the length of v ({})'.format(ncol)
+            raise Exception(err)
+    out = ''
+    for n in range(ncol):
+        if free:
+            write_fmt = '{} '
+        else:
+            write_fmt = '{{:>{}}}'.format(ipos[n])
+        out += write_fmt.format(v[n])
+    if comment is not None:
+        out += '  # {}'.format(comment)
+    out += '\n'
+    return out
 
 def read_fixed_var(line, ncol=1, length=10, ipos=None):
     """
@@ -24,11 +79,11 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None):
     line : str
         text string to parse.
     ncol : int
-        number of columns to parse from line
+        number of columns to parse from line. (default is 1)
     length : int
-        length of
+        length of each column for fixed column widths. (default is 10)
     ipos : list, int, or numpy array
-        a list
+        user-provided column widths. (default is None)
 
     Returns
     -------

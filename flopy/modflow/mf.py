@@ -463,6 +463,29 @@ class Modflow(BaseModel):
                 .format(os.path.basename(dis.filename))
             raise Exception(s + " " + str(e))
 
+        # load bas after dis if it is available so that the free format option
+        # is correctly set for subsequent packages.
+        bas = None
+        bas_key = None
+        for key, item in ext_unit_dict.items():
+            if item.filetype == "BAS6":
+                bas = item
+                bas_key = key
+                break
+        if bas_key is not None:
+            try:
+                pck = bas.package.load(bas.filename, ml,
+                                       ext_unit_dict=ext_unit_dict, check=False)
+                files_succesfully_loaded.append(bas.filename)
+                if ml.verbose:
+                    sys.stdout.write('   {:4s} package load...success\n'
+                                     .format(pck.name[0]))
+                ext_unit_dict.pop(bas_key)
+            except Exception as e:
+                s = 'Could not read basic package: {}. Stopping...' \
+                    .format(os.path.basename(bas.filename))
+                raise Exception(s + " " + str(e))
+
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
@@ -473,7 +496,7 @@ class Modflow(BaseModel):
             not_found = []
             for i, filetype in enumerate(load_only):
                 filetype = filetype.upper()
-                if filetype != 'DIS':
+                if filetype != 'DIS' and filetype != 'BAS6':
                     load_only[i] = filetype
                     found = False
                     for key, item in ext_unit_dict.items():

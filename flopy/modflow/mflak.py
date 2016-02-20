@@ -10,8 +10,8 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils.util_list import MfList
-from ..utils import Util3d, read_fixed_var
+from ..utils.util_array import Transient3d
+from ..utils import Util3d, read_fixed_var, write_fixed_var
 
 class ModflowLak(Package):
     """
@@ -52,11 +52,10 @@ class ModflowLak(Package):
 
     """
 
-    def __init__(self, model, dtype=None, nlakes=1, ipakcb=0, theta=-1.,
-                 nssitr=0, sscncr=0.0, stages=1., stage_range=None,
-                 iunit_tab=None, threeD_data = None,
-                 stress_period_data=None, sill_data=None,
-                 flux_data=None,
+    def __init__(self, model, nlakes=1, ipakcb=0, theta=-1.,
+                 nssitr=0, sscncr=0.0, surfdep=0., stages=1., stage_range=None,
+                 iunit_tab=None, lakarr=None, bdlknc=None,
+                 sill_data=None, flux_data=None,
                  extension='lak', unitnumber=119, options=None, **kwargs):
         """
         Package constructor.
@@ -78,13 +77,14 @@ class ModflowLak(Package):
         self.theta = theta
         self.nssitr = nssitr
         self.sscncr = sscncr
+        self.surfdep = surfdep
         if isinstance(stages, float):
             stages = np.array(self.nlakes, dtype=np.float) * stages
         elif isinstance(stages, list):
             stages = np.array(stages)
         if stages.shape[0] != nlakes:
-            err = 'stages shape should be ({}) but is only ({}).'.format(nlakes,
-                                                                         stages.shape[0])
+            err = 'stages shape should be ' + \
+                  '({}) but is only ({}).'.format(nlakes, stages.shape[0])
             raise Exception(err)
         self.stages = stages
         if stage_range is None:
@@ -95,100 +95,76 @@ class ModflowLak(Package):
             if isinstance(stage_range, list):
                 stage_range = np.array(stage_range)
             elif isinstance(stage_range, float):
-                err = 'stage_range should be a list or array of size ({}, 2)'.format(nlakes)
+                err = 'stage_range should be a list or ' + \
+                      'array of size ({}, 2)'.format(nlakes)
                 raise Exception(err)
         if model.dis.steady[0]:
             if stage_range.shape != (nlakes, 2):
-                err = 'stages shape should be ({},2) but is only {}.'.format(nlakes,
-                                                                             stages_range.shape)
+                err = 'stages shape should be ' + \
+                      '({},2) but is only {}.'.format(nlakes, stages_range.shape)
                 raise Exception(err)
         self.stage_range = stage_range
 
         for option in self.options:
             if 'TABLEINPUT' in option.upper():
                 if iunit_tab is None:
-                    err = "iunit_tab must be specified if 'TABLEIPUT' option specified"
+                    err = "iunit_tab must be specified " + \
+                          "if 'TABLEIPUT' option specified"
                     raise Exception(err)
                 if isinstance(iunit_tab, int):
                     iunit_tab = np.array([iunit_tab])
                 elif isinstance(iunit_tab, list):
                     iunit_tab = np.array(iunit_tab)
                 if iunit_tab.shape[0] != nlakes:
-                    err = 'iunit_tab must be a list or array with ({}) entries'.format(nlakes)
+                    err = 'iunit_tab must be a list or array ' + \
+                          'with ({}) entries'.format(nlakes)
                     raise Exception(err)
         self.iunit_tab = iunit_tab
 
-        if threeD_data is None and stress_period_data is None:
-            err = 'threeD_data or stress_period_data must be specified'
+        if lakarr is None and bdlknc is None:
+            err = 'lakarr and bdlknc must be specified'
             raise Exception(err)
+        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        self.lakarr = Transient3d(model, (nlay, nrow, ncol), np.int,
+                                  lakarr, name='lakarr_')
+        self.bdlknc = Transient3d(model, (nlay, nrow, ncol), np.float32,
+                                  bdlknc, name='bdlknc_')
 
-        if stress_period_data is not None:
-            if not isinstance(stress_period_data, dict):
-                err = 'stress_period_data must be a dictionary'
-                raise Exception(err)
-        if threeD_data is not None:
-            if not isinstance(threeD_data, dict):
-                err = 'threeD_data must be a dictionary'
-                raise Exception(err)
         if flux_data is not None:
             if not isinstance(flux_data, dict):
-                err = 'flux_data must be a dictionary'
-                raise Exception(err)
+                if isinstance(flux_data, list):
+                    flux_data = np.array(flux_data)
+                    if len(flux_data) != nlakes:
+                        err = 'flux_data list must ' + \
+                              'have {} entries'.format(nlakes)
+                        raise Exception(err)
+                elif isinstance(flux_data, float):
+                    if flux_data.shape[0] != nlakes:
+                        flux_data = np.array([flux_data])
+                if flux_data.shape[0] != nlakes:
+                    err = 'flux_data array must have ' + \
+                          '{} entries but only has '.format(nlakes) + \
+                          '{} entries'.format(flux_data.shape[0])
+                    raise Exception(err)
+                # convert array to a dictionary
+                try:
+                    flux_data = {0: flux_data}
+                except:
+                    err = 'flux_data must be a dictionary'
+                    raise Exception(err)
 
-        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-
-        # not tested yet
-        if stress_period_data is None:
-            stress_period_data = {}
-            npers = list(threeD_data.keys())
-            for ipers in npers:
-                lakarr = Util3d(model, (nlay, nrow, ncol), np.int,
-                                threeD_data[ipers][0], name='LAKARR',
-                                locat=self.unit_number[0]).array
-                bdlknc = Util3d(model, (nlay, nrow, ncol), np.float32,
-                                threeD_data[ipers][0], name='BDLKNC',
-                                locat=self.unit_number[0]).array
-                lakeids, stress_period_data[iper] = \
-                    ModflowLak.transform3Dtorecarray(lakarr, bdlknc)
-
-        if dtype is not None:
-            self.dtype = dtype
-        else:
-            self.dtype = self.get_default_dtype(structured=self.parent.structured)
-
-        self.stress_period_data = MfList(self, stress_period_data)
-        self.sill_data = sill_data
         self.flux_data = flux_data
+        self.sill_data = sill_data
 
         self.parent.add_package(self)
 
         return
 
-    @staticmethod
-    def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recarray that correponds to dtype
-        dtype = ModflowLak.get_default_dtype(structured=structured)
-        if aux_names is not None:
-            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((ncells, len(dtype)), dtype=dtype)
-        d[:, :] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
-
-    @staticmethod
-    def get_default_dtype(structured=True):
-        if structured:
-            dtype = np.dtype([("k", np.int), ("i", np.int), ("j", np.int),
-                              ("lake", np.int), ("leakance", np.float32)])
-        else:
-            dtype = np.dtype([("node", np.int), ("lake", np.int),
-                              ("leakance", np.float32)])
-
-        return dtype
-
     def ncells(self):
         # Return the  maximum number of cells that have a stream
         # (developed for MT3DMS SSM package)
-        return self.mxacts
+        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        return (nlay * nrow * ncol)
 
     def write_file(self):
         """
@@ -201,50 +177,54 @@ class ModflowLak(Package):
         """
         f = open(self.fn_path, 'w')
         # dataset 0
-        self.heading = '# {} for {}, generated by Flopy.'.format(self.name,
-                                                                 self.parent.version)
+        self.heading = '# {} package for '.format(self.name[0]) + \
+                       '{}, generated by Flopy.'.format(self.parent.version)
         f.write('{0}\n'.format(self.heading))
+
+        # dataset 1a
+        if len(self.options) > 0:
+            for option in self.options:
+                f.write('{} '.format(option))
+            f.write('\n')
+
+        # dataset 1b
+        f.write(write_fixed_var([self.nlakes, self.ipakcb],
+                                free=self.parent.array_free_format))
+        # dataset 2
+        steady = np.any(self.parent.dis.steady.array)
+        t = [self.theta]
+        if self.theta < 0. or steady:
+            t.append(self.nssitr)
+            t.append(self.sscncr)
+        if self.theta < 0.:
+            t.append(self.surfdep)
+        f.write(write_fixed_var(t, free=self.parent.array_free_format))
+
+        # dataset 3
+        steady = self.parent.dis.steady[0]
+        for n in range(self.nlakes):
+            t = [self.stages[n]]
+            if steady:
+                t.append(self.stage_range[n, 0])
+                t.append(self.stage_range[n, 1])
+            f.write(write_fixed_var(t, free=self.parent.array_free_format))
+
+        nper = self.parent.dis.steady.shape[0]
+        for kper in range(nper):
+            itmp, file_entry_lakarr = self.lakarr.get_kper_entry(kper)
+            ibd, file_entry_bdlknc = self.bdlknc.get_kper_entry(kper)
+
+            t = [itmp, 0, 1]
+            comment = 'Stress period {}'.format(kper + 1)
+            f.write(write_fixed_var(t, free=self.parent.array_free_format, comment=comment))
+            if (itmp > 0):
+                f.write(file_entry_lakarr)
+                f.write(file_entry_bdlknc)
+
+
 
         # close the str file
         f.close()
-
-    @staticmethod
-    def transform3Dtorecarray(lakarr, bdlknc):
-        """
-
-        Parameters
-        ----------
-        lakarr :
-        bdlknc :
-
-        Returns
-        -------
-
-        """
-        # get a list of unique lake numbers
-        lakeids = np.unique(lakarr).tolist()
-        lakecnt = np.bincount(lakarr.flatten())
-        # remove non-lake ids from the list
-        lakeids = [(i, j) for i, j in zip(lakeids, lakecnt) if i != 0]
-
-        # create stress_period_data for this stress period
-        ncells = 0
-        for lake, icnt in lakeids:
-            ncells += icnt
-        spd = ModflowLak.get_empty(ncells=ncells)
-
-        ipos = 0
-        for lake, icnt in lakeids:
-            idx = np.where(lakarr == lake)
-            for j in range(icnt):
-                k, i, j = idx[0][j], idx[1][j], idx[2][j]
-                spd['k'][ipos] = k
-                spd['j'][ipos] = i
-                spd['i'][ipos] = j
-                spd['lake'][ipos] = lake
-                spd['leakance'][ipos] = bdlknc[k, i, j]
-                ipos += 1
-        return lakeids, spd
 
 
     @staticmethod
@@ -362,13 +342,14 @@ class ModflowLak(Package):
             if tabdata:
                 iunit_tab.append(t[ipos])
 
-
-        stress_period_data = {}
+        lake_loc = {}
+        lake_lknc = {}
         sill_data = {}
         flux_data = {}
         for iper in range(nper):
             if model.verbose:
-                print("   reading lak dataset 4 - for stress period {}".format(iper+1))
+                print("   reading lak dataset 4 - " +
+                      "for stress period {}".format(iper+1))
             line = f.readline().rstrip()
             if model.array_free_format:
                 t = line.split()
@@ -378,26 +359,33 @@ class ModflowLak(Package):
 
             if itmp > 0:
                 if model.verbose:
-                    print("   reading lak dataset 5 - for stress period {}".format(iper+1))
+                    print("   reading lak dataset 5 - " +
+                          "for stress period {}".format(iper+1))
+                name = 'LKARR_StressPeriod_{}'.format(iper)
                 lakarr = Util3d.load(f, model, (nlay, nrow, ncol), np.int,
-                                     'LKARR', ext_unit_dict).array
+                                     name, ext_unit_dict)
                 if model.verbose:
-                    print("   reading lak dataset 6 - for stress period {}".format(iper+1))
+                    print("   reading lak dataset 6 - " +
+                          "for stress period {}".format(iper+1))
+                name = 'BDLKNC_StressPeriod_{}'.format(iper)
                 bdlknc = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                     'BDLKNC', ext_unit_dict).array
+                                     name, ext_unit_dict)
 
-                # convert three-dimensional data to a list
-                lakeids, current = ModflowLak.transform3Dtorecarray(lakarr, bdlknc)
+                lake_loc[iper] = lakarr
+                lake_lknc[iper] = bdlknc
+
 
                 if model.verbose:
-                    print("   reading lak dataset 7 - for stress period {}".format(iper+1))
+                    print("   reading lak dataset 7 - " +
+                          "for stress period {}".format(iper+1))
                 line = f.readline().rstrip()
                 t = line.split()
                 nslms = int(t[0])
                 ds8 = []
                 if nslms > 0:
                     if model.verbose:
-                        print("   reading lak dataset 8 - for stress period {}".format(iper+1))
+                        print("   reading lak dataset 8 - " +
+                              "for stress period {}".format(iper+1))
                     for i in range(nslms):
                         line = f.readline().rstrip()
                         if model.array_free_format:
@@ -421,7 +409,8 @@ class ModflowLak(Package):
                         ds8.append((t, silvt))
             if itmp1 >= 0:
                 if model.verbose:
-                    print("   reading lak dataset 9 - for stress period {}".format(iper+1))
+                    print("   reading lak dataset 9 - " +
+                          "for stress period {}".format(iper+1))
                 ds9 = {}
                 for n in range(nlakes):
                     line = f.readline().rstrip()
@@ -445,18 +434,19 @@ class ModflowLak(Package):
                         tds.append(0.)
                         tds.append(0.)
                     ds9[n+1] = tds
-
-            if itmp > 0:
-                stress_period_data[iper] = current
-                sill_data[iper] = ds8
-            if itmp1 >= 0:
                 flux_data[iper] = ds9
 
 
+        # convert lake data to Transient3d objects
+        lake_loc = Transient3d(model, (nlay, nrow, ncol), np.int,
+                               lake_loc, name='lakarr_')
+        lake_lknc = Transient3d(model, (nlay, nrow, ncol), np.float32,
+                                lake_lknc, name='bdlknc_')
+
         lakpak = ModflowLak(model, options=options, nlakee=nlakes,
                             ipakcb=ipakcb, theta=theta, nssitr=nssitr,
-                            sscncr=sscncr, stages=stages,
+                            surfdep=surfdep, sscncr=sscncr, stages=stages,
                             stage_range=stage_range, iunit_tab=iunit_tab,
-                            stress_period_data=stress_period_data,
+                            lakarr=lake_loc, bdlknc=lake_lknc,
                             sill_data=sill_data, flux_data=flux_data)
         return lakpak

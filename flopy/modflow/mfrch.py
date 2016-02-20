@@ -162,16 +162,17 @@ class ModflowRch(Package):
                 assert thickness.shape == self.parent.get_package(pkg).hk.shape
                 Tmean = (self.parent.get_package(pkg).hk.array *
                          thickness)[:, active].sum(axis=0).mean()
-                if Rmean/Tmean < RTmin:
-                    chk._add_to_summary(type='Warning', value=Rmean/Tmean,
-                                         desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
-                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
-                elif Rmean/Tmean > RTmax:
-                    chk._add_to_summary(type='Warning', value=Rmean/Tmean,
-                                         desc='\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax))
-                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
-                else:
-                    chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                if Tmean != 0.:
+                    if Rmean/Tmean < RTmin:
+                        chk._add_to_summary(type='Warning', value=Rmean/Tmean,
+                                             desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
+                        chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                    elif Rmean/Tmean > RTmax:
+                        chk._add_to_summary(type='Warning', value=Rmean/Tmean,
+                                             desc='\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax))
+                        chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                    else:
+                        chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
 
         # check for NRCHOP values != 3
         if self.nrchop != 3:

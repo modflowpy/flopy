@@ -817,6 +817,230 @@ class Util3d(object):
                           self.locat)
 
 
+class Transient3d(object):
+    """
+    Transient3d class for handling time-dependent 3-D model arrays.
+    just a thin wrapper around Util3d
+
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
+        this package will be added.
+    shape : length 3 tuple
+        shape of the 3-D transient arrays, typically (nlay,nrow,ncol)
+    dtype : [np.int,np.float32,np.bool]
+        the type of the data
+    value : variable
+        the data to be assigned to the 3-D arrays. Typically a dict
+        of {kper:value}, where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+    name : string
+        name of the property, used for writing comments to input files and
+        for forming external files names (if needed)
+    fmtin : string
+        modflow fmtin variable (optional).  (the default is None)
+    cnstnt : string
+        modflow cnstnt variable (optional) (the default is 1.0)
+    iprn : int
+        modflow iprn variable (optional) (the default is -1)
+    locat : int
+        modflow locat variable (optional) (the default is None).  If the model
+        instance does not support free format and the
+        external flag is not set and the value is a simple scalar,
+        then locat must be explicitly passed as it is the unit number
+         to read the array from
+    ext_filename : string
+        the external filename to write the array representation to
+        (optional) (the default is None) .
+        If type(value) is a string and is an accessible filename,
+        the ext_filename is reset to value.
+    bin : bool
+        flag to control writing external arrays as binary (optional)
+        (the default is False)
+
+    Attributes
+    ----------
+    transient_3ds : dict{kper:Util3d}
+        the transient sequence of Util3d objects
+
+    Methods
+    -------
+    get_kper_entry : (itmp,string)
+        get the itmp value and the Util2d file entry of the value in
+        transient_2ds in bin kper.  if kper < min(Transient2d.keys()),
+        return (1,zero_entry<Util2d>).  If kper > < min(Transient2d.keys()),
+        but is not found in Transient2d.keys(), return (-1,'')
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    """
+
+    def __init__(self, model, shape, dtype, value, name, fmtin=None,
+                 cnstnt=1.0, iprn=-1, ext_filename=None, locat=None,
+                 bin=False):
+
+        if isinstance(value, Transient3d):
+            for attr in value.__dict__.items():
+                setattr(self, attr[0], attr[1])
+            self.model = model
+            return
+
+        self.model = model
+        assert len(shape) == 3, "Transient3d error: shape arg must be " + \
+                                "length three (nlay, nrow, ncol), not " + \
+                                str(shape)
+        self.shape = shape
+        self.dtype = dtype
+        self.__value = value
+        self.name = name
+        self.fmtin = fmtin
+        self.cnstst = cnstnt
+        self.iprn = iprn
+        self.locat = locat
+        self.transient_3ds = self.build_transient_sequence()
+        return
+
+    def __setattr__(self, key, value):
+        # set the attribute for u3d, even for cnstnt
+        super(Transient3d, self).__setattr__(key, value)
+
+    def get_zero_3d(self, kper):
+        name = self.name_base + str(kper + 1) + '(filled zero)'
+        return Util3d(self.model, self.shape,
+                      self.dtype, 0.0, name=name)
+
+    def __getitem__(self, kper):
+        if kper in list(self.transient_3ds.keys()):
+            return self.transient_3ds[kper]
+        elif kper < min(self.transient_3ds.keys()):
+            return self.get_zero_3d(kper)
+        else:
+            for i in range(kper, -1, -1):
+                if i in list(self.transient_3ds.keys()):
+                    return self.transient_3ds[i]
+            raise Exception("Transient2d.__getitem__(): error:" + \
+                            " could not find an entry before kper {0:d}".format(
+                                kper))
+
+    def __setitem__(self, key, value):
+        try:
+            key = int(key)
+        except Exception as e:
+            raise Exception("Transient3d.__setitem__() error: " + \
+                            "'key'could not be cast to int:{0}".format(str(e)))
+        nper = self.model.nper
+        if key > self.model.nper or key < 0:
+            raise Exception("Transient3d.__setitem__() error: " + \
+                            "key {0} not in nper range {1}:{2}".format(key, 0,
+                                                                       nper))
+
+        self.transient_3ds[key] = self.__get_3d_instance(key, value)
+
+    @property
+    def array(self):
+        arr = np.zeros((self.model.nper, self.shape[0], self.shape[1],
+                        self.shape[2]), dtype=self.dtype)
+        for kper in range(self.model.nper):
+            u3d = self[kper]
+            for k in range(self.shape[0]):
+                arr[kper, k, :, :] = u3d[k].array
+        return arr
+
+    def get_kper_entry(self, kper):
+        """
+        get the file entry info for a given kper
+        returns (itmp,file entry string from Util3d)
+        """
+        if kper in self.transient_3ds:
+            s = ''
+            for k in range(self.shape[0]):
+                s += self.transient_3ds[kper][k].get_file_entry()
+            return 1, s
+        elif kper < min(self.transient_3ds.keys()):
+            t = self.get_zero_3d(kper).get_file_entry()
+            s = ''
+            for k in range(self.shape[0]):
+                s += t[k].get_file_entry()
+            return 1, s
+        else:
+            return -1, ''
+
+    def build_transient_sequence(self):
+        """
+        parse self.__value into a dict{kper:Util3d}
+        """
+
+        # a dict keyed on kper (zero-based)
+        if isinstance(self.__value, dict):
+            tran_seq = {}
+            for key, val in self.__value.items():
+                try:
+                    key = int(key)
+                except:
+                    raise Exception("Transient3d error: can't cast key: " +
+                                    str(key) + " to kper integer")
+                if key < 0:
+                    raise Exception("Transient3d error: key can't be " +
+                                    " negative: " + str(key))
+                try:
+                    u3d = self.__get_3d_instance(key, val)
+                except Exception as e:
+                    raise Exception("Transient3d error building Util3d " +
+                                    " instance from value at kper: " +
+                                    str(key) + "\n" + str(e))
+                tran_seq[key] = u3d
+            return tran_seq
+
+        # these are all for single entries - use the same Util2d for all kper
+        # an array of shape (nrow,ncol)
+        elif isinstance(self.__value, np.ndarray):
+            return {0: self.__get_3d_instance(0, self.__value)}
+
+        # a filename
+        elif isinstance(self.__value, str):
+            return {0: self.__get_3d_instance(0, self.__value)}
+
+        # a scalar
+        elif np.isscalar(self.__value):
+            return {0: self.__get_3d_instance(0, self.__value)}
+
+        # lists aren't allowed
+        elif isinstance(self.__value, list):
+            raise Exception("Transient3d error: value cannot be a list " +
+                            "anymore.  try a dict{kper,value}")
+        else:
+            raise Exception("Transient3d error: value type not " +
+                            " recognized: " + str(type(self.__value)))
+
+    def __get_3d_instance(self, kper, arg):
+        """
+        parse an argument into a Util3d instance
+        """
+        #name = self.name + '_StressPeriod_{}'.format(kper+1)
+        #name = arg.name_base
+        u3d = []
+        for k in range(self.shape[0]):
+            if isinstance(arg, float) or isinstance(arg, int):
+                a = arg
+            else:
+                a = arg[k]
+            name = '{}{}'.format(arg.name_base[k], k+1).replace(' ', '_')
+            u3d.append(Util2d(self.model, (self.shape[1], self.shape[2]),
+                              self.dtype, a, fmtin=self.fmtin, name=name,
+                              locat=self.locat))
+        return u3d
+
+
 class Transient2d(object):
     """
     Transient2d class for handling time-dependent 2-D model arrays.
@@ -1707,6 +1931,8 @@ class Util2d(object):
     def _get_fixed_cr(self, locat, value=None):
         if value is None:
             value = self.cnstnt
+        if locat is None:
+            locat = 0
         if self.dtype == np.int:
             cr = '{0:>10.0f}{1:>10.0f}{2:>19s}{3:>10.0f} #{4}\n' \
                 .format(locat, value, self.format.fortran,
@@ -1762,7 +1988,7 @@ class Util2d(object):
                 self.name))
             self.format.free = False
 
-        if not self.model.array_free_format and self.how == "internal" and self.locat is None:
+        if self.model.array_free_format and self.how == "internal" and self.locat is None:
             print("Util2d {0}: locat is None, but ".format(self.name) + \
                   "model does not " + \
                   "support free format and how is internal..." + \

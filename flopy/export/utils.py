@@ -452,10 +452,12 @@ def util3d_helper(f, u3d, **kwargs):
             f.log("broadcasting 3D array for {0}".format(var_name))
         f.log("getting 3D array for {0}".format(var_name))
 
-        mx,mn = np.nanmax(array),np.nanmin(array)
+        mx, mn = np.nanmax(array), np.nanmin(array)
 
         if u3d.model.bas6 is not None and "ibound" not in var_name:
             array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
+
+        # runtime warning issued in some cases - need to track down cause
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
 

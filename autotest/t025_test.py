@@ -17,6 +17,7 @@ def load_lak(mfnam, pth):
     assert m.load_fail is False
 
     # rewrite files
+    #m.array_free_format = True
     m.model_ws = cpth
     m.write_input()
 
