@@ -180,6 +180,7 @@ class Modflow(BaseModel):
             "pks": flopy.modflow.ModflowPks,
             "sfr": flopy.modflow.ModflowSfr2,
             "lak": flopy.modflow.ModflowLak,
+            "gage": flopy.modflow.ModflowGage,
             "sip": flopy.modflow.ModflowSip,
             "sor": flopy.modflow.ModflowSor,
             "de4": flopy.modflow.ModflowDe4,
@@ -568,6 +569,7 @@ class Modflow(BaseModel):
                     ml.external_units.append(key)
                     ml.external_binflag.append("binary"
                                                in item.filetype.lower())
+                    ml.external_output.append(False)
 
         # pop binary output keys and any external file units that are now
         # internal

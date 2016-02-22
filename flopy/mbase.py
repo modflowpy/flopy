@@ -107,6 +107,7 @@ class BaseModel(object):
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
+        self.external_output = []
         self.package_units = []
 
         return
@@ -235,7 +236,7 @@ class BaseModel(object):
 
         return self.get_package(item)
 
-    def add_external(self, fname, unit, binflag=False):
+    def add_external(self, fname, unit, binflag=False, output=False):
         """
         Assign an external array so that it will be listed as a DATA or
         DATA(BINARY) entry in the name file.  This will allow an outside
@@ -258,10 +259,12 @@ class BaseModel(object):
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
             self.external_binflag.pop(idx)
+            self.external_output.pop(idx)
 
         self.external_fnames.append(fname)
         self.external_units.append(unit)
         self.external_binflag.append(binflag)
+        self.external_output.append(output)
         return
 
     def remove_external(self, fname=None, unit=None):
@@ -283,12 +286,14 @@ class BaseModel(object):
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
+                    self.external_output.pop(i)
         elif unit is not None:
             for i, u in enumerate(self.external_units):
                 if u == unit:
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
+                    self.external_output.pop(i)
         else:
             raise Exception(
                 ' either fname or unit must be passed to remove_external()')
@@ -426,11 +431,14 @@ class BaseModel(object):
 
     def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
-        for ext_file in self.external_fnames:
+        for ext_file, output in zip(self.external_fnames, self.external_output):
             # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
             # this is a wicked mess
-            fpth = os.path.abspath(os.path.join(old_pth, ext_file))
-            new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
+            if output:
+                new_ext_file = ext_file
+            else:
+                fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 

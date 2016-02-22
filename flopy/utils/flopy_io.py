@@ -70,7 +70,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
     out += '\n'
     return out
 
-def read_fixed_var(line, ncol=1, length=10, ipos=None):
+def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
     """
     Parse a fixed format line using user provided data
 
@@ -84,6 +84,9 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None):
         length of each column for fixed column widths. (default is 10)
     ipos : list, int, or numpy array
         user-provided column widths. (default is None)
+    free : bool
+        boolean indicating if sting is free format. ncol, length, and
+        ipos are not used if free is True. (default is False)
 
     Returns
     -------
@@ -91,31 +94,34 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None):
         padded list containing data parsed from the passed text string
 
     """
-    # construct ipos if it was not passed
-    if ipos is None:
-        ipos = []
-        for i in range(ncol):
-            ipos.append(length)
+    if free:
+        out = line.rstrip().split()
     else:
-        if isinstance(ipos, np.ndarray):
-            ipos = ipos.flatten().aslist()
-        elif isinstance(ipos, int):
-            ipos = [ipos]
-        ncol = len(ipos)
-    line = line.rstrip()
-    out = []
-    istart = 0
-    for ivar in range(ncol):
-        istop = istart + ipos[ivar]
-        try:
-            txt = line[istart:istop]
-            if len(txt.strip()) > 0:
-                out.append(txt)
-            else:
-                out.append(0)
-        except:
-            break
-        istart = istop
+        # construct ipos if it was not passed
+        if ipos is None:
+            ipos = []
+            for i in range(ncol):
+                ipos.append(length)
+        else:
+            if isinstance(ipos, np.ndarray):
+                ipos = ipos.flatten().aslist()
+            elif isinstance(ipos, int):
+                ipos = [ipos]
+            ncol = len(ipos)
+        line = line.rstrip()
+        out = []
+        istart = 0
+        for ivar in range(ncol):
+            istop = istart + ipos[ivar]
+            try:
+                txt = line[istart:istop]
+                if len(txt.strip()) > 0:
+                    out.append(txt)
+                else:
+                    out.append(0)
+            except:
+                break
+            istart = istop
     return out
 
 def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):

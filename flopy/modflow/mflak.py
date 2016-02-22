@@ -1,6 +1,6 @@
 """
-mfstr module.  Contains the ModflowStr class. Note that the user can access
-the ModflowStr class as `flopy.modflow.ModflowStr`.
+mflak module.  Contains the ModflowLak class. Note that the user can access
+the ModflowLak class as `flopy.modflow.ModflowLak`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
@@ -23,7 +23,6 @@ class ModflowLak(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-
     options : list of strings
         Package options. (default is None).
     extension : string
@@ -49,7 +48,7 @@ class ModflowLak(Package):
     >>> lak = {}
     >>> lak[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this lake boundary will be
     >>>                                        #applied to all stress periods
-    >>> lak = flopy.modflow.ModflowLak(m, stress_period_data=strd)
+    >>> lak = flopy.modflow.ModflowLak(m, nstress_period_data=strd)
 
     """
 

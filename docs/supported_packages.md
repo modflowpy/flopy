@@ -19,6 +19,7 @@ FloPy Supported Packages
 | Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
 | Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
+| Lake (LAK)                                     | Supported            | Supported            | Not supported        |
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
 | Link-AMG (LMG)                                 | Not supported        | Not supported        | Not supported        |
 | MODFLOW Link-MT3DMS (LMT)                      | Supported            | Supported            | Not supported        |
@@ -83,7 +84,7 @@ FloPy Supported Packages
 | ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
 | HYDMOD (HYD)                                   | Supported            | Supported            | Not supported        |
-| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
+| Gage (GAGE)                                    | Supported            | Supported            | Not supported        |
 | General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
 | Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
 | River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
