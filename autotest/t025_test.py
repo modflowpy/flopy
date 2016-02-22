@@ -22,7 +22,12 @@ run = True
 def load_lak(mfnam, pth):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=pth, verbose=True)
     assert m.load_fail is False
+
     m.exe_name = 'mf2005'
+    v = flopy.which(m.exe_name)
+    if v is None:
+        run = False
+
     if run:
         try:
             success, buff = m.run_model(silent=True)
