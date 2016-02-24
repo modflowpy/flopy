@@ -1,5 +1,7 @@
 from __future__ import print_function
 import os
+import platform
+import socket
 import copy
 import numpy as np
 from datetime import datetime
@@ -287,9 +289,11 @@ class NetCdf(object):
     def write(self):
         """write the nc object to disk"""
         self.log("writing nc file")
-        assert self.nc is not None, "netcdf.write() error: nc file not initialized"
+        assert self.nc is not None, \
+            "netcdf.write() error: nc file not initialized"
 
-        # write any new attributes that have been set since initializing the file
+        # write any new attributes that have been set since
+        # initializing the file
         for k, v in self.global_attributes.items():
             try:
                 if self.nc.attributes.get(k) is not None:
@@ -315,6 +319,26 @@ class NetCdf(object):
         self.nc_inverse_flat = float(298.257223563)
 
         self.global_attributes = {}
+        self.global_attributes["original_namefile"] = self.model.namefile
+        self.global_attributes["model_ws"] = self.model.model_ws
+        self.global_attributes["exe_name"] = self.model.exe_name
+        self.global_attributes["modflow_version"] = self.model.version
+
+        self.global_attributes["create_hostname"] = socket.gethostname()
+        self.global_attributes["create_platform"] = platform.system()
+        self.global_attributes["create_directory"] = os.getcwd()
+
+        htol,rtol = -999,-999
+        try:
+            htol,rtol = NetCdf.get_solver_H_R_tols(self.model)
+        except Exception as e:
+            self.logger.warn("unable to get solver tolerances:" +\
+                             "{0}".format(str(e)))
+        self.global_attributes["solver_head_tolerance"] = htol
+        self.global_attributes["solver_flux_tolerance"] = rtol
+        for n,v in self.model.dis.sr.attribute_dict.items():
+            self.global_attributes["flopy_sr_"+n] = v
+        self.global_attributes["start_datetime"] = self.model.start_datetime
 
         self.fillvalue = FILLVALUE
 
@@ -441,7 +465,7 @@ class NetCdf(object):
                           self.model.sr.rotation)
         for k, v in self.global_attributes.items():
             try:
-                self.nc.setself.ncattr(k, v)
+                self.nc.setncattr(k, v)
             except:
                 self.logger.warn(
                     "error setting global attribute {0}".format(k))
@@ -655,3 +679,15 @@ class NetCdf(object):
         self.log("setting global attributes")
         self.nc.setncatts(attr_dict)
         self.log("setting global attributes")
+
+
+    @staticmethod
+    def get_solver_H_R_tols(model):
+        if model.pcg is not None:
+            return model.pcg.hclose,model.pcg.rclose
+        elif model.nwt is not None:
+            return model.nwt.headtol,model.nwt.fluxtol
+        elif model.sip is not None:
+            return model.sip.hclose,-999
+        elif model.gmg is not None:
+            return model.gmg.hclose,model.gmg.rclose
