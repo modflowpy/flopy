@@ -1588,6 +1588,12 @@ class Util2d(object):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
             self.model = model
+            self.name = name
+            self._ext_filename = self.name.replace(' ', '_') + ".ref"
+            if ext_filename is not None:
+                self.ext_filename = ext_filename.lower()
+            else:
+                self.ext_filename = None
             return
 
         # some defense
