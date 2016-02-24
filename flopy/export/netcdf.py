@@ -336,7 +336,7 @@ class NetCdf(object):
                              "{0}".format(str(e)))
         self.global_attributes["solver_head_tolerance"] = htol
         self.global_attributes["solver_flux_tolerance"] = rtol
-        for n,v in self.model.dis.sr.attribute_dict.items():
+        for n,v in self.model.sr.attribute_dict.items():
             self.global_attributes["flopy_sr_"+n] = v
         self.global_attributes["start_datetime"] = self.model.start_datetime
 

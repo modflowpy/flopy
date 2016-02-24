@@ -37,7 +37,7 @@ def datafile_helper(f, df):
 
 
 def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text='',
-                            mask_vals=[]):
+                            mask_vals=[],mask_array3d=None):
     if logger:
         logger.log("creating array for {0}".format(
                 var_name))
@@ -62,6 +62,8 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                 else:
                     print(estr)
                 continue
+            if mask_array3d is not None:
+                a[mask_array3d] = np.NaN
             try:
                 array[i,:,:,:] = a.astype(np.float32)
             except Exception as e:
@@ -150,8 +152,10 @@ def output_helper(f,ml,oudic,**kwargs):
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
         mask_vals = []
+        mask_array3d = None
         if ml.bas6:
             mask_vals.append(ml.bas6.hnoflo)
+            mask_array3d = ml.bas6.ibound.array == 0
         if ml.bcf:
             mask_vals.append(ml.bcf.hdry)
         if ml.lpf:
@@ -164,22 +168,26 @@ def output_helper(f,ml,oudic,**kwargs):
             if filename.endswith("ucn"):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
                                         "concentration",logger=logger,
-                                        mask_vals=mask_vals)
+                                        mask_vals=mask_vals,
+                                        mask_array3d=mask_array3d)
 
             elif filename.endswith(ml.hext):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
                                         "head",logger=logger,
-                                        mask_vals=mask_vals)
+                                        mask_vals=mask_vals,
+                                        mask_array3d=mask_array3d)
             elif filename.endswith(ml.dext):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
                                         "drawdown",logger=logger,
-                                        mask_vals=mask_vals)
+                                        mask_vals=mask_vals,
+                                        mask_array3d=mask_array3d)
             elif filename.endswith(ml.cext):
                 var_name = "cell_by_cell_flow"
                 for text in out_obj.textlist:
                     _add_output_nc_variable(f,times,shape3d,out_obj,
                                             var_name,logger=logger,text=text,
-                                            mask_vals=mask_vals)
+                                            mask_vals=mask_vals,
+                                            mask_array3d=mask_array3d)
 
             else:
                 estr = "unrecognized file extention:{0}".format(filename)
@@ -194,7 +202,6 @@ def output_helper(f,ml,oudic,**kwargs):
         else:
             raise NotImplementedError("unrecognized export argument" +\
                                       ":{0}".format(f))
-
     return f
 
 
