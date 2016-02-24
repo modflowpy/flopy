@@ -161,7 +161,12 @@ def output_helper(f,ml,oudic,**kwargs):
         for filename,out_obj in oudic.items():
             filename = filename.lower()
 
-            if filename.endswith(ml.hext):
+            if filename.endswith("ucn"):
+                _add_output_nc_variable(f,times,shape3d,out_obj,
+                                        "concentration",logger=logger,
+                                        mask_vals=mask_vals)
+
+            elif filename.endswith(ml.hext):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
                                         "head",logger=logger,
                                         mask_vals=mask_vals)
@@ -237,8 +242,11 @@ def package_helper(f, pak, **kwargs):
             if '__' in attr:
                 continue
             a = pak.__getattribute__(attr)
-            if isinstance(a, Util2d) and len(a.shape) == 2:
-                f = util2d_helper(f, a, **kwargs)
+            if isinstance(a, Util2d) and len(a.shape) == 2 and a.shape[1] > 0:
+                try:
+                    f = util2d_helper(f, a, **kwargs)
+                except:
+                    f.logger.warn("error adding {0} as variable".format(a.name))
             elif isinstance(a, Util3d):
                 f = util3d_helper(f, a, **kwargs)
             elif isinstance(a, Transient2d):

@@ -604,6 +604,11 @@ class NetCdf(object):
 
         # Normalize variable name
         name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
+        #if self.nc.variables.get(name) is not None:
+        #    self.logger.warn("skipping duplicate var {0}".format(name))
+        #    return
+        #while self.nc.variables.get(name) is not None:
+        #    name = name + '_1'
         assert self.nc.variables.get(name) is None, \
             "netcdf.create_variable error: variable already exists:" + name
 
