@@ -75,8 +75,15 @@ class SpatialReference(object):
 
         self.lenuni = lenuni
         self.proj4_str = proj4_str
+        self.rotation = rotation
+        self.xul = xul
+        self.yul = yul
+        # track the origin args
+        self._rotation = rotation
+        self._xul = xul
+        self._yul = yul
         self._reset()
-        self.set_spatialreference(xul, yul, rotation)
+        self.set_spatialreference()
 
 
     @classmethod
@@ -132,12 +139,12 @@ class SpatialReference(object):
         elif key == "delc":
             super(SpatialReference,self).\
                 __setattr__("delc",np.atleast_1d(np.array(value)))
-        elif key == "xul":
-            super(SpatialReference,self).\
-                __setattr__("xul",float(value))
-        elif key == "yul":
-            super(SpatialReference,self).\
-                __setattr__("yul",float(value))
+        # elif key == "xul":
+        #     super(SpatialReference,self).\
+        #         __setattr__("xul",float(value))
+        # elif key == "yul":
+        #     super(SpatialReference,self).\
+        #         __setattr__("yul",float(value))
         elif key == "rotation":
             super(SpatialReference,self).\
                 __setattr__("rotation",float(value))
@@ -153,7 +160,10 @@ class SpatialReference(object):
     def reset(self,**kwargs):
         for key,value in kwargs.items():
             setattr(self,key,value)
-
+        self.xul = None
+        self.yul = None
+        self.set_spatialreference()
+        self._reset()
 
     def _reset(self):
         self._xgrid = None
@@ -227,21 +237,22 @@ class SpatialReference(object):
         return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
                 "proj4_str":self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
+    def set_spatialreference(self):
         """
             set spatial reference - can be called from model instance
         """
 
         # Set origin and rotation
-        if xul is None:
-            self.xul = 0.
-        else:
-            self.xul = xul
-        if yul is None:
-            self.yul = np.add.reduce(self.delc)
-        else:
-            self.yul = yul
-        self.rotation = rotation
+        if self.xul is None:
+            if self._xul is None:
+                self.xul = 0.
+            else:
+                self.xul = self._xul
+        if self.yul is None:
+            if self._yul is None:
+                self.yul = np.add.reduce(self.delc)
+            else:
+                self.yul = self._yul
         self._reset()
 
     def __repr__(self):
