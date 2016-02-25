@@ -182,7 +182,6 @@ class BinaryLayerFile(LayerFile):
         ipos = 0
         while ipos < self.totalbytes:           
             header = self._get_header()
-            print(header)
             self.recordarray.append(header)
             if self.text.upper() not in header['text']:
                 continue
@@ -205,7 +204,6 @@ class BinaryLayerFile(LayerFile):
         self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
         self.iposarray = np.array(self.iposarray)
         self.nlay = np.max(self.recordarray['ilay'])
-        print(self.nlay)
         return
 
     def _read_data(self):
