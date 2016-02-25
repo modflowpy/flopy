@@ -63,7 +63,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                 else:
                     print(estr)
                 continue
-            if mask_array3d is not None:
+            if mask_array3d is not None and a.shape == mask_array3d.shape:
                 a[mask_array3d] = np.NaN
             try:
                 array[i,:,:,:] = a.astype(np.float32)
@@ -173,16 +173,11 @@ def output_helper(f,ml,oudic,**kwargs):
                                         mask_array3d=mask_array3d)
 
             elif isinstance(out_obj,HeadFile):
-                if filename.endswith(ml.hext):
-                    _add_output_nc_variable(f,times,shape3d,out_obj,
-                                            "head",logger=logger,
-                                            mask_vals=mask_vals,
-                                            mask_array3d=mask_array3d)
-                else:
-                    _add_output_nc_variable(f,times,shape3d,out_obj,
-                                            "drawdown",logger=logger,
-                                            mask_vals=mask_vals,
-                                            mask_array3d=mask_array3d)
+                _add_output_nc_variable(f,times,shape3d,out_obj,
+                                        out_obj.text.decode(),logger=logger,
+                                        mask_vals=mask_vals,
+                                        mask_array3d=mask_array3d)
+
             elif isinstance(out_obj,CellBudgetFile):
                 var_name = "cell_by_cell_flow"
                 for text in out_obj.textlist:

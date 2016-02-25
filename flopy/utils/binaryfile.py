@@ -173,6 +173,8 @@ class BinaryLayerFile(LayerFile):
             raise Exception("nrow or ncol > 10000, so either something is "
                             "wrong with the binary file or you have a "
                             "huge-ass model")
+        if self.nrow < 0 or self.ncol < 0:
+            raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)        
@@ -485,6 +487,12 @@ class CellBudgetFile(object):
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
         self.nlay = np.abs(header["nlay"])
+        if self.nrow > 10000 or self.ncol > 10000:
+            raise Exception("nrow or ncol > 10000, so either something is "
+                            "wrong with the binary file or you have a "
+                            "huge-ass model")
+        if self.nrow < 0 or self.ncol < 0:
+            raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
