@@ -1,0 +1,22 @@
+#                                                                
+# NOTE: Test problem in MODFLOW2000 version 1.16  
+#
+LIST  1 l2a_2k.lst
+BAS6  7 l2a_2k.ba6
+BCF6 10 l2a_2k.bc6
+EVT  11 l2a_2k.evt
+RCH  12 l2a_2k.rch
+SIP  13 l2a_2k.sip
+SFR  14 l2a_2k.sfr
+CHD  21 l2a_2k.chd
+LAK  16 l2a_2k.lak
+OC   17 l2a_2k.oc
+DIS  15 l2a_2k.dis
+GAGE 33 l2a_2k.gag
+DATA 37 l2a_2k_lak1.got
+DATA 38 l2a_2k_lak2.got
+DATA 39 l2a_2k_seg1e.got
+DATA 40 l2a_2k_seg2b.got
+DATA 41 l2a_2k_seg2e.got
+DATA 42 l2a_2k_seg3b.got
+DATA 43 l2a_2k_seg3e.got

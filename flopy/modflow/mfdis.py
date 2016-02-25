@@ -110,7 +110,7 @@ class ModflowDis(Package):
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
                  unitnumber=11, xul=None, yul=None, rotation=0.0,
-                 proj4_str="EPSG:4326", start_datetime="1/1/1970"):
+                 proj4_str=None, start_datetime=None):
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
@@ -155,6 +155,17 @@ class ModflowDis(Package):
         self.parent.add_package(self)
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
+
+        if xul is None:
+            xul = model._xul
+        if yul is None:
+            yul = model._yul
+        if rotation is None:
+            rotation = model._rotation
+        if proj4_str is None:
+            proj4_str = model._proj4_str
+        if start_datetime is None:
+            start_datetime = model._start_datetime
 
         self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
                                              self.lenuni,xul=xul, yul=yul,

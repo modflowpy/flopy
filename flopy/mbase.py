@@ -92,17 +92,17 @@ class BaseModel(object):
         self.cl_params = ''
 
         # check for reference info in kwargs
-        # xul = kwargs.pop("xul", None)
-        # yul = kwargs.pop("yul", None)
-        # rotation = kwargs.pop("rotation", 0.0)
-        # proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
-        # self.start_datetime = kwargs.pop("start_datetime", "1-1-1970")
-        # self._sr = utils.SpatialReference(xul=xul, yul=yul, rotation=rotation,
-        #                                   proj4_str=proj4_str)
+        # we are just carrying these until a dis package is added
+        self._xul = kwargs.pop("xul", None)
+        self._yul = kwargs.pop("yul", None)
+        self._rotation = kwargs.pop("rotation", 0.0)
+        self._proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+        self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # Model file information
         # external option stuff
         self.array_free_format = True
+        self.free_format_input = True
         self.array_format = None
         self.external_fnames = []
         self.external_units = []
@@ -112,35 +112,36 @@ class BaseModel(object):
 
         return
 
-    def set_free_format(self, value=True):
-        """
-        Set the free format flag for the model instance
-
-        Parameters
-        ----------
-        value : bool
-            Boolean value to set free format flag for model. (default is True)
-
-        Returns
-        -------
-
-        """
-        if not isinstance(value, bool):
-            print('Error: set_free_format passed value must be a boolean')
-            return False
-        self.array_free_format = value
-
-    def get_free_format(self):
-        """
-        Return the free format flag for the model
-
-        Returns
-        -------
-        out : bool
-            Free format flag for the model
-
-        """
-        return self.array_free_format
+    # we don't need these - no need for controlled access to array_free_format
+    # def set_free_format(self, value=True):
+    #     """
+    #     Set the free format flag for the model instance
+    #
+    #     Parameters
+    #     ----------
+    #     value : bool
+    #         Boolean value to set free format flag for model. (default is True)
+    #
+    #     Returns
+    #     -------
+    #
+    #     """
+    #     if not isinstance(value, bool):
+    #         print('Error: set_free_format passed value must be a boolean')
+    #         return False
+    #     self.array_free_format = value
+    #
+    # def get_free_format(self):
+    #     """
+    #     Return the free format flag for the model
+    #
+    #     Returns
+    #     -------
+    #     out : bool
+    #         Free format flag for the model
+    #
+    #     """
+    #     return self.array_free_format
 
     def next_ext_unit(self):
         """
@@ -184,6 +185,7 @@ class BaseModel(object):
         if self.verbose:
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
+
 
     def remove_package(self, pname):
         """
@@ -470,7 +472,12 @@ class BaseModel(object):
 
     def __setattr__(self, key, value):
 
-        if key == "name":
+        if key == "free_format_input":
+            #if self.bas6 is not None:
+            #    self.bas6.ifrefm = value
+            super(BaseModel, self).__setattr__(key, value)
+
+        elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)

@@ -90,7 +90,7 @@ def test_mbase_sr():
     import numpy as np
     import flopy
 
-    ml = flopy.modflow.Modflow(modelname="test",xul=1000.0,yul=50.0,
+    ml = flopy.modflow.Modflow(modelname="test",xul=1000.0,
                                rotation=12.5,start_datetime="1/1/2016")
     try:
         print(ml.sr.xcentergrid)
@@ -99,17 +99,53 @@ def test_mbase_sr():
     else:
         raise Exception("should have failed")
 
-    dis = flopy.modflow.ModflowDis(ml,nrow=10,ncol=5,delr=np.arange(5))
-    print(ml.sr.xcentergrid)
-
+    dis = flopy.modflow.ModflowDis(ml,nrow=10,ncol=5,delr=np.arange(5),xul=500)
+    print(ml.sr)
+    assert ml.sr.xul == 500
+    assert ml.sr.yul == 10
     ml.model_ws = "temp"
-
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load("test.nam",model_ws="temp")
     assert ml1.sr == ml.sr
     assert ml1.start_datetime == ml.start_datetime
 
+
+def test_free_format_flag():
+    import flopy
+    Lx = 100.
+    Ly = 100.
+    nlay = 1
+    nrow = 51
+    ncol = 51
+    delr = Lx / ncol
+    delc = Ly / nrow
+    top = 0
+    botm = [-1]
+    ms = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(ms, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                                   delc=delc, top=top, botm=botm)
+    bas = flopy.modflow.ModflowBas(ms,ifrefm=True)
+    assert ms.free_format_input == bas.ifrefm
+    ms.free_format_input = False
+    assert ms.free_format_input == bas.ifrefm
+    ms.free_format_input = True
+    bas.ifrefm = False
+    assert ms.free_format_input == bas.ifrefm
+    bas.ifrefm = True
+    assert ms.free_format_input == bas.ifrefm
+
+    ms.model_ws = "temp"
+    ms.write_input()
+    ms1 = flopy.modflow.Modflow.load(ms.namefile,model_ws=ms.model_ws)
+    assert ms1.free_format_input == ms.free_format_input
+    assert ms1.free_format_input == ms1.bas6.ifrefm
+    ms1.free_format_input = False
+    assert ms1.free_format_input == ms1.bas6.ifrefm
+    bas.ifrefm = False
+    assert ms1.free_format_input == ms1.bas6.ifrefm
+    bas.ifrefm = True
+    assert ms1.free_format_input == ms1.bas6.ifrefm
 
 def test_sr():
     import flopy
@@ -125,6 +161,8 @@ def test_sr():
     ms = flopy.modflow.Modflow(rotation=20.)
     dis = flopy.modflow.ModflowDis(ms, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
                                    delc=delc, top=top, botm=botm)
+    bas = flopy.modflow.ModflowBas(ms,ifrefm=True)
+
     assert ms.sr.yul == 100
     ms.sr.xul = 111
     assert ms.sr.xul == 111
@@ -151,7 +189,7 @@ def test_netcdf():
     return
 
 if __name__ == '__main__':
-    test_mbase_sr()
+    test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:
     #for namfile in ["fhb.nam"]:

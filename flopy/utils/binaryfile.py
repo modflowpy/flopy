@@ -169,10 +169,18 @@ class BinaryLayerFile(LayerFile):
         header = self._get_header()
         self.nrow = header['nrow']
         self.ncol = header['ncol']
+        if self.nrow > 10000 or self.ncol > 10000:
+            raise Exception("nrow or ncol > 10000, so either something is "
+                            "wrong with the binary file or you have a "
+                            "huge-ass model")
+        if self.nrow < 0 or self.ncol < 0:
+            raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)        
-        self.databytes = header['ncol'] * header['nrow'] * self.realtype(1).nbytes
+        self.databytes = np.int64(header['ncol']) * \
+                         np.int64(header['nrow']) * \
+                         np.int64(self.realtype(1).nbytes)
         ipos = 0
         while ipos < self.totalbytes:           
             header = self._get_header()
@@ -479,11 +487,19 @@ class CellBudgetFile(object):
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
         self.nlay = np.abs(header["nlay"])
+        if self.nrow > 10000 or self.ncol > 10000:
+            raise Exception("nrow or ncol > 10000, so either something is "
+                            "wrong with the binary file or you have a "
+                            "huge-ass model")
+        if self.nrow < 0 or self.ncol < 0:
+            raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
-        self.databytes = (header['ncol'] * header['nrow'] * header['nlay'] 
-                          * self.realtype(1).nbytes)
+        self.databytes = np.int64(header['ncol']) * \
+                         np.int64(header['nrow']) * \
+                         np.int64(header['nlay']) * \
+                         np.int64(self.realtype(1).nbytes)
         self.recorddict = OrderedDict()
         ipos = 0
         while ipos < self.totalbytes:           

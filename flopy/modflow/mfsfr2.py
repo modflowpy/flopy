@@ -926,7 +926,7 @@ class ModflowSfr2(Package):
 
         f_sfr.write(' '.join(fmts[0:4]).format(nseg, icalc, outseg, iupseg) + ' ')
 
-        if iupseg != 0:
+        if iupseg > 0:
             f_sfr.write(fmts[4].format(iprior) + ' ')
         if icalc == 4:
             f_sfr.write(fmts[5].format(nstrpts) + ' ')

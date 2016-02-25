@@ -2,7 +2,8 @@ FloPy Changes
 -----------------------------------------------
 
 ### Version 3.2.5
-* Added changes for this version.
+* Added support for LAK and GAGE packages - full load and write functionality supported.
+
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).

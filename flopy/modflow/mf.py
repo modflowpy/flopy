@@ -443,6 +443,25 @@ class Modflow(BaseModel):
         # update the modflow version
         ml.set_version(version)
 
+        # look for the free format flag in bas6
+        bas = None
+        bas_key = None
+        for key, item in ext_unit_dict.items():
+            if item.filetype == "BAS6":
+                bas = item
+                bas_key = key
+                break
+        if bas_key is not None:
+            start = bas.filehandle.tell()
+            line = bas.filehandle.readline()
+            while line.startswith("#"):
+                line = bas.filehandle.readline()
+            if "FREE" in line.upper():
+                ml.free_format_input = True
+            bas.filehandle.seek(start)
+
+
+
         # load dis
         dis = None
         dis_key = None
@@ -471,13 +490,7 @@ class Modflow(BaseModel):
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.
-        bas = None
-        bas_key = None
-        for key, item in ext_unit_dict.items():
-            if item.filetype == "BAS6":
-                bas = item
-                bas_key = key
-                break
+
         if bas_key is not None:
             try:
                 pck = bas.package.load(bas.filename, ml,
