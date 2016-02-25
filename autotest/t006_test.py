@@ -3,45 +3,6 @@ import matplotlib
 matplotlib.use('agg')
 
 
-def test_sr():
-    import numpy as np
-    import flopy
-    sr1 = flopy.utils.SpatialReference(1.0,1.0,1)
-    print(sr1.xcentergrid)
-    sr1.delr = np.ones((100))
-    print(sr1.xcentergrid)
-    sr1.rotation = 2.1
-    print(sr1.xcentergrid)
-
-    sr1.reset(delr=np.ones((20)),rotation=-5.0,lenuni=2,xul=200.0)
-    print(sr1.xcentergrid)
-
-    sr2 = flopy.utils.SpatialReference([1.0],[1.0],1)
-    print(sr2.nrow,sr2.ncol)
-
-    sr3 = flopy.utils.SpatialReference(np.ones((10)),np.ones((10)),1)
-    print(sr3.nrow,sr3.ncol)
-
-
-def test_mbase_sr():
-    import numpy as np
-    import flopy
-
-    ml = flopy.modflow.Modflow(modelname="test",xul=1000.0,yul=50.0,
-                               rotation=12.5,start_datetime="1/1/2016")
-    print(ml.sr.xcentergrid)
-
-    dis = flopy.modflow.ModflowDis(ml,nrow=10,ncol=5,delr=np.arange(5))
-    print(ml.sr.xcentergrid)
-
-    ml.model_ws = "temp"
-
-
-    ml.write_input()
-    ml1 = flopy.modflow.Modflow.load("test.nam",model_ws="temp")
-    assert ml1.sr == ml.sr
-    assert ml1.start_datetime == ml.start_datetime
-
 def test_binaryfile_reference():
     import os
     import flopy

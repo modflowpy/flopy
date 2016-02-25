@@ -92,13 +92,12 @@ class BaseModel(object):
         self.cl_params = ''
 
         # check for reference info in kwargs
-        xul = kwargs.pop("xul", None)
-        yul = kwargs.pop("yul", None)
-        rotation = kwargs.pop("rotation", 0.0)
-        proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
-        self.start_datetime = kwargs.pop("start_datetime", "1-1-1970")
-        self._sr = utils.SpatialReference(xul=xul, yul=yul, rotation=rotation,
-                                          proj4_str=proj4_str)
+        # we are just carrying these until a dis package is added
+        self._xul = kwargs.pop("xul", None)
+        self._yul = kwargs.pop("yul", None)
+        self._rotation = kwargs.pop("rotation", 0.0)
+        self._proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+        self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # Model file information
         # external option stuff
@@ -185,6 +184,7 @@ class BaseModel(object):
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
 
+
     def remove_package(self, pname):
         """
         Remove a package from this model
@@ -212,7 +212,7 @@ class BaseModel(object):
         ----------
         item : str
             3 character package name (case insensitive) or "sr" to access
-            the SpatialReference instance
+            the SpatialReference instance of the ModflowDis object
 
 
         Returns
@@ -229,10 +229,14 @@ class BaseModel(object):
         """
         if item == 'sr':
             if self.dis is not None:
-                self._sr.reset(delr=self.dis.delr.array,
-                               delc=self.dis.delc.array,
-                               lenuni=self.dis.lenuni)
-            return self._sr
+                return self.dis.sr
+            else:
+                return None
+        if item == "start_datetime":
+            if self.dis is not None:
+                return self.dis.start_datetime
+            else:
+                return None
 
         return self.get_package(item)
 
@@ -432,9 +436,10 @@ class BaseModel(object):
     def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
         for ext_file, output in zip(self.external_fnames, self.external_output):
-            # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+            #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
             # this is a wicked mess
             if output:
+                #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
                 new_ext_file = ext_file
             else:
                 fpth = os.path.abspath(os.path.join(old_pth, ext_file))
@@ -471,7 +476,18 @@ class BaseModel(object):
             self.change_model_ws(value)
         elif key == "sr":
             assert isinstance(value, utils.SpatialReference)
-            self._sr = value
+            if self.dis is not None:
+                self.dis.sr = value
+            else:
+                raise Exception("cannot set SpatialReference -"
+                                "ModflowDis not found")
+        elif key == "start_datetime":
+            if self.dis is not None:
+                self.dis.start_datetime = value
+            else:
+                raise Exception("cannot set start_datetime -"
+                                "ModflowDis not found")
+
         else:
             super(BaseModel, self).__setattr__(key, value)
 

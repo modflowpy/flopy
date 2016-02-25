@@ -17,7 +17,7 @@ pths = [path, path, path, path]
 #mf_items = ['l1a2k.nam']
 #pths = [path]
 
-run = True
+
 
 def load_lak(mfnam, pth):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=pth, verbose=True)
@@ -25,6 +25,8 @@ def load_lak(mfnam, pth):
 
     m.exe_name = 'mf2005'
     v = flopy.which(m.exe_name)
+
+    run = True
     if v is None:
         run = False
 
@@ -39,7 +41,7 @@ def load_lak(mfnam, pth):
 
     # write free format files - wont run without resetting to free format - evt externa file issue
     m.bas6.ifrefm = True
-    m.array_free_format = True
+    #m.array_free_format = True
 
     # rewrite files
     m.change_model_ws(cpth, reset_external=True)  # l1b2k_bath wont run without this

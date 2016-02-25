@@ -412,8 +412,8 @@ class Modflow(BaseModel):
         namefile_path = os.path.join(ml.model_ws, f)
 
         #set the reference information
-        ml.sr, ml.start_datetime = SpatialReference.\
-            from_namfile_header(namefile_path)
+        ref_attributes = SpatialReference.\
+            attribs_from_namfile_header(namefile_path)
 
         # read name file
         try:
@@ -463,6 +463,11 @@ class Modflow(BaseModel):
             s = 'Could not read discretization package: {}. Stopping...' \
                 .format(os.path.basename(dis.filename))
             raise Exception(s + " " + str(e))
+
+        start_datetime = ref_attributes.pop("start_datetime","01-01-1970")
+        sr = SpatialReference(delr=ml.dis.delr.array,delc=ml.dis.delc.array,**ref_attributes)
+        ml.dis.sr = sr
+        ml.dis.start_datetime = start_datetime
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.
