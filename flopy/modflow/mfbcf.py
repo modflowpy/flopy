@@ -138,7 +138,12 @@ class ModflowBcf(Package):
         self.ipakcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit, self.ihdwet))
         # LAYCON array
         for k in range(nlay):
-            f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k], self.laycon[k]))
+            if self.intercellt[k] > 0:
+                f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k],
+                                                   self.laycon[k]))
+            else:
+                f_bcf.write('{0:1d} '.format(self.laycon[k]))
+
         f_bcf.write('\n')
         f_bcf.write(self.trpy.get_file_entry())
         transient = not self.parent.get_package('DIS').steady.all()
@@ -223,12 +228,11 @@ class ModflowBcf(Package):
         intercellt = np.zeros(nlay, dtype=np.int)
         laycon = np.zeros(nlay, dtype=np.int)
         for k in range(nlay):
-            ival = int(t[k])
-            if ival > 9:
+            if len(t[k]) > 1:
                 intercellt[k] = int(t[k][0])
                 laycon[k] = int(t[k][1])
             else:
-                laycon[k] = ival
+                laycon[k] = int(t[k])
         # TRPY array
         if model.verbose:
             print('   loading TRPY...')

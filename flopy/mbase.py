@@ -92,13 +92,13 @@ class BaseModel(object):
         self.cl_params = ''
 
         # check for reference info in kwargs
-        xul = kwargs.pop("xul", None)
-        yul = kwargs.pop("yul", None)
-        rotation = kwargs.pop("rotation", 0.0)
-        proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
-        self.start_datetime = kwargs.pop("start_datetime", "1-1-1970")
-        self._sr = utils.SpatialReference(xul=xul, yul=yul, rotation=rotation,
-                                          proj4_str=proj4_str)
+        # xul = kwargs.pop("xul", None)
+        # yul = kwargs.pop("yul", None)
+        # rotation = kwargs.pop("rotation", 0.0)
+        # proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+        # self.start_datetime = kwargs.pop("start_datetime", "1-1-1970")
+        # self._sr = utils.SpatialReference(xul=xul, yul=yul, rotation=rotation,
+        #                                   proj4_str=proj4_str)
 
         # Model file information
         # external option stuff
@@ -107,6 +107,7 @@ class BaseModel(object):
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
+        self.external_output = []
         self.package_units = []
 
         return
@@ -211,7 +212,7 @@ class BaseModel(object):
         ----------
         item : str
             3 character package name (case insensitive) or "sr" to access
-            the SpatialReference instance
+            the SpatialReference instance of the ModflowDis object
 
 
         Returns
@@ -228,14 +229,18 @@ class BaseModel(object):
         """
         if item == 'sr':
             if self.dis is not None:
-                self._sr.reset(delr=self.dis.delr.array,
-                               delc=self.dis.delc.array,
-                               lenuni=self.dis.lenuni)
-            return self._sr
+                return self.dis.sr
+            else:
+                return None
+        if item == "start_datetime":
+            if self.dis is not None:
+                return self.dis.start_datetime
+            else:
+                return None
 
         return self.get_package(item)
 
-    def add_external(self, fname, unit, binflag=False):
+    def add_external(self, fname, unit, binflag=False, output=False):
         """
         Assign an external array so that it will be listed as a DATA or
         DATA(BINARY) entry in the name file.  This will allow an outside
@@ -258,10 +263,12 @@ class BaseModel(object):
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
             self.external_binflag.pop(idx)
+            self.external_output.pop(idx)
 
         self.external_fnames.append(fname)
         self.external_units.append(unit)
         self.external_binflag.append(binflag)
+        self.external_output.append(output)
         return
 
     def remove_external(self, fname=None, unit=None):
@@ -283,12 +290,14 @@ class BaseModel(object):
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
+                    self.external_output.pop(i)
         elif unit is not None:
             for i, u in enumerate(self.external_units):
                 if u == unit:
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
+                    self.external_output.pop(i)
         else:
             raise Exception(
                 ' either fname or unit must be passed to remove_external()')
@@ -404,6 +413,7 @@ class BaseModel(object):
                         new_pth, os.getcwd()))
                 new_pth = os.getcwd()
         # --reset the model workspace
+        old_pth = self._model_ws
         self._model_ws = new_pth
         sys.stdout.write(
             '\nchanging model workspace...\n   {}\n'.format(new_pth))
@@ -418,15 +428,22 @@ class BaseModel(object):
             pth = os.path.join(self._model_ws, self.external_path)
             os.makedirs(pth)
             if reset_external:
-                self._reset_external(pth)
+                self._reset_external(pth, old_pth)
         elif reset_external:
-            self._reset_external(self._model_ws)
+            self._reset_external(self._model_ws, old_pth)
         return None
 
-    def _reset_external(self, pth):
+    def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
-        for ext_file in self.external_fnames:
-            new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+        for ext_file, output in zip(self.external_fnames, self.external_output):
+            #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+            # this is a wicked mess
+            if output:
+                #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+                new_ext_file = ext_file
+            else:
+                fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 
@@ -459,7 +476,18 @@ class BaseModel(object):
             self.change_model_ws(value)
         elif key == "sr":
             assert isinstance(value, utils.SpatialReference)
-            self._sr = value
+            if self.dis is not None:
+                self.dis.sr = value
+            else:
+                raise Exception("cannot set SpatialReference -"
+                                "ModflowDis not found")
+        elif key == "start_datetime":
+            if self.dis is not None:
+                self.dis.start_datetime = value
+            else:
+                raise Exception("cannot set start_datetime -"
+                                "ModflowDis not found")
+
         else:
             super(BaseModel, self).__setattr__(key, value)
 

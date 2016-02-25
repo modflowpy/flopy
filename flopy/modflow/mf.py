@@ -179,6 +179,8 @@ class Modflow(BaseModel):
             "nwt": flopy.modflow.ModflowNwt,
             "pks": flopy.modflow.ModflowPks,
             "sfr": flopy.modflow.ModflowSfr2,
+            "lak": flopy.modflow.ModflowLak,
+            "gage": flopy.modflow.ModflowGage,
             "sip": flopy.modflow.ModflowSip,
             "sor": flopy.modflow.ModflowSor,
             "de4": flopy.modflow.ModflowDe4,
@@ -410,8 +412,8 @@ class Modflow(BaseModel):
         namefile_path = os.path.join(ml.model_ws, f)
 
         #set the reference information
-        ml.sr, ml.start_datetime = SpatialReference.\
-            from_namfile_header(namefile_path)
+        ref_attributes = SpatialReference.\
+            attribs_from_namfile_header(namefile_path)
 
         # read name file
         try:
@@ -462,6 +464,34 @@ class Modflow(BaseModel):
                 .format(os.path.basename(dis.filename))
             raise Exception(s + " " + str(e))
 
+        start_datetime = ref_attributes.pop("start_datetime","01-01-1970")
+        sr = SpatialReference(delr=ml.dis.delr.array,delc=ml.dis.delc.array,**ref_attributes)
+        ml.dis.sr = sr
+        ml.dis.start_datetime = start_datetime
+
+        # load bas after dis if it is available so that the free format option
+        # is correctly set for subsequent packages.
+        bas = None
+        bas_key = None
+        for key, item in ext_unit_dict.items():
+            if item.filetype == "BAS6":
+                bas = item
+                bas_key = key
+                break
+        if bas_key is not None:
+            try:
+                pck = bas.package.load(bas.filename, ml,
+                                       ext_unit_dict=ext_unit_dict, check=False)
+                files_succesfully_loaded.append(bas.filename)
+                if ml.verbose:
+                    sys.stdout.write('   {:4s} package load...success\n'
+                                     .format(pck.name[0]))
+                ext_unit_dict.pop(bas_key)
+            except Exception as e:
+                s = 'Could not read basic package: {}. Stopping...' \
+                    .format(os.path.basename(bas.filename))
+                raise Exception(s + " " + str(e))
+
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
@@ -472,7 +502,7 @@ class Modflow(BaseModel):
             not_found = []
             for i, filetype in enumerate(load_only):
                 filetype = filetype.upper()
-                if filetype != 'DIS':
+                if filetype != 'DIS' and filetype != 'BAS6':
                     load_only[i] = filetype
                     found = False
                     for key, item in ext_unit_dict.items():
@@ -544,6 +574,7 @@ class Modflow(BaseModel):
                     ml.external_units.append(key)
                     ml.external_binflag.append("binary"
                                                in item.filetype.lower())
+                    ml.external_output.append(False)
 
         # pop binary output keys and any external file units that are now
         # internal

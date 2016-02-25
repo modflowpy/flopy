@@ -78,9 +78,8 @@ class SpatialReference(object):
         self._reset()
         self.set_spatialreference(xul, yul, rotation)
 
-
-    @classmethod
-    def from_namfile_header(cls,namefile):
+    @staticmethod
+    def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
         header = []
         with open(namefile,'r') as f:
@@ -121,8 +120,8 @@ class SpatialReference(object):
                 except:
                     pass
 
-        return cls(xul=xul,yul=yul,rotation=rotation,proj4_str=proj4_str),\
-               start_datetime
+        return {"xul":xul,"yul":yul,"rotation":rotation,
+                "proj4_str":proj4_str,"start_datetime":start_datetime}
 
     def __setattr__(self, key, value):
         reset = True
