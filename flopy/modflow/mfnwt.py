@@ -350,7 +350,7 @@ class ModflowNwt(Package):
             if line[0] != '#':
                 break
         # dataset 1
-        ifrfm = model.get_free_format()
+        ifrfm = model.free_format_input
 
         vars = (("headtol", float), ("fluxtol", float), ("maxiterout", int),
                 ("thickfact", float), ("linmeth", int), ("iprnwt", int),

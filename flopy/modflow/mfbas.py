@@ -91,12 +91,22 @@ class ModflowBas(Package):
         self.ixsec = ixsec
         self.ichflg = ichflg
         self.stoper = stoper
-        self.ifrefm = ifrefm
+        #self.ifrefm = ifrefm
         #model.array_free_format = ifrefm
         model.free_format_input = ifrefm
         self.hnoflo = hnoflo
         self.parent.add_package(self)
         return
+
+    @property
+    def ifrefm(self):
+       return self.parent.free_format_input
+
+    def __setattr__(self, key, value):
+        if key == "ifrefm":
+            self.parent.free_format_input = value
+        else:
+            super(ModflowBas,self).__setattr__(key,value)
 
     def check(self, f=None, verbose=True, level=1):
         """
