@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
-from ..utils import Util2d, Util3d, Transient2d, MfList
+from ..utils import Util2d, Util3d, Transient2d, MfList, \
+    HeadFile, CellBudgetFile, UcnFile
 from ..mbase import BaseModel
 from ..pakbase import Package
 from . import NetCdf
@@ -165,23 +166,24 @@ def output_helper(f,ml,oudic,**kwargs):
         for filename,out_obj in oudic.items():
             filename = filename.lower()
 
-            if filename.endswith("ucn"):
+            if isinstance(out_obj,UcnFile):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
                                         "concentration",logger=logger,
                                         mask_vals=mask_vals,
                                         mask_array3d=mask_array3d)
 
-            elif filename.endswith(ml.hext):
-                _add_output_nc_variable(f,times,shape3d,out_obj,
-                                        "head",logger=logger,
-                                        mask_vals=mask_vals,
-                                        mask_array3d=mask_array3d)
-            elif filename.endswith(ml.dext):
-                _add_output_nc_variable(f,times,shape3d,out_obj,
-                                        "drawdown",logger=logger,
-                                        mask_vals=mask_vals,
-                                        mask_array3d=mask_array3d)
-            elif filename.endswith(ml.cext):
+            elif isinstance(out_obj,HeadFile):
+                if filename.endswith(ml.hext):
+                    _add_output_nc_variable(f,times,shape3d,out_obj,
+                                            "head",logger=logger,
+                                            mask_vals=mask_vals,
+                                            mask_array3d=mask_array3d)
+                else:
+                    _add_output_nc_variable(f,times,shape3d,out_obj,
+                                            "drawdown",logger=logger,
+                                            mask_vals=mask_vals,
+                                            mask_array3d=mask_array3d)
+            elif isinstance(out_obj,CellBudgetFile):
                 var_name = "cell_by_cell_flow"
                 for text in out_obj.textlist:
                     _add_output_nc_variable(f,times,shape3d,out_obj,
