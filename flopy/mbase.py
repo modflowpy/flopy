@@ -92,13 +92,12 @@ class BaseModel(object):
         self.cl_params = ''
 
         # check for reference info in kwargs
-        # xul = kwargs.pop("xul", None)
-        # yul = kwargs.pop("yul", None)
-        # rotation = kwargs.pop("rotation", 0.0)
-        # proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
-        # self.start_datetime = kwargs.pop("start_datetime", "1-1-1970")
-        # self._sr = utils.SpatialReference(xul=xul, yul=yul, rotation=rotation,
-        #                                   proj4_str=proj4_str)
+        # we are just carrying these until a dis package is added
+        self._xul = kwargs.pop("xul", None)
+        self._yul = kwargs.pop("yul", None)
+        self._rotation = kwargs.pop("rotation", 0.0)
+        self._proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+        self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # Model file information
         # external option stuff
@@ -184,6 +183,7 @@ class BaseModel(object):
         if self.verbose:
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
+
 
     def remove_package(self, pname):
         """

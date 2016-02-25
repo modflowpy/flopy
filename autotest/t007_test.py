@@ -90,7 +90,7 @@ def test_mbase_sr():
     import numpy as np
     import flopy
 
-    ml = flopy.modflow.Modflow(modelname="test",xul=1000.0,yul=50.0,
+    ml = flopy.modflow.Modflow(modelname="test",xul=1000.0,
                                rotation=12.5,start_datetime="1/1/2016")
     try:
         print(ml.sr.xcentergrid)
@@ -99,11 +99,11 @@ def test_mbase_sr():
     else:
         raise Exception("should have failed")
 
-    dis = flopy.modflow.ModflowDis(ml,nrow=10,ncol=5,delr=np.arange(5))
-    print(ml.sr.xcentergrid)
-
+    dis = flopy.modflow.ModflowDis(ml,nrow=10,ncol=5,delr=np.arange(5),xul=500)
+    print(ml.sr)
+    assert ml.sr.xul == 500
+    assert ml.sr.yul == 10
     ml.model_ws = "temp"
-
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load("test.nam",model_ws="temp")
