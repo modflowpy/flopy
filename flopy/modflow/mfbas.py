@@ -93,6 +93,7 @@ class ModflowBas(Package):
         self.stoper = stoper
         self.ifrefm = ifrefm
         #model.array_free_format = ifrefm
+        model.free_format_input = ifrefm
         self.hnoflo = hnoflo
         self.parent.add_package(self)
         return

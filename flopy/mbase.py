@@ -102,6 +102,7 @@ class BaseModel(object):
         # Model file information
         # external option stuff
         self.array_free_format = True
+        self.free_format_input = True
         self.array_format = None
         self.external_fnames = []
         self.external_units = []
