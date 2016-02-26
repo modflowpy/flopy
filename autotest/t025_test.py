@@ -9,7 +9,8 @@ import numpy as np
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp')
 
-mf_items = ['l2a_2k.nam', 'lakeex3.nam', 'l1b2k_bath.nam', 'l1b2k.nam', 'l1a2k.nam']
+mf_items = ['l2a_2k.nam', 'lakeex3.nam', 'l1b2k_bath.nam', 'l1b2k.nam',
+            'l1a2k.nam']
 pths = [path, path, path, path, path]
 
 #mf_items = ['l1b2k_bath.nam']
@@ -20,15 +21,27 @@ pths = [path, path, path, path, path]
 
 
 def load_lak(mfnam, pth):
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=pth, verbose=True)
-    assert m.load_fail is False
-
-    m.exe_name = 'mf2005'
-    v = flopy.which(m.exe_name)
+    exe_name = 'mf2005'
+    v = flopy.which(exe_name)
 
     run = True
     if v is None:
         run = False
+    try:
+        import pymake
+        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
+        apth = os.path.join(lpth, 'flopy')
+        compth = lpth
+        pymake.setup(os.path.join(pth, mfnam), lpth)
+    except:
+        run = False
+        lpth = pth
+        apth = cpth
+        compth = cpth
+
+    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True,
+                                   exe_name=exe_name)
+    assert m.load_fail is False
 
     if run:
         try:
@@ -36,15 +49,14 @@ def load_lak(mfnam, pth):
         except:
             pass
         assert success, 'base model run did not terminate successfully'
-        fn0 = os.path.join(pth, mfnam)
+        fn0 = os.path.join(lpth, mfnam)
 
 
     # write free format files - wont run without resetting to free format - evt externa file issue
-    m.bas6.ifrefm = True
-    #m.array_free_format = True
+    m.free_format_input = True
 
     # rewrite files
-    m.change_model_ws(cpth, reset_external=True)  # l1b2k_bath wont run without this
+    m.change_model_ws(apth, reset_external=True)  # l1b2k_bath wont run without this
     m.write_input()
     if run:
         try:
@@ -52,19 +64,15 @@ def load_lak(mfnam, pth):
         except:
             pass
         assert success, 'base model run did not terminate successfully'
-        fn1 = os.path.join(cpth, mfnam)
+        fn1 = os.path.join(apth, mfnam)
 
-        try:
-            import pymake as pm
-            fsum = os.path.join(cpth,
-                                '{}.budget.out'.format(os.path.splitext(mfnam)[0]))
-            success = pm.compare_budget(fn0, fn1,
+        fsum = os.path.join(compth,
+                            '{}.budget.out'.format(os.path.splitext(mfnam)[0]))
+        success = pymake.compare_budget(fn0, fn1,
                                         max_incpd=0.1, max_cumpd=0.1,
                                         outfile=fsum)
-            assert success, 'budget comparison failure'
+        assert success, 'budget comparison failure'
 
-        except:
-            pass
 
     return
 
