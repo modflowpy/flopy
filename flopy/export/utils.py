@@ -383,6 +383,8 @@ def transient2d_helper(f, t2d, **kwargs):
 
         if t2d.model.bas6 is not None:
             array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = f.fillvalue
+        elif t2d.model.btn is not None:
+            array[:, 0, t2d.model.btn.icbund.array[0] == 0] = f.fillvalue
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
 
@@ -469,6 +471,8 @@ def util3d_helper(f, u3d, **kwargs):
 
         if u3d.model.bas6 is not None and "ibound" not in var_name:
             array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
+        elif u3d.model.btn is not None and 'icbund' not in var_name:
+            array[u3d.model.btn.icbund.array == 0] = f.fillvalue
 
         # runtime warning issued in some cases - need to track down cause
         array[array <= min_valid] = f.fillvalue
@@ -541,6 +545,9 @@ def util2d_helper(f, u2d, **kwargs):
 
         if u2d.model.bas6 is not None and "ibound" not in u2d.name.lower():
             array[u2d.model.bas6.ibound.array[0, :, :] == 0] = f.fillvalue
+        elif u2d.model.btn is not None and "icbund" not in u2d.name.lower():
+            array[u2d.model.btn.icbund.array[0, :, :] == 0] = f.fillvalue
+
         array[array <= min_valid] = f.fillvalue
         array[array >= max_valid] = f.fillvalue
 

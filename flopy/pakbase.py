@@ -713,9 +713,18 @@ class Package(object):
                 for ibnd in range(itmp):
                     line = f.readline()
                     if "open/close" in line.lower():
-                        # raise NotImplementedError("load() method does not support \'open/close\'")
-                        oc_filename = os.path.join(model.model_ws,
-                                                   line.strip().split()[1])
+                        # need to strip out existing path seps and
+                        # replace current-system path seps
+                        raw = line.strip().split()
+                        fname = raw[1]
+                        if '/' in fname:
+                            raw = fname.split('/')
+                        elif '\\' in fname:
+                            raw = fname.split('\\')
+                        else:
+                            raw = [fname]
+                        fname = os.path.join(*raw)
+                        oc_filename = os.path.join(model.model_ws, fname)
                         assert os.path.exists(
                                 oc_filename), "Package.load() error: open/close filename " + \
                                               oc_filename + " not found"
