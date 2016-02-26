@@ -149,6 +149,7 @@ def output_helper(f,ml,oudic,**kwargs):
     for filename,df in oudic.items():
         [times.append(t) for t in df.times if t not in times]
     assert len(times) > 0
+    times.sort()
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)

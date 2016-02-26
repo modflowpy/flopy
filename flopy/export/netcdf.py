@@ -143,6 +143,7 @@ class NetCdf(object):
         import dateutil.parser
         self.start_datetime = self._dt_str(dateutil.parser.parse(
             self.model.start_datetime))
+        self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
         self.grid_units = LENUNI[self.model.sr.lenuni]
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
@@ -499,6 +500,7 @@ class NetCdf(object):
                    "_CoordinateAxisType": "Time"}
         time = self.create_variable("time", attribs, precision_str="f8",
                                     dimensions=("time",))
+        self.logger.warn("time_values:{0}".format(str(time_values)))
         time[:] = np.asarray(time_values)
 
         # Elevation
