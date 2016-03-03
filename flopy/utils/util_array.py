@@ -408,10 +408,10 @@ def read1d(f, a):
 
 def new_u2d(old_util2d, value):
     new_util2d = Util2d(old_util2d.model, old_util2d.shape, old_util2d.dtype,
-                        value, old_util2d.name, old_util2d.fmtin,
+                        value, old_util2d.name, old_util2d.format.fortran,
                         old_util2d.cnstnt, old_util2d.iprn,
                         old_util2d.ext_filename, old_util2d.locat,
-                        old_util2d.bin)
+                        old_util2d.format.binary)
     return new_util2d
 
 
