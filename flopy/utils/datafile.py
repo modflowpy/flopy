@@ -389,10 +389,13 @@ class LayerFile(object):
         if kstpkper is not None:
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
-
-            totim1 = self.recordarray[np.where(
+            idx = np.where(
                     (self.recordarray['kstp'] == kstp1) &
-                    (self.recordarray['kper'] == kper1))]["totim"][0]
+                    (self.recordarray['kper'] == kper1))
+            if idx[0].shape[0] == 0:
+                raise Exception("get_data() error: kstpkper not found:{0}".
+                                format(kstpkper))
+            totim1 = self.recordarray[idx]["totim"][0]
         elif totim is not None:
             totim1 = totim
         elif idx is not None:
