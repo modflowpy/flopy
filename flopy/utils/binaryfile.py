@@ -855,9 +855,9 @@ class CellBudgetFile(object):
             dtype = np.dtype([('node', np.int32), ('q', self.realtype)])
             if verbose:
                 if full3D:
-                    s += 'a numpy masked array of size ({}{}{})'.format(nlay,
-                                                                        nrow,
-                                                                        ncol)
+                    s += 'a numpy masked array of size ({}, {}, {})'.format(nlay,
+                                                                            nrow,
+                                                                            ncol)
                 else:
                     s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
                 print(s)
@@ -873,9 +873,9 @@ class CellBudgetFile(object):
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if verbose:
                 if full3D:
-                    s += 'a numpy masked array of size ({}{}{})'.format(nlay,
-                                                                        nrow,
-                                                                        ncol)
+                    s += 'a numpy masked array of size ({}, {}, {})'.format(nlay,
+                                                                            nrow,
+                                                                            ncol)
                 else:
                     s += 'a list of two 2D numpy arrays.  '
                     s += 'The first is an integer layer array of shape  ' + \
