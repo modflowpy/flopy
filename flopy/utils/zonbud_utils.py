@@ -20,7 +20,7 @@ def _call(command, args):
     return rc
 
 
-def write_zonefile(izone, outfile, iprn=-1):
+def write_zonfile(izone, outfile, iprn=-1):
     """
     izone : array of ints (nlay, nrow, ncol)
         integer-array of zone numbers
@@ -34,7 +34,7 @@ def write_zonefile(izone, outfile, iprn=-1):
     >>> import numpy as np
     >>> nlay = 9
     >>> zon = np.array([np.loadtxt('GWBasins.zon') for lay in range(nlay)], dtype=np.int)
-    >>> flopy.utils.write_zonefile(zon, 'GWBasins_zb2')
+    >>> flopy.utils.write_zonfile(zon, 'GWBasins_zb2')
 
     """
     assert 'int' in str(izone.dtype), 'Input zone array (dtype={}) must be an integer array.'.format(izone.dtype)
@@ -75,7 +75,7 @@ def run_zonbud(zonbud_exe='zonbud.exe', listingfile='zonbudtest csv',
     >>> import numpy as np
     >>> nlay = 9
     >>> zon = np.array([np.loadtxt('GWBasins.zon') for lay in range(nlay)], dtype=np.int)
-    >>> flopy.utils.write_zbarray_file(zon, 'GWBasins_zb2')
+    >>> flopy.utils.write_zonfile(zon, 'GWBasins_zb2')
     >>> flopy.utils.run_zonbud(zonefile='GWBasins_zb2', cbcfile=r'model\fas.cbc')
     """
     assert type(budget_option) == str, 'budget_option must be a string.'
