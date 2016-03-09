@@ -46,11 +46,16 @@ def write_zonfile(izone, outfile, iprn=-1):
 
     with open(outfile, 'w') as f:
         f.write('{} {} {}\n'.format(nlay, nrow, ncol))
-        for lay in range(nlay):
+        if nlay == 1:
             f.write('INTERNAL      ({ncol}I8) {iprn}\n'.format(ncol=ncol, iprn=iprn))
-            # f.write('INTERNAL (free) {iprn}\n'.format(iprn))
             for row in range(nrow):
-                f.write(''.join(['{:8d}'.format(int(val)) for val in izone[lay, row, :]])+'\n')
+                f.write(''.join(['{:8d}'.format(int(val)) for val in izone[row, :]])+'\n')
+        else:
+            for lay in range(nlay):
+                f.write('INTERNAL      ({ncol}I8) {iprn}\n'.format(ncol=ncol, iprn=iprn))
+                # f.write('INTERNAL (free) {iprn}\n'.format(iprn))
+                for row in range(nrow):
+                    f.write(''.join(['{:8d}'.format(int(val)) for val in izone[lay, row, :]])+'\n')
     return
 
 
