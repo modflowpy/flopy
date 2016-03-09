@@ -9,53 +9,7 @@ from datetime import datetime
 # from matplotlib import pyplot as plt
 
 
-class ZoneBudget(object):
-    """
-    ZoneBudget package class
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
-
-    Examples
-    --------
-
-    >>> import flopy
-    >>> m = flopy.modflow.Modflow()
-    >>> z = np.array([0, 1, 2, 3], np.int32)
-    >>> zb = flopy.zonebud.ZoneBudget(m, z)
-    >>> zb.write_array_file('zonearrayfile')
-
-    """
-    def __init__(self, model, z, extension='zb', unitnumber=999):
-
-        """
-        Package constructor.
-
-        """
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, 'ZB', unitnumber)
-        self.unit_number = unitnumber
-        self.nrow, self.ncol, self.nlay, self.nper = self.parent.nrow_ncol_nlay_nper
-        self.izone = Util3d(model, (self.nlay, self.nrow, self.ncol),
-                            np.int32, z, 'zonebud', locat=self.unit_number)
-
-    def write_array_file(self, outfile):
-
-        with open(outfile, 'w') as f:
-            f.write('{} {} {}\n'.format(self.nlay, self.nrow, self.ncol))
-            for lay in range(self.nlay):
-                f.write('INTERNAL      ({}I8)\n'.format(self.ncol))
-                for row in range(self.nrow):
-                    f.write(''.join(['{:8d}'.format(int(val)) for val in self.izone.array[lay, row, :]])+'\n')
-
-
-class ZoneBudget2(Package):
+class ZoneBudget(Package):
     """
     ZoneBudget package class
 
