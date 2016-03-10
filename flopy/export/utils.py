@@ -47,7 +47,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                      dtype=np.float32)
     array[:] = np.NaN
     for i,t in enumerate(times):
-        if t in out_obj.times:
+        if t in out_obj.recordarray["totim"]:
             try:
                 if text:
                     a = out_obj.get_data(totim=t,full3D=True,text=text)
@@ -82,9 +82,9 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
 
     for mask_val in mask_vals:
         array[np.where(array==mask_val)] = np.NaN
-
-    array[np.isnan(array)] = f.fillvalue
     mx,mn = np.nanmax(array),np.nanmin(array)
+    array[np.isnan(array)] = f.fillvalue
+
     units = None
     if var_name in NC_UNITS_FORMAT:
         units = NC_UNITS_FORMAT[var_name].format(
@@ -145,9 +145,16 @@ def output_helper(f,ml,oudic,**kwargs):
         str_args = ','.join(kwargs)
         raise NotImplementedError("unsupported kwargs:{0}".format(str_args))
 
+    # this sucks!  need to round the totims in each output file instance so
+    # that they will line up
+    # for key,out in oudic.items():
+    #    times = [float("{0:10.5f}".format(t)) for t in out.times]
+    #    out.recordarray["totim"] = times
+    #    print(out.recordarray["totim"])
+
     times = []
     for filename,df in oudic.items():
-        [times.append(t) for t in df.times if t not in times]
+        [times.append(t) for t in df.recordarray["totim"] if t not in times]
     assert len(times) > 0
     times.sort()
 
@@ -381,6 +388,9 @@ def transient2d_helper(f, t2d, **kwargs):
         array = t2d.array
         f.log("getting 4D array for {0}".format(t2d.name_base))
 
+        mn = np.nanmin(array)
+        mx = np.nanmax(array)
+
         if t2d.model.bas6 is not None:
             array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = f.fillvalue
         elif t2d.model.btn is not None:
@@ -402,8 +412,8 @@ def transient2d_helper(f, t2d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "time latitude longitude"
         attribs["units"] = units
-        attribs["min"] = np.nanmin(array)
-        attribs["max"] = np.nanmax(array)
+        attribs["min"] = mn
+        attribs["max"] = mx
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("time", "layer", "y", "x"))
