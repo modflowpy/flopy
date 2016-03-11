@@ -412,14 +412,11 @@ def transient2d_helper(f, t2d, **kwargs):
         array = t2d.array
         f.log("getting 4D array for {0}".format(t2d.name_base))
 
-
-
-        if t2d.model.bas6 is not None:
-            array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = np.NaN
-        elif t2d.model.btn is not None:
-            array[:, 0, t2d.model.btn.icbund.array[0] == 0] = np.NaN
-
         if array.dtype not in [int,np.int,np.int32,np.int64]:
+            if t2d.model.bas6 is not None:
+                array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = np.NaN
+            elif t2d.model.btn is not None:
+                array[:, 0, t2d.model.btn.icbund.array[0] == 0] = np.NaN
             array[array <= min_valid] = np.NaN
             array[array >= max_valid] = np.NaN
             mx, mn = np.nanmax(array), np.nanmin(array)
@@ -427,6 +424,12 @@ def transient2d_helper(f, t2d, **kwargs):
             mx, mn = np.nanmax(array), np.nanmin(array)
             array[array <= min_valid] = f.fillvalue
             array[array >= max_valid] = f.fillvalue
+            if t2d.model.bas6 is not None:
+                array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = f.fillvalue
+            elif t2d.model.btn is not None:
+                array[:, 0, t2d.model.btn.icbund.array[0] == 0] = f.fillvalue
+
+
 
         array[np.isnan(array)] = f.fillvalue
 
@@ -510,17 +513,13 @@ def util3d_helper(f, u3d, **kwargs):
             f.log("broadcasting 3D array for {0}".format(var_name))
         f.log("getting 3D array for {0}".format(var_name))
 
-
-
-        if u3d.model.bas6 is not None and "ibound" not in var_name:
-            array[u3d.model.bas6.ibound.array == 0] = np.NaN
-        elif u3d.model.btn is not None and 'icbund' not in var_name:
-            array[u3d.model.btn.icbund.array == 0] = np.NaN
-
-
         # runtime warning issued in some cases - need to track down cause
         # happens when NaN is already in array
         if array.dtype not in [int,np.int,np.int32,np.int64]:
+            if u3d.model.bas6 is not None and "ibound" not in var_name:
+                array[u3d.model.bas6.ibound.array == 0] = np.NaN
+            elif u3d.model.btn is not None and 'icbund' not in var_name:
+                array[u3d.model.btn.icbund.array == 0] = np.NaN
             array[array <= min_valid] = np.NaN
             array[array >= max_valid] = np.NaN
             mx, mn = np.nanmax(array), np.nanmin(array)
@@ -528,6 +527,12 @@ def util3d_helper(f, u3d, **kwargs):
             mx, mn = np.nanmax(array), np.nanmin(array)
             array[array <= min_valid] = f.fillvalue
             array[array >= max_valid] = f.fillvalue
+            if u3d.model.bas6 is not None and "ibound" not in var_name:
+                array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
+            elif u3d.model.btn is not None and 'icbund' not in var_name:
+                array[u3d.model.btn.icbund.array == 0] = f.fillvalue
+
+
 
         array[np.isnan(array)] = f.fillvalue
         units = "unitless"
@@ -593,13 +598,11 @@ def util2d_helper(f, u2d, **kwargs):
         array = u2d.array
         f.log("getting 2D array for {0}".format(u2d.name))
 
-
-        if u2d.model.bas6 is not None and "ibound" not in u2d.name.lower():
-            array[u2d.model.bas6.ibound.array[0, :, :] == 0] = np.NaN
-        elif u2d.model.btn is not None and "icbund" not in u2d.name.lower():
-            array[u2d.model.btn.icbund.array[0, :, :] == 0] = np.NaN
-
         if array.dtype not in [int,np.int,np.int32,np.int64]:
+            if u2d.model.bas6 is not None and "ibound" not in u2d.name.lower():
+                array[u2d.model.bas6.ibound.array[0, :, :] == 0] = np.NaN
+            elif u2d.model.btn is not None and "icbund" not in u2d.name.lower():
+                array[u2d.model.btn.icbund.array[0, :, :] == 0] = np.NaN
             array[array <= min_valid] = np.NaN
             array[array >= max_valid] = np.NaN
             mx, mn = np.nanmax(array), np.nanmin(array)
@@ -607,6 +610,10 @@ def util2d_helper(f, u2d, **kwargs):
             mx, mn = np.nanmax(array), np.nanmin(array)
             array[array <= min_valid] = f.fillvalue
             array[array >= max_valid] = f.fillvalue
+            if u2d.model.bas6 is not None and "ibound" not in u2d.name.lower():
+                array[u2d.model.bas6.ibound.array[0, :, :] == 0] = f.fillvalue
+            elif u2d.model.btn is not None and "icbund" not in u2d.name.lower():
+                array[u2d.model.btn.icbund.array[0, :, :] == 0] = f.fillvalue
 
         array[np.isnan(array)] = f.fillvalue
         units = "unitless"
