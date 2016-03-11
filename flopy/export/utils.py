@@ -176,8 +176,11 @@ def output_helper(f,ml,oudic,**kwargs):
         if logger:
             logger.warn("the following output times are not common to all" +\
                         " output files and are being skipped:\n" +\
-                        ",".join(skipped_times))
-
+                        "{0}".format(skipped_times))
+        else:
+            print("the following output times are not common to all" +\
+                        " output files and are being skipped:\n" +\
+                        "{0}".format(skipped_times))
     times = common_times
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
