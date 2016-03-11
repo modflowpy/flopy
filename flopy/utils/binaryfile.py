@@ -9,6 +9,7 @@ important classes that can be accessed by the user.
 """
 from __future__ import print_function
 import numpy as np
+import warnings
 from collections import OrderedDict
 from flopy.utils.datafile import Header, LayerFile
 
@@ -170,9 +171,9 @@ class BinaryLayerFile(LayerFile):
         self.nrow = header['nrow']
         self.ncol = header['ncol']
         if self.nrow > 10000 or self.ncol > 10000:
-            raise Exception("nrow or ncol > 10000, so either something is "
-                            "wrong with the binary file or you have a "
-                            "huge-ass model")
+            s = 'Possible error. ncol ({}) or nrow ({}) > 10000 '.format(self.ncol,
+                                                                         self.nrow)
+            warnings.warn(s)
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
@@ -452,6 +453,8 @@ class CellBudgetFile(object):
         else:
             raise Exception('Unknown precision specified: ' + precision)
 
+        self.dis = None
+        self.sr = None
         if 'model' in kwargs.keys():
             self.model = kwargs.pop('model')
             self.sr = self.model.sr
@@ -477,7 +480,29 @@ class CellBudgetFile(object):
         #self.value = np.empty((self.nlay, self.nrow, self.ncol),
         #                      dtype=self.realtype)
         return
-   
+
+    def _totim_from_kstpkper(self,kstpkper):
+        if self.dis is None:
+           return 0.0
+        kstp,kper = kstpkper
+        perlen = self.dis.perlen.array
+        nstp = self.dis.nstp.array[kper]
+        tsmult = self.dis.tsmult.array[kper]
+        kper_len = np.sum(perlen[:kper])
+        this_perlen = perlen[kper]
+        if tsmult == 1:
+            dt1 = this_perlen / float(nstp)
+        else:
+            dt1 = this_perlen * (tsmult - 1.0)/ ((tsmult**nstp) - 1.0)
+        kstp_len = [dt1]
+        for i in range(kstp+1):
+            kstp_len.append(kstp_len[-1]*tsmult)
+        #kstp_len = np.array(kstp_len)
+        #kstp_len = kstp_len[:kstp].sum()
+        kstp_len = sum(kstp_len[:kstp+1])
+        return kper_len + kstp_len
+
+
     def _build_index(self):
         """
         Build the ordered dictionary, which maps the header information
@@ -488,9 +513,9 @@ class CellBudgetFile(object):
         self.ncol = header["ncol"]
         self.nlay = np.abs(header["nlay"])
         if self.nrow > 10000 or self.ncol > 10000:
-            raise Exception("nrow or ncol > 10000, so either something is "
-                            "wrong with the binary file or you have a "
-                            "huge-ass model")
+            s = 'Possible error. ncol ({}) or nrow ({}) > 10000 '.format(self.ncol,
+                                                                         self.nrow)
+            warnings.warn(s)
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
@@ -508,6 +533,10 @@ class CellBudgetFile(object):
                 print(header)
             self.nrecords += 1
             totim = header['totim']
+            if totim == 0:
+                totim = self._totim_from_kstpkper(
+                        (header["kstp"]-1,header["kper"]-1))
+                header["totim"] = totim
             if totim > 0 and totim not in self.times:
                 self.times.append(totim)
             kstpkper = (header['kstp'], header['kper'])
