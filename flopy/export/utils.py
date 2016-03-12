@@ -147,10 +147,10 @@ def output_helper(f,ml,oudic,**kwargs):
 
     # this sucks!  need to round the totims in each output file instance so
     # that they will line up
-    # for key,out in oudic.items():
-    #    times = [float("{0:10.5f}".format(t)) for t in out.times]
-    #    out.recordarray["totim"] = times
-    #    print(out.recordarray["totim"])
+    for key,out in oudic.items():
+       times = [float("{0:15.6f}".format(t)) for t in out.recordarray["totim"]]
+       out.recordarray["totim"] = times
+       print(out.recordarray["totim"])
 
     times = []
     for filename,df in oudic.items():
