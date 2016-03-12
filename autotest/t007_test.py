@@ -167,6 +167,16 @@ def test_sr():
     ms.sr.xul = 111
     assert ms.sr.xul == 111
 
+    ms.sr.units = "feet"
+    assert ms.sr.units == "feet"
+
+    try:
+        ms.sr.units = "junk"
+    except:
+        pass
+    else:
+        raise Exception("should have failed")
+
     ms.start_datetime = "1-1-2016"
     assert ms.start_datetime == "1-1-2016"
     assert ms.dis.start_datetime == "1-1-2016"
@@ -177,6 +187,8 @@ def test_sr():
     assert ms1.sr == ms.sr
     assert ms1.dis.sr == ms.dis.sr
     assert ms1.start_datetime == ms.start_datetime
+    assert ms1.sr.units == ms.sr.units
+
 
 def test_shapefile():
     for namfile in namfiles:
@@ -189,7 +201,8 @@ def test_netcdf():
     return
 
 if __name__ == '__main__':
-    test_free_format_flag()
+    test_sr()
+    #test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:
     #for namfile in ["fhb.nam"]:
