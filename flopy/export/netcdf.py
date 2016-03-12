@@ -320,7 +320,7 @@ class NetCdf(object):
         self.nc_inverse_flat = float(298.257223563)
 
         self.global_attributes = {}
-        self.global_attributes["original_namefile"] = self.model.namefile
+        self.global_attributes["namefile"] = self.model.namefile
         self.global_attributes["model_ws"] = self.model.model_ws
         self.global_attributes["exe_name"] = self.model.exe_name
         self.global_attributes["modflow_version"] = self.model.version
