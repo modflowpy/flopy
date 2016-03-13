@@ -320,7 +320,7 @@ class NetCdf(object):
         self.nc_inverse_flat = float(298.257223563)
 
         self.global_attributes = {}
-        self.global_attributes["original_namefile"] = self.model.namefile
+        self.global_attributes["namefile"] = self.model.namefile
         self.global_attributes["model_ws"] = self.model.model_ws
         self.global_attributes["exe_name"] = self.model.exe_name
         self.global_attributes["modflow_version"] = self.model.version
@@ -374,7 +374,8 @@ class NetCdf(object):
             proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
         try:
-            self.grid_crs = Proj(proj4_str)
+            self.grid_crs = Proj(proj4_str,preseve_units=True,errcheck=True)
+
         except Exception as e:
             self.log("error building grid crs:\n{0}".format(str(e)))
             raise Exception("error building grid crs:\n{0}".format(str(e)))
@@ -383,20 +384,25 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        ys = self.model.sr.ycentergrid.copy()
-        xs = self.model.sr.xcentergrid.copy()
+        if self.grid_units.lower().startswith('f') and \
+                not self.model.sr.units.startswith("f"):
+            self.log("converting feet to meters")
+            sr = copy.copy(self.model.sr)
+            sr.delr /= 3.281
+            sr.delc /= 3.281
+            ys = sr.ycentergrid.copy()
+            xs = sr.xcentergrid.copy()
+            self.log("converting feet to meters")
+        else:
+            ys = self.model.sr.ycentergrid.copy()
+            xs = self.model.sr.xcentergrid.copy()
 
-        if self.grid_units.lower().startswith("f"):
-            self.log("converting feet to meters")
-            ys /= 3.281
-            xs /= 3.281
-            self.log("converting feet to meters")
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)
         self.log("projecting grid cell center arrays " + \
-                 "from {0} to {1}".format(str(self.grid_crs),
-                                          str(nc_crs)))
+                 "from {0} to {1}".format(str(self.grid_crs.srs),
+                                          str(nc_crs.srs)))
         try:
             self.xs, self.ys = transform(self.grid_crs, nc_crs, xs, ys)
         except Exception as e:
