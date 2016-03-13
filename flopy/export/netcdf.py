@@ -384,10 +384,10 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        if self.grid_units.lower().startswith('f') and \
-                not self.model.sr.units.startswith("f"):
+        if self.grid_units.lower().startswith('f'): #and \
+               #not self.model.sr.units.startswith("f"):
             self.log("converting feet to meters")
-            sr = copy.copy(self.model.sr)
+            sr = copy.deepcopy(self.model.sr)
             sr.delr /= 3.281
             sr.delc /= 3.281
             ys = sr.ycentergrid.copy()

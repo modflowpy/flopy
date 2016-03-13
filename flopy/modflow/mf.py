@@ -484,7 +484,8 @@ class Modflow(BaseModel):
             raise Exception(s + " " + str(e))
 
         start_datetime = ref_attributes.pop("start_datetime","01-01-1970")
-        sr = SpatialReference(delr=ml.dis.delr.array,delc=ml.dis.delc.array,**ref_attributes)
+        sr = SpatialReference(delr=ml.dis.delr.array,delc=ml.dis.delc.array,\
+                              lenuni=ml.dis.lenuni,**ref_attributes)
         ml.dis.sr = sr
         ml.dis.start_datetime = start_datetime
 
