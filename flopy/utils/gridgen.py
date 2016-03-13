@@ -395,6 +395,27 @@ class Gridgen(object):
         plt.ylim(ymin, ymax)
         return pc
 
+    def get_nod_recarray(self):
+        """
+        Load the qtg.nod file and return as a numpy recarray
+
+        Returns
+        -------
+        node_ra : ndarray
+            Recarray representation of the node file
+
+        """
+
+        # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
+        fname = os.path.join(self.model_ws, 'qtg.nod')
+        f = open(fname, 'r')
+        dt = np.dtype([('node', np.int), ('layer', np.int),
+                       ('x', np.float), ('y', np.float), ('z', np.float),
+                       ('dx', np.float), ('dy', np.float), ('dz', np.float),
+                       ])
+        node_ra = np.genfromtxt(fname, dtype=dt, skip_header=1)
+        return node_ra
+
     def get_disu(self, model, nper=1, perlen=1, nstp=1, tsmult=1, steady=True,
                  itmuni=4, lenuni=2):
 
