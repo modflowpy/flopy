@@ -369,7 +369,7 @@ class ArrayFormat(object):
         else:
             raw = [fd]
             decimal = None
-        fmts = ['I', 'G', 'E', 'F', 'ES', 'EN']
+        fmts = ['ES', 'EN', 'I', 'G', 'E', 'F']
         raw = raw[0].upper()
         for fmt in fmts:
             if fmt in raw:
