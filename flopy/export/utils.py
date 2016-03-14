@@ -7,13 +7,19 @@ from ..pakbase import Package
 from . import NetCdf
 from . import shapefile_utils
 
+
+
 NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", "strt": "{0}",
                    "wel_flux": "{0}^3/{1}", "top": "{0}", "botm": "{0}", "thickness": "{0}",
                    "ghb_cond": "{0}/{1}^2", "ghb_bhead": "{0}", "transmissivity": "{0}^2/{1}",
                    "vertical_conductance": "{0}/{1}^2", "primary_storage_coefficient": "1/{1}",
                    "horizontal_hydraulic_conductivity": "{0}/{1}", "riv_cond": "1/{1}",
                    "riv_stage": "{0}", "riv_rbot": "{0}", "head":"{0}",
-                   "drawdown":"{0}","cell_by_cell_flow":"{0}^3/{1}"}
+                   "drawdown": "{0}", "cell_by_cell_flow": "{0}^3/{1}", "sy":"{1}/{1}",
+                   "prsity": "{1}/{1}", "hani": "{0}/{0}", "al": "{0}/{0}", "drn_elev": "{0}",
+                   "drn_cond": "1/{1}", "dz": "{0}", "subsidence": "{0}",
+                   "chd_shead": "{0}", "chd_ehead": "{0}", "2D_cumulative_well_flux": "{0}^3/{1}",
+                   "3D_cumulative_well_flux": "{0}^3/{1}"}
 NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4", np.int32:"i4"}
 
 NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
@@ -30,7 +36,15 @@ NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
                  "ghb_bhead": "GHB boundary head",
                  "riv_cond": "river bed conductance",
                  "riv_stage": "river stage",
-                 "riv_rbot": "river bottom elevation"}
+                 "riv_rbot": "river bottom elevation",
+                 "drn_elev": "drain elevation",
+                 "drn_cond": "drain conductance",
+                 "hani": "horizontal anisotropy",
+                 "prsity": "porosity",
+                 "sconc1": "starting concentration",
+                 "ibound": "flow model active array",
+                 "icbund": "transport model active array"
+                 }
 
 
 def datafile_helper(f, df):
@@ -47,7 +61,7 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
                      dtype=np.float32)
     array[:] = np.NaN
     for i,t in enumerate(times):
-        if t in out_obj.times:
+        if t in out_obj.recordarray["totim"]:
             try:
                 if text:
                     a = out_obj.get_data(totim=t,full3D=True,text=text)
@@ -82,9 +96,9 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
 
     for mask_val in mask_vals:
         array[np.where(array==mask_val)] = np.NaN
-
-    array[np.isnan(array)] = f.fillvalue
     mx,mn = np.nanmax(array),np.nanmin(array)
+    array[np.isnan(array)] = f.fillvalue
+
     units = None
     if var_name in NC_UNITS_FORMAT:
         units = NC_UNITS_FORMAT[var_name].format(
@@ -145,12 +159,42 @@ def output_helper(f,ml,oudic,**kwargs):
         str_args = ','.join(kwargs)
         raise NotImplementedError("unsupported kwargs:{0}".format(str_args))
 
+    # this sucks!  need to round the totims in each output file instance so
+    # that they will line up
+    for key,out in oudic.items():
+       times = [float("{0:15.6f}".format(t)) for t in out.recordarray["totim"]]
+       out.recordarray["totim"] = times
+
     times = []
     for filename,df in oudic.items():
-        [times.append(t) for t in df.times if t not in times]
+        [times.append(t) for t in df.recordarray["totim"] if t not in times]
     assert len(times) > 0
     times.sort()
 
+    # rectify times - only use times that are common to every output file
+    common_times = []
+    skipped_times = []
+    for t in times:
+        keep = True
+        for filename,df in oudic.items():
+            if t not in df.recordarray["totim"]:
+                keep = False
+                break
+        if keep:
+            common_times.append(t)
+        else:
+            skipped_times.append(t)
+    assert len(common_times) > 0
+    if len(skipped_times) > 0:
+        if logger:
+            logger.warn("the following output times are not common to all" +\
+                        " output files and are being skipped:\n" +\
+                        "{0}".format(skipped_times))
+        else:
+            print("the following output times are not common to all" +\
+                        " output files and are being skipped:\n" +\
+                        "{0}".format(skipped_times))
+    times = common_times
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
         mask_vals = []
@@ -380,13 +424,29 @@ def transient2d_helper(f, t2d, **kwargs):
         f.log("getting 4D array for {0}".format(t2d.name_base))
         array = t2d.array
         f.log("getting 4D array for {0}".format(t2d.name_base))
+        with np.errstate(invalid="ignore"):
+            if array.dtype not in [int,np.int,np.int32,np.int64]:
+                # turn this masking off since recharge can be applied to
+                # highest active
+                #if t2d.model.bas6 is not None:
+                #    array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = np.NaN
+                #elif t2d.model.btn is not None:
+                #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = np.NaN
+                array[array <= min_valid] = np.NaN
+                array[array >= max_valid] = np.NaN
+                mx, mn = np.nanmax(array), np.nanmin(array)
+            else:
+                mx, mn = np.nanmax(array), np.nanmin(array)
+                array[array <= min_valid] = f.fillvalue
+                array[array >= max_valid] = f.fillvalue
+                #if t2d.model.bas6 is not None:
+                #    array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = \
+                #        f.fillvalue
+                #elif t2d.model.btn is not None:
+                #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = \
+                #        f.fillvalue
 
-        if t2d.model.bas6 is not None:
-            array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = f.fillvalue
-        elif t2d.model.btn is not None:
-            array[:, 0, t2d.model.btn.icbund.array[0] == 0] = f.fillvalue
-        array[array <= min_valid] = f.fillvalue
-        array[array >= max_valid] = f.fillvalue
+        array[np.isnan(array)] = f.fillvalue
 
         units = "unitless"
         var_name = t2d.name_base.replace('_', '')
@@ -402,8 +462,8 @@ def transient2d_helper(f, t2d, **kwargs):
             attribs = {"long_name": var_name}
         attribs["coordinates"] = "time latitude longitude"
         attribs["units"] = units
-        attribs["min"] = np.nanmin(array)
-        attribs["max"] = np.nanmax(array)
+        attribs["min"] = mn
+        attribs["max"] = mx
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("time", "layer", "y", "x"))
@@ -457,6 +517,7 @@ def util3d_helper(f, u3d, **kwargs):
         var_name = u3d.name[0].replace(' ', '_').lower()
         f.log("getting 3D array for {0}".format(var_name))
         array = u3d.array
+
         # this is for the crappy vcont in bcf6
         if array.shape != f.shape:
             f.log("broadcasting 3D array for {0}".format(var_name))
@@ -467,17 +528,27 @@ def util3d_helper(f, u3d, **kwargs):
             f.log("broadcasting 3D array for {0}".format(var_name))
         f.log("getting 3D array for {0}".format(var_name))
 
-        mx, mn = np.nanmax(array), np.nanmin(array)
-
-        if u3d.model.bas6 is not None and "ibound" not in var_name:
-            array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
-        elif u3d.model.btn is not None and 'icbund' not in var_name:
-            array[u3d.model.btn.icbund.array == 0] = f.fillvalue
-
         # runtime warning issued in some cases - need to track down cause
-        array[array <= min_valid] = f.fillvalue
-        array[array >= max_valid] = f.fillvalue
+        # happens when NaN is already in array
+        with np.errstate(invalid="ignore"):
+            if array.dtype not in [int,np.int,np.int32,np.int64]:
+                if u3d.model.bas6 is not None and "ibound" not in var_name:
+                    array[u3d.model.bas6.ibound.array == 0] = np.NaN
+                elif u3d.model.btn is not None and 'icbund' not in var_name:
+                    array[u3d.model.btn.icbund.array == 0] = np.NaN
+                array[array <= min_valid] = np.NaN
+                array[array >= max_valid] = np.NaN
+                mx, mn = np.nanmax(array), np.nanmin(array)
+            else:
+                mx, mn = np.nanmax(array), np.nanmin(array)
+                array[array <= min_valid] = f.fillvalue
+                array[array >= max_valid] = f.fillvalue
+                if u3d.model.bas6 is not None and "ibound" not in var_name:
+                    array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
+                elif u3d.model.btn is not None and 'icbund' not in var_name:
+                    array[u3d.model.btn.icbund.array == 0] = f.fillvalue
 
+        array[np.isnan(array)] = f.fillvalue
         units = "unitless"
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
@@ -541,16 +612,31 @@ def util2d_helper(f, u2d, **kwargs):
         array = u2d.array
         f.log("getting 2D array for {0}".format(u2d.name))
 
-        mx,mn = np.nanmax(array),np.nanmin(array)
+        with np.errstate(invalid="ignore"):
+            if array.dtype not in [int,np.int,np.int32,np.int64]:
+                if u2d.model.bas6 is not None and \
+                                "ibound" not in u2d.name.lower():
+                    array[u2d.model.bas6.ibound.array[0, :, :] == 0] = np.NaN
+                elif u2d.model.btn is not None and \
+                                "icbund" not in u2d.name.lower():
+                    array[u2d.model.btn.icbund.array[0, :, :] == 0] = np.NaN
+                array[array <= min_valid] = np.NaN
+                array[array >= max_valid] = np.NaN
+                mx, mn = np.nanmax(array), np.nanmin(array)
+            else:
+                mx, mn = np.nanmax(array), np.nanmin(array)
+                array[array <= min_valid] = f.fillvalue
+                array[array >= max_valid] = f.fillvalue
+                if u2d.model.bas6 is not None and \
+                                "ibound" not in u2d.name.lower():
+                    array[u2d.model.bas6.ibound.array[0, :, :] == 0] = \
+                        f.fillvalue
+                elif u2d.model.btn is not None and \
+                                "icbund" not in u2d.name.lower():
+                    array[u2d.model.btn.icbund.array[0, :, :] == 0] = \
+                        f.fillvalue
 
-        if u2d.model.bas6 is not None and "ibound" not in u2d.name.lower():
-            array[u2d.model.bas6.ibound.array[0, :, :] == 0] = f.fillvalue
-        elif u2d.model.btn is not None and "icbund" not in u2d.name.lower():
-            array[u2d.model.btn.icbund.array[0, :, :] == 0] = f.fillvalue
-
-        array[array <= min_valid] = f.fillvalue
-        array[array >= max_valid] = f.fillvalue
-
+        array[np.isnan(array)] = f.fillvalue
         units = "unitless"
         var_name = u2d.name
         if var_name in NC_UNITS_FORMAT:
@@ -564,6 +650,7 @@ def util2d_helper(f, u2d, **kwargs):
         attribs["units"] = units
         attribs["min"] = mn
         attribs["max"] = mx
+
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("y", "x"))
