@@ -11,8 +11,8 @@ def export_netcdf(namfile):
         return
     print(namfile)
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
-    if m.dis.lenuni == 0:
-        m.dis.lenuni = 1
+    if m.sr.lenuni == 0:
+        m.sr.lenuni = 1
         #print('skipping...lenuni==0 (undefined)')
         #return
     #if sum(m.dis.laycbd) != 0:
@@ -201,7 +201,8 @@ def test_netcdf():
     return
 
 if __name__ == '__main__':
-    test_sr()
+    test_netcdf()
+    #test_sr()
     #test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:

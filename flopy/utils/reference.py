@@ -102,7 +102,6 @@ class SpatialReference(object):
                 crs = pyproj.Proj(self.proj4_str,
                                   preseve_units=True,
                                   errcheck=True)
-                print(crs)
                 if "units=m" in crs.srs:
                     units = "meters"
                 if "units=ft" in crs.srs or \
