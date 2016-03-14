@@ -886,7 +886,10 @@ def run_model(exe_name, namefile, model_ws='./',
     normal_msg : str
         Normal termination message used to determine if the
         run terminated normally. (default is 'normal termination')
-
+    async : boolean
+        asynchonously read model stdout and report with timestamps.  good for
+        models that take long time to run.  not good for models that run
+        really fast
     Returns
     -------
     (success, buff)
@@ -940,6 +943,8 @@ def run_model(exe_name, namefile, model_ws='./',
                     print('{}'.format(c))
                 if report == True:
                     buff.append(c)
+            else:
+                break
         return success, buff
 
 
