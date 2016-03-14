@@ -9,6 +9,12 @@ from __future__ import print_function
 import sys
 import os
 import subprocess as sp
+import threading
+if sys.version_info > (3,0):
+    import queue as Queue
+else:
+    import Queue
+from datetime import datetime
 import copy
 import numpy as np
 from flopy import utils
@@ -852,9 +858,12 @@ class BaseModel(object):
 
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
-              normal_msg='normal termination'):
+              normal_msg='normal termination',
+              buff_len=1):
     """
-    This function will run the model using subprocess.Popen.
+    This function will run the model using subprocess.Popen.  It
+    communicates with the model's stdout asynchronously and reports
+    progress to the screen with timestamps
 
     Parameters
     ----------
@@ -909,21 +918,56 @@ def run_model(exe_name, namefile, model_ws='./',
         s = 'The namefile for this model does not exists: {}'.format(namefile)
         raise Exception(s)
 
+    # simple little function for the thread to target
+    def q_output(output,q):
+            for line in iter(output.readline,b''):
+                q.put(line)
+            output.close()
+
     proc = sp.Popen([exe_name, namefile],
                     stdout=sp.PIPE, cwd=model_ws)
+
+    #some tricks for the asyn stdout reading
+    q = Queue.Queue()
+    thread = threading.Thread(target=q_output,args=(proc.stdout,q))
+    thread.daemon = True
+    thread.start()
+
+    failed_words = ["fail","error"]
+    rbuff = []
+    last = datetime.now()
     while True:
-        line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            if normal_msg in c.lower():
-                success = True
-            c = c.rstrip('\r\n')
-            if not silent:
-                print('{}'.format(c))
-            if report == True:
-                buff.append(c)
+        try:
+            line = q.get_nowait()
+        except Queue.Empty:
+            pass
         else:
+            if line == '':
+                break
+            line = line.decode().lower().strip()
+            if line != '':
+                now = datetime.now()
+                dt = now - last
+                rbuff.append("{0}(dt:{1})-->{2}".format(now,dt,line))
+                if len(rbuff) >= buff_len:
+                    if report:
+                        buff.extend(rbuff)
+                    else:
+                        print(*rbuff)
+                    rbuff = []
+                if normal_msg in line:
+                    success = True
+                    break
+                else:
+                    for fword in failed_words:
+                        if fword in line:
+                            success = False
+                            break
+        if proc.poll() is not None:
             break
+    proc.wait()
+    thread.join(timeout=1)
+
     if pause:
         input('Press Enter to continue...')
     return success, buff

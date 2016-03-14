@@ -647,8 +647,8 @@ class NetCdf(object):
         self.var_attr_dict[name] = attributes
 
         var = self.nc.createVariable(name, precision_str, dimensions,
-                                     fill_value=self.fillvalue, zlib=True,
-                                     chunksizes=tuple(chunks))
+                                     fill_value=self.fillvalue, zlib=True)#,
+                                     #chunksizes=tuple(chunks))
 
         for k, v in attributes.items():
             try:
