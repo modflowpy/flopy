@@ -369,7 +369,7 @@ class ArrayFormat(object):
         else:
             raw = [fd]
             decimal = None
-        fmts = ['I', 'G', 'E', 'F']
+        fmts = ['I', 'G', 'E', 'F', 'ES', 'EN']
         raw = raw[0].upper()
         for fmt in fmts:
             if fmt in raw:
@@ -383,6 +383,10 @@ class ArrayFormat(object):
                     npl = 1
                     width = int(raw[1])
                 if fmt == 'G':
+                    fmt = 'E'
+                elif fmt == 'ES':
+                    fmt = 'E'
+                elif fmt == 'EN':
                     fmt = 'E'
                 return npl, fmt, width, decimal
         raise Exception('Unrecognized format type: ' +
