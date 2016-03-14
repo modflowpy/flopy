@@ -9,6 +9,7 @@ from __future__ import print_function
 import sys
 import os
 import subprocess as sp
+import time
 import threading
 if sys.version_info > (3,0):
     import queue as Queue
@@ -859,7 +860,7 @@ class BaseModel(object):
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
               normal_msg='normal termination',
-              buff_len=1):
+              async=False):
     """
     This function will run the model using subprocess.Popen.  It
     communicates with the model's stdout asynchronously and reports
@@ -900,7 +901,6 @@ def run_model(exe_name, namefile, model_ws='./',
     exe = which(exe_name)
     if exe is None:
         import platform
-
         if platform.system() in 'Windows':
             if not exe_name.lower().endswith('.exe'):
                 exe = which(exe_name + '.exe')
@@ -922,19 +922,34 @@ def run_model(exe_name, namefile, model_ws='./',
     def q_output(output,q):
             for line in iter(output.readline,b''):
                 q.put(line)
-            output.close()
+            #time.sleep(1)
+            #output.close()
 
     proc = sp.Popen([exe_name, namefile],
                     stdout=sp.PIPE, cwd=model_ws)
 
-    #some tricks for the asyn stdout reading
+    if not async:
+        while True:
+            line = proc.stdout.readline()
+            c = line.decode('utf-8')
+            if c != '':
+                if normal_msg in c.lower():
+                    success = True
+                c = c.rstrip('\r\n')
+                if not silent:
+                    print('{}'.format(c))
+                if report == True:
+                    buff.append(c)
+        return success, buff
+
+
+    #some tricks for the async stdout reading
     q = Queue.Queue()
     thread = threading.Thread(target=q_output,args=(proc.stdout,q))
     thread.daemon = True
     thread.start()
 
     failed_words = ["fail","error"]
-    rbuff = []
     last = datetime.now()
     while True:
         try:
@@ -948,25 +963,26 @@ def run_model(exe_name, namefile, model_ws='./',
             if line != '':
                 now = datetime.now()
                 dt = now - last
-                rbuff.append("{0}(dt:{1})-->{2}".format(now,dt,line))
-                if len(rbuff) >= buff_len:
-                    if report:
-                        buff.extend(rbuff)
-                    else:
-                        print(*rbuff)
-                    rbuff = []
-                if normal_msg in line:
-                    success = True
-                    break
-                else:
-                    for fword in failed_words:
-                        if fword in line:
-                            success = False
-                            break
+                line = "{0}(dt:{1})-->{2}".format(now,dt,line)
+                buff.append(line)
+                if not silent:
+                    print(line)
+                for fword in failed_words:
+                    if fword in line:
+                        success = False
+                        break
         if proc.poll() is not None:
             break
     proc.wait()
     thread.join(timeout=1)
+    buff.extend(proc.stdout.readlines())
+    proc.stdout.close()
+
+    for line in buff:
+        if normal_msg in line:
+            print("success")
+            success = True
+            break
 
     if pause:
         input('Press Enter to continue...')
