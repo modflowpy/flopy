@@ -108,7 +108,8 @@ class SpatialReference(object):
                    "to_meters:0.3048" in crs.srs:
                     units = "feet"
             except:
-                pass
+                units = None
+                
         if units is None:
             print("warning: assuming SpatialReference units are meters")
             units = 'meters'

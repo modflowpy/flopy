@@ -936,6 +936,7 @@ def run_model(exe_name, namefile, model_ws='./',
     failed_words = ["fail","error"]
     rbuff = []
     last = datetime.now()
+    lastsec = 0.
     while True:
         try:
             line = q.get_nowait()
@@ -947,8 +948,11 @@ def run_model(exe_name, namefile, model_ws='./',
             line = line.decode().lower().strip()
             if line != '':
                 now = datetime.now()
-                dt = now - last
-                rbuff.append("{0}(dt:{1})-->{2}".format(now,dt,line))
+                tdelta = now - last 
+                tsecs = tdelta.total_seconds() - lastsec
+
+                rbuff.append("(elapsed:{0})-->{1}".format(tsecs,line))
+                lastsec = tsecs + lastsec
                 if len(rbuff) >= buff_len:
                     if report:
                         buff.extend(rbuff)
