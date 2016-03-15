@@ -3,11 +3,12 @@
 LIST           2 freyberg.list
 DIS           11 freyberg.dis 
 BAS6          13 freyberg.bas 
+LPF           15 freyberg.lpf 
+WEL           20 freyberg.wel 
+RIV           18 freyberg.riv 
+RCH           19 freyberg.rch 
+PCG           27 freyberg.pcg 
 OC            14 freyberg.oc 
 DATA(BINARY)  51 freyberg.hds REPLACE
 DATA(BINARY)  52 freyberg.ddn REPLACE
 DATA(BINARY)  53 freyberg.cbc REPLACE
-LPF           15 freyberg.lpf 
-RIV           18 freyberg.riv 
-RCH           19 freyberg.rch 
-PCG           27 freyberg.pcg 
