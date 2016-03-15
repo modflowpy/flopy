@@ -956,6 +956,7 @@ def run_model(exe_name, namefile, model_ws='./',
 
     failed_words = ["fail","error"]
     last = datetime.now()
+    lastsec = 0.
     while True:
         try:
             line = q.get_nowait()
@@ -968,7 +969,9 @@ def run_model(exe_name, namefile, model_ws='./',
             if line != '':
                 now = datetime.now()
                 dt = now - last
-                line = "{0}(dt:{1})-->{2}".format(now,dt,line)
+                tsecs = dt.total_seconds() - lastsec
+                line = "(elapsed:{0})-->{1}".format(tsecs,line)
+                lastsec = tsecs + lastsec
                 buff.append(line)
                 if not silent:
                     print(line)
