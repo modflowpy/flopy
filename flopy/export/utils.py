@@ -354,11 +354,13 @@ def mflist_helper(f, mfl, **kwargs):
 
     elif isinstance(f, NetCdf):
         base_name = mfl.package.name[0].lower()
-        f.log("getting 4D masked arrays for {0}".format(base_name))
-        m4d = mfl.masked_4D_arrays
-        f.log("getting 4D masked arrays for {0}".format(base_name))
+        #f.log("getting 4D masked arrays for {0}".format(base_name))
+        #m4d = mfl.masked_4D_arrays
+        #f.log("getting 4D masked arrays for {0}".format(base_name))
 
-        for name, array in m4d.items():
+        #for name, array in m4d.items():
+        for name, array in mfl.masked_4D_arrays_itr():
+            f.log("processing {0} attribute".format(name))
             var_name = base_name + '_' + name
             units = None
             if var_name in NC_UNITS_FORMAT:
@@ -388,6 +390,7 @@ def mflist_helper(f, mfl, **kwargs):
                 estr = "error setting array to variable {0}:\n{1}".format(var_name, str(e))
                 f.logger.warn(estr)
                 raise Exception(estr)
+            f.log("processing {0} attribute".format(name))
 
         return f
     else:

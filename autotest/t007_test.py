@@ -4,7 +4,8 @@ import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
-skip = ["MNW2-Fig28.nam","testsfr2.nam","testsfr2_tab.nam"]
+#skip = ["MNW2-Fig28.nam","testsfr2.nam","testsfr2_tab.nam"]
+skip = []
 
 def export_netcdf(namfile):
     if namfile in skip:
