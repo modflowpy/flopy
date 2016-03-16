@@ -1,8 +1,14 @@
 from __future__ import print_function
+import os
 from collections import OrderedDict
-from ..pakbase import Package
-from ..utils.binaryfile import CellBudgetFile
-from ..utils import Util2d, Util3d
+from itertools import groupby
+import flopy
+from flopy.pakbase import Package
+from flopy.utils.binaryfile import CellBudgetFile
+from flopy.utils import Util3d
+# from ..pakbase import Package
+# from ..utils.binaryfile import CellBudgetFile
+# from ..utils import Util2d, Util3d
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -58,6 +64,13 @@ class ZoneBudget(Package):
         # GET DATA FOR ALL RECORDS
         # self.cbc_data = cbc.get_data(idx=range(len(self.record_names)), kstpkper=kstpkper, full3D=True)
         start_read_cbc = datetime.now()
+
+
+        # Lets interrogate the budget file in a more systematic way. Read each non-internal flow record individually.
+        # Then lets read each internal flow record individually, starting with Constant Head so that we can be sure
+        # that theses cells have been identified when we need to aggregate them with the face flows.
+
+
         self.ssst_data = OrderedDict([(r, cbc.get_data(text=r, kstpkper=kstpkper, full3D=True)[0])
                                       for idx, r in enumerate(self.record_names)
                                       if r.strip() not in self.internal_flow_terms])
@@ -65,6 +78,8 @@ class ZoneBudget(Package):
                                                for idx, r in enumerate(self.record_names)
                                                if r.strip() in self.internal_flow_terms])
         end_read_cbc = datetime.now()
+        cbctime = end_read_cbc-start_read_cbc
+        print('Time to read cbc file', cbctime)
 
         # OPEN THE ZONE FILE (OR ARRAY) AND FIND THE UNIQUE SET OF ZONES CONTAINED THEREIN
         start_read_izone = datetime.now()
@@ -75,11 +90,17 @@ class ZoneBudget(Package):
         end_read_izone = datetime.now()
         print('Time to read izone', end_read_izone-start_read_izone)
 
+        # Define dtype for the recarray
+        self.dtype = np.dtype([('flow_dir', '|S3'), ('record', '|S20')] +
+                               [('ZONE{: >4d}'.format(z), np.float32) for z in self.zones])
+
         # Accumulte source/sink/storage terms by zone
         start_ssst_inflows = datetime.now()
         self.ssst_inflows, self.ssst_outflows = self._get_source_sink_storage_terms()
         end_ssst_inflows = datetime.now()
         print('Time to read ssst items', end_ssst_inflows-start_ssst_inflows)
+
+
 
         # PROCESS EACH INTERNAL FLOW RECORD IN THE CELL-BY-CELL BUDGET FILE
         for recname, bud in self.internal_flow_data.iteritems():
@@ -88,310 +109,243 @@ class ZoneBudget(Package):
             #  CONSTANT-HEAD CELLS
             # ----not yet tested----#
             if recname.strip() == 'CONSTANT HEAD':
-                pass
+                self.ich_lrc = bud[bud != 0]
 
             elif recname.strip() == 'FLOW RIGHT FACE':
                 start_frf = datetime.now()
-                frf_inflows, frf_outflows = self._get_internal_flow_terms_frf(bud)
+                frf = self._get_internal_flow_terms_frf(bud)
                 end_frf = datetime.now()
                 print('Time to compute frf', end_frf-start_frf)
 
             elif recname.strip() == 'FLOW FRONT FACE':
                 start_fff = datetime.now()
-                fff_inflows, fff_outflows = self._get_internal_flow_terms_fff(bud)
+                fff = self._get_internal_flow_terms_fff(bud)
                 end_fff = datetime.now()
                 print('Time to compute fff', end_fff-start_fff)
 
             elif recname.strip() == 'FLOW LOWER FACE':
                 start_flf = datetime.now()
-                flf_inflows, flf_outflows = self._get_internal_flow_terms_flf(bud)
+                flf = self._get_internal_flow_terms_flf(bud)
                 end_flf = datetime.now()
                 print('Time to compute flf', end_flf-start_flf)
 
             else:
                 print('Budget item', recname, 'not recognized.')
-                break
+                # break
 
-        self.internal_inflows = frf_inflows + fff_inflows + flf_inflows
-        self.internal_outflows = frf_outflows + fff_outflows + flf_outflows
-        print(frf_inflows)
-        print(frf_outflows)
-
-
+        q_tups = sorted(frf + fff + flf)
+        for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
+            q = np.array([i[-1] for i in list(gp)])
+            # print(f2z, np.sum(q))
 
         totim = datetime.now()-start
-        cbctime = end_read_cbc-start_read_cbc
         print('Total time elapsed', totim)
-        print('Time to read cbc file', cbctime)
 
     def _get_source_sink_storage_terms(self):
 
         # IF RECORD IS NOT AN INTERNAL FLOW TERM, ACCUMULATE FLOW BY ZONE.
         inflows = []
         outflows = []
-        for z in self.zones:
-            index = []
-            totals_in = []
-            totals_out = []
-
-            for recname, bud in self.ssst_data.iteritems():
-                index.append(recname.strip())
-                totals_in.append(bud[(bud >= 0.) & (self.izone == z)].sum())
-                totals_out.append(bud[(bud < 0.) & (self.izone == z)].sum())
-
-            zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-            zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-            inflows.append(zone_inflows)
-            outflows.append(zone_outflows*-1)
-
-        inflows = pd.concat(inflows, axis=1)
-        outflows = pd.concat(outflows, axis=1)
-        return inflows, outflows
+        for recname, bud in self.ssst_data.iteritems():
+            rec_inflow = ['in', recname.strip()] + [bud[(bud >= 0.) & (self.izone == z)].sum() for z in self.zones]
+            rec_outflow = ['out', recname.strip()] + [bud[(bud < 0.) & (self.izone == z)].sum() for z in self.zones]
+            # for z in self.zones:
+            #     rec_inflow.append(bud[(bud >= 0.) & (self.izone == z)].sum())
+            #     rec_outflow.append(bud[(bud < 0.) & (self.izone == z)].sum())
+            # rec_inflow = ['in', recname.strip()] + [bud[(bud >= 0.) & (self.izone == z)].sum() for z in self.zones]
+            inflows.append(tuple(rec_inflow))
+            outflows.append(tuple(rec_outflow))
+        ssst_inflows = np.array(inflows, dtype=self.dtype)
+        ssst_outflows = np.array(outflows, dtype=self.dtype)
+        #     zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
+        #     zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
+        #     inflows.append(zone_inflows)
+        #     outflows.append(zone_outflows*-1)
+        #
+        # inflows = pd.concat(inflows, axis=1)
+        # outflows = pd.concat(outflows, axis=1)
+        return ssst_inflows, ssst_outflows
 
     def _get_internal_flow_terms_frf(self, bud):
 
         assert self.ncol >= 2, 'Must have more than 2 columns to accumulate FLOW RIGHT FACE record'
-        inflows = []
-        outflows = []
-
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS COLUMNS. COMPUTE FLOW ONLY BETWEEN A ZONE
         # AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
         # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K.
-        # Look for zone transition boundaries where zone number increases to the "right".
+        # Accumulate flow from lower zones to higher zones from "left" to "right".
         # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
         nz = self.izone[:, :, 1:]
         nzl = self.izone[:, :, :-1]
         l, r, c = np.where(nz > nzl)
-        # Adjust column values by +1 to account for the starting position of "nz"
+
+        # Adjust column values to account for the starting position of "nz"
         c += 1
 
-        # Define cells where we will accumulate flow
-        nzgt = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        nzgt[l, r, c] = 1
-
         # Define the zone from which flow is coming
-        from_zones = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        from_zones[l, r, c] = self.izone[l, r, c-1]
+        from_zones = self.izone[l, r, c-1]
 
         # Define the zone to which flow is going
-        to_zones = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        to_zones[l, r, c] = self.izone[l, r, c]
+        to_zones = self.izone[l, r, c]
 
-        x = zip(from_zones[nzgt==1], to_zones[nzgt==1], bud[nzgt==1])
-        print(zip(np.where(nzgt==1))[:5])
-        print(x[:5])
+        # Get the face flow
+        q = bud[l, r, c-1]
 
+        # Get indices where flow face values are negative (flow into higher zone)
+        idx_neg = np.where(q < 0)
 
-        ##################
+        # Get indices where flow face values are positive (flow out of higher zone)
+        idx_pos = np.where(q >= 0)
 
-        # for z in self.zones:
-        #     zone_bud = np.zeros_like(bud)
-        #     zone_bud[(nzgt == 1) & (self.izone == z)] = bud[(nzgt == 1) & (self.izone == z)]
-        #     index_from = []
-        #     index_to = []
-        #     totals_in = []
-        #     # totals_out = []
-        #     for zi in self.zones:
-        #         index_from.append('From Zone {:3d}'.format(zi))
-        #         totals_in.append(zone_bud[(from_zones == zi) & (zone_bud < 0)].sum())
-        #         # totals_out.append(zone_bud[(from_zones == zi) & (zone_bud < 0)].sum())
-        #
-        #     zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-        #     # zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-        #     inflows.append(zone_inflows)
-        #     # outflows.append(zone_outflows*-1)
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        nzgt_l2r = neg + pos
 
-        ###################
-
-        # FLOW BETWEEN NODE J,I,K AND J+1,I,K.
+        # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
+        # Accumulate flow from lower zones to higher zones from "right" to "left".
+        # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
         nz = self.izone[:, :, :-1]
         nzr = self.izone[:, :, 1:]
         l, r, c = np.where(nz > nzr)
-        # # Adjust column values by -1 to account for the starting position of "nz"
-        # c -= 1
+
+        # Define the zone from which flow is coming
+        from_zones = self.izone[l, r, c]
 
         # Define the zone to which flow is going
-        from_zones = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        from_zones[l, r, c] = self.izone[l, r, c+1]
+        to_zones = self.izone[l, r, c+1]
 
-        # Define cells where we will accumulate flow
-        nzlt = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        nzlt[l, r, c] = 1
+        # Get the face flow
+        q = bud[l, r, c]
 
-        for z in self.zones:
-            zone_bud = np.zeros_like(bud)
-            zone_bud[(nzlt == 1) & (self.izone == z)] = bud[(nzlt == 1) & (self.izone == z)]
-            index = []
-            totals_in = []
-            # totals_out = []
-            for zi in self.zones:
-                index.append('To Zone {:3d}'.format(zi))
-                totals_in.append(zone_bud[(from_zones == zi) & (zone_bud >= 0)].sum())
-                # totals_out.append(zone_bud[(from_zones == zi) & (zone_bud < 0)].sum())
+        # Get indices where flow face values are negative (flow into higher zone)
+        idx_neg = np.where(q < 0)
 
-            zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-            # zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-            inflows.append(zone_inflows)
-            # outflows.append(zone_outflows*-1)
+        # Get indices where flow face values are positive (flow out of higher zone)
+        idx_pos = np.where(q >= 0)
 
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION.
-        # ----not yet implemented----#
-
-        inflows = pd.concat(inflows, axis=1)
-        outflows = pd.concat(outflows, axis=1)
-        return inflows, outflows
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        nzgt_r2l = neg + pos
+        nzgt = sorted(nzgt_l2r + nzgt_r2l, key=lambda tup: tup[:2])
+        return nzgt
 
     def _get_internal_flow_terms_fff(self, bud):
 
         assert self.nrow >= 2, 'Must have more than 2 rows to accumulate FLOW FRONT FACE record'
-        inflows = []
-        outflows = []
-
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS ROWS. COMPUTE FLOW ONLY BETWEEN A ZONE
         #  AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
         # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K.
+        # Accumulate flow from lower zones to higher zones from "up" to "down".
         nz = self.izone[:, 1:, :]
-        nzl = self.izone[:, :-1, :]
-        l, r, c = np.where(nz > nzl)
+        nzu = self.izone[:, :-1, :]
+        l, r, c = np.where(nz < nzu)
         # Adjust column values by +1 to account for the starting position of "nz"
         r += 1
 
+        # Define the zone from which flow is coming
+        from_zones = self.izone[l, r-1, c]
+
         # Define the zone to which flow is going
-        to_zones = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        to_zones[l, r, c] = self.izone[l, r, c-1]
+        to_zones = self.izone[l, r, c]
 
-        # Define cells where we will accumulate flow
-        nzgt = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        nzgt[l, r, c] = 1
+        # Get the face flow
+        q = bud[l, r-1, c]
 
-        for z in self.zones:
-            zone_bud = np.zeros_like(bud)
-            zone_bud[(nzgt == 1) & (self.izone == z)] = bud[(nzgt == 1) & (self.izone == z)]
-            index = []
-            # totals_in = []
-            totals_out = []
-            for zi in self.zones:
-                index.append('To Zone {:3d}'.format(zi))
-                # totals_in.append(zone_bud[(to_zones == zi) & (zone_bud >= 0)].sum())
-                totals_out.append(zone_bud[(to_zones == zi) & (zone_bud < 0)].sum())
+        # Get indices where flow face values are negative (flow into higher zone)
+        idx_neg = np.where(q < 0)
 
-            # zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-            zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-            # inflows.append(zone_inflows)
-            outflows.append(zone_outflows*-1)
-        #
-        # FLOW BETWEEN NODE J,I,K AND J,I+1,K.
+        # Get indices where flow face values are positive (flow out of higher zone)
+        idx_pos = np.where(q >= 0)
+
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        nzgt_u2d = neg + pos
+
+        # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
+        # Accumulate flow from lower zones to higher zones from "down" to "up".
         nz = self.izone[:, :-1, :]
-        nzr = self.izone[:, 1:, :]
-        l, r, c = np.where(nz < nzr)
-        r -= 1  # Adjust column values by -1 to account for the starting position of "nz"
+        nzd = self.izone[:, 1:, :]
+        l, r, c = np.where(nz < nzd)
 
         # Define the zone from which flow is coming
-        from_zones = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        from_zones[l, r, c] = self.izone[l, r, c-1]
+        from_zones = self.izone[l, r, c]
 
-        # Define cells where we will accumulate flow
-        nzlt = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        nzlt[l, r, c] = 1
+        # Define the zone to which flow is going
+        to_zones = self.izone[l, r+1, c]
 
-        for z in self.zones:
-            zone_bud = np.zeros_like(bud)
-            zone_bud[(nzlt == 1) & (self.izone == z)] = bud[(nzlt == 1) & (self.izone == z)]
-            index = []
-            totals_in = []
-            # totals_out = []
-            for zi in self.zones:
-                index.append('From Zone {:3d}'.format(zi))
-                totals_in.append(zone_bud[(from_zones == zi) & (zone_bud >= 0)].sum())
-                # totals_out.append(zone_bud[(from_zones == zi) & (zone_bud < 0)].sum())
+        # Get the face flow
+        q = bud[l, r, c]
 
-            zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-            # zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-            inflows.append(zone_inflows)
-            # outflows.append(zone_outflows*-1)
+        # Get indices where flow face values are negative (flow into higher zone)
+        idx_neg = np.where(q < 0)
 
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION.
-        # ----not yet tested----#
+        # Get indices where flow face values are positive (flow out of higher zone)
+        idx_pos = np.where(q >= 0)
 
-        inflows = pd.concat(inflows, axis=1)
-        outflows = pd.concat(outflows, axis=1)
-        return inflows, outflows
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        nzgt_d2u = neg + pos
+        nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
+        return nzgt
 
     def _get_internal_flow_terms_flf(self, bud):
 
         assert self.nlay >= 2, 'Must have more than 2 layers to accumulate FLOW LOWER FACE record'
-        inflows = []
-        outflows = []
-
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS LAYERS. COMPUTE FLOW ONLY BETWEEN A ZONE
         #  AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
         # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1.
+        # Accumulate flow from lower zones to higher zones from "top" to "bottom".
         nz = self.izone[1:, :, :]
-        nzl = self.izone[-1:, :, :]
-        l, r, c = np.where(nz > nzl)
+        nzt = self.izone[:-1, :, :]
+        l, r, c = np.where(nz > nzt)
         # Adjust column values by +1 to account for the starting position of "nz"
         l += 1
 
+        # Define the zone from which flow is coming
+        from_zones = self.izone[l-1, r, c]
+
         # Define the zone to which flow is going
-        to_zones = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        to_zones[l, r, c] = self.izone[l, r, c-1]
+        to_zones = self.izone[l, r, c]
 
-        # Define cells where we will accumulate flow
-        nzgt = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        nzgt[l, r, c] = 1
+        # Get the face flow
+        q = bud[l-1, r, c]
 
-        for z in self.zones:
-            zone_bud = np.zeros_like(bud)
-            zone_bud[(nzgt == 1) & (self.izone == z)] = bud[(nzgt == 1) & (self.izone == z)]
-            index = []
-            # totals_in = []
-            totals_out = []
-            for zi in self.zones:
-                index.append('To Zone {:3d}'.format(zi))
-                # totals_in.append(zone_bud[(to_zones == zi) & (zone_bud >= 0)].sum())
-                totals_out.append(zone_bud[(to_zones == zi) & (zone_bud < 0)].sum())
+        # Get indices where flow face values are negative (flow into higher zone)
+        idx_neg = np.where(q < 0)
 
-            # zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-            zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-            # inflows.append(zone_inflows)
-            outflows.append(zone_outflows*-1)
+        # Get indices where flow face values are positive (flow out of higher zone)
+        idx_pos = np.where(q >= 0)
 
-        # FLOW BETWEEN NODE J,I,K AND J,I+1,K.
-        nz = self.izone[-1:, :, :]
-        nzr = self.izone[1:, :, :]
-        l, r, c = np.where(nz < nzr)
-        r -= 1  # Adjust column values by -1 to account for the starting position of "nz"
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        nzgt_t2b = neg + pos
+
+        # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
+        # Accumulate flow from lower zones to higher zones from "right" to "left".
+        # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
+        nz = self.izone[:-1, :, :]
+        nzb = self.izone[1:, :, :]
+        l, r, c = np.where(nz < nzb)
 
         # Define the zone from which flow is coming
-        from_zones = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        from_zones[l, r, c] = self.izone[l, r, c-1]
+        from_zones = self.izone[l, r, c]
 
-        # Define cells where we will accumulate flow
-        nzlt = np.zeros((self.nlay, self.nrow, self.ncol), np.int32)
-        nzlt[l, r, c] = 1
+        # Define the zone to which flow is going
+        to_zones = self.izone[l+1, r, c]
 
-        for z in self.zones:
-            zone_bud = np.zeros_like(bud)
-            zone_bud[(nzlt == 1) & (self.izone == z)] = bud[(nzlt == 1) & (self.izone == z)]
-            index = []
-            totals_in = []
-            # totals_out = []
-            for zi in self.zones:
-                index.append('From Zone {:3d}'.format(zi))
-                totals_in.append(zone_bud[(from_zones == zi) & (zone_bud >= 0)].sum())
-                # totals_out.append(zone_bud[(from_zones == zi) & (zone_bud < 0)].sum())
+        # Get the face flow
+        q = bud[l, r, c]
 
-            zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-            # zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-            inflows.append(zone_inflows)
-            # outflows.append(zone_outflows*-1)
+        # Get indices where flow face values are negative (flow into higher zone)
+        idx_neg = np.where(q < 0)
 
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION.
-        # ----not yet tested----#
+        # Get indices where flow face values are positive (flow out of higher zone)
+        idx_pos = np.where(q >= 0)
 
-        inflows = pd.concat(inflows, axis=1)
-        outflows = pd.concat(outflows, axis=1)
-        return inflows, outflows
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        nzgt_b2t = neg + pos
+        nzgt = sorted(nzgt_t2b + nzgt_b2t, key=lambda tup: tup[:2])
+        return nzgt
 
     @staticmethod
     def _find_unique_zones(a, ignore_value=None):
@@ -427,3 +381,15 @@ class ZoneBudget(Package):
     #             flows[rec][z] = buds[z][buds[z] < 0.]
     #     return flows
 
+if __name__ == '__main__':
+    loadpth = r'testing\model'
+    # ml = flopy.modflow.Modflow.load('fas.nam', model_ws=loadpth, check=False)
+    ml = flopy.modflow.Modflow('zonebudtest.nam', model_ws=loadpth)
+    dis = flopy.modflow.ModflowDis.load(os.path.join(loadpth, 'fas.dis'), ml, check=False)
+    zon = np.loadtxt(os.path.join('testing', 'GWBasins.zon'))
+    zb = ZoneBudget(ml, os.path.join(loadpth, 'fas.cbc'), zon, swi=True)
+    # zb.list_internal_flow_records()
+    # outflows = zb.get_outflows()
+    # for rec, buds in outflows.iteritems():
+    #     for z, outflow in buds.iteritems():
+    #         print(rec, 'Zone', z, 'OUT', outflow.sum())
