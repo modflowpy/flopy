@@ -2,44 +2,22 @@ from __future__ import print_function
 import os
 from collections import OrderedDict
 from itertools import groupby
-import flopy
-from flopy.pakbase import Package
-from flopy.utils.binaryfile import CellBudgetFile
-from flopy.utils import Util3d
-# from ..pakbase import Package
-# from ..utils.binaryfile import CellBudgetFile
-# from ..utils import Util2d, Util3d
 import numpy as np
-import pandas as pd
-from datetime import datetime
-# from matplotlib import pyplot as plt
+from ..utils.binaryfile import CellBudgetFile
 
 
-class ZoneBudget(Package):
+class ZoneBudget(object):
     """
     ZoneBudget package class
 
     Example usage:
 
-    import flopy
-    from flopy.zonebud import ZoneBudget
-
-    ml = flopy.modflow.Modflow('zonebudtest.nam')
-    dis = flopy.modflow.ModflowDis.load('zonebudtest.dis'), ml, check=False)
-    zb = ZoneBudget(ml, 'zonebudtest.cbc', 'GWBasins.zon', swi=True)
+    >>>import flopy
+    >>>from flopy.zonebud import ZoneBudget
+    >>>zb = ZoneBudget('zonebudtest.cbc', 'GWBasins.zon')
+    >>>zbud = zb.get_bud()
     """
-    def __init__(self, model, cbc_file, z, out_file='zonebudtest.txt',
-                 zone_to_ignore=None, kstpkper=(0, 0), swi=False, extension='zb', unitnumber=15):
-
-        """
-        Package constructor.
-
-        """
-        start = datetime.now()
-        Package.__init__(self, model, extension, 'ZB',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
-        self.nrow, self.ncol, self.nlay, self.nper = self.parent.nrow_ncol_nlay_nper
-        self.unit_number = unitnumber
+    def __init__(self, cbc_file, zon, kstpkper=(0, 0), out_file='zonebudtest.txt'):
 
         # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
         # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
@@ -48,125 +26,139 @@ class ZoneBudget(Package):
         self.internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
                                     'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
 
-        # OPEN THE CELL-BY-CELL BUDGET BINARY FILE
-        start_open_cbc = datetime.now()
-        cbc = CellBudgetFile(cbc_file)
-        end_open_cbc = datetime.now()
-        print('Time to open cbc file', end_open_cbc-start_open_cbc)
+        # OPEN THE ZONE FILE (OR ARRAY) AND FIND THE UNIQUE SET OF ZONES CONTAINED THEREIN
+        if isinstance(zon, str):
+            if os.path.isfile(zon):
+                try:
+                    self.izone = np.loadtxt(zon)
+                except Exception as e:
+                    print(e)
+        else:
+            self.izone = zon
+        self.zones = self._find_unique_zones(self.izone.ravel())
 
-        # for rec in cbc.recordarray:
-        #     kstp, kper, text, ncol, nrow, nlay, imeth, delt, pertim, totim = rec
-            # print(kstp, text)
+        # Define dtype for the recarray
+        self.dtype = np.dtype([('flow_dir', '|S3'), ('record', '|S20')] +
+                               [('ZONE{: >4d}'.format(z), np.float32) for z in self.zones])
+
+        # OPEN THE CELL-BY-CELL BUDGET BINARY FILE
+        cbc = CellBudgetFile(cbc_file)
 
         # GET A LISTING OF THE UNIQUE RECORDS CONTAINED IN THE BUDGET FILE
         self.record_names = cbc.unique_record_names()
 
-        # GET DATA FOR ALL RECORDS
-        # self.cbc_data = cbc.get_data(idx=range(len(self.record_names)), kstpkper=kstpkper, full3D=True)
-        start_read_cbc = datetime.now()
+        # Get dimensions of budget file arrays
+        self.nlay, self.nrow, self.ncol = cbc.get_data(idx=0, kstpkper=kstpkper, full3D=True)[0].shape
+        assert self.izone.shape == (self.nlay, self.nrow, self.ncol), \
+            'Shape of input zone array {} does not' \
+            ' match the cell by cell' \
+            'budget file {}'.format(self.izone.shape, (self.nlay, self.nrow, self.ncol))
 
 
         # Lets interrogate the budget file in a more systematic way. Read each non-internal flow record individually.
         # Then lets read each internal flow record individually, starting with Constant Head so that we can be sure
         # that theses cells have been identified when we need to aggregate them with the face flows.
 
+        # Accumulate source/sink/storage terms by zone
+        inflows = []
+        outflows = []
+        ssst_records = [rec for rec in self.record_names if rec.strip() not in self.internal_flow_terms]
+        for recname in ssst_records:
+            bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+            in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, bud)
+            inflows.append(in_tup)
+            outflows.append(out_tup)
 
-        self.ssst_data = OrderedDict([(r, cbc.get_data(text=r, kstpkper=kstpkper, full3D=True)[0])
-                                      for idx, r in enumerate(self.record_names)
-                                      if r.strip() not in self.internal_flow_terms])
-        self.internal_flow_data = OrderedDict([(r, cbc.get_data(text=r, kstpkper=kstpkper, full3D=True)[0])
-                                               for idx, r in enumerate(self.record_names)
-                                               if r.strip() in self.internal_flow_terms])
-        end_read_cbc = datetime.now()
-        cbctime = end_read_cbc-start_read_cbc
-        print('Time to read cbc file', cbctime)
+        # IF RECORD IS A CONSTANT-HEAD INTERNAL FLOW TERM, ACCUMULATE FACE FLOWS ONLY FOR
+        #  CONSTANT-HEAD CELLS
+        # ----not yet tested----#
+        bud = cbc.get_data(text='   CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
+        self.ich_lrc = bud[bud != 0]
 
-        # OPEN THE ZONE FILE (OR ARRAY) AND FIND THE UNIQUE SET OF ZONES CONTAINED THEREIN
-        start_read_izone = datetime.now()
-        izone = Util3d(model, (self.nlay, self.nrow, self.ncol),
-                       np.int32, z, 'zonebud', locat=self.unit_number)
-        self.izone = izone.array
-        self.zones = self._find_unique_zones(self.izone.ravel(), ignore_value=zone_to_ignore)
-        end_read_izone = datetime.now()
-        print('Time to read izone', end_read_izone-start_read_izone)
-
-        # Define dtype for the recarray
-        self.dtype = np.dtype([('flow_dir', '|S3'), ('record', '|S20')] +
-                               [('ZONE{: >4d}'.format(z), np.float32) for z in self.zones])
-
-        # Accumulte source/sink/storage terms by zone
-        start_ssst_inflows = datetime.now()
-        self.ssst_inflows, self.ssst_outflows = self._get_source_sink_storage_terms()
-        end_ssst_inflows = datetime.now()
-        print('Time to read ssst items', end_ssst_inflows-start_ssst_inflows)
-
-
+        if 'SWIADDTOCH' in [r.strip() for r in self.record_names]:
+            bud = cbc.get_data(text='      SWIADDTOCH', kstpkper=kstpkper, full3D=True)[0]
+            self.ichswi_lrc += bud[bud != 0]
+        else:
+            self.ichswi_lrc = []
 
         # PROCESS EACH INTERNAL FLOW RECORD IN THE CELL-BY-CELL BUDGET FILE
-        for recname, bud in self.internal_flow_data.iteritems():
+        frf, fff, flf, swifrf, swifff, swiflf = [], [], [], [], [], []
+        for recname in [r for r in self.record_names if r.strip() in self.internal_flow_terms]:
 
-            # IF RECORD IS A CONSTANT-HEAD INTERNAL FLOW TERM, ACCUMULATE FACE FLOWS ONLY FOR
-            #  CONSTANT-HEAD CELLS
-            # ----not yet tested----#
             if recname.strip() == 'CONSTANT HEAD':
-                self.ich_lrc = bud[bud != 0]
+                continue
+            elif recname.strip() == 'SWIADDTOCH':
+                continue
 
             elif recname.strip() == 'FLOW RIGHT FACE':
-                start_frf = datetime.now()
-                frf = self._get_internal_flow_terms_frf(bud)
-                end_frf = datetime.now()
-                print('Time to compute frf', end_frf-start_frf)
+                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                frf = self._get_internal_flow_terms_tuple_frf(bud)
 
             elif recname.strip() == 'FLOW FRONT FACE':
-                start_fff = datetime.now()
-                fff = self._get_internal_flow_terms_fff(bud)
-                end_fff = datetime.now()
-                print('Time to compute fff', end_fff-start_fff)
+                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                fff = self._get_internal_flow_terms_tuple_fff(bud)
 
             elif recname.strip() == 'FLOW LOWER FACE':
-                start_flf = datetime.now()
-                flf = self._get_internal_flow_terms_flf(bud)
-                end_flf = datetime.now()
-                print('Time to compute flf', end_flf-start_flf)
+                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                flf = self._get_internal_flow_terms_tuple_flf(bud)
+
+            elif recname.strip() == 'SWIADDTOFRF':
+                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                swifrf = self._get_internal_flow_terms_tuple_frf(bud)
+
+            elif recname.strip() == 'SWIADDTOFFF':
+                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                swifff = self._get_internal_flow_terms_tuple_fff(bud)
+
+            elif recname.strip() == 'SWIADDTOFLF':
+                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                swiflf = self._get_internal_flow_terms_tuple_flf(bud)
 
             else:
                 print('Budget item', recname, 'not recognized.')
                 # break
 
-        q_tups = sorted(frf + fff + flf)
+        # Format internal flow output
+        q_in = {z: OrderedDict([('flow_dir', 'in'), ('record', 'FROM ZONE{: >4d}'.format(z))]) for z in self.zones}
+        for k, v in q_in.iteritems():
+            for z in self.zones:
+                v[z] = 0.
+
+        q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            q = np.array([i[-1] for i in list(gp)])
-            # print(f2z, np.sum(q))
+            flow = [i[-1] for i in list(gp)]
+            q_in[f2z[0]][f2z[1]] = np.sum(flow)
 
-        totim = datetime.now()-start
-        print('Total time elapsed', totim)
+        for k, v in q_in.iteritems():
+            inflows.append(tuple(v.values()))
 
-    def _get_source_sink_storage_terms(self):
+        q_out = {z: OrderedDict([('flow_dir', 'out'), ('record', 'TO ZONE{: >4d}'.format(z))]) for z in self.zones}
+        for k, v in q_out.iteritems():
+            for z in self.zones:
+                v[z] = 0.
 
-        # IF RECORD IS NOT AN INTERNAL FLOW TERM, ACCUMULATE FLOW BY ZONE.
-        inflows = []
-        outflows = []
-        for recname, bud in self.ssst_data.iteritems():
-            rec_inflow = ['in', recname.strip()] + [bud[(bud >= 0.) & (self.izone == z)].sum() for z in self.zones]
-            rec_outflow = ['out', recname.strip()] + [bud[(bud < 0.) & (self.izone == z)].sum() for z in self.zones]
-            # for z in self.zones:
-            #     rec_inflow.append(bud[(bud >= 0.) & (self.izone == z)].sum())
-            #     rec_outflow.append(bud[(bud < 0.) & (self.izone == z)].sum())
-            # rec_inflow = ['in', recname.strip()] + [bud[(bud >= 0.) & (self.izone == z)].sum() for z in self.zones]
-            inflows.append(tuple(rec_inflow))
-            outflows.append(tuple(rec_outflow))
-        ssst_inflows = np.array(inflows, dtype=self.dtype)
-        ssst_outflows = np.array(outflows, dtype=self.dtype)
-        #     zone_inflows = pd.Series(data=totals_in, index=index, name='Zone {}'.format(z))
-        #     zone_outflows = pd.Series(data=totals_out, index=index, name='Zone {}'.format(z))
-        #     inflows.append(zone_inflows)
-        #     outflows.append(zone_outflows*-1)
-        #
-        # inflows = pd.concat(inflows, axis=1)
-        # outflows = pd.concat(outflows, axis=1)
-        return ssst_inflows, ssst_outflows
+        q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
+        for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
+            flow = [i[-1] for i in list(gp)]
+            q_out[f2z[1]][f2z[0]] = np.sum(flow)
 
-    def _get_internal_flow_terms_frf(self, bud):
+        for k, v in q_out.iteritems():
+            outflows.append(tuple(v.values()))
+
+        self.q = np.array(inflows + outflows, dtype=self.dtype)
+
+    def get_bud(self):
+        return self.q
+
+    def _get_source_sink_storage_terms_tuple(self, recname, bud):
+
+        rec_inflow = ['in', recname.strip()] + [bud[(bud >= 0.) & (self.izone == z)].sum() for z in self.zones]
+        rec_outflow = ['out', recname.strip()] + [bud[(bud < 0.) & (self.izone == z)].sum() for z in self.zones]
+        rec_inflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in rec_inflow]
+        rec_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in rec_outflow]
+        return tuple(rec_inflow), tuple(rec_outflow)
+
+    def _get_internal_flow_terms_tuple_frf(self, bud):
 
         assert self.ncol >= 2, 'Must have more than 2 columns to accumulate FLOW RIGHT FACE record'
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS COLUMNS. COMPUTE FLOW ONLY BETWEEN A ZONE
@@ -225,10 +217,13 @@ class ZoneBudget(Package):
         neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
         pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
         nzgt_r2l = neg + pos
+
+        # Accumulate flow for constant head cells
+
         nzgt = sorted(nzgt_l2r + nzgt_r2l, key=lambda tup: tup[:2])
         return nzgt
 
-    def _get_internal_flow_terms_fff(self, bud):
+    def _get_internal_flow_terms_tuple_fff(self, bud):
 
         assert self.nrow >= 2, 'Must have more than 2 rows to accumulate FLOW FRONT FACE record'
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS ROWS. COMPUTE FLOW ONLY BETWEEN A ZONE
@@ -287,7 +282,7 @@ class ZoneBudget(Package):
         nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
         return nzgt
 
-    def _get_internal_flow_terms_flf(self, bud):
+    def _get_internal_flow_terms_tuple_flf(self, bud):
 
         assert self.nlay >= 2, 'Must have more than 2 layers to accumulate FLOW LOWER FACE record'
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS LAYERS. COMPUTE FLOW ONLY BETWEEN A ZONE
@@ -348,48 +343,13 @@ class ZoneBudget(Package):
         return nzgt
 
     @staticmethod
-    def _find_unique_zones(a, ignore_value=None):
-        z = [i for i in np.unique(a) if i != ignore_value]
+    def _find_unique_zones(a):
+        z = [int(i) for i in np.unique(a)]
         return z
 
-    # def list_internal_flow_records(self):
-    #     for rec, bud in self.records.iteritems():
-    #         if 'From Zone' in rec:
-    #             print(rec, np.nansum(bud))
-    #
-    # def list_inflows(self):
-    #     for rec, buds in self.records.iteritems():
-    #         if rec.strip() not in self.internal_flow_terms:
-    #             for z in self.zones:
-    #                 print(rec, 'Zone', z, 'IN', buds[z][buds[z] >= 0.].sum())
-    #         else:
-    #             print(rec, buds[z].sum())
-    #
-    # def get_inflows(self):
-    #     flows = {}
-    #     for rec, buds in self.records.iteritems():
-    #         flows[rec] = {}
-    #         for z in self.zones:
-    #             flows[rec][z] = buds[z][buds[z] >= 0.]
-    #     return flows
-    #
-    # def get_outflows(self):
-    #     flows = {}
-    #     for rec, buds in self.records.iteritems():
-    #         flows[rec] = {}
-    #         for z in self.zones:
-    #             flows[rec][z] = buds[z][buds[z] < 0.]
-    #     return flows
 
 if __name__ == '__main__':
     loadpth = r'testing\model'
-    # ml = flopy.modflow.Modflow.load('fas.nam', model_ws=loadpth, check=False)
-    ml = flopy.modflow.Modflow('zonebudtest.nam', model_ws=loadpth)
-    dis = flopy.modflow.ModflowDis.load(os.path.join(loadpth, 'fas.dis'), ml, check=False)
-    zon = np.loadtxt(os.path.join('testing', 'GWBasins.zon'))
-    zb = ZoneBudget(ml, os.path.join(loadpth, 'fas.cbc'), zon, swi=True)
-    # zb.list_internal_flow_records()
-    # outflows = zb.get_outflows()
-    # for rec, buds in outflows.iteritems():
-    #     for z, outflow in buds.iteritems():
-    #         print(rec, 'Zone', z, 'OUT', outflow.sum())
+    zon = np.array([np.loadtxt(os.path.join('testing', 'GWBasins.zon'))]*9, dtype=np.int32)
+    zb = ZoneBudget(os.path.join(loadpth, 'fas.cbc'), zon).get_bud()
+    print(zb)
