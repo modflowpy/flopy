@@ -3,8 +3,7 @@ import os
 from collections import OrderedDict
 from itertools import groupby
 import numpy as np
-# from ..utils.binaryfile import CellBudgetFile
-from flopy.utils.binaryfile import CellBudgetFile
+from ..utils.binaryfile import CellBudgetFile
 
 
 class ZoneBudget(object):
@@ -426,11 +425,3 @@ class ZoneBudget(object):
     def _find_unique_zones(a):
         z = [int(i) for i in np.unique(a) if int(i) != 0]
         return z
-
-
-if __name__ == '__main__':
-    loadpth = r'testing\model'
-    zon = np.array([np.loadtxt(os.path.join('testing', 'GWBasins.zon'))]*9, dtype=np.int32)
-    zb = ZoneBudget(os.path.join(loadpth, 'fas.cbc'), zon)
-    zbud = zb.get_bud()
-    zb.to_csv(os.path.join('testing', 'zbud.csv'))
