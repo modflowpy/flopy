@@ -9,6 +9,7 @@ important classes that can be accessed by the user.
 """
 from __future__ import print_function
 import numpy as np
+import warnings
 from collections import OrderedDict
 from flopy.utils.datafile import Header, LayerFile
 
@@ -170,9 +171,9 @@ class BinaryLayerFile(LayerFile):
         self.nrow = header['nrow']
         self.ncol = header['ncol']
         if self.nrow > 10000 or self.ncol > 10000:
-            raise Exception("nrow or ncol > 10000, so either something is "
-                            "wrong with the binary file or you have a "
-                            "huge-ass model")
+            s = 'Possible error. ncol ({}) or nrow ({}) > 10000 '.format(self.ncol,
+                                                                         self.nrow)
+            warnings.warn(s)
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
@@ -488,9 +489,9 @@ class CellBudgetFile(object):
         self.ncol = header["ncol"]
         self.nlay = np.abs(header["nlay"])
         if self.nrow > 10000 or self.ncol > 10000:
-            raise Exception("nrow or ncol > 10000, so either something is "
-                            "wrong with the binary file or you have a "
-                            "huge-ass model")
+            s = 'Possible error. ncol ({}) or nrow ({}) > 10000 '.format(self.ncol,
+                                                                         self.nrow)
+            warnings.warn(s)
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
@@ -855,9 +856,9 @@ class CellBudgetFile(object):
             dtype = np.dtype([('node', np.int32), ('q', self.realtype)])
             if verbose:
                 if full3D:
-                    s += 'a numpy masked array of size ({}{}{})'.format(nlay,
-                                                                        nrow,
-                                                                        ncol)
+                    s += 'a numpy masked array of size ({}, {}, {})'.format(nlay,
+                                                                            nrow,
+                                                                            ncol)
                 else:
                     s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
                 print(s)
@@ -873,9 +874,9 @@ class CellBudgetFile(object):
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
             if verbose:
                 if full3D:
-                    s += 'a numpy masked array of size ({}{}{})'.format(nlay,
-                                                                        nrow,
-                                                                        ncol)
+                    s += 'a numpy masked array of size ({}, {}, {})'.format(nlay,
+                                                                            nrow,
+                                                                            ncol)
                 else:
                     s += 'a list of two 2D numpy arrays.  '
                     s += 'The first is an integer layer array of shape  ' + \
