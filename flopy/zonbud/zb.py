@@ -1,9 +1,10 @@
-from __future__ import print_function
+from __future__ import print_function, division
 import os
 from collections import OrderedDict
 from itertools import groupby
 import numpy as np
-from ..utils.binaryfile import CellBudgetFile
+# from ..utils.binaryfile import CellBudgetFile
+from flopy.utils.binaryfile import CellBudgetFile
 
 
 class ZoneBudget(object):
@@ -16,6 +17,7 @@ class ZoneBudget(object):
     >>>from flopy.zonebud import ZoneBudget
     >>>zb = ZoneBudget('zonebudtest.cbc', 'GWBasins.zon')
     >>>zbud = zb.get_bud()
+    >>>zb.to_csv()
     """
     def __init__(self, cbc_file, zon, kstpkper=(0, 0), out_file='zonebudtest.txt'):
 
@@ -38,8 +40,9 @@ class ZoneBudget(object):
         self.zones = self._find_unique_zones(self.izone.ravel())
 
         # Define dtype for the recarray
+        self.float_type = np.float64
         self.dtype = np.dtype([('flow_dir', '|S3'), ('record', '|S20')] +
-                               [('ZONE{: >4d}'.format(z), np.float32) for z in self.zones])
+                               [('ZONE{: >4d}'.format(z), self.float_type) for z in self.zones])
 
         # OPEN THE CELL-BY-CELL BUDGET BINARY FILE
         cbc = CellBudgetFile(cbc_file)
@@ -48,7 +51,8 @@ class ZoneBudget(object):
         self.record_names = cbc.unique_record_names()
 
         # Get dimensions of budget file arrays
-        self.nlay, self.nrow, self.ncol = cbc.get_data(idx=0, kstpkper=kstpkper, full3D=True)[0].shape
+        self.kstpkper = kstpkper
+        self.nlay, self.nrow, self.ncol = cbc.get_data(idx=0, kstpkper=self.kstpkper, full3D=True)[0].shape
         assert self.izone.shape == (self.nlay, self.nrow, self.ncol), \
             'Shape of input zone array {} does not' \
             ' match the cell by cell' \
@@ -126,8 +130,10 @@ class ZoneBudget(object):
 
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            flow = [i[-1] for i in list(gp)]
-            q_in[f2z[0]][f2z[1]] = np.sum(flow)
+            if 0 not in f2z:
+                # Ignore zone 0
+                gpq = [i[-1] for i in list(gp)]
+                q_in[f2z[0]][f2z[1]] = np.sum(gpq)
 
         for k, v in q_in.iteritems():
             inflows.append(tuple(v.values()))
@@ -139,21 +145,95 @@ class ZoneBudget(object):
 
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            flow = [i[-1] for i in list(gp)]
-            q_out[f2z[1]][f2z[0]] = np.sum(flow)
+            if 0 not in f2z:
+                # Ignore zone 0
+                gpq = [i[-1] for i in list(gp)]
+                q_out[f2z[1]][f2z[0]] = np.sum(gpq)
 
         for k, v in q_out.iteritems():
             outflows.append(tuple(v.values()))
-
-        self.q = np.array(inflows + outflows, dtype=self.dtype)
+        q = inflows + outflows
+        self.q = np.array(q, dtype=self.dtype)
 
     def get_bud(self):
         return self.q
 
+    def to_csv(self, fname='zbud.csv', format='pandas'):
+
+        assert format.lower() in ['pandas', 'zondbud'], 'Format must be one of "pandas" or "zonbud".'
+        # List the field names to be used to slice the recarray
+        fields = ['ZONE{: >4d}'.format(z) for z in self.zones]
+
+        ins_idx = np.where(self.q['flow_dir'] == 'in')[0]
+        out_idx = np.where(self.q['flow_dir'] == 'out')[0]
+
+        ins = self._fields_view(self.q[ins_idx], fields)
+        out = self._fields_view(self.q[out_idx], fields)
+
+        ins_sum = ins.sum(axis=0)
+        out_sum = out.sum(axis=0)
+
+        if format.lower() == 'pandas':
+            with open(fname, 'w') as f:
+
+                # Write header
+                f.write(','.join([field for field in self.dtype.names])+'\n')
+
+                # Write IN terms
+                for rec in self.q[ins_idx]:
+                    f.write(','.join([str(i) for i in rec])+'\n')
+                f.write(','.join([' ', 'Total IN'] + [str(i) for i in ins_sum])+'\n')
+
+                # Write OUT terms
+                for rec in self.q[out_idx]:
+                    f.write(','.join([str(i) for i in rec])+'\n')
+                f.write(','.join([' ', 'Total OUT'] + [str(i) for i in out_sum])+'\n')
+
+                # Write mass balance terms
+                dif = ins_sum-out_sum
+                f.write(','.join([' ', 'IN-OUT'] + [str(i) for i in dif])+'\n')
+                pcterr = 100*(ins_sum-out_sum)/((ins_sum+out_sum)/2.)
+                f.write(','.join([' ', 'Percent Error'] + [str(i) for i in pcterr])+'\n')
+
+        if format.lower() == 'zonbud':
+            with open(fname, 'w') as f:
+
+                # Write header
+                f.write(','.join(['Time Step', str(self.kstpkper[0]+1),
+                                  'Stress Period', str(self.kstpkper[1]+1)])+'\n')
+                f.write(','.join([' '] + [field for field in self.dtype.names[2:]])+'\n')
+
+                # Write IN terms
+                f.write(','.join([' '] + ['IN']*(len(self.dtype.names[1:])-1))+'\n')
+                for rec in self.q[ins_idx]:
+                    f.write(','.join([str(rec[i+1]) for i in range(len(self.dtype.names[1:]))])+'\n')
+                f.write(','.join(['Total IN'] + [str(i) for i in ins_sum])+'\n')
+
+                # Write OUT terms
+                f.write(','.join([' '] + ['OUT']*(len(self.dtype.names[1:])-1))+'\n')
+                for rec in self.q[out_idx]:
+                    f.write(','.join([str(rec[i+1]) for i in range(len(self.dtype.names[1:]))])+'\n')
+                f.write(','.join(['Total OUT'] + [str(i) for i in out_sum])+'\n')
+
+                # Write mass balance terms
+                dif = ins_sum-out_sum
+                f.write(','.join(['IN-OUT'] + [str(i) for i in dif])+'\n')
+                pcterr = 100*(ins_sum-out_sum)/((ins_sum+out_sum)/2.)
+                f.write(','.join(['Percent Error'] + [str(i) for i in pcterr])+'\n')
+
+        # print('Total IN', ins_sum)
+        # print('Total OUT', out_sum)
+        # print('IN-OUT', ins_sum-out_sum)
+        # print('Percent Error', 100*(ins_sum-out_sum)/((ins_sum+out_sum)/2.))
+
+    def _fields_view(self, a, fields):
+        new = a[fields].view(self.float_type).reshape(a.shape + (-1,))
+        return new
+
     def _get_source_sink_storage_terms_tuple(self, recname, bud):
 
         rec_inflow = ['in', recname.strip()] + [bud[(bud >= 0.) & (self.izone == z)].sum() for z in self.zones]
-        rec_outflow = ['out', recname.strip()] + [bud[(bud < 0.) & (self.izone == z)].sum() for z in self.zones]
+        rec_outflow = ['out', recname.strip()] + [bud[(bud < 0.) & (self.izone == z)].sum()*-1 for z in self.zones]
         rec_inflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in rec_inflow]
         rec_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in rec_outflow]
         return tuple(rec_inflow), tuple(rec_outflow)
@@ -344,12 +424,13 @@ class ZoneBudget(object):
 
     @staticmethod
     def _find_unique_zones(a):
-        z = [int(i) for i in np.unique(a)]
+        z = [int(i) for i in np.unique(a) if int(i) != 0]
         return z
 
 
 if __name__ == '__main__':
     loadpth = r'testing\model'
     zon = np.array([np.loadtxt(os.path.join('testing', 'GWBasins.zon'))]*9, dtype=np.int32)
-    zb = ZoneBudget(os.path.join(loadpth, 'fas.cbc'), zon).get_bud()
-    print(zb)
+    zb = ZoneBudget(os.path.join(loadpth, 'fas.cbc'), zon)
+    zbud = zb.get_bud()
+    zb.to_csv(os.path.join('testing', 'zbud.csv'))
