@@ -79,11 +79,11 @@ class ZoneBudget(object):
         bud = cbc.get_data(text='   CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
         self.ich_lrc = bud[bud != 0]
 
+        self.ichswi_lrc = []
         if 'SWIADDTOCH' in [r.strip() for r in self.record_names]:
             bud = cbc.get_data(text='      SWIADDTOCH', kstpkper=kstpkper, full3D=True)[0]
-            self.ichswi_lrc += bud[bud != 0]
-        else:
-            self.ichswi_lrc = []
+            self.ichswi_lrc = bud[bud != 0]
+
 
         # PROCESS EACH INTERNAL FLOW RECORD IN THE CELL-BY-CELL BUDGET FILE
         frf, fff, flf, swifrf, swifff, swiflf = [], [], [], [], [], []
@@ -160,7 +160,7 @@ class ZoneBudget(object):
 
     def to_csv(self, fname='zbud.csv', format='pandas'):
 
-        assert format.lower() in ['pandas', 'zondbud'], 'Format must be one of "pandas" or "zonbud".'
+        assert format.lower() in ['pandas', 'zonbud'], 'Format must be one of "pandas" or "zonbud".'
         # List the field names to be used to slice the recarray
         fields = ['ZONE{: >4d}'.format(z) for z in self.zones]
 
