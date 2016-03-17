@@ -130,7 +130,7 @@ class ZoneBudget(object):
 
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            if 0 not in f2z:
+            if f2z[1] != 0:
                 # Ignore zone 0
                 gpq = [i[-1] for i in list(gp)]
                 q_in[f2z[0]][f2z[1]] = np.sum(gpq)
@@ -145,7 +145,7 @@ class ZoneBudget(object):
 
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            if 0 not in f2z:
+            if f2z[1] != 0:
                 # Ignore zone 0
                 gpq = [i[-1] for i in list(gp)]
                 q_out[f2z[1]][f2z[0]] = np.sum(gpq)
