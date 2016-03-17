@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import subprocess as sp
+import warnings
 from itertools import groupby
 from collections import OrderedDict
 from .binaryfile import CellBudgetFile
@@ -78,11 +79,14 @@ class ZoneBudget(object):
         # ----not yet tested----#
         bud = cbc.get_data(text='   CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
         self.ich_lrc = bud[bud != 0]
+        if len(self.ich_lrc) > 0:
+            chwarn = 'WARNING: CONSTANT HEAD cells were detected, but will not be included in the zonebudget results.'
+            warnings.warn(chwarn, UserWarning)
 
         self.ichswi_lrc = []
         if 'SWIADDTOCH' in [r.strip() for r in self.record_names]:
             bud = cbc.get_data(text='      SWIADDTOCH', kstpkper=kstpkper, full3D=True)[0]
-            self.ichswi_lrc = bud[bud != 0]
+            self.ichswi_lrc += bud[bud != 0]
 
 
         # PROCESS EACH INTERNAL FLOW RECORD IN THE CELL-BY-CELL BUDGET FILE
@@ -145,7 +149,7 @@ class ZoneBudget(object):
 
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            if f2z[1] != 0:
+            if 0 not in f2z:
                 # Ignore zone 0
                 gpq = [i[-1] for i in list(gp)]
                 q_out[f2z[1]][f2z[0]] = np.sum(gpq)
