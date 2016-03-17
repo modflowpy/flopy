@@ -20,12 +20,13 @@ class ZoneBudget(object):
     >>>zbud = zb.get_bud()
     >>>zb.to_csv()
     """
-    def __init__(self, cbc_file, zon, kstpkper=(0, 0), out_file='zonebudtest.txt'):
+    def __init__(self, cbc_file, zon, kstpkper=(0, 0)):
 
         # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
         # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
         #  FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
         # SWIADDTO* terms are used by the SWI2 package.
+        self.kstpkper = kstpkper
         self.internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
                                     'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
 
@@ -51,14 +52,17 @@ class ZoneBudget(object):
         # GET A LISTING OF THE UNIQUE RECORDS CONTAINED IN THE BUDGET FILE
         self.record_names = cbc.unique_record_names()
 
-        # Get dimensions of budget file arrays
-        self.kstpkper = kstpkper
-        self.nlay, self.nrow, self.ncol = cbc.get_data(idx=0, kstpkper=self.kstpkper, full3D=True)[0].shape
-        assert self.izone.shape == (self.nlay, self.nrow, self.ncol), \
+        # Get budgets
+        self.cbc_data = OrderedDict([(recname, cbc.get_data(text=recname, kstpkper=self.kstpkper, full3D=True)[0])
+                                     for recname in self.record_names])
+
+        # Reshape arrays having one layer
+        cbc_bud_shape = self.cbc_data[self.cbc_data.keys()[0]].shape
+        self.nlay, self.nrow, self.ncol = cbc_bud_shape
+        assert self.izone.shape == cbc_bud_shape, \
             'Shape of input zone array {} does not' \
             ' match the cell by cell' \
-            'budget file {}'.format(self.izone.shape, (self.nlay, self.nrow, self.ncol))
-
+            'budget file {}'.format(self.izone.shape, cbc_bud_shape)
 
         # Lets interrogate the budget file in a more systematic way. Read each non-internal flow record individually.
         # Then lets read each internal flow record individually, starting with Constant Head so that we can be sure
@@ -68,16 +72,20 @@ class ZoneBudget(object):
         inflows = []
         outflows = []
         ssst_records = [rec for rec in self.record_names if rec.strip() not in self.internal_flow_terms]
+        self.ssst_buds = OrderedDict()
         for recname in ssst_records:
-            bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+            # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+            bud = self.cbc_data[recname]
             in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, bud)
             inflows.append(in_tup)
             outflows.append(out_tup)
+            self.ssst_buds[recname.strip()] = bud
 
         # IF RECORD IS A CONSTANT-HEAD INTERNAL FLOW TERM, ACCUMULATE FACE FLOWS ONLY FOR
         #  CONSTANT-HEAD CELLS
         # ----not yet tested----#
-        bud = cbc.get_data(text='   CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
+        # bud = cbc.get_data(text='   CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
+        bud = self.cbc_data['   CONSTANT HEAD']
         self.ich_lrc = bud[bud != 0]
         if len(self.ich_lrc) > 0:
             chwarn = 'WARNING: CONSTANT HEAD cells were detected, but will not be included in the zonebudget results.'
@@ -85,7 +93,8 @@ class ZoneBudget(object):
 
         self.ichswi_lrc = []
         if 'SWIADDTOCH' in [r.strip() for r in self.record_names]:
-            bud = cbc.get_data(text='      SWIADDTOCH', kstpkper=kstpkper, full3D=True)[0]
+            # bud = cbc.get_data(text='      SWIADDTOCH', kstpkper=kstpkper, full3D=True)[0]
+            bud = self.cbc_data['      SWIADDTOCH']
             self.ichswi_lrc += bud[bud != 0]
 
 
@@ -99,27 +108,33 @@ class ZoneBudget(object):
                 continue
 
             elif recname.strip() == 'FLOW RIGHT FACE':
-                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                bud = self.cbc_data[recname]
                 frf = self._get_internal_flow_terms_tuple_frf(bud)
 
             elif recname.strip() == 'FLOW FRONT FACE':
-                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                bud = self.cbc_data[recname]
                 fff = self._get_internal_flow_terms_tuple_fff(bud)
 
             elif recname.strip() == 'FLOW LOWER FACE':
-                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                bud = self.cbc_data[recname]
                 flf = self._get_internal_flow_terms_tuple_flf(bud)
 
             elif recname.strip() == 'SWIADDTOFRF':
-                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                bud = self.cbc_data[recname]
                 swifrf = self._get_internal_flow_terms_tuple_frf(bud)
 
             elif recname.strip() == 'SWIADDTOFFF':
-                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                bud = self.cbc_data[recname]
                 swifff = self._get_internal_flow_terms_tuple_fff(bud)
 
             elif recname.strip() == 'SWIADDTOFLF':
-                bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                bud = self.cbc_data[recname]
                 swiflf = self._get_internal_flow_terms_tuple_flf(bud)
 
             else:
@@ -134,10 +149,8 @@ class ZoneBudget(object):
 
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            if f2z[1] != 0:
-                # Ignore zone 0
-                gpq = [i[-1] for i in list(gp)]
-                q_in[f2z[0]][f2z[1]] = np.sum(gpq)
+            gpq = [i[-1] for i in list(gp)]
+            q_in[f2z[0]][f2z[1]] = np.sum(gpq)
 
         for k, v in q_in.iteritems():
             inflows.append(tuple(v.values()))
@@ -149,18 +162,31 @@ class ZoneBudget(object):
 
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            if 0 not in f2z:
-                # Ignore zone 0
-                gpq = [i[-1] for i in list(gp)]
-                q_out[f2z[1]][f2z[0]] = np.sum(gpq)
+            gpq = [i[-1] for i in list(gp)]
+            q_out[f2z[1]][f2z[0]] = np.sum(gpq)
 
         for k, v in q_out.iteritems():
             outflows.append(tuple(v.values()))
         q = inflows + outflows
         self.q = np.array(q, dtype=self.dtype)
 
-    def get_bud(self):
+    @property
+    def budget(self):
+        """
+        Get array of zonebudget records
+
+        Returns
+        -------
+        budget : recarray
+
+        """
         return self.q
+
+    def get_ssst_names(self):
+        return self.ssst_buds.keys()
+
+    def get_ssst_bud(self, name):
+        return self.ssst_buds[name]
 
     def to_csv(self, fname='zbud.csv', format='pandas'):
 
@@ -428,7 +454,7 @@ class ZoneBudget(object):
 
     @staticmethod
     def _find_unique_zones(a):
-        z = [int(i) for i in np.unique(a) if int(i) != 0]
+        z = [int(i) for i in np.unique(a)]
         return z
 
 
