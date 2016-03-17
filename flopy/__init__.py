@@ -32,5 +32,4 @@ from . import modpath
 from . import utils
 from . import plot
 from . import export
-from . import zonbud
 from .mbase import run_model, which
