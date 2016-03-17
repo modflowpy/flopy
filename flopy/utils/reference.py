@@ -78,7 +78,7 @@ class SpatialReference(object):
 
         self.supported_units = ["feet","meters"]
         self._units = units
-        self.units
+        self.units = units
         self._reset()
         self.set_spatialreference(xul, yul, rotation)
 
