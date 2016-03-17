@@ -78,7 +78,6 @@ class SpatialReference(object):
 
         self.supported_units = ["feet","meters"]
         self._units = units
-        self.units = units
         self._reset()
         self.set_spatialreference(xul, yul, rotation)
 
@@ -93,6 +92,7 @@ class SpatialReference(object):
 
     @property
     def units(self):
+        units = None
         if self._units is not None:
             units = self._units.lower()
         else:
@@ -108,7 +108,7 @@ class SpatialReference(object):
                    "to_meters:0.3048" in crs.srs:
                     units = "feet"
             except:
-                units = None
+                pass
                 
         if units is None:
             print("warning: assuming SpatialReference units are meters")
