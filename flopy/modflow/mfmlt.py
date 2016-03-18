@@ -188,15 +188,20 @@ class ModflowMlt(Package):
         t = line.strip().split()
         basename = t.pop(0).lower()
         multarray = mult_dict[basename]
-        multarray = multarray.array.copy()
-
+        try:
+            multarray = multarray.array.copy()
+        except:
+            multarray = multarray.copy()
         # Construct the multiplier array
         while True:
             if len(t) < 2:
                 break
             op = t.pop(0)
             multname = t.pop(0)
-            atemp = mult_dict[multname.lower()].array
+            try:
+                atemp = mult_dict[multname.lower()].array
+            except:
+                atemp = mult_dict[multname.lower()]
             if op == '+':
                 multarray = multarray + atemp
             elif op == '*':
@@ -205,6 +210,8 @@ class ModflowMlt(Package):
                 multarray = multarray - atemp
             elif op == '/':
                 multarray = multarray / atemp
+            elif op == '^':
+                multarray = multarray ** atemp
             else:
                 s = 'Invalid MULT operation {}'.format(op)
                 raise Exception(s)

@@ -2180,6 +2180,10 @@ class Util2d(object):
                 break
             if npl == 'free':
                 raw = line.strip('\n').split()
+                if len(raw) == 1 and ',' in line:
+                    raw = raw[0].split(',')
+                elif ',' in line:
+                    raw = line.replace(',','').strip('\n').split()
             else:
                 # split line using number of values in the line
                 rawlist = []
