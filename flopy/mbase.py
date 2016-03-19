@@ -9,6 +9,13 @@ from __future__ import print_function
 import sys
 import os
 import subprocess as sp
+import time
+import threading
+if sys.version_info > (3,0):
+    import queue as Queue
+else:
+    import Queue
+from datetime import datetime
 import copy
 import numpy as np
 from flopy import utils
@@ -852,9 +859,12 @@ class BaseModel(object):
 
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
-              normal_msg='normal termination'):
+              normal_msg='normal termination',
+              async=False):
     """
-    This function will run the model using subprocess.Popen.
+    This function will run the model using subprocess.Popen.  It
+    communicates with the model's stdout asynchronously and reports
+    progress to the screen with timestamps
 
     Parameters
     ----------
@@ -876,7 +886,10 @@ def run_model(exe_name, namefile, model_ws='./',
     normal_msg : str
         Normal termination message used to determine if the
         run terminated normally. (default is 'normal termination')
-
+    async : boolean
+        asynchonously read model stdout and report with timestamps.  good for
+        models that take long time to run.  not good for models that run
+        really fast
     Returns
     -------
     (success, buff)
@@ -891,7 +904,6 @@ def run_model(exe_name, namefile, model_ws='./',
     exe = which(exe_name)
     if exe is None:
         import platform
-
         if platform.system() in 'Windows':
             if not exe_name.lower().endswith('.exe'):
                 exe = which(exe_name + '.exe')
@@ -909,21 +921,77 @@ def run_model(exe_name, namefile, model_ws='./',
         s = 'The namefile for this model does not exists: {}'.format(namefile)
         raise Exception(s)
 
+    # simple little function for the thread to target
+    def q_output(output,q):
+            for line in iter(output.readline,b''):
+                q.put(line)
+            #time.sleep(1)
+            #output.close()
+
     proc = sp.Popen([exe_name, namefile],
                     stdout=sp.PIPE, cwd=model_ws)
+
+    if not async:
+        while True:
+            line = proc.stdout.readline()
+            c = line.decode('utf-8')
+            if c != '':
+                if normal_msg in c.lower():
+                    success = True
+                c = c.rstrip('\r\n')
+                if not silent:
+                    print('{}'.format(c))
+                if report == True:
+                    buff.append(c)
+            else:
+                break
+        return success, buff
+
+
+    #some tricks for the async stdout reading
+    q = Queue.Queue()
+    thread = threading.Thread(target=q_output,args=(proc.stdout,q))
+    thread.daemon = True
+    thread.start()
+
+    failed_words = ["fail","error"]
+    last = datetime.now()
+    lastsec = 0.
     while True:
-        line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            if normal_msg in c.lower():
-                success = True
-            c = c.rstrip('\r\n')
-            if not silent:
-                print('{}'.format(c))
-            if report == True:
-                buff.append(c)
+        try:
+            line = q.get_nowait()
+        except Queue.Empty:
+            pass
         else:
+            if line == '':
+                break
+            line = line.decode().lower().strip()
+            if line != '':
+                now = datetime.now()
+                dt = now - last
+                tsecs = dt.total_seconds() - lastsec
+                line = "(elapsed:{0})-->{1}".format(tsecs,line)
+                lastsec = tsecs + lastsec
+                buff.append(line)
+                if not silent:
+                    print(line)
+                for fword in failed_words:
+                    if fword in line:
+                        success = False
+                        break
+        if proc.poll() is not None:
             break
+    proc.wait()
+    thread.join(timeout=1)
+    buff.extend(proc.stdout.readlines())
+    proc.stdout.close()
+
+    for line in buff:
+        if normal_msg in line:
+            print("success")
+            success = True
+            break
+
     if pause:
         input('Press Enter to continue...')
     return success, buff

@@ -830,6 +830,23 @@ class MfList(object):
                 m4ds[name][kper, :, :, :] = array
         return m4ds
 
+
+    def masked_4D_arrays_itr(self):
+        # get the first kper
+        arrays = self.to_array(kper=0, mask=True)
+
+        # initialize these big arrays
+        for name, array in arrays.items():
+            m4d = np.zeros((self.model.nper, self.model.nlay,
+                            self.model.nrow, self.model.ncol))
+            m4d[0, :, :, :] = array
+            for kper in range(1, self.model.nper):
+                arrays = self.to_array(kper=kper, mask=True)
+                for tname, array in arrays.items():
+                    if tname == name:
+                        m4d[kper, :, :, :] = array
+            yield name, m4d
+
     @property
     def array(self):
         return self.masked_4D_arrays

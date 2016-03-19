@@ -155,9 +155,12 @@ def output_helper(f,ml,oudic,**kwargs):
     assert isinstance(ml,BaseModel)
     assert len(oudic.keys()) > 0
     logger = kwargs.pop("logger",None)
+    stride = kwargs.pop("stride",1)
     if len(kwargs) > 0:
         str_args = ','.join(kwargs)
         raise NotImplementedError("unsupported kwargs:{0}".format(str_args))
+
+
 
     # this sucks!  need to round the totims in each output file instance so
     # that they will line up
@@ -194,7 +197,7 @@ def output_helper(f,ml,oudic,**kwargs):
             print("the following output times are not common to all" +\
                         " output files and are being skipped:\n" +\
                         "{0}".format(skipped_times))
-    times = common_times
+    times = [t for t in common_times[::stride]]
     if isinstance(f, str) and f.lower().endswith(".nc"):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
         mask_vals = []
@@ -351,11 +354,13 @@ def mflist_helper(f, mfl, **kwargs):
 
     elif isinstance(f, NetCdf):
         base_name = mfl.package.name[0].lower()
-        f.log("getting 4D masked arrays for {0}".format(base_name))
-        m4d = mfl.masked_4D_arrays
-        f.log("getting 4D masked arrays for {0}".format(base_name))
+        #f.log("getting 4D masked arrays for {0}".format(base_name))
+        #m4d = mfl.masked_4D_arrays
+        #f.log("getting 4D masked arrays for {0}".format(base_name))
 
-        for name, array in m4d.items():
+        #for name, array in m4d.items():
+        for name, array in mfl.masked_4D_arrays_itr():
+            f.log("processing {0} attribute".format(name))
             var_name = base_name + '_' + name
             units = None
             if var_name in NC_UNITS_FORMAT:
@@ -385,6 +390,7 @@ def mflist_helper(f, mfl, **kwargs):
                 estr = "error setting array to variable {0}:\n{1}".format(var_name, str(e))
                 f.logger.warn(estr)
                 raise Exception(estr)
+            f.log("processing {0} attribute".format(name))
 
         return f
     else:

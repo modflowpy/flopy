@@ -78,7 +78,6 @@ class SpatialReference(object):
 
         self.supported_units = ["feet","meters"]
         self._units = units
-        self.units
         self._reset()
         self.set_spatialreference(xul, yul, rotation)
 
@@ -93,6 +92,7 @@ class SpatialReference(object):
 
     @property
     def units(self):
+        units = None
         if self._units is not None:
             units = self._units.lower()
         else:
@@ -109,6 +109,7 @@ class SpatialReference(object):
                     units = "feet"
             except:
                 pass
+                
         if units is None:
             print("warning: assuming SpatialReference units are meters")
             units = 'meters'
@@ -123,7 +124,7 @@ class SpatialReference(object):
             for line in f:
                 if not line.startswith('#'):
                     break
-                header.extend(line.strip().replace('#','').split(','))
+                header.extend(line.strip().replace('#','').split(';'))
 
         xul, yul = None, None
         rotation = 0.0
@@ -293,10 +294,11 @@ class SpatialReference(object):
         self._reset()
 
     def __repr__(self):
-        s = "xul:{0:<G}, yul:{1:<G}, rotation:{2:<G}, ".\
+        s = "xul:{0:<G}; yul:{1:<G}; rotation:{2:<G}; ".\
             format(self.xul,self.yul,self.rotation)
-        s += "proj4_str:{0}, ".format(self.proj4_str)
-        s += "units:{0}".format(self.units)
+        s += "proj4_str:{0}; ".format(self.proj4_str)
+        s += "units:{0}; ".format(self.units)
+        s += "lenuni:{0}".format(self.lenuni)
         return s
 
     @property

@@ -350,8 +350,8 @@ class NetCdf(object):
         self.xs = None
 
         self.chunks = {"time": None}
-        self.chunks["x"] = int(self.shape[1] / 4) + 1
-        self.chunks["y"] = int(self.shape[2] / 4) + 1
+        self.chunks["x"] = int(self.shape[2] / 4) + 1
+        self.chunks["y"] = int(self.shape[1] / 4) + 1
         self.chunks["z"] = self.shape[0]
         self.chunks["layer"] = self.shape[0]
 
@@ -647,8 +647,8 @@ class NetCdf(object):
         self.var_attr_dict[name] = attributes
 
         var = self.nc.createVariable(name, precision_str, dimensions,
-                                     fill_value=self.fillvalue, zlib=True,
-                                     chunksizes=tuple(chunks))
+                                     fill_value=self.fillvalue, zlib=True)#,
+                                     #chunksizes=tuple(chunks))
 
         for k, v in attributes.items():
             try:

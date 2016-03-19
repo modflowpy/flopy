@@ -4,7 +4,8 @@ import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
-skip = ["MNW2-Fig28.nam","testsfr2.nam","testsfr2_tab.nam"]
+#skip = ["MNW2-Fig28.nam","testsfr2.nam","testsfr2_tab.nam"]
+skip = []
 
 def export_netcdf(namfile):
     if namfile in skip:
@@ -163,12 +164,21 @@ def test_sr():
                                    delc=delc, top=top, botm=botm)
     bas = flopy.modflow.ModflowBas(ms,ifrefm=True)
 
+    sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,delc=ms.dis.delc.array,lenuni=3,
+                                      xul=321,yul=123,rotation=20)
     assert ms.sr.yul == 100
     ms.sr.xul = 111
     assert ms.sr.xul == 111
 
+    ms.sr.lenuni = 1
+    assert ms.sr.lenuni == 1
+
     ms.sr.units = "feet"
     assert ms.sr.units == "feet"
+
+    ms.sr = sr
+    assert ms.sr == sr
+    assert ms.sr.lenuni != ms.dis.lenuni
 
     try:
         ms.sr.units = "junk"
@@ -188,6 +198,10 @@ def test_sr():
     assert ms1.dis.sr == ms.dis.sr
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.sr.units == ms.sr.units
+    assert ms1.dis.lenuni == ms1.sr.lenuni
+    assert ms1.sr.lenuni != sr.lenuni
+    ms1.sr = sr
+    assert ms1.sr == ms.sr
 
 
 def test_shapefile():
@@ -201,8 +215,8 @@ def test_netcdf():
     return
 
 if __name__ == '__main__':
-    test_netcdf()
-    #test_sr()
+    #test_netcdf()
+    test_sr()
     #test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:

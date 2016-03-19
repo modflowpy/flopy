@@ -369,7 +369,7 @@ class ArrayFormat(object):
         else:
             raw = [fd]
             decimal = None
-        fmts = ['I', 'G', 'E', 'F']
+        fmts = ['ES', 'EN', 'I', 'G', 'E', 'F']
         raw = raw[0].upper()
         for fmt in fmts:
             if fmt in raw:
@@ -383,6 +383,10 @@ class ArrayFormat(object):
                     npl = 1
                     width = int(raw[1])
                 if fmt == 'G':
+                    fmt = 'E'
+                elif fmt == 'ES':
+                    fmt = 'E'
+                elif fmt == 'EN':
                     fmt = 'E'
                 return npl, fmt, width, decimal
         raise Exception('Unrecognized format type: ' +
@@ -2176,6 +2180,10 @@ class Util2d(object):
                 break
             if npl == 'free':
                 raw = line.strip('\n').split()
+                if len(raw) == 1 and ',' in line:
+                    raw = raw[0].split(',')
+                elif ',' in line:
+                    raw = line.replace(',','').strip('\n').split()
             else:
                 # split line using number of values in the line
                 rawlist = []
