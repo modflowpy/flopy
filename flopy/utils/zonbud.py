@@ -57,7 +57,9 @@ class Budget(object):
         ins_plus_out = ins_sum+out_sum
 
         pcterr = 100*(ins_minus_out)/((ins_plus_out)/2.)
+        pcterr = [i if not np.isnan(i) else 0 for i in pcterr]
 
+        formatter = '{:.16e}'.format
         if format.lower() == 'pandas':
             with open(fname, 'w') as f:
 
@@ -66,50 +68,48 @@ class Budget(object):
 
                 # Write IN terms
                 for rec in self.array[ins_idx]:
-                    f.write(','.join([str(i) for i in rec])+'\n')
-                f.write(','.join([' ', 'Total IN'] + [str(i) for i in ins_sum])+'\n')
+                    f.write(','.join([formatter(i) for i in rec])+'\n')
+                f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
                 for rec in self.array[out_idx]:
-                    f.write(','.join([str(i) for i in rec])+'\n')
-                f.write(','.join([' ', 'Total OUT'] + [str(i) for i in out_sum])+'\n')
+                    f.write(','.join([formatter(i) for i in rec])+'\n')
+                f.write(','.join([' ', 'Total OUT'] + [formatter(i) for i in out_sum])+'\n')
 
                 # Write mass balance terms
-                dif = ins_sum-out_sum
-                f.write(','.join([' ', 'IN-OUT'] + [str(i) for i in dif])+'\n')
-                # pcterr = 100*(ins_sum-out_sum)/((ins_sum+out_sum)/2.)
-                f.write(','.join([' ', 'Percent Error'] + [str(i) for i in pcterr])+'\n')
+                f.write(','.join([' ', 'IN-OUT'] + [formatter(i) for i in ins_minus_out])+'\n')
+                f.write(','.join([' ', 'Percent Error'] + [formatter(i) for i in pcterr])+'\n')
 
         if format.lower() == 'zonbud':
             with open(fname, 'w') as f:
 
                 # Write header
-                f.write(','.join(['Time Step', str(self.kstpkper[0]+1),
-                                  'Stress Period', str(self.kstpkper[1]+1)])+'\n')
+                if self.kstpkper is not None:
+                    f.write(','.join(['Time Step', str(self.kstpkper[0]+1),
+                                      'Stress Period', str(self.kstpkper[1]+1)])+'\n')
+                elif self.totim is not None:
+                    f.write(','.join(['Sim. Time', str(self.totim)])+'\n')
                 f.write(','.join([' '] + [field for field in self.array.dtype.names[2:]])+'\n')
 
                 # Write IN terms
                 f.write(','.join([' '] + ['IN']*(len(self.array.dtype.names[1:])-1))+'\n')
                 for rec in self.array[ins_idx]:
-                    f.write(','.join([str(rec[i+1]) for i in range(len(self.array.dtype.names[1:]))])+'\n')
-                f.write(','.join(['Total IN'] + [str(i) for i in ins_sum])+'\n')
+                    recitems = [rec[i+1] for i in range(len(self.array.dtype.names[1:]))]
+                    recitems[1:] = [formatter(i) for i in recitems[1:]]
+                    f.write(','.join(recitems)+'\n')
+                f.write(','.join(['Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
                 f.write(','.join([' '] + ['OUT']*(len(self.array.dtype.names[1:])-1))+'\n')
                 for rec in self.array[out_idx]:
-                    f.write(','.join([str(rec[i+1]) for i in range(len(self.array.dtype.names[1:]))])+'\n')
-                f.write(','.join(['Total OUT'] + [str(i) for i in out_sum])+'\n')
+                    recitems = [rec[i+1] for i in range(len(self.array.dtype.names[1:]))]
+                    recitems[1:] = [formatter(i) for i in recitems[1:]]
+                    f.write(','.join(recitems)+'\n')
+                f.write(','.join(['Total OUT'] + [formatter(i) for i in out_sum])+'\n')
 
                 # Write mass balance terms
-                dif = ins_sum-out_sum
-                f.write(','.join(['IN-OUT'] + [str(i) for i in dif])+'\n')
-                # pcterr = 100*(ins_sum-out_sum)/((ins_sum+out_sum)/2.)
-                f.write(','.join(['Percent Error'] + [str(i) for i in pcterr])+'\n')
-
-        # print('Total IN', ins_sum)
-        # print('Total OUT', out_sum)
-        # print('IN-OUT', ins_sum-out_sum)
-        # print('Percent Error', 100*(ins_sum-out_sum)/((ins_sum+out_sum)/2.))
+                f.write(','.join(['IN-OUT'] + [formatter(i) for i in ins_minus_out])+'\n')
+                f.write(','.join(['Percent Error'] + [formatter(i) for i in pcterr])+'\n')
 
     def _fields_view(self, a, fields):
         new = a[fields].view(self.float_type).reshape(a.shape + (-1,))
@@ -140,80 +140,103 @@ class ZoneBudget(object):
         # OPEN THE CELL-BY-CELL BUDGET BINARY FILE
         self.cbc = CellBudgetFile(cbc_file)
 
-        # GET A LISTING OF THE UNIQUE RECORDS CONTAINED IN THE BUDGET FILE
+        # All record names in the cell-by-cell budget binary file
         self.record_names = self.cbc.unique_record_names()
+
+        # Check for SWI budget terms
+        self.is_swi = False
+        for recname in self.record_names:
+            if 'SWI' in recname:
+                self.is_swi = True
+                break
+
+        # Source/sink/storage term record names
         self.ssst_record_names = [rec.strip() for rec in self.record_names if rec.strip() not in internal_flow_terms]
+
+        # Face flow record names
         self.ff_record_names = [r.strip() for r in self.record_names if r.strip() in internal_flow_terms]
+
+        # Check the shape of the cbc budget file arrays
+        self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
+        self.nlay, self.nrow, self.ncol = self.cbc_shape
 
     def get_budget(self, zon, kstpkper=None, totim=None):
 
+        assert kstpkper in self.get_kstpkper(), 'The specified time step/stress period does not exist {}'.format(kstpkper)
+
         # Get budget data
-        # Placeholder assertion, until multiple kstpkper/totims are supported. "None" will cause the entire
-        # simulation to be pulled.
         if kstpkper is not None:
             self.cbc_data = OrderedDict([(recname.strip(), self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0])
-                                         for recname in self.record_names])
+                                         for recname in self.record_names if recname.strip()])
         elif totim is not None:
             self.cbc_data = OrderedDict([(recname.strip(), self.cbc.get_data(text=recname, totim=totim, full3D=True)[0])
-                                         for recname in self.record_names])
+                                         for recname in self.record_names if recname.strip()])
         else:
             print('Reading budget for last timestep/stress period.')
             kstpkper = self.cbc.get_kstpkper()[-1]
             self.cbc_data = OrderedDict([(recname.strip(), self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0])
-                                         for recname in self.record_names])
+                                         for recname in self.record_names if recname.strip()])
 
         # OPEN THE ZONE FILE (OR ARRAY) AND FIND THE UNIQUE SET OF ZONES CONTAINED THEREIN
         if isinstance(zon, str):
             if os.path.isfile(zon):
                 try:
-                    self.izone = np.loadtxt(zon)
+                    self.izone = np.loadtxt(zon, dtype=np.int32)
                 except Exception as e:
                     print(e)
-        else:
+        elif isinstance(zon, int):
+            # Why would you want to do this?
+            self.izone = np.ones(self.cbc_shape, dtype=np.int32) * zon
+        elif isinstance(zon, np.ndarray):
             self.izone = zon
+        else:
+            s = 'Input zones format is not recognized.'
+            raise Exception(s)
         self.zones = self._find_unique_zones(self.izone.ravel())
+
+        assert self.izone.shape == self.cbc_shape, \
+            'Shape of input zone array {} does not' \
+            ' match the cell by cell' \
+            'budget file {}'.format(self.izone.shape, self.cbc_shape)
 
         # Define dtype for the recarray
         self.float_type = np.float64
         self.dtype = np.dtype([('flow_dir', '|S3'), ('record', '|S20')] +
                                [('ZONE{: >4d}'.format(z), self.float_type) for z in self.zones])
 
-        cbc_bud_shape = self.cbc_data[self.cbc_data.keys()[0]].shape
-        self.nlay, self.nrow, self.ncol = cbc_bud_shape
-        assert self.izone.shape == cbc_bud_shape, \
-            'Shape of input zone array {} does not' \
-            ' match the cell by cell' \
-            'budget file {}'.format(self.izone.shape, cbc_bud_shape)
-
-        # Accumulate source/sink/storage terms by zone
-        inflows = []
-        outflows = []
-        for recname in self.ssst_record_names:
-            # bud = cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-            bud = self.cbc_data[recname]
-            in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, bud)
-            inflows.append(in_tup)
-            outflows.append(out_tup)
-
         # IF RECORD IS A CONSTANT-HEAD INTERNAL FLOW TERM, ACCUMULATE FACE FLOWS ONLY FOR
         #  CONSTANT-HEAD CELLS
         # ----not yet tested----#
-        # bud = cbc.get_data(text='   CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
-        bud = self.cbc_data['CONSTANT HEAD']
-        ich_lrc = bud[bud != 0]
+        ich = None
+        try:
+            ich = self.cbc_data['CONSTANT HEAD']
+        except KeyError:
+            ich = np.zeros(self.cbc_shape)
+        ich_lrc = ich[ich != 0]
         if len(ich_lrc) > 0:
-            chwarn = 'WARNING: CONSTANT HEAD cells were detected, but will not be included in the zonebudget results.'
+            chwarn = 'WARNING: CONSTANT HEAD cells were detected, but will not be included' \
+                     ' in the zonebudget results.'
             warnings.warn(chwarn, UserWarning)
 
-        ichswi_lrc = []
-        if 'SWIADDTOCH' in [r.strip() for r in self.record_names]:
-            # bud = cbc.get_data(text='      SWIADDTOCH', kstpkper=kstpkper, full3D=True)[0]
-            bud = self.cbc_data['SWIADDTOCH']
-            ichswi_lrc += bud[bud != 0]
-
+        ichswi = None
+        try:
+            ichswi = self.cbc_data['SWIADDTOCH']
+        except KeyError:
+            if self.is_swi:
+                ichswi = np.zeros(self.cbc_shape)
+        if self.is_swi:
+            ichswi_lrc = ichswi[ichswi != 0]
+            if len(ichswi_lrc) > 0:
+                chswiwarn = 'WARNING: SWI CONSTANT HEAD cells were detected, but will not be included' \
+                         ' in the zonebudget results.'
+                warnings.warn(chswiwarn, UserWarning)
 
         # PROCESS EACH INTERNAL FLOW RECORD IN THE CELL-BY-CELL BUDGET FILE
         frf, fff, flf, swifrf, swifff, swiflf = [], [], [], [], [], []
+        frf_chd_inflow, fff_chd_inflow, flf_chd_inflow = [], [], []
+        swifrf_chd_inflow, swifff_chd_inflow, swiflf_chd_inflow = [], [], []
+        frf_chd_outflow, fff_chd_outflow, flf_chd_outflow = [], [], []
+        swifrf_chd_outflow, swifff_chd_outflow, swiflf_chd_outflow = [], [], []
         for recname in self.ff_record_names:
 
             if recname.strip() == 'CONSTANT HEAD':
@@ -223,27 +246,27 @@ class ZoneBudget(object):
 
             elif recname.strip() == 'FLOW RIGHT FACE':
                 bud = self.cbc_data[recname]
-                frf = self._get_internal_flow_terms_tuple_frf(bud)
+                frf, frf_chd_inflow, frf_chd_outflow = self._get_internal_flow_terms_tuple_frf(bud, ich)
 
             elif recname.strip() == 'FLOW FRONT FACE':
                 bud = self.cbc_data[recname]
-                fff = self._get_internal_flow_terms_tuple_fff(bud)
+                fff, fff_chd_inflow, fff_chd_outflow = self._get_internal_flow_terms_tuple_fff(bud, ich)
 
             elif recname.strip() == 'FLOW LOWER FACE':
                 bud = self.cbc_data[recname]
-                flf = self._get_internal_flow_terms_tuple_flf(bud)
+                flf, flf_chd_inflow, flf_chd_outflow = self._get_internal_flow_terms_tuple_flf(bud, ich)
 
             elif recname.strip() == 'SWIADDTOFRF':
                 bud = self.cbc_data[recname]
-                swifrf = self._get_internal_flow_terms_tuple_frf(bud)
+                swifrf, swifrf_chd_inflow, swifrf_chd_outflow = self._get_internal_flow_terms_tuple_frf(bud, ichswi)
 
             elif recname.strip() == 'SWIADDTOFFF':
                 bud = self.cbc_data[recname]
-                swifff = self._get_internal_flow_terms_tuple_fff(bud)
+                swifff, swifff_chd_inflow, swifff_chd_outflow = self._get_internal_flow_terms_tuple_fff(bud, ichswi)
 
             elif recname.strip() == 'SWIADDTOFLF':
                 bud = self.cbc_data[recname]
-                swiflf = self._get_internal_flow_terms_tuple_flf(bud)
+                swiflf, swiflf_chd_inflow, swiflf_chd_outflow = self._get_internal_flow_terms_tuple_flf(bud, ichswi)
 
             else:
                 print('Budget item', recname, 'not recognized.')
@@ -254,27 +277,53 @@ class ZoneBudget(object):
         for k, v in q_in.iteritems():
             for z in self.zones:
                 v[z] = 0.
-
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
             gpq = [i[-1] for i in list(gp)]
             q_in[f2z[0]][f2z[1]] = np.sum(gpq)
 
-        for k, v in q_in.iteritems():
-            inflows.append(tuple(v.values()))
-
         q_out = {z: OrderedDict([('flow_dir', 'out'), ('record', 'TO ZONE{: >4d}'.format(z))]) for z in self.zones}
         for k, v in q_out.iteritems():
             for z in self.zones:
                 v[z] = 0.
-
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
         for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
             gpq = [i[-1] for i in list(gp)]
             q_out[f2z[1]][f2z[0]] = np.sum(gpq)
 
+        # Create containers for budget term tuples
+        inflows = []
+        outflows = []
+
+        # NOT YET INMPLEMENTED. CONSTANT HEAD FLOWS DO NOT MATCH ZONEBUDGET OUTPUT.
+        # # Sum CONSTANT HEAD face flows
+        # recname = 'CONSTANT HEAD'
+        # chd_inflow = np.vstack([frf_chd_inflow, fff_chd_inflow, flf_chd_inflow]).sum(axis=0)
+        # chd_outflow = np.vstack([frf_chd_outflow, fff_chd_outflow, flf_chd_outflow]).sum(axis=0)
+        # inflows.append(tuple(['in', recname] + [val for val in chd_inflow]))
+        # outflows.append(tuple(['out', recname] + [val for val in chd_outflow]))
+        #
+        # # Sum SWIADDTOCH face flows
+        # if ichswi is not None:
+        #     recname = 'SWIADDTOCH'
+        #     chdswi_inflow = np.vstack([swifrf_chd_inflow, swifff_chd_inflow, swiflf_chd_inflow]).sum(axis=0)
+        #     chdswi_outflow = np.vstack([swifrf_chd_outflow, swifff_chd_outflow, swiflf_chd_outflow]).sum(axis=0)
+        #     inflows.append(tuple(['in', recname] + [val for val in chdswi_inflow]))
+        #     outflows.append(tuple(['out', recname] + [val for val in chdswi_outflow]))
+
+        # Accumulate source/sink/storage terms by zone
+        for recname in self.ssst_record_names:
+            bud = self.cbc_data[recname]
+            in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, bud)
+            inflows.append(in_tup)
+            outflows.append(out_tup)
+
+        for k, v in q_in.iteritems():
+            inflows.append(tuple(v.values()))
+
         for k, v in q_out.iteritems():
             outflows.append(tuple(v.values()))
+
         q = inflows + outflows
         q = Budget(np.array(q, dtype=self.dtype), kstpkper=kstpkper, totim=totim)
         return q
@@ -320,7 +369,7 @@ class ZoneBudget(object):
         rec_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in rec_outflow]
         return tuple(rec_inflow), tuple(rec_outflow)
 
-    def _get_internal_flow_terms_tuple_frf(self, bud):
+    def _get_internal_flow_terms_tuple_frf(self, bud, ich):
 
         assert self.ncol >= 2, 'Must have more than 2 columns to accumulate FLOW RIGHT FACE record'
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS COLUMNS. COMPUTE FLOW ONLY BETWEEN A ZONE
@@ -343,6 +392,10 @@ class ZoneBudget(object):
 
         # Get the face flow
         q = bud[l, r, c-1]
+
+        # Don't include CH to CH flow (can occur if CHTOCH option is used)
+        if ich is not None:
+            q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
         idx_neg = np.where(q < 0)
@@ -370,6 +423,10 @@ class ZoneBudget(object):
         # Get the face flow
         q = bud[l, r, c]
 
+        # Don't include CH to CH flow (can occur if CHTOCH option is used)
+        if ich is not None:
+            q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
+
         # Get indices where flow face values are negative (flow into higher zone)
         idx_neg = np.where(q < 0)
 
@@ -380,12 +437,23 @@ class ZoneBudget(object):
         pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
         nzgt_r2l = neg + pos
 
-        # Accumulate flow for constant head cells
-
+        # Sum all flow face and constant head terms
         nzgt = sorted(nzgt_l2r + nzgt_r2l, key=lambda tup: tup[:2])
-        return nzgt
 
-    def _get_internal_flow_terms_tuple_fff(self, bud):
+        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+        chd_inflow = [0. for z in self.zones]
+        chd_outflow = [0. for z in self.zones]
+        if ich is not None:
+            q_chd = np.zeros_like(bud)
+            q_chd[(ich != 0)] = bud[(ich != 0)]
+            chd_inflow = [q_chd[(q_chd >= 0.) & (self.izone == z)].sum() for z in self.zones]
+            chd_outflow = [q_chd[(q_chd < 0.) & (self.izone == z)].sum()*-1 for z in self.zones]
+            chd_inflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow]
+            chd_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow]
+
+        return nzgt, tuple(chd_inflow), tuple(chd_outflow)
+
+    def _get_internal_flow_terms_tuple_fff(self, bud, ich):
 
         assert self.nrow >= 2, 'Must have more than 2 rows to accumulate FLOW FRONT FACE record'
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS ROWS. COMPUTE FLOW ONLY BETWEEN A ZONE
@@ -406,6 +474,10 @@ class ZoneBudget(object):
 
         # Get the face flow
         q = bud[l, r-1, c]
+
+        # Don't include CH to CH flow (can occur if CHTOCH option is used)
+        if ich is not None:
+            q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
         idx_neg = np.where(q < 0)
@@ -432,6 +504,10 @@ class ZoneBudget(object):
         # Get the face flow
         q = bud[l, r, c]
 
+        # Don't include CH to CH flow (can occur if CHTOCH option is used)
+        if ich is not None:
+            q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
+
         # Get indices where flow face values are negative (flow into higher zone)
         idx_neg = np.where(q < 0)
 
@@ -441,10 +517,23 @@ class ZoneBudget(object):
         neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
         pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
         nzgt_d2u = neg + pos
-        nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
-        return nzgt
 
-    def _get_internal_flow_terms_tuple_flf(self, bud):
+        nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
+
+        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+        chd_inflow = [0. for z in self.zones]
+        chd_outflow = [0. for z in self.zones]
+        if ich is not None:
+            q_chd = np.zeros_like(bud)
+            q_chd[(ich != 0)] = bud[(ich != 0)]
+            chd_inflow = [q_chd[(q_chd >= 0.) & (self.izone == z)].sum() for z in self.zones]
+            chd_outflow = [q_chd[(q_chd < 0.) & (self.izone == z)].sum()*-1 for z in self.zones]
+            chd_inflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow]
+            chd_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow]
+
+        return nzgt, tuple(chd_inflow), tuple(chd_outflow)
+
+    def _get_internal_flow_terms_tuple_flf(self, bud, ich):
 
         assert self.nlay >= 2, 'Must have more than 2 layers to accumulate FLOW LOWER FACE record'
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS LAYERS. COMPUTE FLOW ONLY BETWEEN A ZONE
@@ -465,6 +554,10 @@ class ZoneBudget(object):
 
         # Get the face flow
         q = bud[l-1, r, c]
+
+        # Don't include CH to CH flow (can occur if CHTOCH option is used)
+        if ich is not None:
+            q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
         idx_neg = np.where(q < 0)
@@ -492,6 +585,10 @@ class ZoneBudget(object):
         # Get the face flow
         q = bud[l, r, c]
 
+        # Don't include CH to CH flow (can occur if CHTOCH option is used)
+        if ich is not None:
+            q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
+
         # Get indices where flow face values are negative (flow into higher zone)
         idx_neg = np.where(q < 0)
 
@@ -501,8 +598,21 @@ class ZoneBudget(object):
         neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
         pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
         nzgt_b2t = neg + pos
+
         nzgt = sorted(nzgt_t2b + nzgt_b2t, key=lambda tup: tup[:2])
-        return nzgt
+
+        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+        chd_inflow = [0. for z in self.zones]
+        chd_outflow = [0. for z in self.zones]
+        if ich is not None:
+            q_chd = np.zeros_like(bud)
+            q_chd[(ich != 0)] = bud[(ich != 0)]
+            chd_inflow = [q_chd[(q_chd >= 0.) & (self.izone == z)].sum() for z in self.zones]
+            chd_outflow = [q_chd[(q_chd < 0.) & (self.izone == z)].sum()*-1 for z in self.zones]
+            chd_inflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow]
+            chd_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow]
+
+        return nzgt, tuple(chd_inflow), tuple(chd_outflow)
 
     @staticmethod
     def _find_unique_zones(a):
@@ -550,13 +660,15 @@ def run_zonbud(zonarray, cbcfile='modflowtest.cbc', listingfile_prefix='zbud', z
     # Need to catch some errors early on, ZoneBudget likes to crash without any feedback
     # Locked output files, non-existent input, etc.
     #
-    assert os.path.isfile(cbcfile), 'Cell by cell budget file is not a file {}'.format(cbcfile)
+    if not os.path.isfile(cbcfile):
+        s = 'The specified cell by cell budget file does not exist: {}'.format(cbcfile)
+        raise Exception(s)
     assert budget_option.upper() in ['A', 'L'], 'Please enter a valid budget option ("A" for all or "L" for' \
                                                 ' a list of times).'
     listingfile_prefix = listingfile_prefix.split('.')[0]
     zonfile = os.path.join(zonbud_ws, listingfile_prefix + '.zon')
     listingfile = os.path.join(zonbud_ws, listingfile_prefix + ' csv')
-    zbud_file = os.path.join(zonbud_ws, listingfile_prefix + '.csv')
+    outfile = os.path.join(zonbud_ws, listingfile_prefix + '.csv')
     args = [listingfile, cbcfile, title, zonfile, budget_option]
     if budget_option == 'L':
         assert kstpkper is not None, 'You have chosen budget option "L", please enter a ' \
@@ -566,13 +678,17 @@ def run_zonbud(zonarray, cbcfile='modflowtest.cbc', listingfile_prefix='zbud', z
         kstpkper_args.append('0,0')
         args += kstpkper_args
 
-    if not os.path.isfile(cbcfile):
-        s = 'The cell by cell budget file for this model does not exists: {}'.format(cbcfile)
+    try:
+        with open(outfile, 'w') as f:
+            pass
+    except IOError:
+        s = 'Output file is not writable. Please check to make sure you have access to the file location ' \
+            'and that the file is not currently locked by another process.'
         raise Exception(s)
 
     _write_zonfile(zonarray, zonfile, iprn)
     _call(zonbud_exe, args, zonbud_ws, silent)
-    zbud = _parse_zbud_file(zbud_file)
+    zbud = _parse_zbud_file(outfile)
     return zbud
 
 
