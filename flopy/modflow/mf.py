@@ -459,7 +459,9 @@ class Modflow(BaseModel):
             if "FREE" in line.upper():
                 ml.free_format_input = True
             bas.filehandle.seek(start)
-
+        if verbose:
+            print("ModflowBas6 free format:{0}\n".format(
+                    ml.free_format_input))
 
 
         # load dis
