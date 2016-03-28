@@ -555,7 +555,7 @@ class ModflowLpf(Package):
                 line = f.readline()
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict, findlayer=k)
             hk[k] = t
-            if chani[k] < 0:
+            if chani[k] < 1:
                 if model.verbose:
                     print('   loading hani layer {0:3d}...'.format(k + 1))
                 if 'hani' not in par_types:
