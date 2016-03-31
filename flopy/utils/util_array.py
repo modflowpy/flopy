@@ -789,7 +789,8 @@ class Util3d(object):
         nlay, nrow, ncol = shape
         u2ds = []
         for k in range(nlay):
-            u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, name,
+            u2d_name = name + "_Layer_{0}".format(k)
+            u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, u2d_name,
                                ext_unit_dict=ext_unit_dict)
             u2ds.append(u2d)
         u3d = Util3d(model, shape, dtype, u2ds, name)
