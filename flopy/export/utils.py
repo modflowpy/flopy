@@ -426,18 +426,23 @@ def transient2d_helper(f, t2d, **kwargs):
         shapefile_utils.write_grid_shapefile(f, t2d.model.sr, array_dict)
 
     elif isinstance(f, NetCdf):
-        # mask the array - assume layer 1 ibound is a good mask
+        # mask the array is defined by any row col with at lease
+        # one active cell
+        mask = None
+        if t2d.model.bas6 is not None:
+            ibnd = np.abs(t2d.model.bas6.ibound.array).sum(axis=0)
+            mask = ibnd == 0
+        elif t2d.model.btn is not None:
+            ibnd = np.abs(t2d.model.btn.icbund.array).sum(axis=0)
+            mask = ibnd == 0
+
         f.log("getting 4D array for {0}".format(t2d.name_base))
         array = t2d.array
         f.log("getting 4D array for {0}".format(t2d.name_base))
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int,np.int,np.int32,np.int64]:
-                # turn this masking off since recharge can be applied to
-                # highest active
-                #if t2d.model.bas6 is not None:
-                #    array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = np.NaN
-                #elif t2d.model.btn is not None:
-                #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = np.NaN
+                if mask is not None:
+                    array[:,0,mask] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
                 mx, mn = np.nanmax(array), np.nanmin(array)

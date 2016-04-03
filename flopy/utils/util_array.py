@@ -490,7 +490,7 @@ class Util3d(object):
         """
         if isinstance(value, Util3d):
             for attr in value.__dict__.items():
-                setattr(self, attr[0], attr[1])
+                setattr(self,attr[0], attr[1])
             self.model = model
             for i, u2d in enumerate(self.util_2ds):
                 self.util_2ds[i] = Util2d(model, u2d.shape, u2d.dtype,
@@ -552,6 +552,7 @@ class Util3d(object):
         elif hasattr(self, "util_2ds") and key == "fmtin":
             for u2d in self.util_2ds:
                 u2d.format = ArrayFormat(u2d, fortran=value)
+            super(Util3d,self).__setattr__("fmtin",value)
         elif hasattr(self, "util_2ds") and key == "how":
             for u2d in self.util_2ds:
                 u2d.how = value

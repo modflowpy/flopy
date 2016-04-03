@@ -2,10 +2,11 @@ from __future__ import print_function
 import os
 import numpy as np
 import subprocess
-import flopy
-from flopy.modflow.mfdisu import ModflowDisU
-from flopy.utils.util_array import read1d, Util2d
-from flopy.mbase import which
+
+# flopy imports
+from ..modflow.mfdisu import ModflowDisU
+from util_array import read1d, Util2d
+from ..mbase import which
 
 try:
     import shapefile

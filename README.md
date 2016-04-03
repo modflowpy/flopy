@@ -92,7 +92,7 @@ A list of supported packages in FloPy is available in [docs/supported_packages.m
 FloPy Model Checks
 -----------------------------------------------
 
-A table of the supported and proposed model checks implemented in  FloPy is available in [docs/checks.md](docs/checks.md) on the github repo.
+A table of the supported and proposed model checks implemented in  FloPy is available in [docs/model_checks.md](docs/model_checks.md) on the github repo.
 
 
 FloPy Changes
