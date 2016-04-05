@@ -337,7 +337,7 @@ class Gridgen(object):
         assert os.path.isfile(qtgfname)
 
         # Export the grid to shapefiles, usgdata, and vtk files
-        self.export()
+        self.export(verbose)
 
         # Create a dictionary that relates nodenumber to vertices
         self._mkvertdict()
@@ -380,7 +380,7 @@ class Gridgen(object):
         ymax = vts[0][1]
         return ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5)
 
-    def export(self):
+    def export(self, verbose=False):
         """
         Export the quadtree grid to shapefiles, usgdata, and vtk
 
@@ -404,6 +404,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtgrid.shp')
             assert os.path.isfile(fn)
         except:
@@ -414,6 +416,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtgrid_pt.shp')
             assert os.path.isfile(fn)
         except:
@@ -424,6 +428,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtg.nod')
             assert os.path.isfile(fn)
         except:
@@ -434,6 +440,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtg.vtu')
             assert os.path.isfile(fn)
         except:
@@ -443,6 +451,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtg_sv.vtu')
             assert os.path.isfile(fn)
         except:
