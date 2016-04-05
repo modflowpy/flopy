@@ -68,6 +68,29 @@ def features_to_shapefile(features, featuretype, filename):
     return
 
 
+def ndarray_to_asciigrid(fname, a, extent, nodata=1.e30):
+    # extent info
+    xmin, xmax, ymin, ymax = extent
+    ncol, nrow = a.shape
+    dx = (xmax - xmin) / ncol
+    assert  dx == (ymax - ymin) / nrow
+    # header
+    header = 'ncols     {}\n'.format(ncol)
+    header += 'nrows    {}\n'.format(nrow)
+    header += 'xllcorner {}\n'.format(xmin)
+    header += 'yllcorner {}\n'.format(ymin)
+    header += 'cellsize {}\n'.format(dx)
+    header += 'NODATA_value {}\n'.format(np.float(nodata))
+    # replace nan with nodata
+    idx = np.isnan(a)
+    a[idx] = np.float(nodata)
+    # write
+    with open(fname, 'w') as f:
+        f.write(header)
+        np.savetxt(f, a, fmt='%15.6e')
+    return
+
+
 class Gridgen(object):
     """
     Class to work with the gridgen program to create layered quadtree grids.
@@ -76,13 +99,25 @@ class Gridgen(object):
     ----------
     dis : flopy.modflow.ModflowDis
         Flopy discretization object
+    model_ws : str
+        workspace location for creating gridgen files (default is '.')
     exe_name : str
         path and name of the gridgen program. (default is gridgen)
+    surface_interpolation : str
+        gridgen method for interpolating elevations.  Valid options include
+        'replicate' (default), 'interpolate', and 'asciigrid'.  If
+        'asciigrid' is used, then elev must be specified.
+    elev : numpy.ndarray
+        3D array to be used for surface interpolation.  It must be of size
+        (nlay + 1, nr, nc).
+    elev_extent : list-like
+        list of xmin, xmax, ymin, ymax extents of the elev grid.
 
     """
 
     def __init__(self, dis, model_ws='.', exe_name='gridgen',
-                 surface_interpolation='replicate'):
+                 surface_interpolation='replicate', elev=None,
+                 elev_extent=None):
         self.nodes = 0
         self.nja = 0
         self._vertdict = {}
@@ -95,10 +130,33 @@ class Gridgen(object):
 
         # surface interpolation method
         self.surface_interpolation = surface_interpolation.upper()
-        if self.surface_interpolation not in ['INTERPOLATE', 'REPLICATE']:
+        self.elev = elev
+        self.elev_extent = elev_extent
+        if self.surface_interpolation not in ['INTERPOLATE', 'REPLICATE',
+                                              'ASCIIGRID']:
             raise Exception('Error.  Unknown surface interpolation method: '
                             '{}.  Must be INTERPOLATE or '
                             'REPLICATE'.format(self.surface_interpolation))
+
+        if self.surface_interpolation == 'ASCIIGRID':
+            # check to make sure elev is a ndarray
+            if not isinstance(elev, np.ndarray):
+                raise Exception('Error.  ASCIIGRID was specified but '
+                                'elev was not specified as a numpy ndarray.')
+            else:
+                nl, nr, nc = elev.shape
+                if nl != dis.nlay + 1:
+                    raise Exception('elev array must have nlay + 1 layers')
+            # check to make sure elev_extents was specified
+            try:
+                self.xminelev, self.xmaxelev, self.yminelev, self.ymaxelev = elev_extent
+            except:
+                raise Exception('Cannot cast elev_extent into xmin, xmax, '
+                                'ymin, ymax.')
+            for k in range(self.dis.nlay + 1):
+                fname = os.path.join(self.model_ws,
+                                     '_gridgen.lay{}.asc'.format(k))
+                ndarray_to_asciigrid(fname, elev[k], elev_extent)
 
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
@@ -196,9 +254,15 @@ class Gridgen(object):
 
         return
 
-    def build(self):
+    def build(self, verbose=False):
         """
         Build the quadtree grid
+
+        Parameters
+        ----------
+        verbose : bool
+            If true, print the results of the gridgen command to the terminal
+            (default is False)
 
         Returns
         -------
@@ -231,6 +295,8 @@ class Gridgen(object):
             os.remove(qtgfname)
         cmds = [self.exe_name, 'quadtreebuilder', '_gridgen_build.dfn']
         buff = subprocess.check_output(cmds, cwd=self.model_ws)
+        if verbose:
+            print(buff)
         assert os.path.isfile(qtgfname)
 
         # Export the grid to shapefiles, usgdata, and vtk files
@@ -739,12 +805,22 @@ class Gridgen(object):
         s += '  SMOOTHING = full\n'
 
         for k in range(self.dis.nlay):
-            s += '  TOP LAYER {} = {} basegrid\n'.format(k + 1,
-                                                         self.surface_interpolation)
+            if self.surface_interpolation == 'ASCIIGRID':
+                grd = '_gridgen.lay{}.asc'.format(k)
+            else:
+                grd = 'basename'
+            s += '  TOP LAYER {} = {} {}\n'.format(k + 1,
+                                                   self.surface_interpolation,
+                                                   grd)
 
         for k in range(self.dis.nlay):
-            s += '  BOTTOM LAYER {} = {} basegrid\n'.format(k + 1,
-                                                            self.surface_interpolation)
+            if self.surface_interpolation == 'ASCIIGRID':
+                grd = '_gridgen.lay{}.asc'.format(k + 1)
+            else:
+                grd = 'basename'
+            s += '  BOTTOM LAYER {} = {} {}\n'.format(k + 1,
+                                                      self.surface_interpolation,
+                                                      grd)
 
         s += '  GRID_DEFINITION_FILE = quadtreegrid.dfn\n'
         s += 'END QUADTREE_BUILDER\n'
@@ -791,7 +867,23 @@ class Gridgen(object):
         None
 
         """
+        # ensure there are active leaf cells from gridgen
+        fname = os.path.join(self.model_ws, 'qtg.nod')
+        if not os.path.isfile(fname):
+            raise Exception('File {} should have been created by gridgen.'.
+                            format(fname))
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.strip().split()
+        nodes = int(ll[0])
+        if nodes == 0:
+            raise Exception('Gridgen resulted in no active cells.')
+
+        # ensure shape file was created by gridgen
         fname = os.path.join(self.model_ws, 'qtgrid.shp')
+        assert os.path.isfile(fname), 'gridgen shape file does not exist'
+
+        # read vertices from shapefile
         sf = shapefile.Reader(fname)
         shapes = sf.shapes()
         fields = sf.fields
