@@ -68,6 +68,29 @@ def features_to_shapefile(features, featuretype, filename):
     return
 
 
+def ndarray_to_asciigrid(fname, a, extent, nodata=1.e30):
+    # extent info
+    xmin, xmax, ymin, ymax = extent
+    ncol, nrow = a.shape
+    dx = (xmax - xmin) / ncol
+    assert  dx == (ymax - ymin) / nrow
+    # header
+    header = 'ncols     {}\n'.format(ncol)
+    header += 'nrows    {}\n'.format(nrow)
+    header += 'xllcorner {}\n'.format(xmin)
+    header += 'yllcorner {}\n'.format(ymin)
+    header += 'cellsize {}\n'.format(dx)
+    header += 'NODATA_value {}\n'.format(np.float(nodata))
+    # replace nan with nodata
+    idx = np.isnan(a)
+    a[idx] = np.float(nodata)
+    # write
+    with open(fname, 'w') as f:
+        f.write(header)
+        np.savetxt(f, a, fmt='%15.6e')
+    return
+
+
 class Gridgen(object):
     """
     Class to work with the gridgen program to create layered quadtree grids.
@@ -76,8 +99,18 @@ class Gridgen(object):
     ----------
     dis : flopy.modflow.ModflowDis
         Flopy discretization object
+    model_ws : str
+        workspace location for creating gridgen files (default is '.')
     exe_name : str
         path and name of the gridgen program. (default is gridgen)
+    surface_interpolation : str
+        Default gridgen method for interpolating elevations.  Valid options
+        include 'replicate' (default) and 'interpolate'
+
+    Notes
+    -----
+    For the surface elevations, the top of a layer uses the same surface as
+    the bottom of the overlying layer.
 
     """
 
@@ -93,12 +126,14 @@ class Gridgen(object):
             raise Exception('Cannot find gridgen binary executable')
         self.exe_name = os.path.abspath(exe_name)
 
-        # surface interpolation method
-        self.surface_interpolation = surface_interpolation.upper()
-        if self.surface_interpolation not in ['INTERPOLATE', 'REPLICATE']:
+        # Set default surface interpolation for all surfaces (nlay + 1)
+        surface_interpolation = surface_interpolation.upper()
+        if surface_interpolation not in ['INTERPOLATE', 'REPLICATE']:
             raise Exception('Error.  Unknown surface interpolation method: '
                             '{}.  Must be INTERPOLATE or '
-                            'REPLICATE'.format(self.surface_interpolation))
+                            'REPLICATE'.format(surface_interpolation))
+        self.surface_interpolation = [surface_interpolation
+                                      for k in range(dis.nlay + 1)]
 
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
@@ -113,6 +148,66 @@ class Gridgen(object):
         for k in range(dis.nlay):
             self._refinement_features.append([])
 
+        # Set up blank _elev and _elev_extent dictionaries
+        self._asciigrid_dict = {}
+
+        return
+
+    def set_surface_interpolation(self, isurf, type, elev=None,
+                                  elev_extent=None):
+        """
+        Parameters
+        ----------
+        isurf : int
+            surface number where 0 is top and nlay + 1 is bottom
+        type : str
+            Must be 'INTERPOLATE', 'REPLICATE' or 'ASCIIGRID'.
+        elev : numpy.ndarray of shape (nr, nc) or str
+            Array that is used as an asciigrid.  If elev is a string, then
+            it is assumed to be the name of the asciigrid.
+        elev_extent : list-like
+            list of xmin, xmax, ymin, ymax extents of the elev grid.
+
+        Returns
+        -------
+        None
+
+        """
+
+        assert 0 <= isurf <= self.dis.nlay + 1
+        type = type.upper()
+        if type not in ['INTERPOLATE', 'REPLICATE', 'ASCIIGRID']:
+            raise Exception('Error.  Unknown surface interpolation type: '
+                            '{}.  Must be INTERPOLATE or '
+                            'REPLICATE'.format(type))
+        else:
+            self.surface_interpolation[isurf] = type
+
+        if type == 'ASCIIGRID':
+            if isinstance(elev, np.ndarray):
+                if elev_extent is None:
+                    raise Exception('Error.  ASCIIGRID was specified but '
+                                    'elev_extent was not.')
+                try:
+                    xmin, xmax, ymin, ymax = elev_extent
+                except:
+                    raise Exception('Cannot cast elev_extent into xmin, xmax, '
+                                    'ymin, ymax: {}'.format(elev_extent))
+
+                nm = '_gridgen.lay{}.asc'.format(isurf)
+                fname = os.path.join(self.model_ws, nm)
+                ndarray_to_asciigrid(fname, elev, elev_extent)
+                self._asciigrid_dict[isurf] = nm
+
+            elif isinstance(elev, str):
+                if not os.path.isfile(elev):
+                    raise Exception('Error.  elev is not a valid file: '
+                                    '{}'.format(elev))
+                self._asciigrid_dict[isurf] = elev
+            else:
+                raise Exception('Error.  ASCIIGRID was specified but '
+                                'elev was not specified as a numpy ndarray or'
+                                'valid asciigrid file.')
         return
 
     def add_active_domain(self, feature, layers):
@@ -196,9 +291,15 @@ class Gridgen(object):
 
         return
 
-    def build(self):
+    def build(self, verbose=False):
         """
         Build the quadtree grid
+
+        Parameters
+        ----------
+        verbose : bool
+            If true, print the results of the gridgen command to the terminal
+            (default is False)
 
         Returns
         -------
@@ -231,10 +332,12 @@ class Gridgen(object):
             os.remove(qtgfname)
         cmds = [self.exe_name, 'quadtreebuilder', '_gridgen_build.dfn']
         buff = subprocess.check_output(cmds, cwd=self.model_ws)
+        if verbose:
+            print(buff)
         assert os.path.isfile(qtgfname)
 
         # Export the grid to shapefiles, usgdata, and vtk files
-        self.export()
+        self.export(verbose)
 
         # Create a dictionary that relates nodenumber to vertices
         self._mkvertdict()
@@ -277,7 +380,7 @@ class Gridgen(object):
         ymax = vts[0][1]
         return ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5)
 
-    def export(self):
+    def export(self, verbose=False):
         """
         Export the quadtree grid to shapefiles, usgdata, and vtk
 
@@ -301,6 +404,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtgrid.shp')
             assert os.path.isfile(fn)
         except:
@@ -311,6 +416,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtgrid_pt.shp')
             assert os.path.isfile(fn)
         except:
@@ -321,6 +428,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtg.nod')
             assert os.path.isfile(fn)
         except:
@@ -331,6 +440,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtg.vtu')
             assert os.path.isfile(fn)
         except:
@@ -340,6 +451,8 @@ class Gridgen(object):
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
+            if verbose:
+                print(buff)
             fn = os.path.join(self.model_ws, 'qtg_sv.vtu')
             assert os.path.isfile(fn)
         except:
@@ -739,12 +852,22 @@ class Gridgen(object):
         s += '  SMOOTHING = full\n'
 
         for k in range(self.dis.nlay):
-            s += '  TOP LAYER {} = {} basegrid\n'.format(k + 1,
-                                                         self.surface_interpolation)
+            if self.surface_interpolation[k] == 'ASCIIGRID':
+                grd = '_gridgen.lay{}.asc'.format(k)
+            else:
+                grd = 'basename'
+            s += '  TOP LAYER {} = {} {}\n'.format(k + 1,
+                                                   self.surface_interpolation[k],
+                                                   grd)
 
         for k in range(self.dis.nlay):
-            s += '  BOTTOM LAYER {} = {} basegrid\n'.format(k + 1,
-                                                            self.surface_interpolation)
+            if self.surface_interpolation[k + 1] == 'ASCIIGRID':
+                grd = '_gridgen.lay{}.asc'.format(k + 1)
+            else:
+                grd = 'basename'
+            s += '  BOTTOM LAYER {} = {} {}\n'.format(k + 1,
+                                                      self.surface_interpolation[k + 1],
+                                                      grd)
 
         s += '  GRID_DEFINITION_FILE = quadtreegrid.dfn\n'
         s += 'END QUADTREE_BUILDER\n'
@@ -791,7 +914,23 @@ class Gridgen(object):
         None
 
         """
+        # ensure there are active leaf cells from gridgen
+        fname = os.path.join(self.model_ws, 'qtg.nod')
+        if not os.path.isfile(fname):
+            raise Exception('File {} should have been created by gridgen.'.
+                            format(fname))
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.strip().split()
+        nodes = int(ll[0])
+        if nodes == 0:
+            raise Exception('Gridgen resulted in no active cells.')
+
+        # ensure shape file was created by gridgen
         fname = os.path.join(self.model_ws, 'qtgrid.shp')
+        assert os.path.isfile(fname), 'gridgen shape file does not exist'
+
+        # read vertices from shapefile
         sf = shapefile.Reader(fname)
         shapes = sf.shapes()
         fields = sf.fields
