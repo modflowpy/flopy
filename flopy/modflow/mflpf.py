@@ -570,7 +570,7 @@ class ModflowLpf(Package):
             key = 'vka'
             if layvka[k] != 0:
                 key = 'vani'
-            if 'vka' not in par_types and 'vani' not in par_types:
+            if 'vk' not in par_types and 'vani' not in par_types:
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, key,
                                  ext_unit_dict)
             else:
