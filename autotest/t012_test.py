@@ -37,7 +37,7 @@ def test_mf2005_p07():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 def test_mf2000_p07():
@@ -63,7 +63,7 @@ def test_mf2000_p07():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 def test_mf2000_HSSTest():
@@ -88,7 +88,7 @@ def test_mf2000_HSSTest():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 """
@@ -126,7 +126,7 @@ def test_mf2000_MultiDiffusion():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 def test_mf2000_P07():
@@ -152,7 +152,7 @@ def test_mf2000_P07():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 def test_mf2000_reinject():
@@ -178,7 +178,7 @@ def test_mf2000_reinject():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 def test_mf2000_SState():
@@ -204,7 +204,7 @@ def test_mf2000_SState():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 def test_mf2000_tob():
@@ -232,7 +232,7 @@ def test_mf2000_tob():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 def test_mf2000_zeroth():
@@ -258,7 +258,7 @@ def test_mf2000_zeroth():
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
-    os.remove(os.path.join(newpth, ftlfile))
+        os.remove(os.path.join(newpth, ftlfile))
     return
 
 
