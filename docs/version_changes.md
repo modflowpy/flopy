@@ -3,9 +3,11 @@ FloPy Changes
 
 ### Version 3.2.5
 * Added support for LAK and GAGE packages - full load and write functionality supported.
+* Improved support for changing the output format of arrays and variables written to MODFLOW input files. 
 
 * Bug fixes:
   1. Fixed issue with VK parameters for LPF and UPW packages.
+  2. Fixed issue with MT3D ADV load in cases where empty fields were present in the first line of the file.
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).
