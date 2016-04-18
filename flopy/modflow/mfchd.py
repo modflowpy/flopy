@@ -89,8 +89,8 @@ class ModflowChd(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 10., 10.1]]]  #this chd will be applied to all
-    >>>                                  #stress periods
+    >>> lrcd = {0:[[2, 3, 4, 10., 10.1]]}  #this chd will be applied to all
+    >>>                                    #stress periods
     >>> chd = flopy.modflow.ModflowChd(m, stress_period_data=lrcd)
 
     """
