@@ -7,7 +7,7 @@ testmodels = [os.path.join(model_ws, f) for f in os.listdir(model_ws)
               if f.endswith('.nam')]
 
 
-def txest_checker_on_load():
+def test_checker_on_load():
     # load all of the models in the mf2005_test folder
     # model level checks are performed by default on load()
     for mfnam in testmodels:
@@ -55,7 +55,12 @@ def test_properties_check():
     # test that storage values ignored for steady state
     mf = flopy.modflow.Modflow(version='mf2005',
                                model_ws='temp')
-    dis = flopy.modflow.ModflowDis(mf, nrow=2, ncol=2, nper=3, steady=True)
+    dis = flopy.modflow.ModflowDis(mf, nrow=2, ncol=2, top=np.array([[100, np.nan],
+                                                                     [100, 100]]),
+                                   nper=3, steady=True)
+    chk = dis.check()
+    assert len(chk.summary_array) == 1
+    assert tuple(chk.summary_array[['k', 'i', 'j']][0]) == (0, 0, 1)
     lpf = flopy.modflow.ModflowLpf(mf, sy=np.ones((2, 2)), ss=np.ones((2, 2)))
     chk = lpf.check()
     assert len(chk.summary_array) == 0
