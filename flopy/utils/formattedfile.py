@@ -196,7 +196,7 @@ class FormattedLayerFile(LayerFile):
         current_col = 0
         result = None
         # Loop until data retreived or eof
-        while current_col < self.ncol - 1 or self.file.tell() == self.totalbytes:
+        while (current_col < self.ncol - 1 or self.file.tell() == self.totalbytes) and current_col < i:
             line = self.file.readline()
             arrline = line.split()
             for val in arrline:
@@ -205,8 +205,10 @@ class FormattedLayerFile(LayerFile):
                                     ' Unable to convert data to float.')
                 result = float(val)
                 current_col = current_col + 1
+                if current_col > i:
+                    break
 
-        if current_col < self.ncol - 1:
+        if (current_col < self.ncol - 1) and (current_col < i):
             raise Exception('Unexpected end of file while reading data.')
 
         return result
@@ -250,7 +252,7 @@ class FormattedLayerFile(LayerFile):
         istat = 1
         for k, i, j in kijlist:
             recordlist = []
-            ioffset_col = (j * self._col_data_size)
+            ioffset_col = (i * self._col_data_size)
             for irec, header in enumerate(self.recordarray):
                 ilay = header['ilay'] - 1 # change ilay from header to zero-based
                 if ilay != k:
@@ -263,7 +265,7 @@ class FormattedLayerFile(LayerFile):
                 # Find the time index and then put value into result in the
                 # correct location.
                 itim = np.where(result[:, 0] == header['totim'])[0]
-                result[itim, istat] = self._read_val(i)
+                result[itim, istat] = self._read_val(j)
             istat += 1
         return result
 
