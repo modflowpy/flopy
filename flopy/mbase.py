@@ -555,17 +555,17 @@ class BaseModel(object):
             self.check(f='{}.chk'.format(self.name), verbose=self.verbose,
                        level=1)
 
-        # org_dir = os.getcwd()
-        # os.chdir(self.model_ws)
         if self.verbose:
             print('\nWriting packages:')
+
         if SelPackList == False:
             for p in self.packagelist:
                 if self.verbose:
                     print('   Package: ', p.name[0])
-                # prevent individual package checks from running after model-level package check above
+                # prevent individual package checks from running after
+                # model-level package check above
                 # otherwise checks are run twice
-                # or the model level check proceedure would have to be split up
+                # or the model level check procedure would have to be split up
                 # or each package would need a check arguemnt,
                 # or default for package level check would have to be False
                 try:
@@ -578,11 +578,11 @@ class BaseModel(object):
                     if pon in p.name:
                         if self.verbose:
                             print('   Package: ', p.name[0])
-                    try:
-                        p.write_file(check=False)
-                    except TypeError:
-                        p.write_file()
-                        break
+                        try:
+                            p.write_file(check=False)
+                        except TypeError:
+                            p.write_file()
+                            break
         if self.verbose:
             print(' ')
         # write name file

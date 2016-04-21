@@ -378,7 +378,7 @@ class ModflowUpw(Package):
                 hani[k] = t
             if model.verbose:
                 print('   loading vka layer {0:3d}...'.format(k + 1))
-            if 'vka' not in par_types and 'vani' not in par_types:
+            if 'vk' not in par_types and 'vani' not in par_types:
                 key = 'vka'
                 if layvka[k] != 0:
                     key = 'vani'

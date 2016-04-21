@@ -522,7 +522,18 @@ def test_how():
     print(u2d.get_file_entry())
 
 
+def test_util3d_reset():
+    import numpy as np
+    import flopy
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    ml.array_free_format = False
+    dis = flopy.modflow.ModflowDis(ml,nlay=2,nrow=10,ncol=10)
+    bas = flopy.modflow.ModflowBas(ml,strt=999)
+    arr = np.ones((ml.nlay,ml.nrow,ml.ncol))
+    ml.bas6.strt = arr
+
 if __name__ == '__main__':
+    test_util3d_reset()
     # test_mflist()
     # test_new_get_file_entry()
     # test_arrayformat()
@@ -534,7 +545,7 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path()
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
-    test_transient2d()
+    #test_transient2d()
     # test_util2d()
     # test_util3d()
     # test_how()

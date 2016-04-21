@@ -120,10 +120,13 @@ class ModflowSwi2(Package):
         must be greater than 0.0 and is reset to 1.0 if NADPTMX is equal to NADPTMN.
         (default is 1.0).
     nu : array of floats
-        if istart = 1, density of each zone (nsrf + 1 values). if istrat = 0, density along
-        top of layer, each surface, and bottom of layer (nsrf + 2 values). (default is 0.025)
-    zeta : list of floats or list of array of floats [(nlay, nrow, ncol), (nlay, nrow, ncol)]
-        initial elevations of the active surfaces. (default is 0.)
+        if istart = 1, density of each zone (nsrf + 1 values). if istrat = 0,
+        density along top of layer, each surface, and bottom of layer
+        (nsrf + 2 values). (default is 0.025)
+    zeta : list of floats or list of array of floats [(nlay, nrow, ncol),
+        (nlay, nrow, ncol)] initial elevations of the active surfaces. The
+        list should contain an entry for each surface and be of size nsrf.
+        (default is 0.)
     ssz : float or array of floats (nlay, nrow, ncol)
         effective porosity. (default is 0.25)
     isource : integer or array of integers (nlay, nrow, ncol)
