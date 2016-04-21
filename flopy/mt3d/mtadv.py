@@ -266,10 +266,12 @@ class Mt3dAdv(Package):
         percel = float(line[10:20])
         mxpart = 0
         if mixelm == 1 or mixelm == 3:
-            mxpart = int(line[20:30])
+            if len(line[20:30].strip()) > 0:
+                mxpart = int(line[20:30])
         nadvfd = 0
         if mixelm == 0:
-            nadvfd = int(line[30:40])
+            if len(line[30:40].strip()) > 0:
+                nadvfd = int(line[30:40])
         if model.verbose:
             print('   MIXELM {}'.format(mixelm))
             print('   PERCEL {}'.format(nadvfd))

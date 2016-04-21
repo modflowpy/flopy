@@ -28,7 +28,7 @@ setup(name=__name__,
       long_description=long_description,
       author=__author__,
       author_email='mark.bakker@tudelft.nl, vincent.post@flinders.edu.au, langevin@usgs.gov, jdhughes@usgs.gov, ' +
-                   'jwhite@usgs.gov, jjstarn@usgs.gov, mnfienen@usgs.gov, frances.alain@gmail.com',
+                   'jwhite@usgs.gov, jjstarn@usgs.gov, mnfienen@usgs.gov, aleaf@usgs.gov, frances.alain@gmail.com',
       url='https://github.com/modflowpy/flopy/',
       license='New BSD',
       platforms='Windows, Mac OS-X',
