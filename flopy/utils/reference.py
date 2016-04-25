@@ -234,7 +234,7 @@ class SpatialReference(object):
     @classmethod
     def from_gridspec(cls,gridspec_file,lenuni=0):
         f = open(gridspec_file,'r')
-        lines = f.readlines()
+        #lines = f.readlines()
         raw = f.readline().strip().split()
         nrow = int(raw[0])
         ncol = int(raw[1])
@@ -248,10 +248,10 @@ class SpatialReference(object):
                 if '*' in r:
                     rraw = r.split('*')
                     for n in range(int(rraw[0])):
-                        delr.append(int(rraw[1]))
+                        delr.append(float(rraw[1]))
                         j += 1
                 else:
-                    delr.append(int(r))
+                    delr.append(float(r))
                     j += 1
         delc = []
         i = 0
@@ -261,10 +261,10 @@ class SpatialReference(object):
                 if '*' in r:
                     rraw = r.split('*')
                     for n in range(int(rraw[0])):
-                        delc.append(int(rraw[1]))
+                        delc.append(float(rraw[1]))
                         i += 1
                 else:
-                    delc.append(int(r))
+                    delc.append(float(r))
                     i += 1
         f.close()
         return cls(np.array(delr), np.array(delc),
