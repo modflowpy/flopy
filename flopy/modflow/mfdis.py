@@ -168,7 +168,7 @@ class ModflowDis(Package):
             start_datetime = model._start_datetime
 
         self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
-                                             self.lenuni,xul=xul, yul=yul,
+                                             self.lenuni, xul=xul, yul=yul,
                                              rotation=rotation,
                                              proj4_str=proj4_str)
         self.start_datetime = start_datetime

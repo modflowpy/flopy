@@ -578,11 +578,11 @@ class BaseModel(object):
                     if pon in p.name:
                         if self.verbose:
                             print('   Package: ', p.name[0])
-                    try:
-                        p.write_file(check=False)
-                    except TypeError:
-                        p.write_file()
-                        break
+                        try:
+                            p.write_file(check=False)
+                        except TypeError:
+                            p.write_file()
+                            break
         if self.verbose:
             print(' ')
         # write name file

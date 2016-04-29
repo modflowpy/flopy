@@ -280,6 +280,11 @@ class ModflowSfr2(Package):
         self.stress_period_data = MfList(self, self.reach_data, dtype=self.reach_data.dtype)
 
         # Datasets 4 and 6. -----------------------------------------------------------------------
+
+        # list of values that indicate segments outside of the model
+        # (depending on how SFR package was constructed)
+        self.not_a_segment_values = [999999]
+
         self.segment_data = {0: self.get_empty_segment_data(self.nss)}
         if segment_data is not None:
             for i in segment_data.keys():
@@ -290,6 +295,9 @@ class ModflowSfr2(Package):
         if len(self.segment_data[0]) == 1 or \
                                 np.diff(self.segment_data[0].nseg).max() != 0 and np.diff(
                     self.segment_data[0].outseg).max() != 0:
+            # first convert any not_a_segment_values to 0
+            for v in self.not_a_segment_values:
+                self.segment_data[0].outseg[self.segment_data[0].outseg == v] = 0
             self.get_outreaches()
         self.channel_geometry_data = channel_geometry_data
         self.channel_flow_data = channel_flow_data
@@ -688,7 +696,8 @@ class ModflowSfr2(Package):
         last_reaches = np.append((np.diff(reach_data.iseg) == 1), True)
         reach_data.outreach = np.append(reach_data.reachID[1:], 0)
         # for now, treat lakes (negative outseg number) the same as outlets
-        reach_data.outreach[last_reaches] = [first_reaches.reachID[s] if s > 0 else 0
+        reach_data.outreach[last_reaches] = [first_reaches.reachID[s] if s > 0
+                                             else 0
                                              for s in segment_data.outseg - 1]
         self.reach_data['outreach'] = reach_data.outreach
 

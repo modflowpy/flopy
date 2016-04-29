@@ -6,6 +6,7 @@ FloPy Supported Packages
 | ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Basic (BAS6)                                   | Supported            | Supported            | Not supported        |
 | Block Centered Flow (BCF)                      | Supported            | Supported            | Not supported        |
+| Time-Variant Specified-Head (CHD)              | Supported            | Supported            | Not supported        |
 | Direct Solver (DE4)                            | Supported            | Supported            | Not supported        |
 | Discretization (DIS)                           | Supported            | Supported            | Not supported        |
 | Drain (DRN)                                    | Supported            | Supported            | Not supported        |

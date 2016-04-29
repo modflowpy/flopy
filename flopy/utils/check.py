@@ -420,7 +420,13 @@ class check:
             pn = [self.package.name] * len(v)
             en = [error_name] * len(v)
             tp = [error_type] * len(v)
-            sa = self._get_summary_array(np.column_stack([tp, pn, np.transpose(inds), v, en]))
+            indsT = np.transpose(inds)
+            # _get_summary_array requires 3 columns for k, i, j,
+            # but indsT will only have two columns if a 2-D array is being compared
+            # pad indsT with a column of zeros for k
+            if indsT.shape[1] == 2:
+                indsT = np.column_stack([np.zeros(indsT.shape[0], dtype=int), indsT])
+            sa = self._get_summary_array(np.column_stack([tp, pn, indsT, v, en]))
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
             self.remove_passed(error_name)
         else:
