@@ -175,7 +175,7 @@ class Util2dTpl(object):
                 for j in range(self.chararray.shape[1]):
                     icount += 1
                     astring += ' {0:>15s}'.format(self.chararray[i, j])
-                    if icount == min(ncol, 10):
+                    if icount == 10 or j == ncol - 1:
                         astring += '\n'
                         icount = 0
             file_entry = cr + astring
