@@ -1380,7 +1380,7 @@ class check:
         self._txt_footer(headertxt, txt, 'overlapping conductance')
 
     def elevations(self):
-        """checks for multiple SFR reaches in one cell; and whether more than one reach has Cond > 0
+        """checks streambed elevations for downstream rises and inconsistencies with model grid
         """
         headertxt = 'Checking segment_data for downstream rises in streambed elevation...\n'
         txt = ''
@@ -1514,7 +1514,7 @@ class check:
             reach_data = recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
 
             txt += self._boolean_compare(reach_data[['k', 'i', 'j', 'iseg', 'ireach',
-                                                     'strtop', 'modeltop', 'reachID']].copy(),
+                                                     'strtop', 'modeltop', 'strhc1', 'reachID']].copy(),
                                          col1='strtop', col2='modeltop',
                                          level0txt='{} reaches encountered with streambed above model top.',
                                          level1txt='Model top violations:',
