@@ -97,15 +97,23 @@ class SpatialReference(object):
             units = self._units.lower()
         else:
             try:
-                import pyproj
+                # need this because preserve_units doesn't seem to be
+                # working for complex proj4 strings.  So if an
+                # epsg code was passed, we have no choice, but if a
+                # proj4 string was passed, we can just parse it
+                if "EPSG" in self.proj4_str.upper():
+                    import pyproj
 
-                crs = pyproj.Proj(self.proj4_str,
-                                  preseve_units=True,
-                                  errcheck=True)
-                if "units=m" in crs.srs:
+                    crs = pyproj.Proj(self.proj4_str,
+                                      preseve_units=True,
+                                      errcheck=True)
+                    proj_str = crs.srs
+                else:
+                    proj_str = self.proj4_str
+                if "units=m" in proj_str:
                     units = "meters"
-                if "units=ft" in crs.srs or \
-                   "to_meters:0.3048" in crs.srs:
+                elif "units=ft" in proj_str or \
+                   "to_meters:0.3048" in proj_str:
                     units = "feet"
             except:
                 pass
