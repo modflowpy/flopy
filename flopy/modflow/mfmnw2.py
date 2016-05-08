@@ -1,6 +1,8 @@
 # from numpy import empty, zeros, ones, where
+import sys
 import numpy as np
 from ..pakbase import Package
+from ..utils.flopy_io import line_parse
 
 
 class ModflowMnw2(Package):
@@ -314,6 +316,30 @@ class ModflowMnw2(Package):
 
         self.parent.add_package(self)
 
+    @staticmethod
+    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+
+        if model.verbose:
+            sys.stdout.write('loading mnw2 package file...\n')
+
+        structured = model.structured
+        if nper is None:
+            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
+
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+        # dataset 0 (header)
+        while True:
+            line = next(f)
+            if line[0] != '#':
+                break
+        # dataset 1
+        mnwmax, nodtot, iwl2cb, mnwprint, option = _parse_1(next(f))
+        # dataset 2
+
+
     def write_file(self):
         """
         Write the package file.
@@ -414,3 +440,73 @@ class ModflowMnw2(Package):
                                                              j, 1])))
 
         f.close()
+
+def _parse_1(line):
+    line = line_parse(line)
+    mnwmax = int(_pop_item(line))
+    nodtot = None
+    if mnwmax < 0:
+        nodtot = int(_pop_item(line))
+    iwl2cb = int(_pop_item(line))
+    mnwprint = int(_pop_item(line))
+    option = []
+    if len(line) > 0:
+        option += [line[i] for i in np.arange(1, len(line)) if 'aux' in line[i - 1].lower()]
+    return mnwmax, nodtot, iwl2cb, mnwprint, option
+
+def _parse_2(line):
+    # dataset 2a
+    line = line_parse(line)
+    wellid = _pop_item(line)
+    nnodes = int(_pop_item(line))
+    # dataset 2b
+    line = line_parse(next(line))
+    losstype, pumploc, qlimit, ppflag, pumpcap = map(line, int)
+    # dataset 2c
+    if losstype.lower() != 'none':
+        rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(next(line), losstype)
+    # dataset 2d
+    dataset_2d1 = []
+    if nnodes > 0:
+        for i in range(nnodes):
+            k = int(_pop_item(line)) -1
+            i = int(_pop_item(line)) -1
+            j = int(_pop_item(line)) -1
+            rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(line, losstype)
+            if ppflag > 0
+                pp = float(_pop_item(line)) -1
+            dataset_2d1.append([k, i, j, rw, rskin, kskin, B, C, P, cwc, pp])
+    elif nnodes < 0:
+        for i in range(nnodes):
+            ztop = float(_pop_item(line))
+            zbotm = float(_pop_item(line))
+            
+def _parse_2c(line, losstype):
+
+    if losstype.lower() != 'specifycwc':
+        rw = float(_pop_item(line))
+        if losstype.lower() == 'skin':
+            rskin = float(_pop_item(line))
+            kskin = float(_pop_item(line))
+        elif losstype.lower() == 'general':
+            B = float(_pop_item(line))
+            C = float(_pop_item(line))
+            P = float(_pop_item(line))
+    else:
+        cwc = float(_pop_item(line))
+
+
+       """ •
+       if LOSSTYPE = THIEM, then specify Rw (the radius of the well).
+       if LOSSTYPE = SKIN, then specify Rw, Rskin (the radius to the outer limit of the skin), and
+Losstype
+Parameter definition requirements for datasets 2c and (or) 2d
+RW Rskin Kskin B C P CWC
+Kskin (the hydraulic conductivity of the skin).
+• if LOSSTYPE = GENERAL, then specify Rw, B, C, and P, where the last three parameters are coefficients in the well-loss equation (equation 2). (See notes and suggestions for GENERAL option under 2b above.)
+• if LOSSTYPE = SPECIFYcwc, then specify CWC (the cell-to-well conductance; see equation 15).
+"""
+def _pop_item(line):
+    if len(line) > 0:
+        return line.pop(0)
+    return 0
