@@ -237,6 +237,7 @@ class ModflowHyd(Package):
         t = line.strip().split()
         nhyd = int(t[0])
         ihydun = int(t[1])
+        model.add_pop_key_list(ihydun)
         hydnoh = float(t[2])
 
         obs = ModflowHyd.get_empty(nhyd)
