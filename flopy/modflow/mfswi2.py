@@ -126,7 +126,7 @@ class ModflowSwi2(Package):
     zeta : list of floats or list of array of floats [(nlay, nrow, ncol),
         (nlay, nrow, ncol)] initial elevations of the active surfaces. The
         list should contain an entry for each surface and be of size nsrf.
-        (default is 0.)
+        (default is [0.])
     ssz : float or array of floats (nlay, nrow, ncol)
         effective porosity. (default is 0.25)
     isource : integer or array of integers (nlay, nrow, ncol)
@@ -187,7 +187,7 @@ class ModflowSwi2(Package):
                                 'nbpol': 2, 'damp': 1.0, 'dampt': 1.0},
                  toeslope=0.05, tipslope=0.05, alpha=None, beta=0.1, nadptmx=1,
                  nadptmn=1, adptfct=1.0,
-                 nu=0.025, zeta=0.0, ssz=0.25, isource=0,
+                 nu=0.025, zeta=[0.0], ssz=0.25, isource=0,
                  obsnam=[], obslrc=[],
                  extension=['swi2', 'zta'], unit_number=29,
                  npln=None):

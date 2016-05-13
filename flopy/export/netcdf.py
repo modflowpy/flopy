@@ -390,6 +390,11 @@ class NetCdf(object):
             sr = copy.deepcopy(self.model.sr)
             sr.delr /= 3.281
             sr.delc /= 3.281
+            if self.model.sr.units.startswith('f'):
+                self.log("converting xul,yul from feet to meters")
+                sr.xul /= 3.281
+                sr.yul /= 3.281
+                self.log("converting xul,yul from feet to meters")
             ys = sr.ycentergrid.copy()
             xs = sr.xcentergrid.copy()
             self.log("converting feet to meters")
