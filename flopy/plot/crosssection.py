@@ -222,18 +222,16 @@ class ModelCrossSection(object):
         else:
             ax = self.ax
 
-        plotarray = a
-        if masked_values is not None:
-            for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
-
         vpts = []
         for k in range(self.dis.nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
                                                    self.sr.yedge,
-                                                   plotarray[k, :, :]))
+                                                   a[k, :, :]))
         vpts = np.array(vpts)
-            
+        if masked_values is not None:
+            for mval in masked_values:
+                vpts = np.ma.masked_equal(vpts, mval)
+
         if isinstance(head, np.ndarray):
             zpts = self.set_zpts(head)
         else:
@@ -743,6 +741,15 @@ class ModelCrossSection(object):
         from matplotlib.collections import PatchCollection
         rectcol = []
 
+        if 'vmin' in kwargs:
+            vmin = kwargs.pop('vmin')
+        else:
+            vmin = None
+        if 'vmax' in kwargs:
+            vmax = kwargs.pop('vmax')
+        else:
+            vmax = None
+
         v = []
         
         colors = []
@@ -770,6 +777,7 @@ class ModelCrossSection(object):
         if len(rectcol) > 0:
             patches = PatchCollection(rectcol, **kwargs)
             patches.set_array(np.array(colors))
+            patches.set_clim(vmin, vmax)
         else:
             patches = None
         return patches
