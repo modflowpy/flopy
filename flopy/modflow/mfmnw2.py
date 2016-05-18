@@ -461,26 +461,74 @@ def _parse_2(line):
     nnodes = int(_pop_item(line))
     # dataset 2b
     line = line_parse(next(line))
-    losstype, pumploc, qlimit, ppflag, pumpcap = map(line, int)
+    losstype, pumploc, qlimit, ppflag, pumpcap = map(int, line)
     # dataset 2c
     if losstype.lower() != 'none':
         rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(next(line), losstype)
     # dataset 2d
     dataset_2d1 = []
+    dataset_2d2 = []
     if nnodes > 0:
         for i in range(nnodes):
+            line = line_parse(next(line))
             k = int(_pop_item(line)) -1
             i = int(_pop_item(line)) -1
             j = int(_pop_item(line)) -1
             rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(line, losstype)
-            if ppflag > 0
+            if ppflag > 0:
                 pp = float(_pop_item(line)) -1
             dataset_2d1.append([k, i, j, rw, rskin, kskin, B, C, P, cwc, pp])
     elif nnodes < 0:
         for i in range(nnodes):
+            line = line_parse(next(line))
             ztop = float(_pop_item(line))
             zbotm = float(_pop_item(line))
-            
+            i = int(_pop_item(line)) -1
+            j = int(_pop_item(line)) -1
+            rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(line, losstype)
+            if ppflag > 0:
+                pp = float(_pop_item(line)) -1
+            dataset_2d2.append([k, i, j, rw, rskin, kskin, B, C, P, cwc, pp])
+    # dataset 2e
+    if pumploc != 0:
+        line = line_parse(next(line))
+        pumplay = int(_pop_item(line))
+        pumprow  = int(_pop_item(line))
+        pumpcol = int(_pop_item(line))
+        zpump =  float(_pop_item(line))
+    # dataset 2f
+    if qlimit > 0:
+        # Only specify dataset 2f if the value of Qlimit in dataset 2b is positive.
+        # Do not enter fractions as percentages.
+        line = line_parse(next(line))
+        hlim = float(_pop_item(line))
+        qcut = int(_pop_item(line))
+        if qcut != 0:
+            gfrcmn = float(_pop_item(line))
+            qfrcmx = float(_pop_item(line))
+    # dataset 2g
+    if pumpcap > 0:
+        # The number of additional data points on the curve (and lines in dataset 2h)
+        # must correspond to the value of PUMPCAP for this well (where PUMPCAP ≤ 25).
+        line = line_parse(next(line))
+        hlift = float(_pop_item(line))
+        liftq0 = float(_pop_item(line))
+        liftqmax = float(_pop_item(line))
+        hwtol = float(_pop_item(line))
+    # dataset 2h
+    if pumpcap > 0:
+        # Enter data in order of decreasing lift
+        # (that is, start with the point corresponding
+        # to the highest value of total dynamic head) and increasing discharge.
+        # The discharge value for the last data point in the sequence
+        # must be less than the value of LIFTqmax.
+        for i in range(len(pumpcap)):
+            line = line_parse(next(line))
+            liftn = float(_pop_item(line))
+            qn = float(_pop_item(line))
+
+
+
 def _parse_2c(line, losstype):
 
     if losstype.lower() != 'specifycwc':
