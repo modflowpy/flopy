@@ -245,6 +245,8 @@ def test_netcdf_overloads():
     print(fdiv2.nc.variables["model_top"][0,:])
     print((f / fdiv2).nc.variables["model_top"][0,:])
 
+    print(f.nc.variables["ibound"][0,:])
+
 def test_shapefile():
     for namfile in namfiles:
         yield export_shapefile, namfile

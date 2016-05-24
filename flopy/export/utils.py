@@ -47,8 +47,50 @@ NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
                  }
 
 
-def datafile_helper(f, df):
-    raise NotImplementedError()
+def ensemble_helper(inputs_filename,outputs_filename,models,**kwargs):
+    """ helper to export an ensemble of model instances.  Assumes
+    all models have same dis and sr, only difference is properties and
+    boundary conditions.  Assumes model.nam.split('_')[-1] is the
+    realization suffix to use in the netcdf variable names
+    """
+
+    for m in models[1:]:
+        assert m.get_nrow_ncol_nlay_nper() == models[0].get_nrow_ncol_nlay_nper()
+    suffix = models[0].name.split('_')[-1]
+    f_in = models[0].export(inputs_filename,**kwargs)
+    mean,stdev = f_in.copy("mean.nc"),NetCdf.zeros_like(f_in,output_filename="stdev.nc")
+    i = 2
+    for m in models[1:]:
+        suffix = m.name.split('_')[-1]
+        f = m.export("temp.nc",**kwargs)
+        f_in.append(f,suffix=suffix)
+        last = mean.copy("mean_temp.nc")
+        mean = last + ((f - last) / float(i))
+        stdev = stdev + ((f - mean) * (f - last))
+        i =+ 1
+
+    f_in.append(mean,suffix="mean")
+    f_in.append(stdev,suffix="stdev")
+
+    suffix = models[0].name.split('_')[-1]
+    f_out = output_helper(outputs_filename,models[0],models[0].\
+                      load_results(as_dict=True),
+                      suffix=suffix,**kwargs)
+    mean,stdev = f_out.copy("mean.nc"),NetCdf.zeros_like(f_out,output_filename="stdev.nc")
+    i = 2
+    for m in models[1:]:
+        suffix = m.name.split('_')[-1]
+        oudic = m.load_results(as_dict=True)
+        f = output_helper("temp.nc",m,oudic,**kwargs)
+        f_out.append(f,suffix=suffix)
+        last = mean.copy("mean_temp.nc")
+        mean = last + ((f - last) / float(i))
+        stdev = stdev + ((f - mean) * (f - last))
+
+    f_out.append(mean,suffix="mean")
+    f_out.append(stdev,suffix="stdev")
+
+    return f_in,f_out
 
 
 def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text='',
@@ -158,10 +200,9 @@ def output_helper(f,ml,oudic,**kwargs):
     stride = kwargs.pop("stride",1)
     suffix = kwargs.pop("suffix",None)
     forgive = kwargs.pop("forgive",False)
-    if len(kwargs) > 0:
+    if len(kwargs) > 0 and logger is not None:
         str_args = ','.join(kwargs)
-        raise NotImplementedError("unsupported kwargs:{0}".format(str_args))
-
+        logger.warn("unused kwargs: "+str_args)
     # this sucks!  need to round the totims in each output file instance so
     # that they will line up
     for key,out in oudic.items():
@@ -199,8 +240,11 @@ def output_helper(f,ml,oudic,**kwargs):
                         "{0}".format(skipped_times))
     times = [t for t in common_times[::stride]]
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, ml, time_values=times,logger=logger,suffix=suffix,
+        f = NetCdf(f, ml, time_values=times,logger=logger,
                    forgive=forgive)
+    else:
+        otimes = list(f.nc.variables["time"][:])
+        assert otimes == times
     if isinstance(f,NetCdf):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
         mask_vals = []
@@ -273,11 +317,10 @@ def model_helper(f, ml, **kwargs):
                                       **kwargs)
 
     elif isinstance(f,NetCdf):
-        if "suffix" in kwargs:
-            f.suffix = kwargs["suffix"]
+
         for pak in ml.packagelist:
             if pak.name[0] in package_names:
-                f = pak.export(f)
+                f = pak.export(f,**kwargs)
         return f
 
     else:
@@ -338,7 +381,7 @@ def generic_array_helper(f, array, var_name="generic_array",
     mx = kwargs.pop("max",1.0e+9)
     long_name = kwargs.pop("long_name",var_name)
     if len(kwargs) > 0:
-        raise Exception("generic_array_helper(): unrecognized kwargs:" +\
+        f.logger.warn("generic_array_helper(): unrecognized kwargs:" +\
                         ",".join(kwargs.keys()))
     attribs = {"long_name": long_name}
     attribs["coordinates"] = coords
@@ -359,10 +402,6 @@ def generic_array_helper(f, array, var_name="generic_array",
         f.logger.warn(estr)
         raise Exception(estr)
     return f
-
-
-
-
 
 
 def mflist_helper(f, mfl, **kwargs):
