@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function,division
 import os
 import platform
 import socket
@@ -162,9 +162,120 @@ class NetCdf(object):
         self._initialize_attributes()
         self.log("initializing attributes")
 
+        self.time_values_arg = time_values
+
         self.log("initializing file")
-        self.initialize_file(time_values=time_values)
+        self.initialize_file(time_values=self.time_values_arg)
         self.log("initializing file")
+
+
+
+    def __add__(self,other):
+        new_net = NetCdf.zeros_like(self)
+        if np.isscalar(other) or isinstance(other,np.ndarray):
+            for vname in self.var_attr_dict.keys():
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] +\
+                                                 other
+        elif isinstance(other,NetCdf):
+            for vname in self.var_attr_dict.keys():
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] +\
+                                                 other.nc.variables[vname][:]
+        else:
+            raise Exception("NetCdf.__add__(): unrecognized other:{0}".\
+                            format(str(type(other))))
+        return new_net
+
+    def __sub__(self,other):
+        new_net = NetCdf.zeros_like(self)
+        if np.isscalar(other) or isinstance(other,np.ndarray):
+            for vname in self.var_attr_dict.keys():
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] -\
+                                                 other
+        elif isinstance(other,NetCdf):
+            for vname in self.var_attr_dict.keys():
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] -\
+                                                 other.nc.variables[vname][:]
+        else:
+            raise Exception("NetCdf.__sub__(): unrecognized other:{0}".\
+                            format(str(type(other))))
+        return new_net
+
+    def __mul__(self,other):
+        new_net = NetCdf.zeros_like(self)
+        if np.isscalar(other) or isinstance(other,np.ndarray):
+            for vname in self.var_attr_dict.keys():
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] *\
+                                                 other
+        elif isinstance(other,NetCdf):
+            for vname in self.var_attr_dict.keys():
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] *\
+                                                 other.nc.variables[vname][:]
+        else:
+            raise Exception("NetCdf.__mul__(): unrecognized other:{0}".\
+                            format(str(type(other))))
+        return new_net
+
+
+    def __div__(self,other):
+        return self.__truediv__(other)
+
+
+    def __truediv__(self,other):
+        new_net = NetCdf.zeros_like(self)
+        with np.errstate(invalid="ignore"):
+            if np.isscalar(other) or isinstance(other,np.ndarray):
+                for vname in self.var_attr_dict.keys():
+                    new_net.nc.variables[vname][:] = self.nc.variables[vname][:] /\
+                                                     other
+            elif isinstance(other,NetCdf):
+                for vname in self.var_attr_dict.keys():
+                    new_net.nc.variables[vname][:] = self.nc.variables[vname][:] /\
+                                                     other.nc.variables[vname][:]
+            else:
+                raise Exception("NetCdf.__sub__(): unrecognized other:{0}".\
+                                format(str(type(other))))
+            return new_net
+
+
+    @classmethod
+    def zeros_like(cls,other,output_filename="netCDF.nc",
+                   verbose=None,logger=None):
+        new_net = NetCdf.empty_like(other,output_filename,verbose=verbose,
+                                    logger=logger)
+        # add the vars to the instance
+        for vname in other.var_attr_dict.keys():
+            if new_net.nc.variables.get(vname) is not None:
+                new_net.logger.warn("variable {0} already defined, skipping".\
+                                    format(vname))
+                continue
+            new_net.log("adding variable {0}".format(vname))
+            var = other.nc.variables[vname]
+            data = var[:]
+            try:
+                mask = data.mask
+                data = np.array(data)
+            except:
+                mask = None
+            new_data = np.zeros_like(data)
+            new_data[mask] = FILLVALUE
+            var = new_net.create_variable(vname,other.var_attr_dict[vname],
+                                          var.dtype,
+                                          dimensions=var.dimensions)
+            new_net.log("adding variable {0}".format(vname))
+        global_attrs = {}
+        for attr in other.nc.ncattrs():
+            if attr not in new_net.nc.ncattrs():
+                global_attrs[attr] = other.nc[attr]
+        new_net.add_global_attributes(global_attrs)
+        return new_net
+
+    @classmethod
+    def empty_like(cls,other,output_filename="netCDF.nc",
+                   verbose=None,logger=None):
+        new_net = cls(output_filename,other.model,
+                      time_values=other.time_values_arg,verbose=verbose,
+                      logger=logger)
+        return new_net
 
     def difference(self, other, minuend="self", mask_zero_diff=True):
         """make a new NetCDF instance that is the difference with another

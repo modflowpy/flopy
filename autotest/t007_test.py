@@ -204,6 +204,47 @@ def test_sr():
     assert ms1.sr == ms.sr
 
 
+def test_netcdf_classmethods():
+    import os
+    import flopy
+    nam_file = "freyberg.nam"
+    model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+    ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
+                                    verbose=True,load_only=[])
+
+    f = ml.export(os.path.join("temp","freyberg.nc"))
+    v1_set = set(f.nc.variables.keys())
+    new_f = flopy.export.NetCdf.zeros_like(f)
+    v2_set = set(new_f.nc.variables.keys())
+    diff = v1_set.symmetric_difference(v2_set)
+    assert len(diff) == 0,str(diff)
+
+def test_netcdf_overloads():
+    import os
+    import flopy
+    nam_file = "freyberg.nam"
+    model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+    ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
+                                    verbose=False,load_only=[])
+
+    f = ml.export(os.path.join("temp","freyberg.nc"))
+    print(f.nc.variables["model_top"][0,:])
+    fplus1 = f + 1
+    print(fplus1.nc.variables["model_top"][0,:])
+    print((f + fplus1).nc.variables["model_top"][0,:])
+
+    fminus1 = f - 1
+    print(fminus1.nc.variables["model_top"][0,:])
+    print((f - fminus1).nc.variables["model_top"][0,:])
+
+    ftimes2 = f * 2
+    print(ftimes2.nc.variables["model_top"][0,:])
+    print((f * ftimes2).nc.variables["model_top"][0,:])
+
+    fdiv2 = f / 2
+    print(fdiv2.nc.variables["model_top"][0,:])
+    print((f / fdiv2).nc.variables["model_top"][0,:])
+
 def test_shapefile():
     for namfile in namfiles:
         yield export_shapefile, namfile
@@ -212,11 +253,14 @@ def test_shapefile():
 def test_netcdf():
     for namfile in namfiles:
         yield export_netcdf, namfile
+
     return
 
 if __name__ == '__main__':
+    test_netcdf_overloads()
+    #test_netcdf_classmethods()
     #test_netcdf()
-    test_sr()
+    #test_sr()
     #test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:
