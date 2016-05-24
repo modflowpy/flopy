@@ -110,6 +110,9 @@ class NetCdf(object):
         will be used
     verbose : if True, stdout is verbose.  If str, then a log file
         is written to the verbose file
+    forgive: what to do if a duplicate variable name is being created.  If
+        True, then suffix arg is appended to variable name at creation
+    suffix: used with the forgive arg to support ensemble-based netcdf files
 
     Notes
     -----
@@ -120,7 +123,7 @@ class NetCdf(object):
     """
 
     def __init__(self, output_filename, model, time_values=None, verbose=None,
-                 logger=None):
+                 logger=None,forgive=False,suffix=None):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
@@ -135,6 +138,9 @@ class NetCdf(object):
             self.logger.warn("removing existing nc file: " + output_filename)
             os.remove(output_filename)
         self.output_filename = output_filename
+
+        self.forgive = bool(forgive)
+        self.suffix = suffix
 
         assert model.dis is not None
         self.model = model
@@ -619,6 +625,8 @@ class NetCdf(object):
         """
         # Normalize variable name
         name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
+        if self.nc.variables.get(name) is not None and self.suffix is not None:
+            name = name + self.suffix
         self.log("creating variable: " + str(name))
         assert precision_str in PRECISION_STRS, \
             "netcdf.create_variable() error: precision string {0} not in {1}". \
@@ -641,13 +649,13 @@ class NetCdf(object):
 
         # Normalize variable name
         name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
-        #if self.nc.variables.get(name) is not None:
-        #    self.logger.warn("skipping duplicate var {0}".format(name))
-        #    return
-        #while self.nc.variables.get(name) is not None:
-        #    name = name + '_1'
-        assert self.nc.variables.get(name) is None, \
-            "netcdf.create_variable error: variable already exists:" + name
+
+        if self.nc.variables.get(name) is not None:
+            if self.forgive:
+                self.logger.warn("variable name {0} already exists...skipping".\
+                                 format(name))
+            else:
+                raise Exception("duplicate variable name: {0}".format(name))
 
         self.var_attr_dict[name] = attributes
 
@@ -656,6 +664,8 @@ class NetCdf(object):
                                      #chunksizes=tuple(chunks))
 
         for k, v in attributes.items():
+            if k == "long_name" and self.suffix is not None:
+                v = v + ' ' + self.suffix
             try:
                 var.setncattr(k, v)
             except:
