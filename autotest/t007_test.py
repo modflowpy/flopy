@@ -228,24 +228,34 @@ def test_netcdf_overloads():
                                     verbose=False,load_only=[])
 
     f = ml.export(os.path.join("temp","freyberg.nc"))
+    fzero = flopy.export.NetCdf.zeros_like(f)
+    assert fzero.nc.variables["model_top"][:].sum() == 0
     print(f.nc.variables["model_top"][0,:])
     fplus1 = f + 1
-    print(fplus1.nc.variables["model_top"][0,:])
-    print((f + fplus1).nc.variables["model_top"][0,:])
+    assert fplus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] + 1
+    assert (f + fplus1).nc.variables["model_top"][0,0] ==\
+           f.nc.variables["model_top"][0,0] + \
+           fplus1.nc.variables["model_top"][0,0]
 
     fminus1 = f - 1
-    print(fminus1.nc.variables["model_top"][0,:])
-    print((f - fminus1).nc.variables["model_top"][0,:])
+    assert fminus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] - 1
+    assert (f - fminus1).nc.variables["model_top"][0,0]==\
+           f.nc.variables["model_top"][0,0] - \
+           fminus1.nc.variables["model_top"][0,0]
 
     ftimes2 = f * 2
-    print(ftimes2.nc.variables["model_top"][0,:])
-    print((f * ftimes2).nc.variables["model_top"][0,:])
+    assert ftimes2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] * 2
+    assert (f * ftimes2).nc.variables["model_top"][0,0] ==\
+            f.nc.variables["model_top"][0,0] * \
+           ftimes2.nc.variables["model_top"][0,0]
 
     fdiv2 = f / 2
-    print(fdiv2.nc.variables["model_top"][0,:])
-    print((f / fdiv2).nc.variables["model_top"][0,:])
+    assert fdiv2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] / 2
+    assert (f / fdiv2).nc.variables["model_top"][0,0] == \
+         f.nc.variables["model_top"][0,0] / \
+           fdiv2.nc.variables["model_top"][0,0]
 
-    print(f.nc.variables["ibound"][0,:])
+    assert f.nc.variables["ibound"][0,0,0] == 1
 
 def test_shapefile():
     for namfile in namfiles:
