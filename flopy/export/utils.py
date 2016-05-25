@@ -47,7 +47,7 @@ NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
                  }
 
 
-def ensemble_helper(inputs_filename,outputs_filename,models,**kwargs):
+def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwargs):
     """ helper to export an ensemble of model instances.  Assumes
     all models have same dis and sr, only difference is properties and
     boundary conditions.  Assumes model.nam.split('_')[-1] is the
@@ -63,14 +63,20 @@ def ensemble_helper(inputs_filename,outputs_filename,models,**kwargs):
     for m in models[1:]:
         suffix = m.name.split('_')[-1]
         f = m.export("temp.nc",**kwargs)
-        f_in.append(f,suffix=suffix)
+        if add_reals:
+            f_in.append(f,suffix=suffix)
         last = mean.copy("mean_temp.nc")
         mean = last + ((f - last) / float(i))
-        stdev = stdev + ((f - mean) * (f - last))
-        i =+ 1
-
-    f_in.append(mean,suffix="mean")
-    f_in.append(stdev,suffix="stdev")
+        stdev += ((f - mean) * (f - last))
+        i += 1
+    if not add_reals:
+        f_in.write()
+        f_in = NetCdf.empty_like(mean,output_filename=inputs_filename)
+        f_in.append(mean,suffix="mean")
+        f_in.append(stdev,suffix="stdev")
+    else:
+        f_in.append(mean,suffix="mean")
+        f_in.append(stdev,suffix="stdev")
 
     suffix = models[0].name.split('_')[-1]
     f_out = output_helper(outputs_filename,models[0],models[0].\
@@ -82,13 +88,21 @@ def ensemble_helper(inputs_filename,outputs_filename,models,**kwargs):
         suffix = m.name.split('_')[-1]
         oudic = m.load_results(as_dict=True)
         f = output_helper("temp.nc",m,oudic,**kwargs)
-        f_out.append(f,suffix=suffix)
+        if add_reals:
+            f_out.append(f,suffix=suffix)
         last = mean.copy("mean_temp.nc")
         mean = last + ((f - last) / float(i))
-        stdev = stdev + ((f - mean) * (f - last))
-
-    f_out.append(mean,suffix="mean")
-    f_out.append(stdev,suffix="stdev")
+        stdev += ((f - mean) * (f - last))
+        i += 1
+    if not add_reals:
+        f_out.write()
+        f_out = NetCdf.empty_like(mean,output_filename=outputs_filename)
+        f_out.append(mean,suffix="mean")
+        f_out.append(stdev,suffix="stdev")
+    else:
+        f_out.append(mean,suffix="mean")
+        f_out.append(stdev,suffix="stdev")
+    print(f_out.var_attr_dict.keys())
 
     return f_in,f_out
 

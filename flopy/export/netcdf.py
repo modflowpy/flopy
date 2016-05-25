@@ -237,19 +237,23 @@ class NetCdf(object):
     def append(self,other,suffix="_1"):
         assert isinstance(other,NetCdf)
         for vname in other.var_attr_dict.keys():
+            attrs = other.var_attr_dict[vname].copy()
             var = other.nc.variables[vname]
             new_vname = vname
+
             if vname in self.nc.variables.keys():
-                new_vname = vname + suffix
+                if vname in self.var_attr_dict.keys():
+                    new_vname = vname + suffix
+                    if "long_name" in attrs:
+                        attrs["long_name"] += " " + suffix
+                else:
+                    continue
             assert new_vname not in self.nc.variables.keys()
-            attrs = other.var_attr_dict[vname]
-            if "long_name" in attrs:
-                attrs["long_name"] += " " + suffix
             new_var = self.create_variable(new_vname,attrs,
                                           var.dtype,
                                           dimensions=var.dimensions)
             new_var[:] = var[:]
-
+        return
 
     def copy(self,output_filename):
         new_net = NetCdf.zeros_like(self,output_filename=output_filename)
