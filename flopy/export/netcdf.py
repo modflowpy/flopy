@@ -13,6 +13,7 @@ ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
 LENUNI = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
 PRECISION_STRS = ["f4", "f8", "i4"]
 
+STANDARD_VARS = ["longitude","latitude","layer","elevation","delr","delc","time"]
 
 class Logger(object):
     """
@@ -242,7 +243,7 @@ class NetCdf(object):
             new_vname = vname
 
             if vname in self.nc.variables.keys():
-                if vname in self.var_attr_dict.keys():
+                if vname not in STANDARD_VARS:
                     new_vname = vname + suffix
                     if "long_name" in attrs:
                         attrs["long_name"] += " " + suffix
@@ -763,6 +764,8 @@ class NetCdf(object):
         name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
         # if this is a core var like a dimension...
         #long_name = attributes.pop("long_name",name)
+        if name in STANDARD_VARS and name in self.nc.variables.keys():
+            return
         if name not in self.var_attr_dict.keys() and\
            name in self.nc.variables.keys():
             if self.forgive:
