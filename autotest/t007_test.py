@@ -257,6 +257,31 @@ def test_netcdf_overloads():
 
     assert f.nc.variables["ibound"][0,0,0] == 1
 
+
+def test_shapefile_ibound():
+    import os
+    import flopy
+    try:
+        import shapefile
+    except:
+        return
+
+    shape_name = os.path.join("temp","test.shp")
+    nam_file = "freyberg.nam"
+    model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+    ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
+                                    verbose=True,load_only=[])
+    ml.export(shape_name)
+    shp = shapefile.Reader(shape_name)
+    field_names = [item[0] for item in shp.fields][1:]
+    ib_idx = field_names.index("ibound_001")
+    assert type(shp.record(0)[ib_idx]) == int,"should be int instead of {0}".\
+        format(type(shp.record(0)[ib_idx]))
+
+    
+
+
+
 def test_shapefile():
     for namfile in namfiles:
         yield export_shapefile, namfile
@@ -269,7 +294,8 @@ def test_netcdf():
     return
 
 if __name__ == '__main__':
-    test_netcdf_overloads()
+    test_shapefile_ibound()
+    #test_netcdf_overloads()
     #test_netcdf_classmethods()
     #test_netcdf()
     #test_sr()
