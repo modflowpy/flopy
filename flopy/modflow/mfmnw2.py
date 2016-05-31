@@ -5,6 +5,92 @@ from ..pakbase import Package
 from ..utils.flopy_io import line_parse
 
 
+
+class Mnw(object):
+    """Multi-Node Well object"""
+    def __init__(self, wellid,
+                 nnodes=1,
+                 losstype="SKIN", pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
+                 rw=1, rskin=2, kskin=10,
+                 B=None, C=0, P=2., cwc=None, pp=1,
+                 dataset_2d1=[], dataset_2d2=[],
+                 node_data=None,
+                 pumplay=0, pumprow=0, pumpcol=0, zpump=None,
+                 hlim=None, qcut=None, qfrcmn=None, qfrcmx=None,
+                 hlift=None, liftq0=None, liftqmax=None, hwtol=None,
+                 liftn=None, qn=None
+                 ):
+        # dataset 2a
+        self.wellid = wellid
+        self.nnodes = nnodes
+        # dataset 2b
+        self.losstype = losstype
+        self.pumploc = pumploc
+        self.qlimit = qlimit
+        self.ppflag = ppflag
+        self.pumpcap = pumpcap
+        # dataset 2c (can be entered by node)
+        self.rw = rw
+        self.rskin = rskin
+        self.kskin = kskin
+        self.B = B
+        self.C = C
+        self.P = P
+        self.cwc = cwc
+        self.pp = pp
+        # dataset 2d (entered by node)
+        self.dataset_2d1 = dataset_2d1
+        self.dataset_2d2 = dataset_2d2
+        # dataset 2e
+        self.pumplay = pumplay
+        self.pumprow = pumprow
+        self.pumpcol = pumpcol
+        self.zpump = zpump
+        # dataset 2f
+        self.hlim = hlim
+        self.qcut = qcut
+        self.qfrcmn = qfrcmn
+        self.qfrcmx = qfrcmx
+        # dataset 2g
+        self.hlift = hlift
+        self.liftq0 = liftq0
+        self.liftqmax = liftqmax
+        self.hwtol = hwtol
+        # dataset 2h
+        self.liftn = liftn
+        self.qn = qn
+
+        # accept node data from structured array
+        self.node_data = node_data
+
+        # build recarray of node data from MNW2 input file
+        if node_data == None:
+            node_data = []
+            d2ab = [wellid, nnodes,
+                    losstype, pumploc, qlimit, ppflag, pumpcap]
+            d2efgh = [pumplay, pumprow, pumpcol, zpump,
+                      hlim, qcut, qfrcmn, qfrcmx,
+                      hlift, liftq0, liftqmax, hwtol,
+                      liftn, qn]
+
+            # clunky but maintains structure of input instructions
+            if len(dataset_2d1) != 0:
+                for line in dataset_2d1:
+                    ztop, zbotm = 0, 0 # could add fn to get from dis
+                    nd = d2ab + [ztop, zbotm] + line + d2efgh
+                    node_data.append(nd)
+            elif len(dataset_2d2) != 0:
+                for line in dataset_2d2:
+                    line = line.insert(2, 0) # insert dummy value for layer
+                    nd = d2ab + line + d2efgh
+                    node_data.append(nd)
+        dtype = [(c, np.float32) for c in ['ztop', 'zbotm', 'k', 'i', 'j',
+                'rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc', 'pp']]
+        self.node_data = np.core.records.fromarrays(np.array(node_data).transpose(),
+                                                    dtype=dtype)
+
+
+
 class ModflowMnw2(Package):
     """
     Multi-Node Well 2 Package Class
@@ -317,6 +403,58 @@ class ModflowMnw2(Package):
         self.parent.add_package(self)
 
     @staticmethod
+    def get_empty_mnw_data(mnwmax=0, aux_names=None, structured=True, default_value=0):
+        # get an empty recarray that correponds to dtype
+        dtype = ModflowMnw2.get_default_reach_dtype(structured=structured)
+        if aux_names is not None:
+            dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        d = np.zeros((mnwmax, len(dtype)), dtype=dtype)
+        d[:, :] = default_value
+        d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        return d
+
+    @staticmethod
+    def get_default_mnw_dtype(structured=True):
+        if structured:
+            return np.dtype([('k', np.int),
+                             ('i', np.int),
+                             ('j', np.int),
+                             ('ztop', np.float32),
+                             ('zbotm', np.float32)
+                             ('wellid', np.object),
+                             ('losstype', np.int),
+                             ('pumploc', np.int),
+                             ('qlimit', np.int),
+                             ('ppflag', np.int),
+                             ('pumpcap', np.int),
+                             ('rw', np.float32),
+                             ('rskin', np.float32),
+                             ('kskin', np.float32),
+                             ('B', np.float32),
+                             ('C', np.float),
+                             ('P', np.float32),
+                             ('cwc', np.float32),
+                             ('pp', np.float32),
+                             ('pumplay', np.int),
+                             ('pumprow', np.int),
+                             ('pumpcol', np.int),
+                             ('zpump', np.float32),
+                             ('hlim', np.float32),
+                             ('qcut', np.int),
+                             ('gfrcmn', np.float32),
+                             ('gfrcmx', np.float32),
+                             ('hlift', np.float32),
+                             ('liftq0', np.float32),
+                             ('liftqmax', np.float32),
+                             ('hwtol', np.float32),
+                             ('liftn', np.float32),
+                             ('qn', np.float32),
+                             ('mnwID', np.int),
+                             ('nodeID', np.int)])
+        else:
+            pass
+
+    @staticmethod
     def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
         if model.verbose:
@@ -338,6 +476,9 @@ class ModflowMnw2(Package):
         # dataset 1
         mnwmax, nodtot, iwl2cb, mnwprint, option = _parse_1(next(f))
         # dataset 2
+        mnw_data = ModflowMnw2.get_empty_mnw_data(mnwmax)
+        for i in range(len(mnwmax)):
+            mnwobj = _parse_2(next(f))
 
 
     def write_file(self):
@@ -463,21 +604,25 @@ def _parse_2(line):
     line = line_parse(next(line))
     losstype, pumploc, qlimit, ppflag, pumpcap = map(int, line)
     # dataset 2c
+    rw, rskin, kskin, B, C, P, cwc = 1, 1, 1, 1, 1, 1, 1 # will not be read below unless < 0
     if losstype.lower() != 'none':
-        rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(next(line), losstype)
+        rw, rskin, kskin, B, C, P, cwc = _parse_2c(next(line), losstype)
     # dataset 2d
     dataset_2d1 = []
     dataset_2d2 = []
+    pp = 1 # partial penetration flag
     if nnodes > 0:
         for i in range(nnodes):
             line = line_parse(next(line))
             k = int(_pop_item(line)) -1
             i = int(_pop_item(line)) -1
             j = int(_pop_item(line)) -1
-            rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(line, losstype)
+            rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn = _parse_2c(line, losstype,
+                                                           rw=rw, rskin=rskin, kskin=kskin,
+                                                           B=B, C=C, P=P, cwc=cwc)
             if ppflag > 0:
-                pp = float(_pop_item(line)) -1
-            dataset_2d1.append([k, i, j, rw, rskin, kskin, B, C, P, cwc, pp])
+                pp = float(_pop_item(line))
+            dataset_2d1.append([k, i, j, rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn, pp])
     elif nnodes < 0:
         for i in range(nnodes):
             line = line_parse(next(line))
@@ -485,10 +630,12 @@ def _parse_2(line):
             zbotm = float(_pop_item(line))
             i = int(_pop_item(line)) -1
             j = int(_pop_item(line)) -1
-            rw, rskin, kskin, B, C, P, cwc, pp = _parse_2c(line, losstype)
+            rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn = _parse_2c(line, losstype,
+                                                           rw=rw, rskin=rskin, kskin=kskin,
+                                                           B=B, C=C, P=P, cwc=cwc)
             if ppflag > 0:
-                pp = float(_pop_item(line)) -1
-            dataset_2d2.append([k, i, j, rw, rskin, kskin, B, C, P, cwc, pp])
+                pp = float(_pop_item(line))
+            dataset_2d2.append([ztop, zbotm, i, j, rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn, pp])
     # dataset 2e
     if pumploc != 0:
         line = line_parse(next(line))
@@ -504,7 +651,7 @@ def _parse_2(line):
         hlim = float(_pop_item(line))
         qcut = int(_pop_item(line))
         if qcut != 0:
-            gfrcmn = float(_pop_item(line))
+            qfrcmn = float(_pop_item(line))
             qfrcmx = float(_pop_item(line))
     # dataset 2g
     if pumpcap > 0:
@@ -527,21 +674,40 @@ def _parse_2(line):
             liftn = float(_pop_item(line))
             qn = float(_pop_item(line))
 
+    return Mnw(wellid,
+               nnodes=nnodes,
+               losstype=losstype, pumploc=pumploc, qlimit=qlimit,
+               ppflag=ppflag, pumpcap=pumpcap,
+               rw=rw, rskin=rskin, kskin=kskin,
+               B=B, C=C, P=P, cwc=cwc, pp=pp,
+               dataset_2d1=dataset_2d1, dataset_2d2=dataset_2d2,
+               pumplay=pumplay, pumprow=pumprow, pumpcol=pumpcol, zpump=zpump,
+               hlim=hlim, qcut=qcut, gfrcmn=qfrcmn, gfrcmx=qfrcmx,
+               hlift=hlift, liftq0=liftq0, liftqmax=liftqmax, hwtol=hwtol,
+               liftn=liftn, qn=qn)
 
 
-def _parse_2c(line, losstype):
+def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1, cwc=-1):
 
     if losstype.lower() != 'specifycwc':
-        rw = float(_pop_item(line))
+        if rw < 0:
+            rw = float(_pop_item(line))
         if losstype.lower() == 'skin':
-            rskin = float(_pop_item(line))
-            kskin = float(_pop_item(line))
+            if rskin < 0:
+                rskin = float(_pop_item(line))
+            if kskin < 0:
+                kskin = float(_pop_item(line))
         elif losstype.lower() == 'general':
-            B = float(_pop_item(line))
-            C = float(_pop_item(line))
-            P = float(_pop_item(line))
+            if B < 0:
+                B = float(_pop_item(line))
+            if C < 0:
+                C = float(_pop_item(line))
+            if P < 0:
+                P = float(_pop_item(line))
     else:
-        cwc = float(_pop_item(line))
+        if cwc < 0:
+            cwc = float(_pop_item(line))
+    return rw, rskin, kskin, B, C, P, cwc
 
 
        """ •
