@@ -8,6 +8,7 @@ FloPy Changes
 * Bug fixes:
   1. Fixed issue with VK parameters for LPF and UPW packages.
   2. Fixed issue with MT3D ADV load in cases where empty fields were present in the first line of the file.
+  3. Fixed cross-section array plotting issues.
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).

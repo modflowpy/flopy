@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList, \
-    HeadFile, CellBudgetFile, UcnFile
+    HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
 from ..mbase import BaseModel
 from ..pakbase import Package
 from . import NetCdf
@@ -19,7 +19,7 @@ NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", 
                    "prsity": "{1}/{1}", "hani": "{0}/{0}", "al": "{0}/{0}", "drn_elev": "{0}",
                    "drn_cond": "1/{1}", "dz": "{0}", "subsidence": "{0}",
                    "chd_shead": "{0}", "chd_ehead": "{0}", "2D_cumulative_well_flux": "{0}^3/{1}",
-                   "3D_cumulative_well_flux": "{0}^3/{1}"}
+                   "3D_cumulative_well_flux": "{0}^3/{1}","vka":"{0}/{1}"}
 NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4", np.int32:"i4"}
 
 NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
@@ -47,8 +47,65 @@ NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
                  }
 
 
-def datafile_helper(f, df):
-    raise NotImplementedError()
+def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwargs):
+    """ helper to export an ensemble of model instances.  Assumes
+    all models have same dis and sr, only difference is properties and
+    boundary conditions.  Assumes model.nam.split('_')[-1] is the
+    realization suffix to use in the netcdf variable names
+    """
+    f_in,f_out = None,None
+    for m in models[1:]:
+        assert m.get_nrow_ncol_nlay_nper() == models[0].get_nrow_ncol_nlay_nper()
+    if inputs_filename is not None:
+        f_in = models[0].export(inputs_filename,**kwargs)
+        mean,stdev = f_in.copy("mean.nc"),NetCdf.zeros_like(f_in,output_filename="stdev.nc")
+        i = 2
+        for m in models[1:]:
+            suffix = m.name.split('.')[0].split('_')[-1]
+            f = m.export("temp.nc",**kwargs)
+            if add_reals:
+                f_in.append(f,suffix=suffix)
+            last = mean.copy("mean_temp.nc")
+            mean = last + ((f - last) / float(i))
+            stdev += ((f - mean) * (f - last))
+            i += 1
+        if i > 2:
+            if not add_reals:
+                f_in.write()
+                f_in = NetCdf.empty_like(mean,output_filename=inputs_filename)
+                f_in.append(mean,suffix="mean")
+                f_in.append(stdev,suffix="stdev")
+            else:
+                f_in.append(mean,suffix="mean")
+                f_in.append(stdev,suffix="stdev")
+    if outputs_filename is not None:
+        suffix = m.name.split('.')[0].split('_')[-1]
+        f_out = output_helper(outputs_filename,models[0],models[0].\
+                          load_results(as_dict=True),
+                          suffix=suffix,**kwargs)
+        mean,stdev = f_out.copy("mean.nc"),NetCdf.zeros_like(f_out,output_filename="stdev.nc")
+        i = 2
+        for m in models[1:]:
+            suffix = m.name.split('.')[0].split('_')[-1]
+            oudic = m.load_results(as_dict=True)
+            f = output_helper("temp.nc",m,oudic,**kwargs)
+            if add_reals:
+                f_out.append(f,suffix=suffix)
+            last = mean.copy("mean_temp.nc")
+            mean = last + ((f - last) / float(i))
+            stdev += ((f - mean) * (f - last))
+            i += 1
+        if i > 2:
+            if not add_reals:
+                f_out.write()
+                f_out = NetCdf.empty_like(mean,output_filename=outputs_filename)
+                f_out.append(mean,suffix="mean")
+                f_out.append(stdev,suffix="stdev")
+            else:
+                f_out.append(mean,suffix="mean")
+                f_out.append(stdev,suffix="stdev")
+
+    return f_in,f_out
 
 
 def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text='',
@@ -156,12 +213,11 @@ def output_helper(f,ml,oudic,**kwargs):
     assert len(oudic.keys()) > 0
     logger = kwargs.pop("logger",None)
     stride = kwargs.pop("stride",1)
-    if len(kwargs) > 0:
+    suffix = kwargs.pop("suffix",None)
+    forgive = kwargs.pop("forgive",False)
+    if len(kwargs) > 0 and logger is not None:
         str_args = ','.join(kwargs)
-        raise NotImplementedError("unsupported kwargs:{0}".format(str_args))
-
-
-
+        logger.warn("unused kwargs: "+str_args)
     # this sucks!  need to round the totims in each output file instance so
     # that they will line up
     for key,out in oudic.items():
@@ -199,6 +255,12 @@ def output_helper(f,ml,oudic,**kwargs):
                         "{0}".format(skipped_times))
     times = [t for t in common_times[::stride]]
     if isinstance(f, str) and f.lower().endswith(".nc"):
+        f = NetCdf(f, ml, time_values=times,logger=logger,
+                   forgive=forgive)
+    else:
+        otimes = list(f.nc.variables["time"][:])
+        assert otimes == times
+    if isinstance(f,NetCdf):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
         mask_vals = []
         mask_array3d = None
@@ -210,7 +272,6 @@ def output_helper(f,ml,oudic,**kwargs):
         if ml.lpf:
             mask_vals.append(ml.lpf.hdry)
 
-        f = NetCdf(f, ml, time_values=times,logger=logger)
         for filename,out_obj in oudic.items():
             filename = filename.lower()
 
@@ -223,6 +284,12 @@ def output_helper(f,ml,oudic,**kwargs):
             elif isinstance(out_obj,HeadFile):
                 _add_output_nc_variable(f,times,shape3d,out_obj,
                                         out_obj.text.decode(),logger=logger,
+                                        mask_vals=mask_vals,
+                                        mask_array3d=mask_array3d)
+
+            elif isinstance(out_obj,FormattedHeadFile):
+                _add_output_nc_variable(f,times,shape3d,out_obj,
+                                        out_obj.text,logger=logger,
                                         mask_vals=mask_vals,
                                         mask_array3d=mask_array3d)
 
@@ -265,9 +332,10 @@ def model_helper(f, ml, **kwargs):
                                       **kwargs)
 
     elif isinstance(f,NetCdf):
+
         for pak in ml.packagelist:
             if pak.name[0] in package_names:
-                f = pak.export(f)
+                f = pak.export(f,**kwargs)
         return f
 
     else:
@@ -314,6 +382,41 @@ def package_helper(f, pak, **kwargs):
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
+
+def generic_array_helper(f, array, var_name="generic_array",
+                         dimensions = ("time", "layer", "y", "x"),
+                         precision_str="f4",units="unitless",**kwargs):
+    assert isinstance(f,NetCdf),"generic_array_helper() can only be used " +\
+                                "with instantiated netCDfs"
+    assert array.ndim == len(dimensions),"generic_array_helper() "+\
+                                         "array.ndim != dimensions"
+    coords_dims = {"time":"time", "layer":"layer", "y":"latitude","x":"longitude"}
+    coords = ' '.join([coords_dims[d] for d in dimensions])
+    mn = kwargs.pop("min",-1.0e+9)
+    mx = kwargs.pop("max",1.0e+9)
+    long_name = kwargs.pop("long_name",var_name)
+    if len(kwargs) > 0:
+        f.logger.warn("generic_array_helper(): unrecognized kwargs:" +\
+                        ",".join(kwargs.keys()))
+    attribs = {"long_name": long_name}
+    attribs["coordinates"] = coords
+    attribs["units"] = units
+    attribs["min"] = mn
+    attribs["max"] = mx
+    try:
+        var = f.create_variable(var_name, attribs, precision_str=precision_str,
+                                dimensions=dimensions)
+    except Exception as e:
+        estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
+        f.logger.warn(estr)
+        raise Exception(estr)
+    try:
+        var[:] = array
+    except Exception as e:
+        estr = "error setting array to variable {0}:\n{1}".format(var_name, str(e))
+        f.logger.warn(estr)
+        raise Exception(estr)
+    return f
 
 
 def mflist_helper(f, mfl, **kwargs):
@@ -471,7 +574,7 @@ def transient2d_helper(f, t2d, **kwargs):
             attribs = {"long_name": NC_LONG_NAMES[var_name]}
         else:
             attribs = {"long_name": var_name}
-        attribs["coordinates"] = "time latitude longitude"
+        attribs["coordinates"] = "time layer latitude longitude"
         attribs["units"] = units
         attribs["min"] = mn
         attribs["max"] = mx
