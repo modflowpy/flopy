@@ -249,7 +249,11 @@ class NetCdf(object):
                         attrs["long_name"] += " " + suffix
                 else:
                     continue
-            assert new_vname not in self.nc.variables.keys()
+            assert new_vname not in self.nc.variables.keys(),\
+                "var already exists:{0} in {1}".\
+                    format(new_vname,",".join(self.nc.variables.keys()))
+            attrs["max"] = var[:].max()
+            attrs["min"] = var[:].min()
             new_var = self.create_variable(new_vname,attrs,
                                           var.dtype,
                                           dimensions=var.dimensions)
