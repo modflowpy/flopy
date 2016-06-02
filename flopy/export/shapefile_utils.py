@@ -76,7 +76,10 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             array = array[0, :, :]
         assert array.shape == (sr.nrow, sr.ncol)
         array[np.where(np.isnan(array))] = nan_val
-        wr.field(name, "N", 20, 12)
+        if array.dtype in [np.int,np.int32,np.int64]:
+            wr.field(name, "N", 20, 0)
+        else:
+            wr.field(name, "N", 20, 12)
         arrays.append(array)
 
     for i in range(sr.nrow):

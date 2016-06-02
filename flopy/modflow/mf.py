@@ -321,6 +321,15 @@ class Modflow(BaseModel):
             self.hext = oc.extension[1]
             self.dext = oc.extension[2]
             self.cext = oc.extension[3]
+            if oc.chedfm is None:
+                head_const = flopy.utils.HeadFile
+            else:
+                head_const = flopy.utils.FormattedHeadFile
+            if oc.cddnfm is None:
+                ddn_const = flopy.utils.HeadFile
+            else:
+                ddn_const = flopy.utils.FormattedHeadFile
+
             for k, lst in oc.stress_period_data.items():
                 for v in lst:
                     if v.lower() == 'save head':
@@ -341,10 +350,10 @@ class Modflow(BaseModel):
         bdObj = None
 
         if savehead and os.path.exists(self.hpth):
-            hdObj = flopy.utils.HeadFile(self.hpth, model=self, **kwargs)
+            hdObj = head_const(self.hpth, model=self, **kwargs)
 
         if saveddn and os.path.exists(self.dpth):
-            ddObj = flopy.utils.HeadFile(self.dpth, model=self, **kwargs)
+            ddObj = ddn_const(self.dpth, model=self, **kwargs)
 
         if savebud and os.path.exists(self.cpth):
             bdObj = flopy.utils.CellBudgetFile(self.cpth, model=self, **kwargs)

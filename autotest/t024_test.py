@@ -60,7 +60,8 @@ def test_properties_check():
                                    nper=3, steady=True)
     chk = dis.check()
     assert len(chk.summary_array) == 1
-    assert tuple(chk.summary_array[['k', 'i', 'j']][0]) == (0, 0, 1)
+    kij = (chk.summary_array['k'][0],chk.summary_array['i'][0],chk.summary_array['j'][0])
+    assert kij == (0, 0, 1)
     lpf = flopy.modflow.ModflowLpf(mf, sy=np.ones((2, 2)), ss=np.ones((2, 2)))
     chk = lpf.check()
     assert len(chk.summary_array) == 0
@@ -89,7 +90,7 @@ def test_properties_check():
     assert 'vertical hydraulic conductivity values above checker threshold of 100000.0' in ind3_errors
 
 if __name__ == '__main__':
-    for mfnam in testmodels:
-        checker_on_load(mfnam)
-    test_bcs_check()
+    #for mfnam in testmodels:
+    #    checker_on_load(mfnam)
+    #test_bcs_check()
     test_properties_check()
