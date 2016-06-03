@@ -336,7 +336,7 @@ class Mnw(object):
         # build recarray of node data from MNW2 input file
         if node_data is None:
             nnodes = len(dataset_2d1) if len(dataset_2d1) > 0 else len(dataset_2d2)
-            node_data = ModflowMnw2.get_empty_mnw_data(nnodes, aux_names=mnwpackage.option)
+            node_data = ModflowMnw2.get_empty_mnw_data(nnodes, aux_names=mnwpackage.aux)
 
             d2ab = [wellid, nnodes,
                     losstype, pumploc, qlimit, ppflag, pumpcap]
@@ -452,7 +452,16 @@ class ModflowMnw2(Package):
 
     Attributes
     ----------
-
+    itmp : list of ints
+        is an integer value for reusing or reading multi-node well data; it can change each stress period.
+        ITMP must be ≥ 0 for the first stress period of a simulation.
+        • if ITMP > 0, then ITMP is the total number of active multi-node wells simulated during the stress period,
+        and only wells listed in dataset 4a will be active during the stress period. Characteristics of each well
+        are defined in datasets 2 and 4.
+        • if ITMP = 0, then no multi-node wells are active for the stress period and the following dataset is skipped.
+        • if ITMP < 0, then the same number of wells and well information will be reused from the
+        previous stress period and dataset 4 is skipped.
+        This variable is generated automatically by flopy.
     Methods
     -------
 
@@ -500,7 +509,8 @@ class ModflowMnw2(Package):
 
         self.stress_period_data = stress_period_data # dict of rec arrays (sp data by mnw)
 
-        if mnw is not None:
+        if mnw is None:
+            self.get_itmp(stress_period_data)
             self.make_mnw_objects(node_data, stress_period_data)
         elif node_data is None and mnw is not None:
             if isinstance(mnw, list):
@@ -633,6 +643,7 @@ class ModflowMnw2(Package):
             mnw[mnwobj.wellid] = mnwobj
             # master table with all node data
             np.append(node_data, mnwobj.node_data).view(np.recarray)
+
         # dataset 3
         itmp = int(line_parse(next(f))[0])
         stress_period_data = {} # stress period data table for package (flopy convention)
@@ -656,13 +667,31 @@ class ModflowMnw2(Package):
             else:
                 # copy pumping rates from previous stress period
                 mnw[wellid].stress_period_data[per] = mnw[wellid].stress_period_data[per-1]
-        return
+        f.close()
+        return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, iwl2cb=iwl2cb, mnwprnt=mnwprint, aux=option,
+                           node_data=node_data, mnw=mnw, stress_period_data=stress_period_data)
 
     def make_mnw_objects(self, node_data, stress_period_data):
         self.mnw = {}
         mnws = np.unique(node_data.wellid)
         for wellid in mnws:
-            self.mnw
+            nd = node_data[node_data.wellid == wellid]
+            nnodes = len(nd)
+            # if tops and bottoms are specified, flip nnodes
+            maxtop = np.max(nd.ztop)
+            minbot = np.min(nd.zbotm)
+            if maxtop - minbot > 0:
+                nnodes *= -1
+            # reshape stress period data to well
+            nper=len(stress_period_data.keys())
+            mnwspd = Mnw.get_empty_stress_period_data(nper, aux_names=self.aux)
+            for per in range(nper):
+                inds = stress_period_data[0].wellid == wellid
+                mnwspd[per] = stress_period_data[per][inds].values
+            self.mnw[wellid] = Mnw(wellid,
+                                   nnodes=nnodes, nper=nper,
+                                   node_data=nd, stress_period_data=mnwspd,
+                                   mnwpackage=self)
 
     def make_node_data(self, mnwobjs):
         """Make node_data rec array from Mnw objects"""
