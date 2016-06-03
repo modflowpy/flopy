@@ -79,10 +79,8 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
                 f_in.append(mean,suffix="mean")
                 f_in.append(stdev,suffix="stdev")
     if outputs_filename is not None:
-        suffix = m.name.split('.')[0].split('_')[-1]
         f_out = output_helper(outputs_filename,models[0],models[0].\
-                          load_results(as_dict=True),
-                          suffix=suffix,**kwargs)
+                          load_results(as_dict=True),**kwargs)
         mean,stdev = f_out.copy("mean.nc"),NetCdf.zeros_like(f_out,output_filename="stdev.nc")
         i = 2
         for m in models[1:]:
@@ -101,6 +99,7 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
                 f_out = NetCdf.empty_like(mean,output_filename=outputs_filename)
                 f_out.append(mean,suffix="mean")
                 f_out.append(stdev,suffix="stdev")
+
             else:
                 f_out.append(mean,suffix="mean")
                 f_out.append(stdev,suffix="stdev")
