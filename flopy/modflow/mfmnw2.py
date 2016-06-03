@@ -538,7 +538,7 @@ class ModflowMnw2(Package):
     @staticmethod
     def get_empty_node_data(mnwmax=0, aux_names=None, structured=True, default_value=0):
         # get an empty recarray that correponds to dtype
-        dtype = ModflowMnw2.get_default_reach_dtype(structured=structured)
+        dtype = ModflowMnw2.get_default_node_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((mnwmax, len(dtype)), dtype=dtype)
@@ -553,7 +553,7 @@ class ModflowMnw2(Package):
                              ('i', np.int),
                              ('j', np.int),
                              ('ztop', np.float32),
-                             ('zbotm', np.float32)
+                             ('zbotm', np.float32),
                              ('wellid', np.object),
                              ('losstype', np.int),
                              ('pumploc', np.int),
@@ -630,13 +630,13 @@ class ModflowMnw2(Package):
             if line[0] != '#':
                 break
         # dataset 1
-        mnwmax, nodtot, iwl2cb, mnwprint, option = _parse_1(next(f))
+        mnwmax, nodtot, iwl2cb, mnwprint, option = _parse_1(line)
         # dataset 2
         node_data = ModflowMnw2.get_empty_node_data(0)
         mnw = {}
-        for i in range(len(mnwmax)):
+        for i in range(mnwmax):
             # create a Mnw object by parsing dataset 2
-            mnwobj = _parse_2(next(f))
+            mnwobj = _parse_2(f)
             # populate stress period data table for each well object
             # this is filled below under dataset 4
             mnwobj.stress_period_data = Mnw.get_empty_stress_period_data(nper, aux_names=option)
@@ -729,25 +729,29 @@ def _parse_1(line):
         option += [line[i] for i in np.arange(1, len(line)) if 'aux' in line[i - 1].lower()]
     return mnwmax, nodtot, iwl2cb, mnwprint, option
 
-def _parse_2(line):
+def _parse_2(f):
     # dataset 2a
-    line = line_parse(line)
+    line = line_parse(next(f))
     wellid = _pop_item(line)
     nnodes = int(_pop_item(line))
     # dataset 2b
-    line = line_parse(next(line))
-    losstype, pumploc, qlimit, ppflag, pumpcap = map(int, line)
+    line = line_parse(next(f))
+    losstype = _pop_item(line)
+    pumploc = int(_pop_item(line))
+    qlimit = int(_pop_item(line))
+    ppflag = int(_pop_item(line))
+    pumpcap = int(_pop_item(line))
     # dataset 2c
     rw, rskin, kskin, B, C, P, cwc = 1, 1, 1, 1, 1, 1, 1 # will not be read below unless < 0
     if losstype.lower() != 'none':
-        rw, rskin, kskin, B, C, P, cwc = _parse_2c(next(line), losstype)
+        rw, rskin, kskin, B, C, P, cwc = _parse_2c(next(f), losstype)
     # dataset 2d
     dataset_2d1 = []
     dataset_2d2 = []
     pp = 1 # partial penetration flag
     if nnodes > 0:
         for i in range(nnodes):
-            line = line_parse(next(line))
+            line = line_parse(next(f))
             k = int(_pop_item(line)) -1
             i = int(_pop_item(line)) -1
             j = int(_pop_item(line)) -1
@@ -759,7 +763,7 @@ def _parse_2(line):
             dataset_2d1.append([k, i, j, rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn, pp])
     elif nnodes < 0:
         for i in range(nnodes):
-            line = line_parse(next(line))
+            line = line_parse(next(f))
             ztop = float(_pop_item(line))
             zbotm = float(_pop_item(line))
             i = int(_pop_item(line)) -1
@@ -772,7 +776,7 @@ def _parse_2(line):
             dataset_2d2.append([ztop, zbotm, i, j, rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn, pp])
     # dataset 2e
     if pumploc != 0:
-        line = line_parse(next(line))
+        line = line_parse(next(f))
         pumplay = int(_pop_item(line))
         pumprow  = int(_pop_item(line))
         pumpcol = int(_pop_item(line))
@@ -781,7 +785,7 @@ def _parse_2(line):
     if qlimit > 0:
         # Only specify dataset 2f if the value of Qlimit in dataset 2b is positive.
         # Do not enter fractions as percentages.
-        line = line_parse(next(line))
+        line = line_parse(next(f))
         hlim = float(_pop_item(line))
         qcut = int(_pop_item(line))
         if qcut != 0:
@@ -791,7 +795,7 @@ def _parse_2(line):
     if pumpcap > 0:
         # The number of additional data points on the curve (and lines in dataset 2h)
         # must correspond to the value of PUMPCAP for this well (where PUMPCAP ≤ 25).
-        line = line_parse(next(line))
+        line = line_parse(next(f))
         hlift = float(_pop_item(line))
         liftq0 = float(_pop_item(line))
         liftqmax = float(_pop_item(line))
@@ -804,7 +808,7 @@ def _parse_2(line):
         # The discharge value for the last data point in the sequence
         # must be less than the value of LIFTqmax.
         for i in range(len(pumpcap)):
-            line = line_parse(next(line))
+            line = line_parse(next(f))
             liftn = float(_pop_item(line))
             qn = float(_pop_item(line))
 
