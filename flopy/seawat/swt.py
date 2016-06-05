@@ -1,7 +1,8 @@
+import os
 from ..mbase import BaseModel
 from ..pakbase import Package
 from .swtvdf import SeawatVdf
-import os
+
 
 class SeawatList(Package):
     """
@@ -22,13 +23,15 @@ class SeawatList(Package):
         # Not implemented for list class
         return
 
+
 class Seawat(BaseModel):
-    '''
+    """
     SEAWAT base class
-    '''
-    def __init__(self, modelname='mt3dmstest', namefile_ext='nam', 
+
+    """
+    def __init__(self, modelname='swttest', namefile_ext='nam',
                  modflowmodel=None, mt3dmsmodel=None, 
-                 version='seawat', exe_name='swt_v4.exe', model_ws = None,
+                 version='seawat', exe_name='swt_v4.exe', model_ws=None,
                  verbose=False, external_path=None):
         BaseModel.__init__(self, modelname, namefile_ext, exe_name=exe_name, 
                            model_ws=model_ws)

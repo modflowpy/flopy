@@ -1,23 +1,21 @@
-import flopy
+import os
+import sys
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
-from .mtadv import Mt3dAdv
 from .mtbtn import Mt3dBtn
+from .mtadv import Mt3dAdv
 from .mtdsp import Mt3dDsp
-from .mtgcg import Mt3dGcg
-from .mtphc import Mt3dPhc
-from .mtrct import Mt3dRct
 from .mtssm import Mt3dSsm
+from .mtrct import Mt3dRct
+from .mtgcg import Mt3dGcg
 from .mttob import Mt3dTob
-import os
-import sys
-
+from .mtphc import Mt3dPhc
 
 class Mt3dList(Package):
-    '''
+    """
     List package class
-    '''
+    """
 
     def __init__(self, model, extension='list', listunit=7):
         # Call ancestor's init to set self.parent, extension, name and
@@ -255,14 +253,14 @@ class Mt3dms(BaseModel):
         # Create a dictionary to map package with package object.
         # This is used for loading models.
         self.mfnam_packages = {
-            'btn': flopy.mt3d.Mt3dBtn,
-            'adv': flopy.mt3d.Mt3dAdv,
-            'dsp': flopy.mt3d.Mt3dDsp,
-            'ssm': flopy.mt3d.Mt3dSsm,
-            'rct': flopy.mt3d.Mt3dRct,
-            'gcg': flopy.mt3d.Mt3dGcg,
-            'tob': flopy.mt3d.Mt3dTob,
-            'phc': flopy.mt3d.Mt3dPhc,
+            'btn': Mt3dBtn,
+            'adv': Mt3dAdv,
+            'dsp': Mt3dDsp,
+            'ssm': Mt3dSsm,
+            'rct': Mt3dRct,
+            'gcg': Mt3dGcg,
+            'tob': Mt3dTob,
+            'phc': Mt3dPhc,
         }
         return
 
