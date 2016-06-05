@@ -102,9 +102,9 @@ class Modflow(BaseModel):
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
                  version='mf2005', exe_name='mf2005.exe',
                  structured=True, listunit=2, model_ws='.', external_path=None,
-                 verbose=False,**kwargs):
+                 verbose=False, **kwargs):
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws,
-                           structured=structured,**kwargs)
+                           structured=structured, **kwargs)
         self.version_types = {'mf2k': 'MODFLOW-2000', 'mf2005': 'MODFLOW-2005',
                               'mfnwt': 'MODFLOW-NWT', 'mfusg': 'MODFLOW-USG'}
 

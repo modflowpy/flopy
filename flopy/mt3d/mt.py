@@ -162,14 +162,14 @@ class Mt3dms(BaseModel):
     ----------
     modelname : string, optional
         Name of model.  This string will be used to name the MODFLOW input
-        that are created with write_model. (the default is 'modflowtest')
+        that are created with write_model. (the default is 'mt3dtest')
     namefile_ext : string, optional
         Extension for the namefile (the default is 'nam')
     version : string, optional
-        Version of MODFLOW to use (the default is 'mf2005').
+        Version of MT3DMS to use (the default is 'mt3dms').
     exe_name : string, optional
         The name of the executable to use (the default is
-        'mf2005').
+        'mt3dms.exe').
     listunit : integer, optional
         Unit number for the list file (the default is 2).
     model_ws : string, optional
