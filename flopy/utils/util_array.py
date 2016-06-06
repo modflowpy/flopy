@@ -2520,6 +2520,9 @@ class Util2d(object):
                         fname = ext_unit_dict[int(raw[1])].filename.strip()
                     except:
                         pass
+
+
+                    
                 nunit = int(raw[1])
                 if isfloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
