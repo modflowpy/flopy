@@ -85,7 +85,8 @@ class ArrayFormat(object):
         self._format = None
         self._width = None
         self._decimal = None
-        self._freeformat_model = u2d.model.array_free_format
+        self._freeformat_model = bool(u2d.model.array_free_format)
+        self._arrayformat_model = bool(u2d.model.array_format)
 
         self.default_float_width = 15
         self.default_int_width = 10
@@ -111,6 +112,10 @@ class ArrayFormat(object):
 
         else:
             self._set_defaults()
+
+    @property
+    def array_free_format(self):
+        return bool(self._freeformat_model)
 
     def _set_defaults(self):
         if self.dtype in [int, np.int, np.int32]:
@@ -1651,11 +1656,10 @@ class Util2d(object):
         # if a filename was passed in or external path was set
         elif self.model.external_path is not None or \
                         self.vtype == str:
-            if self.model.array_free_format:
+            if self.format.array_free_format:
                 self._how = "openclose"
             else:
                 self._how = "external"
-
         else:
             self._how = "internal"
 
@@ -1928,7 +1932,7 @@ class Util2d(object):
 
     def get_constant_cr(self, value):
 
-        if self.model.array_free_format:
+        if self.format.array_free_format:
             lay_space = '{0:>27s}'.format('')
             if self.vtype in [int, np.int]:
                 lay_space = '{0:>32s}'.format('')
@@ -1961,7 +1965,7 @@ class Util2d(object):
         return cr
 
     def get_internal_cr(self):
-        if self.model.array_free_format:
+        if self.format.array_free_format:
             cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
                 .format(self.cnstnt, self.format.fortran, self.iprn, self.name)
             return cr
@@ -1981,7 +1985,7 @@ class Util2d(object):
             locat = -1 * np.abs(locat)
         self.model.add_external(self.model_file_path, locat,
                                 self.format.binary)
-        if self.model.array_free_format:
+        if self.format.array_free_format:
             cr = 'EXTERNAL  {0:>30d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
                 locat, self.cnstnt,
                 self.format.fortran, self.iprn,
@@ -1997,12 +2001,12 @@ class Util2d(object):
         else:
             how = self._how
 
-        if not self.model.array_free_format and self.format.free:
+        if not self.format.array_free_format and self.format.free:
             print("Util2d {0}: can't be free format...resetting".format(
                 self.name))
             self.format.free = False
 
-        if not self.model.array_free_format and self.how == "internal" and self.locat is None:
+        if not self.format.array_free_format and self.how == "internal" and self.locat is None:
             print("Util2d {0}: locat is None, but ".format(self.name) + \
                   "model does not " + \
                   "support free format and how is internal..." + \
@@ -2013,7 +2017,7 @@ class Util2d(object):
                 and how in ["constant", "internal"]:
             print("Util2d:{0}: ".format(self.name) + \
                   "resetting 'how' to external")
-            if self.model.array_free_format:
+            if self.format.array_free_format:
                 how = "openclose"
             else:
                 how = "external"
@@ -2025,7 +2029,7 @@ class Util2d(object):
 
         elif how == "external" or how == "openclose":
             if how == "openclose":
-                assert self.model.array_free_format, "Util2d error: 'how' is openclose," + \
+                assert self.format.array_free_format, "Util2d error: 'how' is openclose," + \
                                                      "but model doesn't support free fmt"
 
             # write a file if needed
