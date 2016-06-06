@@ -111,18 +111,16 @@ class Mnw(object):
         (losstype == 'SPECIFYcwc')
     pp : float
         fraction of partial penetration for the cell. Only specify if PPFLAG > 0 and NNODES > 0.
-    dataset_2d1 : list
-        List containing dataset 2d-1 (see MNW2 input instructions).
-        LAY ROW COL {Rw Rskin Kskin B C P CWC PP}
-
-        Note: LAY ROW COL should be entered as zero-based (following the flopy convention;
-        e.g. 0 0 0 signifies layer 1, row 1, column 1)
-    dataset_2d2 : list
-        List containing dataset 2d-2 (see MNW2 input instructions and node_data columns below).
-        ztop zbotm ROW COL {Rw Rskin Kskin B C P CWC PP}
-
-        Note: ROW COL should be entered as zero-based (following the flopy convention;
-        e.g. 0 0 signifies row 1, column 1)
+    k : int
+        layer index of well (zero-based)
+    i : int
+        row index of well (zero-based)
+    j : int
+        column index of well (zero-based)
+    ztop : float
+        top elevation of open intervals of vertical well.
+    zbotm : float
+        bottom elevation of open intervals of vertical well.
     node_data : numpy record array
         table containing MNW data by node. A blank node_data template can be created
         via the ModflowMnw2.get_empty_mnw_data() static method.
@@ -271,7 +269,7 @@ class Mnw(object):
                  losstype="SKIN", pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
                  rw=1, rskin=2, kskin=10,
                  B=None, C=0, P=2., cwc=None, pp=1,
-                 dataset_2d1=[], dataset_2d2=[],
+                 k=0, i=0, j=0, ztop=0, zbotm=0,
                  node_data=None, stress_period_data=None,
                  pumplay=0, pumprow=0, pumpcol=0, zpump=None,
                  hlim=None, qcut=None, qfrcmn=None, qfrcmx=None,
@@ -301,8 +299,11 @@ class Mnw(object):
         self.cwc = cwc
         self.pp = pp
         # dataset 2d (entered by node)
-        self.dataset_2d1 = dataset_2d1
-        self.dataset_2d2 = dataset_2d2
+        self.k = k
+        self.i = i
+        self.j = j
+        self.ztop = ztop
+        self.zbotm = zbotm
         # dataset 2e
         self.pumplay = pumplay
         self.pumprow = pumprow
@@ -323,7 +324,6 @@ class Mnw(object):
         self.qn = qn
 
         # dataset 4
-        # could add capability to read dataset 4 just like the package file
 
         # accept stress period data (pumping rates) from structured array
         self.stress_period_data = stress_period_data
@@ -332,33 +332,20 @@ class Mnw(object):
         self.node_data = node_data
 
         # build recarray of node data from MNW2 input file
-        best approach would be to only include non-default values
-        (iterate by column names)
         if node_data is None:
-            nnodes = len(dataset_2d1) if len(dataset_2d1) > 0 else len(dataset_2d2)
-            node_data = ModflowMnw2.get_empty_node_data(nnodes, aux_names=self.aux)
+            self.make_node_data()
 
-            d2ab = [wellid,
-                    losstype, pumploc, qlimit, ppflag, pumpcap]
-            d2efgh = [pumplay, pumprow, pumpcol, zpump,
-                      hlim, qcut, qfrcmn, qfrcmx,
-                      hlift, liftq0, liftqmax, hwtol,
-                      liftn, qn]
+    def make_node_data(self):
+        """Makes the node data array from variables entered individually."""
+        nnodes = len(self.i)
+        node_data = ModflowMnw2.get_empty_node_data(nnodes, aux_names=self.aux)
 
-            # clunky but maintains structure of input instructions
-            if len(dataset_2d1) != 0:
-                for n, line in enumerate(dataset_2d1):
-                    ztop, zbotm = 0, 0 # could add fn to get from dis
-                    k, i, j = line[0:3]
-                    nd = [k, i, j, ztop, zbotm] + d2ab + line[3:] + d2efgh
-                    node_data[n] = nd
-            elif len(dataset_2d2) != 0:
-                for n, line in enumerate(dataset_2d2):
-                    ztop, zbotm, i, j = line[0:4]
-                    nd = tuple([0, i, j, ztop, zbotm] + d2ab + line[4:] + d2efgh)
-                    assert len(nd) == len(node_data[n])
-                    node_data[n] = nd
-            self.node_data = node_data
+        names = self._get_item2_names()
+
+        for n in names:
+            print("{}, {}".format(n, self.__dict__[n]))
+            node_data[n] = self.__dict__[n]
+        self.node_data = node_data
 
     @staticmethod
     def get_empty_stress_period_data(nper=0, aux_names=None, structured=True, default_value=0):
@@ -368,13 +355,13 @@ class Mnw(object):
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((nper, len(dtype)), dtype=dtype)
         d[:, :] = default_value
-        d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = d.view(np.recarray)
         return d
 
     @staticmethod
     def get_default_spd_dtype(structured=True):
         if structured:
-            return np.dtype([('per', np.object),
+            return np.dtype([('per', str),
                              ('qdes', np.float),
                              ('capmult', np.int),
                              ('cprime', np.float32),
@@ -385,7 +372,80 @@ class Mnw(object):
         else:
             pass
 
+    def _get_item2_names(self):
+        """Determine which variables are being used.
 
+        Returns
+        -------
+        names : list of str
+            List of names (same as variables in MNW2 Package input instructions) of columns
+            to assign (upon load) or retain (upon write) in reach_data array.
+
+        Note
+        ----
+        Lowercase is used for all variable names.
+
+            ztop : float
+                top elevation of open intervals of vertical well.
+            zbotm : float
+                bottom elevation of open intervals of vertical well.
+            wellid : str
+            losstyp : str
+            pumploc : int
+            qlimit : int
+            ppflag : int
+            pumpcap : int
+            rw : float
+            rskin : float
+            kskin : float
+            B : float
+            C : float
+            P : float
+            cwc : float
+            pp : float
+            pumplay : int
+            pumprow : int
+            pumpcol : int
+            zpump : float
+            hlim : float
+            qcut : int
+            qfrcmn : float
+            qfrcmx : float
+            hlift : float
+            liftq0 : float
+            liftqmax : float
+            hwtol : float
+            liftn : float
+            qn : float
+        """
+        names = ['i', 'j']
+        if self.nnodes > 0:
+            names += ['k']
+        if self.nnodes < 0:
+            names += ['ztop', 'zbotm']
+        names += ['wellid', 'losstype', 'pumploc', 'qlimit', 'ppflag', 'pumpcap']
+        if self.losstype.lower() == 'thiem':
+            names += ['rw']
+        elif self.losstype.lower() == 'skin':
+            names += ['rw', 'rskin', 'kskin']
+        elif self.losstype.lower() == 'general':
+            names += ['rw', 'B', 'C', 'P']
+        elif self.losstype.lower() == 'specifycwc':
+            names += ['cwc']
+        if self.ppflag > 0 and self.nnodes > 0:
+            names += ['pp']
+        if self.pumploc != 0:
+            names += ['pumplay', 'pumprow', 'pumpcol']
+            if self.pumploc < 0:
+                names += ['zpump']
+        if self.qlimit > 0:
+            names += ['hlim', 'qcut']
+            if self.qcut != 0:
+                names += ['qfrcmn', 'qfrcmx']
+        if self.pumpcap > 0:
+            names += ['hlift', 'liftq0', 'liftqmax', 'hwtol']
+            names += ['liftn', 'qn']
+        return names
 
 class ModflowMnw2(Package):
     """
@@ -576,8 +636,8 @@ class ModflowMnw2(Package):
                              ('zpump', np.float32),
                              ('hlim', np.float32),
                              ('qcut', np.int),
-                             ('gfrcmn', np.float32),
-                             ('gfrcmx', np.float32),
+                             ('qfrcmn', np.float32),
+                             ('qfrcmx', np.float32),
                              ('hlift', np.float32),
                              ('liftq0', np.float32),
                              ('liftqmax', np.float32),
@@ -590,18 +650,19 @@ class ModflowMnw2(Package):
     @staticmethod
     def get_empty_stress_period_data(itmp=0, aux_names=None, structured=True, default_value=0):
         # get an empty recarray that correponds to dtype
-        dtype = ModflowMnw2.get_default_reach_dtype(structured=structured)
+        dtype = ModflowMnw2.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros((itmp, len(dtype)), dtype=dtype)
         d[:, :] = default_value
-        d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        #d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = d.view(np.recarray)
         return d
 
     @staticmethod
     def get_default_spd_dtype(structured=True):
         if structured:
-            return np.dtype([('wellid', np.object),
+            return np.dtype([('wellid', str),
                              ('qdes', np.float),
                              ('capmult', np.int),
                              ('cprime', np.float32),
@@ -651,18 +712,20 @@ class ModflowMnw2(Package):
         stress_period_data = {} # stress period data table for package (flopy convention)
         for per in range(0, nper):
             # dataset4
+            # dict might be better here to only load submitted values
             if itmp > 0:
                 current_4 = ModflowMnw2.get_empty_stress_period_data(itmp, aux_names=option)
                 for i in range(itmp):
                     wellid, qdes, capmult, cprime, xyz = _parse_4a(next(f), mnw, gwt=gwt)
+                    hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
                     # update package stress period data table
-                    current_4[i] = [wellid, qdes, capmult, cprime,
-                                    hlim, qcut, qfrcmn, qfrcmx] + xyz
+                    current_4[i] = tuple([wellid, qdes, capmult, cprime,
+                                    hlim, qcut, qfrcmn, qfrcmx] + xyz)
                     # update well stress period data table
-                    mnw[wellid].stress_period_data[per] = [per] + [qdes, capmult, cprime,
-                                                                   hlim, qcut, qfrcmn, qfrcmx] + xyz
+                    mnw[wellid].stress_period_data[per] = tuple([per] + [qdes, capmult, cprime,
+                                                                   hlim, qcut, qfrcmn, qfrcmx] + xyz)
                 stress_period_data[per] = current_4
             elif itmp == 0: # no active mnws this stress period
                 continue
@@ -743,39 +806,38 @@ def _parse_2(f):
     qlimit = _pop_item(line, int)
     ppflag = _pop_item(line, int)
     pumpcap = _pop_item(line, int)
+
     # dataset 2c
-    rw, rskin, kskin, B, C, P, cwc = 1, 1, 1, 1, 1, 1, 1 # will not be read below unless < 0
+    names = ['ztop', 'zbotm', 'k', 'i', 'j', 'rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc', 'pp']
+    d2d = {n: [] for n in names} # dataset 2d; dict of lists for each variable
     if losstype.lower() != 'none':
-        rw, rskin, kskin, B, C, P, cwc = _parse_2c(next(f), losstype)
+        # set default values of 0 for all 2c items
+        d2dw = dict(zip(['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc'], [0]*7))
+        d2dw.update(_parse_2c(next(f), losstype)) # dict of values for well
+        for k, v in d2dw.items():
+            if v > 0:
+                d2d[k] = v
     # dataset 2d
-    dataset_2d1 = []
-    dataset_2d2 = []
     pp = 1 # partial penetration flag
-    if nnodes > 0:
-        for i in range(nnodes):
-            line = line_parse(next(f))
-            k = _pop_item(line, int) -1
-            i = _pop_item(line, int) -1
-            j = _pop_item(line, int) -1
-            rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn = _parse_2c(line, losstype,
-                                                           rw=rw, rskin=rskin, kskin=kskin,
-                                                           B=B, C=C, P=P, cwc=cwc)
-            if ppflag > 0:
-                pp = _pop_item(line, float)
-            dataset_2d1.append([k, i, j, rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn, pp])
-    elif nnodes < 0:
-        for i in range(-nnodes):
-            line = line_parse(next(f))
-            ztop = _pop_item(line, float)
-            zbotm = _pop_item(line, float)
-            i = _pop_item(line, int) -1
-            j = _pop_item(line, int) -1
-            rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn = _parse_2c(line, losstype,
-                                                           rw=rw, rskin=rskin, kskin=kskin,
-                                                           B=B, C=C, P=P, cwc=cwc)
-            if ppflag > 0:
-                pp = _pop_item(line, float)
-            dataset_2d2.append([ztop, zbotm, i, j, rwn, rskinn, kskinn, Bn, Cn, Pn, cwcn, pp])
+    for i in range(np.abs(nnodes)):
+        line = line_parse(next(f))
+        if nnodes > 0:
+            d2d['k'].append(_pop_item(line, int) -1)
+            d2d['i'].append(_pop_item(line, int) -1)
+            d2d['j'].append(_pop_item(line, int) -1)
+        elif nnodes < 0:
+            d2d['ztop'].append(_pop_item(line, float))
+            d2d['zbotm'].append(_pop_item(line, float))
+            d2d['i'].append(_pop_item(line, int) -1)
+            d2d['j'].append(_pop_item(line, int) -1)
+        d2di = _parse_2c(line, losstype, rw=d2dw['rw'], rskin=d2dw['rskin'], kskin=d2dw['kskin'],
+                         B=d2dw['B'], C=d2dw['C'], P=d2dw['P'], cwc=d2dw['cwc'])
+        # append only the returned items
+        for k, v in d2di.items():
+            d2d[k] += v
+        if ppflag > 0:
+            d2d['pp'] += _pop_item(line, float)
+
     # dataset 2e
     pumplay = None
     pumprow = None
@@ -832,9 +894,9 @@ def _parse_2(f):
                nnodes=nnodes,
                losstype=losstype, pumploc=pumploc, qlimit=qlimit,
                ppflag=ppflag, pumpcap=pumpcap,
-               rw=rw, rskin=rskin, kskin=kskin,
-               B=B, C=C, P=P, cwc=cwc, pp=pp,
-               dataset_2d1=dataset_2d1, dataset_2d2=dataset_2d2,
+               k=d2d['k'], i=d2d['i'], j=d2d['j'], ztop=d2d['ztop'], zbotm=d2d['zbotm'],
+               rw=d2d['rw'], rskin=d2d['rskin'], kskin=d2d['kskin'],
+               B=d2d['B'], C=d2d['C'], P=d2d['P'], cwc=d2d['cwc'], pp=d2d['pp'],
                pumplay=pumplay, pumprow=pumprow, pumpcol=pumpcol, zpump=zpump,
                hlim=hlim, qcut=qcut, qfrcmn=qfrcmn, qfrcmx=qfrcmx,
                hlift=hlift, liftq0=liftq0, liftqmax=liftqmax, hwtol=hwtol,
@@ -844,29 +906,30 @@ def _parse_2(f):
 def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1, cwc=-1):
     if not isinstance(line, list):
         line = line_parse(line)
+    nd = {} # dict of dataset 2c/2d items
     if losstype.lower() != 'specifycwc':
         if rw < 0:
-            rw = _pop_item(line, float)
+            nd['rw'] = _pop_item(line, float)
         if losstype.lower() == 'skin':
             if rskin < 0:
-                rskin = _pop_item(line, float)
+                nd['rskin'] = _pop_item(line, float)
             if kskin < 0:
-                kskin = _pop_item(line, float)
+                nd['kskin'] = _pop_item(line, float)
         elif losstype.lower() == 'general':
             if B < 0:
-                B = _pop_item(line, float)
+                nd['B'] = _pop_item(line, float)
             if C < 0:
-                C = _pop_item(line, float)
+                nd['C'] = _pop_item(line, float)
             if P < 0:
-                P = _pop_item(line, float)
+                nd['P'] = _pop_item(line, float)
     else:
         if cwc < 0:
-            cwc = _pop_item(line, float)
-    return rw, rskin, kskin, B, C, P, cwc
+            nd['cwc'] = _pop_item(line, float)
+    return nd
 
 def _parse_4a(line, mnw, gwt=False):
-    capmult = None
-    cprime = None
+    capmult = 0
+    cprime = 0
     line = line_parse(line)
     wellid = _pop_item(line)
     pumpcap = mnw[wellid].pumpcap
@@ -879,8 +942,8 @@ def _parse_4a(line, mnw, gwt=False):
     return wellid, qdes, capmult, cprime, xyz
 
 def _parse_4b(line):
-    qfrcmn = None
-    qfrcmx = None
+    qfrcmn = 0
+    qfrcmx = 0
     line = line_parse(line)
     hlim = _pop_item(line, float)
     qcut = _pop_item(line, int)
