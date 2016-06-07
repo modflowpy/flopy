@@ -380,8 +380,31 @@ class ModelMap(object):
         patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
         return patch_collection
 
-    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1, jstep=1,
-                       normalize=False, **kwargs):
+    def plot_cvfd(self, verts, iverts, **kwargs):
+        """
+        Plot a cvfd grid.  The vertices must be in the same coordinates as
+        the rotated and offset grid.
+
+        Parameters
+        ----------
+        verts : ndarray
+            2d array of x and y points.
+        iverts : list of lists
+            should be of len(ncells) with a list of vertex number for each cell
+
+        kwargs : dictionary
+            Keyword arguments passed to plotutil.plot_shapefile()
+
+        """
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, **kwargs)
+        return patch_collection
+
+    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
+                       jstep=1, normalize=False, **kwargs):
         """
         Use quiver to plot vectors.
 
