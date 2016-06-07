@@ -78,6 +78,8 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
             else:
                 f_in.append(mean,suffix="mean")
                 f_in.append(stdev,suffix="stdev")
+        mean.nc.close()
+        stdev.nc.close()
     if outputs_filename is not None:
         f_out = output_helper(outputs_filename,models[0],models[0].\
                           load_results(as_dict=True),**kwargs)
