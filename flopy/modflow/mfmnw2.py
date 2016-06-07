@@ -341,31 +341,30 @@ class Mnw(object):
         node_data = ModflowMnw2.get_empty_node_data(nnodes, aux_names=self.aux)
 
         names = self._get_item2_names()
-
         for n in names:
-            print("{}, {}".format(n, self.__dict__[n]))
             node_data[n] = self.__dict__[n]
         self.node_data = node_data
 
     @staticmethod
     def get_empty_stress_period_data(nper=0, aux_names=None, structured=True, default_value=0):
         # get an empty recarray that correponds to dtype
-        dtype = ModflowMnw2.get_default_spd_dtype(structured=structured)
+        dtype = Mnw.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nper, len(dtype)), dtype=dtype)
-        d[:, :] = default_value
+        d = np.zeros(nper, dtype=dtype)
+        if len(d) > 0:
+            d[:] = default_value
         d = d.view(np.recarray)
         return d
 
     @staticmethod
     def get_default_spd_dtype(structured=True):
         if structured:
-            return np.dtype([('per', str),
+            return np.dtype([('per', np.int),
                              ('qdes', np.float),
                              ('capmult', np.int),
                              ('cprime', np.float32),
-                             ('hlim', np.float32)
+                             ('hlim', np.float32),
                              ('qcut', np.int),
                              ('qfrcmn', np.float),
                              ('qfrcmx', np.float)])
@@ -603,9 +602,11 @@ class ModflowMnw2(Package):
         dtype = ModflowMnw2.get_default_node_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.empty((mnwmax, len(dtype)), dtype=dtype)
-        d[:, :] = default_value
-        d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = np.zeros(mnwmax, dtype=dtype)
+        #if len(d) > 0:
+        #    d[:] = default_value
+        #d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = d.view(np.recarray)
         return d
 
     @staticmethod
@@ -616,8 +617,8 @@ class ModflowMnw2(Package):
                              ('j', np.int),
                              ('ztop', np.float32),
                              ('zbotm', np.float32),
-                             ('wellid', str),
-                             ('losstype', str),
+                             ('wellid', np.object),
+                             ('losstype', np.object),
                              ('pumploc', np.int),
                              ('qlimit', np.int),
                              ('ppflag', np.int),
@@ -653,8 +654,9 @@ class ModflowMnw2(Package):
         dtype = ModflowMnw2.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((itmp, len(dtype)), dtype=dtype)
-        d[:, :] = default_value
+        d = np.zeros(itmp, dtype=dtype)
+        #if len(d) > 0:
+        #    d[:] = default_value
         #d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
         d = d.view(np.recarray)
         return d
@@ -662,7 +664,7 @@ class ModflowMnw2(Package):
     @staticmethod
     def get_default_spd_dtype(structured=True):
         if structured:
-            return np.dtype([('wellid', str),
+            return np.dtype([('wellid', np.object),
                              ('qdes', np.float),
                              ('capmult', np.int),
                              ('cprime', np.float32),
@@ -705,12 +707,12 @@ class ModflowMnw2(Package):
             mnwobj.stress_period_data = Mnw.get_empty_stress_period_data(nper, aux_names=option)
             mnw[mnwobj.wellid] = mnwobj
             # master table with all node data
-            np.append(node_data, mnwobj.node_data).view(np.recarray)
+            node_data = np.append(node_data, mnwobj.node_data).view(np.recarray)
 
-        # dataset 3
-        itmp = int(line_parse(next(f))[0])
         stress_period_data = {} # stress period data table for package (flopy convention)
         for per in range(0, nper):
+            # dataset 3
+            itmp = int(line_parse(next(f))[0])
             # dataset4
             # dict might be better here to only load submitted values
             if itmp > 0:
