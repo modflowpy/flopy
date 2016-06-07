@@ -352,8 +352,8 @@ class Mnw(object):
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros(nper, dtype=dtype)
-        if len(d) > 0:
-            d[:] = default_value
+        #if len(d) > 0:
+        #    d[:] = default_value
         d = d.view(np.recarray)
         return d
 
@@ -434,7 +434,8 @@ class Mnw(object):
         if self.ppflag > 0 and self.nnodes > 0:
             names += ['pp']
         if self.pumploc != 0:
-            names += ['pumplay', 'pumprow', 'pumpcol']
+            if self.pumploc > 0:
+                names += ['pumplay', 'pumprow', 'pumpcol']
             if self.pumploc < 0:
                 names += ['zpump']
         if self.qlimit > 0:
@@ -847,10 +848,12 @@ def _parse_2(f):
     zpump = None
     if pumploc != 0:
         line = line_parse(next(f))
-        pumplay = _pop_item(line, int)
-        pumprow = _pop_item(line, int)
-        pumpcol = _pop_item(line, int)
-        zpump = _pop_item(line, float)
+        if pumploc > 0:
+            pumplay = _pop_item(line, int)
+            pumprow = _pop_item(line, int)
+            pumpcol = _pop_item(line, int)
+        else:
+            zpump = _pop_item(line, float)
     # dataset 2f
     hlim = None
     qcut = None
