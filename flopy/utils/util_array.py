@@ -72,7 +72,7 @@ class ArrayFormat(object):
 
     """
 
-    def __init__(self, u2d, python=None, fortran=None):
+    def __init__(self, u2d, python=None, fortran=None,array_free_format=None):
 
         assert isinstance(u2d, Util2d), "ArrayFormat only supports Util2d," + \
                                         "not {0}".format(type(u2d))
@@ -85,8 +85,10 @@ class ArrayFormat(object):
         self._format = None
         self._width = None
         self._decimal = None
-        self._freeformat_model = bool(u2d.model.array_free_format)
-        self._arrayformat_model = bool(u2d.model.array_format)
+        if array_free_format is not None:
+            self._freeformat_model = bool(array_free_format)
+        else:
+            self._freeformat_model = bool(u2d.model.array_free_format)
 
         self.default_float_width = 15
         self.default_int_width = 10
@@ -420,7 +422,8 @@ def new_u2d(old_util2d, value):
                         value, old_util2d.name, old_util2d.format.fortran,
                         old_util2d.cnstnt, old_util2d.iprn,
                         old_util2d.ext_filename, old_util2d.locat,
-                        old_util2d.format.binary)
+                        old_util2d.format.binary,
+                        array_free_format=old_util2d.format.array_free_format)
     return new_util2d
 
 
@@ -489,7 +492,7 @@ class Util3d(object):
 
     def __init__(self, model, shape, dtype, value, name,
                  fmtin=None, cnstnt=1.0, iprn=-1, locat=None,
-                 ext_unit_dict=None):
+                 ext_unit_dict=None,array_free_format=None):
         """
         3-D wrapper from Util2d - shape must be 3-D
         """
@@ -497,12 +500,14 @@ class Util3d(object):
             for attr in value.__dict__.items():
                 setattr(self,attr[0], attr[1])
             self.model = model
+            self.array_free_format=array_free_format
             for i, u2d in enumerate(self.util_2ds):
                 self.util_2ds[i] = Util2d(model, u2d.shape, u2d.dtype,
                                           u2d._array, name=u2d.name,
                                           fmtin=u2d.format.fortran,
                                           locat=locat,
-                                          cnstnt=u2d.cnstnt)
+                                          cnstnt=u2d.cnstnt,
+                                          array_free_format=array_free_format)
 
             return
         assert len(shape) == 3, 'Util3d:shape attribute must be length 3'
@@ -527,6 +532,8 @@ class Util3d(object):
         self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
+        self.array_free_format = array_free_format
+
         self.ext_filename_base = []
         if model.external_path is not None:
             for k in range(shape[0]):
@@ -556,7 +563,8 @@ class Util3d(object):
                 u2d.cnstnt = value
         elif hasattr(self, "util_2ds") and key == "fmtin":
             for u2d in self.util_2ds:
-                u2d.format = ArrayFormat(u2d, fortran=value)
+                u2d.format = ArrayFormat(u2d, fortran=value,
+                                         array_free_format=self.array_free_format)
             super(Util3d,self).__setattr__("fmtin",value)
         elif hasattr(self, "util_2ds") and key == "how":
             for u2d in self.util_2ds:
@@ -766,7 +774,8 @@ class Util3d(object):
                     u2d = Util2d(self.model, self.shape[1:], self.dtype, item,
                                  fmtin=self.fmtin, name=name,
                                  ext_filename=ext_filename,
-                                 locat=self.locat)
+                                 locat=self.locat,
+                                 array_free_format=self.array_free_format)
                     u2ds.append(u2d)
 
         elif isinstance(self.__value, np.ndarray):
@@ -789,7 +798,8 @@ class Util3d(object):
                 u2d = Util2d(self.model, self.shape[1:], self.dtype, a,
                              fmtin=self.fmtin, name=name,
                              ext_filename=ext_filename,
-                             locat=self.locat)
+                             locat=self.locat,
+                             array_free_format=self.array_free_format)
                 u2ds.append(u2d)
 
         else:
@@ -798,13 +808,15 @@ class Util3d(object):
         return u2ds
 
     @staticmethod
-    def load(f_handle, model, shape, dtype, name, ext_unit_dict=None):
+    def load(f_handle, model, shape, dtype, name, ext_unit_dict=None,
+             array_format=None):
         assert len(shape) == 3, 'Util3d:shape attribute must be length 3'
         nlay, nrow, ncol = shape
         u2ds = []
         for k in range(nlay):
             u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, name,
-                              ext_unit_dict=ext_unit_dict)
+                              ext_unit_dict=ext_unit_dict,
+                              array_format=array_format)
             u2ds.append(u2d)
         u3d = Util3d(model, shape, dtype, u2ds, name)
         return u3d
@@ -897,7 +909,7 @@ class Transient3d(object):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None,
-                 bin=False):
+                 bin=False,array_free_format=None):
 
         if isinstance(value, Transient3d):
             for attr in value.__dict__.items():
@@ -917,6 +929,7 @@ class Transient3d(object):
         self.cnstst = cnstnt
         self.iprn = iprn
         self.locat = locat
+        self.array_free_format=array_free_format
         self.transient_3ds = self.build_transient_sequence()
         return
 
@@ -927,7 +940,8 @@ class Transient3d(object):
     def get_zero_3d(self, kper):
         name = self.name_base + str(kper + 1) + '(filled zero)'
         return Util3d(self.model, self.shape,
-                      self.dtype, 0.0, name=name)
+                      self.dtype, 0.0, name=name,
+                      array_free_format=self.array_free_format)
 
     def __getitem__(self, kper):
         if kper in list(self.transient_3ds.keys()):
@@ -1047,7 +1061,8 @@ class Transient3d(object):
             name = '{}{}'.format(arg.name_base[k], k+1).replace(' ', '_')
             u3d.append(Util2d(self.model, (self.shape[1], self.shape[2]),
                               self.dtype, a, fmtin=self.fmtin, name=name,
-                              locat=self.locat))
+                              locat=self.locat,
+                              array_free_format=self.array_free_format))
         return u3d
 
 
@@ -1121,7 +1136,7 @@ class Transient2d(object):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None,
-                 bin=False):
+                 bin=False,array_free_format=None):
 
         if isinstance(value, Transient2d):
             for attr in value.__dict__.items():
@@ -1131,7 +1146,8 @@ class Transient2d(object):
                                                   u2d._array, name=u2d.name,
                                                   fmtin=u2d.format.fortran,
                                                   locat=locat,
-                                                  cnstnt=u2d.cnstnt)
+                                                  cnstnt=u2d.cnstnt,
+                                                  array_free_format=array_free_format)
 
             self.model = model
             return
@@ -1148,6 +1164,7 @@ class Transient2d(object):
         self.cnstst = cnstnt
         self.iprn = iprn
         self.locat = locat
+        self.array_free_format = array_free_format
         if model.external_path is not None:
             self.ext_filename_base = \
                 os.path.join(model.external_path,
@@ -1223,7 +1240,8 @@ class Transient2d(object):
     def get_zero_2d(self, kper):
         name = self.name_base + str(kper + 1) + '(filled zero)'
         return Util2d(self.model, self.shape,
-                      self.dtype, 0.0, name=name)
+                      self.dtype, 0.0, name=name,
+                      array_free_format=self.array_free_format)
 
     def to_shapefile(self, filename):
         """
@@ -1491,7 +1509,8 @@ class Transient2d(object):
         u2d = Util2d(self.model, self.shape, self.dtype, arg,
                      fmtin=self.fmtin, name=name,
                      ext_filename=ext_filename,
-                     locat=self.locat)
+                     locat=self.locat,
+                     array_free_format=self.array_free_format)
         return u2d
 
 
@@ -1579,7 +1598,7 @@ class Util2d(object):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
-                 how=None):
+                 how=None,array_free_format=None):
         """
         1d or 2-d array support with minimum of mem footprint.
         only creates arrays as needed, 
@@ -1634,7 +1653,8 @@ class Util2d(object):
         else:
             self.cnstnt = int(cnstnt)
         self.iprn = iprn
-        self._format = ArrayFormat(self, fortran=fmtin)
+        self._format = ArrayFormat(self, fortran=fmtin,
+                                   array_free_format=array_free_format)
         self._format.binary = bool(bin)
         self.ext_filename = ext_filename
         self._ext_filename = self.name.replace(' ', '_') + ".ref"
@@ -1783,7 +1803,8 @@ class Util2d(object):
         self.export(filename)
 
     def set_fmtin(self, fmtin):
-        self._format = ArrayFormat(self, fortran=fmtin)
+        self._format = ArrayFormat(self, fortran=fmtin,
+                                   array_free_format=self.format.array_free_format)
 
     def get_value(self):
         return copy.deepcopy(self.__value)
@@ -2395,7 +2416,8 @@ class Util2d(object):
                             str(type(value)))
 
     @staticmethod
-    def load(f_handle, model, shape, dtype, name, ext_unit_dict=None):
+    def load(f_handle, model, shape, dtype, name, ext_unit_dict=None,
+             array_free_format=None,array_format="modflow"):
         """
         functionality to load Util2d instance from an existing
         model input file.
@@ -2414,9 +2436,9 @@ class Util2d(object):
                     break
 
         # Allows for special MT3D array reader
-        array_format = None
-        if hasattr(model, 'array_format'):
-            array_format = model.array_format
+        #array_format = None
+        #if hasattr(model, 'array_format'):
+        #    array_format = model.array_format
 
         cr_dict = Util2d.parse_control_record(f_handle.readline(),
                                               current_unit=curr_unit,
@@ -2426,7 +2448,8 @@ class Util2d(object):
 
         if cr_dict['type'] == 'constant':
             u2d = Util2d(model, shape, dtype, cr_dict['cnstnt'], name=name,
-                         iprn=cr_dict['iprn'], fmtin="(FREE)")
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
+                         array_free_format=array_free_format)
 
         elif cr_dict['type'] == 'open/close':
             # clean up the filename a little
@@ -2452,14 +2475,16 @@ class Util2d(object):
             f.close()
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
-                         cnstnt=cr_dict['cnstnt'])
+                         cnstnt=cr_dict['cnstnt'],
+                         array_free_format=array_free_format)
 
 
         elif cr_dict['type'] == 'internal':
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict['fmtin'])
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
-                         cnstnt=cr_dict['cnstnt'], locat=None)
+                         cnstnt=cr_dict['cnstnt'], locat=None,
+                         array_free_format=array_free_format)
 
         elif cr_dict['type'] == 'external':
             if str('binary') not in str(cr_dict['fmtin'].lower()):
@@ -2477,7 +2502,8 @@ class Util2d(object):
                     bintype='Head')
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
-                         cnstnt=cr_dict['cnstnt'])
+                         cnstnt=cr_dict['cnstnt'],
+                         array_free_format=array_free_format)
             # track this unit number so we can remove it from the external
             # file list later
             model.pop_key_list.append(cr_dict['nunit'])

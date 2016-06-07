@@ -426,18 +426,18 @@ class Mt3dms(BaseModel):
                 btn = item
                 btn_key = key
                 break
-        try:
-            pck = btn.package.load(btn.filename, mt,
-                                   ext_unit_dict=ext_unit_dict)
-            files_succesfully_loaded.append(btn.filename)
-            if mt.verbose:
-                sys.stdout.write('   {:4s} package load...success\n'
-                                 .format(pck.name[0]))
-            ext_unit_dict.pop(btn_key)
-        except Exception as e:
-            s = 'Could not read btn package: {}. Stopping...' \
-                .format(os.path.basename(btn.filename))
-            raise Exception(s + " " + str(e))
+        #try:
+        pck = btn.package.load(btn.filename, mt,
+                               ext_unit_dict=ext_unit_dict)
+        files_succesfully_loaded.append(btn.filename)
+        if mt.verbose:
+            sys.stdout.write('   {:4s} package load...success\n'
+                             .format(pck.name[0]))
+        ext_unit_dict.pop(btn_key)
+        # except Exception as e:
+        #     s = 'Could not read btn package: {}. Stopping...' \
+        #         .format(os.path.basename(btn.filename))
+        #     raise Exception(s + " " + str(e))
 
         if load_only is None:
             load_only = []

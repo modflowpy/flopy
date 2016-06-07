@@ -201,7 +201,8 @@ class Mt3dSsm(Package):
             self.crch = []
             t2d = Transient2d(model, (nrow, ncol), np.float32,
                                crch, name='crch1',
-                               locat=self.unit_number[0])
+                               locat=self.unit_number[0],
+                               array_free_format=False)
             self.crch.append(t2d)
             if ncomp > 1:
                 for icomp in range(2, ncomp+1):
@@ -215,7 +216,8 @@ class Mt3dSsm(Package):
                               name)
                     t2d = Transient2d(model, (nrow, ncol), np.float32,
                                        val, name=name,
-                                       locat=self.unit_number[0])
+                                       locat=self.unit_number[0],
+                                       array_free_format=False)
                     self.crch.append(t2d)
         else:
             self.crch = None
@@ -224,7 +226,8 @@ class Mt3dSsm(Package):
             self.cevt = []
             t2d = Transient2d(model, (nrow, ncol), np.float32,
                                cevt, name='cevt1',
-                               locat=self.unit_number[0])
+                               locat=self.unit_number[0],
+                              array_free_format=False)
             self.cevt.append(t2d)
             if ncomp > 1:
                 for icomp in range(2, ncomp+1):
@@ -239,7 +242,8 @@ class Mt3dSsm(Package):
                               name)
                     t2d = Transient2d(model, (nrow, ncol), np.float32,
                                        val, name=name,
-                                       locat=self.unit_number[0])
+                                       locat=self.unit_number[0],
+                                       array_free_format=False)
                     self.cevt.append(t2d)
 
         else:
@@ -464,25 +468,29 @@ class Mt3dSsm(Package):
         crch = None
         if 't' in frch.lower():
             t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='crch', locat=0)
+                              0.0, name='crch', locat=0,
+                              array_free_format=False)
             crch = {0 : t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "crch" + str(icomp)
                     t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name=name, locat=0)
+                                      0.0, name=name, locat=0,
+                                      array_free_format=False)
                     kwargs[name] = {0 : t2d}
 
         cevt = None
         if 't' in fevt.lower():
             t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='cevt', locat=0)
+                              0.0, name='cevt', locat=0,
+                              array_free_format=False)
             cevt = {0 : t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "cevt" + str(icomp)
                     t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name=name, locat=0)
+                                      0.0, name=name, locat=0,
+                                      array_free_format=False)
                     kwargs[name] = {0 : t2d}
 
         stress_period_data = {}
@@ -505,7 +513,7 @@ class Mt3dSsm(Package):
                 if model.verbose:
                     print('   loading CRCH...')
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'crch',
-                                 ext_unit_dict)
+                                 ext_unit_dict, array_format="mt3d")
                 crch[iper] = t
                 # Load each multispecies array
                 if ncomp > 1:
@@ -514,7 +522,8 @@ class Mt3dSsm(Package):
                         if model.verbose:
                             print('   loading {}...'.format(name))
                         t = Util2d.load(f, model, (nrow, ncol),
-                                        np.float32, name, ext_unit_dict)
+                                        np.float32, name, ext_unit_dict,
+                                        array_format="mt3d")
                         crchicomp = kwargs[name]
                         crchicomp[iper] = t
 
@@ -531,7 +540,7 @@ class Mt3dSsm(Package):
                 if model.verbose:
                     print('   loading CEVT...')
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'cevt',
-                                 ext_unit_dict)
+                                 ext_unit_dict, array_format="mt3d")
                 cevt[iper] = t
                 # Load each multispecies array
                 if ncomp > 1:
@@ -540,7 +549,8 @@ class Mt3dSsm(Package):
                         if model.verbose:
                             print('   loading {}...'.format(name))
                         t = Util2d.load(f, model, (nrow, ncol),
-                                        np.float32, name, ext_unit_dict)
+                                        np.float32, name, ext_unit_dict,
+                                        array_format="mt3d")
                         cevticomp = kwargs[name]
                         cevticomp[iper] = t
 
