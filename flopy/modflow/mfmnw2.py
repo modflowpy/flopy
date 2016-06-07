@@ -447,6 +447,53 @@ class Mnw(object):
             names += ['liftn', 'qn']
         return names
 
+    def _write_2(self, f_mnw):
+        """write out dataset 2 for MNW.
+
+        Parameters
+        ----------
+        f_mnw : package file handle
+        """
+        f_mnw.write('{} {:.0f}\n'.format(self.wellid, self.nnodes))
+        f_mnw.write('{} {:.0f} {:.0f} {:.0f} {:.0f}\n'.format(self.losstype,
+                                                            self.pumploc,
+                                                            self.qlimit,
+                                                            self.ppflag,
+                                                            self.pumpcap))
+        if self.losstype.lower() != 'none':
+            if self.losstype.lower() != 'specifycwc':
+                f_mnw.write('{} '.format(self.rw))
+                if self.losstype.lower() == 'skin':
+                    f_mnw.write('{} {}'.format(self.rskin, self.kskin))
+                elif self.losstype.lower() == 'general':
+                    f_mnw.write('{} {} {}'.format(self.B, self.C, self.P))
+            else:
+                f_mnw.write('{}'.format(self.cwc))
+            f_mnw.write('\n')
+        if self.nnodes > 0:
+            def _getloc(n):
+                return '{:.0f} {:.0f} {:.0f}'.format(self.node_data.k[n] +1,
+                                                     self.node_data.i[n] +1,
+                                                     self.node_data.j[n] +1)
+        elif self.nnodes < 0:
+            def _getloc(n):
+                return '{} {} {:.0f} {:.0f}'.format(self.node_data.ztop[n],
+                                                    self.node_data.zbotm[n],
+                                                    self.node_data.i[n] +1,
+                                                    self.node_data.j[n] +1)
+        for n in range(np.abs(self.nnodes)):
+            f_mnw.write(_getloc(n))
+            for var in ['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'CWC', 'PP']:
+                val = self.__dict__[var]
+                if isinstance(val, list) or val < 0:
+                    f_mnw.write(' {}'.format(self.node_data[var][n]))
+            f_mnw.write('\n')
+        if self.pumploc != 0:
+            if self.pumploc > 0:
+                for var in [self.pumplay, self.pumprow, self.pumpcol]:
+
+
+
 class ModflowMnw2(Package):
     """
     Multi-Node Well 2 Package Class
@@ -772,8 +819,17 @@ class ModflowMnw2(Package):
             np.append(node_data, mnwobj.node_data).view(np.recarray)
         self.node_data = node_data
 
+    def _write_1(self, f_mnw):
+        f_mnw.write('{:.0f} '.format(self.mnwmax))
+        if self.mnwmax > 0:
+            f_mnw.write('{:.0f} '.format(self.nodtot))
+        f_mnw.write('{:.0f} {:.0f}'.format(self.iwl2cb, self.mnwprnt))
+        if len(self.aux) > 0:
+            for abc in self.aux:
+                f_mnw.write(' aux {}'.format(abc))
+        f_mnw.write('\n')
 
-    def write_file(self):
+    def write_file(self, filename=None):
         """
         Write the package file.
 
@@ -782,7 +838,25 @@ class ModflowMnw2(Package):
         None
 
         """
-        pass
+
+        # tabfiles = False
+        # tabfiles_dict = {}
+        # transroute = False
+        # reachinput = False
+        if filename is not None:
+            self.fn_path = filename
+
+        f_mnw = open(self.fn_path, 'w')
+
+        # dataset 0 (header)
+        f_mnw.write('{0}\n'.format(self.heading))
+
+        # dataset 1
+        self._write_1(f_mnw)
+
+        # dataset 2
+        # need a method that assigns attributes from table to objects!
+        # call make_mnw_objects?? (table is definitive then)
 
 def _parse_1(line):
     line = line_parse(line)
