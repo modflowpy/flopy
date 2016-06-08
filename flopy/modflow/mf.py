@@ -338,7 +338,9 @@ class Modflow(BaseModel):
                         saveddn = True
                     if v.lower() == 'save budget':
                         savebud = True
-        except:
+        except Exception as e:
+            print("error reading output filenames from OC package:{0}".\
+                  format(str(e)))
             pass
 
         self.hpth = os.path.join(self.model_ws, '{}.{}'.format(self.name, self.hext))
@@ -354,12 +356,25 @@ class Modflow(BaseModel):
 
         if saveddn and os.path.exists(self.dpth):
             ddObj = ddn_const(self.dpth, model=self, **kwargs)
-
         if savebud and os.path.exists(self.cpth):
             bdObj = flopy.utils.CellBudgetFile(self.cpth, model=self, **kwargs)
 
+        # get subsidence, if written
+        subObj = None
+        try:
+
+            if self.sub is not None and "subsidence.hds" in self.sub.extension:
+                idx = self.sub.extension.index("subsidence.hds")
+                subObj = head_const(os.path.join(self.model_ws,self.sub.file_name[idx]),
+                                    text="subsidence")
+        except Exception as e:
+            print("error loading subsidence.hds:{0}".format(str(e)))
+
+
         if as_dict:
             oudic = {}
+            if subObj is not None:
+                oudic["subsidence.hds"] = subObj
             if savehead and hdObj:
                 oudic[self.hpth] = hdObj
             if saveddn and ddObj:

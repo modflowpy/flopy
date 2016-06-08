@@ -496,6 +496,7 @@ class Util3d(object):
         """
         3-D wrapper from Util2d - shape must be 3-D
         """
+        self.array_free_format = array_free_format
         if isinstance(value, Util3d):
             for attr in value.__dict__.items():
                 setattr(self,attr[0], attr[1])
@@ -532,7 +533,7 @@ class Util3d(object):
         self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
-        self.array_free_format = array_free_format
+
 
         self.ext_filename_base = []
         if model.external_path is not None:

@@ -5,6 +5,7 @@ import socket
 import copy
 import numpy as np
 from datetime import datetime
+import time
 
 # globals
 FILLVALUE = -99999.9
@@ -267,7 +268,7 @@ class NetCdf(object):
         return new_net
 
     @classmethod
-    def zeros_like(cls,other,output_filename="netCDF.nc",
+    def zeros_like(cls,other,output_filename=None,
                    verbose=None,logger=None):
         new_net = NetCdf.empty_like(other,output_filename,verbose=verbose,
                                     logger=logger)
@@ -300,14 +301,19 @@ class NetCdf(object):
         return new_net
 
     @classmethod
-    def empty_like(cls,other,output_filename="netCDF.nc",
+    def empty_like(cls,other,output_filename=None,
                    verbose=None,logger=None):
+        if output_filename is None:
+            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
+
+        while os.path.exists(output_filename):
+            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
         new_net = cls(output_filename,other.model,
                       time_values=other.time_values_arg,verbose=verbose,
                       logger=logger)
         return new_net
 
-    def difference(self, other, minuend="self", mask_zero_diff=True):
+    def difference(self, other, minuend="self", mask_zero_diff=True,onlydiff=True):
         """make a new NetCDF instance that is the difference with another
         netcdf file
 
@@ -322,6 +328,8 @@ class NetCdf(object):
         mask_zero_diff : bool flag to mask differences that are zero.  If
             True, positions in the difference array that are zero will be set
             to self.fillvalue
+
+        only_diff : bool flag to only add non-zero diffs to output file
 
         Returns
         -------
@@ -398,6 +406,8 @@ class NetCdf(object):
                 o_mask = o_data.mask
                 s_data = np.array(s_data)
                 o_data = np.array(o_data)
+                s_data[s_mask] = 0.0
+                o_data[o_mask] = 0.0
 
             # difference with self
             if minuend.lower() == "self":
@@ -409,15 +419,26 @@ class NetCdf(object):
                 self.logger.warn(mess)
                 raise Exception(mess)
 
+            # check for non-zero diffs
+            if onlydiff and d_data.sum() == 0.0:
+                self.logger.warn("var {0} has zero differences, skipping...".format(vname))
+                continue
+
+
+            notzero = d_data != 0.0
+
             # reapply masks
             if s_mask is not None:
                 self.log("applying self mask")
+                s_mask[d_data != 0.0] = False
                 d_data[s_mask] = FILLVALUE
                 self.log("applying self mask")
             if o_mask is not None:
                 self.log("applying other mask")
+                o_mask[d_data != 0.0] = False
                 d_data[o_mask] = FILLVALUE
                 self.log("applying other mask")
+
             var = new_net.create_variable(vname,self.var_attr_dict[vname],
                                           s_var.dtype,
                                           dimensions=s_var.dimensions)
