@@ -277,7 +277,7 @@ class Mnw(object):
                  pumplay=0, pumprow=0, pumpcol=0, zpump=None,
                  hlim=None, qcut=None, qfrcmn=None, qfrcmx=None,
                  hlift=None, liftq0=None, liftqmax=None, hwtol=None,
-                 liftn=None, qn=None, mnwpackage=None
+                 liftn=None, qn=None, mnwpackage=None,
                  ):
         self.nper = nper
         self.mnwpackage = mnwpackage # associated ModflowMnw2 instance
@@ -329,10 +329,16 @@ class Mnw(object):
         # dataset 4
 
         # accept stress period data (pumping rates) from structured array
-        self.stress_period_data = stress_period_data
+        self.stress_period_data = self.get_empty_stress_period_data(nper)
+        if stress_period_data is not None:
+            for n in stress_period_data.dtype.names:
+                self.stress_period_data[n] = stress_period_data[n]
 
         # accept node data from structured array
-        self.node_data = node_data
+        self.node_data = ModflowMnw2.get_empty_node_data(np.abs(nnodes), aux_names=self.aux)
+        if node_data is not None:
+            for n in node_data.dtype.names:
+                self.node_data[n] = node_data[n]
 
         # build recarray of node data from MNW2 input file
         if node_data is None:
@@ -342,10 +348,10 @@ class Mnw(object):
 
     def make_node_data(self):
         """Makes the node data array from variables entered individually."""
-        nnodes = len(self.i)
-        node_data = ModflowMnw2.get_empty_node_data(nnodes, aux_names=self.aux)
+        nnodes = self.nnodes
+        node_data = ModflowMnw2.get_empty_node_data(np.abs(nnodes), aux_names=self.aux)
 
-        names = self._get_item2_names()
+        names = Mnw.get_item2_names(self)
         for n in names:
             node_data[n] = self.__dict__[n]
         self.node_data = node_data
@@ -376,7 +382,8 @@ class Mnw(object):
         else:
             pass
 
-    def _get_item2_names(self, use_node_data=False):
+    @staticmethod
+    def get_item2_names(mnw2obj=None, node_data=None):
         """Determine which variables are being used.
 
         Returns
@@ -422,46 +429,66 @@ class Mnw(object):
             liftn : float
             qn : float
         """
-        if use_node_data:
-            self.losstype = self.node_data.losstype[0]
-            self.ppfloag = self.node_data.ppflag[0]
-            self.pumploc = self.node_data.pumploc[0]
-            self.qlimit = self.node_data.qlimit[0]
-            self.pumpcap = self.node_data.pumpcap[0]
+
+        if node_data is not None:
+            nnodes = Mnw.get_nnodes(node_data)
+            losstype = node_data.losstype[0]
+            ppflag = node_data.ppflag[0]
+            pumploc = node_data.pumploc[0]
+            qlimit = node_data.qlimit[0]
+            pumpcap = node_data.pumpcap[0]
+            qcut = node_data.qcut[0]
+        else: # get names based on mnw2obj attribute values
+            nnodes = mnw2obj.nnodes
+            losstype = mnw2obj.losstype
+            ppflag = mnw2obj.ppflag
+            pumploc = mnw2obj.pumploc
+            qlimit = mnw2obj.qlimit
+            pumpcap = mnw2obj.pumpcap
+            qcut = mnw2obj.qcut
 
         names = ['i', 'j']
-        if self.nnodes > 0:
+        if nnodes > 0:
             names += ['k']
-        if self.nnodes < 0:
+        if nnodes < 0:
             names += ['ztop', 'zbotm']
         names += ['wellid', 'losstype', 'pumploc', 'qlimit', 'ppflag', 'pumpcap']
-        if self.losstype.lower() == 'thiem':
+        if losstype.lower() == 'thiem':
             names += ['rw']
-        elif self.losstype.lower() == 'skin':
+        elif losstype.lower() == 'skin':
             names += ['rw', 'rskin', 'kskin']
-        elif self.losstype.lower() == 'general':
+        elif losstype.lower() == 'general':
             names += ['rw', 'B', 'C', 'P']
-        elif self.losstype.lower() == 'specifycwc':
+        elif losstype.lower() == 'specifycwc':
             names += ['cwc']
-        if self.ppflag > 0 and self.nnodes > 0:
+        if ppflag > 0 and nnodes > 0:
             names += ['pp']
-        if self.pumploc != 0:
-            if self.pumploc > 0:
+        if pumploc != 0:
+            if pumploc > 0:
                 names += ['pumplay', 'pumprow', 'pumpcol']
-            if self.pumploc < 0:
+            if pumploc < 0:
                 names += ['zpump']
-        if self.qlimit > 0:
+        if qlimit > 0:
             names += ['hlim', 'qcut']
-            if self.qcut != 0:
+            if qcut != 0:
                 names += ['qfrcmn', 'qfrcmx']
-        if self.pumpcap > 0:
+        if pumpcap > 0:
             names += ['hlift', 'liftq0', 'liftqmax', 'hwtol']
             names += ['liftn', 'qn']
         return names
 
+    @staticmethod
+    def get_nnodes(node_data):
+        nnodes = len(node_data)
+        # check if ztop and zbotm were entered,
+        # flip nnodes for format 2
+        if np.sum(node_data.ztop - node_data.zbotm) > 0:
+            nnodes *= -1
+        return nnodes
+
     def _set_attributes_from_node_data(self):
         """Populates the Mnw object attributes with values from node_data table."""
-        names = self._get_item2_names(use_node_data=True)
+        names = Mnw.get_item2_names(node_data=self.node_data)
         for n in names:
             # assign by node variables as lists if they are being included
             if n in self.by_node_variables and len(np.unique(self.node_data[n])) > 1:
@@ -689,16 +716,29 @@ class ModflowMnw2(Package):
 
         # Datasets 2-4 are contained in node_data and stress_period_data tables
         # and/or in Mnw objects
-        self.node_data = node_data # rec array of Mnw properties by node
+        self.node_data = self.get_empty_node_data(0, aux_names=aux)
+        if node_data is not None:
+            self.node_data = self.get_empty_node_data(len(node_data), aux_names=aux)
+            names = [n for n in node_data.dtype.names if n in self.node_data.dtype.names]
+            for n in names:
+                self.node_data[n] = node_data[n] # rec array of Mnw properties by node
+            self.nodtot = len(self.node_data)
         self.mnw = mnw # dict or list of Mnw objects
 
-        self.stress_period_data = stress_period_data # dict of rec arrays (sp data by mnw)
+        self.stress_period_data = {0: self.get_empty_stress_period_data(0, aux_names=aux)}
+        if stress_period_data is not None:
+            for per, data in stress_period_data.items():
+                spd = ModflowMnw2.get_empty_stress_period_data(len(data),
+                                                               aux_names=aux)
+                names = [n for n in data.dtype.names if n in spd.dtype.names]
+                for n in names:
+                    spd[n] = data[n]
+                self.stress_period_data[per] = spd # dict of rec arrays (sp data by mnw)
         self.itmp = itmp
         self.gwt = gwt
 
         if mnw is None:
-            self.get_itmp(stress_period_data)
-            self.make_mnw_objects(node_data, stress_period_data)
+            self.make_mnw_objects()
         elif node_data is None and mnw is not None:
             if isinstance(mnw, list):
                 self.mnw = {mnwobj.wellid: mnwobj for mnwobj in mnw}
@@ -723,12 +763,18 @@ class ModflowMnw2(Package):
         self.parent.add_package(self)
         '''
     @staticmethod
-    def get_empty_node_data(mnwmax=0, aux_names=None, structured=True, default_value=0):
-        # get an empty recarray that correponds to dtype
+    def get_empty_node_data(maxnodes=0, aux_names=None, structured=True, default_value=0):
+        """get an empty recarray that correponds to dtype
+
+        Parameters
+        ----------
+        maxnodes : int
+            Total number of nodes to be simulated
+        """
         dtype = ModflowMnw2.get_default_node_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros(mnwmax, dtype=dtype)
+        d = np.zeros(maxnodes, dtype=dtype)
         #if len(d) > 0:
         #    d[:] = default_value
         #d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
@@ -866,25 +912,37 @@ class ModflowMnw2(Package):
         return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, iwl2cb=iwl2cb, mnwprnt=mnwprint, aux=option,
                            node_data=node_data, mnw=mnw, stress_period_data=stress_period_data, itmp=itmp)
 
-    def make_mnw_objects(self, node_data, stress_period_data):
+    def make_mnw_objects(self):
+        node_data = self.node_data
+        stress_period_data = self.stress_period_data
         self.mnw = {}
         mnws = np.unique(node_data.wellid)
         for wellid in mnws:
             nd = node_data[node_data.wellid == wellid]
-            nnodes = len(nd)
+            nnodes = Mnw.get_nnodes(nd)
             # if tops and bottoms are specified, flip nnodes
             maxtop = np.max(nd.ztop)
             minbot = np.min(nd.zbotm)
-            if maxtop - minbot > 0:
+            if maxtop - minbot > 0 and nnodes > 0:
                 nnodes *= -1
             # reshape stress period data to well
-            nper=len(stress_period_data.keys())
-            mnwspd = Mnw.get_empty_stress_period_data(nper, aux_names=self.aux)
-            for per in range(nper):
+            mnwspd = Mnw.get_empty_stress_period_data(self.nper, aux_names=self.aux)
+            for per, itmp in enumerate(self.itmp):
                 inds = stress_period_data[0].wellid == wellid
-                mnwspd[per] = tuple([per] + list(stress_period_data[per][inds][0])[1:])
+                if itmp > 0 and np.any(inds):
+                    #values = tuple([per] + list(stress_period_data[per][inds][0])[1:])
+                    #assert len(mnwspd[per]) == len(values)
+                    #mnwspd[per] = tuple([per] + list(stress_period_data[per][inds][0])[1:])
+                    names = [n for n in stress_period_data[per][inds].dtype.names if n in mnwspd.dtype.names]
+                    mnwspd[per]['per'] = per
+                    for n in names:
+                        mnwspd[per][n] = stress_period_data[per][inds][n]
+                elif itmp == 0:
+                    continue
+                elif itmp < 0:
+                    mnwspd[per] = mnwspd[per-1]
             self.mnw[wellid] = Mnw(wellid,
-                                   nnodes=nnodes, nper=nper,
+                                   nnodes=nnodes, nper=self.nper,
                                    node_data=nd, stress_period_data=mnwspd,
                                    mnwpackage=self)
 
