@@ -652,8 +652,11 @@ class Package(object):
         # set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
-        if "nwt" in model.version.lower() and 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
+        if "modflowwel" in str(pack_type).lower():
             partype = ['flux']
+
+        if "nwt" in model.version.lower() and 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
+
             specify = False
             ipos = f.tell()
             line = f.readline()
