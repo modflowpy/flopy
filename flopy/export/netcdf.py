@@ -5,6 +5,7 @@ import socket
 import copy
 import numpy as np
 from datetime import datetime
+import time
 
 # globals
 FILLVALUE = -99999.9
@@ -267,7 +268,7 @@ class NetCdf(object):
         return new_net
 
     @classmethod
-    def zeros_like(cls,other,output_filename="netCDF.nc",
+    def zeros_like(cls,other,output_filename=None,
                    verbose=None,logger=None):
         new_net = NetCdf.empty_like(other,output_filename,verbose=verbose,
                                     logger=logger)
@@ -300,8 +301,13 @@ class NetCdf(object):
         return new_net
 
     @classmethod
-    def empty_like(cls,other,output_filename="netCDF.nc",
+    def empty_like(cls,other,output_filename=None,
                    verbose=None,logger=None):
+        if output_filename is None:
+            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
+
+        while os.path.exists(output_filename):
+            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
         new_net = cls(output_filename,other.model,
                       time_values=other.time_values_arg,verbose=verbose,
                       logger=logger)

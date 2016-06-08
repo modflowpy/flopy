@@ -69,6 +69,7 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
             mean = last + ((f - last) / float(i))
             stdev += ((f - mean) * (f - last))
             i += 1
+            f.nc.close()
         if i > 2:
             if not add_reals:
                 f_in.write()
@@ -95,6 +96,7 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
             mean = last + ((f - last) / float(i))
             stdev += ((f - mean) * (f - last))
             i += 1
+            f.nc.close()
         if i > 2:
             if not add_reals:
                 f_out.write()
