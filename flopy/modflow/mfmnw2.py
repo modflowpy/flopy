@@ -2,6 +2,7 @@
 import sys
 import numpy as np
 from ..pakbase import Package
+from flopy.utils.flopy_io import _fmt_string
 
 class Mnw(object):
     """Multi-Node Well object class
@@ -129,7 +130,7 @@ class Mnw(object):
         or in node_data (or dataset 2d) by node. Variables not in dataset 2d (such as pumplay) can be
         included in node data for convenience (to allow construction of MNW2 package from a table),
         but are only written to MNW2 as a single variable. When writing non-dataset 2d variables to MNW2 input,
-        the average value for the well will be used.
+        the first value for the well will be used.
 
         Other variables (e.g. hlim) can be entered here as
         constant for all stress periods, or by stress period below in stress_period_data.
@@ -264,6 +265,8 @@ class Mnw(object):
     mnwpackage : ModflowMnw2 instance
         package that mnw is attached to
     """
+    by_node_variables = ['k', 'i', 'j', 'ztop', 'zbotm', 'rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc', 'pp']
+
     def __init__(self, wellid,
                  nnodes=1, nper=0,
                  losstype="SKIN", pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
@@ -334,6 +337,8 @@ class Mnw(object):
         # build recarray of node data from MNW2 input file
         if node_data is None:
             self.make_node_data()
+        else:
+            self._set_attributes_from_node_data()
 
     def make_node_data(self):
         """Makes the node data array from variables entered individually."""
@@ -371,7 +376,7 @@ class Mnw(object):
         else:
             pass
 
-    def _get_item2_names(self):
+    def _get_item2_names(self, use_node_data=False):
         """Determine which variables are being used.
 
         Returns
@@ -417,6 +422,13 @@ class Mnw(object):
             liftn : float
             qn : float
         """
+        if use_node_data:
+            self.losstype = self.node_data.losstype[0]
+            self.ppfloag = self.node_data.ppflag[0]
+            self.pumploc = self.node_data.pumploc[0]
+            self.qlimit = self.node_data.qlimit[0]
+            self.pumpcap = self.node_data.pumpcap[0]
+
         names = ['i', 'j']
         if self.nnodes > 0:
             names += ['k']
@@ -447,50 +459,112 @@ class Mnw(object):
             names += ['liftn', 'qn']
         return names
 
-    def _write_2(self, f_mnw):
+    def _set_attributes_from_node_data(self):
+        """Populates the Mnw object attributes with values from node_data table."""
+        names = self._get_item2_names(use_node_data=True)
+        for n in names:
+            # assign by node variables as lists if they are being included
+            if n in self.by_node_variables and len(np.unique(self.node_data[n])) > 1:
+                self.__dict__[n] = list(self.node_data[n])
+            else:
+                self.__dict__[n] = self.node_data[n][0]
+
+    def _write_2(self, f_mnw, float_format='{:.2f}', indent=12):
         """write out dataset 2 for MNW.
 
         Parameters
         ----------
         f_mnw : package file handle
         """
-        f_mnw.write('{} {:.0f}\n'.format(self.wellid, self.nnodes))
-        f_mnw.write('{} {:.0f} {:.0f} {:.0f} {:.0f}\n'.format(self.losstype,
-                                                            self.pumploc,
-                                                            self.qlimit,
-                                                            self.ppflag,
-                                                            self.pumpcap))
+        # update object attributes with values from node_data
+        self._set_attributes_from_node_data()
+
+        indent = ' '*indent
+        # dataset 2a
+        fmt = '{} {:.0f}\n'
+        f_mnw.write(fmt.format(self.wellid, self.nnodes))
+        # dataset 2b
+        fmt = indent + '{} {:.0f} {:.0f} {:.0f} {:.0f}\n'
+        f_mnw.write(fmt.format(self.losstype,
+                               self.pumploc,
+                               self.qlimit,
+                               self.ppflag,
+                               self.pumpcap))
+        # dataset 2c
+        def _assign_by_node_var(var):
+            """Assign negative number if variable is entered by node."""
+            if isinstance(var, list):
+                return -1
+            return var
+
         if self.losstype.lower() != 'none':
             if self.losstype.lower() != 'specifycwc':
-                f_mnw.write('{} '.format(self.rw))
+                fmt = indent + float_format + ' '
+                f_mnw.write(fmt.format(_assign_by_node_var(self.rw)))
                 if self.losstype.lower() == 'skin':
-                    f_mnw.write('{} {}'.format(self.rskin, self.kskin))
+                    fmt = '{0} {0}'.format(float_format)
+                    f_mnw.write(fmt.format(_assign_by_node_var(self.rskin),
+                                               _assign_by_node_var(self.kskin)))
                 elif self.losstype.lower() == 'general':
-                    f_mnw.write('{} {} {}'.format(self.B, self.C, self.P))
+                    fmt = '{0} {0 {0}'.format(float_format)
+                    f_mnw.write(fmt.format(_assign_by_node_var(self.B),
+                                                  _assign_by_node_var(self.C),
+                                                  _assign_by_node_var(self.P)))
             else:
-                f_mnw.write('{}'.format(self.cwc))
+                fmt = indent+float_format
+                f_mnw.write(fmt.format(_assign_by_node_var(self.cwc)))
             f_mnw.write('\n')
+        # dataset 2d
         if self.nnodes > 0:
             def _getloc(n):
-                return '{:.0f} {:.0f} {:.0f}'.format(self.node_data.k[n] +1,
-                                                     self.node_data.i[n] +1,
-                                                     self.node_data.j[n] +1)
+                """Output for dataset 2d1."""
+                return indent+'{:.0f} {:.0f} {:.0f}'.format(self.k[n] +1,
+                                                     self.i[n] +1,
+                                                     self.j[n] +1)
         elif self.nnodes < 0:
             def _getloc(n):
-                return '{} {} {:.0f} {:.0f}'.format(self.node_data.ztop[n],
-                                                    self.node_data.zbotm[n],
-                                                    self.node_data.i[n] +1,
-                                                    self.node_data.j[n] +1)
+                """Output for dataset 2d2."""
+                fmt = indent+'{0} {0} '.format(float_format) + '{:.0f} {:.0f}'
+                return fmt.format(self.node_data.ztop[n],
+                                  self.node_data.zbotm[n],
+                                  self.node_data.i[n] +1,
+                                  self.node_data.j[n] +1)
         for n in range(np.abs(self.nnodes)):
             f_mnw.write(_getloc(n))
-            for var in ['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'CWC', 'PP']:
+            for var in ['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc', 'pp']:
                 val = self.__dict__[var]
+                if val is None:
+                    continue
+                # only write variables by node if they are lists
                 if isinstance(val, list) or val < 0:
-                    f_mnw.write(' {}'.format(self.node_data[var][n]))
+                    fmt = ' ' + float_format
+                    f_mnw.write(fmt.format(self.node_data[var][n]))
             f_mnw.write('\n')
+        # dataset 2e
         if self.pumploc != 0:
             if self.pumploc > 0:
-                for var in [self.pumplay, self.pumprow, self.pumpcol]:
+                f_mnw.write(indent+'{:.0f} {:.0f} {:.0f}\n'.format(self.pumplay,
+                                                            self.pumprow,
+                                                            self.pumpcol))
+            elif self.pumploc < 0:
+                fmt = indent+'{}\n'.format(float_format)
+                f_mnw.write(fmt.format(self.zpump))
+        # dataset 2f
+        if self.qlimit > 0:
+            fmt = indent+'{} '.format(float_format) + '{:.0f}'
+            f_mnw.write(fmt.format(self.hlim, self.qcut))
+            if self.qcut != 0:
+                fmt = ' {0} {0}'.format(float_format)
+                f_mnw.write(fmt.format(self.qfrcmn, self.qfrcmx))
+            f_mnw.write('\n')
+        # dataset 2g
+        if self.pumpcap > 0:
+            fmt = indent+'{0} {0} {0} {0}\n'.format(float_format)
+            f_mnw.write(fmt.format(self.hlift, self.liftq0, self.liftqmax, self.hwtol))
+        # dataset 2h
+        if self.pumpcap > 0:
+            fmt = indent+'{0} {0}\n'.format(float_format)
+            f_mnw.write(fmt.format(self.liftn, self.qn))
 
 
 
@@ -554,13 +628,6 @@ class ModflowMnw2(Package):
         for multi-node wells. Format is the same as stress period data for individual Mnw objects,
         except the 'per' column is replaced by 'wellid' (containing wellid for each MNW).
         See Mnw class documentation for more information.
-    extension : string
-        Filename extension (default is 'mnw2')
-    unitnumber : int
-        File unit number (default is 34).
-
-    Attributes
-    ----------
     itmp : list of ints
         is an integer value for reusing or reading multi-node well data; it can change each stress period.
         ITMP must be ≥ 0 for the first stress period of a simulation.
@@ -570,7 +637,16 @@ class ModflowMnw2(Package):
         • if ITMP = 0, then no multi-node wells are active for the stress period and the following dataset is skipped.
         • if ITMP < 0, then the same number of wells and well information will be reused from the
         previous stress period and dataset 4 is skipped.
-        This variable is generated automatically by flopy.
+    extension : string
+        Filename extension (default is 'mnw2')
+    unitnumber : int
+        File unit number (default is 34).
+    gwt : boolean
+        Flag indicating whether GW transport process is active
+
+    Attributes
+    ----------
+
     Methods
     -------
 
@@ -590,8 +666,8 @@ class ModflowMnw2(Package):
     """
 
     def __init__(self, model, mnwmax=0, nodtot=None, iwl2cb=0, mnwprnt=0, aux=[],
-                 node_data=None, mnw=None, stress_period_data=None,
-                 extension='mnw2', unitnumber=34):
+                 node_data=None, mnw=None, stress_period_data=None, itmp=[],
+                 extension='mnw2', unitnumber=34, gwt=False):
         """
         Package constructor
         """
@@ -617,6 +693,8 @@ class ModflowMnw2(Package):
         self.mnw = mnw # dict or list of Mnw objects
 
         self.stress_period_data = stress_period_data # dict of rec arrays (sp data by mnw)
+        self.itmp = itmp
+        self.gwt = gwt
 
         if mnw is None:
             self.get_itmp(stress_period_data)
@@ -758,14 +836,15 @@ class ModflowMnw2(Package):
             node_data = np.append(node_data, mnwobj.node_data).view(np.recarray)
 
         stress_period_data = {} # stress period data table for package (flopy convention)
+        itmp = []
         for per in range(0, nper):
             # dataset 3
-            itmp = int(line_parse(next(f))[0])
+            itmp_per = int(line_parse(next(f))[0])
             # dataset4
             # dict might be better here to only load submitted values
-            if itmp > 0:
-                current_4 = ModflowMnw2.get_empty_stress_period_data(itmp, aux_names=option)
-                for i in range(itmp):
+            if itmp_per > 0:
+                current_4 = ModflowMnw2.get_empty_stress_period_data(itmp_per, aux_names=option)
+                for i in range(itmp_per):
                     wellid, qdes, capmult, cprime, xyz = _parse_4a(next(f), mnw, gwt=gwt)
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
@@ -777,14 +856,15 @@ class ModflowMnw2(Package):
                     mnw[wellid].stress_period_data[per] = tuple([per] + [qdes, capmult, cprime,
                                                                    hlim, qcut, qfrcmn, qfrcmx] + xyz)
                 stress_period_data[per] = current_4
-            elif itmp == 0: # no active mnws this stress period
+            elif itmp_per == 0: # no active mnws this stress period
                 continue
             else:
                 # copy pumping rates from previous stress period
                 mnw[wellid].stress_period_data[per] = mnw[wellid].stress_period_data[per-1]
+            itmp.append(itmp_per)
         f.close()
         return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, iwl2cb=iwl2cb, mnwprnt=mnwprint, aux=option,
-                           node_data=node_data, mnw=mnw, stress_period_data=stress_period_data)
+                           node_data=node_data, mnw=mnw, stress_period_data=stress_period_data, itmp=itmp)
 
     def make_mnw_objects(self, node_data, stress_period_data):
         self.mnw = {}
@@ -802,7 +882,7 @@ class ModflowMnw2(Package):
             mnwspd = Mnw.get_empty_stress_period_data(nper, aux_names=self.aux)
             for per in range(nper):
                 inds = stress_period_data[0].wellid == wellid
-                mnwspd[per] = stress_period_data[per][inds].values
+                mnwspd[per] = tuple([per] + list(stress_period_data[per][inds][0])[1:])
             self.mnw[wellid] = Mnw(wellid,
                                    nnodes=nnodes, nper=nper,
                                    node_data=nd, stress_period_data=mnwspd,
@@ -821,7 +901,7 @@ class ModflowMnw2(Package):
 
     def _write_1(self, f_mnw):
         f_mnw.write('{:.0f} '.format(self.mnwmax))
-        if self.mnwmax > 0:
+        if self.mnwmax < 0:
             f_mnw.write('{:.0f} '.format(self.nodtot))
         f_mnw.write('{:.0f} {:.0f}'.format(self.iwl2cb, self.mnwprnt))
         if len(self.aux) > 0:
@@ -829,7 +909,7 @@ class ModflowMnw2(Package):
                 f_mnw.write(' aux {}'.format(abc))
         f_mnw.write('\n')
 
-    def write_file(self, filename=None):
+    def write_file(self, filename=None, float_format='{:.2f}'):
         """
         Write the package file.
 
@@ -838,11 +918,9 @@ class ModflowMnw2(Package):
         None
 
         """
+        # update mnw objects from node and stress_period_data tables
+        self.make_mnw_objects(self.node_data, self.stress_period_data)
 
-        # tabfiles = False
-        # tabfiles_dict = {}
-        # transroute = False
-        # reachinput = False
         if filename is not None:
             self.fn_path = filename
 
@@ -857,6 +935,38 @@ class ModflowMnw2(Package):
         # dataset 2
         # need a method that assigns attributes from table to objects!
         # call make_mnw_objects?? (table is definitive then)
+        for k, mnw in self.mnw.items():
+            mnw._write_2(f_mnw, float_format=float_format)
+
+        # dataset 3
+        for per in range(self.nper):
+            f_mnw.write('{:.0f}  Stress Period {:.0f}\n'.format(self.itmp[per], per+1))
+            if self.itmp[per] > 0:
+
+                for n in range(self.itmp[per]):
+                    # dataset 4
+                    wellid, qdes = self.stress_period_data[per][['wellid', 'qdes']][n]
+                    fmt = '{} '+float_format
+                    f_mnw.write(fmt.format(wellid, qdes))
+                    if self.mnw[wellid].pumpcap > 0:
+                        fmt = ' '+float_format
+                        f_mnw.write(fmt.format(*self.stress_period_data[per].capmult[n]))
+                    if qdes > 0 and self.gwt:
+                        f_mnw.write(fmt.format(*self.stress_period_data[per].cprime[n]))
+                    if len(self.aux) > 0:
+                        for var in self.aux:
+                            fmt = ' '+float_format
+                            f_mnw.write(fmt.format(*self.stress_period_data[per][var][n]))
+                    f_mnw.write('\n')
+                    if self.mnw[wellid].qlimit < 0:
+                        hlim, qcut = self.stress_period_data[per][['hlim', 'qcut']][n]
+                        fmt = float_format + ' {:.0f}'
+                        f_mnw.write(fmt.format(hlim, qcut))
+                        if qcut != 0:
+                            fmt = ' {} {}'.format(float_format)
+                            f_mnw.write(fmt.format(*self.stress_period_data[per][['qfrcmn', 'qfrcmx']][n]))
+                        f_mnw.write('\n')
+        f_mnw.close()
 
 def _parse_1(line):
     line = line_parse(line)
@@ -980,7 +1090,6 @@ def _parse_2(f):
                hlim=hlim, qcut=qcut, qfrcmn=qfrcmn, qfrcmx=qfrcmx,
                hlift=hlift, liftq0=liftq0, liftqmax=liftqmax, hwtol=hwtol,
                liftn=liftn, qn=qn)
-
 
 def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1, cwc=-1):
     if not isinstance(line, list):
