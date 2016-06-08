@@ -74,11 +74,14 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
             if not add_reals:
                 f_in.write()
                 f_in = NetCdf.empty_like(mean,output_filename=inputs_filename)
-                f_in.append(mean,suffix="mean")
-                f_in.append(stdev,suffix="stdev")
+                f_in.append(mean,suffix="**mean**")
+                f_in.append(stdev,suffix="**stdev**")
             else:
-                f_in.append(mean,suffix="mean")
-                f_in.append(stdev,suffix="stdev")
+                f_in.append(mean,suffix="**mean**")
+                f_in.append(stdev,suffix="**stdev**")
+        mean.add_global_attributes({"namefile":''})
+        stdev.add_global_attributes({"namefile":''})
+        f_in.add_global_attributes({"namefile":''})
         mean.nc.close()
         stdev.nc.close()
     if outputs_filename is not None:
@@ -101,13 +104,17 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
             if not add_reals:
                 f_out.write()
                 f_out = NetCdf.empty_like(mean,output_filename=outputs_filename)
-                f_out.append(mean,suffix="mean")
-                f_out.append(stdev,suffix="stdev")
+                f_out.append(mean,suffix="**mean**")
+                f_out.append(stdev,suffix="**stdev**")
 
             else:
-                f_out.append(mean,suffix="mean")
-                f_out.append(stdev,suffix="stdev")
-
+                f_out.append(mean,suffix="**mean**")
+                f_out.append(stdev,suffix="**stdev**")
+        mean.add_global_attributes({"namefile":''})
+        stdev.add_global_attributes({"namefile":''})
+        f_out.add_global_attributes({"namefile":''})
+        mean.nc.close()
+        stdev.nc.close()
     return f_in,f_out
 
 

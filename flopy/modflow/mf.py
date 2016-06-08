@@ -472,7 +472,6 @@ class Modflow(BaseModel):
             print("ModflowBas6 free format:{0}\n".format(
                     ml.free_format_input))
 
-
         # load dis
         dis = None
         dis_key = None
