@@ -42,8 +42,8 @@ class Mnw(object):
         GENERAL head loss is defined with coefficients A, B, and C and power exponent P
                 (hWELL = hn + AQn + BQn + CQnP). A is determined by the model from the value of Rw.
                 User must define Rw, B, C, and P in dataset 2c or 2d. A value of P = 2.0 is suggested
-                if no other data are available (the model allows 1.0 ≤ P ≤ 3.5).
-                Entering a value of C = 0 will result in a “linear” model
+                if no other data are available (the model allows 1.0 <= P <= 3.5).
+                Entering a value of C = 0 will result in a "linear" model
                 in which the value of B is entered directly
                 (rather than entering properties of the skin, as with the SKIN option).
         SPECIFYcwc the user specifies an effective conductance value
@@ -191,10 +191,10 @@ class Mnw(object):
                 When PUMPCAP > 0, in the first stress period in which Qdes is specified with a negative value,
                 Qdes represents the maximum operating discharge for the pump; in subsequent stress periods,
                 any different negative values of Qdes are ignored, although values are subject to
-                adjustment for CapMult. If Qdes ≥ 0.0, then pump-capacity adjustments are not applied.
+                adjustment for CapMult. If Qdes >= 0.0, then pump-capacity adjustments are not applied.
             capmult : int
                 is a flag and multiplier for implementing head-capacity relations during a given stress period.
-                Only specify if PUMPCAP > 0 for this well. If CapMult ≤ 0, then head-capacity relations
+                Only specify if PUMPCAP > 0 for this well. If CapMult <= 0, then head-capacity relations
                 are ignored for this stress period. If CapMult = 1.0, then head-capacity relations defined
                 in datasets 2g and 2h are used. If CapMult equals any other positive value (for example, 0.6 or 1.1),
                 then head-capacity relations are used but adjusted and shifted by multiplying
@@ -230,11 +230,11 @@ class Mnw(object):
     qfrcmn : float
         is the minimum pumping rate or fraction of original pumping rate (a choice that depends on QCUT)
         that a well must exceed to remain active during a stress period. The absolute value
-        of Qfrcmn must be less than the absolute value of Qfrcmx (defined next). Only specify if QCUT ≠ 0.
+        of Qfrcmn must be less than the absolute value of Qfrcmx (defined next). Only specify if QCUT != 0.
     qfrcmx : float
         is the minimum pumping rate or fraction of original pumping rate that must be exceeded to
         reactivate a well that had been shut off based on Qfrcmn during a stress period. The absolute
-        value of Qfrcmx must be greater than the absolute value of Qfrcmn. Only specify if QCUT ≠0.
+        value of Qfrcmx must be greater than the absolute value of Qfrcmn. Only specify if QCUT != 0.
     hlift : float
         is the reference head (or elevation) corresponding to the discharge point for the well.
         This is typically at or above the land surface, and can be increased to account for additional head
@@ -620,14 +620,14 @@ class ModflowMnw2(Package):
         The value of "IWL2CB" will become the third value on that line, etc.
     iwl2cb : int
         is a flag and a unit number:
-        •	if IWL2CB > 0, then it is the unit number to which MNW cell-by-cell flow terms
-            will be recorded whenever cell-by-cell budget data are written to a file
-            (as determined by the outputcontrol options of MODFLOW).
-        •	if IWL2CB = 0, then MNW cell-by-cell flow terms will not be printed or recorded.
-        •	if IWL2CB < 0, then well injection or withdrawal rates and water levels in the well
-            and its multiple cells will be printed in the main MODFLOW listing (output) file
-            whenever cell-by-cell budget data are written to a file
-            (as determined by the output control options of MODFLOW).
+            if IWL2CB > 0, then it is the unit number to which MNW cell-by-cell flow terms
+                will be recorded whenever cell-by-cell budget data are written to a file
+                (as determined by the outputcontrol options of MODFLOW).
+            if IWL2CB = 0, then MNW cell-by-cell flow terms will not be printed or recorded.
+            if IWL2CB < 0, then well injection or withdrawal rates and water levels in the well
+                and its multiple cells will be printed in the main MODFLOW listing (output) file
+                whenever cell-by-cell budget data are written to a file
+                (as determined by the output control options of MODFLOW).
     mnwprnt : integer
         Flag controlling the level of detail of information about multi-node wells to be written to the
         main MODFLOW listing (output) file. If MNWPRNT = 0, then only basic well information will be
@@ -636,10 +636,10 @@ class ModflowMnw2(Package):
         (default is 0)
     aux : list of strings
         (listed as "OPTION" in MNW2 input instructions)
-        is an optional list of character values in the style of “AUXILIARY abc” or “AUX abc”
-        where “abc” is the name of an auxiliary parameter to be read for each multi-node well
+        is an optional list of character values in the style of "AUXILIARY abc" or "AUX abc"
+        where "abc" is the name of an auxiliary parameter to be read for each multi-node well
         as part of dataset 4a. Up to 20 parameters can be specified,
-        each of which must be preceded by “AUXILIARY” or “AUX.”
+        each of which must be preceded by "AUXILIARY" or "AUX."
         These parameters will not be used by the MNW2 Package,
         but they will be available for use by other packages.
         (default is None)
@@ -657,12 +657,12 @@ class ModflowMnw2(Package):
         See Mnw class documentation for more information.
     itmp : list of ints
         is an integer value for reusing or reading multi-node well data; it can change each stress period.
-        ITMP must be ≥ 0 for the first stress period of a simulation.
-        • if ITMP > 0, then ITMP is the total number of active multi-node wells simulated during the stress period,
-        and only wells listed in dataset 4a will be active during the stress period. Characteristics of each well
-        are defined in datasets 2 and 4.
-        • if ITMP = 0, then no multi-node wells are active for the stress period and the following dataset is skipped.
-        • if ITMP < 0, then the same number of wells and well information will be reused from the
+        ITMP must be >= 0 for the first stress period of a simulation.
+        if ITMP > 0, then ITMP is the total number of active multi-node wells simulated during the stress period,
+            and only wells listed in dataset 4a will be active during the stress period. Characteristics of each well
+            are defined in datasets 2 and 4.
+        if ITMP = 0, then no multi-node wells are active for the stress period and the following dataset is skipped.
+        if ITMP < 0, then the same number of wells and well information will be reused from the
         previous stress period and dataset 4 is skipped.
     extension : string
         Filename extension (default is 'mnw2')
@@ -1150,7 +1150,7 @@ def _parse_2(f):
     hwtol = None
     if pumpcap > 0:
         # The number of additional data points on the curve (and lines in dataset 2h)
-        # must correspond to the value of PUMPCAP for this well (where PUMPCAP ≤ 25).
+        # must correspond to the value of PUMPCAP for this well (where PUMPCAP <= 25).
         line = line_parse(next(f))
         hlift = _pop_item(line, float)
         liftq0 = _pop_item(line, float)

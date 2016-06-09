@@ -5,13 +5,14 @@ import os
 import flopy
 import numpy as np
 
-path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp')
 
-def test_load(path):
+
+def test_load():
 
     # load in the test problem (1 well, 3 stress periods)
     m = flopy.modflow.Modflow('MNW2-Fig28', model_ws=cpth)
+    path = os.path.join('..', 'examples', 'data', 'mf2005_test')
     dis = flopy.modflow.ModflowDis.load(path + '/MNW2-Fig28.dis', m)
     mnw2 = flopy.modflow.ModflowMnw2.load(path + '/MNW2-Fig28.mnw2', m)
 
@@ -27,6 +28,7 @@ def test_load(path):
     assert np.array_equal(mnw2.node_data, mnw2_2.node_data)
     assert (mnw2.stress_period_data[0].qdes - mnw2_2.stress_period_data[0].qdes).max() < 0.01
     assert np.abs(mnw2.stress_period_data[0].qdes - mnw2_2.stress_period_data[0].qdes).min() < 0.01
+
 
 def test_make_package():
     m = flopy.modflow.Modflow('mnw2example', model_ws=cpth)
@@ -62,5 +64,5 @@ def test_make_package():
     assert np.array_equal(mnw2.stress_period_data[1], mnw2fromobj.stress_period_data[1])
 
 if __name__ == '__main__':
-    test_load(path)
+    test_load()
     test_make_package()
