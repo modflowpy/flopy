@@ -403,11 +403,18 @@ class NetCdf(object):
             if isinstance(s_data,np.ma.MaskedArray):
                 self.logger.warn("masked array for {0}".format(vname))
                 s_mask = s_data.mask
-                o_mask = o_data.mask
                 s_data = np.array(s_data)
-                o_data = np.array(o_data)
                 s_data[s_mask] = 0.0
+            else:
+                np.nan_to_num(s_data)
+
+            if isinstance(o_data,np.ma.MaskedArray):
+                o_mask = o_data.mask
+                o_data = np.array(o_data)
                 o_data[o_mask] = 0.0
+            else:
+                np.nan_to_num(o_data)
+
 
             # difference with self
             if minuend.lower() == "self":
@@ -424,9 +431,10 @@ class NetCdf(object):
                 self.logger.warn("var {0} has zero differences, skipping...".format(vname))
                 continue
 
-
-            notzero = d_data != 0.0
-
+            self.logger.warn("resetting diff attrs max,min:{0},{1}".format(d_data.min(),d_data.max()))
+            attrs = self.var_attr_dict[vname].copy()
+            attrs["max"] = d_data.max()
+            attrs["min"] = d_data.min()
             # reapply masks
             if s_mask is not None:
                 self.log("applying self mask")
@@ -439,12 +447,14 @@ class NetCdf(object):
                 d_data[o_mask] = FILLVALUE
                 self.log("applying other mask")
 
-            var = new_net.create_variable(vname,self.var_attr_dict[vname],
-                                          s_var.dtype,
-                                          dimensions=s_var.dimensions)
             d_data[np.isnan(d_data)] = FILLVALUE
             if mask_zero_diff:
                 d_data[np.where(d_data==0.0)] = FILLVALUE
+
+            var = new_net.create_variable(vname,attrs,
+                                          s_var.dtype,
+                                          dimensions=s_var.dimensions)
+
             var[:] = d_data
             self.log("processing variable {0}".format(vname))
 
