@@ -1036,7 +1036,8 @@ class ModflowMnw2(Package):
 
                 for n in range(self.itmp[per]):
                     # dataset 4
-                    wellid, qdes = self.stress_period_data[per][['wellid', 'qdes']][n]
+                    wellid = self.stress_period_data[per].wellid[n]
+                    qdes = self.stress_period_data[per].qdes[n]
                     fmt = '{} '+float_format
                     f_mnw.write(fmt.format(wellid, qdes))
                     if self.mnw[wellid].pumpcap > 0:
