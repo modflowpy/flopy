@@ -723,6 +723,7 @@ class ModflowMnw2(Package):
             for n in names:
                 self.node_data[n] = node_data[n] # rec array of Mnw properties by node
             self.nodtot = len(self.node_data)
+            self.node_data.sort(order='wellid')
         self.mnw = mnw # dict or list of Mnw objects
 
         self.stress_period_data = {0: self.get_empty_stress_period_data(0, aux_names=aux)}
@@ -733,6 +734,7 @@ class ModflowMnw2(Package):
                 names = [n for n in data.dtype.names if n in spd.dtype.names]
                 for n in names:
                     spd[n] = data[n]
+                spd.sort(order='wellid')
                 self.stress_period_data[per] = spd # dict of rec arrays (sp data by mnw)
         self.itmp = itmp
         self.gwt = gwt
@@ -745,6 +747,7 @@ class ModflowMnw2(Package):
             elif isinstance(mnw, Mnw):
                 self.mnw = {mnw.wellid: mnw}
             self.make_node_data(self.mnw)
+            self.make_stress_period_data(self.mnw)
 
         '''
         # -input format checks:
@@ -930,13 +933,10 @@ class ModflowMnw2(Package):
             for per, itmp in enumerate(self.itmp):
                 inds = stress_period_data[0].wellid == wellid
                 if itmp > 0 and np.any(inds):
-                    #values = tuple([per] + list(stress_period_data[per][inds][0])[1:])
-                    #assert len(mnwspd[per]) == len(values)
-                    #mnwspd[per] = tuple([per] + list(stress_period_data[per][inds][0])[1:])
                     names = [n for n in stress_period_data[per][inds].dtype.names if n in mnwspd.dtype.names]
                     mnwspd[per]['per'] = per
                     for n in names:
-                        mnwspd[per][n] = stress_period_data[per][inds][n]
+                        mnwspd[per][n] = stress_period_data[per][inds][n][0]
                 elif itmp == 0:
                     continue
                 elif itmp < 0:
@@ -954,8 +954,39 @@ class ModflowMnw2(Package):
             mnwobjs = [mnwobjs]
         node_data = ModflowMnw2.get_empty_node_data(0)
         for mnwobj in mnwobjs:
-            np.append(node_data, mnwobj.node_data).view(np.recarray)
+            node_data = np.append(node_data, mnwobj.node_data).view(np.recarray)
+        node_data.sort(order='wellid')
         self.node_data = node_data
+
+    def make_stress_period_data(self, mnwobjs):
+        """make stress_period_data rec array from Mnw objects"""
+        if isinstance(mnwobjs, dict):
+            mnwobjs = list(mnwobjs.values())
+        elif isinstance(mnwobjs, Mnw):
+            mnwobjs = [mnwobjs]
+        stress_period_data = {}
+        for per, itmp in enumerate(self.itmp):
+            if itmp > 0:
+                stress_period_data[per] = ModflowMnw2.get_empty_stress_period_data(itmp, aux_names=self.aux)
+                i=0
+                for mnw in mnwobjs:
+                    if per in mnw.stress_period_data.per:
+                        i += 1
+                        if i > itmp:
+                            raise ItmpError(itmp, i)
+                        names = [n for n in mnw.stress_period_data.dtype.names
+                                 if n in stress_period_data[per].dtype.names]
+                        stress_period_data[per]['wellid'][i-1] = mnw.wellid
+                        for n in names:
+                            stress_period_data[per][n][i-1] = mnw.stress_period_data[n][per]
+                stress_period_data[per].sort(order='wellid')
+                if i < itmp:
+                    raise ItmpError(itmp, i)
+            elif itmp == 0:
+                continue
+            else: # itmp < 0
+                stress_period_data[per] = stress_period_data[per -1]
+        self.stress_period_data = stress_period_data
 
     def _write_1(self, f_mnw):
         f_mnw.write('{:.0f} '.format(self.mnwmax))
@@ -967,7 +998,7 @@ class ModflowMnw2(Package):
                 f_mnw.write(' aux {}'.format(abc))
         f_mnw.write('\n')
 
-    def write_file(self, filename=None, float_format='{:.2f}'):
+    def write_file(self, filename=None, float_format='{:.2f}', use_tables=True):
         """
         Write the package file.
 
@@ -976,8 +1007,10 @@ class ModflowMnw2(Package):
         None
 
         """
-        # update mnw objects from node and stress_period_data tables
-        self.make_mnw_objects(self.node_data, self.stress_period_data)
+
+        if use_tables:
+            # update mnw objects from node and stress_period_data tables
+            self.make_mnw_objects()
 
         if filename is not None:
             self.fn_path = filename
@@ -1220,3 +1253,11 @@ def _pop_item(line, dtype=str):
             # '-10.'
             return int(float(line.pop(0)))
     return 0
+
+class ItmpError(Exception):
+    def __init__(self, itmp, nactivewells):
+        self.itmp = itmp
+        self.nactivewells = nactivewells
+    def __str__(self):
+        return('\n\nItmp value of {} is positive but does not equal the number of active wells specified ({}). '
+               'See Mnw2 package documentation for details.'.format(self.itmp, self.nactivewells))
