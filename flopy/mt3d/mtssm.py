@@ -171,7 +171,8 @@ class Mt3dSsm(Package):
             self.stress_period_data = None
         else:
             self.stress_period_data = MfList(self, model=model,
-                                         data=stress_period_data)
+                                             data=stress_period_data,
+                                             list_free_format=False)
 
         if mxss is None and self.parent.mf is None:
             warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
