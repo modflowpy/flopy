@@ -20,14 +20,14 @@ def test_load():
     m = flopy.modflow.Modflow('br', model_ws=cpth)
     path = os.path.join('..', 'examples', 'data', 'mnw2_examples')
     mnw2 = flopy.modflow.ModflowMnw2.load(path + '/BadRiver_cal.mnw2', m)
-    #mnw2.write_file(os.path.join(cpth, 'brtest.mnw2'))
+    mnw2.write_file(os.path.join(cpth, 'brtest.mnw2'))
 
-    #m2 = flopy.modflow.Modflow('br', model_ws=cpth)
-    #mnw2_2 = flopy.modflow.ModflowMnw2.load(cpth + '/brtest.mnw2', m)
+    m2 = flopy.modflow.Modflow('br', model_ws=cpth)
+    mnw2_2 = flopy.modflow.ModflowMnw2.load(cpth + '/brtest.mnw2', m)
 
-    #assert np.array_equal(mnw2.node_data, mnw2_2.node_data)
-    #assert (mnw2.stress_period_data[0].qdes - mnw2_2.stress_period_data[0].qdes).max() < 0.01
-    #assert np.abs(mnw2.stress_period_data[0].qdes - mnw2_2.stress_period_data[0].qdes).min() < 0.01
+    assert np.array_equal(mnw2.node_data, mnw2_2.node_data)
+    assert (mnw2.stress_period_data[0].qdes - mnw2_2.stress_period_data[0].qdes).max() < 0.01
+    assert np.abs(mnw2.stress_period_data[0].qdes - mnw2_2.stress_period_data[0].qdes).min() < 0.01
 
 
 def test_make_package():
@@ -54,15 +54,15 @@ def test_make_package():
                  stress_period_data=stress_period_data,
                  itmp=[2, 2, -1], # reuse second per pumping for last stress period
                  )
-
+    '''
     # make the package from the objects
     mnw2fromobj = flopy.modflow.ModflowMnw2(model=m, mnwmax=2,
                  mnw=mnw2.mnw,
                  itmp=[2, 2, -1], # reuse second per pumping for last stress period
                  )
     # verify that they two input methods produce the same results
-    #assert np.array_equal(mnw2.stress_period_data[1], mnw2fromobj.stress_period_data[1])
-
+    assert np.array_equal(mnw2.stress_period_data[1], mnw2fromobj.stress_period_data[1])
+    '''
 if __name__ == '__main__':
-    test_load()
+    #test_load()
     test_make_package()

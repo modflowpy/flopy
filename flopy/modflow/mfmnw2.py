@@ -268,7 +268,7 @@ class Mnw(object):
     by_node_variables = ['k', 'i', 'j', 'ztop', 'zbotm', 'rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc', 'pp']
 
     def __init__(self, wellid,
-                 nnodes=1, nper=0,
+                 nnodes=1, nper=1,
                  losstype="SKIN", pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
                  rw=1, rskin=2, kskin=10,
                  B=None, C=0, P=2., cwc=None, pp=1,
