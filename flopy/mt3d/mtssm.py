@@ -391,7 +391,7 @@ class Mt3dSsm(Package):
 
         >>> import flopy
         >>> mt = flopy.mt3d.Mt3dms()
-        >>> ssm = flopy.mt3d.Mt3dSsm.load('test.ssm', m)
+        >>> ssm = flopy.mt3d.Mt3dSsm.load('test.ssm', mt)
 
         """
 
