@@ -46,8 +46,8 @@ class Mt3dRct(Package):
         if srconc is None:
             srconc = 0.0
         self.srconc = []
-        u3d = Util3d(model, (nlay, nrow, ncol), np.float32,
-                     srconc, name='srconc1', locat=self.unit_number[0],
+        u3d = Util3d(model, (nlay, nrow, ncol), np.float32, srconc,
+                     name='srconc1', locat=self.unit_number[0],
                      array_free_format=False)
         self.srconc.append(u3d)
         if ncomp > 1:
@@ -60,9 +60,8 @@ class Mt3dRct(Package):
                     print("BTN: setting srconc for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
-                u3d = Util3d(model, (nlay, nrow, ncol),
-                             np.float32, val, name=name,
-                             locat=self.unit_number[0],
+                u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
+                             name=name, locat=self.unit_number[0],
                              array_free_format=False)
                 self.srconc.append(u3d)
 
@@ -70,9 +69,8 @@ class Mt3dRct(Package):
         if sp1 is None:
             sp1 = 0.0
         self.sp1 = []
-        u3d = Util3d(model, (nlay, nrow, ncol), np.float32,
-                     sp1, name='sp11', locat=self.unit_number[0],
-                     array_free_format=False)
+        u3d = Util3d(model, (nlay, nrow, ncol), np.float32, sp1, name='sp11',
+                     locat=self.unit_number[0], array_free_format=False)
         self.sp1.append(u3d)
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
@@ -84,9 +82,8 @@ class Mt3dRct(Package):
                     print("BTN: setting sp1 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
-                u3d = Util3d(model, (nlay, nrow, ncol),
-                             np.float32, val, name=name,
-                             locat=self.unit_number[0],
+                u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
+                             name=name, locat=self.unit_number[0],
                              array_free_format=False)
                 self.sp1.append(u3d)
 
@@ -94,9 +91,8 @@ class Mt3dRct(Package):
         if sp2 is None:
             sp2 = 0.0
         self.sp2 = []
-        u3d = Util3d(model, (nlay, nrow, ncol), np.float32,
-                     sp2, name='sp21', locat=self.unit_number[0],
-                     array_free_format=False)
+        u3d = Util3d(model, (nlay, nrow, ncol), np.float32, sp2, name='sp21',
+                     locat=self.unit_number[0], array_free_format=False)
         self.sp2.append(u3d)
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
@@ -108,9 +104,8 @@ class Mt3dRct(Package):
                     print("BTN: setting sp2 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
-                u3d = Util3d(model, (nlay, nrow, ncol),
-                             np.float32, val, name=name,
-                             locat=self.unit_number[0],
+                u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
+                             name=name, locat=self.unit_number[0],
                              array_free_format=False)
                 self.sp2.append(u3d)
 
@@ -118,9 +113,8 @@ class Mt3dRct(Package):
         if rc1 is None:
             rc1 = 0.0
         self.rc1 = []
-        u3d = Util3d(model, (nlay, nrow, ncol), np.float32,
-                     rc1, name='rc11', locat=self.unit_number[0],
-                     array_free_format=False)
+        u3d = Util3d(model, (nlay, nrow, ncol), np.float32, rc1, name='rc11',
+                     locat=self.unit_number[0], array_free_format=False)
         self.rc1.append(u3d)
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
@@ -132,9 +126,8 @@ class Mt3dRct(Package):
                     print("BTN: setting rc1 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
-                u3d = Util3d(model, (nlay, nrow, ncol),
-                             np.float32, val, name=name,
-                             locat=self.unit_number[0],
+                u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
+                             name=name, locat=self.unit_number[0],
                              array_free_format=False)
                 self.rc1.append(u3d)
 
@@ -142,9 +135,8 @@ class Mt3dRct(Package):
         if rc2 is None:
             rc2 = 0.0
         self.rc2 = []
-        u3d = Util3d(model, (nlay, nrow, ncol), np.float32,
-                     rc2, name='rc21', locat=self.unit_number[0],
-                     array_free_format=False)
+        u3d = Util3d(model, (nlay, nrow, ncol), np.float32, rc2, name='rc21',
+                     locat=self.unit_number[0], array_free_format=False)
         self.rc2.append(u3d)
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
@@ -156,9 +148,8 @@ class Mt3dRct(Package):
                     print("BTN: setting rc2 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
-                u3d = Util3d(model, (nlay, nrow, ncol),
-                             np.float32, val, name=name,
-                             locat=self.unit_number[0],
+                u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
+                             name=name, locat=self.unit_number[0],
                              array_free_format=False)
                 self.rc2.append(u3d)
 
@@ -288,8 +279,8 @@ class Mt3dRct(Package):
         if model.verbose:
             print('   loading RHOB...')
         if isothm in [1, 2, 3, 4, 6]:
-            rhob = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'rhob',
-                                 ext_unit_dict, array_format="mt3d")
+            rhob = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
+                               'rhob', ext_unit_dict, array_format="mt3d")
             if model.verbose:
                 print('   RHOB {}'.format(rhob))
 
@@ -299,8 +290,7 @@ class Mt3dRct(Package):
             print('   loading PRSITY2...')
         if isothm in [5, 6]:
             prsity2 = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                               'prsity2',
-                               ext_unit_dict, array_format="mt3d")
+                               'prsity2', ext_unit_dict, array_format="mt3d")
             if model.verbose:
                 print('   PRSITY2 {}'.format(prsity2))
 
@@ -319,7 +309,7 @@ class Mt3dRct(Package):
                     if model.verbose:
                         print('   loading {}...'.format(name))
                     u3d = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                       name, ext_unit_dict, array_format="mt3d")
+                                      name, ext_unit_dict, array_format="mt3d")
                     kwargs[name] = u3d
                     if model.verbose:
                         print('   SRCONC{} {}'.format(icomp, u3d))
@@ -330,7 +320,7 @@ class Mt3dRct(Package):
             print('   loading SP1...')
         if isothm > 0:
             sp1 = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                 'sp11', ext_unit_dict, array_format="mt3d")
+                              'sp11', ext_unit_dict, array_format="mt3d")
             if model.verbose:
                 print('   SP1 {}'.format(sp1))
             if ncomp > 1:
@@ -350,7 +340,7 @@ class Mt3dRct(Package):
             print('   loading SP2...')
         if isothm > 0:
             sp2 = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                 'sp21', ext_unit_dict, array_format="mt3d")
+                              'sp21', ext_unit_dict, array_format="mt3d")
             if model.verbose:
                 print('   SP2 {}'.format(sp2))
             if ncomp > 1:
@@ -379,10 +369,8 @@ class Mt3dRct(Package):
                     name = "rc1" + str(icomp)
                     if model.verbose:
                         print('   loading {}...'.format(name))
-                    u3d = Util3d.load(f, model, (nlay, nrow, ncol),
-                                      np.float32,
-                                      name, ext_unit_dict,
-                                      array_format="mt3d")
+                    u3d = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
+                                      name, ext_unit_dict, array_format="mt3d")
                     kwargs[name] = u3d
                     if model.verbose:
                         print('   RC1{} {}'.format(icomp, u3d))
@@ -392,10 +380,8 @@ class Mt3dRct(Package):
         if model.verbose:
             print('   loading RC2...')
         if ireact > 0:
-            rc2 = Util3d.load(f, model, (nlay, nrow, ncol),
-                              np.float32,
-                              'rc21', ext_unit_dict,
-                              array_format="mt3d")
+            rc2 = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
+                              'rc21', ext_unit_dict, array_format="mt3d")
             if model.verbose:
                 print('   RC2 {}'.format(rc2))
             if ncomp > 1:
@@ -403,10 +389,8 @@ class Mt3dRct(Package):
                     name = "rc2" + str(icomp)
                     if model.verbose:
                         print('   loading {}...'.format(name))
-                    u3d = Util3d.load(f, model, (nlay, nrow, ncol),
-                                      np.float32,
-                                      name, ext_unit_dict,
-                                      array_format="mt3d")
+                    u3d = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
+                                      name, ext_unit_dict, array_format="mt3d")
                     kwargs[name] = u3d
                     if model.verbose:
                         print('   RC2{} {}'.format(icomp, u3d))
