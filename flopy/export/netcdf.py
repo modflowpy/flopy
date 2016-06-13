@@ -237,28 +237,57 @@ class NetCdf(object):
             return new_net
 
     def append(self,other,suffix="_1"):
-        assert isinstance(other,NetCdf)
-        for vname in other.var_attr_dict.keys():
-            attrs = other.var_attr_dict[vname].copy()
-            var = other.nc.variables[vname]
-            new_vname = vname
+        assert isinstance(other,NetCdf) or isinstance(other,dict)
+        if isinstance(other,NetCdf):
+            for vname in other.var_attr_dict.keys():
+                attrs = other.var_attr_dict[vname].copy()
+                var = other.nc.variables[vname]
+                new_vname = vname
 
-            if vname in self.nc.variables.keys():
-                if vname not in STANDARD_VARS:
-                    new_vname = vname + suffix
-                    if "long_name" in attrs:
-                        attrs["long_name"] += " " + suffix
-                else:
-                    continue
-            assert new_vname not in self.nc.variables.keys(),\
-                "var already exists:{0} in {1}".\
-                    format(new_vname,",".join(self.nc.variables.keys()))
-            attrs["max"] = var[:].max()
-            attrs["min"] = var[:].min()
-            new_var = self.create_variable(new_vname,attrs,
-                                          var.dtype,
-                                          dimensions=var.dimensions)
-            new_var[:] = var[:]
+                if vname in self.nc.variables.keys():
+                    if vname not in STANDARD_VARS:
+                        new_vname = vname + suffix
+                        if "long_name" in attrs:
+                            attrs["long_name"] += " " + suffix
+                    else:
+                        continue
+                assert new_vname not in self.nc.variables.keys(),\
+                    "var already exists:{0} in {1}".\
+                        format(new_vname,",".join(self.nc.variables.keys()))
+                attrs["max"] = var[:].max()
+                attrs["min"] = var[:].min()
+                new_var = self.create_variable(new_vname,attrs,
+                                              var.dtype,
+                                              dimensions=var.dimensions)
+                new_var[:] = var[:]
+        else:
+            for vname,array in other.items():
+                vname_norm = self.normalize_name(vname)
+                assert vname_norm in self.nc.variables.keys(),"dict var not in " \
+                                                         "self.vars:{0}-->".\
+                                                         format(vname) +\
+                                                        ",".join(self.nc.variables.keys())
+
+
+                new_vname = vname_norm + suffix
+                assert new_vname not in self.nc.variables.keys()
+                attrs = self.var_attr_dict[vname_norm].copy()
+                attrs["max"] = np.nanmax(array)
+                attrs["min"] = np.nanmin(array)
+                attrs["name"] = new_vname
+                attrs["long_name"] = attrs["long_name"] + ' ' + suffix
+                var = self.nc.variables[vname_norm]
+                #assert var.shape == array.shape,\
+                #    "{0} shape ({1}) doesn't make array shape ({2})".\
+                #        format(new_vname,str(var.shape),str(array.shape))
+                new_var = self.create_variable(new_vname,attrs,
+                                              var.dtype,
+                                              dimensions=var.dimensions)
+                try:
+                    new_var[:] = array
+                except:
+                    new_var[:,0] = array
+
         return
 
     def copy(self,output_filename):
@@ -767,6 +796,10 @@ class NetCdf(object):
         exp._CoordinateAxes = "layer"
         return
 
+    @staticmethod
+    def normalize_name(name):
+        return name.replace('.', '_').replace(' ', '_').replace('-', '_')
+
     def create_variable(self, name, attributes, precision_str='f4',
                         dimensions=("time", "layer", "y", "x")):
         """
@@ -796,7 +829,7 @@ class NetCdf(object):
 
         """
         # Normalize variable name
-        name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
+        name = self.normalize_name(name)
         # if this is a core var like a dimension...
         #long_name = attributes.pop("long_name",name)
         if name in STANDARD_VARS and name in self.nc.variables.keys():
