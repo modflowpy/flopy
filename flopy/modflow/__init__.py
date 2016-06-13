@@ -29,7 +29,7 @@ from .mfuzf1 import ModflowUzf1
 from .mfupw import ModflowUpw
 from .mfnwt import ModflowNwt
 from .mfmnw1 import ModflowMnw1
-from .mfmnw2 import ModflowMnw2
+from .mfmnw2 import ModflowMnw2, Mnw
 from .mfmnwi import ModflowMnwi
 from .mfzon import ModflowZon
 from .mfmlt import ModflowMlt

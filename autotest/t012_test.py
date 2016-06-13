@@ -2,6 +2,7 @@
 import os
 import flopy
 
+
 pthtest = os.path.join('..', 'examples', 'data', 'mt3d_test')
 pth2005 = os.path.join(pthtest, 'mf2005mt3d')
 pth2000 = os.path.join(pthtest, 'mf2kmt3d')
@@ -23,7 +24,7 @@ def test_mf2005_p07():
     mf.model_ws = newpth
     mf.write_input()
     if ismf2005 is not None:
-        success, buff = mf.run_model(silent=True)
+        success, buff = mf.run_model(silent=False)
         assert success, '{} did not run'.format(mf.name)
 
     namfile = 'p7mt.nam'
@@ -33,7 +34,7 @@ def test_mf2005_p07():
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2005 is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -59,7 +60,7 @@ def test_mf2000_p07():
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -84,7 +85,7 @@ def test_mf2000_HSSTest():
     ftlfile = 'hsstest.FTL'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -122,7 +123,7 @@ def test_mf2000_MultiDiffusion():
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -148,7 +149,7 @@ def test_mf2000_P07():
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -174,7 +175,7 @@ def test_mf2000_reinject():
     ftlfile = 'p3.FTL'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -200,7 +201,7 @@ def test_mf2000_SState():
     ftlfile = 'SState.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -228,7 +229,7 @@ def test_mf2000_tob():
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)
@@ -254,7 +255,7 @@ def test_mf2000_zeroth():
     ftlfile = 'zeroth.FTL'
     mt.ftlfilename = ftlfile
     mt.write_input()
-    if ismt3d is not None:
+    if ismt3d is not None and ismf2k is not None:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)

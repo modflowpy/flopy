@@ -108,11 +108,14 @@ class Mt3dDsp(Package):
         mcomp = model.mcomp
         self.multiDiff = multiDiff
         self.al = Util3d(model,(nlay,nrow,ncol),np.float32,al,name='al',
-                          locat=self.unit_number[0])
+                         locat=self.unit_number[0],
+                         array_free_format=False)
         self.trpt = Util2d(model,(nlay,),np.float32,trpt,name='trpt',
-                            locat=self.unit_number[0])
+                           locat=self.unit_number[0],
+                           array_free_format=False)
         self.trpv = Util2d(model,(nlay,),np.float32,trpv,name='trpv',
-                            locat=self.unit_number[0])
+                           locat=self.unit_number[0],
+                           array_free_format=False)
 
         # Multi-species and multi-diffusion, hence the complexity
         self.dmcoef = []
@@ -136,7 +139,8 @@ class Mt3dDsp(Package):
                       str(icomp) + " to zero, kwarg name " +
                       name)
             u2or3 = utype(model, shape, np.float32, val,
-                        name=name, locat=self.unit_number[0])
+                          name=name, locat=self.unit_number[0],
+                          array_free_format=False)
             self.dmcoef.append(u2or3)
 
         if len(list(kwargs.keys())) > 0:
@@ -264,17 +268,17 @@ class Mt3dDsp(Package):
         if model.verbose:
             print('   loading AL...')
         al = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'al',
-                          ext_unit_dict)
+                          ext_unit_dict, array_format="mt3d")
 
         if model.verbose:
             print('   loading TRPT...')
         trpt = Util2d.load(f, model, (nlay, 1), np.float32, 'trpt',
-                            ext_unit_dict)
+                            ext_unit_dict, array_format="mt3d")
 
         if model.verbose:
             print('   loading TRPV...')
         trpv = Util2d.load(f, model, (nlay, 1), np.float32, 'trpv',
-                            ext_unit_dict)
+                            ext_unit_dict, array_format="mt3d")
 
         if model.verbose:
             print('   loading DMCOEFF...')
@@ -282,23 +286,23 @@ class Mt3dDsp(Package):
         dmcoef = []
         if multiDiff:
             dmcoef = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                               'dmcoef1', ext_unit_dict)
+                               'dmcoef1', ext_unit_dict, array_format="mt3d")
             if model.mcomp > 1:
                 for icomp in range(2, model.mcomp + 1):
                     name = "dmcoef" + str(icomp)
                     u3d = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                       name, ext_unit_dict)
+                                       name, ext_unit_dict, array_format="mt3d")
                     kwargs[name] = u3d
 
 
         else:
             dmcoef = Util2d.load(f, model, (nlay, 1), np.float32,
-                               'dmcoef1', ext_unit_dict)
+                               'dmcoef1', ext_unit_dict, array_format="mt3d")
             if model.mcomp > 1:
                 for icomp in range(2, model.mcomp + 1):
                     name = "dmcoef" + str(icomp + 1)
                     u2d = Util2d.load(f, model, (nlay, 1), np.float32, name,
-                                ext_unit_dict)
+                                ext_unit_dict, array_format="mt3d")
                     kwargs[name] = u2d
 
         dsp = Mt3dDsp(model, al=al, trpt=trpt, trpv=trpv, dmcoef=dmcoef,
