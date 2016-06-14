@@ -462,8 +462,8 @@ class NetCdf(object):
 
             self.logger.warn("resetting diff attrs max,min:{0},{1}".format(d_data.min(),d_data.max()))
             attrs = self.var_attr_dict[vname].copy()
-            attrs["max"] = d_data.max()
-            attrs["min"] = d_data.min()
+            attrs["max"] = np.nanmax(d_data)
+            attrs["min"] = np.nanmin(d_data)
             # reapply masks
             if s_mask is not None:
                 self.log("applying self mask")
