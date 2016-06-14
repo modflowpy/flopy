@@ -342,7 +342,7 @@ class Mt3dms(BaseModel):
 
     @staticmethod
     def load(f, version='mt3dms', exe_name='mt3dms.exe', verbose=False,
-             model_ws='.', load_only=None):
+             model_ws='.', load_only=None, forgive=False):
         """
         Load an existing model.
 
@@ -426,18 +426,23 @@ class Mt3dms(BaseModel):
                 btn = item
                 btn_key = key
                 break
-        #try:
-        pck = btn.package.load(btn.filename, mt,
-                               ext_unit_dict=ext_unit_dict)
+
+        if btn is None:
+            return None
+
+        try:
+            pck = btn.package.load(btn.filename, mt,
+                                   ext_unit_dict=ext_unit_dict)
+        except:
+            if forgive:
+                return None
+            else:
+                raise Exception('BTN not found in name file.')
         files_succesfully_loaded.append(btn.filename)
         if mt.verbose:
             sys.stdout.write('   {:4s} package load...success\n'
                              .format(pck.name[0]))
         ext_unit_dict.pop(btn_key)
-        # except Exception as e:
-        #     s = 'Could not read btn package: {}. Stopping...' \
-        #         .format(os.path.basename(btn.filename))
-        #     raise Exception(s + " " + str(e))
 
         if load_only is None:
             load_only = []
