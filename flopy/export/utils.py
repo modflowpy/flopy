@@ -693,28 +693,45 @@ def util3d_helper(f, u3d, **kwargs):
         array = u3d.array
 
         # this is for the crappy vcont in bcf6
-        if isinstance(f,NetCdf) and array.shape != f.shape:
-            f.log("broadcasting 3D array for {0}".format(var_name))
-            full_array = np.empty(f.shape)
+        # if isinstance(f,NetCdf) and array.shape != f.shape:
+        #     f.log("broadcasting 3D array for {0}".format(var_name))
+        #     full_array = np.empty(f.shape)
+        #     full_array[:] = np.NaN
+        #     full_array[:array.shape[0]] = array
+        #     array = full_array
+        #     f.log("broadcasting 3D array for {0}".format(var_name))
+        #f.log("getting 3D array for {0}".format(var_name))
+            #
+        mask = None
+        if u3d.model.bas6 is not None and "ibound" not in var_name:
+            mask = u3d.model.bas6.ibound.array == 0
+        elif u3d.model.btn is not None and 'icbund' not in var_name:
+            mask = u3d.model.btn.icbund.array == 0
+
+        if mask is not None and array.shape != mask.shape:
+            #f.log("broadcasting 3D array for {0}".format(var_name))
+            full_array = np.empty(mask.shape)
             full_array[:] = np.NaN
             full_array[:array.shape[0]] = array
             array = full_array
-            f.log("broadcasting 3D array for {0}".format(var_name))
-        #f.log("getting 3D array for {0}".format(var_name))
+            #f.log("broadcasting 3D array for {0}".format(var_name))
+
 
         # runtime warning issued in some cases - need to track down cause
         # happens when NaN is already in array
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int,np.int,np.int32,np.int64]:
-                if u3d.model.bas6 is not None and "ibound" not in var_name:
-                    array[u3d.model.bas6.ibound.array == 0] = np.NaN
-                elif u3d.model.btn is not None and 'icbund' not in var_name:
-                    array[u3d.model.btn.icbund.array == 0] = np.NaN
+                #if u3d.model.bas6 is not None and "ibound" not in var_name:
+                #    array[u3d.model.bas6.ibound.array == 0] = np.NaN
+                #elif u3d.model.btn is not None and 'icbund' not in var_name:
+                #    array[u3d.model.btn.icbund.array == 0] = np.NaN
+                array[mask] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
+                array[mask] = netcdf.FILLVALUE
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
                 if u3d.model.bas6 is not None and "ibound" not in var_name:
