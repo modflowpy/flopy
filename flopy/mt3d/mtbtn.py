@@ -214,12 +214,15 @@ class Mt3dBtn(Package):
         self.species_names = species_names
         self.prsity = Util3d(model, (self.nlay, self.nrow, self.ncol),
                               np.float32, prsity, name='prsity',
-                              locat=self.unit_number[0])
+                              locat=self.unit_number[0],
+                              array_free_format=False)
         self.icbund = Util3d(model, (self.nlay, self.nrow, self.ncol), np.int,
                               icbund, name='icbund',
-                              locat=self.unit_number[0])
+                              locat=self.unit_number[0],
+                             array_free_format=False)
         self.ssflag = ssflag
-        self.dt0 = Util2d(model, (self.nper,), np.float32, dt0, name='dt0')
+        self.dt0 = Util2d(model, (self.nper,), np.float32, dt0, name='dt0',
+                          array_free_format=False)
         self.mxstrn = Util2d(model, (self.nper,), np.int, mxstrn,
                               name='mxstrn')
         self.ttsmult = Util2d(model, (self.nper,), np.float32, ttsmult,
@@ -230,7 +233,8 @@ class Mt3dBtn(Package):
         # Do some fancy stuff for multi-species concentrations
         self.sconc = []
         u3d = Util3d(model, (self.nlay, self.nrow, self.ncol), np.float32,
-                      sconc, name='sconc1', locat=self.unit_number[0])
+                     sconc, name='sconc1', locat=self.unit_number[0],
+                     array_free_format=False)
         self.sconc.append(u3d)
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
@@ -243,8 +247,9 @@ class Mt3dBtn(Package):
                           str(icomp) + " to zero, kwarg name " +
                           name)
                 u3d = Util3d(model, (self.nlay, self.nrow, self.ncol),
-                              np.float32, val, name=name,
-                              locat=self.unit_number[0])
+                             np.float32, val, name=name,
+                             locat=self.unit_number[0],
+                             array_free_format=False)
                 self.sconc.append(u3d)
 
         # Check to make sure that all kwargs have been consumed
@@ -308,12 +313,14 @@ class Mt3dBtn(Package):
         if delr is not None:
             self.delr = Util2d(self.parent, (ncol,), np.float32, delr,
                                 name='delr',
-                                locat=self.unit_number[0])
+                                locat=self.unit_number[0],
+                                array_free_format=False)
         else:
             self.delr = Util2d(self.parent, (ncol,), np.float32,
                                 self.parent.mf.dis.delr.get_value(),
                                 name='delr',
-                                locat=self.unit_number[0])
+                                locat=self.unit_number[0],
+                                array_free_format=False)
 
         if delc is not None:
             self.delc = Util2d(self.parent, (nrow,), np.float32, delc,
@@ -323,27 +330,32 @@ class Mt3dBtn(Package):
             self.delc = Util2d(self.parent, (nrow,), np.float32,
                                 self.parent.mf.dis.delc.get_value(),
                                 name='delc',
-                                locat=self.unit_number[0])
+                                locat=self.unit_number[0],
+                                array_free_format=False)
 
         if htop is not None:
             self.htop = Util2d(self.parent, (nrow, ncol), np.float32, htop,
                                 name='htop',
-                                locat=self.unit_number[0])
+                                locat=self.unit_number[0],
+                                array_free_format=False)
         else:
             self.htop = Util2d(self.parent, (nrow, ncol), np.float32,
                                 self.parent.mf.dis.top.get_value(),
                                 name='htop',
-                                locat=self.unit_number[0])
+                                locat=self.unit_number[0],
+                                array_free_format=False)
 
         if dz is not None:
             self.dz = Util3d(self.parent, (nlay, nrow, ncol), np.float32, dz,
                               name='dz',
-                              locat=self.unit_number[0])
+                              locat=self.unit_number[0],
+                              array_free_format=False)
         else:
             thickness = self.parent.mf.dis.thickness.get_value()
             self.dz = Util3d(self.parent, (nlay, nrow, ncol), np.float32,
                               thickness, name='dz',
-                              locat=self.unit_number[0])
+                              locat=self.unit_number[0],
+                              array_free_format=False)
 
         if perlen is not None:
             self.perlen = Util2d(self.parent, (nper,), np.float32, perlen,
@@ -653,42 +665,42 @@ class Mt3dBtn(Package):
         if model.verbose:
             print('   loading DELR...')
         delr = Util2d.load(f, model, (ncol, 1), np.float32, 'delr',
-                            ext_unit_dict)
+                            ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   DELR {}'.format(delr))
 
         if model.verbose:
             print('   loading DELC...')
         delc = Util2d.load(f, model, (nrow, 1), np.float32, 'delc',
-                            ext_unit_dict)
+                            ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   DELC {}'.format(delc))
 
         if model.verbose:
             print('   loading HTOP...')
         htop = Util2d.load(f, model, (nrow, ncol), np.float32, 'htop',
-                            ext_unit_dict)
+                            ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   HTOP {}'.format(htop))
 
         if model.verbose:
             print('   loading DZ...')
         dz = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'dz',
-                          ext_unit_dict)
+                          ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   DZ {}'.format(dz))
 
         if model.verbose:
             print('   loading PRSITY...')
         prsity = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'prsity',
-                              ext_unit_dict)
+                              ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   PRSITY {}'.format(prsity))
 
         if model.verbose:
             print('   loading ICBUND...')
         icbund = Util3d.load(f, model, (nlay, nrow, ncol), np.int, 'icbund',
-                              ext_unit_dict)
+                              ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   ICBUND {}'.format(icbund))
 
@@ -696,14 +708,14 @@ class Mt3dBtn(Package):
             print('   loading SCONC...')
         kwargs = {}
         sconc = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'sconc1',
-                             ext_unit_dict)
+                             ext_unit_dict, array_format="mt3d")
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
                 name = "sconc" + str(icomp)
                 if model.verbose:
                     print('   loading {}...'.format(name))
                 u3d = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                   name, ext_unit_dict)
+                                   name, ext_unit_dict, array_format="mt3d")
                 kwargs[name] = u3d
         if model.verbose:
             print('   SCONC {}'.format(sconc))

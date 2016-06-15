@@ -648,6 +648,117 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     ax.add_collection(pc)
     return pc
 
+
+def cvfd_to_patch_collection(verts, iverts):
+    """
+    Create a patch collection from control volume vertices and incidence list
+
+    Parameters
+    ----------
+    verts : ndarray
+        2d array of x and y points.
+    iverts : list of lists
+        should be of len(ncells) with a list of vertex numbers for each cell
+
+    """
+    from matplotlib.patches import Polygon
+    from matplotlib.collections import PatchCollection
+    ptchs = []
+    for icell, ivertlist in enumerate(iverts):
+        points = []
+        for iv in ivertlist:
+            points.append((verts[iv, 0], verts[iv, 1]))
+        iv = ivertlist[0]
+        points.append((verts[iv, 0], verts[iv, 1]))
+        ptchs.append(Polygon(points))
+    pc = PatchCollection(ptchs)
+    return pc
+
+
+def plot_cvfd(verts, iverts, ax=None, cmap='Dark2', edgecolor='scaled',
+              facecolor='scaled', a=None, masked_values=None, **kwargs):
+    """
+    Generic function for plotting a control volume finite different grid of
+    information.
+
+    Parameters
+    ----------
+    verts : ndarray
+        2d array of x and y points.
+    iverts : list of lists
+        should be of len(ncells) with a list of vertex number for each cell
+    linewidth : float
+        Width of all lines. (default is 1)
+    cmap : string
+        Name of colormap to use for polygon shading (default is 'Dark2')
+    edgecolor : string
+        Color name.  (Default is 'scaled' to scale the edge colors.)
+    facecolor : string
+        Color name.  (Default is 'scaled' to scale the face colors.)
+    a : numpy.ndarray
+        Array to plot.
+    masked_values : iterable of floats, ints
+        Values to mask.
+    kwargs : dictionary
+        Keyword arguments that are passed to PatchCollection.set(``**kwargs``).
+        Some common kwargs would be 'linewidths', 'linestyles', 'alpha', etc.
+
+    Returns
+    -------
+    pc : matplotlib.collections.PatchCollection
+
+    Examples
+    --------
+
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    if 'vmin' in kwargs:
+        vmin = kwargs.pop('vmin')
+    else:
+        vmin = None
+
+    if 'vmax' in kwargs:
+        vmax = kwargs.pop('vmax')
+    else:
+        vmax = None
+
+    if ax is None:
+        ax = plt.gca()
+    cm = plt.get_cmap(cmap)
+
+    pc = cvfd_to_patch_collection(verts, iverts)
+    pc.set(**kwargs)
+
+    # set colors
+    if a is None:
+        nshp = len(pc.get_paths())
+        cccol = cm(1. * np.arange(nshp) / nshp)
+        if facecolor == 'scaled':
+            pc.set_facecolor(cccol)
+        else:
+            pc.set_facecolor(facecolor)
+        if edgecolor == 'scaled':
+            pc.set_edgecolor(cccol)
+        else:
+            pc.set_edgecolor(edgecolor)
+    else:
+        pc.set_cmap(cm)
+        if masked_values is not None:
+            for mval in masked_values:
+                a = np.ma.masked_equal(a, mval)
+        if edgecolor == 'scaled':
+            pc.set_edgecolor('none')
+        else:
+            pc.set_edgecolor(edgecolor)
+        pc.set_array(a)
+        pc.set_clim(vmin=vmin, vmax=vmax)
+    # add the patch collection to the axis
+    ax.add_collection(pc)
+    return pc
+
+
 def saturated_thickness(head, top, botm, laytyp, mask_values=None):
     """
     Calculate the saturated thickness.

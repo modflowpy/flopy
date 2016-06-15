@@ -195,11 +195,21 @@ class ModflowSub(Package):
         units = [unit_number]
         extra = ['']
 
+        item15_extensions = ["subsidence.hds","total_comp.hds","inter_comp.hds","vert_disp.hds","nodelay_precon.hds","delay_precon.hds"]
+        item15_units = [2052 + i for i in range(len(item15_extensions))]
+
+
         if isuboc > 0:
             extensions.append('subbud')
             name.append('DATA(BINARY)')
             units.append(2051)
             extra.append('REPLACE')
+            for e,u in zip(item15_extensions,item15_units):
+                extensions.append(e)
+                name.append('DATA(BINARY)')
+                units.append(u)
+                extra.append('REPLACE')
+
         if idsave > 0:
             extensions.append('rst')
             name.append('DATA(BINARY)')
@@ -276,8 +286,10 @@ class ModflowSub(Package):
                 if isinstance(ids15, list):
                     ids15 = np.array(ids15)
             # make sure the correct unit is specified
+            iu = 0
             for i in range(1, 12, 2):
-                ids15[i] = 2051
+                ids15[i] = item15_units[iu]
+                iu += 1
             self.ids15 = ids15
             if ids16 is None:
                 self.isuboc = 1
@@ -293,6 +305,8 @@ class ModflowSub(Package):
             if len(ids16.shape) == 1:
                 ids16 = np.reshape(ids16, (1, ids16.shape[0]))
             self.ids16 = ids16
+
+
 
         # add package to model
         self.parent.add_package(self)
@@ -556,9 +570,11 @@ class ModflowSub(Package):
                 sys.stdout.write('  loading sub dataset 15 for layer {}\n'.format(kk))
             ids15 = np.empty(12, dtype=np.int)
             ids15 = read1d(f, ids15)
+            iu = 1
             for k in range(1, 12, 2):
                 model.add_pop_key_list(ids15[k])
-                ids15[k] = 2051  # all subsidence data sent to unit 2051
+                ids15[k] = 2051 + iu  # all subsidence data sent to unit 2051
+                iu += 1
             # dataset 16
             ids16 = [0] * isuboc
             for k in range(isuboc):
@@ -568,7 +584,7 @@ class ModflowSub(Package):
                 t = read1d(f, t)
                 t[0:4] -= 1
                 ids16[k] = t
-
+        model.add_pop_key_list(2051)
         # close file
         f.close()
 
