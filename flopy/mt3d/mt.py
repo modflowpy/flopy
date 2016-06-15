@@ -11,6 +11,9 @@ from .mtrct import Mt3dRct
 from .mtgcg import Mt3dGcg
 from .mttob import Mt3dTob
 from .mtphc import Mt3dPhc
+from .mtuzt import Mt3dUzt
+from .mtsft import Mt3dSft
+from .mtlkt import Mt3dLkt
 
 class Mt3dList(Package):
     """
