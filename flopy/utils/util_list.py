@@ -51,7 +51,8 @@ class MfList(object):
 
     """
 
-    def __init__(self, package, data=None, dtype=None, model=None):
+    def __init__(self, package, data=None, dtype=None, model=None,
+                 list_free_format=None):
 
         if isinstance(data, MfList):
             for attr in data.__dict__.items():
@@ -81,6 +82,8 @@ class MfList(object):
         self.__data = {}
         if data is not None:
             self.__cast_data(data)
+        self.list_free_format = list_free_format
+        return
 
     def get_empty(self, ncell=0):
         d = np.zeros((ncell, len(self.dtype)), dtype=self.dtype)
@@ -125,12 +128,15 @@ class MfList(object):
     # Get the numpy savetxt-style fmt string that corresponds to the dtype
     @property
     def fmt_string(self):
-        use_free = True
-        if self.package.parent.bas6 is not None:
-            use_free = self.package.parent.bas6.ifrefm
-        # mt3d list data is fixed format
-        if 'mt3d' in self.package.parent.version.lower():
-            use_free = False
+        if self.list_free_format is not None:
+            use_free = self.list_free_format
+        else:
+            use_free = True
+            if self.package.parent.bas6 is not None:
+                use_free = self.package.parent.bas6.ifrefm
+            # mt3d list data is fixed format
+            if 'mt3d' in self.package.parent.version.lower():
+                use_free = False
         fmt_string = ''
         for field in self.dtype.descr:
             vtype = field[1][1].lower()

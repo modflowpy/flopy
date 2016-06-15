@@ -4,6 +4,9 @@ FloPy Changes
 ### Version 3.2.5
 * Added support for LAK and GAGE packages - full load and write functionality supported.
 * Improved support for changing the output format of arrays and variables written to MODFLOW input files. 
+* Restructued SEAWAT support so that packages can be added directly to the SEAWAT model, in addition to the approach of adding a modflow model and a mt3d model.  Can now load a SEAWAT model.
+* Added load support for MT3DMS Reactions package
+* Added multi-species support for MT3DMS Reactions package
 
 * Bug fixes:
   1. Fixed issue with VK parameters for LPF and UPW packages.

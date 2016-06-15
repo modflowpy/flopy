@@ -1599,7 +1599,7 @@ class Util2d(object):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
-                 how=None,array_free_format=None):
+                 how=None, array_free_format=None):
         """
         1d or 2-d array support with minimum of mem footprint.
         only creates arrays as needed, 
@@ -1624,6 +1624,8 @@ class Util2d(object):
                 self.ext_filename = ext_filename.lower()
             else:
                 self.ext_filename = None
+            if locat is not None:
+                self.locat = locat
             return
 
         # some defense

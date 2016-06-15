@@ -160,7 +160,7 @@ class SeawatVdf(Package):
 
     Notes
     -----
-    In swt_4 mtdnconc became mt3drhoflag. If the latter one is defined in
+    In swt_4 mtdnconc became mt3drhoflg. If the latter one is defined in
     kwargs, it will overwrite mtdnconc. Same goes for denseslp, which has
     become drhodc.
 
@@ -181,8 +181,8 @@ class SeawatVdf(Package):
         if unitnumber is None:
             unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'VDF', unitnumber)
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
-        self.mtdnconc = kwargs.pop('mt3drhoflag', mtdnconc)
+        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        self.mtdnconc = kwargs.pop('mt3drhoflg', mtdnconc)
         self.mfnadvfd = mfnadvfd
         self.nswtcpl = nswtcpl
         self.iwtable = iwtable
@@ -212,7 +212,6 @@ class SeawatVdf(Package):
         None
 
         """
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         f_vdf = open(self.fn_path, 'w')
 
         # item 1
@@ -317,7 +316,7 @@ class SeawatVdf(Package):
                 break
 
         # Determine problem dimensions
-        nrow, ncol, nlay, nper = model.mf.get_nrow_ncol_nlay_nper()
+        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # Item 1: MT3DRHOFLG MFNADVFD NSWTCPL IWTABLE - line already read above
         if model.verbose:
@@ -363,6 +362,7 @@ class SeawatVdf(Package):
             t = line.strip().split()
             denseref = float(t[0])
             drhodc = float(t[1])
+            nsrhoeos = 1
         else:
             if model.verbose:
                 print('   loading DENSEREF DRHODPRHD PRHDREF...')
@@ -412,7 +412,7 @@ class SeawatVdf(Package):
                 for k in range(nlay):
                     if model.verbose:
                         print('   loading DENSE layer {0:3d}...'.format(k + 1))
-                    t = Util2d.load(f, model.mf, (nrow, ncol), np.float32,
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32,
                                      'dense', ext_unit_dict)
                     dense[k] = t
 
