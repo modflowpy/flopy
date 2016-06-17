@@ -12,6 +12,7 @@ import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d
+from flopy.utils.flopy_io import _pop_item, line_parse
 
 
 class ModflowUzf1(Package):
@@ -224,7 +225,7 @@ class ModflowUzf1(Package):
         # NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2 [NTRAIL2 NSETS2] NUZGAG SURFDEP
         self.nuztop = nuztop
         self.iuzfopt = iuzfopt
-        self.irunflg = irunflg
+        self.irunflg = irunflg #The Streamflow-Routing (SFR2) and(or) the Lake (LAK3) Packages must be active if IRUNFLG is not zero.
         self.ietflg = ietflg
         self.iuzfcb1 = iuzfcb1
         self.iuzfcb2 = iuzfcb2
@@ -453,7 +454,7 @@ class ModflowUzf1(Package):
         f_uzf.close()
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=False):
         """
         Load an existing package.
 
@@ -490,22 +491,124 @@ class ModflowUzf1(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-
         # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
+        # determine problem dimensions
+        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1
+        nuztop, nuzfopt, irunflg, ietflg, iuzfcb1, iuzfcb2, \
+        ntrail2, nsets2, nuzgag, surfdep = _parse1(next(f))
 
-        # todo: everything
-        print('   Warning: load method not completed. default uzf object created.')
+        arrays = {}
+        def load_util2d(name, dtype):
+            print('   loading {} array...'.format(name))
+            arrays[name] = Util2d.load(f, model, (nrow, ncol), dtype, name,
+                                       ext_unit_dict)
+
+        # dataset 2
+        load_util2d('iuzfbnd', np.int)
+
+        # dataset 3
+        if irunflg > 0:
+            load_util2d('irunbnd', np.int)
+
+        # dataset 4
+        if irunflg == 1:
+            load_util2d('vks', np.float32)
+
+        if iuzfopt > 0:
+            # dataset 5
+            load_util2d('eps', np.float32)
+
+            # dataset 6
+            load_util2d('thts', np.float32)
+
+            # dataset 7
+            load_util2d('thti', np.float32)
+
+        # dataset 8
+        uzfgag = {}
+        if nuzfgag > 0:
+            for i in range(nuzgag):
+                iuzrow, iuzcol, iftunit, iuzopt = _parse8(next(f))
+                tmp = [iuzrow, iuzcol] if iftunit > 0 else []
+                tmp.append(iftunit)
+                if iuzopt > 0:
+                    tmp.append(iuzopt)
+                uzfgag[iftunit] = tmp
+
+        # dataset 9
+        for per in range(nper):
+            line = line_parse(next(f))
+            nuzf1 = _pop_item(line, int)
+
+            # dataset 10
+            if nuzf1 > 0:
+                load_util2d('finf', np.float32)
+
+            if ietflg > 0:
+                # dataset 11
+                line = line_parse(next(f))
+                nuzf2 = _pop_item(line, int)
+                if nuzf2 > 0:
+                    # dataset 12
+                    load_util2d('pet', np.float32)
+                    # dataset 13
+                    line = line_parse(next(f))
+                    nuzf3 = _pop_item(line, int)
+                    if nuzf3 > 0:
+                        # dataset 14
+                        load_util2d('extdp', np.float32)
+                        # dataset 15
+                        line = line_parse(next(f))
+                        nuzf4 = _pop_item(line, int)
+                        if nuzf4 > 0:
+                            # dataset 16
+                            load_util2d('extwc', np.float32)
 
         # close the file
         f.close()
 
         # create uzf object
-        uzf = ModflowUzf1(model)
+        return ModflowUzf1(model,
+                           nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, iuzfcb1=57, iuzfcb2=0,
+                           ntrail2=10, nsets=20, nuzgag=0,
+                           surfdep=1.0, *arrays,
+                           uzfbud_ext=[], extension='uzf', unitnumber=19)
 
-        # return default uzf object
-        return uzf
+def _parse1(line):
+    ntrail2 = None
+    nsets2 = None
+    line = line_parse(line)
+    nuztop = _pop_item(line, int)
+    iuzfopt = _pop_item(line, int)
+    irunflg = _pop_item(line, int)
+    ietflag = _pop_item(line, int)
+    iuzfcb1 = _pop_item(line, int)
+    iuzfcb2 = _pop_item(line, int)
+    if iuzfopt > 0:
+        ntrail2 = _pop_item(line, int)
+        nsets2 = _pop_item(line, int)
+    nuzgag = _pop_item(line, int)
+    surfdep = _pop_item(line, float)
+    return nuztop, nuzfopt, irunflg, ietflag, iuzfcb1, iuzfcb2, ntrail2, nsets2, nuzgag, surfdep
+
+def _parse8(line):
+    iuzrow = None
+    iuzcol = None
+    iuzopt = None
+    line = line_parse(line)
+    if len(line) > 1:
+        iuzrow = _pop_item(line, int)
+        iuzcol = _pop_item(line, int)
+        iftunit = _pop_item(line,int)
+        iuzoipt = _pop_item(line, int)
+    else:
+        iftunit = _pop_item()
+    return iuzrow, iuzcol, iftunit, iuzopt
+
+
+
