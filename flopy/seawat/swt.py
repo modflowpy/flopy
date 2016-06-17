@@ -591,9 +591,9 @@ class Seawat(BaseModel):
         # Create a dictionary to map package with package object.
         # This is used for loading models.
         self.mfnam_packages = {}
-        for k, v in modflowmodel.mfnam_packages.iteritems():
+        for k, v in modflowmodel.mfnam_packages.items():
             self.mfnam_packages[k] = v
-        for k, v in mt3dmodel.mfnam_packages.iteritems():
+        for k, v in mt3dmodel.mfnam_packages.items():
             self.mfnam_packages[k] = v
         self.mfnam_packages['vdf'] = SeawatVdf
         self.mfnam_packages['vsc'] = SeawatVsc
