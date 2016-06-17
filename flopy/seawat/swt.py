@@ -527,7 +527,7 @@ class Seawat(BaseModel):
     --------
 
     >>> import flopy
-    >>> m = flopy.seawat.swt.Seawat2()
+    >>> m = flopy.seawat.swt.Seawat()
 
     """
 
