@@ -374,6 +374,9 @@ class Seawat2(BaseModel):
         # Write SEAWAT entries and close
         f_nam.write('%s\n' % ('# Variable density flow'))
         f_nam.write('%s' % self.get_name_file_entries())
+        for u, f in zip(self.external_units, self.external_fnames):
+            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
+
         f_nam.close()
         return
 
