@@ -234,9 +234,10 @@ class Mt3dBtn(Package):
 
     def setmodflowvars(self, nlay, nrow, ncol, nper, laycon, delr, delc, htop,
                             dz, perlen, nstp, tsmult):
-        '''
+        """
         Set these variables from the MODFLOW model, if it exists
-        '''
+
+        """
         # Members that may come from a modflow model (model.mf)
         validmfdis = True
         try:

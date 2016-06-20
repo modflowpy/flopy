@@ -492,7 +492,7 @@ class Util3d(object):
 
     def __init__(self, model, shape, dtype, value, name,
                  fmtin=None, cnstnt=1.0, iprn=-1, locat=None,
-                 ext_unit_dict=None,array_free_format=None):
+                 ext_unit_dict=None, array_free_format=None):
         """
         3-D wrapper from Util2d - shape must be 3-D
         """

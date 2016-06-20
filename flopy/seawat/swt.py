@@ -662,6 +662,18 @@ class Seawat(BaseModel):
         else:
             return 1
 
+    def _set_name(self, value):
+        # Overrides BaseModel's setter for name property
+        BaseModel._set_name(self, value)
+
+        if self.version == 'mf2k':
+            for i in range(len(self.glo.extension)):
+                self.glo.file_name[i] = self.name + '.' + self.glo.extension[i]
+
+        for i in range(len(self.lst.extension)):
+            self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
+        return
+
     def write_name_file(self):
         """
         Write the name file
