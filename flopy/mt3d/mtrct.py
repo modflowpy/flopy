@@ -6,14 +6,163 @@ from ..utils import Util3d
 
 class Mt3dRct(Package):
     """
-    Chemical reaction package class
+    Chemical reaction package class.
 
+    Parameters
+    ----------
+    model : model object
+        The model object (of type :class:`flopy.mt3dms.mt.Mt3dms`) to which
+        this package will be added.
+    isothm : int
+        isothm is a flag indicating which type of sorption (or dual-domain mass
+        transfer) is simulated: isothm = 0, no sorption is simulated;
+        isothm = 1, linear isotherm (equilibrium-controlled); isothm = 2,
+        Freundlich isotherm (equilibrium-controlled); isothm = 3, Langmuir
+        isotherm (equilibrium-controlled); isothm = 4, first-order kinetic
+        sorption (nonequilibrium); isothm = 5, dual-domain mass transfer
+        (without sorption); isothm = 6, dual-domain mass transfer
+        (with sorption). (default is 0).
+    ireact : int
+        ireact is a flag indicating which type of kinetic rate reaction is
+        simulated: ireact = 0, no kinetic rate reaction is simulated;
+        ireact = 1, first-order irreversible reaction. Note that this reaction
+        package is not intended for modeling chemical reactions between
+        species. An add-on reaction package developed specifically for that
+        purpose may be used. (default is 0).
+    igetsc : int
+        igetsc is an integer flag indicating whether the initial concentration
+        for the nonequilibrium sorbed or immobile phase of all species should
+        be read when nonequilibrium sorption (isothm = 4) or dual-domain mass
+        transfer (isothm = 5 or 6) is simulated: igetsc = 0, the initial
+        concentration for the sorbed or immobile phase is not read. By default,
+        the sorbed phase is assumed to be in equilibrium with the dissolved
+        phase (isothm = 4), and the immobile domain is assumed to have zero
+        concentration (isothm = 5 or 6). igetsc > 0, the initial concentration
+        for the sorbed phase or immobile liquid phase of all species will be
+        read. (default is 1).
+    rhob : float or array of floats (nlay, nrow, ncol)
+        rhob is the bulk density of the aquifer medium (unit, ML-3). rhob is
+        used if isothm = 1, 2, 3, 4, or 6. If rhob is not user-specified and
+        isothem is not 5 then rhob is set to 1.8e3. (default is None)
+    prsity2 : float or array of floats (nlay, nrow, ncol)
+        prsity2 is the porosity of the immobile domain (the ratio of pore
+        spaces filled with immobile fluids over the bulk volume of the aquifer
+        medium) when the simulation is intended to represent a dual-domain
+        system. prsity2 is used if isothm = 5 or 6. If prsity2 is not user-
+        specified and isothm = 5 or 6 then prsity2 is set to 0.1.
+        (default is None)
+    srconc : float or array of floats (nlay, nrow, ncol)
+        srconc is the user-specified initial concentration for the sorbed phase
+        of the first species if isothm = 4 (unit, MM-1). Note that for
+        equilibrium-controlled sorption, the initial concentration for the
+        sorbed phase cannot be specified. srconc is the user-specified initial
+        concentration of the first species for the immobile liquid phase if
+        isothm = 5 or 6 (unit, ML-3). If srconc is not user-specified and
+        isothm = 4, 5, or 6 then srconc is set to 0. (default is None).
+    sp1 : float or array of floats (nlay, nrow, ncol)
+        sp1 is the first sorption parameter for the first species. The use of
+        sp1 depends on the type of sorption selected (the value of isothm).
+        For linear sorption (isothm = 1) and nonequilibrium sorption (isothm =
+        4), sp1 is the distribution coefficient (Kd) (unit, L3M-1). For
+        Freundlich sorption (isothm = 2), sp1 is the Freundlich equilibrium
+        constant (Kf) (the unit depends on the Freundlich exponent a). For
+        Langmuir sorption (isothm = 3), sp1 is the Langmuir equilibrium
+        constant (Kl) (unit, L3M-1 ). For dual-domain mass transfer without
+        sorption (isothm = 5), sp1 is not used, but still must be entered. For
+        dual-domain mass transfer with sorption (isothm = 6), sp1 is also the
+        distribution coefficient (Kd) (unit, L3M-1). If sp1 is not specified
+        and isothm > 0 then sp1 is set to 0. (default is None).
+    sp2 : float or array of floats (nlay, nrow, ncol)
+        sp2 is the second sorption or dual-domain model parameter for the first
+        species. The use of sp2 depends on the type of sorption or dual-domain
+        model selected. For linear sorption (isothm = 1), sp2 is read but not
+        used. For Freundlich sorption (isothm = 2), sp2 is the Freundlich
+        exponent a. For Langmuir sorption (isothm = 3), sp2 is the total
+        concentration of the sorption sites available ( S ) (unit, MM-1). For
+        nonequilibrium sorption (isothm = 4), sp2 is the first-order mass
+        transfer rate between the dissolved and sorbed phases (unit, T-1). For
+        dual-domain mass transfer (isothm = 5 or 6), sp2 is the first-order
+        mass transfer rate between the two domains (unit, T-1). If sp2 is not
+        specified and isothm > 0 then sp2 is set to 0. (default is None).
+    rc1 : float or array of floats (nlay, nrow, ncol)
+        rc1 is the first-order reaction rate for the dissolved (liquid) phase
+        for the first species (unit, T-1). rc1 is not used ireact = 0. If a
+        dual-domain system is simulated, the reaction rates for the liquid
+        phase in the mobile and immobile domains are assumed to be equal. If
+        rc1 is not specified and ireact > 0 then rc1 is set to 0.
+        (default is None).
+    rc2 : float or array of floats (nlay, nrow, ncol)
+        rc2 is the first-order reaction rate for the sorbed phase for the first
+        species (unit, T-1). rc2 is not used ireact = 0. If a dual-domain
+        system is simulated, the reaction rates for the sorbed phase in the
+        mobile and immobile domains are assumed to be equal. Generally, if the
+        reaction is radioactive decay, rc2 should be set equal to rc1, while
+        for biodegradation, rc2 may be different from rc1. Note that rc2 is
+        read but not used, if no sorption is included in the simulation. If
+        rc2 is not specified and ireact > 0 then rc2 is set to 0.
+        (default is None).
+    extension : string
+        Filename extension (default is 'rct')
+    unitnumber : int
+        File unit number. If file unit number is None then an unused unit
+         number if used. (default is None).
+
+    **kwargs
+    --------
+    srconcn : float or array of floats (nlay, nrow, ncol)
+        srconcn is the user-specified initial concentration for the sorbed
+        phase of species n. If srconcn is not passed as a **kwarg and
+        isothm = 4, 5, or 6 then srconc for species n is set to 0.
+        See description of srconc for a more complete description of srconcn.
+    sp1n : float or array of floats (nlay, nrow, ncol)
+        sp1n is the first sorption parameter for species n. If sp1n is not
+        passed as a **kwarg and isothm > 0 then sp1 for species n is set to 0.
+        See description of sp1 for a more complete description of sp1n.
+    sp2n : float or array of floats (nlay, nrow, ncol)
+        sp2n is the second sorption or dual-domain model parameter for species
+        n. If sp2n is not passed as a **kwarg and isothm > 0 then sp2 for
+        species n is set to 0. See description of sp2 for a more complete
+        description of sp2n.
+    rc1n : float or array of floats (nlay, nrow, ncol)
+        rc1n is the first-order reaction rate for the dissolved (liquid) phase
+        for species n. If rc1n is not passed as a **kwarg and ireact > 0 then
+        rc1 for species n is set to 0. See description of rc1 for a more
+        complete description of rc1n.
+    rc2n : float or array of floats (nlay, nrow, ncol)
+        rc2n is the first-order reaction rate for the sorbed phase for species
+        n. If rc2n is not passed as a **kwarg and ireact > 0 then rc2 for
+        species n is set to 0. See description of rc2 for a more complete
+        description of rc2n.
+
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> mt = flopy.mt3dms.Mt3dms()
+    >>> rct = flopy.mt3dms.Mt3dRct(mt)
     """
     unitnumber = 36
 
     def __init__(self, model, isothm=0, ireact=0, igetsc=1, rhob=None,
                  prsity2=None, srconc=None, sp1=None, sp2=None, rc1=None,
                  rc2=None, extension='rct', unitnumber=None, **kwargs):
+        """
+        Package constructor.
+
+        """
         if unitnumber is None:
             unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'RCT', unitnumber)
@@ -57,7 +206,7 @@ class Mt3dRct(Package):
                 if name in kwargs:
                     val = kwargs.pop(name)
                 else:
-                    print("BTN: setting srconc for component " +
+                    print("RCT: setting srconc for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
                 u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
@@ -79,7 +228,7 @@ class Mt3dRct(Package):
                 if name in kwargs:
                     val = kwargs.pop(name)
                 else:
-                    print("BTN: setting sp1 for component " +
+                    print("RCT: setting sp1 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
                 u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
@@ -101,7 +250,7 @@ class Mt3dRct(Package):
                 if name in kwargs:
                     val = kwargs.pop(name)
                 else:
-                    print("BTN: setting sp2 for component " +
+                    print("RCT: setting sp2 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
                 u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
@@ -123,7 +272,7 @@ class Mt3dRct(Package):
                 if name in kwargs:
                     val = kwargs.pop(name)
                 else:
-                    print("BTN: setting rc1 for component " +
+                    print("RCT: setting rc1 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
                 u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
@@ -145,7 +294,7 @@ class Mt3dRct(Package):
                 if name in kwargs:
                     val = kwargs.pop(name)
                 else:
-                    print("BTN: setting rc2 for component " +
+                    print("RCT: setting rc2 for component " +
                           str(icomp) + " to zero, kwarg name " +
                           name)
                 u3d = Util3d(model, (nlay, nrow, ncol), np.float32, val,
@@ -212,6 +361,18 @@ class Mt3dRct(Package):
         model : model object
             The model object (of type :class:`flopy.mt3d.mt.Mt3dms`) to
             which this package will be added.
+        nlay : int
+            Number of model layers in the reaction package. If nlay is not
+            specified, the number of layers in the passed model object is
+            used. (default is None).
+        nrow : int
+            Number of model rows in the reaction package. If nrow is not
+            specified, the number of rows in the passed model object is
+            used. (default is None).
+        ncol : int
+            Number of model columns in the reaction package. If nlay is not
+            specified, the number of columns in the passed model object is
+            used. (default is None).
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
             or older style array control records, then `f` should be a file
