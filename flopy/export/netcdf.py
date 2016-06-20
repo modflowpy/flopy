@@ -125,7 +125,7 @@ class NetCdf(object):
     """
 
     def __init__(self, output_filename, model, time_values=None, verbose=None,
-                 logger=None,forgive=False):
+                 logger=None, forgive=False):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:

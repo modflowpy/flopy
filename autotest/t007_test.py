@@ -4,7 +4,7 @@ import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
-#skip = ["MNW2-Fig28.nam","testsfr2.nam","testsfr2_tab.nam"]
+#skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
 skip = []
 
 def export_netcdf(namfile):
@@ -41,6 +41,8 @@ def export_netcdf(namfile):
     except Exception as e:
         raise Exception('ncdf import fail for nc file {0}'.format(fnc_name))
     return
+
+
 def export_shapefile(namfile):
 
     try:
@@ -147,6 +149,7 @@ def test_free_format_flag():
     assert ms1.free_format_input == ms1.bas6.ifrefm
     bas.ifrefm = True
     assert ms1.free_format_input == ms1.bas6.ifrefm
+
 
 def test_sr():
     import flopy
@@ -278,9 +281,6 @@ def test_shapefile_ibound():
     assert type(shp.record(0)[ib_idx]) == int,"should be int instead of {0}".\
         format(type(shp.record(0)[ib_idx]))
 
-    
-
-
 
 def test_shapefile():
     for namfile in namfiles:
@@ -293,11 +293,23 @@ def test_netcdf():
 
     return
 
+def build_netcdf():
+    for namfile in namfiles:
+        export_netcdf(namfile)
+    return
+
+def build_sfr_netcdf():
+    namfile = 'testsfr2.nam'
+    export_netcdf(namfile)
+    return
+
+
 if __name__ == '__main__':
-    test_shapefile_ibound()
+    #test_shapefile_ibound()
     #test_netcdf_overloads()
     #test_netcdf_classmethods()
-    #test_netcdf()
+    #build_netcdf()
+    build_sfr_netcdf()
     #test_sr()
     #test_free_format_flag()
     #test_export_output()
