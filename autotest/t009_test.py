@@ -146,6 +146,40 @@ def test_sfr_renumbering():
     assert 'continuity in segment and reach numbering' in chk.passed
     assert 'segment numbering order' in chk.passed
 
+def test_example():
+
+    m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005', exe_name='mf2005.exe',
+                               model_ws=path, load_only=['ghb', 'evt', 'rch', 'dis', 'bas6', 'oc', 'sip', 'lpf'])
+    reach_data = np.genfromtxt('../examples/data/sfr_examples/test1ss_reach_data.csv', delimiter=',', names=True)
+    ss_segment_data = np.genfromtxt('../examples/data/sfr_examples/test1ss_segment_data.csv', delimiter=',', names=True)
+    segment_data = {0: ss_segment_data}
+
+    channel_flow_data = {0: {1: [[0.5, 1.0, 2.0, 4.0, 7.0, 10.0, 20.0, 30.0, 50.0, 75.0, 100.0],
+                             [0.25, 0.4, 0.55, 0.7, 0.8, 0.9, 1.1, 1.25, 1.4, 1.7, 2.6],
+                             [3.0, 3.5, 4.2, 5.3, 7.0, 8.5, 12.0, 14.0, 17.0, 20.0, 22.0]]}}
+    channel_geometry_data = {0: {7: [[0.0, 10.0, 80.0, 100.0, 150.0, 170.0, 240.0, 250.0],
+                                 [20.0, 13.0, 10.0, 2.0, 0.0, 10.0, 13.0, 20.0]],
+                             8: [[0.0, 10.0, 80.0, 100.0, 150.0, 170.0, 240.0, 250.0],
+                                 [25.0, 17.0, 13.0, 4.0, 0.0, 10.0, 16.0, 20.0]]}}
+
+    nstrm = len(reach_data) # number of reaches
+    nss = len(segment_data[0]) # number of segments
+    nsfrpar = 0 # number of parameters (not supported)
+    nparseg = 0
+    const = 1.486 # constant for manning's equation, units of cfs
+    dleak = 0.0001 # closure tolerance for stream stage computation
+    istcb1 = 53 # flag for writing SFR output to cell-by-cell budget (on unit 53)
+    istcb2 = 81 # flag for writing SFR output to text file
+    dataset_5 = {0: [nss, 0, 0]} # dataset 5 (see online guide)
+
+    sfr = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const, dleak=dleak, istcb1=istcb1, istcb2=istcb2,
+                                reach_data=reach_data,
+                                segment_data=segment_data,
+                                channel_geometry_data=channel_geometry_data,
+                                channel_flow_data=channel_flow_data,
+                                dataset_5=dataset_5)
+
 if __name__ == '__main__':
-    test_sfr()
-    test_sfr_renumbering()
+    #test_sfr()
+    #test_sfr_renumbering()
+    test_example()
