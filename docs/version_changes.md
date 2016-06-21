@@ -12,6 +12,8 @@ FloPy Changes
   1. Fixed issue with VK parameters for LPF and UPW packages.
   2. Fixed issue with MT3D ADV load in cases where empty fields were present in the first line of the file.
   3. Fixed cross-section array plotting issues.
+  4. BTN observation locations must now be entered in zero-based indices (a 1 is now added to the index values written to btn file)
+  5. Added static method to Mt3dms().load_mas that reads an MT3D mass file and returns a recarray
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).

@@ -93,7 +93,8 @@ class Mt3dBtn(Package):
     obs: array of int
         An array with the cell indices (layer, row, column) for which the
         concentration is to be printed at every transport step. (default is
-        None).
+        None).  obs indices must be entered as zero-based numbers as a 1 is
+        added to them before writing to the btn file.
     nprobs: int
         An integer indicating how frequently the concentration at the specified
         observation points should be saved. (default is 1).
@@ -177,6 +178,10 @@ class Mt3dBtn(Package):
         self.nprs = nprs
         self.timprs = timprs
         self.obs = obs
+        if isinstance(obs, list):
+            obs = np.array(obs)
+        if obs.ndim != 2:
+            raise Exception('obs must be (or be convertible to) a 2d array')
         self.nprobs = nprobs
         self.chkmas = chkmas
         self.nprmas = nprmas
@@ -493,10 +498,10 @@ class Mt3dBtn(Package):
         else:
             nobs = self.obs.shape[0]
             f_btn.write('{0:10d}{1:10d}\n'.format(nobs, self.nprobs))
-            for r in range(nobs):
+            for i in range(nobs):
                 f_btn.write('{0:10d}{1:10d}{2:10d}\n' \
-                            .format(self.obs[r, 0], self.obs[r, 1],
-                                    self.obs[r, 2]))
+                            .format(self.obs[i, 0] + 1, self.obs[i, 1] + 1,
+                                    self.obs[i, 2] + 1))
 
         # A20 CHKMAS, NPRMAS
         if (self.chkmas == True):
