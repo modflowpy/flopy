@@ -723,7 +723,8 @@ class ModflowMnw2(Package):
             for n in names:
                 self.node_data[n] = node_data[n] # rec array of Mnw properties by node
             self.nodtot = len(self.node_data)
-            self.node_data.sort(order='wellid')
+            # Python 3.5.0 produces a segmentation fault when trying to sort BR MNW wells
+            #self.node_data.sort(order='wellid', axis=0)
         self.mnw = mnw # dict or list of Mnw objects
 
         self.stress_period_data = {0: self.get_empty_stress_period_data(0, aux_names=aux)}
@@ -895,6 +896,8 @@ class ModflowMnw2(Package):
                 current_4 = ModflowMnw2.get_empty_stress_period_data(itmp_per, aux_names=option)
                 for i in range(itmp_per):
                     wellid, qdes, capmult, cprime, xyz = _parse_4a(next(f), mnw, gwt=gwt)
+                    if wellid == 'Mellen3':
+                        j=2
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
@@ -955,7 +958,7 @@ class ModflowMnw2(Package):
         node_data = ModflowMnw2.get_empty_node_data(0)
         for mnwobj in mnwobjs:
             node_data = np.append(node_data, mnwobj.node_data).view(np.recarray)
-        node_data.sort(order='wellid')
+        #node_data.sort(order='wellid')
         self.node_data = node_data
 
     def make_stress_period_data(self, mnwobjs):
@@ -1026,8 +1029,12 @@ class ModflowMnw2(Package):
         # dataset 2
         # need a method that assigns attributes from table to objects!
         # call make_mnw_objects?? (table is definitive then)
-        for k, mnw in self.mnw.items():
-            mnw._write_2(f_mnw, float_format=float_format)
+        if use_tables:
+            mnws = self.node_data.wellid.tolist() # preserve any order
+        else:
+            mnws = self.mnw.values()
+        for k in mnws:
+            self.mnw[k]._write_2(f_mnw, float_format=float_format)
 
         # dataset 3
         for per in range(self.nper):
