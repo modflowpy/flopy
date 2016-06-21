@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
@@ -542,3 +543,31 @@ class Mt3dms(BaseModel):
 
         # return model object
         return mt
+
+    @staticmethod
+    def load_mas(fname):
+        """
+        Load an mt3d mas file and return a numpy recarray
+
+        Parameters
+        ----------
+        fname : str
+            name of MT3D mas file
+
+        Returns
+        -------
+        r : np.ndarray
+
+        """
+        if not os.path.isfile(fname):
+            raise Exception('Could not find file: {}'.format(fname))
+        dtype = [('time', float), ('total_in', float),
+                 ('total_out', float),
+                 ('sources', float), ('sinks', float),
+                 ('fluid_storage', float),
+                 ('total_mass', float), ('error_in-out', float),
+                 ('error_alt', float)]
+        r = np.loadtxt(fname, skiprows=2, dtype=dtype)
+        r = r.view(np.recarray)
+        return r
+

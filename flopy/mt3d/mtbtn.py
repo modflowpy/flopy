@@ -263,9 +263,10 @@ class Mt3dBtn(Package):
 
     def setmodflowvars(self, nlay, nrow, ncol, nper, laycon, delr, delc, htop,
                             dz, perlen, nstp, tsmult):
-        '''
+        """
         Set these variables from the MODFLOW model, if it exists
-        '''
+
+        """
         # Members that may come from a modflow model (model.mf)
         validmfdis = True
         try:
@@ -570,6 +571,36 @@ class Mt3dBtn(Package):
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.mt3d.mt.Mt3dms`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        btn :  Mt3dBtn object
+            Mt3dBtn object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> mt = flopy.mt3d.Mt3dms()
+        >>> btn = flopy.mt3d.Mt3dBtn.load('test.btn', mt)
+
+        """
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')

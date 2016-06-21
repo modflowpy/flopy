@@ -242,7 +242,7 @@ class SeawatVdf(Package):
                 f_vdf.write('%10i%10.4f%10.4f\n' % (1, self.denseslp,
                                                     self.crhoref))
             else:
-                for i in xrange(self.nsrhoeos-1):
+                for i in range(self.nsrhoeos-1):
                     mtrhospec = 2 + i
                     f_vdf.write('%10i%10.4f%10.4f\n' % (mtrhospec,
                                                         self.denseslp[i+1],

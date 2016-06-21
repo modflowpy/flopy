@@ -106,13 +106,15 @@ class Package(object):
                                old_value.dtype, value,
                                name=old_value.name,
                                fmtin=old_value.format.fortran,
-                               locat=old_value.locat)
+                               locat=old_value.locat,
+                               array_free_format=old_value.format.array_free_format)
             elif isinstance(old_value, Util3d):
                 value = Util3d(self.parent, old_value.shape,
                                old_value.dtype, value,
                                name=old_value.name_base,
                                fmtin=old_value.fmtin,
-                               locat=old_value.locat)
+                               locat=old_value.locat,
+                               array_free_format=old_value.array_free_format)
             elif isinstance(old_value, Transient2d):
                 value = Transient2d(self.parent, old_value.shape,
                                     old_value.dtype, value,
