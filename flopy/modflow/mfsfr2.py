@@ -230,6 +230,8 @@ class ModflowSfr2(Package):
         self.nstrm = np.sign(nstrm) * len(reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
         if segment_data is not None and not isinstance(segment_data, dict):
             segment_data = {0: segment_data}
+        # use atleast_1d for length since segment_data might be a 0D array
+        # this seems to be OK, because self.segment_data is produced by the constructor (never 0D)
         self.nss = len(np.atleast_1d(segment_data[0]))# number of stream segments
         self.nsfrpar = nsfrpar
         self.nparseg = nparseg

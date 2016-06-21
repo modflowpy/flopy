@@ -179,6 +179,15 @@ def test_example():
                                 channel_flow_data=channel_flow_data,
                                 dataset_5=dataset_5)
 
+    # test handling of a 0-D array (produced by genfromtxt sometimes)
+    segment_data = np.array(segment_data[0])
+    sfr = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const, dleak=dleak, istcb1=istcb1, istcb2=istcb2,
+                                reach_data=reach_data,
+                                segment_data=segment_data,
+                                channel_geometry_data=channel_geometry_data,
+                                channel_flow_data=channel_flow_data,
+                                dataset_5=dataset_5)
+
 if __name__ == '__main__':
     test_sfr()
     test_sfr_renumbering()
