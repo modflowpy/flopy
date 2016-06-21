@@ -159,11 +159,26 @@ class Seawat2(BaseModel):
         self.set_version(version)
         self.lst = SeawatList(self, listunit=listunit)
 
+        # external option stuff
+        self.array_free_format = False
+        self.array_format = 'mt3d'
+        self.external_fnames = []
+        self.external_units = []
+        self.external_binflag = []
+        self.external = False
+
         # If a MODFLOW model was passed in, then use it, otherwise create
         # one.
         if modflowmodel is not None:
             self.mf = modflowmodel
             self.packagelist.extend(self.mf.packagelist)
+            self.external_binflag.extend(self.mf.external_binflag)
+            self.external_fnames.extend(self.mf.external_fnames)
+            self.external_units.extend(self.mf.external_units)
+            self.mf.external_binflag = []
+            self.mf.external_units = []
+            self.mf.external_fnames = []
+
         else:
             self.mf = Modflow(modelname=modelname, version='mf2k',
                               exe_name='mf2k.exe', structured=structured,
@@ -176,6 +191,12 @@ class Seawat2(BaseModel):
         if mt3dmodel is not None:
             self.mt = mt3dmodel
             self.packagelist.extend(self.mt.packagelist)
+            self.external_binflag.extend(self.mt.external_binflag)
+            self.external_fnames.extend(self.mt.external_fnames)
+            self.external_units.extend(self.mt.external_units)
+            self.mt.external_binflag = []
+            self.mt.external_units = []
+            self.mt.external_fnames = []
         else:
             self.mt = Mt3dms(modelname=modelname, version='mt3dms',
                              exe_name='mt3dms.exe', structured=structured,
@@ -183,13 +204,7 @@ class Seawat2(BaseModel):
                              external_path=external_path, verbose=verbose,
                              namefile_ext='nam_mt3d')
 
-        # external option stuff
-        self.array_free_format = False
-        self.array_format = 'mt3d'
-        self.external_fnames = []
-        self.external_units = []
-        self.external_binflag = []
-        self.external = False
+
         self.verbose = verbose
         self.load = load
         # the starting external data unit number
@@ -362,20 +377,32 @@ class Seawat2(BaseModel):
         # Write MODFLOW entries
         f_nam.write('%s\n' % ('# Flow'))
         f_nam.write('%s' % self.mf.get_name_file_entries())
-        for u, f in zip(self.mf.external_units, self.mf.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
+        for b, u, f in zip(self.mf.external_binflag, self.mf.external_units, \
+                           self.mf.external_fnames):
+            tag = "DATA"
+            if b:
+                tag = "DATA(BINARY)"
+            f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
 
         # Write MT3DMS entries
         f_nam.write('%s\n' % ('# Transport'))
         f_nam.write('%s' % self.mt.get_name_file_entries())
-        for u, f in zip(self.mt.external_units, self.mt.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
+        for b, u, f in zip(self.mt.external_binflag, self.mt.external_units, \
+                           self.mt.external_fnames):
+            tag = "DATA"
+            if b:
+                tag = "DATA(BINARY)"
+            f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
 
         # Write SEAWAT entries and close
         f_nam.write('%s\n' % ('# Variable density flow'))
         f_nam.write('%s' % self.get_name_file_entries())
-        for u, f in zip(self.external_units, self.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
+        for b, u, f in zip(self.external_binflag, self.external_units, \
+                           self.external_fnames):
+            tag = "DATA"
+            if b:
+                tag = "DATA(BINARY)"
+            f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
 
         f_nam.close()
         return

@@ -125,8 +125,8 @@ mswt.btn.prsity[0].how = "internal"
 mswt.btn.prsity[1].how = "external"
 mswt.btn.sconc[0].how = "external"
 mswt.btn.prsity[0].fmtin = "(100E15.6)"
-#mswt.lpf.hk[0].fmtin = "(BINARY)"
-#mswt.btn.prsity[1].fmtin = '(BINARY)'
+mswt.lpf.hk[0].fmtin = "(BINARY)"
+mswt.btn.prsity[1].fmtin = '(BINARY)'
 
 # In[7]:
 mswt.write_input()

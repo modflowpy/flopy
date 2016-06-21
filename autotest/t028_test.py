@@ -54,6 +54,31 @@ def test_2_swtv4_ex():
     return
 
 
+def test_seawat2_array_format():
+    d = '2_henry'
+    subds = ['1_classic_case1']
+    for subd in subds:
+        pth = os.path.join(pthtest, d, subd)
+        testpth = os.path.join(newpth, d + '-' + subd)
+        if os.path.isdir(testpth):
+            shutil.rmtree(testpth)
+        os.mkdir(testpth)
+        namfile = 'seawat.nam'
+        if subd == '6_age_simulation':
+            namfile = 'henry_mod.nam'
+        m = flopy.seawat.Seawat2.load(namfile, model_ws=pth,
+                                          verbose=verbose)
+        m.change_model_ws(testpth,reset_external=True)
+        m.mf.change_model_ws(testpth,reset_external=True)
+        m.mt.change_model_ws(testpth,reset_external=True)
+        m.bcf6.hy[0].fmtin = '(BINARY)'
+        m.btn.prsity[0].fmtin = '(BINARY)'
+        m.write_input()
+        if isswtv4 is not None and runmodel:
+            success, buff = m.run_model(silent=False)
+            assert success, '{} did not run'.format(m.name)
+    return
+
 def test_3_swtv4_ex():
     d = '3_elder'
     subds = ['']
@@ -154,6 +179,7 @@ def test_7_swtv4_ex():
 
 
 if __name__ == '__main__':
+    test_seawat2_array_format()
     test_1_swtv4_ex()
     test_2_swtv4_ex()
     test_3_swtv4_ex()
