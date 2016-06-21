@@ -701,6 +701,17 @@ class Seawat(BaseModel):
             self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
         return
 
+    def change_model_ws(self, new_pth=None, reset_external=False):
+        #if hasattr(self,"_mf"):
+        if self._mf is not None:
+            self._mf.change_model_ws(new_pth=new_pth,
+                                     reset_external=reset_external)
+        #if hasattr(self,"_mt"):
+        if self._mt is not None:
+            self._mt.change_model_ws(new_pth=new_pth,
+                                     reset_external=reset_external)
+        super(Seawat,self).change_model_ws(new_pth=new_pth,
+                                           reset_external=reset_external)
     def write_name_file(self):
         """
         Write the name file
@@ -722,6 +733,33 @@ class Seawat(BaseModel):
 
         # Write SEAWAT entries and close
         f_nam.write('%s' % self.get_name_file_entries())
+
+        if self._mf is not None:
+            for b, u, f in zip(self._mf.external_binflag,
+                               self._mf.external_units, \
+                               self._mf.external_fnames):
+                tag = "DATA"
+                if b:
+                    tag = "DATA(BINARY)"
+                f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+
+        if self._mt is not None:
+            for b, u, f in zip(self._mt.external_binflag,
+                               self._mt.external_units, \
+                               self._mt.external_fnames):
+                tag = "DATA"
+                if b:
+                    tag = "DATA(BINARY)"
+                f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+
+        for b, u, f in zip(self.external_binflag, self.external_units, \
+                           self.external_fnames):
+            tag = "DATA"
+            if b:
+                tag = "DATA(BINARY)"
+            f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+
+
         f_nam.close()
         return
 
@@ -774,6 +812,11 @@ class Seawat(BaseModel):
         else:
             modelname = f
 
+        ms = Seawat(modelname=modelname, namefile_ext='nam',
+                    modflowmodel=None, mt3dmodel=None,
+                    version=version, exe_name=exe_name, model_ws=model_ws,
+                    verbose=verbose)
+
         mf = Modflow.load(f, version='mf2k', exe_name=None, verbose=verbose,
                           model_ws=model_ws, load_only=load_only, forgive=True,
                           check=False)
@@ -781,19 +824,21 @@ class Seawat(BaseModel):
         mt = Mt3dms.load(f, version='mt3dms', exe_name=None, verbose=verbose,
                          model_ws=model_ws, forgive=True)
 
-        ms = Seawat(modelname=modelname, namefile_ext='nam',
-                    modflowmodel=None, mt3dmodel=None,
-                    version=version, exe_name=exe_name, model_ws=model_ws,
-                    verbose=verbose)
 
         for p in mf.packagelist:
             p.parent = ms
             ms.add_package(p)
-
+        ms._mt = None
         if mt is not None:
             for p in mt.packagelist:
                 p.parent = ms
                 ms.add_package(p)
+            mt.external_units = []
+            mt.external_binflag = []
+            mt.external_fnames = []
+            ms._mt = mt
+        ms._mf = mf
+
 
         # return model object
         return ms
