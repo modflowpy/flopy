@@ -1,7 +1,7 @@
 __author__ = 'aleaf'
 
 import sys
-sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
+#sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import numpy as np
 import matplotlib
@@ -180,6 +180,6 @@ def test_example():
                                 dataset_5=dataset_5)
 
 if __name__ == '__main__':
-    #test_sfr()
-    #test_sfr_renumbering()
+    test_sfr()
+    test_sfr_renumbering()
     test_example()
