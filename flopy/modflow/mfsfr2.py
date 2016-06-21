@@ -228,7 +228,10 @@ class ModflowSfr2(Package):
 
         # Dataset 1c. ----------------------------------------------------------------------
         self.nstrm = np.sign(nstrm) * len(reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
-        self.nss = len(segment_data[0]) if segment_data is not None else nss  # number of stream segments
+        self.nss = nss
+        if segment_data is not None and not isinstance(segment_data, dict):
+            segment_data = {0: segment_data}
+            self.nss = len(segment_data[0])# number of stream segments
         self.nsfrpar = nsfrpar
         self.nparseg = nparseg
         self.const = const  # conversion factor used in calculating stream depth for stream reach (icalc = 1 or 2)
