@@ -3,6 +3,25 @@ Module for input/output utilities
 """
 import numpy as np
 
+def _fmt_string(array, float_format='{}'):
+    """makes a formatting string for a rec-array; given a desired float_format."""
+    fmt_string = ''
+    for field in array.dtype.descr:
+        vtype = field[1][1].lower()
+        if (vtype == 'i'):
+            fmt_string += '{:.0f} '
+        elif (vtype == 'f'):
+            fmt_string += '{} '.format(float_format)
+        elif (vtype == 'o'):
+            fmt_string += '{} '
+        elif (vtype == 's'):
+            raise Exception("MfList error: '\str\' type found it dtype." + \
+                            " This gives unpredictable results when " + \
+                            "recarray to file - change to \'object\' type")
+        else:
+            raise Exception("MfList.fmt_string error: unknown vtype " + \
+                            "in dtype:" + vtype)
+    return fmt_string
 
 def line_parse(line):
     """
