@@ -66,11 +66,11 @@ def test_seawat2_array_format():
         namfile = 'seawat.nam'
         if subd == '6_age_simulation':
             namfile = 'henry_mod.nam'
-        m = flopy.seawat.Seawat2.load(namfile, model_ws=pth,
+        m = flopy.seawat.Seawat.load(namfile, model_ws=pth,
                                           verbose=verbose)
         m.change_model_ws(testpth,reset_external=True)
-        m.mf.change_model_ws(testpth,reset_external=True)
-        m.mt.change_model_ws(testpth,reset_external=True)
+        #m.mf.change_model_ws(testpth,reset_external=True)
+        #m.mt.change_model_ws(testpth,reset_external=True)
         m.bcf6.hy[0].fmtin = '(BINARY)'
         m.btn.prsity[0].fmtin = '(BINARY)'
         m.write_input()
@@ -179,7 +179,7 @@ def test_7_swtv4_ex():
 
 
 if __name__ == '__main__':
-    test_seawat2_array_format()
+    #test_seawat2_array_format()
     test_1_swtv4_ex()
     test_2_swtv4_ex()
     test_3_swtv4_ex()

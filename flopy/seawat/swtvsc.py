@@ -196,7 +196,7 @@ class SeawatVsc(Package):
             f_vsc.write('%10i' % self.mtmutempspec)
 
             if self.mutempopt == 1:
-                string = '%10.3E%10f%10f%10f\n'
+                string = ' %9.3E %9f %9f %9f\n'
             elif self.mutempopt == 2:
                 string = '%10.3E%10f%10f %9f %9f\n'
             elif self.mutempopt == 3:

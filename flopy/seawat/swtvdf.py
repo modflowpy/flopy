@@ -242,11 +242,11 @@ class SeawatVdf(Package):
                 f_vdf.write('%10i%10.4f%10.4f\n' % (1, self.denseslp,
                                                     self.crhoref))
             else:
-                for i in range(self.nsrhoeos-1):
-                    mtrhospec = 2 + i
+                for i in range(self.nsrhoeos):
+                    mtrhospec = 1 + i
                     f_vdf.write('%10i%10.4f%10.4f\n' % (mtrhospec,
-                                                        self.denseslp[i+1],
-                                                        self.crhoref[i+1]))
+                                                        self.denseslp[i],
+                                                        self.crhoref[i]))
 
         # item 5
         f_vdf.write('%10f\n' % (self.firstdt))
