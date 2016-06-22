@@ -93,7 +93,8 @@ class Mt3dBtn(Package):
     obs: array of int
         An array with the cell indices (layer, row, column) for which the
         concentration is to be printed at every transport step. (default is
-        None).
+        None).  obs indices must be entered as zero-based numbers as a 1 is
+        added to them before writing to the btn file.
     nprobs: int
         An integer indicating how frequently the concentration at the specified
         observation points should be saved. (default is 1).
@@ -177,6 +178,11 @@ class Mt3dBtn(Package):
         self.nprs = nprs
         self.timprs = timprs
         self.obs = obs
+        if obs is not None:
+            if isinstance(obs, list):
+                obs = np.array(obs)
+            if obs.ndim != 2:
+                raise Exception('obs must be (or be convertible to) a 2d array')
         self.nprobs = nprobs
         self.chkmas = chkmas
         self.nprmas = nprmas
@@ -234,13 +240,15 @@ class Mt3dBtn(Package):
 
     def setmodflowvars(self, nlay, nrow, ncol, nper, laycon, delr, delc, htop,
                             dz, perlen, nstp, tsmult):
-        '''
+        """
         Set these variables from the MODFLOW model, if it exists
-        '''
+
+        """
         # Members that may come from a modflow model (model.mf)
         validmfdis = True
         try:
             dum = self.parent.mf.dis.nlay
+            mf = self.parent.mf
         except:
             validmfdis = False
 
@@ -259,22 +267,22 @@ class Mt3dBtn(Package):
         if nlay is not None:
             self.nlay = nlay
         else:
-            self.nlay = self.parent.mf.dis.nlay
+            self.nlay = mf.dis.nlay
 
         if nrow is not None:
             self.nrow = nrow
         else:
-            self.nrow = self.parent.mf.dis.nrow
+            self.nrow = mf.dis.nrow
 
         if ncol is not None:
             self.ncol = ncol
         else:
-            self.ncol = self.parent.mf.dis.ncol
+            self.ncol = mf.dis.ncol
 
         if nper is not None:
             self.nper = nper
         else:
-            self.nper = self.parent.mf.dis.nper
+            self.nper = mf.dis.nper
 
         nlay = self.nlay
         nrow = self.nrow
@@ -288,7 +296,7 @@ class Mt3dBtn(Package):
                                 array_free_format=False)
         else:
             self.delr = Util2d(self.parent, (ncol,), np.float32,
-                                self.parent.mf.dis.delr.get_value(),
+                                mf.dis.delr.get_value(),
                                 name='delr',
                                 locat=self.unit_number[0],
                                 array_free_format=False)
@@ -299,7 +307,7 @@ class Mt3dBtn(Package):
                                 locat=self.unit_number[0])
         else:
             self.delc = Util2d(self.parent, (nrow,), np.float32,
-                                self.parent.mf.dis.delc.get_value(),
+                                mf.dis.delc.get_value(),
                                 name='delc',
                                 locat=self.unit_number[0],
                                 array_free_format=False)
@@ -311,7 +319,7 @@ class Mt3dBtn(Package):
                                 array_free_format=False)
         else:
             self.htop = Util2d(self.parent, (nrow, ncol), np.float32,
-                                self.parent.mf.dis.top.get_value(),
+                                mf.dis.top.get_value(),
                                 name='htop',
                                 locat=self.unit_number[0],
                                 array_free_format=False)
@@ -322,7 +330,7 @@ class Mt3dBtn(Package):
                               locat=self.unit_number[0],
                               array_free_format=False)
         else:
-            thickness = self.parent.mf.dis.thickness.get_value()
+            thickness = mf.dis.thickness.get_value()
             self.dz = Util3d(self.parent, (nlay, nrow, ncol), np.float32,
                               thickness, name='dz',
                               locat=self.unit_number[0],
@@ -334,7 +342,7 @@ class Mt3dBtn(Package):
                                   locat=self.unit_number[0])
         else:
             self.perlen = Util2d(self.parent, (nper,), np.float32,
-                                  self.parent.mf.dis.perlen.get_value(),
+                                  mf.dis.perlen.get_value(),
                                   name='perlen',
                                   locat=self.unit_number[0])
 
@@ -344,7 +352,7 @@ class Mt3dBtn(Package):
                                 locat=self.unit_number[0])
         else:
             self.nstp = Util2d(self.parent, (nper,), np.int,
-                                self.parent.mf.dis.nstp.get_value(),
+                                mf.dis.nstp.get_value(),
                                 name='nstp',
                                 locat=self.unit_number[0])
 
@@ -354,7 +362,7 @@ class Mt3dBtn(Package):
                                   locat=self.unit_number[0])
         else:
             self.tsmult = Util2d(self.parent, (nper,), np.float32,
-                                  self.parent.mf.dis.tsmult.get_value(),
+                                  mf.dis.tsmult.get_value(),
                                   name='tsmult',
                                   locat=self.unit_number[0])
 
@@ -364,14 +372,14 @@ class Mt3dBtn(Package):
                                   name='laycon',
                                   locat=self.unit_number[0])
         else:
-            flow_package = self.parent.mf.get_package('BCF6')
+            flow_package = mf.get_package('BCF6')
             if flow_package is not None:
                 self.laycon = Util2d(self.parent, (nlay,), np.int,
                                       flow_package.laycon.get_value(),
                                       name='laycon',
                                       locat=self.unit_number[0])
             else:
-                flow_package = self.parent.mf.get_package('LPF')
+                flow_package = mf.get_package('LPF')
                 if flow_package is not None:
                     self.laycon = Util2d(self.parent, (nlay,),
                                           np.int, flow_package.laytyp.get_value(),
@@ -491,10 +499,10 @@ class Mt3dBtn(Package):
         else:
             nobs = self.obs.shape[0]
             f_btn.write('{0:10d}{1:10d}\n'.format(nobs, self.nprobs))
-            for r in range(nobs):
+            for i in range(nobs):
                 f_btn.write('{0:10d}{1:10d}{2:10d}\n' \
-                            .format(self.obs[r, 0], self.obs[r, 1],
-                                    self.obs[r, 2]))
+                            .format(self.obs[i, 0] + 1, self.obs[i, 1] + 1,
+                                    self.obs[i, 2] + 1))
 
         # A20 CHKMAS, NPRMAS
         if (self.chkmas == True):
@@ -521,6 +529,36 @@ class Mt3dBtn(Package):
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.mt3d.mt.Mt3dms`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+        Returns
+        -------
+        btn :  Mt3dBtn object
+            Mt3dBtn object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> mt = flopy.mt3d.Mt3dms()
+        >>> btn = flopy.mt3d.Mt3dBtn.load('test.btn', mt)
+
+        """
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')

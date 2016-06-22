@@ -91,15 +91,16 @@ class ModelCrossSection(object):
         self.sr.rotation = rotation
 
                                                          
-        onkey = list(line.keys())[0]                      
+        onkey = list(line.keys())[0]
+        eps = 1.e-4
         if 'row' in linekeys:
             self.direction = 'x'
-            pts = [(self.sr.xedge[0]+0.1, self.sr.ycenter[int(line[onkey])]-0.1),
-                   (self.sr.xedge[-1]-0.1, self.sr.ycenter[int(line[onkey])]+0.1)]
+            pts = [(self.sr.xedge[0] + eps, self.sr.ycenter[int(line[onkey])] - eps),
+                   (self.sr.xedge[-1] - eps, self.sr.ycenter[int(line[onkey])] + eps)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            pts = [(self.sr.xcenter[int(line[onkey])]+0.1, self.sr.yedge[0]-0.1),
-                   (self.sr.xcenter[int(line[onkey])]-0.1, self.sr.yedge[-1]+0.1)]
+            pts = [(self.sr.xcenter[int(line[onkey])] + eps, self.sr.yedge[0] - eps),
+                   (self.sr.xcenter[int(line[onkey])] - eps, self.sr.yedge[-1] + eps)]
         else:
             self.direction = 'xy'
             verts = line[onkey]

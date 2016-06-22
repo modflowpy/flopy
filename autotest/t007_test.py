@@ -4,7 +4,7 @@ import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
-#skip = ["MNW2-Fig28.nam","testsfr2.nam","testsfr2_tab.nam"]
+#skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
 skip = []
 
 def export_netcdf(namfile):
@@ -41,6 +41,8 @@ def export_netcdf(namfile):
     except Exception as e:
         raise Exception('ncdf import fail for nc file {0}'.format(fnc_name))
     return
+
+
 def export_shapefile(namfile):
 
     try:
@@ -148,6 +150,7 @@ def test_free_format_flag():
     bas.ifrefm = True
     assert ms1.free_format_input == ms1.bas6.ifrefm
 
+
 def test_sr():
     import flopy
     Lx = 100.
@@ -219,43 +222,43 @@ def test_netcdf_classmethods():
     diff = v1_set.symmetric_difference(v2_set)
     assert len(diff) == 0,str(diff)
 
-def test_netcdf_overloads():
-    import os
-    import flopy
-    nam_file = "freyberg.nam"
-    model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
-    ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
-                                    verbose=False,load_only=[])
-
-    f = ml.export(os.path.join("temp","freyberg.nc"))
-    fzero = flopy.export.NetCdf.zeros_like(f)
-    assert fzero.nc.variables["model_top"][:].sum() == 0
-    print(f.nc.variables["model_top"][0,:])
-    fplus1 = f + 1
-    assert fplus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] + 1
-    assert (f + fplus1).nc.variables["model_top"][0,0] ==\
-           f.nc.variables["model_top"][0,0] + \
-           fplus1.nc.variables["model_top"][0,0]
-
-    fminus1 = f - 1
-    assert fminus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] - 1
-    assert (f - fminus1).nc.variables["model_top"][0,0]==\
-           f.nc.variables["model_top"][0,0] - \
-           fminus1.nc.variables["model_top"][0,0]
-
-    ftimes2 = f * 2
-    assert ftimes2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] * 2
-    assert (f * ftimes2).nc.variables["model_top"][0,0] ==\
-            f.nc.variables["model_top"][0,0] * \
-           ftimes2.nc.variables["model_top"][0,0]
-
-    fdiv2 = f / 2
-    assert fdiv2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] / 2
-    assert (f / fdiv2).nc.variables["model_top"][0,0] == \
-         f.nc.variables["model_top"][0,0] / \
-           fdiv2.nc.variables["model_top"][0,0]
-
-    assert f.nc.variables["ibound"][0,0,0] == 1
+# def test_netcdf_overloads():
+#     import os
+#     import flopy
+#     nam_file = "freyberg.nam"
+#     model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+#     ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
+#                                     verbose=False,load_only=[])
+#
+#     f = ml.export(os.path.join("temp","freyberg.nc"))
+#     fzero = flopy.export.NetCdf.zeros_like(f)
+#     assert fzero.nc.variables["model_top"][:].sum() == 0
+#     print(f.nc.variables["model_top"][0,:])
+#     fplus1 = f + 1
+#     assert fplus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] + 1
+#     assert (f + fplus1).nc.variables["model_top"][0,0] ==\
+#            f.nc.variables["model_top"][0,0] + \
+#            fplus1.nc.variables["model_top"][0,0]
+#
+#     fminus1 = f - 1
+#     assert fminus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] - 1
+#     assert (f - fminus1).nc.variables["model_top"][0,0]==\
+#            f.nc.variables["model_top"][0,0] - \
+#            fminus1.nc.variables["model_top"][0,0]
+#
+#     ftimes2 = f * 2
+#     assert ftimes2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] * 2
+#     assert (f * ftimes2).nc.variables["model_top"][0,0] ==\
+#             f.nc.variables["model_top"][0,0] * \
+#            ftimes2.nc.variables["model_top"][0,0]
+#
+#     fdiv2 = f / 2
+#     assert fdiv2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] / 2
+#     assert (f / fdiv2).nc.variables["model_top"][0,0] == \
+#          f.nc.variables["model_top"][0,0] / \
+#            fdiv2.nc.variables["model_top"][0,0]
+#
+#     assert f.nc.variables["ibound"][0,0,0] == 1
 
 
 def test_shapefile_ibound():
@@ -278,9 +281,6 @@ def test_shapefile_ibound():
     assert type(shp.record(0)[ib_idx]) == int,"should be int instead of {0}".\
         format(type(shp.record(0)[ib_idx]))
 
-    
-
-
 
 def test_shapefile():
     for namfile in namfiles:
@@ -293,11 +293,23 @@ def test_netcdf():
 
     return
 
+def build_netcdf():
+    for namfile in namfiles:
+        export_netcdf(namfile)
+    return
+
+def build_sfr_netcdf():
+    namfile = 'testsfr2.nam'
+    export_netcdf(namfile)
+    return
+
+
 if __name__ == '__main__':
-    test_shapefile_ibound()
+    #test_shapefile_ibound()
     #test_netcdf_overloads()
     #test_netcdf_classmethods()
-    #test_netcdf()
+    #build_netcdf()
+    build_sfr_netcdf()
     #test_sr()
     #test_free_format_flag()
     #test_export_output()
