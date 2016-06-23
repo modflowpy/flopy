@@ -234,8 +234,7 @@ class ZoneBudget(object):
         # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
         ich = np.ma.zeros(self.cbc_shape, np.int32)
         ich.mask = True
-        a = self.cbc_data['CONSTANT HEAD']
-        chd = self.cbc.create3D(a, self.nlay, self.nrow, self.ncol)
+        chd = self.cbc_data['CONSTANT HEAD']
         for l, r, c in zip(*np.where(chd != 0.)):
             ich[l, r, c] = 1
             ich.mask[l, r, c] = False
@@ -325,8 +324,11 @@ class ZoneBudget(object):
                 budout = np.ma.zeros(self.cbc_shape)
                 budout[bud < 0] = bud[bud < 0]
             else:
-                budin = self.cbc.create3D(bud[bud['q'] >= 0], self.nlay, self.nrow, self.ncol)
-                budout = self.cbc.create3D(bud[bud['q'] < 0], self.nlay, self.nrow, self.ncol)
+                budin = np.zeros((self.nlay, self.nrow, self.ncol))
+                budout = np.zeros((self.nlay, self.nrow, self.ncol))
+                np.copyto(budin, bud, where=bud >= 0)
+                np.copyto(budout, bud, where=bud < 0)
+
 
             in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout)
             inflows.append(in_tup)
