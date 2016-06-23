@@ -517,12 +517,15 @@ class ModelCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
+
         # Find package to plot
         if package is not None:
             p = package
+            ftype = p.name[0]
         elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
+            ftype = ftype.upper()
             p = self.model.get_package(ftype)
         else:
             raise Exception('Cannot find package to plot')
