@@ -70,7 +70,7 @@ FloPy Supported Packages
 | Dispersion (DSP)                         | Supported            | Supported            | Not supported        |
 | Generalized Conjugate Gradient (GCG)     | Supported            | Supported            | Not supported        |
 | PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
-| Reaction (RCT)                           | Supported            | Not supported        | Not supported        |
+| Reaction (RCT)                           | Supported            | Supported            | Not supported        |
 | Sink and Source Mixing (SSM)             | Supported            | Supported            | Not supported        |
 | Transport Observation (TOB)              | Supported            | Not supported        | Not supported        |
 
@@ -78,7 +78,7 @@ FloPy Supported Packages
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Variable Density Flow (VDF)              | Supported            | Supported            | Not supported        |
-| Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
+| Viscosity (VSC)                          | Supported            | Supported            | Not supported        |
 
 ### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT Observations
 | Package                                        | Creation and Write   | Load Available       | Template Creation    |

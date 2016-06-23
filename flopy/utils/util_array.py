@@ -492,7 +492,7 @@ class Util3d(object):
 
     def __init__(self, model, shape, dtype, value, name,
                  fmtin=None, cnstnt=1.0, iprn=-1, locat=None,
-                 ext_unit_dict=None,array_free_format=None):
+                 ext_unit_dict=None, array_free_format=None):
         """
         3-D wrapper from Util2d - shape must be 3-D
         """
@@ -1599,7 +1599,7 @@ class Util2d(object):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None, bin=False,
-                 how=None,array_free_format=None):
+                 how=None, array_free_format=None):
         """
         1d or 2-d array support with minimum of mem footprint.
         only creates arrays as needed, 
@@ -1624,6 +1624,8 @@ class Util2d(object):
                 self.ext_filename = ext_filename.lower()
             else:
                 self.ext_filename = None
+            if locat is not None:
+                self.locat = locat
             return
 
         # some defense
@@ -1969,6 +1971,12 @@ class Util2d(object):
         fformat = self.format.fortran
         if value is None:
             value = self.cnstnt
+        if self.format.binary:
+            if locat is None:
+                raise Exception("Util2d._get_fixed_cr(): locat is None but"+\
+                                "format is binary")
+            if not self.format.array_free_format:
+                locat = -1 * np.abs(locat)
         if locat is None:
             locat = 0
         if locat is 0:
@@ -2003,8 +2011,8 @@ class Util2d(object):
 
     def get_external_cr(self):
         locat = self.model.next_ext_unit()
-        if self.format.binary:
-            locat = -1 * np.abs(locat)
+        #if self.format.binary:
+        #    locat = -1 * np.abs(locat)
         self.model.add_external(self.model_file_path, locat,
                                 self.format.binary)
         if self.format.array_free_format:

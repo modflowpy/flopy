@@ -150,16 +150,17 @@ class Mt3dSsm(Package):
                               "'stress_period_data' instead.")
 
         # Set dimensions
+        mf = self.parent.mf
         nrow = model.nrow
         ncol = model.ncol
         nlay = model.nlay
         ncomp = model.ncomp
 
         self.__SsmPackages = []
-        if self.parent.mf is not None:
+        if mf is not None:
             for i, label in enumerate(SsmLabels):
                 self.__SsmPackages.append(SsmPackage(label,
-                                   self.parent.mf.get_package(label),
+                                   mf.get_package(label),
                                    (i < 6))) # First 6 need T/F flag in file line 1
 
         if dtype is not None:
@@ -171,9 +172,10 @@ class Mt3dSsm(Package):
             self.stress_period_data = None
         else:
             self.stress_period_data = MfList(self, model=model,
-                                         data=stress_period_data)
+                                             data=stress_period_data,
+                                             list_free_format=False)
 
-        if mxss is None and self.parent.mf is None:
+        if mxss is None and mf is None:
             warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
                           'None.  Cannot calculate max number of sources ' +
                           'and sinks.  Estimating from stress_period_data. ')
@@ -390,7 +392,7 @@ class Mt3dSsm(Package):
 
         >>> import flopy
         >>> mt = flopy.mt3d.Mt3dms()
-        >>> ssm = flopy.mt3d.Mt3dSsm.load('test.ssm', m)
+        >>> ssm = flopy.mt3d.Mt3dSsm.load('test.ssm', mt)
 
         """
 
