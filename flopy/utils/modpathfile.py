@@ -77,6 +77,12 @@ class PathlineFile():
         self.file = open(self.fname, 'r')
         while True:
             line = self.file.readline()
+            if isinstance(line, bytes):
+                line = line.decode()
+            if self.skiprows < 1:
+                if 'MODPATH_PATHLINE_FILE 6' not in line.upper():
+                    errmsg = '{} is not a valid pathline file'.format(self.fname)
+                    raise Exception(errmsg)
             self.skiprows += 1
             if 'end header' in line.lower():
                 break
@@ -284,6 +290,12 @@ class EndpointFile():
         idx = 0
         while True:
             line = self.file.readline()
+            if isinstance(line, bytes):
+                line = line.decode()
+            if self.skiprows < 1:
+                if 'MODPATH_ENDPOINT_FILE 6' not in line.upper():
+                    errmsg = '{} is not a valid endpoint file'.format(self.fname)
+                    raise Exception(errmsg)
             self.skiprows += 1
             if idx == 1:
                 t = line.strip()

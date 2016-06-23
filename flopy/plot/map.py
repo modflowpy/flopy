@@ -540,6 +540,8 @@ class ModelMap(object):
         
         if 'layer' in kwargs:
             kon = kwargs.pop('layer')
+            if isinstance(kon, bytes):
+                kon = kon.decode()
             if isinstance(kon, str):
                 if kon.lower() == 'all':
                     kon = -1
@@ -547,6 +549,7 @@ class ModelMap(object):
                     kon = self.layer
         else:
             kon = self.layer
+        print(kon)
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -567,7 +570,11 @@ class ModelMap(object):
             arr = np.vstack((x0r, y0r)).T
             #select based on layer
             if kon >= 0:
-                arr = np.ma.masked_where((p['k'] != kon), arr)
+                kk = p['k'].copy().reshape(p.shape[0], 1)
+                kk = np.repeat(kk, 2, axis=1)
+                arr = np.ma.masked_where((kk != kon), arr)
+            else:
+                arr = np.ma.asarray(arr)
             #append line to linecol if there is some unmasked segment
             if not arr.mask.all():
                 linecol.append(arr)
