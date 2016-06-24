@@ -4,7 +4,7 @@ the ModflowLak class as `flopy.modflow.ModflowLak`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/str.htm>`_.
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lak.htm>`_.
 
 """
 import os
