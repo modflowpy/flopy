@@ -103,8 +103,8 @@ class Seawat(BaseModel):
             mt3dmodel = Mt3dms()
 
         # external option stuff
-        self.array_free_format = True
-        self.array_format = 'modflow'
+        self.array_free_format = False
+        self.array_format = 'mt3d'
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
