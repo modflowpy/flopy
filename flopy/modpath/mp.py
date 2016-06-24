@@ -182,8 +182,8 @@ class Modpath(BaseModel):
                 ngrp = arr.sum()
                 icnt = 0
                 for k in range(nlay):
-                    for j in range(nrow):
-                        for i in range(ncol):
+                    for i in range(nrow):
+                        for j in range(ncol):
                             if arr[k, i, j] < 1:
                                 continue
                             group_name.append('wc{}'.format(icnt))

@@ -243,7 +243,7 @@ class EndpointFile():
 
     Notes
     -----
-    The EndpointeFile class provides simple ways to retrieve MODPATH 6
+    The EndpointFile class provides simple ways to retrieve MODPATH 6
     endpoint data from a MODPATH 6 ascii endpoint file.
 
     Examples
@@ -262,7 +262,7 @@ class EndpointFile():
 
         """
         self.fname = filename
-        self.dtype, self.outdtype = self._get_dtypes()
+        self.dtype = self._get_dtypes()
         self._build_index()
         self._data = np.loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
         # set number of particle ids
@@ -324,9 +324,7 @@ class EndpointFile():
                           ('yloc', np.float32), ('zloc', np.float32),
                           ('x', np.float32), ('y', np.float32), ('z', np.float32),
                           ('label', '|S40')])
-        outdtype = np.dtype([("x", np.float32), ("y", np.float32), ("z", np.float32),
-                             ("time", np.float32), ("k", np.int), ("id", np.int)])
-        return dtype, outdtype
+        return dtype
 
     def get_maxid(self):
         """
@@ -335,14 +333,14 @@ class EndpointFile():
         Returns
         ----------
         out : int
-            Maximum enpoint particle id.
+            Maximum endpoint particle id.
 
         """
         return self.maxid
 
     def get_maxtime(self):
         """
-        Get the maximum time in endpoint file
+        Get the maximum time in the endpoint file
 
         Returns
         ----------
@@ -352,7 +350,20 @@ class EndpointFile():
         """
         return self.data['finaltime'].max()
 
-    def get_data(self, partid=0, final=True):
+
+    def get_maxtraveltime(self):
+        """
+        Get the maximum travel time in the endpoint file
+
+        Returns
+        ----------
+        out : float
+            Maximum endpoint travel time.
+
+        """
+        return (self.data['finaltime'] - self.data['initialtime']).max()
+
+    def get_data(self, partid=0):
         """
         Get endpoint data from the endpoint file for a single particle.
 
@@ -360,15 +371,13 @@ class EndpointFile():
         ----------
         partid : int
             The zero-based particle id.  The first record is record 0.
-        final : bool
-            Boolean flag used determine if the initial or final endpoint
-            time should be returned, Default is True
+            (default is 0)
 
         Returns
         ----------
         ra : numpy record array
-            A numpy recarray with the final or initial (final=False)
-            x, y, z, time, k, and particleid for endpoint partid.
+            A numpy recarray with the endpoint particle data for
+            endpoint partid.
 
 
         See Also
@@ -386,32 +395,20 @@ class EndpointFile():
 
         """
         idx = self._data['particleid'] == partid
-        self._ta = self._data[idx]
-        if final:
-            ra = np.rec.fromarrays((self._ta['x'], self._ta['y'], self._ta['z'],
-                                    self._ta['finaltime'], self._ta['k'],
-                                    self._ta['particleid']), dtype=self.outdtype)
-        else:
-            ra = np.rec.fromarrays((self._ta['x0'], self._ta['y0'], self._ta['z0'],
-                                    self._ta['initialtime'], self._ta['k0'],
-                                    self._ta['particleid']), dtype=self.outdtype)
+        ra = self._data[idx]
         return ra
 
-    def get_alldata(self, final=True):
+    def get_alldata(self):
         """
         Get endpoint data from the endpoint file for all endpoints.
 
         Parameters
         ----------
-        final : bool
-            Boolean flag used determine if the initial or final endpoint
-            time should be returned, Default is True
 
         Returns
         ----------
         ra : numpy record array
-            A numpy recarray with the final or initial (final=False)
-            x, y, z, time, k, and particleid for endpoint partid.
+            A numpy recarray with the endpoint particle data
 
 
         See Also
@@ -428,12 +425,13 @@ class EndpointFile():
         >>> e = endobj.get_alldata()
 
         """
-        if final:
-            ra = np.rec.fromarrays((self._data['x'], self._data['y'], self._data['z'],
-                                    self._data['finaltime'], self._data['k'],
-                                    self._data['particleid']), dtype=self.outdtype)
-        else:
-            ra = np.rec.fromarrays((self._data['x0'], self._data['y0'], self._data['z0'],
-                                    self._data['initialtime'], self._data['k0'],
-                                    self._data['particleid']), dtype=self.outdtype)
+        ra = self._data.copy()
+        # if final:
+        #     ra = np.rec.fromarrays((self._data['x'], self._data['y'], self._data['z'],
+        #                             self._data['finaltime'], self._data['k'],
+        #                             self._data['particleid']), dtype=self.outdtype)
+        # else:
+        #     ra = np.rec.fromarrays((self._data['x0'], self._data['y0'], self._data['z0'],
+        #                             self._data['initialtime'], self._data['k0'],
+        #                             self._data['particleid']), dtype=self.outdtype)
         return ra
