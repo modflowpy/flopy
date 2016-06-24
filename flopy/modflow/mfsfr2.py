@@ -733,8 +733,10 @@ class ModflowSfr2(Package):
         all_upsegs : dict
             Nested dictionary of form {stress period: {segment: [list of upsegs]}}
 
-        Note:
+        Notes
+        -----
         This method will not work if there are instances of circular routing.
+
         """
         all_upsegs = {}
         for per in range(self.nper):
@@ -1722,9 +1724,10 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
         List of names (same as variables in SFR Package input instructions) of columns
         to assign (upon load) or retain (upon write) in reach_data array.
 
-    Note
-    ----
+    Notes
+    -----
     Lowercase is used for all variable names.
+
     """
     names = []
     if structured:
