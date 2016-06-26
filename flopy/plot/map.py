@@ -5,6 +5,7 @@ import matplotlib.colors
 from . import plotutil
 from .plotutil import bc_color_dict
 
+
 class ModelMap(object):
     """
     Class to create a map of the model.
@@ -45,6 +46,7 @@ class ModelMap(object):
     grid at (0, 0).
 
     """
+
     def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
                  extent=None, xul=None, yul=None, rotation=None):
         self.model = model
@@ -54,12 +56,12 @@ class ModelMap(object):
         if sr is not None:
             self.sr = copy.deepcopy(sr)
         elif dis is not None:
-            #print("warning: the dis arg to model map is deprecated")
+            # print("warning: the dis arg to model map is deprecated")
             self.sr = copy.deepcopy(dis.parent.sr)
         elif model is not None:
-            #print("warning: the model arg to model map is deprecated")
+            # print("warning: the model arg to model map is deprecated")
             self.sr = copy.deepcopy(model.sr)
-    
+
         # model map override spatial reference settings
         if xul is not None:
             self.sr.xul = xul
@@ -67,7 +69,6 @@ class ModelMap(object):
             self.sr.yul = yul
         if rotation is not None:
             self.sr.rotation = rotation
-        
 
         if ax is None:
             try:
@@ -81,10 +82,10 @@ class ModelMap(object):
             self._extent = extent
         else:
             self._extent = None
-        
+
         # why is this non-default color scale used??
         #  This should be passed as a kwarg by the user to the indivudual plotting method.
-        #self.cmap = plotutil.viridis
+        # self.cmap = plotutil.viridis
 
         return
 
@@ -168,7 +169,7 @@ class ModelMap(object):
                 cmap = kwargs.pop('cmap')
             cmap = None
         contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
-                                      plotarray, **kwargs)
+                                 plotarray, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
 
@@ -279,7 +280,8 @@ class ModelMap(object):
 
         return lc
 
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None, plotAll=False,
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
+                plotAll=False,
                 **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
@@ -328,7 +330,7 @@ class ModelMap(object):
         try:
             mflist = p.stress_period_data[kper]
         except Exception as e:
-            raise Exception('Not a list-style boundary package:'+str(e))
+            raise Exception('Not a list-style boundary package:' + str(e))
 
         # Return if MfList is None
         if mflist is None:
@@ -338,7 +340,7 @@ class ModelMap(object):
         plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
         if plotAll:
             idx = [mflist['i'], mflist['j']]
-            #plotarray[:, idx] = 1
+            # plotarray[:, idx] = 1
             pa = np.zeros((self.sr.nrow, self.sr.ncol), dtype=np.int)
             pa[idx] = 1
             for k in range(nlay):
@@ -451,7 +453,8 @@ class ModelMap(object):
             if self.model is not None:
                 dis = self.model.dis
             else:
-                print("ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
+                print(
+                    "ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
                 return
         ib = self.model.bas6.ibound.array
         delr = dis.delr.array
@@ -493,7 +496,7 @@ class ModelMap(object):
         v = v[::istep, ::jstep]
         # normalize
         if normalize:
-            vmag = np.sqrt(u**2. + v**2.)
+            vmag = np.sqrt(u ** 2. + v ** 2.)
             idx = vmag > 0.
             u[idx] /= vmag[idx]
             v[idx] /= vmag[idx]
@@ -536,12 +539,14 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
-        #make sure pathlines is a list
+        # make sure pathlines is a list
         if isinstance(pl, np.ndarray):
             pl = [pl]
-        
+
         if 'layer' in kwargs:
             kon = kwargs.pop('layer')
+            if isinstance(kon, bytes):
+                kon = kon.decode()
             if isinstance(kon, str):
                 if kon.lower() == 'all':
                     kon = -1
@@ -561,41 +566,58 @@ class ModelMap(object):
         linecol = []
         for p in pl:
             vlc = []
-            #rotate data
-            x0r, y0r = self.sr.rotate(p['x'], p['y'], self.sr.rotation, 0., self.sr.yedge[0])
+            # rotate data
+            x0r, y0r = self.sr.rotate(p['x'], p['y'], self.sr.rotation, 0.,
+                                      self.sr.yedge[0])
             x0r += self.sr.xul
             y0r += self.sr.yul - self.sr.yedge[0]
-            #build polyline array
+            # build polyline array
             arr = np.vstack((x0r, y0r)).T
-            #select based on layer
+            # select based on layer
             if kon >= 0:
-                arr = np.ma.masked_where((p['k'] != kon), arr)
-            #append line to linecol if there is some unmasked segment
+                kk = p['k'].copy().reshape(p.shape[0], 1)
+                kk = np.repeat(kk, 2, axis=1)
+                arr = np.ma.masked_where((kk != kon), arr)
+            else:
+                arr = np.ma.asarray(arr)
+            # append line to linecol if there is some unmasked segment
             if not arr.mask.all():
                 linecol.append(arr)
-        #create line collection
+        # create line collection
         lc = None
         if len(linecol) > 0:
             lc = LineCollection(linecol, **kwargs)
             ax.add_collection(lc)
         return lc
 
-
-    def plot_endpoint(self, ep, **kwargs):
+    def plot_endpoint(self, ep, direction='ending',
+                      selection=None, selection_direction=None, **kwargs):
         """
         Plot the MODPATH endpoints.
 
         Parameters
         ----------
         ep : rec array
-            rec array is data returned from modpathfile EndpointFile
-            get_data() or get_alldata() methods. Data in rec array
-            is 'x', 'y', 'z', 'time', 'k', and 'particleid'.
+            A numpy recarray with the endpoint particle data from the
+            MODPATH 6 endpoint file
+        direction : str
+            String defining if starting or ending particle locations should be
+            considered. (default is 'ending')
+        selection : tuple
+            tuple that defines the zero-base layer, row, column location
+            (l, r, c) to use to make a selection of particle endpoints.
+            The selection could be a well location to determine capture zone
+            for the well. If selection is None, all particle endpoints for
+            the user-sepcified direction will be plotted. (default is None)
+        selection_direction : str
+            String defining is a selection should be made on starting or
+            ending particle locations. If selection is not None and
+            selection_direction is None, the selection direction will be set
+            to the opposite of direction. (default is None)
 
-        kwargs : layer, ax, c, s, colorbar, colorbar_label, shrink. The
+        kwargs : ax, c, s or size, colorbar, colorbar_label, shrink. The
             remaining kwargs are passed into the matplotlib scatter
-            method. If layer='all', endpoints are output for all layers.
-            If colorbar is True a colorbar will be added to the plot.
+            method. If colorbar is True a colorbar will be added to the plot.
             If colorbar_label is passed in and colorbar is True then
             colorbar_label will be passed to the colorbar set_label()
             method. If shrink is passed in and colorbar is True then
@@ -606,35 +628,70 @@ class ModelMap(object):
         sp : matplotlib.pyplot.scatter
 
         """
-
-        if 'layer' in kwargs:
-            kon = kwargs.pop('layer')
-            if isinstance(kon, str):
-                if kon.lower() == 'all':
-                    kon = -1
-                else:
-                    kon = self.layer
+        if direction.lower() == 'ending':
+            direction = 'ending'
+        elif direction.lower() == 'starting':
+            direction = 'starting'
         else:
-            kon = self.layer
+            errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
+                     'or "starting".'
+            raise Exception(errmsg)
+
+        if direction == 'starting':
+            xp, yp = 'x0', 'y0'
+        elif direction == 'ending':
+            xp, yp = 'x', 'y'
+
+        if selection_direction is not None:
+            if selection_direction.lower() != 'starting' and \
+                            selection_direction.lower() != 'ending':
+                errmsg = 'flopy.map.plot_endpoint selection_direction ' + \
+                         'must be "ending" or "starting".'
+                raise Exception(errmsg)
+        else:
+            if direction.lower() == 'starting':
+                selection_direction = 'ending'
+            elif direction.lower() == 'ending':
+                selection_direction = 'starting'
+
+        if selection is not None:
+            try:
+                k, i, j = selection[0], selection[1], selection[2]
+                if selection_direction.lower() == 'starting':
+                    ksel, isel, jsel = 'k0', 'i0', 'j0'
+                elif selection_direction.lower() == 'ending':
+                    ksel, isel, jsel = 'k', 'i', 'j'
+            except:
+                errmsg = 'flopy.map.plot_endpoint selection must be a ' + \
+                         'zero-based layer, row, column tuple (l, r, c) ' + \
+                         'of the location to evaluate (i.e., well location).'
+                raise Exception(errmsg)
+
+        if selection is not None:
+            idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
+            tep = ep[idx]
+        else:
+            tep = ep.copy()
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
 
-        #scatter kwargs that users may redefine
+        # scatter kwargs that users may redefine
         if 'c' not in kwargs:
-            c = ep['time']
+            c = tep['finaltime'] - tep['initialtime']
         else:
-            c = np.empty((ep.shape[0]), dtype="S30")
+            c = np.empty((tep.shape[0]), dtype="S30")
             c.fill(kwargs.pop('c'))
 
-        if 's' not in kwargs:
-            s = 50.
-        else:
-            s = float(kwargs.pop('s'))**2.
+        s = 50
+        if 's' in kwargs:
+            s = float(kwargs.pop('s')) ** 2.
+        elif 'size' in kwargs:
+            s = float(kwargs.pop('size')) ** 2.
 
-        #colorbar kwargs
+        # colorbar kwargs
         createcb = False
         if 'colorbar' in kwargs:
             createcb = kwargs.pop('colorbar')
@@ -647,23 +704,22 @@ class ModelMap(object):
         if 'shrink' in kwargs:
             shrink = float(kwargs.pop('shrink'))
 
-        #rotate data
-        x0r, y0r = self.sr.rotate(ep['x'], ep['y'], self.sr.rotation, 0., self.sr.yedge[0])
+        # rotate data
+        x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation, 0.,
+                                  self.sr.yedge[0])
         x0r += self.sr.xul
         y0r += self.sr.yul - self.sr.yedge[0]
-        #build array to plot
+        # build array to plot
         arr = np.vstack((x0r, y0r)).T
-        #select based on layer
-        if kon >= 0:
-            c = np.ma.masked_where((ep['k'] != kon), c)
-        #plot the end point data
+
+        # plot the end point data
         sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
-        #add a colorbar for endpoint times
+
+        # add a colorbar for travel times
         if createcb:
             cb = plt.colorbar(sp, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
-
 
     def get_grid_line_collection(self, **kwargs):
         """
