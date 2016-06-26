@@ -89,7 +89,7 @@ class ModflowMnwi(Package):
         wel1flag, qsumflag, byndflag = map(int, line)
 
         # dataset 2
-        mnwobs = pop_item(line_parse(next(f)))
+        mnwobs = pop_item(line_parse(next(f)), int)
         wellid_unit_qndflag_qhbflag_concflag = []
         if mnwobs > 0:
             for i in range(mnwobs):

@@ -3,6 +3,8 @@ import sys
 import numpy as np
 from ..pakbase import Package
 from flopy.utils.flopy_io import line_parse, pop_item
+from flopy.utils.util_list import MfList
+
 
 class Mnw(object):
     """Multi-Node Well object class
@@ -698,7 +700,7 @@ class ModflowMnw2(Package):
         """
         Package constructor
         """
-        Package.__init__(self, model, extension, 'MNW',
+        Package.__init__(self, model, extension, 'MNW2',
                          unitnumber)  # Call ancestor's init to set self.parent, extension, name, and unit number
 
         self.url = 'mnw2.htm'
@@ -763,9 +765,9 @@ class ModflowMnw2(Package):
         assert self.itmp[
                    0] >= 0, 'ITMP must be greater than or equal to zero for the first time step.'
         assert self.itmp.max() <= self.mnwmax, 'ITMP cannot exceed maximum number of wells to be simulated.'
-
-        self.parent.add_package(self)
         '''
+        self.parent.add_package(self)
+
     @staticmethod
     def get_empty_node_data(maxnodes=0, aux_names=None, structured=True, default_value=0):
         """get an empty recarray that correponds to dtype
@@ -917,6 +919,37 @@ class ModflowMnw2(Package):
         f.close()
         return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, iwl2cb=iwl2cb, mnwprnt=mnwprint, aux=option,
                            node_data=node_data, mnw=mnw, stress_period_data=stress_period_data, itmp=itmp)
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check sfr2 package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.sfr2.check()
+        """
+        pass
 
     def make_mnw_objects(self):
         node_data = self.node_data

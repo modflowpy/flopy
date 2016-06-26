@@ -30,6 +30,7 @@ def line_parse(line):
     it.
 
     """
+    line = line.split(';')[0] # ; denotes comment
     line = line.replace(',', ' ')
     return line.strip().split()
 
