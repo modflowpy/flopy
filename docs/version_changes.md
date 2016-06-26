@@ -10,6 +10,7 @@ FloPy Changes
 * Added multi-species support for MT3DMS Reactions package
 * Added static method to Mt3dms().load_mas that reads an MT3D mass file and returns a recarray
 * Added static method to Mt3dms().load_obs that reads an MT3D mass file and returns a recarray
+* Added method to flopy.modpath.Modpath to create modpath simulation file from modflow model instance boundary conditions. Also added examples of creating modpath files and post-processing modpath pathline and endpoint files to the flopy3_MapExample notebook.
 
 * Bug fixes:
   1. Fixed issue with VK parameters for LPF and UPW packages.
