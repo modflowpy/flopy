@@ -1,5 +1,6 @@
+import sys
 from ..pakbase import Package
-
+from flopy.utils.flopy_io import line_parse, pop_item
 
 class ModflowMnwi(Package):
     """
@@ -67,6 +68,45 @@ class ModflowMnwi(Package):
             print('WARNING: number of listed well ids to be monitored does not match MNWOBS.')
 
         self.parent.add_package(self)
+
+    @staticmethod
+    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+
+        if model.verbose:
+            sys.stdout.write('loading mnw2 package file...\n')
+
+        structured = model.structured
+        if nper is None:
+            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
+
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+
+        # dataset 1
+        line = line_parse(next(f))
+        wel1flag, qsumflag, byndflag = map(int, line)
+
+        # dataset 2
+        mnwobs = pop_item(line_parse(next(f)))
+        wellid_unit_qndflag_qhbflag_concflag = []
+        if mnwobs > 0:
+            for i in range(mnwobs):
+                # dataset 3
+                line = line_parse(next(f))
+                wellid = pop_item(line, str)
+                unit = pop_item(line, int)
+                qndflag = pop_item(line, int)
+                qbhflag = pop_item(line, int)
+                tmp = [wellid, unit, qndflag, qbhflag]
+                if gwt and len(line) > 0:
+                    tmp.append(pop_item(line, int))
+                wellid_unit_qndflag_qhbflag_concflag.append(tmp)
+        return ModflowMnwi(model, wel1flag=wel1flag, qsumflag=qsumflag, byndflag=byndflag, mnwobs=mnwobs,
+                           wellid_unit_qndflag_qhbflag_concflag=wellid_unit_qndflag_qhbflag_concflag,
+                           extension='mnwi', unitnumber=58)
+
 
     def write_file(self):
         """
