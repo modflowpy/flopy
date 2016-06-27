@@ -502,7 +502,8 @@ class Util3d(object):
                                           u2d._array, name=u2d.name,
                                           fmtin=u2d.format.fortran,
                                           locat=locat,
-                                          cnstnt=u2d.cnstnt)
+                                          cnstnt=u2d.cnstnt,
+                                          ext_filename=u2d.filename)
 
             return
         assert len(shape) == 3, 'Util3d:shape attribute must be length 3'
@@ -1131,7 +1132,8 @@ class Transient2d(object):
                                                   u2d._array, name=u2d.name,
                                                   fmtin=u2d.format.fortran,
                                                   locat=locat,
-                                                  cnstnt=u2d.cnstnt)
+                                                  cnstnt=u2d.cnstnt,
+                                                  ext_filename=u2d.filename)
 
             self.model = model
             return
