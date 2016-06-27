@@ -60,6 +60,7 @@ target/
 flopy/.idea
 
 examples/Notebooks/data
+examples/Notebooks/temp
 examples/Notebooks/.ipynb_checkpoints
 examples/Testing/.idea
 examples/Testing/data

@@ -517,7 +517,7 @@ class ModelMap(object):
 
         return quiver
 
-    def plot_pathline(self, pl, **kwargs):
+    def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
         Plot the MODPATH pathlines.
 
@@ -528,7 +528,16 @@ class ModelMap(object):
             modpathfile PathlineFile get_data() or get_alldata()
             methods. Data in rec array is 'x', 'y', 'z', 'time',
             'k', and 'particleid'.
-
+        travel_time: float or str
+            travel_time is a travel time selection for the displayed
+            pathlines. If a float is passed then pathlines with times
+            less than or equal to the passed time are plotted. If a
+            string is passed a variety logical constraints can be added
+            in front of a time value to select pathlines for a select
+            period of time. Valid logical constraints are <=, <, >=, and
+            >. For example, to select all pathlines less than 10000 days
+            travel_time='< 10000' would be passed to plot_pathline.
+            (default is None)
         kwargs : layer, ax, colors.  The remaining kwargs are passed
             into the LineCollection constructor. If layer='all',
             pathlines are output for all layers
@@ -565,9 +574,41 @@ class ModelMap(object):
 
         linecol = []
         for p in pl:
+            if travel_time is None:
+                tp = p.copy()
+            else:
+                if isinstance(travel_time, str):
+                    if '<=' in travel_time:
+                        time = float(travel_time.replace('<=', ''))
+                        idx = (p['time'] <= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('<', ''))
+                        idx = (p['time'] < time)
+                    elif '>=' in travel_time:
+                        time = float(travel_time.replace('>=', ''))
+                        idx = (p['time'] >= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('>', ''))
+                        idx = (p['time'] > time)
+                    else:
+                        try:
+                            time = float(travel_time)
+                            idx = (p['time'] <= time)
+                        except:
+                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
+                                     'variable cannot be parsed. ' + \
+                                     'Acceptable logical variables are , ' + \
+                                     '<=, <, >=, and >. ' + \
+                                     'You passed {}'.format(travel_time)
+                            raise Exception(errmsg)
+                else:
+                    time = float(travel_time)
+                    idx = (p['time'] <= time)
+                tp = p[idx]
+
             vlc = []
             # rotate data
-            x0r, y0r = self.sr.rotate(p['x'], p['y'], self.sr.rotation, 0.,
+            x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation, 0.,
                                       self.sr.yedge[0])
             x0r += self.sr.xul
             y0r += self.sr.yul - self.sr.yedge[0]
