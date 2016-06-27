@@ -3,6 +3,7 @@ import sys
 import numpy as np
 from ..pakbase import Package
 from flopy.utils.flopy_io import line_parse, pop_item
+from ..utils import Util2d, Transient2d, check
 from flopy.utils.util_list import MfList
 
 
@@ -922,7 +923,7 @@ class ModflowMnw2(Package):
 
     def check(self, f=None, verbose=True, level=1):
         """
-        Check sfr2 package data for common errors.
+        Check mnw2 package data for common errors.
 
         Parameters
         ----------
@@ -947,9 +948,15 @@ class ModflowMnw2(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow.load('model.nam')
-        >>> m.sfr2.check()
+        >>> m.mnw2.check()
         """
-        pass
+        chk = check(self, f=f, verbose=verbose, level=level)
+        if "MNW2" not in self.parent.get_package_list():
+            chk._add_to_summary(type='Warning', value=0,
+                                             desc='\r    MNWI package present without MNW2 packge.')
+
+        chk.summarize()
+        return chk
 
     def make_mnw_objects(self):
         node_data = self.node_data
