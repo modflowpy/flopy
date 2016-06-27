@@ -1,9 +1,10 @@
 # from numpy import empty, zeros, ones, where
+import warnings
 import sys
 import numpy as np
 from ..pakbase import Package
 from flopy.utils.flopy_io import line_parse, pop_item
-from ..utils import Util2d, Transient2d, check
+from flopy.utils import check
 from flopy.utils.util_list import MfList
 
 
@@ -489,6 +490,40 @@ class Mnw(object):
             nnodes *= -1
         return nnodes
 
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check mnw object for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        chk : flopy.utils.check object
+
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+        if self.losstype.lower() not in ['none', 'thiem', 'skin', 'general', 'sepecifycwc']:
+            chk._add_to_summary(type='Error', k=self.k, i=self.i, j=self.j,
+                                value=self.losstype, desc='Invalid losstype.')
+
+        chk.summarize()
+        return chk
+
+
+
+
     def _set_attributes_from_node_data(self):
         """Populates the Mnw object attributes with values from node_data table."""
         names = Mnw.get_item2_names(node_data=self.node_data)
@@ -753,20 +788,6 @@ class ModflowMnw2(Package):
             self.make_node_data(self.mnw)
             self.make_stress_period_data(self.mnw)
 
-        '''
-        # -input format checks:
-        lossTypes = ['NONE', 'THIEM', 'SKIN', 'GENERAL', 'SPECIFYcwc']
-        for i in range(mnwmax):
-            assert len(self.wellid[i].split(
-                ' ')) == 1, 'WELLID (%s) must not contain spaces' % \
-                            self.wellid[i]
-            assert self.losstype[
-                       i] in lossTypes, 'LOSSTYPE (%s) must be one of the following: NONE, THIEM, SKIN, GENERAL, or SPECIFYcwc' % \
-                                        self.losstype[i]
-        assert self.itmp[
-                   0] >= 0, 'ITMP must be greater than or equal to zero for the first time step.'
-        assert self.itmp.max() <= self.mnwmax, 'ITMP cannot exceed maximum number of wells to be simulated.'
-        '''
         self.parent.add_package(self)
 
     @staticmethod
@@ -951,9 +972,16 @@ class ModflowMnw2(Package):
         >>> m.mnw2.check()
         """
         chk = check(self, f=f, verbose=verbose, level=level)
-        if "MNW2" not in self.parent.get_package_list():
-            chk._add_to_summary(type='Warning', value=0,
-                                             desc='\r    MNWI package present without MNW2 packge.')
+
+        # itmp
+        if self.itmp[0] < 0:
+            chk._add_to_summary(type='Error', value=self.itmp[0],
+                                desc='Itmp must be >= 0 for first stress period.')
+        invalid_itmp = np.array(self.itmp) > self.mnwmax
+        if np.any(invalid_itmp):
+            for v in np.array(self.itmp)[invalid_itmp]:
+                chk._add_to_summary(type='Error', value=v,
+                                    desc='Itmp value greater than MNWMAX')
 
         chk.summarize()
         return chk
@@ -1124,6 +1152,9 @@ def _parse_1(line):
 def _parse_2(f):
     # dataset 2a
     line = line_parse(next(f))
+    if len(line) > 2:
+        warnings.warn('MNW2: {}\nExtra items in Dataset 2a!' +\
+                      'Check for WELLIDs with space but not enclosed in quotes.'.format(line))
     wellid = pop_item(line)
     nnodes = pop_item(line, int)
     # dataset 2b
