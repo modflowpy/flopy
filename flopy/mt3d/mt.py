@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
@@ -342,7 +343,7 @@ class Mt3dms(BaseModel):
 
     @staticmethod
     def load(f, version='mt3dms', exe_name='mt3dms.exe', verbose=False,
-             model_ws='.', load_only=None):
+             model_ws='.', load_only=None, forgive=False):
         """
         Load an existing model.
 
@@ -426,18 +427,23 @@ class Mt3dms(BaseModel):
                 btn = item
                 btn_key = key
                 break
+
+        if btn is None:
+            return None
+
         try:
             pck = btn.package.load(btn.filename, mt,
                                    ext_unit_dict=ext_unit_dict)
-            files_succesfully_loaded.append(btn.filename)
-            if mt.verbose:
-                sys.stdout.write('   {:4s} package load...success\n'
-                                 .format(pck.name[0]))
-            ext_unit_dict.pop(btn_key)
-        except Exception as e:
-            s = 'Could not read btn package: {}. Stopping...' \
-                .format(os.path.basename(btn.filename))
-            raise Exception(s + " " + str(e))
+        except:
+            if forgive:
+                return None
+            else:
+                raise Exception('BTN not found in name file.')
+        files_succesfully_loaded.append(btn.filename)
+        if mt.verbose:
+            sys.stdout.write('   {:4s} package load...success\n'
+                             .format(pck.name[0]))
+        ext_unit_dict.pop(btn_key)
 
         if load_only is None:
             load_only = []
@@ -531,3 +537,102 @@ class Mt3dms(BaseModel):
 
         # return model object
         return mt
+
+    @staticmethod
+    def load_mas(fname):
+        """
+        Load an mt3d mas file and return a numpy recarray
+
+        Parameters
+        ----------
+        fname : str
+            name of MT3D mas file
+
+        Returns
+        -------
+        r : np.ndarray
+
+        """
+        if not os.path.isfile(fname):
+            raise Exception('Could not find file: {}'.format(fname))
+        dtype = [('time', float), ('total_in', float),
+                 ('total_out', float),
+                 ('sources', float), ('sinks', float),
+                 ('fluid_storage', float),
+                 ('total_mass', float), ('error_in-out', float),
+                 ('error_alt', float)]
+        r = np.loadtxt(fname, skiprows=2, dtype=dtype)
+        r = r.view(np.recarray)
+        return r
+
+
+    @staticmethod
+    def load_obs(fname):
+        """
+        Load an mt3d obs file and return a numpy recarray
+
+        Parameters
+        ----------
+        fname : str
+            name of MT3D obs file
+
+        Returns
+        -------
+        r : np.ndarray
+
+        """
+        firstline = 'STEP   TOTAL TIME             LOCATION OF OBSERVATION POINTS (K,I,J)'
+        dtype = [('step', int), ('time', float)]
+        nobs = 0
+        obs = []
+
+        if not os.path.isfile(fname):
+            raise Exception('Could not find file: {}'.format(fname))
+        with open(fname, 'r') as f:
+            line = f.readline()
+            if line.strip() != firstline:
+                msg = 'First line in file must be \n{}\nFound {}'.format(firstline, line.strip())
+                msg += '\n{} does not appear to be a valid MT3D OBS file'.format(fname)
+                raise Exception(msg)
+
+            # Read obs names (when break, line will have first data line)
+            nlineperrec = 0
+            while True:
+                line = f.readline()
+                if line[0:7].strip() == '1':
+                    break
+                nlineperrec += 1
+                ll = line.strip().split()
+                while len(ll) > 0:
+                    k = int(ll.pop(0))
+                    i = int(ll.pop(0))
+                    j = int(ll.pop(0))
+                    obsnam = '({}, {}, {})'.format(k, i, j)
+                    if obsnam in obs:
+                        obsnam += str(len(obs) + 1) # make obs name unique
+                    obs.append(obsnam)
+
+            icount = 0
+            r = []
+            while True:
+                ll = []
+                for n in range(nlineperrec):
+                    icount += 1
+                    if icount > 1:
+                        line = f.readline()
+                    ll.extend(line.strip().split())
+
+                if not line:
+                    break
+
+                rec = [int(ll[0])]
+                for val in ll[1:]:
+                    rec.append(float(val))
+                r.append(tuple(rec))
+
+        # add obs names to dtype
+        for nameob in obs:
+            dtype.append((nameob, float))
+        r = np.array(r, dtype=dtype)
+        r = r.view(np.recarray)
+        return r

@@ -33,7 +33,7 @@ Kh = 1.0
 # whatever you want). The modelname will be the name given to all MODFLOW files (input and output).
 # The exe_name should be the full path to your MODFLOW executable. The version is either 'mf2k'
 # for MODFLOW2000 or 'mf2005'for MODFLOW2005.
-ml = mf.Modflow(modelname=name, exe_name='mf2005', version='mf2005', external_path='./')
+ml = mf.Modflow(modelname=name, exe_name='mf2005', version='mf2005')
 
 # Define the discretization of the model. All layers are given equal thickness. The `bot` array
 # is build from the `Hlay` values to indicate top and bottom of each layer, and `delrow` and

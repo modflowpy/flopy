@@ -5,6 +5,7 @@ import socket
 import copy
 import numpy as np
 from datetime import datetime
+import time
 
 # globals
 FILLVALUE = -99999.9
@@ -124,7 +125,7 @@ class NetCdf(object):
     """
 
     def __init__(self, output_filename, model, time_values=None, verbose=None,
-                 logger=None,forgive=False):
+                 logger=None, forgive=False):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
@@ -236,28 +237,57 @@ class NetCdf(object):
             return new_net
 
     def append(self,other,suffix="_1"):
-        assert isinstance(other,NetCdf)
-        for vname in other.var_attr_dict.keys():
-            attrs = other.var_attr_dict[vname].copy()
-            var = other.nc.variables[vname]
-            new_vname = vname
+        assert isinstance(other,NetCdf) or isinstance(other,dict)
+        if isinstance(other,NetCdf):
+            for vname in other.var_attr_dict.keys():
+                attrs = other.var_attr_dict[vname].copy()
+                var = other.nc.variables[vname]
+                new_vname = vname
 
-            if vname in self.nc.variables.keys():
-                if vname not in STANDARD_VARS:
-                    new_vname = vname + suffix
-                    if "long_name" in attrs:
-                        attrs["long_name"] += " " + suffix
-                else:
-                    continue
-            assert new_vname not in self.nc.variables.keys(),\
-                "var already exists:{0} in {1}".\
-                    format(new_vname,",".join(self.nc.variables.keys()))
-            attrs["max"] = var[:].max()
-            attrs["min"] = var[:].min()
-            new_var = self.create_variable(new_vname,attrs,
-                                          var.dtype,
-                                          dimensions=var.dimensions)
-            new_var[:] = var[:]
+                if vname in self.nc.variables.keys():
+                    if vname not in STANDARD_VARS:
+                        new_vname = vname + suffix
+                        if "long_name" in attrs:
+                            attrs["long_name"] += " " + suffix
+                    else:
+                        continue
+                assert new_vname not in self.nc.variables.keys(),\
+                    "var already exists:{0} in {1}".\
+                        format(new_vname,",".join(self.nc.variables.keys()))
+                attrs["max"] = var[:].max()
+                attrs["min"] = var[:].min()
+                new_var = self.create_variable(new_vname,attrs,
+                                              var.dtype,
+                                              dimensions=var.dimensions)
+                new_var[:] = var[:]
+        else:
+            for vname,array in other.items():
+                vname_norm = self.normalize_name(vname)
+                assert vname_norm in self.nc.variables.keys(),"dict var not in " \
+                                                         "self.vars:{0}-->".\
+                                                         format(vname) +\
+                                                        ",".join(self.nc.variables.keys())
+
+
+                new_vname = vname_norm + suffix
+                assert new_vname not in self.nc.variables.keys()
+                attrs = self.var_attr_dict[vname_norm].copy()
+                attrs["max"] = np.nanmax(array)
+                attrs["min"] = np.nanmin(array)
+                attrs["name"] = new_vname
+                attrs["long_name"] = attrs["long_name"] + ' ' + suffix
+                var = self.nc.variables[vname_norm]
+                #assert var.shape == array.shape,\
+                #    "{0} shape ({1}) doesn't make array shape ({2})".\
+                #        format(new_vname,str(var.shape),str(array.shape))
+                new_var = self.create_variable(new_vname,attrs,
+                                              var.dtype,
+                                              dimensions=var.dimensions)
+                try:
+                    new_var[:] = array
+                except:
+                    new_var[:,0] = array
+
         return
 
     def copy(self,output_filename):
@@ -267,7 +297,7 @@ class NetCdf(object):
         return new_net
 
     @classmethod
-    def zeros_like(cls,other,output_filename="netCDF.nc",
+    def zeros_like(cls,other,output_filename=None,
                    verbose=None,logger=None):
         new_net = NetCdf.empty_like(other,output_filename,verbose=verbose,
                                     logger=logger)
@@ -300,14 +330,19 @@ class NetCdf(object):
         return new_net
 
     @classmethod
-    def empty_like(cls,other,output_filename="netCDF.nc",
+    def empty_like(cls,other,output_filename=None,
                    verbose=None,logger=None):
+        if output_filename is None:
+            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
+
+        while os.path.exists(output_filename):
+            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
         new_net = cls(output_filename,other.model,
                       time_values=other.time_values_arg,verbose=verbose,
                       logger=logger)
         return new_net
 
-    def difference(self, other, minuend="self", mask_zero_diff=True):
+    def difference(self, other, minuend="self", mask_zero_diff=True,onlydiff=True):
         """make a new NetCDF instance that is the difference with another
         netcdf file
 
@@ -322,6 +357,8 @@ class NetCdf(object):
         mask_zero_diff : bool flag to mask differences that are zero.  If
             True, positions in the difference array that are zero will be set
             to self.fillvalue
+
+        only_diff : bool flag to only add non-zero diffs to output file
 
         Returns
         -------
@@ -395,9 +432,18 @@ class NetCdf(object):
             if isinstance(s_data,np.ma.MaskedArray):
                 self.logger.warn("masked array for {0}".format(vname))
                 s_mask = s_data.mask
-                o_mask = o_data.mask
                 s_data = np.array(s_data)
+                s_data[s_mask] = 0.0
+            else:
+                np.nan_to_num(s_data)
+
+            if isinstance(o_data,np.ma.MaskedArray):
+                o_mask = o_data.mask
                 o_data = np.array(o_data)
+                o_data[o_mask] = 0.0
+            else:
+                np.nan_to_num(o_data)
+
 
             # difference with self
             if minuend.lower() == "self":
@@ -409,21 +455,35 @@ class NetCdf(object):
                 self.logger.warn(mess)
                 raise Exception(mess)
 
+            # check for non-zero diffs
+            if onlydiff and d_data.sum() == 0.0:
+                self.logger.warn("var {0} has zero differences, skipping...".format(vname))
+                continue
+
+            self.logger.warn("resetting diff attrs max,min:{0},{1}".format(d_data.min(),d_data.max()))
+            attrs = self.var_attr_dict[vname].copy()
+            attrs["max"] = np.nanmax(d_data)
+            attrs["min"] = np.nanmin(d_data)
             # reapply masks
             if s_mask is not None:
                 self.log("applying self mask")
+                s_mask[d_data != 0.0] = False
                 d_data[s_mask] = FILLVALUE
                 self.log("applying self mask")
             if o_mask is not None:
                 self.log("applying other mask")
+                o_mask[d_data != 0.0] = False
                 d_data[o_mask] = FILLVALUE
                 self.log("applying other mask")
-            var = new_net.create_variable(vname,self.var_attr_dict[vname],
-                                          s_var.dtype,
-                                          dimensions=s_var.dimensions)
+
             d_data[np.isnan(d_data)] = FILLVALUE
             if mask_zero_diff:
                 d_data[np.where(d_data==0.0)] = FILLVALUE
+
+            var = new_net.create_variable(vname,attrs,
+                                          s_var.dtype,
+                                          dimensions=s_var.dimensions)
+
             var[:] = d_data
             self.log("processing variable {0}".format(vname))
 
@@ -736,6 +796,10 @@ class NetCdf(object):
         exp._CoordinateAxes = "layer"
         return
 
+    @staticmethod
+    def normalize_name(name):
+        return name.replace('.', '_').replace(' ', '_').replace('-', '_')
+
     def create_variable(self, name, attributes, precision_str='f4',
                         dimensions=("time", "layer", "y", "x")):
         """
@@ -765,7 +829,7 @@ class NetCdf(object):
 
         """
         # Normalize variable name
-        name = name.replace('.', '_').replace(' ', '_').replace('-', '_')
+        name = self.normalize_name(name)
         # if this is a core var like a dimension...
         #long_name = attributes.pop("long_name",name)
         if name in STANDARD_VARS and name in self.nc.variables.keys():

@@ -43,6 +43,7 @@ ssm_data[0] = ssm_sp1
 
 
 def test_seawat_henry():
+    #SEAWAT model from a modflow model and an mt3d model
     modelname = 'henry'
     mf = flopy.modflow.Modflow(modelname, exe_name='swt_v4',
                                model_ws=workspace)
@@ -87,8 +88,9 @@ def test_seawat_henry():
 
 
 def test_seawat2_henry():
+    #SEAWAT model directly by adding packages
     modelname = 'henry2'
-    m = flopy.seawat.Seawat2(modelname, 'nam', model_ws=workspace,
+    m = flopy.seawat.swt.Seawat(modelname, 'nam', model_ws=workspace,
                             exe_name='swt_v4')
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol, nper=1, delr=delr,
                                    delc=delc, laycbd=0, top=henry_top,
@@ -125,5 +127,5 @@ def test_seawat2_henry():
 
 
 if __name__ == '__main__':
-    #test_seawat_henry()
+    test_seawat_henry()
     test_seawat2_henry()

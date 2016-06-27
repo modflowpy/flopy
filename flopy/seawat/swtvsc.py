@@ -134,7 +134,7 @@ class SeawatVsc(Package):
         if unitnumber is None:
             unitnumber = self.unitnumber
         Package.__init__(self, model, extension, 'VSC', unitnumber)
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
+        nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.mt3dmuflg = mt3dmuflg
         self.viscmin = viscmin
         self.viscmax = viscmax
@@ -163,7 +163,6 @@ class SeawatVsc(Package):
         None
 
         """
-        nrow, ncol, nlay, nper = self.parent.mf.nrow_ncol_nlay_nper
         f_vsc = open(self.fn_path, 'w')
 
         # item 1
@@ -197,7 +196,7 @@ class SeawatVsc(Package):
             f_vsc.write('%10i' % self.mtmutempspec)
 
             if self.mutempopt == 1:
-                string = '%10.3E%10f%10f%10f\n'
+                string = ' %9.3E %9f %9f %9f\n'
             elif self.mutempopt == 2:
                 string = '%10.3E%10f%10f %9f %9f\n'
             elif self.mutempopt == 3:
@@ -270,7 +269,7 @@ class SeawatVsc(Package):
                 break
 
         # Determine problem dimensions
-        nrow, ncol, nlay, nper = model.mf.get_nrow_ncol_nlay_nper()
+        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # Item 1: MT3DMUFLG - line already read above
         if model.verbose:
@@ -307,6 +306,7 @@ class SeawatVsc(Package):
             viscref = float(t[0])
             dmudc = float(t[1])
             cmuref = float(t[2])
+            nsmueos = 1
             if model.verbose:
                 print('   VISCREF {}'.format(viscref))
                 print('   DMUDC {}'.format(dmudc))
@@ -386,7 +386,7 @@ class SeawatVsc(Package):
                 for k in range(nlay):
                     if model.verbose:
                         print('   loading VISC layer {0:3d}...'.format(k + 1))
-                    t = util_2d.load(f, model.mf, (nrow, ncol), np.float32,
+                    t = util_2d.load(f, model, (nrow, ncol), np.float32,
                                      'visc', ext_unit_dict)
                     visc[k] = t
 

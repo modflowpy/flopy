@@ -4,7 +4,7 @@ from ..utils import Util2d, Util3d, Transient2d, MfList, \
     HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
 from ..mbase import BaseModel
 from ..pakbase import Package
-from . import NetCdf
+from . import NetCdf,netcdf
 from . import shapefile_utils
 
 
@@ -47,6 +47,17 @@ NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
                  }
 
 
+def get_var_array_dict(m):
+    vdict = {}
+    #for vname in f.var_attr_dict.keys():
+    #    vdict[vname] = f.nc.variables[vname][:]
+    for attr in m:
+        if hasattr(attr,"stress_period_data"):
+            array_dict = attr.stress_period_data.array
+
+    return vdict
+
+
 def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwargs):
     """ helper to export an ensemble of model instances.  Assumes
     all models have same dis and sr, only difference is properties and
@@ -58,54 +69,81 @@ def ensemble_helper(inputs_filename,outputs_filename,models,add_reals=True,**kwa
         assert m.get_nrow_ncol_nlay_nper() == models[0].get_nrow_ncol_nlay_nper()
     if inputs_filename is not None:
         f_in = models[0].export(inputs_filename,**kwargs)
-        mean,stdev = f_in.copy("mean.nc"),NetCdf.zeros_like(f_in,output_filename="stdev.nc")
-        i = 2
+        vdict = {}
+        vdicts = [models[0].export(vdict,**kwargs)]
+        i = 1
         for m in models[1:]:
             suffix = m.name.split('.')[0].split('_')[-1]
-            f = m.export("temp.nc",**kwargs)
+            vdict = {}
+            m.export(vdict,**kwargs)
+            vdicts.append(vdict)
             if add_reals:
-                f_in.append(f,suffix=suffix)
-            last = mean.copy("mean_temp.nc")
-            mean = last + ((f - last) / float(i))
-            stdev += ((f - mean) * (f - last))
+                f_in.append(vdict,suffix=suffix)
             i += 1
-        if i > 2:
+        mean, stdev = {},{}
+        for vname in vdict.keys():
+            alist = []
+            for vd in vdicts:
+                alist.append(vd[vname])
+            alist = np.array(alist)
+            mean[vname] = alist.mean(axis=0)
+            stdev[vname] = alist.std(axis=0)
+            mean[vname][vdict[vname]==netcdf.FILLVALUE] = netcdf.FILLVALUE
+            stdev[vname][vdict[vname]==netcdf.FILLVALUE] = netcdf.FILLVALUE
+            mean[vname][np.isnan(vdict[vname])] = netcdf.FILLVALUE
+            stdev[vname][np.isnan(vdict[vname])] = netcdf.FILLVALUE
+
+        if i >= 2:
             if not add_reals:
                 f_in.write()
                 f_in = NetCdf.empty_like(mean,output_filename=inputs_filename)
-                f_in.append(mean,suffix="mean")
-                f_in.append(stdev,suffix="stdev")
+                f_in.append(mean,suffix="**mean**")
+                f_in.append(stdev,suffix="**stdev**")
             else:
-                f_in.append(mean,suffix="mean")
-                f_in.append(stdev,suffix="stdev")
-        mean.nc.close()
-        stdev.nc.close()
+                f_in.append(mean,suffix="**mean**")
+                f_in.append(stdev,suffix="**stdev**")
+        f_in.add_global_attributes({"namefile":''})
+
     if outputs_filename is not None:
         f_out = output_helper(outputs_filename,models[0],models[0].\
                           load_results(as_dict=True),**kwargs)
-        mean,stdev = f_out.copy("mean.nc"),NetCdf.zeros_like(f_out,output_filename="stdev.nc")
-        i = 2
+        vdict = {}
+        vdicts = [output_helper(vdict,models[0],models[0].\
+                                load_results(as_dict=True),**kwargs)]
+        i = 1
         for m in models[1:]:
             suffix = m.name.split('.')[0].split('_')[-1]
             oudic = m.load_results(as_dict=True)
-            f = output_helper("temp.nc",m,oudic,**kwargs)
+            vdict = {}
+            output_helper(vdict,m,oudic,**kwargs)
+            vdicts.append(vdict)
             if add_reals:
-                f_out.append(f,suffix=suffix)
-            last = mean.copy("mean_temp.nc")
-            mean = last + ((f - last) / float(i))
-            stdev += ((f - mean) * (f - last))
+                f_out.append(vdict,suffix=suffix)
             i += 1
-        if i > 2:
+
+        mean, stdev = {},{}
+        for vname in vdict.keys():
+            alist = []
+            for vd in vdicts:
+                alist.append(vd[vname])
+            alist = np.array(alist)
+            mean[vname] = alist.mean(axis=0)
+            stdev[vname] = alist.std(axis=0)
+            mean[vname][np.isnan(vdict[vname])] = netcdf.FILLVALUE
+            stdev[vname][np.isnan(vdict[vname])] = netcdf.FILLVALUE
+            mean[vname][vdict[vname]==netcdf.FILLVALUE] = netcdf.FILLVALUE
+            stdev[vname][vdict[vname]==netcdf.FILLVALUE] = netcdf.FILLVALUE
+        if i >= 2:
             if not add_reals:
                 f_out.write()
                 f_out = NetCdf.empty_like(mean,output_filename=outputs_filename)
-                f_out.append(mean,suffix="mean")
-                f_out.append(stdev,suffix="stdev")
+                f_out.append(mean,suffix="**mean**")
+                f_out.append(stdev,suffix="**stdev**")
 
             else:
-                f_out.append(mean,suffix="mean")
-                f_out.append(stdev,suffix="stdev")
-
+                f_out.append(mean,suffix="**mean**")
+                f_out.append(stdev,suffix="**stdev**")
+        f_out.add_global_attributes({"namefile":''})
     return f_in,f_out
 
 
@@ -155,7 +193,13 @@ def _add_output_nc_variable(f,times,shape3d,out_obj,var_name,logger=None,text=''
     for mask_val in mask_vals:
         array[np.where(array==mask_val)] = np.NaN
     mx,mn = np.nanmax(array),np.nanmin(array)
-    array[np.isnan(array)] = f.fillvalue
+    array[np.isnan(array)] = netcdf.FILLVALUE
+
+    if isinstance(f,dict):
+        if text:
+            var_name = text.decode().strip().lower()
+        f[var_name] = array
+        return f
 
     units = None
     if var_name in NC_UNITS_FORMAT:
@@ -258,10 +302,10 @@ def output_helper(f,ml,oudic,**kwargs):
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, ml, time_values=times,logger=logger,
                    forgive=forgive)
-    else:
+    elif isinstance(f,NetCdf):
         otimes = list(f.nc.variables["time"][:])
         assert otimes == times
-    if isinstance(f,NetCdf):
+    if isinstance(f,NetCdf) or isinstance(f,dict):
         shape3d = (ml.nlay,ml.nrow,ml.ncol)
         mask_vals = []
         mask_array3d = None
@@ -339,9 +383,14 @@ def model_helper(f, ml, **kwargs):
                 f = pak.export(f,**kwargs)
         return f
 
+    elif isinstance(f,dict):
+        for pak in ml.packagelist:
+            f = pak.export(f,**kwargs)
+
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
+    return f
 
 def package_helper(f, pak, **kwargs):
     assert isinstance(pak,Package)
@@ -353,7 +402,7 @@ def package_helper(f, pak, **kwargs):
                                                       package_names=pak.name,
                                                       **kwargs)
 
-    elif isinstance(f, NetCdf):
+    elif isinstance(f, NetCdf) or isinstance(f,dict):
         attrs = dir(pak)
         if 'sr' in attrs:
             attrs.remove('sr')
@@ -456,7 +505,8 @@ def mflist_helper(f, mfl, **kwargs):
                     array_dict[aname] = array[k]
         shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
 
-    elif isinstance(f, NetCdf):
+
+    elif isinstance(f, NetCdf) or isinstance(f,dict):
         base_name = mfl.package.name[0].lower()
         #f.log("getting 4D masked arrays for {0}".format(base_name))
         #m4d = mfl.masked_4D_arrays
@@ -464,8 +514,12 @@ def mflist_helper(f, mfl, **kwargs):
 
         #for name, array in m4d.items():
         for name, array in mfl.masked_4D_arrays_itr():
-            f.log("processing {0} attribute".format(name))
             var_name = base_name + '_' + name
+            if isinstance(f,dict):
+                f[var_name] = array
+                continue
+            f.log("processing {0} attribute".format(name))
+
             units = None
             if var_name in NC_UNITS_FORMAT:
                 units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
@@ -529,7 +583,7 @@ def transient2d_helper(f, t2d, **kwargs):
             array_dict[name] = u2d.array
         shapefile_utils.write_grid_shapefile(f, t2d.model.sr, array_dict)
 
-    elif isinstance(f, NetCdf):
+    elif isinstance(f, NetCdf) or isinstance(f,dict):
         # mask the array is defined by any row col with at lease
         # one active cell
         mask = None
@@ -540,9 +594,9 @@ def transient2d_helper(f, t2d, **kwargs):
             ibnd = np.abs(t2d.model.btn.icbund.array).sum(axis=0)
             mask = ibnd == 0
 
-        f.log("getting 4D array for {0}".format(t2d.name_base))
+        #f.log("getting 4D array for {0}".format(t2d.name_base))
         array = t2d.array
-        f.log("getting 4D array for {0}".format(t2d.name_base))
+        #f.log("getting 4D array for {0}".format(t2d.name_base))
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int,np.int,np.int32,np.int64]:
                 if mask is not None:
@@ -552,8 +606,8 @@ def transient2d_helper(f, t2d, **kwargs):
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
-                array[array <= min_valid] = f.fillvalue
-                array[array >= max_valid] = f.fillvalue
+                array[array <= min_valid] = netcdf.FILLVALUE
+                array[array >= max_valid] = netcdf.FILLVALUE
                 #if t2d.model.bas6 is not None:
                 #    array[:, 0, t2d.model.bas6.ibound.array[0] == 0] = \
                 #        f.fillvalue
@@ -561,10 +615,15 @@ def transient2d_helper(f, t2d, **kwargs):
                 #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = \
                 #        f.fillvalue
 
-        array[np.isnan(array)] = f.fillvalue
-
-        units = "unitless"
         var_name = t2d.name_base.replace('_', '')
+        if isinstance(f,dict):
+            array[array==netcdf.FILLVALUE] = np.NaN
+            f[var_name] = array
+            return f
+
+        array[np.isnan(array)] = f.fillvalue
+        units = "unitless"
+
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         try:
@@ -628,40 +687,61 @@ def util3d_helper(f, u3d, **kwargs):
         shapefile_utils.write_grid_shapefile(f, u3d.model.sr,
                              array_dict)
 
-    elif isinstance(f, NetCdf):
+    elif isinstance(f, NetCdf) or isinstance(f,dict):
         var_name = u3d.name[0].replace(' ', '_').lower()
-        f.log("getting 3D array for {0}".format(var_name))
+        #f.log("getting 3D array for {0}".format(var_name))
         array = u3d.array
 
         # this is for the crappy vcont in bcf6
-        if array.shape != f.shape:
-            f.log("broadcasting 3D array for {0}".format(var_name))
-            full_array = np.empty(f.shape)
+        # if isinstance(f,NetCdf) and array.shape != f.shape:
+        #     f.log("broadcasting 3D array for {0}".format(var_name))
+        #     full_array = np.empty(f.shape)
+        #     full_array[:] = np.NaN
+        #     full_array[:array.shape[0]] = array
+        #     array = full_array
+        #     f.log("broadcasting 3D array for {0}".format(var_name))
+        #f.log("getting 3D array for {0}".format(var_name))
+            #
+        mask = None
+        if u3d.model.bas6 is not None and "ibound" not in var_name:
+            mask = u3d.model.bas6.ibound.array == 0
+        elif u3d.model.btn is not None and 'icbund' not in var_name:
+            mask = u3d.model.btn.icbund.array == 0
+
+        if mask is not None and array.shape != mask.shape:
+            #f.log("broadcasting 3D array for {0}".format(var_name))
+            full_array = np.empty(mask.shape)
             full_array[:] = np.NaN
             full_array[:array.shape[0]] = array
             array = full_array
-            f.log("broadcasting 3D array for {0}".format(var_name))
-        f.log("getting 3D array for {0}".format(var_name))
+            #f.log("broadcasting 3D array for {0}".format(var_name))
+
 
         # runtime warning issued in some cases - need to track down cause
         # happens when NaN is already in array
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int,np.int,np.int32,np.int64]:
-                if u3d.model.bas6 is not None and "ibound" not in var_name:
-                    array[u3d.model.bas6.ibound.array == 0] = np.NaN
-                elif u3d.model.btn is not None and 'icbund' not in var_name:
-                    array[u3d.model.btn.icbund.array == 0] = np.NaN
+                #if u3d.model.bas6 is not None and "ibound" not in var_name:
+                #    array[u3d.model.bas6.ibound.array == 0] = np.NaN
+                #elif u3d.model.btn is not None and 'icbund' not in var_name:
+                #    array[u3d.model.btn.icbund.array == 0] = np.NaN
+                array[mask] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
-                array[array <= min_valid] = f.fillvalue
-                array[array >= max_valid] = f.fillvalue
+                array[mask] = netcdf.FILLVALUE
+                array[array <= min_valid] = netcdf.FILLVALUE
+                array[array >= max_valid] = netcdf.FILLVALUE
                 if u3d.model.bas6 is not None and "ibound" not in var_name:
-                    array[u3d.model.bas6.ibound.array == 0] = f.fillvalue
+                    array[u3d.model.bas6.ibound.array == 0] = netcdf.FILLVALUE
                 elif u3d.model.btn is not None and 'icbund' not in var_name:
-                    array[u3d.model.btn.icbund.array == 0] = f.fillvalue
+                    array[u3d.model.btn.icbund.array == 0] = netcdf.FILLVALUE
+
+        if isinstance(f,dict):
+            f[var_name] = array
+            return f
 
         array[np.isnan(array)] = f.fillvalue
         units = "unitless"
@@ -720,12 +800,12 @@ def util2d_helper(f, u2d, **kwargs):
         shapefile_utils.write_grid_shapefile(f, u2d.model.sr, {name: u2d.array})
         return
 
-    elif isinstance(f, NetCdf):
+    elif isinstance(f, NetCdf) or isinstance(f,dict):
 
         # try to mask the array - assume layer 1 ibound is a good mask
-        f.log("getting 2D array for {0}".format(u2d.name))
+        #f.log("getting 2D array for {0}".format(u2d.name))
         array = u2d.array
-        f.log("getting 2D array for {0}".format(u2d.name))
+        #f.log("getting 2D array for {0}".format(u2d.name))
 
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int,np.int,np.int32,np.int64]:
@@ -740,20 +820,24 @@ def util2d_helper(f, u2d, **kwargs):
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
-                array[array <= min_valid] = f.fillvalue
-                array[array >= max_valid] = f.fillvalue
+                array[array <= min_valid] = netcdf.FILLVALUE
+                array[array >= max_valid] = netcdf.FILLVALUE
                 if u2d.model.bas6 is not None and \
                                 "ibound" not in u2d.name.lower():
                     array[u2d.model.bas6.ibound.array[0, :, :] == 0] = \
-                        f.fillvalue
+                        netcdf.FILLVALUE
                 elif u2d.model.btn is not None and \
                                 "icbund" not in u2d.name.lower():
                     array[u2d.model.btn.icbund.array[0, :, :] == 0] = \
-                        f.fillvalue
+                        netcdf.FILLVALUE
+        var_name = u2d.name
+        if isinstance(f,dict):
+            f[var_name] = array
+            return f
 
         array[np.isnan(array)] = f.fillvalue
         units = "unitless"
-        var_name = u2d.name
+
         if var_name in NC_UNITS_FORMAT:
             units = NC_UNITS_FORMAT[var_name].format(f.grid_units, f.time_units)
         precision_str = NC_PRECISION_TYPE[u2d.dtype]

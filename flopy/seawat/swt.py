@@ -24,78 +24,6 @@ class SeawatList(Package):
 
 class Seawat(BaseModel):
     """
-    SEAWAT base class
-
-    """
-    def __init__(self, modelname='swttest', namefile_ext='nam',
-                 modflowmodel=None, mt3dmsmodel=None, 
-                 version='seawat', exe_name='swt_v4.exe', model_ws=None,
-                 verbose=False, external_path=None):
-        BaseModel.__init__(self, modelname, namefile_ext, exe_name=exe_name, 
-                           model_ws=model_ws)
-
-        self.version_types = {'seawat': 'SEAWAT'}
-        self.set_version(version)
-
-        self.__mf = modflowmodel
-        self.__mt = mt3dmsmodel
-        self.lst = SeawatList(self)
-        self.__vdf = None
-        self.verbose = verbose
-        self.external_path = external_path
-        return
-        
-    def __repr__( self ):
-        return 'SEAWAT model'
-
-    def getvdf(self):
-        if (self.__vdf == None):
-            for p in (self.packagelist):
-                if isinstance(p, SeawatVdf):
-                    self.__vdf = p
-        return self.__vdf
-
-    def getmf(self):
-        return self.__mf
-
-    def getmt(self):
-        return self.__mt
-
-    mf = property(getmf) # Property has no setter, so read-only
-    mt = property(getmt) # Property has no setter, so read-only
-    vdf = property(getvdf) # Property has no setter, so read-only
-
-    def write_name_file(self):
-        """
-        Write the name file
-
-        Returns
-        -------
-        None
-
-        """
-        fn_path = os.path.join(self.model_ws,self.namefile)
-        f_nam = open(fn_path, 'w')
-        f_nam.write('%s\n' % (self.heading) )
-        f_nam.write('%s\t%3i\t%s\n' % (self.lst.name[0], 
-                                       self.lst.unit_number[0], 
-                                       self.lst.file_name[0]))
-        f_nam.write('%s\n' % ('# Flow') )
-        f_nam.write('%s' % self.__mf.get_name_file_entries())
-        for u,f in zip(self.mf.external_units,self.mf.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u)+f+'\n'	)
-        f_nam.write('%s\n' % ('# Transport') )
-        f_nam.write('%s' % self.__mt.get_name_file_entries())
-        for u,f in zip(self.mt.external_units,self.mt.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u)+f+'\n'	)
-        f_nam.write('%s\n' % ('# Variable density flow') )
-        f_nam.write('%s' % self.get_name_file_entries())
-        f_nam.close()
-        return
-
-
-class Seawat2(BaseModel):
-    """
     SEAWAT Model Class.
 
     Parameters
@@ -140,7 +68,7 @@ class Seawat2(BaseModel):
     --------
 
     >>> import flopy
-    >>> m = flopy.seawat.swt.Seawat2()
+    >>> m = flopy.seawat.swt.Seawat()
 
     """
 
@@ -159,27 +87,20 @@ class Seawat2(BaseModel):
         self.set_version(version)
         self.lst = SeawatList(self, listunit=listunit)
 
-        # If a MODFLOW model was passed in, then use it, otherwise create
-        # one.
+        # If a MODFLOW model was passed in, then add its packages
+        self.mf = self
         if modflowmodel is not None:
-            self.mf = modflowmodel
+            for p in modflowmodel.packagelist:
+                self.packagelist.append(p)
         else:
-            self.mf = Modflow(modelname=modelname, version='mf2k',
-                              exe_name='mf2k.exe', structured=structured,
-                              listunit=listunit, model_ws=model_ws,
-                              external_path=external_path, verbose=verbose,
-                              namefile_ext='nam_mf')
+            modflowmodel = Modflow()
 
-        # If a MT3D model was passed in, then use it, otherwise create
-        # one.
+        # If a MT3D model was passed in, then add its packages
         if mt3dmodel is not None:
-            self.mt = mt3dmodel
+            for p in mt3dmodel.packagelist:
+                self.packagelist.append(p)
         else:
-            self.mt = Mt3dms(modelname=modelname, version='mt3dms',
-                             exe_name='mt3dms.exe', structured=structured,
-                             listunit=listunit, model_ws=model_ws,
-                             external_path=external_path, verbose=verbose,
-                             namefile_ext='nam_mt3d')
+            mt3dmodel = Mt3dms()
 
         # external option stuff
         self.array_free_format = False
@@ -210,55 +131,14 @@ class Seawat2(BaseModel):
 
         # Create a dictionary to map package with package object.
         # This is used for loading models.
-        self.mfnam_packages = {
-            'vdf': SeawatVdf,
-            'vsc': SeawatVsc,
-        }
+        self.mfnam_packages = {}
+        for k, v in modflowmodel.mfnam_packages.items():
+            self.mfnam_packages[k] = v
+        for k, v in mt3dmodel.mfnam_packages.items():
+            self.mfnam_packages[k] = v
+        self.mfnam_packages['vdf'] = SeawatVdf
+        self.mfnam_packages['vsc'] = SeawatVsc
         return
-
-    def __getattr__(self, item):
-        """
-        __getattr__ - syntactic sugar (overriding for SEAWAT)
-
-        Parameters
-        ----------
-        item : str
-            3 character package name (case insensitive) or "sr" to access
-            the SpatialReference instance of the ModflowDis object
-
-
-        Returns
-        -------
-        sr : SpatialReference instance
-        pp : Package object
-            Package object of type :class:`flopy.pakbase.Package`
-
-        Note
-        ----
-        if self.dis is not None, then the spatial reference instance is updated
-        using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
-        returned
-        """
-        item = item.lower()
-        if item == 'sr':
-            if self.mf.dis is not None:
-                return self.mf.dis.sr
-            else:
-                return None
-        if item == "start_datetime":
-            if self.mf.dis is not None:
-                return self.mf.dis.start_datetime
-            else:
-                return None
-
-        # find package in one of three models and return
-        if item in self.mfnam_packages:
-            return self.get_package(item)
-        elif item in self.mf.mfnam_packages:
-            return self.mf.get_package(item)
-        elif item in self.mt.mfnam_packages:
-            return self.mt.get_package(item)
-        return None
 
     @property
     def nlay(self):
@@ -269,28 +149,28 @@ class Seawat2(BaseModel):
 
     @property
     def nrow(self):
-        if (self.mf.dis):
-            return self.mf.dis.nrow
+        if (self.dis):
+            return self.dis.nrow
         else:
             return 0
 
     @property
     def ncol(self):
-        if (self.mf.dis):
-            return self.mf.dis.ncol
+        if (self.dis):
+            return self.dis.ncol
         else:
             return 0
 
     @property
     def nper(self):
-        if (self.mf.dis):
+        if (self.dis):
             return self.dis.nper
         else:
             return 0
 
     @property
     def nrow_ncol_nlay_nper(self):
-        dis = self.mf.get_package('DIS')
+        dis = self.get_package('DIS')
         if (dis):
             return dis.nrow, dis.ncol, dis.nlay, dis.nper
         else:
@@ -299,20 +179,6 @@ class Seawat2(BaseModel):
     def get_nrow_ncol_nlay_nper(self):
         return self.nrow_ncol_nlay_nper
 
-    @property
-    def ncomp(self):
-        if (self.mt.btn):
-            return self.mt.btn.ncomp
-        else:
-            return 1
-
-    @property
-    def mcomp(self):
-        if (self.mt.btn):
-            return self.mt.btn.mcomp
-        else:
-            return 1
-
     def get_ifrefm(self):
         bas = self.get_package('BAS6')
         if (bas):
@@ -320,24 +186,43 @@ class Seawat2(BaseModel):
         else:
             return False
 
-    def add_package(self, p):
-        """
-        Add a package.
+    @property
+    def ncomp(self):
+        if (self.btn):
+            return self.btn.ncomp
+        else:
+            return 1
 
-        Parameters
-        ----------
-        p : Package object
+    @property
+    def mcomp(self):
+        if (self.btn):
+            return self.btn.mcomp
+        else:
+            return 1
 
-        """
-        pname = p.name[0].lower()
-        if pname in self.mfnam_packages:
-            super(Seawat2, self).add_package(p)
-        elif pname in self.mf.mfnam_packages:
-            self.mf.add_package(p)
-        elif pname in self.mt.mfnam_packages:
-            self.mt.add_package(p)
+    def _set_name(self, value):
+        # Overrides BaseModel's setter for name property
+        BaseModel._set_name(self, value)
+
+        if self.version == 'mf2k':
+            for i in range(len(self.glo.extension)):
+                self.glo.file_name[i] = self.name + '.' + self.glo.extension[i]
+
+        for i in range(len(self.lst.extension)):
+            self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
         return
 
+    def change_model_ws(self, new_pth=None, reset_external=False):
+        #if hasattr(self,"_mf"):
+        if self._mf is not None:
+            self._mf.change_model_ws(new_pth=new_pth,
+                                     reset_external=reset_external)
+        #if hasattr(self,"_mt"):
+        if self._mt is not None:
+            self._mt.change_model_ws(new_pth=new_pth,
+                                     reset_external=reset_external)
+        super(Seawat,self).change_model_ws(new_pth=new_pth,
+                                           reset_external=reset_external)
     def write_name_file(self):
         """
         Write the name file
@@ -357,58 +242,114 @@ class Seawat2(BaseModel):
                                        self.lst.unit_number[0],
                                        self.lst.file_name[0]))
 
-        # Write MODFLOW entries
-        f_nam.write('%s\n' % ('# Flow'))
-        f_nam.write('%s' % self.mf.get_name_file_entries())
-        for u, f in zip(self.mf.external_units, self.mf.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
-
-        # Write MT3DMS entries
-        f_nam.write('%s\n' % ('# Transport'))
-        f_nam.write('%s' % self.mt.get_name_file_entries())
-        for u, f in zip(self.mt.external_units, self.mt.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
-
         # Write SEAWAT entries and close
-        f_nam.write('%s\n' % ('# Variable density flow'))
         f_nam.write('%s' % self.get_name_file_entries())
+
+        if self._mf is not None:
+            for b, u, f in zip(self._mf.external_binflag,
+                               self._mf.external_units, \
+                               self._mf.external_fnames):
+                tag = "DATA"
+                if b:
+                    tag = "DATA(BINARY)"
+                f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+
+        if self._mt is not None:
+            for b, u, f in zip(self._mt.external_binflag,
+                               self._mt.external_units, \
+                               self._mt.external_fnames):
+                tag = "DATA"
+                if b:
+                    tag = "DATA(BINARY)"
+                f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+
+        for b, u, f in zip(self.external_binflag, self.external_units, \
+                           self.external_fnames):
+            tag = "DATA"
+            if b:
+                tag = "DATA(BINARY)"
+            f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+
+
         f_nam.close()
         return
 
-    def write_input(self, SelPackList=False, check=False):
+    @staticmethod
+    def load(f, version='seawat', exe_name='swt_v4', verbose=False,
+             model_ws='.', load_only=None):
         """
-        Write the input.
+        Load an existing model.
 
         Parameters
         ----------
-        SelPackList : False or list of packages
+        f : string
+            Full path and name of SEAWAT name file.
 
-        """
-        self.mf.write_input(SelPackList, check)
-        self.mt.write_input(SelPackList, check)
-        super(Seawat2, self).write_input(SelPackList, check)
-        return
+        version : string
+            The version of SEAWAT (seawat)
+            (default is seawat)
 
-    def get_package(self, name):
-        """
-        Get a package.
+        exe_name : string
+            The name of the executable to use if this loaded model is run.
+            (default is swt_v4.exe)
 
-        Parameters
-        ----------
-        name : str
-            Name of the package, 'RIV', 'LPF', etc.
+        verbose : bool
+            Write information on the load process if True.
+            (default is False)
+
+        model_ws : string
+            The path for the model workspace.
+            (default is the current working directory '.')
+
+        load_only : list of strings
+            Filetype(s) to load (e.g. ['lpf', 'adv'])
+            (default is None, which means that all will be loaded)
 
         Returns
         -------
-        pp : Package object
-            Package object of type :class:`flopy.pakbase.Package`
+        m : flopy.seawat.swt.Seawat
+            flopy Seawat model object
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.seawat.swt.Seawat.load(f)
 
         """
-        name = name.lower()
-        if name in self.mfnam_packages:
-            return super(Seawat2, self).get_package(name)
-        elif name in self.mf.mfnam_packages:
-            return self.mf.get_package(name)
-        elif name in self.mt.mfnam_packages:
-            return self.mt.get_package(name)
-        return None
+        # test if name file is passed with extension (i.e., is a valid file)
+        if os.path.isfile(os.path.join(model_ws, f)):
+            modelname = f.rpartition('.')[0]
+        else:
+            modelname = f
+
+        ms = Seawat(modelname=modelname, namefile_ext='nam',
+                    modflowmodel=None, mt3dmodel=None,
+                    version=version, exe_name=exe_name, model_ws=model_ws,
+                    verbose=verbose)
+
+        mf = Modflow.load(f, version='mf2k', exe_name=None, verbose=verbose,
+                          model_ws=model_ws, load_only=load_only, forgive=True,
+                          check=False)
+
+        mt = Mt3dms.load(f, version='mt3dms', exe_name=None, verbose=verbose,
+                         model_ws=model_ws, forgive=True)
+
+
+        for p in mf.packagelist:
+            p.parent = ms
+            ms.add_package(p)
+        ms._mt = None
+        if mt is not None:
+            for p in mt.packagelist:
+                p.parent = ms
+                ms.add_package(p)
+            mt.external_units = []
+            mt.external_binflag = []
+            mt.external_fnames = []
+            ms._mt = mt
+        ms._mf = mf
+
+
+        # return model object
+        return ms

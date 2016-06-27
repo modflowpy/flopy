@@ -69,9 +69,11 @@ class ModflowNwt(Package):
         should be used when the MODERATE option does not result in successful
         convergence.
         (default is COMPLEX).
-    continue : bool
+    Continue : bool
         if the model fails to converge during a time step then it will continue to
-        solve the following time step. (default is False).
+        solve the following time step. (default is False).  Note the capital
+        C on this option so that it doesn't conflict with a reserved Python
+        language word.
     dbdtheta : float
         is a coefficient used to reduce the weight applied to the head change between
         nonlinear iterations. dbdtheta is used to control oscillations in head.

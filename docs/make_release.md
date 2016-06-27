@@ -4,7 +4,7 @@ Instructions for making a FloPy release
 ## Finalizing the release
 
 1.  Merge the `develop` branch into the `master` branch.
-2.  Update travis build status in `master` branch README.md` from:
+2.  Update travis build status in `master` branch `README.md` from:
 
     ```
     [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)

@@ -680,6 +680,8 @@ class ModflowOc(Package):
                     
         # reset unit numbers
         unitnumber=[14, 51, 52, 53]
+        for u in unitnumber:
+            model.add_pop_key_list(u)
         if ihedun > 0:
             model.add_pop_key_list(ihedun)
         if iddnun > 0:
