@@ -571,3 +571,74 @@ class Mt3dms(BaseModel):
         r = r.view(np.recarray)
         return r
 
+
+    @staticmethod
+    def load_obs(fname):
+        """
+        Load an mt3d obs file and return a numpy recarray
+
+        Parameters
+        ----------
+        fname : str
+            name of MT3D obs file
+
+        Returns
+        -------
+        r : np.ndarray
+
+        """
+        firstline = 'STEP   TOTAL TIME             LOCATION OF OBSERVATION POINTS (K,I,J)'
+        dtype = [('step', int), ('time', float)]
+        nobs = 0
+        obs = []
+
+        if not os.path.isfile(fname):
+            raise Exception('Could not find file: {}'.format(fname))
+        with open(fname, 'r') as f:
+            line = f.readline()
+            if line.strip() != firstline:
+                msg = 'First line in file must be \n{}\nFound {}'.format(firstline, line.strip())
+                msg += '\n{} does not appear to be a valid MT3D OBS file'.format(fname)
+                raise Exception(msg)
+
+            # Read obs names (when break, line will have first data line)
+            nlineperrec = 0
+            while True:
+                line = f.readline()
+                if line[0:7].strip() == '1':
+                    break
+                nlineperrec += 1
+                ll = line.strip().split()
+                while len(ll) > 0:
+                    k = int(ll.pop(0))
+                    i = int(ll.pop(0))
+                    j = int(ll.pop(0))
+                    obsnam = '({}, {}, {})'.format(k, i, j)
+                    if obsnam in obs:
+                        obsnam += str(len(obs) + 1) # make obs name unique
+                    obs.append(obsnam)
+
+            icount = 0
+            r = []
+            while True:
+                ll = []
+                for n in range(nlineperrec):
+                    icount += 1
+                    if icount > 1:
+                        line = f.readline()
+                    ll.extend(line.strip().split())
+
+                if not line:
+                    break
+
+                rec = [int(ll[0])]
+                for val in ll[1:]:
+                    rec.append(float(val))
+                r.append(tuple(rec))
+
+        # add obs names to dtype
+        for nameob in obs:
+            dtype.append((nameob, float))
+        r = np.array(r, dtype=dtype)
+        r = r.view(np.recarray)
+        return r

@@ -279,7 +279,7 @@ class Modflow(BaseModel):
 
     def write_name_file(self):
         """
-        Write the model files.
+        Write the model name file.
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')

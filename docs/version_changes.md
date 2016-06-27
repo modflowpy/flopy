@@ -1,19 +1,32 @@
 FloPy Changes
 -----------------------------------------------
 
+### Version 3.2.6
+* Document your new features.
+
+* Bug fixes:
+  1. Document your bug fixes.
+
+
 ### Version 3.2.5
 * Added support for LAK and GAGE packages - full load and write functionality supported.
+* Added support for MNW2 package. Load and write of .mnw2 package files supported. Support for .mnwi, or the results files (.qsu, .byn) not yet implemented.
 * Improved support for changing the output format of arrays and variables written to MODFLOW input files. 
 * Restructued SEAWAT support so that packages can be added directly to the SEAWAT model, in addition to the approach of adding a modflow model and a mt3d model.  Can now load a SEAWAT model.
 * Added load support for MT3DMS Reactions package
 * Added multi-species support for MT3DMS Reactions package
+* Added static method to Mt3dms().load_mas that reads an MT3D mass file and returns a recarray
+* Added static method to Mt3dms().load_obs that reads an MT3D mass file and returns a recarray
+* Added method to flopy.modpath.Modpath to create modpath simulation file from modflow model instance boundary conditions. Also added examples of creating modpath files and post-processing modpath pathline and endpoint files to the flopy3_MapExample notebook.
 
 * Bug fixes:
   1. Fixed issue with VK parameters for LPF and UPW packages.
   2. Fixed issue with MT3D ADV load in cases where empty fields were present in the first line of the file.
   3. Fixed cross-section array plotting issues.
   4. BTN observation locations must now be entered in zero-based indices (a 1 is now added to the index values written to btn file)
-  5. Added static method to Mt3dms().load_mas that reads an MT3D mass file and returns a recarray
+  5. Uploaded supporting files for SFR example notebook; fixed issue with segment_data submitted as array (instead of dict) and as 0d array(s).
+  6. Fixed CHD Package so that it now supports options, and therefore, auxiliary variables can be specified.
+  7. Fixed loading BTN save times when numbers are touching. 
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).

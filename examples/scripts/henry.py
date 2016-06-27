@@ -33,7 +33,7 @@ hk = 864.  #m/day
 # Create the basic MODFLOW model structure
 modelname = 'henry'
 #mf = flopy.modflow.Modflow(modelname, exe_name='swt_v4', model_ws=workspace)
-mswt = flopy.seawat.Seawat2(modelname,exe_name="swt_v4",model_ws=workspace)
+mswt = flopy.seawat.Seawat(modelname,exe_name="swt_v4",model_ws=workspace)
 
 
 # Add DIS package to the MODFLOW model
