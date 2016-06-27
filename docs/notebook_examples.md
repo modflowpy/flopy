@@ -31,9 +31,9 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 #### SWI2 examples
 
-+ [Example 1](../examples/Notebooks/flopy3_swipackage_ex1.ipynb) of the SWI2 manual, simulating a rotating interface.
++ [Example 1](../examples/Notebooks/flopy3_swi2package_ex1.ipynb) of the SWI2 manual, simulating a rotating interface.
 
-+ [Example 4](../examples/Notebooks/flopy3_swipackage_ex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
++ [Example 4](../examples/Notebooks/flopy3_swi2package_ex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
 
 #### Model checking examples
 
@@ -49,7 +49,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 #### Export examples
 
-+ An overview of the FloPy [netCDF export capabilities](../examples/Notebooks/flopy3_netCDF.ipynb).
++ An overview of the FloPy [netCDF and shapefile export capabilities](../examples/Notebooks/flopy3_export.ipynb).
 
 #### Parameter Estimation examples
 

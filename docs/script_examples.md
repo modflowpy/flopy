@@ -17,4 +17,6 @@ FloPy scripts for running and post-processing the lake example and SWI2 Examples
 
 + [SWI2 Example 5](examples/scripts/flopy_swi2_ex5.py)
 
++ [Henry problem using SEAWAT version 4](examples/scripts/henry.py)
+
 Note that examples 2 and 5 also include FloPy code for running and post-processing SEAWAT models.

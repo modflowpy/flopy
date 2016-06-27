@@ -19,6 +19,7 @@ FloPy Changes
   4. BTN observation locations must now be entered in zero-based indices (a 1 is now added to the index values written to btn file)
   5. Uploaded supporting files for SFR example notebook; fixed issue with segment_data submitted as array (instead of dict) and as 0d array(s).
   6. Fixed CHD Package so that it now supports options, and therefore, auxiliary variables can be specified.
+  7. Fixed loading BTN save times when numbers are touching. 
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).
