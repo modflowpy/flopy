@@ -177,7 +177,7 @@ iso[1, 30, 35] = 2
 ssz=0.2
 # swi2 observations
 obsnam = ['layer1_', 'layer2_']
-obslrc=[[1, 31, 36], [2, 31, 36]]
+obslrc=[[0, 30, 35], [1, 30, 35]]
 nobs = len(obsnam)
 iswiobs = 1051 
 
