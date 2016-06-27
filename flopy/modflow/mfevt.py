@@ -274,7 +274,7 @@ class ModflowEvt(Package):
                     if model.verbose:
                         print('   loading ievt stress period {0:3d}...'.format(
                             iper+1))
-                    t = Util2d.load(f, model, (nrow, ncol), np.int32, 'ievt',
+                    t = Util2d.load(f, model, (nrow, ncol), np.int, 'ievt',
                                      ext_unit_dict)
                     current_ievt = t
                 ievt[iper] = current_ievt

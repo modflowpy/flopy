@@ -1,0 +1,19 @@
+    5   17   22    2    4    0  NLAY,NROW,NCOL,NPER,ITMUNI,LENUNI
+ 0 0 0 0 0
+  internal       1.0 (7F10.0)                     0
+      250.     1000.     1000.     1000.      500.      500.      500.
+      500.      500.      500.      500.      500.      500.      500.
+      500.      500.      500.      500.      500.     1000.     1000.
+      250.
+  internal       1.0 (7F10.0)                     0
+      250.     1000.     1000.     1000.     1000.     1000.      500.
+      500.      500.      500.      500.     1000.     1000.     1000.
+     1000.     1000.      250.
+CONSTANT   3.000000E+02  TOP of system          
+CONSTANT  107. Layer BOTM layer   1
+CONSTANT  97.  Layer BOTM layer   2
+CONSTANT  87.  Layer BOTM layer   3
+CONSTANT  77.  Layer BOTM layer   4
+CONSTANT  6.700000E+01  Layer BOTM layer   5
+      400.        50      1.03  TR
+      400.        50      1.03  TR

@@ -9,6 +9,13 @@ from __future__ import print_function
 import sys
 import os
 import subprocess as sp
+import time
+import threading
+if sys.version_info > (3,0):
+    import queue as Queue
+else:
+    import Queue
+from datetime import datetime
 import copy
 import numpy as np
 from flopy import utils
@@ -92,54 +99,56 @@ class BaseModel(object):
         self.cl_params = ''
 
         # check for reference info in kwargs
-        xul = kwargs.pop("xul", None)
-        yul = kwargs.pop("yul", None)
-        rotation = kwargs.pop("rotation", 0.0)
-        proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
-        self.start_datetime = kwargs.pop("start_datetime", "1-1-1970")
-        self._sr = utils.SpatialReference(xul=xul, yul=yul, rotation=rotation,
-                                          proj4_str=proj4_str)
+        # we are just carrying these until a dis package is added
+        self._xul = kwargs.pop("xul", None)
+        self._yul = kwargs.pop("yul", None)
+        self._rotation = kwargs.pop("rotation", 0.0)
+        self._proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+        self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # Model file information
         # external option stuff
         self.array_free_format = True
+        self.free_format_input = True
         self.array_format = None
         self.external_fnames = []
         self.external_units = []
         self.external_binflag = []
+        self.external_output = []
         self.package_units = []
 
         return
 
-    def set_free_format(self, value=True):
-        """
-        Set the free format flag for the model instance
-
-        Parameters
-        ----------
-        value : bool
-            Boolean value to set free format flag for model. (default is True)
-
-        Returns
-        -------
-
-        """
-        if not isinstance(value, bool):
-            print('Error: set_free_format passed value must be a boolean')
-            return False
-        self.array_free_format = value
-
-    def get_free_format(self):
-        """
-        Return the free format flag for the model
-
-        Returns
-        -------
-        out : bool
-            Free format flag for the model
-
-        """
-        return self.array_free_format
+    # we don't need these - no need for controlled access to array_free_format
+    # def set_free_format(self, value=True):
+    #     """
+    #     Set the free format flag for the model instance
+    #
+    #     Parameters
+    #     ----------
+    #     value : bool
+    #         Boolean value to set free format flag for model. (default is True)
+    #
+    #     Returns
+    #     -------
+    #
+    #     """
+    #     if not isinstance(value, bool):
+    #         print('Error: set_free_format passed value must be a boolean')
+    #         return False
+    #     self.array_free_format = value
+    #
+    # def get_free_format(self):
+    #     """
+    #     Return the free format flag for the model
+    #
+    #     Returns
+    #     -------
+    #     out : bool
+    #         Free format flag for the model
+    #
+    #     """
+    #     return self.array_free_format
 
     def next_ext_unit(self):
         """
@@ -184,6 +193,7 @@ class BaseModel(object):
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
 
+
     def remove_package(self, pname):
         """
         Remove a package from this model
@@ -211,7 +221,7 @@ class BaseModel(object):
         ----------
         item : str
             3 character package name (case insensitive) or "sr" to access
-            the SpatialReference instance
+            the SpatialReference instance of the ModflowDis object
 
 
         Returns
@@ -228,14 +238,18 @@ class BaseModel(object):
         """
         if item == 'sr':
             if self.dis is not None:
-                self._sr.reset(delr=self.dis.delr.array,
-                               delc=self.dis.delc.array,
-                               lenuni=self.dis.lenuni)
-            return self._sr
+                return self.dis.sr
+            else:
+                return None
+        if item == "start_datetime":
+            if self.dis is not None:
+                return self.dis.start_datetime
+            else:
+                return None
 
         return self.get_package(item)
 
-    def add_external(self, fname, unit, binflag=False):
+    def add_external(self, fname, unit, binflag=False, output=False):
         """
         Assign an external array so that it will be listed as a DATA or
         DATA(BINARY) entry in the name file.  This will allow an outside
@@ -258,10 +272,12 @@ class BaseModel(object):
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
             self.external_binflag.pop(idx)
+            self.external_output.pop(idx)
 
         self.external_fnames.append(fname)
         self.external_units.append(unit)
         self.external_binflag.append(binflag)
+        self.external_output.append(output)
         return
 
     def remove_external(self, fname=None, unit=None):
@@ -283,12 +299,14 @@ class BaseModel(object):
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
+                    self.external_output.pop(i)
         elif unit is not None:
             for i, u in enumerate(self.external_units):
                 if u == unit:
                     self.external_fnames.pop(i)
                     self.external_units.pop(i)
                     self.external_binflag.pop(i)
+                    self.external_output.pop(i)
         else:
             raise Exception(
                 ' either fname or unit must be passed to remove_external()')
@@ -404,6 +422,7 @@ class BaseModel(object):
                         new_pth, os.getcwd()))
                 new_pth = os.getcwd()
         # --reset the model workspace
+        old_pth = self._model_ws
         self._model_ws = new_pth
         sys.stdout.write(
             '\nchanging model workspace...\n   {}\n'.format(new_pth))
@@ -418,15 +437,22 @@ class BaseModel(object):
             pth = os.path.join(self._model_ws, self.external_path)
             os.makedirs(pth)
             if reset_external:
-                self._reset_external(pth)
+                self._reset_external(pth, old_pth)
         elif reset_external:
-            self._reset_external(self._model_ws)
+            self._reset_external(self._model_ws, old_pth)
         return None
 
-    def _reset_external(self, pth):
+    def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
-        for ext_file in self.external_fnames:
-            new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+        for ext_file, output in zip(self.external_fnames, self.external_output):
+            #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+            # this is a wicked mess
+            if output:
+                #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+                new_ext_file = ext_file
+            else:
+                fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 
@@ -453,13 +479,29 @@ class BaseModel(object):
 
     def __setattr__(self, key, value):
 
-        if key == "name":
+        if key == "free_format_input":
+            #if self.bas6 is not None:
+            #    self.bas6.ifrefm = value
+            super(BaseModel, self).__setattr__(key, value)
+
+        elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
             self.change_model_ws(value)
         elif key == "sr":
             assert isinstance(value, utils.SpatialReference)
-            self._sr = value
+            if self.dis is not None:
+                self.dis.sr = value
+            else:
+                raise Exception("cannot set SpatialReference -"
+                                "ModflowDis not found")
+        elif key == "start_datetime":
+            if self.dis is not None:
+                self.dis.start_datetime = value
+            else:
+                raise Exception("cannot set start_datetime -"
+                                "ModflowDis not found")
+
         else:
             super(BaseModel, self).__setattr__(key, value)
 
@@ -513,17 +555,17 @@ class BaseModel(object):
             self.check(f='{}.chk'.format(self.name), verbose=self.verbose,
                        level=1)
 
-        # org_dir = os.getcwd()
-        # os.chdir(self.model_ws)
         if self.verbose:
             print('\nWriting packages:')
+
         if SelPackList == False:
             for p in self.packagelist:
                 if self.verbose:
                     print('   Package: ', p.name[0])
-                # prevent individual package checks from running after model-level package check above
+                # prevent individual package checks from running after
+                # model-level package check above
                 # otherwise checks are run twice
-                # or the model level check proceedure would have to be split up
+                # or the model level check procedure would have to be split up
                 # or each package would need a check arguemnt,
                 # or default for package level check would have to be False
                 try:
@@ -536,11 +578,11 @@ class BaseModel(object):
                     if pon in p.name:
                         if self.verbose:
                             print('   Package: ', p.name[0])
-                    try:
-                        p.write_file(check=False)
-                    except TypeError:
-                        p.write_file()
-                        break
+                        try:
+                            p.write_file(check=False)
+                        except TypeError:
+                            p.write_file()
+                            break
         if self.verbose:
             print(' ')
         # write name file
@@ -817,9 +859,12 @@ class BaseModel(object):
 
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
-              normal_msg='normal termination'):
+              normal_msg='normal termination',
+              async=False):
     """
-    This function will run the model using subprocess.Popen.
+    This function will run the model using subprocess.Popen.  It
+    communicates with the model's stdout asynchronously and reports
+    progress to the screen with timestamps
 
     Parameters
     ----------
@@ -841,7 +886,10 @@ def run_model(exe_name, namefile, model_ws='./',
     normal_msg : str
         Normal termination message used to determine if the
         run terminated normally. (default is 'normal termination')
-
+    async : boolean
+        asynchonously read model stdout and report with timestamps.  good for
+        models that take long time to run.  not good for models that run
+        really fast
     Returns
     -------
     (success, buff)
@@ -856,7 +904,6 @@ def run_model(exe_name, namefile, model_ws='./',
     exe = which(exe_name)
     if exe is None:
         import platform
-
         if platform.system() in 'Windows':
             if not exe_name.lower().endswith('.exe'):
                 exe = which(exe_name + '.exe')
@@ -874,21 +921,77 @@ def run_model(exe_name, namefile, model_ws='./',
         s = 'The namefile for this model does not exists: {}'.format(namefile)
         raise Exception(s)
 
+    # simple little function for the thread to target
+    def q_output(output,q):
+            for line in iter(output.readline,b''):
+                q.put(line)
+            #time.sleep(1)
+            #output.close()
+
     proc = sp.Popen([exe_name, namefile],
                     stdout=sp.PIPE, cwd=model_ws)
+
+    if not async:
+        while True:
+            line = proc.stdout.readline()
+            c = line.decode('utf-8')
+            if c != '':
+                if normal_msg in c.lower():
+                    success = True
+                c = c.rstrip('\r\n')
+                if not silent:
+                    print('{}'.format(c))
+                if report == True:
+                    buff.append(c)
+            else:
+                break
+        return success, buff
+
+
+    #some tricks for the async stdout reading
+    q = Queue.Queue()
+    thread = threading.Thread(target=q_output,args=(proc.stdout,q))
+    thread.daemon = True
+    thread.start()
+
+    failed_words = ["fail","error"]
+    last = datetime.now()
+    lastsec = 0.
     while True:
-        line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            if normal_msg in c.lower():
-                success = True
-            c = c.rstrip('\r\n')
-            if not silent:
-                print('{}'.format(c))
-            if report == True:
-                buff.append(c)
+        try:
+            line = q.get_nowait()
+        except Queue.Empty:
+            pass
         else:
+            if line == '':
+                break
+            line = line.decode().lower().strip()
+            if line != '':
+                now = datetime.now()
+                dt = now - last
+                tsecs = dt.total_seconds() - lastsec
+                line = "(elapsed:{0})-->{1}".format(tsecs,line)
+                lastsec = tsecs + lastsec
+                buff.append(line)
+                if not silent:
+                    print(line)
+                for fword in failed_words:
+                    if fword in line:
+                        success = False
+                        break
+        if proc.poll() is not None:
             break
+    proc.wait()
+    thread.join(timeout=1)
+    buff.extend(proc.stdout.readlines())
+    proc.stdout.close()
+
+    for line in buff:
+        if normal_msg in line:
+            print("success")
+            success = True
+            break
+
     if pause:
         input('Press Enter to continue...')
     return success, buff

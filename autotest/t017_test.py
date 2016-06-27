@@ -9,7 +9,7 @@ def test_formattedfile_read():
     assert isinstance(h, flopy.utils.FormattedHeadFile)
 
     times = h.get_times()
-    assert abs(times[0] - 1577880064.0) < 1e-6, 'times[0] != {}'.format(times[0])
+    assert np.isclose(times[0], 1577880064.0)
 
     kstpkper = h.get_kstpkper()
     assert kstpkper[0] == (49, 0), 'kstpkper[0] != (49, 0)'
@@ -21,8 +21,8 @@ def test_formattedfile_read():
     assert np.array_equal(h0, h2), 'formatted head read using totim != head read using idx'
 
     ts = h.get_ts((0, 7, 5))
-    assert abs(ts[0, 1] - 976.801025390625) < 1e-6, \
-        'time series value ({}) != 976.801 - difference = {}'.format(ts[0, 1], abs(ts[0, 1] - 976.801025390625))
+    assert np.isclose(ts[0, 1], 944.487, 1e-6), \
+        'time series value ({}) != {}'.format(ts[0, 1], 944.487)
     return
 
 
@@ -34,7 +34,7 @@ def test_binaryfile_read():
     assert isinstance(h, flopy.utils.HeadFile)
 
     times = h.get_times()
-    assert abs(times[0] - 10.0) < 1e-6, 'times[0] != {}'.format(times[0])
+    assert np.isclose(times[0], 10.0), 'times[0] != {}'.format(times[0])
 
     kstpkper = h.get_kstpkper()
     assert kstpkper[0] == (0, 0), 'kstpkper[0] != (0, 0)'
@@ -46,8 +46,8 @@ def test_binaryfile_read():
     assert np.array_equal(h0, h2), 'binary head read using totim != head read using idx'
 
     ts = h.get_ts((0, 7, 5))
-    assert abs(ts[0, 1] - 26.00697135925293) < 1e-6, \
-        'time series value ({}) != 976.801 - difference = {}'.format(ts[0, 1], abs(ts[0, 1] - 26.00697135925293))
+    assert np.isclose(ts[0, 1], 26.00697135925293), \
+        'time series value ({}) != {}'.format(ts[0, 1], - 26.00697135925293)
     return
 
 

@@ -1,23 +1,22 @@
-import flopy
+import os
+import sys
+import numpy as np
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
-from .mtadv import Mt3dAdv
 from .mtbtn import Mt3dBtn
+from .mtadv import Mt3dAdv
 from .mtdsp import Mt3dDsp
-from .mtgcg import Mt3dGcg
-from .mtphc import Mt3dPhc
-from .mtrct import Mt3dRct
 from .mtssm import Mt3dSsm
+from .mtrct import Mt3dRct
+from .mtgcg import Mt3dGcg
 from .mttob import Mt3dTob
-import os
-import sys
-
+from .mtphc import Mt3dPhc
 
 class Mt3dList(Package):
-    '''
+    """
     List package class
-    '''
+    """
 
     def __init__(self, model, extension='list', listunit=7):
         # Call ancestor's init to set self.parent, extension, name and
@@ -164,14 +163,14 @@ class Mt3dms(BaseModel):
     ----------
     modelname : string, optional
         Name of model.  This string will be used to name the MODFLOW input
-        that are created with write_model. (the default is 'modflowtest')
+        that are created with write_model. (the default is 'mt3dtest')
     namefile_ext : string, optional
         Extension for the namefile (the default is 'nam')
     version : string, optional
-        Version of MODFLOW to use (the default is 'mf2005').
+        Version of MT3DMS to use (the default is 'mt3dms').
     exe_name : string, optional
         The name of the executable to use (the default is
-        'mf2005').
+        'mt3dms.exe').
     listunit : integer, optional
         Unit number for the list file (the default is 2).
     model_ws : string, optional
@@ -255,14 +254,14 @@ class Mt3dms(BaseModel):
         # Create a dictionary to map package with package object.
         # This is used for loading models.
         self.mfnam_packages = {
-            'btn': flopy.mt3d.Mt3dBtn,
-            'adv': flopy.mt3d.Mt3dAdv,
-            'dsp': flopy.mt3d.Mt3dDsp,
-            'ssm': flopy.mt3d.Mt3dSsm,
-            'rct': flopy.mt3d.Mt3dRct,
-            'gcg': flopy.mt3d.Mt3dGcg,
-            'tob': flopy.mt3d.Mt3dTob,
-            'phc': flopy.mt3d.Mt3dPhc,
+            'btn': Mt3dBtn,
+            'adv': Mt3dAdv,
+            'dsp': Mt3dDsp,
+            'ssm': Mt3dSsm,
+            'rct': Mt3dRct,
+            'gcg': Mt3dGcg,
+            'tob': Mt3dTob,
+            'phc': Mt3dPhc,
         }
         return
 
@@ -344,7 +343,7 @@ class Mt3dms(BaseModel):
 
     @staticmethod
     def load(f, version='mt3dms', exe_name='mt3dms.exe', verbose=False,
-             model_ws='.', load_only=None):
+             model_ws='.', load_only=None, forgive=False):
         """
         Load an existing model.
 
@@ -428,18 +427,23 @@ class Mt3dms(BaseModel):
                 btn = item
                 btn_key = key
                 break
+
+        if btn is None:
+            return None
+
         try:
             pck = btn.package.load(btn.filename, mt,
                                    ext_unit_dict=ext_unit_dict)
-            files_succesfully_loaded.append(btn.filename)
-            if mt.verbose:
-                sys.stdout.write('   {:4s} package load...success\n'
-                                 .format(pck.name[0]))
-            ext_unit_dict.pop(btn_key)
-        except Exception as e:
-            s = 'Could not read btn package: {}. Stopping...' \
-                .format(os.path.basename(btn.filename))
-            raise Exception(s + " " + str(e))
+        except:
+            if forgive:
+                return None
+            else:
+                raise Exception('BTN not found in name file.')
+        files_succesfully_loaded.append(btn.filename)
+        if mt.verbose:
+            sys.stdout.write('   {:4s} package load...success\n'
+                             .format(pck.name[0]))
+        ext_unit_dict.pop(btn_key)
 
         if load_only is None:
             load_only = []
@@ -533,3 +537,102 @@ class Mt3dms(BaseModel):
 
         # return model object
         return mt
+
+    @staticmethod
+    def load_mas(fname):
+        """
+        Load an mt3d mas file and return a numpy recarray
+
+        Parameters
+        ----------
+        fname : str
+            name of MT3D mas file
+
+        Returns
+        -------
+        r : np.ndarray
+
+        """
+        if not os.path.isfile(fname):
+            raise Exception('Could not find file: {}'.format(fname))
+        dtype = [('time', float), ('total_in', float),
+                 ('total_out', float),
+                 ('sources', float), ('sinks', float),
+                 ('fluid_storage', float),
+                 ('total_mass', float), ('error_in-out', float),
+                 ('error_alt', float)]
+        r = np.loadtxt(fname, skiprows=2, dtype=dtype)
+        r = r.view(np.recarray)
+        return r
+
+
+    @staticmethod
+    def load_obs(fname):
+        """
+        Load an mt3d obs file and return a numpy recarray
+
+        Parameters
+        ----------
+        fname : str
+            name of MT3D obs file
+
+        Returns
+        -------
+        r : np.ndarray
+
+        """
+        firstline = 'STEP   TOTAL TIME             LOCATION OF OBSERVATION POINTS (K,I,J)'
+        dtype = [('step', int), ('time', float)]
+        nobs = 0
+        obs = []
+
+        if not os.path.isfile(fname):
+            raise Exception('Could not find file: {}'.format(fname))
+        with open(fname, 'r') as f:
+            line = f.readline()
+            if line.strip() != firstline:
+                msg = 'First line in file must be \n{}\nFound {}'.format(firstline, line.strip())
+                msg += '\n{} does not appear to be a valid MT3D OBS file'.format(fname)
+                raise Exception(msg)
+
+            # Read obs names (when break, line will have first data line)
+            nlineperrec = 0
+            while True:
+                line = f.readline()
+                if line[0:7].strip() == '1':
+                    break
+                nlineperrec += 1
+                ll = line.strip().split()
+                while len(ll) > 0:
+                    k = int(ll.pop(0))
+                    i = int(ll.pop(0))
+                    j = int(ll.pop(0))
+                    obsnam = '({}, {}, {})'.format(k, i, j)
+                    if obsnam in obs:
+                        obsnam += str(len(obs) + 1) # make obs name unique
+                    obs.append(obsnam)
+
+            icount = 0
+            r = []
+            while True:
+                ll = []
+                for n in range(nlineperrec):
+                    icount += 1
+                    if icount > 1:
+                        line = f.readline()
+                    ll.extend(line.strip().split())
+
+                if not line:
+                    break
+
+                rec = [int(ll[0])]
+                for val in ll[1:]:
+                    rec.append(float(val))
+                r.append(tuple(rec))
+
+        # add obs names to dtype
+        for nameob in obs:
+            dtype.append((nameob, float))
+        r = np.array(r, dtype=dtype)
+        r = r.view(np.recarray)
+        return r

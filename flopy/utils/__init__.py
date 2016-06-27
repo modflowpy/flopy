@@ -21,7 +21,7 @@
 
     """
 from .mfreadnam import parsenamefile
-from .util_array import Util3d, Util2d, Transient2d, read1d
+from .util_array import Util3d, Util2d, Transient2d, Transient3d, read1d
 from .util_list import MfList
 from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
 from .formattedfile import FormattedHeadFile
@@ -34,3 +34,5 @@ from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget
 from .check import check, get_neighbors
 from .utils_def import FlopyBinaryData, totim_to_datetime
+from .flopy_io import read_fixed_var, write_fixed_var
+from .zonbud_utils import write_zonfile, run_zonbud

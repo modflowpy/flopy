@@ -4,15 +4,16 @@ import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
-skip = ["MNW2-Fig28.nam","testsfr2.nam","testsfr2_tab.nam"]
+#skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
+skip = []
 
 def export_netcdf(namfile):
     if namfile in skip:
         return
     print(namfile)
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
-    if m.dis.lenuni == 0:
-        m.dis.lenuni = 1
+    if m.sr.lenuni == 0:
+        m.sr.lenuni = 1
         #print('skipping...lenuni==0 (undefined)')
         #return
     #if sum(m.dis.laycbd) != 0:
@@ -40,6 +41,8 @@ def export_netcdf(namfile):
     except Exception as e:
         raise Exception('ncdf import fail for nc file {0}'.format(fnc_name))
     return
+
+
 def export_shapefile(namfile):
 
     try:
@@ -66,6 +69,219 @@ def export_shapefile(namfile):
                                            "shapefile {0}:{1:d}".format(fnc_name,s.numRecords)
     return
 
+
+def test_export_output():
+    import os
+    import numpy as np
+    import flopy
+
+    model_ws = os.path.join("..","examples","data","freyberg")
+    ml = flopy.modflow.Modflow.load("freyberg.nam",model_ws=model_ws)
+    hds_pth = os.path.join(model_ws,"freyberg.githds")
+    hds = flopy.utils.HeadFile(hds_pth)
+
+    out_pth = os.path.join("temp","freyberg.out.nc")
+    nc = flopy.export.utils.output_helper(out_pth,ml,{"freyberg.githds":hds})
+    var = nc.nc.variables.get("head")
+    arr = var[:]
+    ibound_mask = ml.bas6.ibound.array == 0
+    arr_mask = arr.mask[0]
+    assert np.array_equal(ibound_mask,arr_mask)
+
+
+def test_mbase_sr():
+    import numpy as np
+    import flopy
+
+    ml = flopy.modflow.Modflow(modelname="test",xul=1000.0,
+                               rotation=12.5,start_datetime="1/1/2016")
+    try:
+        print(ml.sr.xcentergrid)
+    except:
+        pass
+    else:
+        raise Exception("should have failed")
+
+    dis = flopy.modflow.ModflowDis(ml,nrow=10,ncol=5,delr=np.arange(5),xul=500)
+    print(ml.sr)
+    assert ml.sr.xul == 500
+    assert ml.sr.yul == 10
+    ml.model_ws = "temp"
+
+    ml.write_input()
+    ml1 = flopy.modflow.Modflow.load("test.nam",model_ws="temp")
+    assert ml1.sr == ml.sr
+    assert ml1.start_datetime == ml.start_datetime
+
+
+def test_free_format_flag():
+    import flopy
+    Lx = 100.
+    Ly = 100.
+    nlay = 1
+    nrow = 51
+    ncol = 51
+    delr = Lx / ncol
+    delc = Ly / nrow
+    top = 0
+    botm = [-1]
+    ms = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(ms, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                                   delc=delc, top=top, botm=botm)
+    bas = flopy.modflow.ModflowBas(ms,ifrefm=True)
+    assert ms.free_format_input == bas.ifrefm
+    ms.free_format_input = False
+    assert ms.free_format_input == bas.ifrefm
+    ms.free_format_input = True
+    bas.ifrefm = False
+    assert ms.free_format_input == bas.ifrefm
+    bas.ifrefm = True
+    assert ms.free_format_input == bas.ifrefm
+
+    ms.model_ws = "temp"
+    ms.write_input()
+    ms1 = flopy.modflow.Modflow.load(ms.namefile,model_ws=ms.model_ws)
+    assert ms1.free_format_input == ms.free_format_input
+    assert ms1.free_format_input == ms1.bas6.ifrefm
+    ms1.free_format_input = False
+    assert ms1.free_format_input == ms1.bas6.ifrefm
+    bas.ifrefm = False
+    assert ms1.free_format_input == ms1.bas6.ifrefm
+    bas.ifrefm = True
+    assert ms1.free_format_input == ms1.bas6.ifrefm
+
+
+def test_sr():
+    import flopy
+    Lx = 100.
+    Ly = 100.
+    nlay = 1
+    nrow = 51
+    ncol = 51
+    delr = Lx / ncol
+    delc = Ly / nrow
+    top = 0
+    botm = [-1]
+    ms = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(ms, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                                   delc=delc, top=top, botm=botm)
+    bas = flopy.modflow.ModflowBas(ms,ifrefm=True)
+
+    sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,delc=ms.dis.delc.array,lenuni=3,
+                                      xul=321,yul=123,rotation=20)
+    assert ms.sr.yul == 100
+    ms.sr.xul = 111
+    assert ms.sr.xul == 111
+
+    ms.sr.lenuni = 1
+    assert ms.sr.lenuni == 1
+
+    ms.sr.units = "feet"
+    assert ms.sr.units == "feet"
+
+    ms.sr = sr
+    assert ms.sr == sr
+    assert ms.sr.lenuni != ms.dis.lenuni
+
+    try:
+        ms.sr.units = "junk"
+    except:
+        pass
+    else:
+        raise Exception("should have failed")
+
+    ms.start_datetime = "1-1-2016"
+    assert ms.start_datetime == "1-1-2016"
+    assert ms.dis.start_datetime == "1-1-2016"
+
+    ms.model_ws = "temp"
+    ms.write_input()
+    ms1 = flopy.modflow.Modflow.load(ms.namefile,model_ws=ms.model_ws)
+    assert ms1.sr == ms.sr
+    assert ms1.dis.sr == ms.dis.sr
+    assert ms1.start_datetime == ms.start_datetime
+    assert ms1.sr.units == ms.sr.units
+    assert ms1.dis.lenuni == ms1.sr.lenuni
+    assert ms1.sr.lenuni != sr.lenuni
+    ms1.sr = sr
+    assert ms1.sr == ms.sr
+
+
+def test_netcdf_classmethods():
+    import os
+    import flopy
+    nam_file = "freyberg.nam"
+    model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+    ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
+                                    verbose=True,load_only=[])
+
+    f = ml.export(os.path.join("temp","freyberg.nc"))
+    v1_set = set(f.nc.variables.keys())
+    new_f = flopy.export.NetCdf.zeros_like(f)
+    v2_set = set(new_f.nc.variables.keys())
+    diff = v1_set.symmetric_difference(v2_set)
+    assert len(diff) == 0,str(diff)
+
+# def test_netcdf_overloads():
+#     import os
+#     import flopy
+#     nam_file = "freyberg.nam"
+#     model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+#     ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
+#                                     verbose=False,load_only=[])
+#
+#     f = ml.export(os.path.join("temp","freyberg.nc"))
+#     fzero = flopy.export.NetCdf.zeros_like(f)
+#     assert fzero.nc.variables["model_top"][:].sum() == 0
+#     print(f.nc.variables["model_top"][0,:])
+#     fplus1 = f + 1
+#     assert fplus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] + 1
+#     assert (f + fplus1).nc.variables["model_top"][0,0] ==\
+#            f.nc.variables["model_top"][0,0] + \
+#            fplus1.nc.variables["model_top"][0,0]
+#
+#     fminus1 = f - 1
+#     assert fminus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] - 1
+#     assert (f - fminus1).nc.variables["model_top"][0,0]==\
+#            f.nc.variables["model_top"][0,0] - \
+#            fminus1.nc.variables["model_top"][0,0]
+#
+#     ftimes2 = f * 2
+#     assert ftimes2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] * 2
+#     assert (f * ftimes2).nc.variables["model_top"][0,0] ==\
+#             f.nc.variables["model_top"][0,0] * \
+#            ftimes2.nc.variables["model_top"][0,0]
+#
+#     fdiv2 = f / 2
+#     assert fdiv2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] / 2
+#     assert (f / fdiv2).nc.variables["model_top"][0,0] == \
+#          f.nc.variables["model_top"][0,0] / \
+#            fdiv2.nc.variables["model_top"][0,0]
+#
+#     assert f.nc.variables["ibound"][0,0,0] == 1
+
+
+def test_shapefile_ibound():
+    import os
+    import flopy
+    try:
+        import shapefile
+    except:
+        return
+
+    shape_name = os.path.join("temp","test.shp")
+    nam_file = "freyberg.nam"
+    model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+    ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
+                                    verbose=True,load_only=[])
+    ml.export(shape_name)
+    shp = shapefile.Reader(shape_name)
+    field_names = [item[0] for item in shp.fields][1:]
+    ib_idx = field_names.index("ibound_001")
+    assert type(shp.record(0)[ib_idx]) == int,"should be int instead of {0}".\
+        format(type(shp.record(0)[ib_idx]))
+
+
 def test_shapefile():
     for namfile in namfiles:
         yield export_shapefile, namfile
@@ -74,10 +290,30 @@ def test_shapefile():
 def test_netcdf():
     for namfile in namfiles:
         yield export_netcdf, namfile
+
     return
 
-if __name__ == '__main__':
-    #for namfile in namfiles:
-    for namfile in ["fhb.nam"]:
+def build_netcdf():
+    for namfile in namfiles:
         export_netcdf(namfile)
+    return
+
+def build_sfr_netcdf():
+    namfile = 'testsfr2.nam'
+    export_netcdf(namfile)
+    return
+
+
+if __name__ == '__main__':
+    #test_shapefile_ibound()
+    #test_netcdf_overloads()
+    #test_netcdf_classmethods()
+    #build_netcdf()
+    build_sfr_netcdf()
+    #test_sr()
+    #test_free_format_flag()
+    #test_export_output()
+    #for namfile in namfiles:
+    #for namfile in ["fhb.nam"]:
+        #export_netcdf(namfile)
         #export_shapefile(namfile)

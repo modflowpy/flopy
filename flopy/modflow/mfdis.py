@@ -9,8 +9,8 @@ MODFLOW Guide
 """
 
 import sys
-import numpy as np
 import warnings
+import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, reference, check
 
@@ -109,7 +109,8 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=11):
+                 unitnumber=11, xul=None, yul=None, rotation=0.0,
+                 proj4_str=None, start_datetime=None):
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
@@ -155,22 +156,24 @@ class ModflowDis(Package):
         self.itmuni_dict = {0: "undefined", 1: "seconds", 2: "minutes",
                             3: "hours", 4: "days", 5: "years"}
 
+        if xul is None:
+            xul = model._xul
+        if yul is None:
+            yul = model._yul
+        if rotation is None:
+            rotation = model._rotation
+        if proj4_str is None:
+            proj4_str = model._proj4_str
+        if start_datetime is None:
+            start_datetime = model._start_datetime
+
+        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
+                                             self.lenuni, xul=xul, yul=yul,
+                                             rotation=rotation,
+                                             proj4_str=proj4_str)
+        self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
-
-
-    @property
-    def sr(self):
-        warnings.warn("ModflowDis.sr is deprecated. use Modflow.sr")
-        return self.parent.sr
-
-
-    @property
-    def start_datetime(self):
-        warnings.warn("ModflowDis.start_datetime is deprecated. "+
-                      "use Modflow.start_datetime")
-        return self.parent.start_datetime
-
 
     def checklayerthickness(self):
         """
@@ -518,6 +521,47 @@ class ModflowDis(Package):
         chk.summarize()
         return chk
 
+        '''
+        if f is not None:
+            if isinstance(f, str):
+                pth = os.path.join(self.parent.model_ws, f)
+                f = open(pth, 'w', 0)
+
+        errors = False
+        txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.name[0])
+        t = ''
+        t1 = ''
+        inactive = self.parent.bas6.ibound.array == 0
+        # thickness errors
+        d = self.thickness.array
+        d[inactive] = 1.
+        if d.min() <= 0:
+            errors = True
+            t = '{}  ERROR: Negative or zero cell thickness specified.\n'.format(t)
+            if level > 0:
+                idx = np.column_stack(np.where(d <= 0.))
+                t1 = self.level1_arraylist(idx, d, self.thickness.name, t1)
+        else:
+            t = '{}  Specified cell thickness is OK.\n'.format(t)
+
+        # add header to level 0 text
+        txt += t
+
+        if level > 0:
+            if errors:
+                txt += '\n  DETAILED SUMMARY OF {} ERRORS:\n'.format(self.name[0])
+                # add level 1 header to level 1 text
+                txt += t1
+
+        # write errors to summary file
+        if f is not None:
+            f.write('{}\n'.format(txt))
+
+        # write errors to stdout
+        if verbose:
+            print(txt)
+        '''
+
     @staticmethod
     def load(f, model, ext_unit_dict=None, check=True):
         """
@@ -578,38 +622,38 @@ class ModflowDis(Package):
             if "xul" in item.lower():
                 try:
                     xul = float(item.split(':')[1])
-                    dep = True
                 except:
                     pass
+                dep = True
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(':')[1])
-                    dep = True
                 except:
                     pass
+                dep = True
             elif "rotation" in item.lower():
                 try:
                     rotation = float(item.split(':')[1])
-                    dep = True
                 except:
                     pass
+                dep = True
             elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ':'.join(item.split(':')[1:]).strip()
-                    dep = True
                 except:
                     pass
+                dep = True
             elif "start" in item.lower():
                 try:
                     start_datetime = item.split(':')[1].strip()
-                    dep = True
                 except:
                     pass
+                dep = True
         if dep:
-            warnings.warn("reference information found in" +\
-                          " ModflowDis header. This information " +\
-                          " is being ignored.  Please use the namfile")
-
+            warnings.warn("SpatialReference information found in DIS header,"
+                          "this information is being ignored.  "
+                          "SpatialReference info is now stored in the namfile"
+                          "header")
         # dataset 1
         nlay, nrow, ncol, nper, itmuni, lenuni = line.strip().split()[0:6]
         nlay = int(nlay)
@@ -687,9 +731,8 @@ class ModflowDis(Package):
         # create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
-                         lenuni)\
-            #, xul=xul, yul=yul, rotation=rotation,
-            #             proj4_str=proj4_str, start_datetime=start_datetime)
+                         lenuni, xul=xul, yul=yul, rotation=rotation,
+                         proj4_str=proj4_str, start_datetime=start_datetime)
         if check:
             dis.check(f='{}.chk'.format(dis.name[0]), verbose=dis.parent.verbose, level=0)
         # return dis object instance

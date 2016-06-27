@@ -89,14 +89,14 @@ class ModflowChd(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> lrcd = [[[2, 3, 4, 10., 10.1]]]  #this chd will be applied to all
-    >>>                                  #stress periods
+    >>> lrcd = {0:[[2, 3, 4, 10., 10.1]]}   #this chd will be applied to all
+    >>>                                     #stress periods
     >>> chd = flopy.modflow.ModflowChd(m, stress_period_data=lrcd)
 
     """
 
     def __init__(self, model, stress_period_data=None, dtype=None,
-                 extension='chd', unitnumber=24, **kwargs):
+                 options=None, extension='chd', unitnumber=24, **kwargs):
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, 'CHD', unitnumber)
         self.url = 'chd.htm'
@@ -109,6 +109,9 @@ class ModflowChd(Package):
         self.stress_period_data = MfList(self, stress_period_data)
 
         self.np = 0
+        if options is None:
+            options = []
+        self.options = options
         self.parent.add_package(self)
 
     def ncells(self):
@@ -126,7 +129,10 @@ class ModflowChd(Package):
         """
         f_chd = open(self.fn_path, 'w')
         f_chd.write('{0:s}\n'.format(self.heading))
-        f_chd.write(' {0:9d}\n'.format(self.stress_period_data.mxact))
+        f_chd.write(' {0:9d}'.format(self.stress_period_data.mxact))
+        for option in self.options:
+            f_chd.write('  {}'.format(option))
+        f_chd.write('\n')
         self.stress_period_data.write_transient(f_chd)
         f_chd.close()
 

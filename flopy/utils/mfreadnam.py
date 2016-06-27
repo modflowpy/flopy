@@ -142,8 +142,18 @@ def parsenamefile(namfilename, packages, verbose=True):
         if '#' not in tmp[0]:
             # be sure the second value is an integer
             if testint(tmp[1]):
+
+                # need make filenames with paths system agnostic
+                if '/' in tmp[2]:
+                    raw = tmp[2].split('/')
+                elif '\\' in tmp[2]:
+                    raw = tmp[2].split('\\')
+                else:
+                    raw = [tmp[2]]
+                tmp[2] = os.path.join(*raw)
+
                 fname = os.path.join(os.path.dirname(namfilename), tmp[2])
-                if not os.path.isfile(fname):
+                if not os.path.isfile(fname) or not os.path.exists(fname):
                     # change to lower and make comparison (required for linux)
                     dn = os.path.dirname(fname)
                     fls = os.listdir(dn)

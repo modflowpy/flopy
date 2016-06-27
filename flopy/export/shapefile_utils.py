@@ -76,7 +76,10 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             array = array[0, :, :]
         assert array.shape == (sr.nrow, sr.ncol)
         array[np.where(np.isnan(array))] = nan_val
-        wr.field(name, "N", 20, 12)
+        if array.dtype in [np.int,np.int32,np.int64]:
+            wr.field(name, "N", 20, 0)
+        else:
+            wr.field(name, "N", 20, 12)
         arrays.append(array)
 
     for i in range(sr.nrow):
@@ -134,10 +137,13 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
         pak = ml.get_package(pname)
         if pak is not None:
             attrs = dir(pak)
+            if 'sr' in attrs:
+                attrs.remove('sr')
+            if 'start_datetime' in attrs:
+                attrs.remove('start_datetime')
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if isinstance(a, Util2d) and a.shape == (ml.nrow,
-                                                          ml.ncol):
+                if isinstance(a, Util2d) and a.shape == (ml.nrow, ml.ncol):
                     name = a.name.lower()
                     array_dict[name] = a.array
                 elif isinstance(a, Util3d):
@@ -175,21 +181,21 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                                 array_dict[name] = u2d.array
 
     # write data arrays to a shapefile
-    write_grid_shapefile(filename, ml.dis.sr, array_dict)
+    write_grid_shapefile(filename, ml.sr, array_dict)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
     """
-    Function for to format an array name to a maximum of 10 characters to conform
-    with ESRI shapefile maximum attribute name length
+    Function for to format an array name to a maximum of 10 characters to
+    conform with ESRI shapefile maximum attribute name length
 
     Parameters
     ----------
     name : string
         data array name
     length : int
-        maximum length of string to return. Value passed to function is overridden
-        and set to 10 if keep_layer=True. (default is 6)
+        maximum length of string to return. Value passed to function is
+        overridden and set to 10 if keep_layer=True. (default is 6)
     keep_layer : bool
         Boolean that determines if layer number in name should be retained.
         (default is False)

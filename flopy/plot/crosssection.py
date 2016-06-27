@@ -45,10 +45,10 @@ class ModelCrossSection(object):
                 raise Exception('Cannot find discretization package')
             else:
                 self.dis = model.get_package('DIS')
-                self.sr = copy.deepcopy(self.dis.sr)
+                self.sr = copy.deepcopy(self.dis.parent.sr)
         else:
             self.dis = dis
-            self.sr = copy.deepcopy(dis.sr)
+            self.sr = copy.deepcopy(dis.parent.sr)
         if line == None:
             s = 'line must be specified.'
             raise Exception(s)
@@ -91,15 +91,16 @@ class ModelCrossSection(object):
         self.sr.rotation = rotation
 
                                                          
-        onkey = list(line.keys())[0]                      
+        onkey = list(line.keys())[0]
+        eps = 1.e-4
         if 'row' in linekeys:
             self.direction = 'x'
-            pts = [(self.sr.xedge[0]+0.1, self.sr.ycenter[int(line[onkey])]-0.1),
-                   (self.sr.xedge[-1]-0.1, self.sr.ycenter[int(line[onkey])]+0.1)]
+            pts = [(self.sr.xedge[0] + eps, self.sr.ycenter[int(line[onkey])] - eps),
+                   (self.sr.xedge[-1] - eps, self.sr.ycenter[int(line[onkey])] + eps)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            pts = [(self.sr.xcenter[int(line[onkey])]+0.1, self.sr.yedge[0]-0.1),
-                   (self.sr.xcenter[int(line[onkey])]-0.1, self.sr.yedge[-1]+0.1)]
+            pts = [(self.sr.xcenter[int(line[onkey])] + eps, self.sr.yedge[0] - eps),
+                   (self.sr.xcenter[int(line[onkey])] - eps, self.sr.yedge[-1] + eps)]
         else:
             self.direction = 'xy'
             verts = line[onkey]
@@ -222,18 +223,16 @@ class ModelCrossSection(object):
         else:
             ax = self.ax
 
-        plotarray = a
-        if masked_values is not None:
-            for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
-
         vpts = []
         for k in range(self.dis.nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
                                                    self.sr.yedge,
-                                                   plotarray[k, :, :]))
+                                                   a[k, :, :]))
         vpts = np.array(vpts)
-            
+        if masked_values is not None:
+            for mval in masked_values:
+                vpts = np.ma.masked_equal(vpts, mval)
+
         if isinstance(head, np.ndarray):
             zpts = self.set_zpts(head)
         else:
@@ -518,12 +517,15 @@ class ModelCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
+
         # Find package to plot
         if package is not None:
             p = package
+            ftype = p.name[0]
         elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
+            ftype = ftype.upper()
             p = self.model.get_package(ftype)
         else:
             raise Exception('Cannot find package to plot')
@@ -743,6 +745,15 @@ class ModelCrossSection(object):
         from matplotlib.collections import PatchCollection
         rectcol = []
 
+        if 'vmin' in kwargs:
+            vmin = kwargs.pop('vmin')
+        else:
+            vmin = None
+        if 'vmax' in kwargs:
+            vmax = kwargs.pop('vmax')
+        else:
+            vmax = None
+
         v = []
         
         colors = []
@@ -770,6 +781,7 @@ class ModelCrossSection(object):
         if len(rectcol) > 0:
             patches = PatchCollection(rectcol, **kwargs)
             patches.set_array(np.array(colors))
+            patches.set_clim(vmin, vmax)
         else:
             patches = None
         return patches

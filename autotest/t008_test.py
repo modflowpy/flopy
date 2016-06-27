@@ -67,9 +67,11 @@ def load_nwt(nwtfile):
     if os.path.isfile(fn):
         os.remove(fn)
     if 'fmt.' in nwtfile.lower():
-        ml.set_free_format(value=False)
+        #ml.set_free_format(value=False)
+        ml.array_free_format = False
     else:
-        ml.set_free_format(value=True)
+        #ml.set_free_format(value=True)
+        ml.array_free_format = True
     nwt = flopy.modflow.ModflowNwt.load(nwtfile, ml)
     assert isinstance(nwt,
                       flopy.modflow.ModflowNwt), '{} load unsuccessful'.format(

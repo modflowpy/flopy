@@ -6,6 +6,7 @@ FloPy Supported Packages
 | ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Basic (BAS6)                                   | Supported            | Supported            | Not supported        |
 | Block Centered Flow (BCF)                      | Supported            | Supported            | Not supported        |
+| Time-Variant Specified-Head (CHD)              | Supported            | Supported            | Not supported        |
 | Direct Solver (DE4)                            | Supported            | Supported            | Not supported        |
 | Discretization (DIS)                           | Supported            | Supported            | Not supported        |
 | Drain (DRN)                                    | Supported            | Supported            | Not supported        |
@@ -19,6 +20,7 @@ FloPy Supported Packages
 | Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
 | Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
+| Lake (LAK)                                     | Supported            | Supported            | Not supported        |
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
 | Link-AMG (LMG)                                 | Not supported        | Not supported        | Not supported        |
 | MODFLOW Link-MT3DMS (LMT)                      | Supported            | Supported            | Not supported        |
@@ -68,7 +70,7 @@ FloPy Supported Packages
 | Dispersion (DSP)                         | Supported            | Supported            | Not supported        |
 | Generalized Conjugate Gradient (GCG)     | Supported            | Supported            | Not supported        |
 | PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
-| Reaction (RCT)                           | Supported            | Not supported        | Not supported        |
+| Reaction (RCT)                           | Supported            | Supported            | Not supported        |
 | Sink and Source Mixing (SSM)             | Supported            | Supported            | Not supported        |
 | Transport Observation (TOB)              | Supported            | Not supported        | Not supported        |
 
@@ -76,14 +78,14 @@ FloPy Supported Packages
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Variable Density Flow (VDF)              | Supported            | Supported            | Not supported        |
-| Viscosity (VSC)                          | Supported            | Not supported        | Not supported        |
+| Viscosity (VSC)                          | Supported            | Supported            | Not supported        |
 
 ### MODFLOW-2000, MODFLOW-2005, and MODFLOW-NWT Observations
 | Package                                        | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
 | HYDMOD (HYD)                                   | Supported            | Supported            | Not supported        |
-| Gage (GAGE)                                    | Not supported        | Not supported        | Not supported        |
+| Gage (GAGE)                                    | Supported            | Supported            | Not supported        |
 | General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
 | Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
 | River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |

@@ -51,7 +51,8 @@ class MfList(object):
 
     """
 
-    def __init__(self, package, data=None, dtype=None, model=None):
+    def __init__(self, package, data=None, dtype=None, model=None,
+                 list_free_format=None):
 
         if isinstance(data, MfList):
             for attr in data.__dict__.items():
@@ -69,7 +70,7 @@ class MfList(object):
         else:
             self.model = model
         try:
-            self.sr = self.model.dis.sr
+            self.sr = self.model.sr
         except:
             self.sr = None
         if dtype is None:
@@ -81,6 +82,8 @@ class MfList(object):
         self.__data = {}
         if data is not None:
             self.__cast_data(data)
+        self.list_free_format = list_free_format
+        return
 
     def get_empty(self, ncell=0):
         d = np.zeros((ncell, len(self.dtype)), dtype=self.dtype)
@@ -125,15 +128,34 @@ class MfList(object):
     # Get the numpy savetxt-style fmt string that corresponds to the dtype
     @property
     def fmt_string(self):
+        if self.list_free_format is not None:
+            use_free = self.list_free_format
+        else:
+            use_free = True
+            if self.package.parent.bas6 is not None:
+                use_free = self.package.parent.bas6.ifrefm
+            # mt3d list data is fixed format
+            if 'mt3d' in self.package.parent.version.lower():
+                use_free = False
         fmt_string = ''
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
             if vtype == 'i':
-                fmt_string += ' %9d'
+                if use_free:
+                    fmt_string += ' %9d'
+                else:
+                    fmt_string += '%10d'
             elif vtype == 'f':
-                fmt_string += ' %9G'
+                if use_free:
+                    fmt_string += ' %15.7E'
+                else:
+                    fmt_string += '%10G'
+
             elif vtype == 'o':
-                fmt_string += ' %s'
+                if use_free:
+                    fmt_string += ' %9s'
+                else:
+                    fmt_string += '%10s'
             elif vtype == 's':
                 raise Exception("MfList error: '\str\' type found it dtype." + \
                                 " This gives unpredictable results when " + \
@@ -402,10 +424,10 @@ class MfList(object):
                                                self.model.external_path)
                     filename = self.package.name[0] + \
                                "_{0:04d}.dat".format(kper)
-                    py_filepath = os.path.join(py_filepath,filename)
+                    py_filepath = os.path.join(py_filepath, filename)
                     model_filepath = os.path.join(self.model.external_path,
                                                   filename)
-                    self.__tofile(py_filepath,kper_data)
+                    self.__tofile(py_filepath, kper_data)
                     kper_vtype = str
                     kper_data = model_filepath
 
@@ -817,6 +839,22 @@ class MfList(object):
                 m4ds[name][kper, :, :, :] = array
         return m4ds
 
+    def masked_4D_arrays_itr(self):
+        # get the first kper
+        arrays = self.to_array(kper=0, mask=True)
+
+        # initialize these big arrays
+        for name, array in arrays.items():
+            m4d = np.zeros((self.model.nper, self.model.nlay,
+                            self.model.nrow, self.model.ncol))
+            m4d[0, :, :, :] = array
+            for kper in range(1, self.model.nper):
+                arrays = self.to_array(kper=kper, mask=True)
+                for tname, array in arrays.items():
+                    if tname == name:
+                        m4d[kper, :, :, :] = array
+            yield name, m4d
+
     @property
     def array(self):
         return self.masked_4D_arrays
@@ -835,7 +873,7 @@ class MfList(object):
             MfList instance
         """
         sp_data = MfList.masked4D_arrays_to_stress_period_data(
-                model.get_package(pak_name).get_default_dtype(), m4ds)
+            model.get_package(pak_name).get_default_dtype(), m4ds)
         return cls(model.get_package(pak_name), data=sp_data)
 
     @staticmethod
@@ -851,22 +889,20 @@ class MfList(object):
         -------
             dict {kper:recarray}
         """
-        assert isinstance(m4ds,dict)
-        for name,m4d in m4ds.items():
-            assert isinstance(m4d,np.ndarray)
+        assert isinstance(m4ds, dict)
+        for name, m4d in m4ds.items():
+            assert isinstance(m4d, np.ndarray)
             assert name in dtype.names
             assert m4d.ndim == 4
         keys = list(m4ds.keys())
 
-        for i1,key1 in enumerate(keys):
+        for i1, key1 in enumerate(keys):
             a1 = np.isnan(m4ds[key1])
-            for i2,key2 in enumerate(keys[i1:]):
+            for i2, key2 in enumerate(keys[i1:]):
                 a2 = np.isnan(m4ds[key2])
-                if not np.array_equal(a1,a2):
-                    raise Exception("Transient2d error: masking not equal" +\
-                                    " for {0} and {1}".format(key1,key2))
-
-
+                if not np.array_equal(a1, a2):
+                    raise Exception("Transient2d error: masking not equal" + \
+                                    " for {0} and {1}".format(key1, key2))
 
         sp_data = {}
         for kper in range(m4d.shape[0]):
@@ -886,7 +922,7 @@ class MfList(object):
             spd["i"] = ii
             spd["k"] = kk
             spd["j"] = jj
-            for n,v in vals.items():
+            for n, v in vals.items():
                 spd[n] = v
             sp_data[kper] = spd
         return sp_data

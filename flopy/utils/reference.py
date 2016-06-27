@@ -69,30 +69,76 @@ class SpatialReference(object):
     """
 
     def __init__(self, delr=1.0, delc=1.0, lenuni=1, xul=None, yul=None, rotation=0.0,
-                 proj4_str="EPSG:4326"):
+                 proj4_str="EPSG:4326",units=None):
         self.delc = np.atleast_1d(np.array(delc))
         self.delr = np.atleast_1d(np.array(delr))
 
         self.lenuni = lenuni
-        self.proj4_str = proj4_str
+        self._proj4_str = proj4_str
+
+        self.supported_units = ["feet","meters"]
+        self._units = units
         self._reset()
         self.set_spatialreference(xul, yul, rotation)
 
+    @property
+    def proj4_str(self):
+        if "epsg" in self._proj4_str.lower() and \
+           "init" not in self._proj4_str.lower():
+            proj4_str = "+init=" + self._proj4_str
+        else:
+            proj4_str = self._proj4_str
+        return proj4_str
 
-    @classmethod
-    def from_namfile_header(cls,namefile):
+    @property
+    def units(self):
+        units = None
+        if self._units is not None:
+            units = self._units.lower()
+        else:
+            try:
+                # need this because preserve_units doesn't seem to be
+                # working for complex proj4 strings.  So if an
+                # epsg code was passed, we have no choice, but if a
+                # proj4 string was passed, we can just parse it
+                if "EPSG" in self.proj4_str.upper():
+                    import pyproj
+
+                    crs = pyproj.Proj(self.proj4_str,
+                                      preseve_units=True,
+                                      errcheck=True)
+                    proj_str = crs.srs
+                else:
+                    proj_str = self.proj4_str
+                if "units=m" in proj_str:
+                    units = "meters"
+                elif "units=ft" in proj_str or \
+                   "to_meters:0.3048" in proj_str:
+                    units = "feet"
+            except:
+                pass
+                
+        if units is None:
+            print("warning: assuming SpatialReference units are meters")
+            units = 'meters'
+        assert units in self.supported_units
+        return units
+
+    @staticmethod
+    def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
         header = []
         with open(namefile,'r') as f:
             for line in f:
                 if not line.startswith('#'):
                     break
-                header.extend(line.strip().replace('#','').split(','))
+                header.extend(line.strip().replace('#','').split(';'))
 
         xul, yul = None, None
         rotation = 0.0
         proj4_str = "EPSG:4326"
         start_datetime = "1/1/1970"
+        units = None
 
         for item in header:
             if "xul" in item.lower():
@@ -120,9 +166,12 @@ class SpatialReference(object):
                     start_datetime = item.split(':')[1].strip()
                 except:
                     pass
+            elif "units" in item.lower():
+                units = item.split(':')[1].strip()
 
-        return cls(xul=xul,yul=yul,rotation=rotation,proj4_str=proj4_str),\
-               start_datetime
+        return {"xul":xul,"yul":yul,"rotation":rotation,
+                "proj4_str":proj4_str,"start_datetime":start_datetime,
+                "units":units}
 
     def __setattr__(self, key, value):
         reset = True
@@ -144,6 +193,14 @@ class SpatialReference(object):
         elif key == "lenuni":
             super(SpatialReference,self).\
                 __setattr__("lenuni",int(value))
+        elif key == "units":
+            value = value.lower()
+            assert value in self.supported_units
+            super(SpatialReference,self).\
+                __setattr__("_units",value)
+        elif key == "proj4_str":
+            super(SpatialReference,self).\
+                __setattr__("_proj4_str",value)
         else:
             super(SpatialReference,self).__setattr__(key,value)
             reset = False
@@ -185,7 +242,7 @@ class SpatialReference(object):
     @classmethod
     def from_gridspec(cls,gridspec_file,lenuni=0):
         f = open(gridspec_file,'r')
-        lines = f.readlines()
+        #lines = f.readlines()
         raw = f.readline().strip().split()
         nrow = int(raw[0])
         ncol = int(raw[1])
@@ -199,10 +256,10 @@ class SpatialReference(object):
                 if '*' in r:
                     rraw = r.split('*')
                     for n in range(int(rraw[0])):
-                        delr.append(int(rraw[1]))
+                        delr.append(float(rraw[1]))
                         j += 1
                 else:
-                    delr.append(int(r))
+                    delr.append(float(r))
                     j += 1
         delc = []
         i = 0
@@ -212,10 +269,10 @@ class SpatialReference(object):
                 if '*' in r:
                     rraw = r.split('*')
                     for n in range(int(rraw[0])):
-                        delc.append(int(rraw[1]))
+                        delc.append(float(rraw[1]))
                         i += 1
                 else:
-                    delc.append(int(r))
+                    delc.append(float(r))
                     i += 1
         f.close()
         return cls(np.array(delr), np.array(delc),
@@ -245,9 +302,11 @@ class SpatialReference(object):
         self._reset()
 
     def __repr__(self):
-        s = "xul:{0:<G}, yul:{1:<G}, rotation:{2:<G}, ".\
+        s = "xul:{0:<G}; yul:{1:<G}; rotation:{2:<G}; ".\
             format(self.xul,self.yul,self.rotation)
-        s += "proj4_str:{0}".format(self.proj4_str)
+        s += "proj4_str:{0}; ".format(self.proj4_str)
+        s += "units:{0}; ".format(self.units)
+        s += "lenuni:{0}".format(self.lenuni)
         return s
 
     @property

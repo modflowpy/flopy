@@ -3,6 +3,25 @@ Module for input/output utilities
 """
 import numpy as np
 
+def _fmt_string(array, float_format='{}'):
+    """makes a formatting string for a rec-array; given a desired float_format."""
+    fmt_string = ''
+    for field in array.dtype.descr:
+        vtype = field[1][1].lower()
+        if (vtype == 'i'):
+            fmt_string += '{:.0f} '
+        elif (vtype == 'f'):
+            fmt_string += '{} '.format(float_format)
+        elif (vtype == 'o'):
+            fmt_string += '{} '
+        elif (vtype == 's'):
+            raise Exception("MfList error: '\str\' type found it dtype." + \
+                            " This gives unpredictable results when " + \
+                            "recarray to file - change to \'object\' type")
+        else:
+            raise Exception("MfList.fmt_string error: unknown vtype " + \
+                            "in dtype:" + vtype)
+    return fmt_string
 
 def line_parse(line):
     """
@@ -14,6 +33,115 @@ def line_parse(line):
     line = line.replace(',', ' ')
     return line.strip().split()
 
+def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
+    """
+
+    Parameters
+    ----------
+    v : list, int, float, bool, or numpy array
+        list, int, float, bool, or numpy array containing the data to be
+        written to a string.
+    length : int
+        length of each column for fixed column widths. (default is 10)
+    ipos : list, int, or numpy array
+        user-provided column widths. (default is None)
+    free : bool
+        boolean indicating if a free format string should be generated.
+        length and ipos are not used if free is True. (default is False)
+    comment : str
+        comment string to add to the end of the string
+
+    Returns
+    -------
+    out : str
+        fixed or free format string generated using user-provided data
+
+    """
+    if isinstance(v, np.ndarray):
+        v = v.aslist()
+    elif isinstance(v, int) or isinstance(v, float) or isinstance(v, bool):
+        v = [v]
+    ncol = len(v)
+    # construct ipos if it was not passed
+    if ipos is None:
+        ipos = []
+        for i in range(ncol):
+            ipos.append(length)
+    else:
+        if isinstance(ipos, np.ndarray):
+            ipos = ipos.flatten().aslist()
+        elif isinstance(ipos, int):
+            ipos = [ipos]
+        if len(ipos) < ncol:
+            err = 'user provided ipos length ({})'.format(len(ipos)) + \
+                  'should be greater than or equal ' + \
+                  'to the length of v ({})'.format(ncol)
+            raise Exception(err)
+    out = ''
+    for n in range(ncol):
+        if free:
+            write_fmt = '{} '
+        else:
+            write_fmt = '{{:>{}}}'.format(ipos[n])
+        out += write_fmt.format(v[n])
+    if comment is not None:
+        out += '  # {}'.format(comment)
+    out += '\n'
+    return out
+
+def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
+    """
+    Parse a fixed format line using user provided data
+
+    Parameters
+    ----------
+    line : str
+        text string to parse.
+    ncol : int
+        number of columns to parse from line. (default is 1)
+    length : int
+        length of each column for fixed column widths. (default is 10)
+    ipos : list, int, or numpy array
+        user-provided column widths. (default is None)
+    free : bool
+        boolean indicating if sting is free format. ncol, length, and
+        ipos are not used if free is True. (default is False)
+
+    Returns
+    -------
+    out : list
+        padded list containing data parsed from the passed text string
+
+    """
+    if free:
+        out = line.rstrip().split()
+    else:
+        # construct ipos if it was not passed
+        if ipos is None:
+            ipos = []
+            for i in range(ncol):
+                ipos.append(length)
+        else:
+            if isinstance(ipos, np.ndarray):
+                ipos = ipos.flatten().aslist()
+            elif isinstance(ipos, int):
+                ipos = [ipos]
+            ncol = len(ipos)
+        line = line.rstrip()
+        out = []
+        istart = 0
+        for ivar in range(ncol):
+            istop = istart + ipos[ivar]
+            try:
+                txt = line[istart:istop]
+                if len(txt.strip()) > 0:
+                    out.append(txt)
+                else:
+                    out.append(0)
+            except:
+                break
+            istart = istop
+    return out
 
 def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
     """
