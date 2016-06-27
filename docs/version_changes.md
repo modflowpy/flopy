@@ -1,6 +1,13 @@
 FloPy Changes
 -----------------------------------------------
 
+### Version 3.2.6
+* Document your new features.
+
+* Bug fixes:
+  1. Document your bug fixes.
+
+
 ### Version 3.2.5
 * Added support for LAK and GAGE packages - full load and write functionality supported.
 * Added support for MNW2 package. Load and write of .mnw2 package files supported. Support for .mnwi, or the results files (.qsu, .byn) not yet implemented.
