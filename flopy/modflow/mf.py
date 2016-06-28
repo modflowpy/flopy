@@ -189,7 +189,9 @@ class Modflow(BaseModel):
             "upw": flopy.modflow.ModflowUpw,
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
-            "hyd": flopy.modflow.ModflowHyd
+            "hyd": flopy.modflow.ModflowHyd,
+            "vdf": flopy.seawat.SeawatVdf,
+            "vsc": flopy.seawat.SeawatVsc
         }
         return
 
@@ -277,7 +279,7 @@ class Modflow(BaseModel):
 
     def write_name_file(self):
         """
-        Write the model files.
+        Write the model name file.
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')

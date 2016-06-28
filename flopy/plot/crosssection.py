@@ -91,15 +91,16 @@ class ModelCrossSection(object):
         self.sr.rotation = rotation
 
                                                          
-        onkey = list(line.keys())[0]                      
+        onkey = list(line.keys())[0]
+        eps = 1.e-4
         if 'row' in linekeys:
             self.direction = 'x'
-            pts = [(self.sr.xedge[0]+0.1, self.sr.ycenter[int(line[onkey])]-0.1),
-                   (self.sr.xedge[-1]-0.1, self.sr.ycenter[int(line[onkey])]+0.1)]
+            pts = [(self.sr.xedge[0] + eps, self.sr.ycenter[int(line[onkey])] - eps),
+                   (self.sr.xedge[-1] - eps, self.sr.ycenter[int(line[onkey])] + eps)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            pts = [(self.sr.xcenter[int(line[onkey])]+0.1, self.sr.yedge[0]-0.1),
-                   (self.sr.xcenter[int(line[onkey])]-0.1, self.sr.yedge[-1]+0.1)]
+            pts = [(self.sr.xcenter[int(line[onkey])] + eps, self.sr.yedge[0] - eps),
+                   (self.sr.xcenter[int(line[onkey])] - eps, self.sr.yedge[-1] + eps)]
         else:
             self.direction = 'xy'
             verts = line[onkey]
@@ -516,12 +517,15 @@ class ModelCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
+
         # Find package to plot
         if package is not None:
             p = package
+            ftype = p.name[0]
         elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
+            ftype = ftype.upper()
             p = self.model.get_package(ftype)
         else:
             raise Exception('Cannot find package to plot')

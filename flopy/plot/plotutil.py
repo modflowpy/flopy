@@ -978,7 +978,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
 
     """
 
-    small_value = 1.0e-1
+    small_value = 1.0e-4
 
     # make sure xedge and yedge are numpy arrays
     if not isinstance(xedge, np.ndarray):

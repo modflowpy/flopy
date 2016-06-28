@@ -30,4 +30,4 @@
 0.50,0.50,110.65,5.0                          ;downstream stream channel information for segment 
 3 1  0 -2       0.0 0.0   0.0   0.0   0.05    ;flow and environmental data for segment 3
 0.50,0.50,109.4286,5.0                        ;upstream stream channel information for segment 3
-0.50,0.50,102.5714,5.0                        ;downstream stream channel information for segment 3    
+0.50,0.50,102.5714,5.0                        ;downstream stream channel information for segment 3

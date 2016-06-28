@@ -1,6 +1,8 @@
 """
 test MNW2 package
 """
+import sys
+sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import flopy
 import numpy as np
@@ -65,5 +67,5 @@ def test_make_package():
     assert np.array_equal(mnw2_4.stress_period_data[1], mnw2fromobj.stress_period_data[1])
     
 if __name__ == '__main__':
-    #test_load()
+    test_load()
     test_make_package()

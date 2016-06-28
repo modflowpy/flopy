@@ -231,7 +231,7 @@ gcg = mt3.Mt3dGcg(mt, mxiter=1, iter1=50, isolve=3, cclose=1e-6, iprgcg=5)
 ssm = mt3.Mt3dSsm(mt, stress_period_data=ssm_data)
 mt.write_input()
 # Create the SEAWAT model structure
-mswtf = swt.Seawat(modelname, 'nam_swt', modflowmodel=ml, mt3dmsmodel=mt,
+mswtf = swt.Seawat(modelname, 'nam_swt', modflowmodel=ml, mt3dmodel=mt,
                    exe_name=swtexe_name, model_ws=dirs[1])  # Coupled to modflow model mf and mt3dms model mt
 vdf = swt.SeawatVdf(mswtf, nswtcpl=1, iwtable=0, densemin=0, densemax=0, denseref=1000., denseslp=25., firstdt=1.0e-03)
 mswtf.write_input()
