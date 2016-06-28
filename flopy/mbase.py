@@ -9,7 +9,7 @@ from __future__ import print_function
 import sys
 import os
 import subprocess as sp
-import time
+import shutil
 import threading
 if sys.version_info > (3,0):
     import queue as Queue
@@ -311,6 +311,44 @@ class BaseModel(object):
             raise Exception(
                 ' either fname or unit must be passed to remove_external()')
         return
+
+    def add_existing_package(self, filename,ptype=None, copy_to_model_ws=True):
+        """ add an existing package to a model instance.
+        Parameters
+        ----------
+        filename : str
+            the name of the file to add as a package
+        ptype : optional
+            the model package type (e.g. "lpf", "wel", etc).  If None,
+            then the file extension of the filename arg is used
+        copy_to_model_ws : bool
+            flag to copy the package file into the model_ws directory.
+        """
+        if ptype is None:
+            ptype = filename.split('.')[-1]
+        ptype = str(ptype).upper()
+        # for pak in self.packagelist:
+        #     if ptype in pak.name:
+        #         print("BaseModel.add_existing_package() warning: " +\
+        #               "replacing existing package {0}".format(ptype))
+        class Obj(object):
+            pass
+
+        fake_package = Obj()
+        fake_package.write_file = lambda: None
+        fake_package.extra = ['']
+        fake_package.name = [ptype]
+        fake_package.unit_number = [self.next_ext_unit()]
+        if copy_to_model_ws:
+            base_filename = os.path.split(filename)[-1]
+            fake_package.file_name = [base_filename]
+            shutil.copy2(filename,os.path.join(self.model_ws,base_filename))
+        else:
+            fake_package.file_name = [filename]
+        fake_package.allowDuplicates = True
+        self.add_package(fake_package)
+
+
 
     def get_name_file_entries(self):
         """
