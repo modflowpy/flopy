@@ -5,7 +5,7 @@ FloPy Changes
 * Document your new features.
 
 * Bug fixes:
-  1. Document your bug fixes.
+  1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
 
 
 ### Version 3.2.5

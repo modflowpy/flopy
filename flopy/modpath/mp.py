@@ -56,6 +56,7 @@ class Modpath(BaseModel):
         self.mpbas_file = '{}.mpbas'.format(modelname)
         if self.__mf is not None:
             dis_file = self.__mf.dis.file_name[0]
+            dis_unit = self.__mf.dis.unit_number[0]
         self.dis_file = dis_file
         self.dis_unit = dis_unit
         if self.__mf is not None:
