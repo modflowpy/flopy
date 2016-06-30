@@ -508,6 +508,7 @@ class Util3d(object):
                                           fmtin=u2d.format.fortran,
                                           locat=locat,
                                           cnstnt=u2d.cnstnt,
+                                          ext_filename=u2d.filename,
                                           array_free_format=array_free_format)
 
             return
@@ -1149,6 +1150,7 @@ class Transient2d(object):
                                                   fmtin=u2d.format.fortran,
                                                   locat=locat,
                                                   cnstnt=u2d.cnstnt,
+                                                  ext_filename=u2d.filename,
                                                   array_free_format=array_free_format)
 
             self.model = model
