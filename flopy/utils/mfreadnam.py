@@ -142,7 +142,6 @@ def parsenamefile(namfilename, packages, verbose=True):
         if '#' not in tmp[0]:
             # be sure the second value is an integer
             if testint(tmp[1]):
-                print(tmp[2])
 
                 # remove quotes in file path
                 tmp[2] = tmp[2].replace('"', '')
