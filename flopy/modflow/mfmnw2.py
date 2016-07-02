@@ -1024,8 +1024,8 @@ class ModflowMnw2(Package):
         elif isinstance(mnwobjs, Mnw):
             mnwobjs = [mnwobjs]
         node_data = ModflowMnw2.get_empty_node_data(0)
-        for mnwobj in mnwobjs:
-            node_data = np.append(node_data, mnwobj.node_data).view(np.recarray)
+        mnwobj_node_data = [mnwobj.node_data for mnwobj in mnwobjs]
+        node_data = np.append(node_data, mnwobj_node_data).view(np.recarray)
         #node_data.sort(order='wellid')
         self.node_data = node_data
 
