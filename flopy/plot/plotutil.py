@@ -877,7 +877,7 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         dc = delc.reshape((delc.shape[0], 1))
         area = dr * dc
         for k in range(nlay):
-            qz[k, :, :] = qz[k, :, :] / area[:, :]
+            qz[k, :, :] = Qz[k, :, :] / area[:, :]
         qz[1:, :, :] = 0.5 * (qz[0:nlay-1, :, :] + qz[1:nlay, :, :])
         qz[0, :, :] = 0.5 * qz[0, :, :]
         qz = -qz
