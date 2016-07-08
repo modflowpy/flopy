@@ -533,7 +533,7 @@ def test_util3d_reset():
     ml.bas6.strt = arr
 
 if __name__ == '__main__':
-    test_util3d_reset()
+    #test_util3d_reset()
     # test_mflist()
     # test_new_get_file_entry()
     # test_arrayformat()
@@ -545,7 +545,7 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path()
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
-    #test_transient2d()
+    test_transient2d()
     # test_util2d()
     # test_util3d()
     # test_how()
