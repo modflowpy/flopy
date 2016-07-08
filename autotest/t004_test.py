@@ -471,6 +471,20 @@ def test_new_get_file_entry():
     print(u2d.get_file_entry(how="external"))
 
 
+def test_append_mflist():
+    ml = flopy.modflow.Modflow(model_ws="temp")
+    dis = flopy.modflow.ModflowDis(ml,10,10,10,10)
+    sp_data1 = {3: [1, 1, 1, 1.0],5:[1,2,4,4.0]}
+    sp_data2 = {0: [1, 1, 3, 3.0],8:[9,2,4,4.0]}
+    wel1 = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data1)
+    wel2 = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data2)
+    wel3 = flopy.modflow.ModflowWel(ml,stress_period_data=\
+                                    wel2.stress_period_data.append(
+                                            wel1.stress_period_data))
+
+    ml.write_input()
+
+
 def test_mflist():
 
     ml = flopy.modflow.Modflow(model_ws="temp")
@@ -533,7 +547,7 @@ def test_util3d_reset():
     ml.bas6.strt = arr
 
 if __name__ == '__main__':
-    #test_util3d_reset()
+    # test_util3d_reset()
     # test_mflist()
     # test_new_get_file_entry()
     # test_arrayformat()

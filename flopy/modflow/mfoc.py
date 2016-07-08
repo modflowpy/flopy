@@ -132,12 +132,34 @@ class ModflowOc(Package):
                  cboufm=None, compact=True,\
                  stress_period_data={(0, 0): ['save head']},\
                  extension=['oc', 'hds', 'ddn', 'cbc'],\
-                 unitnumber=[14, 51, 52, 53]):
+                 unitnumber=[14, 51, 52, 53], **kwargs):
 
         """
         Package constructor.
 
         """
+        # process kwargs
+        if 'save_every' in kwargs:
+            save_every = int(kwargs.pop('save_every'))
+        else:
+            save_every = None
+        if save_every is not None:
+            if 'save_types' in kwargs:
+                save_types = kwargs.pop('save_types')
+                if isinstance(save_types, str):
+                    save_types = [save_types]
+            else:
+                save_types = ['save head', 'print budget']
+            stress_period_data = {}
+            for kper in range(model.dis.nper):
+                icnt = save_every
+                for kstp in range(model.dis.nstp[kper]):
+                    if icnt == save_every:
+                        stress_period_data[(kper, kstp)] = save_types
+                        icnt = 0
+                    else:
+                        stress_period_data[(kper, kstp)] = []
+                    icnt += 1
 
         # Call ancestor's init to set self.parent,
         # extension, name and unit number

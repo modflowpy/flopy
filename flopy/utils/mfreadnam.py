@@ -143,6 +143,10 @@ def parsenamefile(namfilename, packages, verbose=True):
             # be sure the second value is an integer
             if testint(tmp[1]):
 
+                # remove quotes in file path
+                tmp[2] = tmp[2].replace('"', '')
+                tmp[2] = tmp[2].replace("'", "")
+
                 # need make filenames with paths system agnostic
                 if '/' in tmp[2]:
                     raw = tmp[2].split('/')
