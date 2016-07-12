@@ -1,4 +1,7 @@
+import sys
 from ..pakbase import Package
+from flopy.utils.flopy_io import line_parse, pop_item
+from ..utils import Util2d, Transient2d, check
 
 
 class ModflowMnwi(Package):
@@ -67,6 +70,81 @@ class ModflowMnwi(Package):
             print('WARNING: number of listed well ids to be monitored does not match MNWOBS.')
 
         self.parent.add_package(self)
+
+    @staticmethod
+    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+
+        if model.verbose:
+            sys.stdout.write('loading mnw2 package file...\n')
+
+        structured = model.structured
+        if nper is None:
+            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
+
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+
+        # dataset 1
+        line = line_parse(next(f))
+        wel1flag, qsumflag, byndflag = map(int, line)
+
+        # dataset 2
+        mnwobs = pop_item(line_parse(next(f)), int)
+        wellid_unit_qndflag_qhbflag_concflag = []
+        if mnwobs > 0:
+            for i in range(mnwobs):
+                # dataset 3
+                line = line_parse(next(f))
+                wellid = pop_item(line, str)
+                unit = pop_item(line, int)
+                qndflag = pop_item(line, int)
+                qbhflag = pop_item(line, int)
+                tmp = [wellid, unit, qndflag, qbhflag]
+                if gwt and len(line) > 0:
+                    tmp.append(pop_item(line, int))
+                wellid_unit_qndflag_qhbflag_concflag.append(tmp)
+        return ModflowMnwi(model, wel1flag=wel1flag, qsumflag=qsumflag, byndflag=byndflag, mnwobs=mnwobs,
+                           wellid_unit_qndflag_qhbflag_concflag=wellid_unit_qndflag_qhbflag_concflag,
+                           extension='mnwi', unitnumber=58)
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check mnwi package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.mnwi.check()
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+        if "MNW2" not in self.parent.get_package_list():
+            chk._add_to_summary(type='Warning', value=0,
+                                             desc='\r    MNWI package present without MNW2 packge.')
+
+        chk.summarize()
+        return chk
 
     def write_file(self):
         """

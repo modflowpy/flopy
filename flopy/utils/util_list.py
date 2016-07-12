@@ -94,6 +94,58 @@ class MfList(object):
         from flopy import export
         return export.utils.mflist_helper(f, self, **kwargs)
 
+    def append(self,other):
+        """ append the recarrays from one MfList to another
+        Parameters
+        ----------
+            other: variable: an item that can be cast in to an MfList
+                that corresponds with self
+        Returns
+        -------
+            dict of {kper:recarray}
+        """
+        if not isinstance(other,MfList):
+            other = MfList(self.package,data=other,dtype=self.dtype,
+                           model=self.model,
+                           list_free_format=self.list_free_format)
+        assert isinstance(other,MfList),"MfList.append(): other arg must be "+\
+                                        "MfList or dict, not {0}".format(type(other))
+
+        other_kpers = list(other.data.keys())
+        other_kpers.sort()
+
+        self_kpers = list(self.data.keys())
+        self_kpers.sort()
+
+        new_dict = {}
+        for kper in range(self.model.nper):
+            other_data = other[kper].copy()
+            self_data = self[kper].copy()
+
+            other_len = other_data.shape[0]
+            self_len = self_data.shape[0]
+
+
+
+            if (other_len == 0 and self_len == 0) or\
+               (kper not in self_kpers and kper not in other_kpers):
+                continue
+
+
+            elif self_len == 0:
+                new_dict[kper] = other_data
+            elif other_len == 0:
+                new_dict[kper] = self_data
+            else:
+                new_len = other_data.shape[0] + self_data.shape[0]
+                new_data = np.recarray(new_len,dtype=self.dtype)
+                new_data[:self_len] = self_data
+                new_data[self_len:self_len+other_len] = other_data
+                new_dict[kper] = new_data
+
+
+        return new_dict
+
     @property
     def data(self):
         return self.__data
@@ -324,7 +376,10 @@ class MfList(object):
                 "MfList error: _getitem__() passed invalid kper index:"
                 + str(kper))
         if kper not in list(self.data.keys()):
-            return self.get_empty()
+            if kper == 0:
+                return self.get_empty()
+            else:
+                return self.data[self.__find_last_kper(kper)]
         if (self.vtype[kper] == int):
             if (self.data[kper] == 0):
                 return self.get_empty()

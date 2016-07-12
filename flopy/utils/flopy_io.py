@@ -42,9 +42,22 @@ def line_parse(line):
     it.
 
     """
+    line = line.split(';')[0] # ; denotes comment
     line = line.replace(',', ' ')
     line = line.split(';')[0] # discard comments
     return line.strip().split()
+
+def pop_item(line, dtype=str):
+    if len(line) > 0:
+        if dtype == str:
+            return line.pop(0)
+        elif dtype == float:
+            return float(line.pop(0))
+        elif dtype == int:
+            # handle strings like this:
+            # '-10.'
+            return int(float(line.pop(0)))
+    return 0
 
 def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
     """

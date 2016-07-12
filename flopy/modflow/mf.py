@@ -164,6 +164,8 @@ class Modflow(BaseModel):
             "hfb6": flopy.modflow.ModflowHfb,
             "chd": flopy.modflow.ModflowChd,
             "wel": flopy.modflow.ModflowWel,
+            "mnw2": flopy.modflow.ModflowMnw2,
+            "mnwi": flopy.modflow.ModflowMnwi,
             "drn": flopy.modflow.ModflowDrn,
             "rch": flopy.modflow.ModflowRch,
             "evt": flopy.modflow.ModflowEvt,
@@ -279,7 +281,7 @@ class Modflow(BaseModel):
 
     def write_name_file(self):
         """
-        Write the model files.
+        Write the model name file.
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')

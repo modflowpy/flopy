@@ -6,17 +6,24 @@ sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import flopy
 import numpy as np
+from flopy.utils.flopy_io import line_parse
 
 cpth = os.path.join('temp')
+mf2005pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
+def test_line_parse():
+    # ensure that line_parse is working correctly
+    # comment handling
+    line = line_parse('Well-A  -1                   ; 2a. WELLID,NNODES')
+    assert line == ['Well-A', '-1']
 
 def test_load():
 
     # load in the test problem (1 well, 3 stress periods)
-    m = flopy.modflow.Modflow('MNW2-Fig28', model_ws=cpth)
-    path = os.path.join('..', 'examples', 'data', 'mf2005_test')
-    dis = flopy.modflow.ModflowDis.load(path + '/MNW2-Fig28.dis', m)
-    mnw2 = flopy.modflow.ModflowMnw2.load(path + '/MNW2-Fig28.mnw2', m)
+    m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth)
+    m.change_model_ws(cpth)
+    assert 'MNW2' in m.get_package_list()
+    assert 'MNWI' in m.get_package_list()
 
     # load a real mnw2 package from a steady state model (multiple wells)
     m2 = flopy.modflow.Modflow('br', model_ws=cpth)
@@ -66,6 +73,14 @@ def test_make_package():
     # verify that they two input methods produce the same results
     assert np.array_equal(mnw2_4.stress_period_data[1], mnw2fromobj.stress_period_data[1])
 
+def test_checks():
+    m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
+                              load_only=['dis', 'bas6', 'mnwi'], verbose=True, check=False)
+    chk = m.check()
+    assert 'MNWI package present without MNW2 packge.' in '.'.join(chk.summary_array.desc)
+
 if __name__ == '__main__':
+    test_line_parse()
     test_load()
     test_make_package()
+    test_checks()

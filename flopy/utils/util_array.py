@@ -508,6 +508,7 @@ class Util3d(object):
                                           fmtin=u2d.format.fortran,
                                           locat=locat,
                                           cnstnt=u2d.cnstnt,
+                                          ext_filename=u2d.filename,
                                           array_free_format=array_free_format)
 
             return
@@ -815,7 +816,8 @@ class Util3d(object):
         nlay, nrow, ncol = shape
         u2ds = []
         for k in range(nlay):
-            u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, name,
+            u2d_name = name + '_Layer_{0}'.format(k)
+            u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, u2d_name,
                               ext_unit_dict=ext_unit_dict,
                               array_format=array_format)
             u2ds.append(u2d)
@@ -1148,6 +1150,7 @@ class Transient2d(object):
                                                   fmtin=u2d.format.fortran,
                                                   locat=locat,
                                                   cnstnt=u2d.cnstnt,
+                                                  ext_filename=u2d.filename,
                                                   array_free_format=array_free_format)
 
             self.model = model
@@ -1219,7 +1222,7 @@ class Transient2d(object):
         kper_dict = Transient2d.masked4d_array_to_kper_dict(m4d)
         return cls(model=model, shape=(model.nrow, model.ncol),
                    value=kper_dict,
-                   dtype=m4d.dtype, name=name)
+                   dtype=m4d.dtype.type, name=name)
 
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":
@@ -1651,10 +1654,13 @@ class Util2d(object):
         if self.vtype == str:
             fmtin = "(FREE)"
         self.__value_built = None
-        if isinstance(dtype, np.float) or isinstance(dtype, np.float32):
-            self.cnstnt = float(cnstnt)
-        else:
-            self.cnstnt = int(cnstnt)
+        #if isinstance(dtype, np.float) or isinstance(dtype, np.float32):
+        #if dtype in [float,np.float,np.float32]:
+        #    self.cnstnt = float(cnstnt)
+        #else:
+        #    self.cnstnt = int(cnstnt)
+        self.cnstnt = dtype(cnstnt)
+
         self.iprn = iprn
         self._format = ArrayFormat(self, fortran=fmtin,
                                    array_free_format=array_free_format)
