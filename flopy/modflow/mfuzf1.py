@@ -201,12 +201,13 @@ class ModflowUzf1(Package):
 
     """
 
-    def __init__(self, model, \
+    def __init__(self, model,
                  nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, iuzfcb1=57, iuzfcb2=0, ntrail2=10, nsets=20, nuzgag=0,
-                 surfdep=1.0, \
-                 iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35, thtr=0.15, thti=0.20, row_col_iftunit_iuzopt=[], \
-                 specifythtr=0, specifythti=0, nosurfleak=0, \
-                 finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1, \
+                 surfdep=1.0,
+                 iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35, thtr=0.15, thti=0.20,
+                 specifythtr=0, specifythti=0, nosurfleak=0,
+                 finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
+                 uzgag=None,
                  uzfbud_ext=[], extension='uzf', unitnumber=19):
         Package.__init__(self, model, extension, ['UZF'],
                          unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
@@ -282,15 +283,16 @@ class ModflowUzf1(Package):
             self.thti = Util2d(model, (nrow, ncol), np.float32, thti, name='thti')
         # Data Set 8
         # [IUZROW] [IUZCOL] IFTUNIT [IUZOPT]
-        if len(row_col_iftunit_iuzopt) != nuzgag:
+        self.uzgag = uzgag
+        if len(uzgag) != nuzgag:
             print("WARNING!\nItem 8 doesn't correspond with NUZGAG.\nNUZGAG set to 0")
             self.nuzgag = 0
-            self.row_col_iftunit_iuzopt = []
+            self.uzgag = []
         else:
-            self.row_col_iftunit_iuzopt = row_col_iftunit_iuzopt
+            self.uzgag = uzgag
             i = 0
-            for l in row_col_iftunit_iuzopt:
-                unitnumber.append(abs(l[0][2]))
+            for iftunit, l in uzgag.items():
+                unitnumber.append(abs(iftunit))
                 if uzfbud_ext == []:
                     extension.append(extension[0] + 'b' + str(i))
                 else:
@@ -301,7 +303,7 @@ class ModflowUzf1(Package):
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
         self.finf = []
-        if (not isinstance(finf, list)):
+        if not isinstance(finf, list):
             finf = [finf]
         for i, a in enumerate(finf):
             b = Util2d(model, (nrow, ncol), np.float32, a, name='finf_' + str(i + 1))
@@ -318,7 +320,7 @@ class ModflowUzf1(Package):
             # Data Set 14
             # [EXTDP (NCOL, NROW)] – U2DREL
             self.extdp = []
-            if (not isinstance(extdp, list)):
+            if not isinstance(extdp, list):
                 extdp = [extdp]
             for i, a in enumerate(extdp):
                 b = Util2d(model, (nrow, ncol), np.float32, a, name='extdp_' + str(i + 1))
@@ -401,55 +403,55 @@ class ModflowUzf1(Package):
         # Data Set 8
         # [IUZROW] [IUZCOL] IFTUNIT [IUZOPT]
         if self.nuzgag > 0:
-            for n in range(self.nuzgag):
-                if self.row_col_iftunit_iuzopt[n][0][2] > 0:
+            for iftunit, values in self.uzgag.items():
+                if iftunit > 0:
                     comment = ' IUZROW IUZCOL IFTUNIT IUZOPT'
-                    f_uzf.write('%10i%10i%10i%10i%s\n' % (tuple(self.row_col_iftunit_iuzopt[n][0] + [comment])))
+                    f_uzf.write('%10i%10i%10i%10i%s\n' % (tuple(values + [comment])))
                     # f_uzf.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:50s}\n'.\
-                    #    format(tuple(self.row_col_iftunit_iuzopt[n][0] + [comment])))
+                    #    format(tuple(self.uzgag[n][0] + [comment])))
                 else:
                     comment = ' IFTUNIT'
-                    f_uzf.write('%10i%s\n' % (tuple([self.row_col_iftunit_iuzopt[n][0][2]] + [comment])))
+                    f_uzf.write('%10i%s\n' % (tuple(values + [comment])))
         for n in range(nper):
             comment = ' NUZF1 for stress period ' + str(n + 1)
-            if (n < len(self.finf)):
+            if n < len(self.finf):
                 nuzf1 = 1
             else:
                 nuzf1 = -1
             # f_uzf.write('%10i%s\n' % (nuzf1, comment))
             f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf1, comment))
             comment = 'FINF for stress period ' + str(n + 1)
-            if (n < len(self.finf)):
+            if n < len(self.finf):
                 f_uzf.write(self.finf[n].get_file_entry())
             comment = ' NUZF2 for stress period ' + str(n + 1)
             if self.ietflg > 0:
-                if (n < len(self.pet)):
+                if n < len(self.pet):
                     nuzf2 = 1
                 else:
                     nuzf2 = -1
                 # f_uzf.write('%10i%s\n' % (nuzf2, comment))
                 f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf2, comment))
                 comment = 'PET for stress period ' + str(n + 1)
-                if (n < len(self.pet)):
+                if n < len(self.pet):
                     f_uzf.write(self.pet[n].get_file_entry())
                 comment = ' NUZF3 for stress period ' + str(n + 1)
-                if (n < len(self.extdp)):
+                if n < len(self.extdp):
                     nuzf3 = 1
                 else:
                     nuzf3 = -1
                 f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf3, comment))
                 comment = 'EXTDP for stress period ' + str(n + 1)
-                if (n < len(self.extdp)):
+                if n < len(self.extdp):
                     f_uzf.write(self.extdp[n].get_file_entry())
                 comment = ' NUZF4 for stress period ' + str(n + 1)
                 if self.iuzfopt > 0:
-                    if (n < len(self.extwc)):
+                    if n < len(self.extwc):
                         nuzf4 = 1
                     else:
                         nuzf4 = -1
                     f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf4, comment))
                     comment = 'EXTWC for stress period ' + str(n + 1)
-                    if (n < len(self.extwc)):
+                    if n < len(self.extwc):
                         f_uzf.write(self.extwc[n].get_file_entry())
         f_uzf.close()
 
@@ -493,20 +495,29 @@ class ModflowUzf1(Package):
             f = open(filename, 'r')
         # dataset 0 -- header
         while True:
-            line = f.readline()
+            line = next(f)
             if line[0] != '#':
                 break
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        # dataset 1
-        nuztop, nuzfopt, irunflg, ietflg, iuzfcb1, iuzfcb2, \
-        ntrail2, nsets2, nuzgag, surfdep = _parse1(next(f))
+        # dataset 1a
+        specifythtr, specifythti, nosurfleak = _parse1a(line)
+        # dataset 1b
+        nuztop, iuzfopt, irunflg, ietflg, iuzfcb1, iuzfcb2, \
+        ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
 
-        arrays = {}
-        def load_util2d(name, dtype):
+        arrays = {'finf': [], # datasets 10, 12, 14, 16 are lists of util2d arrays
+                  'pet': [],
+                  'extdp': [],
+                  'extwc': []}
+        def load_util2d(name, dtype, per=None):
             print('   loading {} array...'.format(name))
-            arrays[name] = Util2d.load(f, model, (nrow, ncol), dtype, name,
-                                       ext_unit_dict)
+            if per is not None:
+                arrays[name].append(Util2d.load(f, model, (nrow, ncol), dtype, name,
+                                       ext_unit_dict))
+            else:
+                arrays[name] = Util2d.load(f, model, (nrow, ncol), dtype, name,
+                                           ext_unit_dict)
 
         # dataset 2
         load_util2d('iuzfbnd', np.int)
@@ -526,28 +537,30 @@ class ModflowUzf1(Package):
             # dataset 6
             load_util2d('thts', np.float32)
 
-            # dataset 7
-            load_util2d('thti', np.float32)
+            if not model.dis.steady[0]:
+                # dataset 7 (initial water content; only read if not steady-state)
+                load_util2d('thti', np.float32)
 
         # dataset 8
-        uzfgag = {}
-        if nuzfgag > 0:
+        uzgag = {}
+        if nuzgag > 0:
             for i in range(nuzgag):
                 iuzrow, iuzcol, iftunit, iuzopt = _parse8(next(f))
                 tmp = [iuzrow, iuzcol] if iftunit > 0 else []
                 tmp.append(iftunit)
                 if iuzopt > 0:
                     tmp.append(iuzopt)
-                uzfgag[iftunit] = tmp
+                uzgag[iftunit] = tmp
 
         # dataset 9
         for per in range(nper):
+            print('stress period {}:'.format(per+1))
             line = line_parse(next(f))
             nuzf1 = _pop_item(line, int)
 
             # dataset 10
             if nuzf1 > 0:
-                load_util2d('finf', np.float32)
+                load_util2d('finf', np.float32, per=per)
 
             if ietflg > 0:
                 # dataset 11
@@ -555,29 +568,41 @@ class ModflowUzf1(Package):
                 nuzf2 = _pop_item(line, int)
                 if nuzf2 > 0:
                     # dataset 12
-                    load_util2d('pet', np.float32)
+                    load_util2d('pet', np.float32, per=per)
                     # dataset 13
                     line = line_parse(next(f))
                     nuzf3 = _pop_item(line, int)
                     if nuzf3 > 0:
                         # dataset 14
-                        load_util2d('extdp', np.float32)
+                        load_util2d('extdp', np.float32, per=per)
                         # dataset 15
                         line = line_parse(next(f))
                         nuzf4 = _pop_item(line, int)
                         if nuzf4 > 0:
                             # dataset 16
-                            load_util2d('extwc', np.float32)
+                            load_util2d('extwc', np.float32, per=per)
 
         # close the file
         f.close()
 
         # create uzf object
         return ModflowUzf1(model,
-                           nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, iuzfcb1=57, iuzfcb2=0,
-                           ntrail2=10, nsets=20, nuzgag=0,
-                           surfdep=1.0, *arrays,
-                           uzfbud_ext=[], extension='uzf', unitnumber=19)
+                           nuztop=nuztop, iuzfopt=iuzfopt, irunflg=irunflg, ietflg=ietflg,
+                           iuzfcb1=iuzfcb1, iuzfcb2=iuzfcb2,
+                           ntrail2=ntrail2, nsets=nsets2, nuzgag=nuzgag,
+                           surfdep=surfdep, uzgag=uzgag,
+                           specifythtr=specifythtr, specifythti=specifythti, nosurfleak=nosurfleak,
+                           **arrays
+                           )
+
+def _parse1a(line):
+    line = line_parse(line)
+    line = [s.lower() if isinstance(s, str) else s for s in line]
+    specifythtr = True if 'specifythtr' in line else False
+    specifythti = True if 'specifythti' in line else False
+    nosurfleak = True if 'nosurfleak' in line else False
+    return specifythtr, specifythti, nosurfleak
+
 
 def _parse1(line):
     ntrail2 = None
@@ -594,20 +619,20 @@ def _parse1(line):
         nsets2 = _pop_item(line, int)
     nuzgag = _pop_item(line, int)
     surfdep = _pop_item(line, float)
-    return nuztop, nuzfopt, irunflg, ietflag, iuzfcb1, iuzfcb2, ntrail2, nsets2, nuzgag, surfdep
+    return nuztop, iuzfopt, irunflg, ietflag, iuzfcb1, iuzfcb2, ntrail2, nsets2, nuzgag, surfdep
 
 def _parse8(line):
     iuzrow = None
     iuzcol = None
-    iuzopt = None
+    iuzopt = 0
     line = line_parse(line)
     if len(line) > 1:
         iuzrow = _pop_item(line, int)
         iuzcol = _pop_item(line, int)
-        iftunit = _pop_item(line,int)
-        iuzoipt = _pop_item(line, int)
+        iftunit = _pop_item(line, int)
+        iuzopt = _pop_item(line, int)
     else:
-        iftunit = _pop_item()
+        iftunit = _pop_item(line, int)
     return iuzrow, iuzcol, iftunit, iuzopt
 
 
