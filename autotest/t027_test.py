@@ -2,11 +2,12 @@
 test MNW2 package
 """
 import sys
-sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
+sys.path.insert(0, '/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import flopy
 import numpy as np
 from flopy.utils.flopy_io import line_parse
+from flopy.utils.util_list import MfList
 
 cpth = os.path.join('temp')
 mf2005pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -20,7 +21,7 @@ def test_line_parse():
 def test_load():
 
     # load in the test problem (1 well, 3 stress periods)
-    m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth)
+    m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth, verbose=True, forgive=False)
     m.change_model_ws(cpth)
     assert 'MNW2' in m.get_package_list()
     assert 'MNWI' in m.get_package_list()
@@ -73,9 +74,14 @@ def test_make_package():
     # verify that they two input methods produce the same results
     assert np.array_equal(mnw2_4.stress_period_data[1], mnw2fromobj.stress_period_data[1])
 
+def test_export():
+    m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
+                              load_only=['dis', 'bas6', 'mnwi', 'mnw2'], verbose=True, check=False)
+    m.mnw2.export(os.path.join(cpth, 'MNW2-Fig28.nc'))
+
 def test_checks():
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
-                              load_only=['dis', 'bas6', 'mnwi'], verbose=True, check=False)
+                              load_only=['dis', 'bas6', 'mnwi', 'wel'], verbose=True, check=False)
     chk = m.check()
     assert 'MNWI package present without MNW2 packge.' in '.'.join(chk.summary_array.desc)
 
@@ -83,4 +89,5 @@ if __name__ == '__main__':
     test_line_parse()
     test_load()
     test_make_package()
+    test_export()
     test_checks()
