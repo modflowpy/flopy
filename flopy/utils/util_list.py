@@ -828,8 +828,9 @@ class MfList(object):
             raise NotImplementedError()
         arrays = {}
         for name in self.dtype.names[i0:]:
-            arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
-            arrays[name] = arr.copy()
+            if not self.dtype.fields[name][0] == object:
+                arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
+                arrays[name] = arr.copy()
 
         # if this kper is not found
         if kper not in self.data.keys():

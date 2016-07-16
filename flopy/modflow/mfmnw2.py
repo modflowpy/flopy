@@ -376,17 +376,17 @@ class Mnw(object):
     @staticmethod
     def get_default_spd_dtype(structured=True):
         if structured:
-            return np.dtype([('per', np.int),
-                             ('qdes', np.float),
+            return np.dtype([('k', np.int),
+                             ('i', np.int),
+                             ('j', np.int),
+                             ('per', np.int),
+                             ('qdes', np.float32),
                              ('capmult', np.int),
                              ('cprime', np.float32),
                              ('hlim', np.float32),
                              ('qcut', np.int),
-                             ('qfrcmn', np.float),
-                             ('qfrcmx', np.float),
-                             ('k', np.float),
-                             ('i', np.float),
-                             ('j', np.float)])
+                             ('qfrcmn', np.float32),
+                             ('qfrcmx', np.float32)])
         else:
             pass
 
@@ -760,6 +760,7 @@ class ModflowMnw2(Package):
         # Datasets 2-4 are contained in node_data and stress_period_data tables
         # and/or in Mnw objects
         self.node_data = self.get_empty_node_data(0, aux_names=aux)
+
         if node_data is not None:
             self.node_data = self.get_empty_node_data(len(node_data), aux_names=aux)
             names = [n for n in node_data.dtype.names if n in self.node_data.dtype.names]
@@ -813,9 +814,6 @@ class ModflowMnw2(Package):
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         d = np.zeros(maxnodes, dtype=dtype)
-        #if len(d) > 0:
-        #    d[:] = default_value
-        #d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
         d = d.view(np.recarray)
         return d
 
@@ -837,7 +835,7 @@ class ModflowMnw2(Package):
                              ('rskin', np.float32),
                              ('kskin', np.float32),
                              ('B', np.float32),
-                             ('C', np.float),
+                             ('C', np.float32),
                              ('P', np.float32),
                              ('cwc', np.float32),
                              ('pp', np.float32),
@@ -874,17 +872,17 @@ class ModflowMnw2(Package):
     @staticmethod
     def get_default_spd_dtype(structured=True):
         if structured:
-            return np.dtype([('wellid', np.object),
-                             ('qdes', np.float),
+            return np.dtype([('k', np.int),
+                             ('i', np.int),
+                             ('j', np.int),
+                             ('wellid', np.object),
+                             ('qdes', np.float32),
                              ('capmult', np.int),
                              ('cprime', np.float32),
                              ('hlim', np.float32),
                              ('qcut', np.int),
-                             ('qfrcmn', np.float),
-                             ('qfrcmx', np.float),
-                             ('k', np.int),
-                             ('i', np.int),
-                             ('j', np.int)])
+                             ('qfrcmn', np.float32),
+                             ('qfrcmx', np.float32) ])
         else:
             pass
 
@@ -940,11 +938,11 @@ class ModflowMnw2(Package):
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
                     # update package stress period data table
                     kij = list(node_data[node_data.wellid == wellid][['k', 'i', 'j']][0])
-                    current_4[i] = tuple([wellid, qdes, capmult, cprime,
-                                    hlim, qcut, qfrcmn, qfrcmx] + kij + xyz)
+                    current_4[i] = tuple(kij + [wellid, qdes, capmult, cprime,
+                                    hlim, qcut, qfrcmn, qfrcmx] + xyz)
                     # update well stress period data table
-                    mnw[wellid].stress_period_data[per] = tuple([per] + [qdes, capmult, cprime,
-                                                                   hlim, qcut, qfrcmn, qfrcmx] + kij + xyz)
+                    mnw[wellid].stress_period_data[per] = tuple(kij + [per] + [qdes, capmult, cprime,
+                                                                   hlim, qcut, qfrcmn, qfrcmx] + xyz)
                 stress_period_data[per] = current_4
             elif itmp_per == 0: # no active mnws this stress period
                 continue
@@ -1074,6 +1072,24 @@ class ModflowMnw2(Package):
         self.stress_period_data = MfList(self,
                                          stress_period_data,
                                          dtype=stress_period_data[0].dtype)
+
+    def export(self, f, **kwargs):
+        self.node_data_MfList = MfList(self, self.node_data, dtype=self.node_data.dtype)
+        # make some modifications to ensure proper export
+        if np.nansum(self.stress_period_data.array['qcut']) == 0:
+            todrop = {'qfrcmx', 'qfrcmn'}
+            names = list(set(self.stress_period_data.dtype.names).difference(todrop))
+            dtype = np.dtype([(k, d) for k, d in self.stress_period_data.dtype.descr if k not in todrop])
+            spd = {}
+            for k, v in self.stress_period_data.data.items():
+                newarr = np.array(np.zeros_like(self.stress_period_data[k][names]),
+                                  dtype=dtype).view(np.recarray)
+                for n in dtype.names:
+                    newarr[n] = self.stress_period_data[k][n]
+                spd[k] = newarr
+            self.stress_period_data = MfList(self, spd, dtype=dtype)
+
+        super(ModflowMnw2, self).export(f, **kwargs)
 
     def _write_1(self, f_mnw):
         f_mnw.write('{:.0f} '.format(self.mnwmax))

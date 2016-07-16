@@ -6,6 +6,7 @@ sys.path.insert(0, '/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import flopy
 import numpy as np
+import netCDF4
 from flopy.utils.flopy_io import line_parse
 from flopy.utils.util_list import MfList
 
@@ -75,10 +76,17 @@ def test_make_package():
     assert np.array_equal(mnw2_4.stress_period_data[1], mnw2fromobj.stress_period_data[1])
 
 def test_export():
+    """test export of package."""
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
-                              load_only=['dis', 'bas6', 'mnwi', 'mnw2'], verbose=True, check=False)
+                              load_only=['dis', 'bas6', 'mnwi', 'mnw2', 'wel'], verbose=True, check=False)
+    m.wel.export(os.path.join(cpth, 'MNW2-Fig28_well.nc'))
     m.mnw2.export(os.path.join(cpth, 'MNW2-Fig28.nc'))
-
+    nc = netCDF4.Dataset('../autotest/temp/MNW2-Fig28.nc')
+    assert np.array_equal(nc.variables['mnw2_qdes'][:, 0, 29, 40],
+                          np.array([0., -10000., -10000.], dtype='float32'))
+    assert np.array_equal(nc.variables['mnw2_rw'][:, 0, 29, 40],
+                          np.array([ 0.13330001,  0.13330001,  0.13330001], dtype='float32'))
+    # need to add shapefile test
 def test_checks():
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
                               load_only=['dis', 'bas6', 'mnwi', 'wel'], verbose=True, check=False)
