@@ -436,8 +436,13 @@ def package_helper(f, pak, **kwargs):
 def generic_array_helper(f, array, var_name="generic_array",
                          dimensions = ("time", "layer", "y", "x"),
                          precision_str="f4",units="unitless",**kwargs):
-    assert isinstance(f,NetCdf),"generic_array_helper() can only be used " +\
-                                "with instantiated netCDfs"
+    #assert isinstance(f,NetCdf),"generic_array_helper() can only be used " +\
+    #                            "with instantiated netCDfs"
+    if isinstance(f, str) and f.lower().endswith(".nc"):
+        assert "model" in kwargs.keys(),"creating a new netCDF using generic_array_helper requires a 'model' kwarg"
+        assert isinstance(kwargs["model"],BaseModel)
+        f = NetCdf(f, kwargs.pop("model"))
+
     assert array.ndim == len(dimensions),"generic_array_helper() "+\
                                          "array.ndim != dimensions"
     coords_dims = {"time":"time", "layer":"layer", "y":"latitude","x":"longitude"}
