@@ -377,11 +377,20 @@ class Mt3dms(BaseModel):
         mt : flopy.mt3d.mt.Mt3dms
             flopy Mt3d model object
 
+        Notes
+        -----
+        The load method does not retain the name for the MODFLOW-generated
+        FTL file.  This can be added manually after the MT3D model has been
+        loaded.  The syntax for doing this manually is
+        mt.ftlfilename = 'example.ftl'
+
         Examples
         --------
 
         >>> import flopy
+        >>> f = 'example.nam'
         >>> mt = flopy.mt3d.mt.Mt3dms.load(f)
+        >>> mt.ftlfilename = 'example.ftl'
 
         """
         # test if name file is passed with extension (i.e., is a valid file)
