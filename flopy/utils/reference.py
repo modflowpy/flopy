@@ -239,6 +239,17 @@ class SpatialReference(object):
             return False
         return True
 
+
+    @classmethod
+    def from_namfile(cls,namefile):
+        attribs = SpatialReference.attribs_from_namfile_header(namefile)
+        try:
+            attribs.pop("start_datetime")
+        except:
+            pass
+        return SpatialReference(**attribs)
+
+
     @classmethod
     def from_gridspec(cls,gridspec_file,lenuni=0):
         f = open(gridspec_file,'r')
