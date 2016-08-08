@@ -100,7 +100,8 @@ class ModpathSim(Package):
         self.trace_file = '{}.{}'.format(model.get_name(), 'trace_file.txt')
         self.trace_id = trace_id 
         self.stop_zone = stop_zone 
-        self.zone = zone  
+        self.zone = util_3d(model, (nlay,nrow,ncol), np.int, \
+                    zone, name='zone', locat=self.unit_number[0]) 
         self.retard_fac = retard_fac 
         self.retard_fcCB = retard_fcCB
         
@@ -229,9 +230,9 @@ class ModpathSim(Package):
                 
         if self.options_dict['ZoneArrayOption'] != 1:
             # item 30
-            f_sim.write('{0:s}\n'.format(self.stop_zone))
+            f_sim.write('{0:d}\n'.format(self.stop_zone))
             # item 31
-            f_sim.write(self.stop_zone.get_file_entry())
+            f_sim.write(self.zone.get_file_entry())
             
         if self.options_dict['RetardationOption'] != 1:
             # item 32
