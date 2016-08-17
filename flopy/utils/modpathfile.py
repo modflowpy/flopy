@@ -425,7 +425,7 @@ class EndpointFile():
         >>> e = endobj.get_alldata()
 
         """
-        ra = self._data.copy()
+        ra = self._data.view(np.recarray).copy()
         # if final:
         #     ra = np.rec.fromarrays((self._data['x'], self._data['y'], self._data['z'],
         #                             self._data['finaltime'], self._data['k'],
@@ -435,3 +435,26 @@ class EndpointFile():
         #                             self._data['initialtime'], self._data['k0'],
         #                             self._data['particleid']), dtype=self.outdtype)
         return ra
+
+    def get_destination_endpoint_data(self, dest_cells):
+        """Get endpoint data for set of destination cells.
+
+        Parameters
+        ----------
+        dest_cells : list or array of tuples
+            (k, i, j) of each destination cell (zero-based)
+
+        Returns
+        -------
+        epdest : np.recarray
+            Slice of endpoint data array containing only data with final k,i,j in dest_cells
+        """
+        if not isinstance(dest_cells, list):
+            dest_cells = list(dest_cells)
+        k, i, j = map(np.array, list(zip(*dest_cells)))
+
+        ra = self.get_alldata()
+        # find the intersection of endpoints and dest_cells
+        inds = np.in1d(ra[['k', 'i', 'j']], np.array(dest_cells))
+        epdest = ra[inds].copy()
+        return epdest

@@ -146,6 +146,29 @@ class MfList(object):
 
         return new_dict
 
+    def drop(self, fields):
+        """drop fields from an MfList
+
+        Parameters
+        ----------
+        fields : list or set of field names to drop
+
+        Returns
+        -------
+        dropped : MfList without the dropped fields
+        """
+        fields = set(fields) if isinstance(fields, list) else fields
+        names = list(set(self.dtype.names).difference(fields))
+        dtype = np.dtype([(k, d) for k, d in self.dtype.descr if k not in fields])
+        spd = {}
+        for k, v in self.data.items():
+            newarr = np.array(np.zeros_like(self.data[k][names]),
+                              dtype=dtype).view(np.recarray)
+            for n in dtype.names:
+                newarr[n] = self.data[k][n]
+            spd[k] = newarr
+        return MfList(self.package, spd, dtype=dtype)
+
     @property
     def data(self):
         return self.__data

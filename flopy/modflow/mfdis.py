@@ -738,7 +738,25 @@ class ModflowDis(Package):
         # return dis object instance
         return dis
 
+def get_layer(dis, i, j, elev):
+    """Return the layer for an elevation at an i, j location.
 
+    Parameters
+    ----------
+    dis : flopy.modflow.ModflowDis object
+    i : row index (zero-based)
+    j : column index
+    elev : elevation (in same units as model)
+
+    Returns
+    -------
+    k : zero-based layer index
+    """
+    elevs = dis.botm.array[:, i, j].tolist()
+    for k, botm in enumerate(elevs):
+        if botm < elev:
+            return k
+    return len(elevs) -1
 
 
 

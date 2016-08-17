@@ -6,7 +6,7 @@ from ..pakbase import Package
 from flopy.utils.flopy_io import line_parse, pop_item
 from flopy.utils import check
 from flopy.utils.util_list import MfList
-
+from flopy.modflow.mfdis import get_layer
 
 class Mnw(object):
     """Multi-Node Well object class
@@ -998,6 +998,38 @@ class ModflowMnw2(Package):
         chk.summarize()
         return chk
 
+    def get_allnode_data(self):
+        """Get a version of the node_data array that has all MNW2 nodes listed explicitly.
+        For example, MNWs with open intervals encompassing multiple layers would have a row
+        entry for each layer. Ztop and zbotm values indicate the top and bottom elevations of the node
+        (these are the same as the layer top and bottom if the node fully penetrates that layer).
+
+        Returns
+        -------
+        allnode_data : np.recarray
+            Numpy record array of same form as node_data, except each row represents only one node.
+        """
+        from numpy.lib.recfunctions import stack_arrays
+
+        nd = []
+        for r in self.node_data:
+            startK = get_layer(self.parent.dis, r.i, r.j, r.ztop)
+            endK = get_layer(self.parent.dis, r.i, r.j, r.zbotm)
+            if startK == endK:
+                r = r.copy()
+                r['k'] = startK
+                nd.append(r)
+            else:
+                for k in np.arange(startK, endK+1):
+                    r = r.copy()
+                    r['k'] = k
+                    if k > startK:
+                        r['ztop'] = self.parent.dis.botm[k-1, r.i, r.j]
+                    if k < endK:
+                        r['zbotm'] = self.parent.dis.botm[k, r.i, r.j]
+                    nd.append(r)
+        return stack_arrays(nd, usemask=False).view(np.recarray)
+
     def make_mnw_objects(self):
         node_data = self.node_data
         stress_period_data = self.stress_period_data
@@ -1076,18 +1108,26 @@ class ModflowMnw2(Package):
     def export(self, f, **kwargs):
         self.node_data_MfList = MfList(self, self.node_data, dtype=self.node_data.dtype)
         # make some modifications to ensure proper export
-        if np.nansum(self.stress_period_data.array['qcut']) == 0:
-            todrop = {'qfrcmx', 'qfrcmn'}
-            names = list(set(self.stress_period_data.dtype.names).difference(todrop))
-            dtype = np.dtype([(k, d) for k, d in self.stress_period_data.dtype.descr if k not in todrop])
-            spd = {}
-            for k, v in self.stress_period_data.data.items():
-                newarr = np.array(np.zeros_like(self.stress_period_data[k][names]),
-                                  dtype=dtype).view(np.recarray)
-                for n in dtype.names:
-                    newarr[n] = self.stress_period_data[k][n]
-                spd[k] = newarr
-            self.stress_period_data = MfList(self, spd, dtype=dtype)
+        # avoid duplicate entries for qfrc
+        if np.nansum(self.stress_period_data.array['qlimit']) == 0:
+            todrop = ['hlim', 'qcut', 'qfrcmn', 'qfrcmx']
+        elif np.nansum(self.stress_period_data.array['qcut']) == 0:
+            todrop = ['qfrcmn', 'qfrcmx']
+
+        self.stress_period_data = self.stress_period_data.drop()
+        '''
+        todrop = {'qfrcmx', 'qfrcmn'}
+        names = list(set(self.stress_period_data.dtype.names).difference(todrop))
+        dtype = np.dtype([(k, d) for k, d in self.stress_period_data.dtype.descr if k not in todrop])
+        spd = {}
+        for k, v in self.stress_period_data.data.items():
+            newarr = np.array(np.zeros_like(self.stress_period_data[k][names]),
+                              dtype=dtype).view(np.recarray)
+            for n in dtype.names:
+                newarr[n] = self.stress_period_data[k][n]
+            spd[k] = newarr
+        self.stress_period_data = MfList(self, spd, dtype=dtype)
+        '''
 
         super(ModflowMnw2, self).export(f, **kwargs)
 

@@ -55,15 +55,15 @@ class Modpath(BaseModel):
         self.mpnamefile = '{}.{}'.format(self.name, namefile_ext)
         self.mpbas_file = '{}.mpbas'.format(modelname)
         if self.__mf is not None:
-            dis_file = self.__mf.dis.file_name[0]
+            # ensure that user-specified files are used
+            head_file = self.__mf.oc.file_name[1] if head_file is None else head_file
+            budget_file = self.__mf.oc.file_name[3] if budget_file is None else budget_file
+            dis_file = self.__mf.dis.file_name[0] if dis_file is None else dis_file
             dis_unit = self.__mf.dis.unit_number[0]
-        self.dis_file = dis_file
-        self.dis_unit = dis_unit
-        if self.__mf is not None:
-            head_file = self.__mf.oc.file_name[1]
-            budget_file = self.__mf.oc.file_name[3]
         self.head_file = head_file
         self.budget_file = budget_file
+        self.dis_file = dis_file
+        self.dis_unit = dis_unit
         self.__sim = None
         self.array_free_format = False
         self.array_format = 'modflow'
