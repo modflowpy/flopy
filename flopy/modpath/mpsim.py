@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util2d, Util3d
+from ..utils import Util2d, Util3d, check
 
 
 class ModpathSim(Package):
@@ -125,6 +125,43 @@ class ModpathSim(Package):
         # retard_fcCB,name='retard_fcCB',locat=self.unit_number[0])
 
         self.parent.add_package(self)
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+
+        # MODPATH apparently produces no output if stoptime > last timepoint
+        if self.options_dict['StopOption'] == 3 and self.options_dict['TimePointOption'] == 3:
+            if self.time_pts[-1] < self.stop_time:
+                chk._add_to_summary(type='Error', value=self.stop_time,
+                                    desc='Stop time greater than last TimePoint')
+            else:
+                chk.append_passed('Valid stop time')
+            chk.summarize()
+        return chk
 
     def write_file(self):
         """

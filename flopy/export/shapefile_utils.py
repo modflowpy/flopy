@@ -230,3 +230,83 @@ def shape_attr_name(name, length=6, keep_layer=False):
     if len(n) > length:
         n = n[:length]
     return n
+
+def enforce_10ch_limit(names):
+    """Enforce 10 character limit for fieldnames.
+    Add suffix for duplicate names starting at 0.
+
+    Parameters
+    ----------
+    names : list of strings
+
+    Returns
+    -------
+    names : list of unique strings of len <= 10.
+    """
+    names = [n[:9]+'1' if len(n) > 10 else n
+             for n in names]
+    dups = {x:names.count(x) for x in names}
+    suffix = {n: list(range(len(cnt))) for n, cnt in dups.items() if cnt > 1}
+    for i, n in enumerate(names):
+        if dups[n] > 1:
+            names[i] = n[:9] + str(suffix[n].pop(0))
+    return names
+
+def get_pyshp_field_info(dtypename):
+    """Get pyshp dtype information for a given numpy dtype."""
+    fields = {'int': ('N', 20, 0),
+              'float': ('F', 20, 12),
+              'bool': ('L', 1),
+              'str': ('C', 50),
+              'object': ('C', 50)}
+    k = [k for k in fields.keys() if k in dtypename.lower()]
+    if len(k) == 1:
+        return fields[k[0]]
+    else:
+        return fields['str']
+
+def recarray2shp(recarray, geoms, shpname='recarray.shp'):
+    """Write a numpy record array to a shapefile, using a corresponding
+    list of geometries.
+
+    Parameters
+    ----------
+    recarray : np.recarry
+        Numpy record array with attribute information that will go in the shapefile
+    geoms : list of flopy.utils.geometry objects
+        The number of geometries in geoms must equal the number of records in recarray.
+    shpname : str
+        Path for the output shapefile
+
+    Notes
+    -----
+    Uses pyshp.
+
+    """
+    try:
+        import shapefile as sf
+    except Exception as e:
+        raise Exception("io.to_shapefile(): error " +
+                        "importing shapefile - try pip install pyshp")
+    if len(recarray) != len(geoms):
+        raise IndexError('Number of geometries must equal the number of records!')
+
+    geomtype = None
+    for g in geoms:
+        try:
+            geomtype = g.shapetype
+        except:
+            continue
+    w = sf.Writer(geomtype)
+    w.autoBalance = 1
+    # set up the attribute fields
+    print(recarray.dtype.names)
+    names = enforce_10ch_limit(recarray.dtype.names)
+    for i, npdtype in enumerate(recarray.dtype.names):
+        w.field(names[i], *get_pyshp_field_info(npdtype))
+
+    # write the geometry and attributes for each record
+    for i, r in enumerate(recarray):
+        w.poly(parts=geoms[i].pyshp_parts)
+        w.record(*r)
+    w.save(shpname)
