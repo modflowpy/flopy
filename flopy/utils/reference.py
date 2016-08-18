@@ -2,6 +2,8 @@
 Module spatial referencing for flopy model objects
 
 """
+import sys
+import os
 import numpy as np
 
 
@@ -581,4 +583,86 @@ class SpatialReference(object):
 
         return b
 
+class epsgRef:
+    """Sets up a local database of projection file text referenced by epsg code.
+    The database is located in the site packages folder in epsgref.py, which
+    contains a dictionary, prj, of projection file text keyed by epsg value.
+    """
+    def __init__(self):
+        import site
+        self.location = os.path.join(site.getsitepackages()[0], 'epsgref.py')
 
+    def make(self):
+        if not os.path.exists(self.location):
+            newfile = open(self.location, 'w')
+            newfile.write('prj = {}\n')
+            newfile.close()
+    def reset(self, verbose=True):
+        os.remove(self.location)
+        self.make()
+        if verbose:
+            print('Resetting {}'.format(self.location))
+    def add(self, epsg, prj):
+        """add an epsg code to epsgref.py"""
+        with open(self.location, 'a') as epsgfile:
+            epsgfile.write("prj[{:d}] = '{}'\n".format(epsg, prj))
+    def remove(self, epsg):
+        """removes an epsg entry from epsgref.py"""
+        from epsgref import prj
+        self.reset(verbose=False)
+        if epsg in prj.keys():
+            del prj[epsg]
+        for epsg, prj in prj.items():
+            self.add(epsg, prj)
+    @staticmethod
+    def show():
+        import importlib
+        import epsgref
+        importlib.reload(epsgref)
+        from epsgref import prj
+        for k, v in prj.items():
+            print('{}:\n{}\n'.format(k, v))
+
+
+def getprj(epsg, addlocalreference=True):
+    """Gets projection file (.prj) text for given epsg code from spatialreference.org
+    See: https://www.epsg-registry.org/
+
+    Parameters
+    ----------
+    epsg : int
+        epsg code for coordinate system
+    addlocalreference : boolean
+        adds the projection file text associated with epsg to a local
+        database, epsgref.py, located in site-packages.
+
+    Returns
+    -------
+    prj : str
+        text for a projection (*.prj) file.
+    """
+    epsgfile = epsgRef()
+    prj = None
+    try:
+        from epsgref import prj
+        prj = prj.get(epsg)
+    except ImportError:
+        epsgfile.make()
+
+    if prj is None:
+        try:
+            import requests
+        except:
+            raise ImportError('This requires the requests module.')
+            return
+        try:
+            resp = requests.get("http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(epsg))
+            prj = resp.text.replace("\n", "")
+            if addlocalreference:
+                epsgfile.add(epsg, prj)
+        except:
+            e = sys.exc_info()
+            print(e)
+            print('Need an internet connection to look up epsg on spatialreference.org.')
+            return
+    return prj

@@ -1,9 +1,10 @@
 """
 Module for exporting and importing flopy model attributes
 """
+import shutil
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList
-
+from ..utils.reference import getprj
 
 def write_gridlines_shapefile(filename, sr):
     """
@@ -265,7 +266,7 @@ def get_pyshp_field_info(dtypename):
     else:
         return fields['str']
 
-def recarray2shp(recarray, geoms, shpname='recarray.shp'):
+def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     """Write a numpy record array to a shapefile, using a corresponding
     list of geometries.
 
@@ -277,10 +278,18 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp'):
         The number of geometries in geoms must equal the number of records in recarray.
     shpname : str
         Path for the output shapefile
+    epsg : int
+        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+    prj : str
+        Existing projection file to be used with new shapefile.
 
     Notes
     -----
     Uses pyshp.
+    epsg code requires an internet connection the first time to get the projection
+    file text from spatialreference.org, but then stashes the text in the file
+    epsgref.py (located in the site-packages folder) for subsequent use. See
+    flopy.reference for more details.
 
     """
     try:
@@ -300,13 +309,33 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp'):
     w = sf.Writer(geomtype)
     w.autoBalance = 1
     # set up the attribute fields
-    print(recarray.dtype.names)
     names = enforce_10ch_limit(recarray.dtype.names)
     for i, npdtype in enumerate(recarray.dtype.names):
         w.field(names[i], *get_pyshp_field_info(npdtype))
 
     # write the geometry and attributes for each record
-    for i, r in enumerate(recarray):
-        w.poly(parts=geoms[i].pyshp_parts)
-        w.record(*r)
+    if geomtype == 5:
+        for i, r in enumerate(recarray):
+            w.poly(geoms[i].pyshp_parts)
+            w.record(*r)
+    elif geomtype == 3:
+        for i, r in enumerate(recarray):
+            w.line(geoms[i].pyshp_parts)
+            w.record(*r)
+    elif geomtype == 1:
+        for i, r in enumerate(recarray):
+            w.point(*geoms[i].pyshp_parts)
+            w.record(*r)
     w.save(shpname)
+    print('wrote {}'.format(shpname))
+
+    # write the projection file
+    prjname = shpname.split('.')[0] + '.prj'
+    # write projection file from epsg code
+    if epsg is not None:
+        prjtxt = getprj(epsg)
+        with open(prjname, 'w') as output:
+            output.write(prjtxt)
+    # copy a supplied prj file
+    if prj is not None:
+        shutil.copy(prj, prjname)
