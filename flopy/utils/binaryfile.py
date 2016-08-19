@@ -51,8 +51,13 @@ class BinaryHeader(Header):
                 # text strings. Necessary to work with HeadFile and UcnFile
                 # routines
                 ttext = kwargs[k].upper()
+                # trim a long string
                 if len(ttext) > 16:
                     text = text[0:16]
+                # pad a short string
+                elif len(ttext) < 16:
+                    text = "{:<16}".format(ttext)
+                # the string is just right
                 else:
                     text = ttext
                 self.header[0][k] = text
