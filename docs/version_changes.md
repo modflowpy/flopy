@@ -7,6 +7,7 @@ FloPy Changes
 * Bug fixes:
   1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
   2. Fixed bug in check routine when THICKSTRT is specified as an option in the LPF and UPW packages.
+  3. Fixed bug in BinaryHeader.set_values method that prevented setting of entries based on passed kwargs.
 
 
 ### Version 3.2.5
