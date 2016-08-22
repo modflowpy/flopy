@@ -24,18 +24,6 @@ class ModflowLpf(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-    ipakcb : int
-        A flag that is used to determine if cell-by-cell budget data should be
-        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 53)
-    hdry : float
-        Is the head that is assigned to cells that are converted to dry during
-        a simulation. Although this value plays no role in the model
-        calculations, it is useful as an indicator when looking at the
-        resulting heads that are output from the model. HDRY is thus similar
-        to HNOFLO in the Basic Package, which is the value assigned to cells
-        that are no-flow cells at the start of a model simulation. (default
-        is -1.e30).
     laytyp : int or array of ints (nlay)
         Layer type (default is 0).
     layavg : int or array of ints (nlay)
@@ -60,6 +48,21 @@ class ModflowLpf(Package):
         hydraulic conductivity.
     laywet : float or array of floats (nlay)
         contains a flag for each layer that indicates if wetting is active.
+    ipakcb : int
+        A flag that is used to determine if cell-by-cell budget data should be
+        saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
+        (default is 53)
+    hdry : float
+        Is the head that is assigned to cells that are converted to dry during
+        a simulation. Although this value plays no role in the model
+        calculations, it is useful as an indicator when looking at the
+        resulting heads that are output from the model. HDRY is thus similar
+        to HNOFLO in the Basic Package, which is the value assigned to cells
+        that are no-flow cells at the start of a model simulation. (default
+        is -1.e30).
+    iwdflg : int
+        flag to indicate if wetting is inactive (0) or not (non zero)
+        (default is 0)        
     wetfct : float
         is a factor that is included in the calculation of the head that is
         initially established at a cell when it is converted from dry to wet.
