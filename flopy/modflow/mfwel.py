@@ -33,7 +33,7 @@ class ModflowWel(Package):
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
         boundaries. Indices of the dictionary are the numbers of the stress
-        period. This gives the form of::
+        period. This gives the form of:
 
             stress_period_data =
             {0: [
@@ -59,12 +59,14 @@ class ModflowWel(Package):
         simulation. Full details of all options to specify stress_period_data
         can be found in the flopy3 boundaries Notebook in the basic
         subdirectory of the examples directory
-    options : list of strings
-        Package options. (default is None).
+    dtype : custom datatype of stress_period_data.
+        If None the default well datatype will be applied (default is None).
     extension : string
         Filename extension (default is 'wel')
     unitnumber : int
-        File unit number (default is 11).
+        File unit number (default is 20).
+    options : list of strings
+        Package options (default is None).        
 
     Attributes
     ----------
