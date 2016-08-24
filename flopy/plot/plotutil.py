@@ -678,7 +678,7 @@ def cvfd_to_patch_collection(verts, iverts):
 def plot_cvfd(verts, iverts, ax=None, cmap='Dark2', edgecolor='scaled',
               facecolor='scaled', a=None, masked_values=None, **kwargs):
     """
-    Generic function for plotting a control volume finite different grid of
+    Generic function for plotting a control volume finite difference grid of
     information.
 
     Parameters
