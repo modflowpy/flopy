@@ -1,0 +1,480 @@
+
+MODPATH - Version 6.0.00  July 16, 2012                   
+U.S. GEOLOGICAL SURVEY PARTICLE TRACKING MODEL FOR MODFLOW
+
+Simulation File: EXAMPLE-7.mpsim                                                                                                                                                                                         
+  
+--------------------------------------------
+Allocating and reading data for grid  1
+--------------------------------------------
+
+ OPENING EXAMPLE.MPBAS
+ FILE TYPE:MPBAS   UNIT   70   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING EXAMPLE.DIS
+ FILE TYPE:DIS   UNIT    3   STATUS:OLD    
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+
+ OPENING EXAMPLE.HED
+ FILE TYPE:HEAD   UNIT    1   STATUS:OLD    
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+
+ OPENING EXAMPLE.BUD
+ FILE TYPE:BUDGET   UNIT    2   STATUS:OLD    
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+
+ DISCRETIZATION INPUT DATA READ FROM UNIT    3
+    5 LAYERS        25 ROWS        25 COLUMNS
+    3 STRESS PERIOD(S) IN SIMULATION
+ MODEL TIME UNIT IS DAYS
+ MODEL LENGTH UNIT IS FEET
+  Confining bed flag for each layer:
+   0   0   0   0   0
+
+                     DELR =   400.000    
+
+                     DELC =   400.000    
+
+ TOP ELEVATION OF LAYER 1 =   400.000    
+
+   MODEL LAYER BOTTOM EL. =   270.000     FOR LAYER   1
+
+   MODEL LAYER BOTTOM EL. =   220.000     FOR LAYER   2
+
+   MODEL LAYER BOTTOM EL. =   200.000     FOR LAYER   3
+
+   MODEL LAYER BOTTOM EL. =   100.000     FOR LAYER   4
+
+   MODEL LAYER BOTTOM EL. =   0.00000     FOR LAYER   5
+
+
+ STRESS PERIOD     LENGTH       TIME STEPS     MULTIPLIER FOR DELT    SS FLAG
+ ----------------------------------------------------------------------------
+        1         200000.0          1                    1.000         SS
+        2         10000.00         10                    1.500         TR
+        3         200000.0          1                    1.000         SS
+
+ COMBINED STEADY-STATE AND TRANSIENT SIMULATION
+ 
+
+ AQUIFER HEAD IS SET TO 1.00000E+30 AT ALL NO-FLOW NODES (IBOUND=0).
+ AQUIFER HEAD IS SET TO 1.00000E+20 AT ALL DRY NODES.
+ 
+ 
+ Default stress package boundary face options (IFACE):
+   RECHARGE will be assigned to face  6
+   ET will be assigned to face  6
+ 
+ LAYER TYPE(LAYTYP)
+  1 0 0 0 0
+
+           BOUNDARY ARRAY =              1 FOR LAYER   1
+
+           BOUNDARY ARRAY =              1 FOR LAYER   2
+
+           BOUNDARY ARRAY =              1 FOR LAYER   3
+
+           BOUNDARY ARRAY =              1 FOR LAYER   4
+
+           BOUNDARY ARRAY =              1 FOR LAYER   5
+
+                 POROSITY =  0.300000     FOR LAYER   1
+
+                 POROSITY =  0.300000     FOR LAYER   2
+
+                 POROSITY =  0.300000     FOR LAYER   3
+
+                 POROSITY =  0.300000     FOR LAYER   4
+
+                 POROSITY =  0.300000     FOR LAYER   5
+ 
+ CHECKING THE HEAD FILE FOR GRID   1
+ Single Precision Binary Head file
+ READ HEAD FOR PERIOD     1 STEP     1  PERTIM =   2.000000E+05  TOTIM =   2.000000E+05
+ READ HEAD FOR PERIOD     2 STEP     1  PERTIM =   8.823783E+01  TOTIM =   2.000882E+05
+ READ HEAD FOR PERIOD     2 STEP     2  PERTIM =   2.205946E+02  TOTIM =   2.002206E+05
+ READ HEAD FOR PERIOD     2 STEP     3  PERTIM =   4.191297E+02  TOTIM =   2.004191E+05
+ READ HEAD FOR PERIOD     2 STEP     4  PERTIM =   7.169324E+02  TOTIM =   2.007169E+05
+ READ HEAD FOR PERIOD     2 STEP     5  PERTIM =   1.163636E+03  TOTIM =   2.011636E+05
+ READ HEAD FOR PERIOD     2 STEP     6  PERTIM =   1.833692E+03  TOTIM =   2.018337E+05
+ READ HEAD FOR PERIOD     2 STEP     7  PERTIM =   2.838776E+03  TOTIM =   2.028388E+05
+ READ HEAD FOR PERIOD     2 STEP     8  PERTIM =   4.346402E+03  TOTIM =   2.043464E+05
+ READ HEAD FOR PERIOD     2 STEP     9  PERTIM =   6.607842E+03  TOTIM =   2.066078E+05
+ READ HEAD FOR PERIOD     2 STEP    10  PERTIM =   1.000000E+04  TOTIM =   2.100000E+05
+ READ HEAD FOR PERIOD     3 STEP     1  PERTIM =   2.000000E+05  TOTIM =   4.100000E+05
+ THE HEAD FILE FOR GRID   1 IS COMPLETE.
+ 
+ CHECKING AND INDEXING BUDGET FILE FOR GRID   1
+ Index position =          1
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    1 , TIME STEP    1 ...
+ Single Precision Binary Budget file
+ Reading    CONSTANT HEAD for Period    1   Time Step    1
+ Reading FLOW RIGHT FACE  for Period    1   Time Step    1
+ Reading FLOW FRONT FACE  for Period    1   Time Step    1
+ Reading FLOW LOWER FACE  for Period    1   Time Step    1
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    1   Time Step    1
+ Reading    RIVER LEAKAGE for Period    1   Time Step    1
+ Reading         RECHARGE for Period    1   Time Step    1
+ Index position =      40717
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    1 ...
+ Reading          STORAGE for Period    2   Time Step    1
+ Reading    CONSTANT HEAD for Period    2   Time Step    1
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    1
+ Reading FLOW FRONT FACE  for Period    2   Time Step    1
+ Reading FLOW LOWER FACE  for Period    2   Time Step    1
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    1
+ Reading    RIVER LEAKAGE for Period    2   Time Step    1
+ Reading         RECHARGE for Period    2   Time Step    1
+ Index position =      93997
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    2 ...
+ Reading          STORAGE for Period    2   Time Step    2
+ Reading    CONSTANT HEAD for Period    2   Time Step    2
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    2
+ Reading FLOW FRONT FACE  for Period    2   Time Step    2
+ Reading FLOW LOWER FACE  for Period    2   Time Step    2
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    2
+ Reading    RIVER LEAKAGE for Period    2   Time Step    2
+ Reading         RECHARGE for Period    2   Time Step    2
+ Index position =     147277
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    3 ...
+ Reading          STORAGE for Period    2   Time Step    3
+ Reading    CONSTANT HEAD for Period    2   Time Step    3
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    3
+ Reading FLOW FRONT FACE  for Period    2   Time Step    3
+ Reading FLOW LOWER FACE  for Period    2   Time Step    3
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    3
+ Reading    RIVER LEAKAGE for Period    2   Time Step    3
+ Reading         RECHARGE for Period    2   Time Step    3
+ Index position =     200557
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    4 ...
+ Reading          STORAGE for Period    2   Time Step    4
+ Reading    CONSTANT HEAD for Period    2   Time Step    4
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    4
+ Reading FLOW FRONT FACE  for Period    2   Time Step    4
+ Reading FLOW LOWER FACE  for Period    2   Time Step    4
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    4
+ Reading    RIVER LEAKAGE for Period    2   Time Step    4
+ Reading         RECHARGE for Period    2   Time Step    4
+ Index position =     253837
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    5 ...
+ Reading          STORAGE for Period    2   Time Step    5
+ Reading    CONSTANT HEAD for Period    2   Time Step    5
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    5
+ Reading FLOW FRONT FACE  for Period    2   Time Step    5
+ Reading FLOW LOWER FACE  for Period    2   Time Step    5
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    5
+ Reading    RIVER LEAKAGE for Period    2   Time Step    5
+ Reading         RECHARGE for Period    2   Time Step    5
+ Index position =     307117
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    6 ...
+ Reading          STORAGE for Period    2   Time Step    6
+ Reading    CONSTANT HEAD for Period    2   Time Step    6
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    6
+ Reading FLOW FRONT FACE  for Period    2   Time Step    6
+ Reading FLOW LOWER FACE  for Period    2   Time Step    6
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    6
+ Reading    RIVER LEAKAGE for Period    2   Time Step    6
+ Reading         RECHARGE for Period    2   Time Step    6
+ Index position =     360397
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    7 ...
+ Reading          STORAGE for Period    2   Time Step    7
+ Reading    CONSTANT HEAD for Period    2   Time Step    7
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    7
+ Reading FLOW FRONT FACE  for Period    2   Time Step    7
+ Reading FLOW LOWER FACE  for Period    2   Time Step    7
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    7
+ Reading    RIVER LEAKAGE for Period    2   Time Step    7
+ Reading         RECHARGE for Period    2   Time Step    7
+ Index position =     413677
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    8 ...
+ Reading          STORAGE for Period    2   Time Step    8
+ Reading    CONSTANT HEAD for Period    2   Time Step    8
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    8
+ Reading FLOW FRONT FACE  for Period    2   Time Step    8
+ Reading FLOW LOWER FACE  for Period    2   Time Step    8
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    8
+ Reading    RIVER LEAKAGE for Period    2   Time Step    8
+ Reading         RECHARGE for Period    2   Time Step    8
+ Index position =     466957
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP    9 ...
+ Reading          STORAGE for Period    2   Time Step    9
+ Reading    CONSTANT HEAD for Period    2   Time Step    9
+ Reading FLOW RIGHT FACE  for Period    2   Time Step    9
+ Reading FLOW FRONT FACE  for Period    2   Time Step    9
+ Reading FLOW LOWER FACE  for Period    2   Time Step    9
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step    9
+ Reading    RIVER LEAKAGE for Period    2   Time Step    9
+ Reading         RECHARGE for Period    2   Time Step    9
+ Index position =     520237
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP   10 ...
+ Reading          STORAGE for Period    2   Time Step   10
+ Reading    CONSTANT HEAD for Period    2   Time Step   10
+ Reading FLOW RIGHT FACE  for Period    2   Time Step   10
+ Reading FLOW FRONT FACE  for Period    2   Time Step   10
+ Reading FLOW LOWER FACE  for Period    2   Time Step   10
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    2   Time Step   10
+ Reading    RIVER LEAKAGE for Period    2   Time Step   10
+ Reading         RECHARGE for Period    2   Time Step   10
+ Index position =     573517
+ READ FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    3 , TIME STEP    1 ...
+ Reading    CONSTANT HEAD for Period    3   Time Step    1
+ Reading FLOW RIGHT FACE  for Period    3   Time Step    1
+ Reading FLOW FRONT FACE  for Period    3   Time Step    1
+ Reading FLOW LOWER FACE  for Period    3   Time Step    1
+   FLOW RATES BETWEEN CELLS HAVE BEEN READ
+ Reading            WELLS for Period    3   Time Step    1
+ Reading    RIVER LEAKAGE for Period    3   Time Step    1
+ Reading         RECHARGE for Period    3   Time Step    1
+ THE BUDGET INDEX FOR GRID   1 WAS SUCCESSFULLY CREATED.
+ 
+TIME SERIES ANALYSIS (ISIMTYPE = 3)
+FORWARD TRACKING (ITRACKDIR =  1)
+LET PARTICLES PASS THROUGH WEAK SINK CELLS (ISINK = 1)
+LET PARTICLES PASS THROUGH WEAK SOURCE CELLS FOR BACKTRACKING SIMULATIONS (ISOURCE = 1)
+DO NOT SAVE ADVECTIVE OBSERVATIONS FOR TIME SERIES SIMULATIONS (IADVOBS =  1)
+ 
+PARTICLE OUTPUT FILES:
+ENDPOINT FILE:  EXAMPLE-7.endpoint                                                                                                                                                                                      
+TIME SERIES FILE:  EXAMPLE-7.timeseries                                                                                                                                                                                    
+ 
+REFERENCE TIME CALCULATED FOR: KPER =     3  KSTP =     1  RELATIVE POSITION WITHIN TIME STEP = 0.0000000
+COMPUTED REFERENCE TIME =   0.2100000E+06
+EXTEND INITIAL OR FINAL STEADY-STATE TIMESTEP AND CONTINUE TRACKING (ISTOPT =  2)
+ Particle starting locations will be read from file:                                                                                                                                                     EXAMPLE-7.locations                                                                                                                                                                                     
+   Starting locations file format option (ISLFOPT) =                                                                                                                                                        2
+ 
+TOTAL NUMBER OF PARTICLES FOR ALL GROUPS =         48
+ 
+CHECK CELL BUDGETS FOR ALL CELLS AND PRINT SUMMARY (IBDOPT =  2)
+ 
+Particles will be allowed to pass through all zones.
+
+               ZONE ARRAY =              1 FOR LAYER   1
+
+               ZONE ARRAY =              1 FOR LAYER   2
+
+               ZONE ARRAY =              1 FOR LAYER   3
+
+               ZONE ARRAY =              1 FOR LAYER   4
+
+               ZONE ARRAY =              2 FOR LAYER   5
+ 
+NO RETARDATION. FACTOR = 1 FOR ALL CELLS
+ 
+ 
+ Run particle tracking simulation ...
+ 
+ ----------------------------------------------------------------------------------------------
+Processing Time Step    10 Period     2.  Time =  2.10000E+05                                                                         (Cumulative step =     11)
+ ----------------------------------------------------------------------------------------------
+ PROCESSING HEAD AND BUDGET DATA FOR GRID   1
+ READ HEAD FOR PERIOD     2 STEP    10  PERTIM =   1.000000E+04  TOTIM =   2.100000E+05
+ UPDATE IBOUND FOR NO-FLOW AND DRY CELLS.
+ PROCESS FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    2 , TIME STEP   10 ...
+ Reading          STORAGE for Period    2   Time Step   10
+ Reading    CONSTANT HEAD for Period    2   Time Step   10
+ Reading FLOW RIGHT FACE  for Period    2   Time Step   10
+ Reading FLOW FRONT FACE  for Period    2   Time Step   10
+ Reading FLOW LOWER FACE  for Period    2   Time Step   10
+ Reading            WELLS for Period    2   Time Step   10
+      IFACE values will be read from a compact budget list.
+ Reading    RIVER LEAKAGE for Period    2   Time Step   10
+      IFACE values will be read from a compact budget list.
+ Reading         RECHARGE for Period    2   Time Step   10
+      Flows will be assigned to face  6
+ 
+ CHECKING BUDGET DATA FOR GRID   1
+   NUMBER OF VARIABLE HEAD CELLS =      3125
+           10 CELLS HAD BALANCE ERRORS BETWEEN 0.01 AND 0.1 PERCENT                              
+            0 CELLS HAD BALANCE ERRORS BETWEEN 0.1 AND 1.0 PERCENT                               
+            0 CELLS HAD BALANCE ERRORS BETWEEN 1.0 AND 10.0 PERCENT                              
+            0 CELLS HAD BALANCE ERRORS BETWEEN 10.0 AND 50.0 PERCENT                             
+            0 CELLS HAD BALANCE ERRORS GREATER THAN 50.0 PERCENT                                      
+ 
+   A MAXIMUM ERROR OF     0.019175 PERCENT OCCURRED IN LAYER    5  ROW   14  COLUMN   25
+ 
+ INDIVIDUAL CELL BUDGETS:
+   CELL WITH MAXIMUM VOLUMETRIC BALANCE ERROR:
+   GRID  1   LAYER    5   ROW   14   COLUMN   25
+     FACE FLOWS:
+          QX1 =   0.2986158E+03(IN)      QX2 =   0.0000000E+00      
+          QY1 =   0.1013469E+03(IN)      QY2 =   0.3475418E+02 (OUT)
+          QZ1 =   0.0000000E+00          QZ2 =   0.3653117E+03 (OUT)
+     CELL FACE FLOWS:  FLOW IN =   0.3999627E+03     FLOW OUT =   0.4000659E+03   NET INFLOW (IN - OUT) =  -0.1032333E+00
+     FLOW TO SINKS =   0.0000000E+00   FLOW FROM SOURCES =   0.0000000E+00   FLOW FROM STORAGE =   0.2652856E-01
+     VOLUMETRIC RESIDUAL =  -0.7670477E-01   VOLUMETRIC BALANCE(%) =    0.0191749
+ 
+ 
+ Head statistics for layer   1
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3201399E+03  Maximum head =   0.3391501E+03
+         50 cells have heads in the range   0.3201399E+03 to   0.3239419E+03
+         50 cells have heads in the range   0.3239419E+03 to   0.3277440E+03
+         75 cells have heads in the range   0.3277440E+03 to   0.3315460E+03
+        105 cells have heads in the range   0.3315460E+03 to   0.3353481E+03
+        345 cells have heads in the range   0.3353481E+03 to   0.3391501E+03
+ 
+ Head statistics for layer   2
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3203474E+03  Maximum head =   0.3391250E+03
+         50 cells have heads in the range   0.3203474E+03 to   0.3241029E+03
+         50 cells have heads in the range   0.3241029E+03 to   0.3278585E+03
+         75 cells have heads in the range   0.3278585E+03 to   0.3316140E+03
+        111 cells have heads in the range   0.3316140E+03 to   0.3353695E+03
+        339 cells have heads in the range   0.3353695E+03 to   0.3391250E+03
+ 
+ Head statistics for layer   3
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3252079E+03  Maximum head =   0.3354597E+03
+         50 cells have heads in the range   0.3252079E+03 to   0.3272583E+03
+         65 cells have heads in the range   0.3272583E+03 to   0.3293086E+03
+         85 cells have heads in the range   0.3293086E+03 to   0.3313590E+03
+        116 cells have heads in the range   0.3313590E+03 to   0.3334093E+03
+        309 cells have heads in the range   0.3334093E+03 to   0.3354597E+03
+ 
+ Head statistics for layer   4
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3294330E+03  Maximum head =   0.3317944E+03
+          4 cells have heads in the range   0.3294330E+03 to   0.3299052E+03
+        188 cells have heads in the range   0.3299052E+03 to   0.3303775E+03
+        130 cells have heads in the range   0.3303775E+03 to   0.3308498E+03
+        107 cells have heads in the range   0.3308498E+03 to   0.3313221E+03
+        196 cells have heads in the range   0.3313221E+03 to   0.3317944E+03
+ 
+ Head statistics for layer   5
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3282853E+03  Maximum head =   0.3317853E+03
+          1 cells have heads in the range   0.3282853E+03 to   0.3289853E+03
+          1 cells have heads in the range   0.3289853E+03 to   0.3296853E+03
+        197 cells have heads in the range   0.3296853E+03 to   0.3303853E+03
+        176 cells have heads in the range   0.3303853E+03 to   0.3310853E+03
+        250 cells have heads in the range   0.3310853E+03 to   0.3317853E+03
+ 
+ ----------------------------------------------------------------------------------------------
+Processing Time Step     1 Period     3.  Time =  4.10000E+05                                                                         (Cumulative step =     12)
+ ----------------------------------------------------------------------------------------------
+ PROCESSING HEAD AND BUDGET DATA FOR GRID   1
+ READ HEAD FOR PERIOD     3 STEP     1  PERTIM =   2.000000E+05  TOTIM =   4.100000E+05
+ UPDATE IBOUND FOR NO-FLOW AND DRY CELLS.
+ PROCESS FLOW PACKAGE BUDGET DATA FOR STRESS PERIOD    3 , TIME STEP    1 ...
+ Reading    CONSTANT HEAD for Period    3   Time Step    1
+ Reading FLOW RIGHT FACE  for Period    3   Time Step    1
+ Reading FLOW FRONT FACE  for Period    3   Time Step    1
+ Reading FLOW LOWER FACE  for Period    3   Time Step    1
+ Reading            WELLS for Period    3   Time Step    1
+      IFACE values will be read from a compact budget list.
+ Reading    RIVER LEAKAGE for Period    3   Time Step    1
+      IFACE values will be read from a compact budget list.
+ Reading         RECHARGE for Period    3   Time Step    1
+      Flows will be assigned to face  6
+ 
+ CHECKING BUDGET DATA FOR GRID   1
+   NUMBER OF VARIABLE HEAD CELLS =      3125
+           77 CELLS HAD BALANCE ERRORS BETWEEN 0.01 AND 0.1 PERCENT                              
+            0 CELLS HAD BALANCE ERRORS BETWEEN 0.1 AND 1.0 PERCENT                               
+            0 CELLS HAD BALANCE ERRORS BETWEEN 1.0 AND 10.0 PERCENT                              
+            0 CELLS HAD BALANCE ERRORS BETWEEN 10.0 AND 50.0 PERCENT                             
+            0 CELLS HAD BALANCE ERRORS GREATER THAN 50.0 PERCENT                                      
+ 
+   A MAXIMUM ERROR OF     0.039792 PERCENT OCCURRED IN LAYER    3  ROW   25  COLUMN   19
+ 
+ INDIVIDUAL CELL BUDGETS:
+   CELL WITH MAXIMUM VOLUMETRIC BALANCE ERROR:
+   GRID  1   LAYER    3   ROW   25   COLUMN   19
+     FACE FLOWS:
+          QX1 =   0.1193805E+00(IN)      QX2 =   0.1337330E+00 (OUT)
+          QY1 =   0.0000000E+00          QY2 =   0.7145265E-03 (OUT)
+          QZ1 =  -0.4012540E+02(OUT)     QZ2 =  -0.4012445E+02 (IN) 
+     CELL FACE FLOWS:  FLOW IN =   0.4024383E+02     FLOW OUT =   0.4025985E+02   NET INFLOW (IN - OUT) =  -0.1601691E-01
+     FLOW TO SINKS =   0.0000000E+00   FLOW FROM SOURCES =   0.0000000E+00   FLOW FROM STORAGE =   0.0000000E+00
+     VOLUMETRIC RESIDUAL =  -0.1601691E-01   VOLUMETRIC BALANCE(%) =    0.0397917
+ 
+ 
+ Head statistics for layer   1
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3201397E+03  Maximum head =   0.3391261E+03
+         50 cells have heads in the range   0.3201397E+03 to   0.3239370E+03
+         50 cells have heads in the range   0.3239370E+03 to   0.3277342E+03
+         75 cells have heads in the range   0.3277342E+03 to   0.3315315E+03
+        105 cells have heads in the range   0.3315315E+03 to   0.3353288E+03
+        345 cells have heads in the range   0.3353288E+03 to   0.3391261E+03
+ 
+ Head statistics for layer   2
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3203470E+03  Maximum head =   0.3391009E+03
+         50 cells have heads in the range   0.3203470E+03 to   0.3240978E+03
+         50 cells have heads in the range   0.3240978E+03 to   0.3278486E+03
+         75 cells have heads in the range   0.3278486E+03 to   0.3315994E+03
+        111 cells have heads in the range   0.3315994E+03 to   0.3353501E+03
+        339 cells have heads in the range   0.3353501E+03 to   0.3391009E+03
+ 
+ Head statistics for layer   3
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3251994E+03  Maximum head =   0.3354383E+03
+         50 cells have heads in the range   0.3251994E+03 to   0.3272472E+03
+         65 cells have heads in the range   0.3272472E+03 to   0.3292950E+03
+         85 cells have heads in the range   0.3292950E+03 to   0.3313427E+03
+        116 cells have heads in the range   0.3313427E+03 to   0.3333905E+03
+        309 cells have heads in the range   0.3333905E+03 to   0.3354383E+03
+ 
+ Head statistics for layer   4
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3294151E+03  Maximum head =   0.3317757E+03
+          4 cells have heads in the range   0.3294151E+03 to   0.3298872E+03
+        188 cells have heads in the range   0.3298872E+03 to   0.3303594E+03
+        130 cells have heads in the range   0.3303594E+03 to   0.3308315E+03
+        107 cells have heads in the range   0.3308315E+03 to   0.3313036E+03
+        196 cells have heads in the range   0.3313036E+03 to   0.3317757E+03
+ 
+ Head statistics for layer   5
+          0 cells are inactive no-flow cells (HNOFLO =   0.1000000E+31)
+          0 cells are inactive dry cells (HDRY =   0.1000000E+21)
+ 
+            Minimum head =   0.3282675E+03  Maximum head =   0.3317666E+03
+          1 cells have heads in the range   0.3282675E+03 to   0.3289674E+03
+          1 cells have heads in the range   0.3289674E+03 to   0.3296672E+03
+        197 cells have heads in the range   0.3296672E+03 to   0.3303670E+03
+        176 cells have heads in the range   0.3303670E+03 to   0.3310668E+03
+        250 cells have heads in the range   0.3310668E+03 to   0.3317666E+03
+ 
+Particle summary:
+-----------------
+         0 particles remain active
+        48 particles terminated in zone    2
+         0 particles were stranded
+ 
+Default real number precision =         15
+Heads input from single-precision head file.
+Flows input from single-precision compact budget file.
+ 
+End of MODPATH simulation. Normal termination.

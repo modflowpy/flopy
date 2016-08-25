@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Basemap>
+  <BasemapLayer>
+    <LocalName>wells.shp</LocalName>
+    <Description>well</Description>
+    <Color>
+      <R>128</R>
+      <G>128</G>
+      <B>128</B>
+    </Color>
+    <Size>5</Size>
+    <Style>1</Style>
+    <Visible>True</Visible>
+  </BasemapLayer>
+  <BasemapLayer>
+    <LocalName>River.shp</LocalName>
+    <Description>River</Description>
+    <Color>
+      <R>0</R>
+      <G>255</G>
+      <B>255</B>
+    </Color>
+    <Size>10</Size>
+    <Style>1</Style>
+    <Visible>True</Visible>
+  </BasemapLayer>
+</Basemap>
