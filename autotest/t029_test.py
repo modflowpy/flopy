@@ -1,0 +1,58 @@
+"""
+test modpath functionality
+"""
+import sys
+sys.path.insert(0, '/Users/aleaf/Documents/GitHub/flopy3')
+import glob
+import shutil
+import os
+import flopy
+import numpy as np
+from flopy.utils.modpathfile import EndpointFile, PathlineFile
+
+mffiles = glob.glob('../Examples/data/mp6/EXAMPLE*')
+path = 'temp/mp6/'
+if not os.path.isdir(path):
+    os.makedirs(path)
+for f in mffiles:
+    shutil.copy(f, path + os.path.split(f)[1])
+
+def test_mpsim():
+
+    model_ws = path
+    m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=model_ws)
+    m.get_package_list()
+
+    mp = flopy.modpath.Modpath(modelname='ex6',
+                           exe_name='mp6',
+                           modflowmodel=m,
+                           model_ws=path,
+                           dis_file=m.name+'.dis',
+                           head_file=m.name+'.hed',
+                           budget_file=m.name+'.bud')
+
+    mpb = flopy.modpath.ModpathBas(mp, hdry=m.lpf.hdry, laytyp=m.lpf.laytyp, ibound=1, prsity=0.1)
+
+    sim = mp.create_mpsim(trackdir='forward', simtype='endpoint', packages='RCH')
+    mp.write_input()
+
+def test_get_destination_data():
+
+    pthld = PathlineFile(path + 'EXAMPLE-3.pathline')
+    epd = EndpointFile(path + 'EXAMPLE-3.endpoint')
+
+    well_epd = epd.get_destination_endpoint_data(dest_cells=[(4, 12, 12)])
+    well_pthld = pthld.get_destination_pathline_data(dest_cells=[(4, 12, 12)])
+
+    # same particle IDs should be in both endpoing data and pathline data
+    assert len(set(well_epd.particleid).difference(set(well_pthld.particleid))) == 0
+
+    # check that all starting locations are included in the pathline data
+    # (pathline data slice not just endpoings)
+    starting_locs = well_epd[['k0', 'i0', 'j0']]
+    pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(), dtype=starting_locs.dtype)
+    assert np.all(np.in1d(starting_locs, pathline_locs))
+
+if __name__ == '__main__':
+    test_mpsim()
+    test_get_destination_data()
