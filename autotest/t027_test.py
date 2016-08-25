@@ -84,8 +84,7 @@ def test_export():
     nc = netCDF4.Dataset('../autotest/temp/MNW2-Fig28.nc')
     assert np.array_equal(nc.variables['mnw2_qdes'][:, 0, 29, 40],
                           np.array([0., -10000., -10000.], dtype='float32'))
-    assert np.array_equal(nc.variables['mnw2_rw'][:, 0, 29, 40],
-                          np.array([ 0.13330001,  0.13330001,  0.13330001], dtype='float32'))
+    assert np.sum(nc.variables['mnw2_rw'][:, :, 29, 40]) - 5.1987 < 1e-4
     # need to add shapefile test
 def test_checks():
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,

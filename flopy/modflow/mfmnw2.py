@@ -1106,15 +1106,22 @@ class ModflowMnw2(Package):
                                          dtype=stress_period_data[0].dtype)
 
     def export(self, f, **kwargs):
-        self.node_data_MfList = MfList(self, self.node_data, dtype=self.node_data.dtype)
+        # A better strategy would be to build a single 4-D MfList
+        # (currently the stress period data array has everything in layer 0)
+        self.node_data_MfList = MfList(self, self.get_allnode_data(), dtype=self.node_data.dtype)
         # make some modifications to ensure proper export
         # avoid duplicate entries for qfrc
-        if np.nansum(self.stress_period_data.array['qlimit']) == 0:
-            todrop = ['hlim', 'qcut', 'qfrcmn', 'qfrcmx']
-        elif np.nansum(self.stress_period_data.array['qcut']) == 0:
-            todrop = ['qfrcmn', 'qfrcmx']
-
-        self.stress_period_data = self.stress_period_data.drop()
+        wellids = np.unique(self.node_data.wellid)
+        todrop = ['hlim', 'qcut', 'qfrcmn', 'qfrcmx']
+        # move duplicate fields from node_data to stress_period_data
+        for wellid in wellids:
+            wellnd = self.node_data.wellid == wellid
+            if np.max(self.node_data.qlimit[wellnd]) > 0:
+                for per in self.stress_period_data.data.keys():
+                    for col in todrop:
+                        inds = self.stress_period_data[per].wellid == wellid
+                        self.stress_period_data[per][col][inds] = self.node_data[wellnd][col]
+        self.node_data_MfList = self.node_data_MfList.drop(todrop)
         '''
         todrop = {'qfrcmx', 'qfrcmn'}
         names = list(set(self.stress_period_data.dtype.names).difference(todrop))

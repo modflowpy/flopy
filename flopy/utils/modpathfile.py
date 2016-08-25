@@ -220,6 +220,30 @@ class PathlineFile():
             plist.append(self.get_data(partid=partid, totim=totim, ge=ge))
         return plist
 
+    def get_destination_pathline_data(self, dest_cells):
+        """Get pathline data for set of destination cells.
+
+        Parameters
+        ----------
+        dest_cells : list or array of tuples
+            (k, i, j) of each destination cell (zero-based)
+
+        Returns
+        -------
+        epdest : np.recarray
+            Slice of endpoint data array (e.g. EndpointFile.get_alldata)
+            containing only data with final k,i,j in dest_cells.
+        """
+        if not isinstance(dest_cells, list):
+            dest_cells = list(dest_cells)
+        k, i, j = map(np.array, list(zip(*dest_cells)))
+
+        ra = self._data
+        # find the intersection of endpoints and dest_cells
+        inds = np.in1d(ra[['k', 'i', 'j']], np.array(dest_cells))
+        epdest = ra[inds].copy()
+        return epdest
+
 
 class EndpointFile():
     """
@@ -447,7 +471,8 @@ class EndpointFile():
         Returns
         -------
         epdest : np.recarray
-            Slice of endpoint data array containing only data with final k,i,j in dest_cells
+            Slice of endpoint data array (e.g. EndpointFile.get_alldata)
+            containing only data with final k,i,j in dest_cells.
         """
         if not isinstance(dest_cells, list):
             dest_cells = list(dest_cells)
