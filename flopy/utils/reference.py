@@ -35,6 +35,16 @@ class SpatialReference(object):
     proj4_str: str
         a PROJ4 string that identifies the grid in space. warning: case sensitive!
 
+    epsg : int
+        EPSG code that identifies the grid in space. Can be used in lieu of proj4.
+        PROJ4 attribute will auto-populate if there is an internet connection
+        (via get_proj4 method).
+        See https://www.epsg-registry.org/ or spatialreference.org
+
+    length_multiplier : float
+        multiplier to convert model units to spatial reference units.
+        delr and delc above will be multiplied by this value. (default=1.)
+
     Attributes
     ----------
     xedge : ndarray
@@ -71,17 +81,22 @@ class SpatialReference(object):
     """
 
     def __init__(self, delr=1.0, delc=1.0, lenuni=1, xul=None, yul=None, rotation=0.0,
-                 proj4_str="EPSG:4326",units=None):
-        self.delc = np.atleast_1d(np.array(delc))
-        self.delr = np.atleast_1d(np.array(delr))
+                 proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
+        self.delc = np.atleast_1d(np.array(delc)) * length_multiplier
+        self.delr = np.atleast_1d(np.array(delr)) * length_multiplier
 
         self.lenuni = lenuni
         self._proj4_str = proj4_str
+
+        self.epsg = epsg
+        if epsg is not None:
+            self._proj4_str = getproj4(epsg)
 
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
         self.set_spatialreference(xul, yul, rotation)
+        self.length_multiplier = length_multiplier
 
     @property
     def proj4_str(self):
@@ -650,19 +665,57 @@ def getprj(epsg, addlocalreference=True):
         epsgfile.make()
 
     if prj is None:
-        try:
-            import requests
-        except:
-            raise ImportError('This requires the requests module.')
-            return
-        try:
-            resp = requests.get("http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(epsg))
-            prj = resp.text.replace("\n", "")
-            if addlocalreference:
-                epsgfile.add(epsg, prj)
-        except:
-            e = sys.exc_info()
-            print(e)
-            print('Need an internet connection to look up epsg on spatialreference.org.')
-            return
+        prj = get_spatialreference(epsg, text='epsg')
+    if addlocalreference:
+        epsgfile.add(epsg, prj)
     return prj
+
+def get_spatialreference(epsg, text='prettywkt'):
+    """Gets text for given epsg code and text format from spatialreference.org
+    Fetches the reference text using the url:
+        http://spatialreference.org/ref/epsg/<epsg code>/<text>/
+
+    See: https://www.epsg-registry.org/
+
+    Parameters
+    ----------
+    epsg : int
+        epsg code for coordinate system
+    text : str
+        string added to url
+
+    Returns
+    -------
+    url : str
+
+    """
+    try:
+        import requests
+    except:
+        raise ImportError('This requires the requests module.')
+        return
+    try:
+        resp = requests.get("http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text))
+        text = resp.text.replace("\n", "")
+        return text
+    except:
+        e = sys.exc_info()
+        print(e)
+        print('Need an internet connection to look up epsg on spatialreference.org.')
+        return
+
+def getproj4(epsg):
+    """Gets projection file (.prj) text for given epsg code from spatialreference.org
+    See: https://www.epsg-registry.org/
+
+    Parameters
+    ----------
+    epsg : int
+        epsg code for coordinate system
+
+    Returns
+    -------
+    prj : str
+        text for a projection (*.prj) file.
+    """
+    return get_spatialreference(epsg, text='proj4')

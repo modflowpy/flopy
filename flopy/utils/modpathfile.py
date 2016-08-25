@@ -486,3 +486,57 @@ class EndpointFile():
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
         return epdest
+
+    def write_shapefile(self, endpoint_data=None,
+                        shpname='endpoings.shp',
+                        direction='ending', sr=None, epsg=None,
+                        **kwargs):
+        """Write particle starting / ending locations to shapefile.
+
+        endpoing_data : np.recarry
+            Record array of same form as that returned by EndpointFile.get_alldata.
+            (if none, EndpointFile.get_alldata() is exported).
+        shpname : str
+            File path for shapefile
+        direction : str
+            String defining if starting or ending particle locations should be
+            considered. (default is 'ending')
+        sr : flopy.utils.reference.SpatialReference instance
+            Used to scale and rotate Global x,y,z values in MODPATH Endpoint file
+        epsg : int
+            EPSG code for writing projection (.prj) file. If this is not supplied,
+            the proj4 string or epgs code associated with sr will be used.
+        kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+        """
+        from flopy.utils.reference import SpatialReference
+        from flopy.utils.geometry import Point
+        from flopy.export.shapefile_utils import recarray2shp
+
+        epd = endpoint_data
+        if epd is None:
+            epd = self.get_alldata()
+
+        length_mult = 1.
+        rot = 0
+        if sr is not None:
+            rot = sr.rotation
+            length_mult = sr.length_multiplier
+            if epsg is None:
+                epsg = sr.epsg
+
+        if direction.lower() == 'ending':
+            xcol, ycol, zcol = 'x', 'y', 'z'
+        elif direction.lower() == 'starting':
+            xcol, ycol, zcol = 'x0', 'y0', 'z0'
+        else:
+            errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
+                     'or "starting".'
+            raise Exception(errmsg)
+
+        x, y = SpatialReference.rotate(epd[xcol] * length_mult,
+                                       epd[ycol] * length_mult,
+                                       theta=rot)
+        z = epd[zcol]
+
+        geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
+        recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)

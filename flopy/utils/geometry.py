@@ -110,9 +110,11 @@ class Point:
     type = 'Point'
     shapetype = 1
 
-    def __init__(self, coorindates):
+    def __init__(self, *coordinates):
 
-        self.coords = coorindates
+        self.coords = coordinates
+        if len(coordinates) == 2:
+            self.has_z = True
 
     @property
     def x(self):
@@ -121,6 +123,10 @@ class Point:
     @property
     def y(self):
         return self.coords[1]
+
+    @property
+    def z(self):
+        return 0 if not self.has_z else self.coords[2]
 
     @property
     def bounds(self):
