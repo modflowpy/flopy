@@ -549,7 +549,7 @@ class ModelMap(object):
         """
         from matplotlib.collections import LineCollection
         # make sure pathlines is a list
-        if isinstance(pl, np.ndarray):
+        if not isinstance(pl, list):
             pl = [pl]
 
         if 'layer' in kwargs:

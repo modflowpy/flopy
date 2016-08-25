@@ -230,19 +230,23 @@ class PathlineFile():
 
         Returns
         -------
-        epdest : np.recarray
-            Slice of endpoint data array (e.g. EndpointFile.get_alldata)
-            containing only data with final k,i,j in dest_cells.
+        pthldest : np.recarray
+            Slice of pathline data array (e.g. PathlineFile._data)
+            containing only pathlines with final k,i,j in dest_cells.
         """
-        if not isinstance(dest_cells, list):
-            dest_cells = list(dest_cells)
-        k, i, j = map(np.array, list(zip(*dest_cells)))
-
-        ra = self._data
+        ra = self._data.view(np.recarray)
         # find the intersection of endpoints and dest_cells
-        inds = np.in1d(ra[['k', 'i', 'j']], np.array(dest_cells))
-        epdest = ra[inds].copy()
-        return epdest
+        # convert dest_cells to same dtype for comparison
+        raslice = ra[['k', 'i', 'j']]
+        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
+        inds = np.in1d(raslice, dest_cells)
+        epdest = ra[inds].copy().view(np.recarray)
+
+        # use particle ids to get the rest of the paths
+        inds = np.in1d(ra.particleid, epdest.particleid)
+        pthldes = ra[inds].copy()
+        pthldes.sort(order=['particleid', 'time'])
+        return pthldes
 
 
 class EndpointFile():
@@ -474,12 +478,11 @@ class EndpointFile():
             Slice of endpoint data array (e.g. EndpointFile.get_alldata)
             containing only data with final k,i,j in dest_cells.
         """
-        if not isinstance(dest_cells, list):
-            dest_cells = list(dest_cells)
-        k, i, j = map(np.array, list(zip(*dest_cells)))
-
         ra = self.get_alldata()
         # find the intersection of endpoints and dest_cells
-        inds = np.in1d(ra[['k', 'i', 'j']], np.array(dest_cells))
-        epdest = ra[inds].copy()
+        # convert dest_cells to same dtype for comparison
+        raslice = ra[['k', 'i', 'j']]
+        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
+        inds = np.in1d(raslice, dest_cells)
+        epdest = ra[inds].copy().view(np.recarray)
         return epdest

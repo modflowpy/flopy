@@ -50,7 +50,7 @@ class ModpathSim(Package):
 
     def __init__(self, model, mp_name_file='mp.nam', mp_list_file='mp.list',
                  option_flags=[1, 2, 1, 1, 1, 2, 2, 1, 2, 1, 1, 1],
-                 ref_time=0, ref_time_per_stp=[0, 1, 1.0], stop_time=None,
+                 ref_time=0, ref_time_per_stp=[0, 0, 1.0], stop_time=None,
                  group_name=['group_1'], group_placement=[[1, 1, 1, 0, 1, 1]],
                  release_times=[[1, 1]],
                  group_region=[[1, 1, 1, 1, 1, 1]], mask_nlay=[1],
@@ -207,7 +207,7 @@ class ModpathSim(Package):
         if self.options_dict['ReferenceTimeOption'] == 2:
             Period, Step, TimeFraction = self.ref_time_per_stp
             f_sim.write(
-                '{0:d} {1:d} {2:f}\n'.format(Period, Step, TimeFraction))
+                '{0:d} {1:d} {2:f}\n'.format(Period+1, Step+1, TimeFraction))
 
         # item 10
         if self.options_dict['StopOption'] == 3:

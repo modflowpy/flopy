@@ -127,7 +127,7 @@ class Modpath(BaseModel):
     mf = property(getmf)  # Property has no setter, so read-only
 
     def create_mpsim(self, simtype='pathline', trackdir='forward',
-                     packages='WEL'):
+                     packages='WEL', start_time=0):
         """
         Create a MODPATH simulation file using available MODFLOW boundary
         package data.
@@ -146,6 +146,14 @@ class Modpath(BaseModel):
             Keyword defining the modflow packages used to create initial
             particle locations. Supported packages are 'WEL' and 'RCH'.
             (default is 'WEL')
+        start_time : float or tuple
+            Sets the value of MODPATH reference time relative to MODFLOW time.
+            float : value of MODFLOW simulation time at which to start the particle tracking simulation.
+                    Sets the value of MODPATH ReferenceTimeOption to 1.
+            tuple : (period, step, time fraction) MODFLOW stress period, time step and fraction
+                    between 0 and 1 at which to start the particle tracking simulation.
+                    Sets the value of MODPATH ReferenceTimeOption to 2.
+
 
         Returns
         -------
@@ -155,6 +163,17 @@ class Modpath(BaseModel):
         if isinstance(packages, str):
             packages = [packages]
         pak_list = self.__mf.get_package_list()
+
+        # not sure if this is the best way to handle this
+        ReferenceTimeOption = 1
+        ref_time = 0
+        ref_time_per_stp = (0, 0, 1.)
+        if isinstance(start_time, tuple):
+            ReferenceTimeOption = 2 # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            ref_time_per_stp = start_time
+        else:
+            ref_time = start_time
+
         Grid = 1
         GridCellRegionOption = 1
         PlacementOption = 1
@@ -224,7 +243,7 @@ class Modpath(BaseModel):
             TrackingDirection = 2
         WeakSinkOption = 2
         WeakSourceOption = 1
-        ReferenceTimeOption = 1
+
         StopOption = 2
         ParticleGenerationOption = 1
         if SimulationType == 1:
@@ -242,7 +261,10 @@ class Modpath(BaseModel):
                      BudgetOutputOption, ZoneArrayOption, RetardationOption,
                      AdvectiveObservationsOption]
 
-        return ModpathSim(self, option_flags=mpoptions,
+        return ModpathSim(self,
+                          ref_time=ref_time,
+                          ref_time_per_stp=ref_time_per_stp,
+                          option_flags=mpoptions,
                           group_placement=group_placement,
                           group_name=group_name,
                           group_region=group_region,
