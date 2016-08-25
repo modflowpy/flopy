@@ -24,25 +24,37 @@ class Mt3dSsm(Package):
     model : model object
         The model object (of type :class:`flopy.mt3d.mt.Mt3dms`) to which
         this package will be added.
-    crch : array of floats
-        CRCH is the concentration of recharge flux for a particular species.
+    crch : Transient2d, scalar, array of floats, or dictionary
+        CRCH is the concentration of recharge for species 1.
         If the recharge flux is positive, it acts as a source whose
         concentration can be specified as desired. If the recharge flux is
         negative, it acts as a sink (discharge) whose concentration is always
         set equal to the concentration of groundwater at the cell where
         discharge occurs. Note that the location and flow rate of
         recharge/discharge are obtained from the flow model directly through
-        the unformatted flow-transport link file.
-    cevt : array of floats
-        is the concentration of evapotranspiration flux for a particular
-        species. Evapotranspiration is the only type of sink whose
+        the unformatted flow-transport link file.  crch can be specified as
+        an array, if the array is constant for the entire simulation.  If
+        crch changes by stress period, then the user must provide a
+        dictionary, where the key is the stress period number (zero based) and
+        the value is the recharge array.  The recharge concentration
+        can be specified for additional species by passing additional
+        arguments to the Mt3dSsm constructor.  For example, to specify the
+        recharge concentration for species two one could use
+        crch2={0: 0., 1: 10*np.ones((nlay, nrow, ncol), dtype=np.float)} as
+        and additional keyword argument that is passed to Mt3dSsm when making
+        the ssm object.
+    cevt : Transient2d, scalar, array of floats, or dictionary
+        is the concentration of evapotranspiration flux for species 1.
+        Evapotranspiration is the only type of sink whose
         concentration may be specified externally. Note that the
         concentration of a sink cannot be greater than that of the aquifer at
         the sink cell. Thus, if the sink concentration is specified greater
         than that of the aquifer, it is automatically set equal to the
         concentration of the aquifer. Also note that the location and flow
         rate of evapotranspiration are obtained from the flow model directly
-        through the unformatted flow-transport link file.
+        through the unformatted flow-transport link file.  For multi-species
+        simulations, see crch for a description of how to specify
+        additional concentrations arrays for each species.
     stress_period_data : dictionary
         Keys in the dictionary are stress zero-based stress period numbers;
         values in the dictionary are recarrays of SSM boundaries.  The
