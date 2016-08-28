@@ -661,11 +661,11 @@ def getprj(epsg, addlocalreference=True):
     try:
         from epsgref import prj
         prj = prj.get(epsg)
-    except ImportError:
+    except:
         epsgfile.make()
 
     if prj is None:
-        prj = get_spatialreference(epsg, text='epsg')
+        prj = get_spatialreference(epsg, text='prettywkt')
     if addlocalreference:
         epsgfile.add(epsg, prj)
     return prj
@@ -695,7 +695,8 @@ def get_spatialreference(epsg, text='prettywkt'):
         raise ImportError('This requires the requests module.')
         return
     try:
-        resp = requests.get("http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text))
+        url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
+        resp = requests.get(url)
         text = resp.text.replace("\n", "")
         return text
     except:

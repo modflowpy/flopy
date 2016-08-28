@@ -8,8 +8,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
-from collections import OrderedDict
-
+import numpy.lib.recfunctions as rf
 
 class PathlineFile():
     """
@@ -93,7 +92,7 @@ class PathlineFile():
            Build numpy dtype for the MODPATH 6 pathline file.
         """
         dtype = np.dtype([("particleid", np.int), ("particlegroup", np.int),
-                          ("timepointindex", np.int), ("comulativetimestep", np.int),
+                          ("timepointindex", np.int), ("cumulativetimestep", np.int),
                           ("time", np.float32), ("x", np.float32),
                           ("y", np.float32), ("z", np.float32),
                           ("k", np.int), ("i", np.int), ("j", np.int),
@@ -247,6 +246,102 @@ class PathlineFile():
         pthldes = ra[inds].copy()
         pthldes.sort(order=['particleid', 'time'])
         return pthldes
+
+    def write_shapefile(self, pathline_data=None,
+                        one_per_particle=True,
+                        direction='ending',
+                        shpname='endpoings.shp',
+                        sr=None, epsg=None,
+                        **kwargs):
+        """Write pathlines to shapefile.
+
+        pathline_data : np.recarry
+            Record array of same form as that returned by EndpointFile.get_alldata.
+            (if none, EndpointFile.get_alldata() is exported).
+        one_per_particle : boolean (default True)
+            True writes a single LineString with a single set of attribute data for each
+            particle. False writes a record/geometry for each pathline segment
+            (each row in the PathLine file). This option can be used to visualize
+            attribute information (time, model layer, etc.) across a pathline in a GIS.
+        direction : str
+            String defining if starting or ending particle locations should be
+            included in shapefile attribute information. Only used if one_per_particle=False.
+            (default is 'ending')
+        shpname : str
+            File path for shapefile
+        sr : flopy.utils.reference.SpatialReference instance
+            Used to scale and rotate Global x,y,z values in MODPATH Endpoint file
+        epsg : int
+            EPSG code for writing projection (.prj) file. If this is not supplied,
+            the proj4 string or epgs code associated with sr will be used.
+        kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+        """
+        from flopy.utils.reference import SpatialReference
+        from flopy.utils.geometry import LineString
+        from flopy.export.shapefile_utils import recarray2shp
+
+        pth = pathline_data
+        if pth is None:
+            pth = self._data.view(np.recarray)
+        pth = pth.copy()
+        pth.sort(order=['particleid', 'time'])
+
+        length_mult = 1.
+        rot = 0
+        if sr is not None:
+            rot = sr.rotation
+            length_mult = sr.length_multiplier
+            if epsg is None:
+                epsg = sr.epsg
+
+        particles = np.unique(pth.particleid)
+        geoms = []
+
+        # 1 geometry for each path
+        if one_per_particle:
+
+            loc_inds = 0
+            if direction == 'ending':
+                loc_inds = -1
+
+            pthdata = []
+            for pid in particles:
+                ra = pth[pth.particleid == pid]
+
+                x, y = SpatialReference.rotate(ra.x * length_mult,
+                                               ra.y * length_mult,
+                                               theta=rot)
+                z = ra.z
+                geoms.append(LineString(list(zip(x, y, z))))
+                pthdata.append((pid,
+                                ra.particlegroup[0],
+                                ra.time.max(),
+                                ra.k[loc_inds],
+                                ra.i[loc_inds],
+                                ra.k[loc_inds]))
+            pthdata = np.array(pthdata, dtype=[('particleid', np.int),
+                                               ('particlegroup', np.int),
+                                               ('time', np.float),
+                                               ('k', np.int),
+                                               ('i', np.int),
+                                               ('j', np.int)
+                                               ]).view(np.recarray)
+        # geometry for each row in PathLine file
+        else:
+            dtype = pth.dtype.copy()
+            pthdata = np.recarray([], dtype=dtype)
+            for pid in particles:
+                ra = pth[pth.particleid == pid]
+                x, y = SpatialReference.rotate(ra.x * length_mult,
+                                               ra.y * length_mult,
+                                               theta=rot)
+                z = ra.z
+                geoms.append([LineString([(x[i-1], y[i-1], z[i-1]),
+                                          (x[i], y[i], z[i])])
+                             for i in np.arange(1, (len(ra)))])
+            pthdata = np.append(pthdata, dtype=dtype).view(np.recarray)
+
+        recarray2shp(pthdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
 
 class EndpointFile():
@@ -493,7 +588,7 @@ class EndpointFile():
                         **kwargs):
         """Write particle starting / ending locations to shapefile.
 
-        endpoing_data : np.recarry
+        endpoint_data : np.recarry
             Record array of same form as that returned by EndpointFile.get_alldata.
             (if none, EndpointFile.get_alldata() is exported).
         shpname : str

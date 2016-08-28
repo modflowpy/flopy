@@ -46,13 +46,16 @@ class Polygon:
             print('This feature requires descartes.\nTry "pip install descartes"')
         return PolygonPatch(self.geojson, **kwargs)
 
-    def plot(self, **kwargs):
+    def plot(self, ax=None, **kwargs):
         """Convenience wrapper around the descartes."""
         try:
             import matplotlib.pyplot as plt
         except ImportError:
             print('This feature requires matplotlib.')
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.figure
         ax.add_patch(self.get_patch(**kwargs))
         xmin, ymin, xmax, ymax = self.bounds
         ax.set_xlim(xmin, xmax)
@@ -63,18 +66,25 @@ class LineString:
 
     type = 'LineString'
     shapetype = 3
+    has_z = False
 
     def __init__(self, coordinates):
 
         self.coords = list(map(tuple, coordinates))
+        if len(self.coords[0]) == 3:
+            self.has_z = True
 
     @property
     def x(self):
-        return [x for x, y in self.coords]
+        return[c[0] for c in self.coords]
 
     @property
     def y(self):
-        return [y for x, y in self.coords]
+        return [c[1] for c in self.coords]
+
+    @property
+    def z(self):
+        return 0 if not self.has_z else [c[2] for c in self.coords]
 
     @property
     def bounds(self):
@@ -93,22 +103,26 @@ class LineString:
     def pyshp_parts(self):
         return self.coords
 
-    def plot(self, **kwargs):
+    def plot(self, ax=None, **kwargs):
         try:
             import matplotlib.pyplot as plt
         except ImportError:
             print('This feature requires matplotlib.')
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.figure
         plt.plot(self.x, self.y, **kwargs)
         xmin, ymin, xmax, ymax = self.bounds
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        plt.show()
+        #plt.show()
 
 class Point:
 
     type = 'Point'
     shapetype = 1
+    has_z = False
 
     def __init__(self, *coordinates):
 
@@ -145,14 +159,17 @@ class Point:
     def pyshp_parts(self):
         return self.coords
 
-    def plot(self, **kwargs):
+    def plot(self, ax=None, **kwargs):
         try:
             import matplotlib.pyplot as plt
         except ImportError:
             print('This feature requires matplotlib.')
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.figure
         plt.scatter(self.x, self.y, **kwargs)
         xmin, ymin, xmax, ymax = self.bounds
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
+        ax.set_xlim(xmin-1, xmax+1) # singular bounds otherwise
+        ax.set_ylim(ymin-1, ymax+1)
         plt.show()
