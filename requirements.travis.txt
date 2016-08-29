@@ -3,4 +3,4 @@ matplotlib>=1.4
 python-dateutil>=2.4
 netcdf4>1.1
 pyproj>=1.9
-pyshp
+pyshp!=1.2.8
