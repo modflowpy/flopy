@@ -3,6 +3,8 @@ Module for exporting and importing flopy model attributes
 """
 import shutil
 import numpy as np
+import numpy.lib.recfunctions as rf
+
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..utils.reference import getprj
 
@@ -258,7 +260,7 @@ def get_pyshp_field_info(dtypename):
     fields = {'int': ('N', 20, 0),
               '<i': ('N', 20, 0),
               'float': ('F', 20, 12),
-              '<f': ('N', 20, 0),
+              '<f': ('F', 20, 0),
               'bool': ('L', 1),
               'b1': ('L', 1),
               'str': ('C', 50),
@@ -268,6 +270,45 @@ def get_pyshp_field_info(dtypename):
         return fields[k[0]]
     else:
         return fields['str']
+
+def get_pyshp_field_dtypes(code):
+    """Returns a numpy dtype for a pyshp field type."""
+    dtypes = {'N': np.int,
+              'F': np.float,
+              'L': np.bool,
+              'C': np.object}
+    return dtypes.get(code, np.object)
+
+def shp2recarray(shpname):
+    """Read a shapefile into a numpy recarray.
+
+    Parameters
+    ----------
+    shpname : str
+        ESRI Shapefile.
+
+    Returns
+    -------
+    recarray : np.recarray
+    """
+    try:
+        import shapefile as sf
+    except Exception as e:
+        raise Exception("io.to_shapefile(): error " +
+                        "importing shapefile - try pip install pyshp")
+    from flopy.utils.geometry import shape
+
+    sfobj = sf.Reader(shpname)
+    dtype = [(f[0], get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
+
+    geoms = [shape(s) for s in sfobj.iterShapes()]
+    records = [tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())]
+    dtype += [('geometry', np.object)]
+    #recfunctions.append_fields(array, names='tmp1', data=col1,
+    #                                           asrecarray=True)
+
+    recarray = np.array(records, dtype=dtype).view(np.recarray)
+    return recarray
 
 def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     """Write a numpy record array to a shapefile, using a corresponding
@@ -306,7 +347,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     geomtype = None
     for g in geoms:
         try:
-            geomtype = g.shapetype
+            geomtype = g.shapeType
         except:
             continue
     w = sf.Writer(geomtype)

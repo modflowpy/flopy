@@ -9,7 +9,7 @@ import numpy as np
 import flopy
 from flopy.utils.geometry import Polygon
 from flopy.utils.reference import SpatialReference
-from flopy.export.shapefile_utils import recarray2shp
+from flopy.export.shapefile_utils import recarray2shp, shp2recarray
 from flopy.utils.reference import getprj, epsgRef
 
 
@@ -27,8 +27,12 @@ def test_polygon_from_ij():
     m.sr = SpatialReference(delr=m.dis.delr * .3048, delc=m.dis.delc * .3048, xul=600000, yul=5170000,
                             proj4_str='EPSG:26715', rotation=45)
 
-    recarray = np.array([(0, 5, 5), (1, 4, 5), (0, 7, 8)],
-                        dtype=[('k', '<i8'), ('i', '<i8'), ('j', '<i8')]).view(np.recarray)
+    recarray = np.array([(0, 5, 5, .1, True, 's0'),
+                         (1, 4, 5, .2, False, 's1'),
+                         (0, 7, 8, .3, True, 's2')],
+                        dtype=[('k', '<i8'), ('i', '<i8'), ('j', '<i8'),
+                               ('stuff', '<f4'), ('stuf', '|b1'),
+                               ('stf', np.object)]).view(np.recarray)
 
     get_vertices = m.sr.get_vertices # function to get the referenced vertices for a model cell
     geoms = [Polygon(get_vertices(i, j)) for i, j in recarray[['i', 'j']]]
@@ -42,6 +46,15 @@ def test_polygon_from_ij():
     assert 26715 in prj.keys()
     shutil.copy('temp/test.prj', 'temp/26715.prj')
     recarray2shp(recarray, geoms, 'temp/test.shp', prj='temp/26715.prj')
+
+def test_dtypes():
+    ra = shp2recarray('temp/test.shp')
+    assert "int" in ra.dtype['k'].name
+    assert "float" in ra.dtype['stuff'].name
+    assert "bool" in ra.dtype['stuf'].name
+    assert "object" in ra.dtype['stf'].name
+    assert True
+
 
 def test_epsgref():
 
@@ -71,4 +84,5 @@ def test_epsgref():
 
 if __name__ == '__main__':
     test_polygon_from_ij()
+    test_dtypes()
     test_epsgref()

@@ -6,7 +6,7 @@ import numpy as np
 class Polygon:
 
     type = 'Polygon'
-    shapetype = 5 # pyshp
+    shapeType = 5 # pyshp
 
     def __init__(self, exterior, interiors=None):
         """Container for housing and describing polygon geometries
@@ -111,7 +111,7 @@ class Polygon:
 class LineString:
 
     type = 'LineString'
-    shapetype = 3
+    shapeType = 3
     has_z = False
 
     def __init__(self, coordinates):
@@ -199,7 +199,7 @@ class LineString:
 class Point:
 
     type = 'Point'
-    shapetype = 1
+    shapeType = 1
     has_z = False
 
     def __init__(self, *coordinates):
@@ -280,3 +280,32 @@ class Point:
         xmin, ymin, xmax, ymax = self.bounds
         ax.set_xlim(xmin-1, xmax+1) # singular bounds otherwise
         ax.set_ylim(ymin-1, ymax+1)
+
+def shape(pyshp_shpobj):
+    """Convert a pyshp geometry object to a flopy geometry object.
+
+    Parameters
+    ----------
+    pyshp_shpobj : shapefile._Shape instance
+
+    Returns
+    -------
+    shape : flopy.utils.geometry Polygon, Linestring, or Point
+
+    Notes
+    -----
+    Currently only regular Polygons, LineStrings and Points (pyshp types 5, 3, 1) supported.
+
+    Examples
+    --------
+
+    >>> import shapefile as sf
+    >>> from flopy.utils.geometry import shape
+    >>> sfobj = sf.Reader('shapefile.shp')
+    >>> flopy_geom = shape(list(sfobj.iterShapes())[0])
+    """
+    types = {5: Polygon,
+             3: LineString,
+             1: Point}
+    flopy_geometype = types[pyshp_shpobj.shapeType]
+    return flopy_geometype(pyshp_shpobj.points)
