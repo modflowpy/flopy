@@ -53,8 +53,15 @@ def test_get_destination_data():
     pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(), dtype=starting_locs.dtype)
     assert np.all(np.in1d(starting_locs, pathline_locs))
 
-    # test writing a shapefile
+    # test writing a shapefile of endpoints
     epd.write_shapefile(well_epd, direction='starting', shpname=path+'starting_locs.shp')
+
+    # test writing shapefile of pathlines
+    pthld.write_shapefile(well_pthld, one_per_particle=True,
+                          direction='starting', shpname='temp/mp6/pathlines_1per.shp')
+    pthld.write_shapefile(well_pthld, one_per_particle=False,
+                          shpname='temp/mp6/pathlines.shp')
+
 
 if __name__ == '__main__':
     test_mpsim()

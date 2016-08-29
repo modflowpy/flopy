@@ -9,7 +9,45 @@ class Polygon:
     shapetype = 5 # pyshp
 
     def __init__(self, exterior, interiors=None):
+        """Container for housing and describing polygon geometries
+        (e.g. to be read or written to shapefiles or other geographic data formats)
 
+        Parameters
+        ----------
+        exterior : sequence
+            Sequence of coordinates describing the outer ring of the polygon.
+        interiors : sequence of sequences
+            Describes one or more holes within the polygon
+
+        Attributes
+        ----------
+        exterior : (x, y, z) coordinates of exterior
+        interiors : tuple of (x, y, z) coordinates of each interior polygon
+        patch : descardes.PolygonPatch representation
+        bounds : (xmin, ymin, xmax, ymax)
+            Tuple describing bounding box for polygon
+        geojson : dict
+            Returns a geojson representation of the feature
+        pyshp_parts : list of lists
+            Returns a list of all parts (each an individual polygon).
+            Can be used as input for the shapefile.Writer.poly method (pyshp package)
+
+        Methods
+        -------
+        get_patch
+            Returns a descartes PolygonPatch object representation of the polygon.
+            Accepts keyword arguments to descartes.PolygonPatch. Requires the
+            descartes package (pip install descartes).
+        plot
+            Plots the feature using descartes (via get_patch) and matplotlib.pyplot.
+            Accepts keyword arguments to descartes.PolygonPatch. Requires the
+            descartes package (pip install descartes).
+
+        Notes
+        -----
+        Multi-polygons not yet supported.
+        z information is only stored if it was entered.
+        """
         self.exterior = tuple(map(tuple, exterior))
         self.interiors = tuple() if interiors is None else (map(tuple, i) for i in interiors)
         self.patch = self.get_patch()
@@ -47,7 +85,15 @@ class Polygon:
         return PolygonPatch(self.geojson, **kwargs)
 
     def plot(self, ax=None, **kwargs):
-        """Convenience wrapper around the descartes."""
+        """Plot the feature.
+
+        Parameters
+        ----------
+        ax : matplotlib.pyplot axes instance
+
+        Accepts keyword arguments to descartes.PolygonPatch. Requires the
+        descartes package (pip install descartes).
+        """
         try:
             import matplotlib.pyplot as plt
         except ImportError:
@@ -69,7 +115,39 @@ class LineString:
     has_z = False
 
     def __init__(self, coordinates):
+        """Container for housing and describing linestring geometries
+        (e.g. to be read or written to shapefiles or other geographic data formats)
 
+        Parameters
+        ----------
+        coordinates : sequence
+            Sequence of coordinates describing a line
+
+        Attributes
+        ----------
+        coords : list of (x, y, z) coordinates
+        x : list of x coordinates
+        y : list of y coordinates
+        z : list of z coordinates
+        bounds : (xmin, ymin, xmax, ymax)
+            Tuple describing bounding box for linestring
+        geojson : dict
+            Returns a geojson representation of the feature
+        pyshp_parts : list of lists
+            Returns a list of all parts (each an individual linestring).
+            Can be used as input for the shapefile.Writer.line method (pyshp package)
+
+        Methods
+        -------
+        plot
+            Plots the feature using matplotlib.pyplot.
+            Accepts keyword arguments to pyplot.plot.
+
+        Notes
+        -----
+        Multi-linestrings not yet supported.
+        z information is only stored if it was entered.
+        """
         self.coords = list(map(tuple, coordinates))
         if len(self.coords[0]) == 3:
             self.has_z = True
@@ -101,7 +179,7 @@ class LineString:
 
     @property
     def pyshp_parts(self):
-        return self.coords
+        return [self.coords]
 
     def plot(self, ax=None, **kwargs):
         try:
@@ -125,7 +203,37 @@ class Point:
     has_z = False
 
     def __init__(self, *coordinates):
+        """Container for housing and describing point geometries
+        (e.g. to be read or written to shapefiles or other geographic data formats)
 
+        Parameters
+        ----------
+        coordinates : tuple
+            x, y or x, y, z
+
+        Attributes
+        ----------
+        coords : x, y, z coordinates
+        x : x coordinate
+        y : y coordinate
+        z : z coordinate
+        bounds : (xmin, ymin, xmax, ymax)
+            Tuple describing bounding box
+        geojson : dict
+            Returns a geojson representation of the feature
+        pyshp_parts : list of tuples
+            Can be used as input for the shapefile.Writer.line method (pyshp package)
+
+        Methods
+        -------
+        plot
+            Plots the feature using matplotlib.pyplot.
+            Accepts keyword arguments to pyplot.scatter.
+
+        Notes
+        -----
+        z information is only stored if it was entered.
+        """
         self.coords = coordinates
         if len(coordinates) == 2:
             self.has_z = True
@@ -172,4 +280,3 @@ class Point:
         xmin, ymin, xmax, ymax = self.bounds
         ax.set_xlim(xmin-1, xmax+1) # singular bounds otherwise
         ax.set_ylim(ymin-1, ymax+1)
-        plt.show()

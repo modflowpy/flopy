@@ -256,8 +256,11 @@ def enforce_10ch_limit(names):
 def get_pyshp_field_info(dtypename):
     """Get pyshp dtype information for a given numpy dtype."""
     fields = {'int': ('N', 20, 0),
+              '<i': ('N', 20, 0),
               'float': ('F', 20, 12),
+              '<f': ('N', 20, 0),
               'bool': ('L', 1),
+              'b1': ('L', 1),
               'str': ('C', 50),
               'object': ('C', 50)}
     k = [k for k in fields.keys() if k in dtypename.lower()]
@@ -310,8 +313,8 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     w.autoBalance = 1
     # set up the attribute fields
     names = enforce_10ch_limit(recarray.dtype.names)
-    for i, npdtype in enumerate(recarray.dtype.names):
-        w.field(names[i], *get_pyshp_field_info(npdtype))
+    for i, npdtype in enumerate(recarray.dtype.descr):
+        w.field(names[i], *get_pyshp_field_info(npdtype[1]))
 
     # write the geometry and attributes for each record
     if geomtype == 5:
@@ -334,8 +337,9 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     # write projection file from epsg code
     if epsg is not None:
         prjtxt = getprj(epsg)
-        with open(prjname, 'w') as output:
-            output.write(prjtxt)
+        if prjtxt is not None:
+            with open(prjname, 'w') as output:
+                output.write(prjtxt)
     # copy a supplied prj file
     if prj is not None:
         shutil.copy(prj, prjname)

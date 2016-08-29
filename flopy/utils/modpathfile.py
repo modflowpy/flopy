@@ -328,18 +328,18 @@ class PathlineFile():
                                                ]).view(np.recarray)
         # geometry for each row in PathLine file
         else:
-            dtype = pth.dtype.copy()
-            pthdata = np.recarray([], dtype=dtype)
+            dtype = pth.dtype
+            pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
             for pid in particles:
                 ra = pth[pth.particleid == pid]
                 x, y = SpatialReference.rotate(ra.x * length_mult,
                                                ra.y * length_mult,
                                                theta=rot)
                 z = ra.z
-                geoms.append([LineString([(x[i-1], y[i-1], z[i-1]),
+                geoms += [LineString([(x[i-1], y[i-1], z[i-1]),
                                           (x[i], y[i], z[i])])
-                             for i in np.arange(1, (len(ra)))])
-            pthdata = np.append(pthdata, dtype=dtype).view(np.recarray)
+                             for i in np.arange(1, (len(ra)))]
+                pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
 
         recarray2shp(pthdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
