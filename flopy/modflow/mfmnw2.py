@@ -1018,21 +1018,24 @@ class ModflowMnw2(Package):
 
         nd = []
         for r in self.node_data:
-            startK = get_layer(self.parent.dis, r.i, r.j, r.ztop)
-            endK = get_layer(self.parent.dis, r.i, r.j, r.zbotm)
-            if startK == endK:
-                r = r.copy()
-                r['k'] = startK
-                nd.append(r)
-            else:
-                for k in np.arange(startK, endK+1):
+            if r.ztop - r.zbotm > 0:
+                startK = get_layer(self.parent.dis, r.i, r.j, r.ztop)
+                endK = get_layer(self.parent.dis, r.i, r.j, r.zbotm)
+                if startK == endK:
                     r = r.copy()
-                    r['k'] = k
-                    if k > startK:
-                        r['ztop'] = self.parent.dis.botm[k-1, r.i, r.j]
-                    if k < endK:
-                        r['zbotm'] = self.parent.dis.botm[k, r.i, r.j]
+                    r['k'] = startK
                     nd.append(r)
+                else:
+                    for k in np.arange(startK, endK+1):
+                        r = r.copy()
+                        r['k'] = k
+                        if k > startK:
+                            r['ztop'] = self.parent.dis.botm[k-1, r.i, r.j]
+                        if k < endK:
+                            r['zbotm'] = self.parent.dis.botm[k, r.i, r.j]
+                        nd.append(r)
+            else:
+                nd.append(r)
         return stack_arrays(nd, usemask=False).view(np.recarray)
 
     def make_mnw_objects(self):

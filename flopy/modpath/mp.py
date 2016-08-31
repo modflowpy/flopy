@@ -216,19 +216,44 @@ class Modpath(BaseModel):
                                            [3, 4, 4], [4, 4, 4],
                                            [5, 4, 4], [6, 4, 4]])
                             icnt += 1
+            # this is kind of a band aid pending refactoring of mpsim class
             elif 'MNW' in package.upper():
                 if 'MNW2' not in pak_list:
                     raise Exception('Error: no MNW2 package in the passed model')
                 node_data = self.__mf.mnw2.get_allnode_data()
-                for k, i, j, wellid in node_data[['k', 'i', 'j', 'wellid']]:
-                    group_name.append('{}{}'.format(wellid, k))
+                node_data.sort(order=['wellid', 'k'])
+                wellids = np.unique(node_data.wellid)
+                side_faces = [[1, 4, 4], [2, 4, 4],
+                              [3, 4, 4], [4, 4, 4]]
+                top_face = [5, 4, 4]
+                botm_face = [6, 4, 4]
+                def append_node(ifaces_well, wellid, node_number, k, i, j):
+                    """add a single MNW node"""
+                    group_region.append([k, i, j, k, i, j])
+                    ifaces.append(ifaces_well)
+                    face_ct.append(len(ifaces_well))
+                    group_name.append('{}{}'.format(wellid, node_number))
                     group_placement.append([Grid, GridCellRegionOption,
-                                            PlacementOption,
-                                            ReleaseStartTime,
-                                            ReleaseOption, CHeadOption])
-                    group_region.append([0, i, j, 0, i, j])
-                    face_ct.append(1)
-                    ifaces.append([[6, 1, 1]])
+                                        PlacementOption,
+                                        ReleaseStartTime,
+                                        ReleaseOption,
+                                        CHeadOption])
+
+                for wellid in wellids:
+                    nd = node_data[node_data.wellid == wellid]
+                    if len(nd) == 1:
+                        append_node(side_faces + [top_face, botm_face],
+                                    wellid, 0, *nd[['k', 'i', 'j']][0])
+                    else:
+                        append_node(side_faces + [top_face],
+                                    wellid, 0, *nd[['k', 'i', 'j']][0])
+                        for i in range(len(nd))[1:]:
+                            if i == len(nd) -1:
+                                append_node(side_faces + [botm_face],
+                                            wellid, i, *nd[['k', 'i', 'j']][i])
+                            else:
+                                append_node(side_faces,
+                                            wellid, i, *nd[['k', 'i', 'j']][i])
             elif package.upper() == 'RCH':
                 for j in range(nrow):
                     for i in range(ncol):
