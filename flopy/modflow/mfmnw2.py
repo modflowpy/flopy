@@ -306,11 +306,15 @@ class Mnw(object):
         self.cwc = cwc
         self.pp = pp
         # dataset 2d (entered by node)
+        # indices should be lists (for iteration over nodes)
         self.k = k
         self.i = i
         self.j = j
         self.ztop = ztop
         self.zbotm = zbotm
+        for v in self.by_node_variables:
+            if not isinstance(self.__dict__[v], list):
+                self.__dict__[v] = [self.__dict__[v]]
         # dataset 2e
         self.pumplay = pumplay
         self.pumprow = pumprow
@@ -533,7 +537,7 @@ class Mnw(object):
         names = Mnw.get_item2_names(node_data=self.node_data)
         for n in names:
             # assign by node variables as lists if they are being included
-            if n in self.by_node_variables and len(np.unique(self.node_data[n])) > 1:
+            if n in self.by_node_variables:# and len(np.unique(self.node_data[n])) > 1:
                 self.__dict__[n] = list(self.node_data[n])
             else:
                 self.__dict__[n] = self.node_data[n][0]
@@ -562,9 +566,9 @@ class Mnw(object):
         # dataset 2c
         def _assign_by_node_var(var):
             """Assign negative number if variable is entered by node."""
-            if isinstance(var, list):
+            if len(np.unique(var)) > 1:
                 return -1
-            return var
+            return var[0]
 
         if self.losstype.lower() != 'none':
             if self.losstype.lower() != 'specifycwc':
@@ -575,7 +579,7 @@ class Mnw(object):
                     f_mnw.write(fmt.format(_assign_by_node_var(self.rskin),
                                                _assign_by_node_var(self.kskin)))
                 elif self.losstype.lower() == 'general':
-                    fmt = '{0} {0 {0}'.format(float_format)
+                    fmt = '{0} {0} {0}'.format(float_format)
                     f_mnw.write(fmt.format(_assign_by_node_var(self.B),
                                                   _assign_by_node_var(self.C),
                                                   _assign_by_node_var(self.P)))
@@ -604,8 +608,9 @@ class Mnw(object):
                 val = self.__dict__[var]
                 if val is None:
                     continue
-                # only write variables by node if they are lists
-                if isinstance(val, list) or val < 0:
+                # only write variables by node if they are unique lists > length 1
+                if len(np.unique(val)) > 1:
+                    #if isinstance(val, list) or val < 0:
                     fmt = ' ' + float_format
                     f_mnw.write(fmt.format(self.node_data[var][n]))
             f_mnw.write('\n')
@@ -1039,10 +1044,10 @@ class ModflowMnw2(Package):
             nd = node_data[node_data.wellid == wellid]
             nnodes = Mnw.get_nnodes(nd)
             # if tops and bottoms are specified, flip nnodes
-            maxtop = np.max(nd.ztop)
-            minbot = np.min(nd.zbotm)
-            if maxtop - minbot > 0 and nnodes > 0:
-                nnodes *= -1
+            #maxtop = np.max(nd.ztop)
+            #minbot = np.min(nd.zbotm)
+            #if maxtop - minbot > 0 and nnodes > 0:
+            #    nnodes *= -1
             # reshape stress period data to well
             mnwspd = Mnw.get_empty_stress_period_data(self.nper, aux_names=self.aux)
             for per, itmp in enumerate(self.itmp):
@@ -1177,7 +1182,7 @@ class ModflowMnw2(Package):
         # need a method that assigns attributes from table to objects!
         # call make_mnw_objects?? (table is definitive then)
         if use_tables:
-            mnws = self.node_data.wellid.tolist() # preserve any order
+            mnws = np.unique(self.node_data.wellid).tolist() # preserve any order
         else:
             mnws = self.mnw.values()
         for k in mnws:

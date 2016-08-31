@@ -154,7 +154,6 @@ class Modpath(BaseModel):
                     between 0 and 1 at which to start the particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 2.
 
-
         Returns
         -------
         mpsim : ModpathSim object
@@ -193,8 +192,7 @@ class Modpath(BaseModel):
         for package in packages:
             if package.upper() == 'WEL':
                 if 'WEL' not in pak_list:
-                    errmsg = 'Error: no well package in the passed model'
-                    raise errmsg
+                    raise Exception('Error: no well package in the passed model')
                 for kper in range(nper):
                     mflist = self.__mf.wel.stress_period_data[kper]
                     idx = [mflist['k'], mflist['i'], mflist['j']]
@@ -218,6 +216,19 @@ class Modpath(BaseModel):
                                            [3, 4, 4], [4, 4, 4],
                                            [5, 4, 4], [6, 4, 4]])
                             icnt += 1
+            elif 'MNW' in package.upper():
+                if 'MNW2' not in pak_list:
+                    raise Exception('Error: no MNW2 package in the passed model')
+                node_data = self.__mf.mnw2.get_allnode_data()
+                for k, i, j, wellid in node_data[['k', 'i', 'j', 'wellid']]:
+                    group_name.append('{}{}'.format(wellid, k))
+                    group_placement.append([Grid, GridCellRegionOption,
+                                            PlacementOption,
+                                            ReleaseStartTime,
+                                            ReleaseOption, CHeadOption])
+                    group_region.append([0, i, j, 0, i, j])
+                    face_ct.append(1)
+                    ifaces.append([[6, 1, 1]])
             elif package.upper() == 'RCH':
                 for j in range(nrow):
                     for i in range(ncol):

@@ -11,6 +11,7 @@ import numpy as np
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 
 mffiles = glob.glob('../Examples/data/mp6/EXAMPLE*')
+
 path = 'temp/mp6/'
 if not os.path.isdir(path):
     os.makedirs(path)
@@ -35,6 +36,30 @@ def test_mpsim():
 
     sim = mp.create_mpsim(trackdir='forward', simtype='endpoint', packages='RCH')
     mp.write_input()
+
+    # replace the well with an mnw
+    node_data = np.array([(3, 12, 12, 'well1', 'skin', -1, 0, 0, 0, 1., 2., 5., 6.2),
+                      (4, 12, 12, 'well1', 'skin', -1, 0, 0, 0, 0.5, 2., 5., 6.2)],
+                     dtype=[('k', np.int), ('i', np.int), ('j', np.int),
+                            ('wellid', np.object), ('losstype', np.object),
+                            ('pumploc', np.int), ('qlimit', np.int),
+                            ('ppflag', np.int), ('pumpcap', np.int),
+                            ('rw', np.float), ('rskin', np.float),
+                            ('kskin', np.float), ('zpump', np.float)]).view(np.recarray)
+
+    stress_period_data = {0: np.array([(0, 'well1', -150000.0)],
+                                      dtype=[('per', np.int),
+                                             ('wellid', np.object),
+                                             ('qdes', np.float)])}
+    m.remove_package('WEL')
+    mnw2 = flopy.modflow.ModflowMnw2(model=m, mnwmax=1,
+                                     node_data=node_data,
+                                     stress_period_data=stress_period_data,
+                                     itmp=[1, -1, -1])
+    # test creation of
+    sim = mp.create_mpsim(trackdir='backward', simtype='pathline', packages='MNW2')
+    mp.write_input()
+    assert True
 
 def test_get_destination_data():
 
