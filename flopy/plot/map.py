@@ -404,7 +404,8 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, **kwargs)
+        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, self.layer,
+                                              **kwargs)
         return patch_collection
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,

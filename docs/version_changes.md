@@ -2,6 +2,7 @@ FloPy Changes
 -----------------------------------------------
 
 ### Version 3.2.6
+* Added functionality to read binary grd file for unstructured grids.
 * Document your new features.
 
 * Bug fixes:

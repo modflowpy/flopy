@@ -2,7 +2,7 @@ import numpy as np
 import collections
 
 from ..utils.utils_def import FlopyBinaryData
-
+from ..utils.reference import SpatialReference
 
 class MfGrdFile(FlopyBinaryData):
 
@@ -95,6 +95,28 @@ class MfGrdFile(FlopyBinaryData):
                     v = self.read_real()
             self._datadict[key] = v
 
+        # set the spatial reference
+        self.sr = self._set_spatialreference()
+
+    def _set_spatialreference(self):
+        try:
+            if self._grid == 'DISV':
+                sr = None
+            elif self._grid == 'DIS':
+                delr, delc = self._datadict['DELR'], self._datadict['DELC']
+                xoff, yoff, rot = self._datadict['XOFFSET'], \
+                                  self._datadict['YOFFSET'], \
+                                  self._datadict['ANGROT']
+                sr = SpatialReference(delr=delr, delc=delc,
+                                      xul=xoff, yul=yoff, rotation=rot)
+        except:
+            print('could not set spatial reference for {}'.format(self.file.name))
+
+        return sr
+
+    def get_spatialreference(self):
+        return self.sr
+
     def get_verts(self):
         if self._grid == 'DISV':
             try:
@@ -109,6 +131,28 @@ class MfGrdFile(FlopyBinaryData):
                 if self.verbose:
                     print('returning vertices for {}'.format(self.file.name))
                 return iverts, self._datadict['VERTICES'].reshape(shpvert)
+            except:
+                print('could not return vertices for {}'.format(self.file.name))
+        elif self._grid == 'DIS':
+            try:
+                nlay, nrow, ncol = self._datadict['NLAY'], \
+                                   self._datadict['NROW'], \
+                                   self._datadict['NCOL']
+                iv = 0
+                verts = []
+                iverts = []
+                for k in range(nlay):
+                    for i in range(nrow):
+                        for j in range(ncol):
+                            ivlist = []
+                            v = self.sr.get_vertices(i, j)
+                            for (x, y) in v:
+                                verts.append((x, y))
+                                ivlist.append(iv)
+                                iv += 1
+                            iverts.append(ivlist)
+                verts = np.array(verts)
+                return iverts, verts
             except:
                 print('could not return vertices for {}'.format(self.file.name))
 
