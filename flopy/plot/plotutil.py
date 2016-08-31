@@ -668,8 +668,10 @@ def cvfd_to_patch_collection(verts, iverts):
         points = []
         for iv in ivertlist:
             points.append((verts[iv, 0], verts[iv, 1]))
-        iv = ivertlist[0]
-        points.append((verts[iv, 0], verts[iv, 1]))
+        # close the polygon, if necessary
+        if ivertlist[0] != ivertlist[-1]:
+            iv = ivertlist[0]
+            points.append((verts[iv, 0], verts[iv, 1]))
         ptchs.append(Polygon(points))
     pc = PatchCollection(ptchs)
     return pc
