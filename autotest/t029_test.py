@@ -1,94 +1,42 @@
-"""
-test modpath functionality
-"""
-import sys
-sys.path.insert(0, '/Users/aleaf/Documents/GitHub/flopy3')
-import glob
-import shutil
 import os
 import flopy
-import numpy as np
-from flopy.utils.modpathfile import EndpointFile, PathlineFile
+import matplotlib.pyplot as plt
 
-mffiles = glob.glob('../Examples/data/mp6/EXAMPLE*')
 
-path = 'temp/mp6/'
-if not os.path.isdir(path):
-    os.makedirs(path)
-for f in mffiles:
-    shutil.copy(f, path + os.path.split(f)[1])
+pthtest = os.path.join('..', 'examples', 'data', 'mfgrd_test')
+newpth = os.path.join('.', 'temp')
 
-def test_mpsim():
+def test_mfgrddis():
+    grbnam = 'nwtp3.dis.grb'
+    fn = os.path.join(pthtest, grbnam)
+    dis = flopy.utils.MfGrdFile(fn, verbose=True)
 
-    model_ws = path
-    m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=model_ws)
-    m.get_package_list()
+    iverts, verts = dis.get_verts()
+    sr = dis.get_spatialreference()
+    extents = sr.get_extent()
+    vertc = dis.get_centroids()
+    errmsg = 'extents {} of {} '.format(extents, grbnam) + \
+             'does not equal (0.0, 8000.0, -8000.0, 0.0)'
+    assert extents == (0.0, 8000.0, -8000.0, 0.0), errmsg
+    errmsg = 'shape of {} {} '.format(grbnam, verts.shape) + \
+             'not equal to (32000, 2).'
+    assert verts.shape == (32000, 2), errmsg
+    errmsg = 'ncells of {} {} '.format(grbnam, len(iverts)) + \
+             'not equal to 6400.'
+    assert len(iverts) == 6400, errmsg
 
-    mp = flopy.modpath.Modpath(modelname='ex6',
-                           exe_name='mp6',
-                           modflowmodel=m,
-                           model_ws=path,
-                           dis_file=m.name+'.dis',
-                           head_file=m.name+'.hed',
-                           budget_file=m.name+'.bud')
 
-    mpb = flopy.modpath.ModpathBas(mp, hdry=m.lpf.hdry, laytyp=m.lpf.laytyp, ibound=1, prsity=0.1)
 
-    sim = mp.create_mpsim(trackdir='forward', simtype='endpoint', packages='RCH')
-    mp.write_input()
+def test_mfgrddisv():
+    fn = os.path.join(pthtest, 'flow.disv.grb')
+    disv = flopy.utils.MfGrdFile(fn, verbose=True)
 
-    # replace the well with an mnw
-    node_data = np.array([(3, 12, 12, 'well1', 'skin', -1, 0, 0, 0, 1., 2., 5., 6.2),
-                      (4, 12, 12, 'well1', 'skin', -1, 0, 0, 0, 0.5, 2., 5., 6.2)],
-                     dtype=[('k', np.int), ('i', np.int), ('j', np.int),
-                            ('wellid', np.object), ('losstype', np.object),
-                            ('pumploc', np.int), ('qlimit', np.int),
-                            ('ppflag', np.int), ('pumpcap', np.int),
-                            ('rw', np.float), ('rskin', np.float),
-                            ('kskin', np.float), ('zpump', np.float)]).view(np.recarray)
-
-    stress_period_data = {0: np.array([(0, 'well1', -150000.0)],
-                                      dtype=[('per', np.int),
-                                             ('wellid', np.object),
-                                             ('qdes', np.float)])}
-    m.remove_package('WEL')
-    mnw2 = flopy.modflow.ModflowMnw2(model=m, mnwmax=1,
-                                     node_data=node_data,
-                                     stress_period_data=stress_period_data,
-                                     itmp=[1, -1, -1])
-    # test creation of modpath simulation file for MNW2
-    # (not a very robust test)
-    sim = mp.create_mpsim(trackdir='backward', simtype='pathline', packages='MNW2')
-    mp.write_input()
-    assert True
-
-def test_get_destination_data():
-
-    pthld = PathlineFile(path + 'EXAMPLE-3.pathline')
-    epd = EndpointFile(path + 'EXAMPLE-3.endpoint')
-
-    well_epd = epd.get_destination_endpoint_data(dest_cells=[(4, 12, 12)])
-    well_pthld = pthld.get_destination_pathline_data(dest_cells=[(4, 12, 12)])
-
-    # same particle IDs should be in both endpoing data and pathline data
-    assert len(set(well_epd.particleid).difference(set(well_pthld.particleid))) == 0
-
-    # check that all starting locations are included in the pathline data
-    # (pathline data slice not just endpoings)
-    starting_locs = well_epd[['k0', 'i0', 'j0']]
-    pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(), dtype=starting_locs.dtype)
-    assert np.all(np.in1d(starting_locs, pathline_locs))
-
-    # test writing a shapefile of endpoints
-    epd.write_shapefile(well_epd, direction='starting', shpname=path+'starting_locs.shp')
-
-    # test writing shapefile of pathlines
-    pthld.write_shapefile(well_pthld, one_per_particle=True,
-                          direction='starting', shpname='temp/mp6/pathlines_1per.shp')
-    pthld.write_shapefile(well_pthld, one_per_particle=False,
-                          shpname='temp/mp6/pathlines.shp')
-
+    iverts, verts = disv.get_verts()
+    errmsg = 'shape of flow.disv {} not equal to (156, 2).'.format(verts.shape)
+    assert verts.shape == (156, 2), errmsg
+    errmsg = 'ncells of flow.disv {} not equal to 218.'.format(len(iverts))
+    assert len(iverts) == 218, errmsg
 
 if __name__ == '__main__':
-    test_mpsim()
-    test_get_destination_data()
+    test_mfgrddis()
+    test_mfgrddisv()
