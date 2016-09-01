@@ -117,6 +117,21 @@ class MfGrdFile(FlopyBinaryData):
     def get_spatialreference(self):
         return self.sr
 
+    def get_centroids(self):
+        x, y = None, None
+        try:
+            if self._grid == 'DISV':
+                x = self._datadict['CELLX']
+                y = self._datadict['CELLY']
+            elif self._grid == 'DIS':
+                nlay = self._datadict['NLAY']
+                x = np.tile(self.sr.xcentergrid.flatten(), nlay)
+                y = np.tile(self.sr.ycentergrid.flatten(), nlay)
+        except:
+            print('could not return centroids' +
+                  ' for {}'.format(self.file.name))
+        return np.column_stack((x, y))
+
     def get_verts(self):
         if self._grid == 'DISV':
             try:
