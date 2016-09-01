@@ -56,7 +56,8 @@ def test_mpsim():
                                      node_data=node_data,
                                      stress_period_data=stress_period_data,
                                      itmp=[1, -1, -1])
-    # test creation of
+    # test creation of modpath simulation file for MNW2
+    # (not a very robust test)
     sim = mp.create_mpsim(trackdir='backward', simtype='pathline', packages='MNW2')
     mp.write_input()
     assert True

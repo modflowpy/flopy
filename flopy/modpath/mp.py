@@ -127,7 +127,9 @@ class Modpath(BaseModel):
     mf = property(getmf)  # Property has no setter, so read-only
 
     def create_mpsim(self, simtype='pathline', trackdir='forward',
-                     packages='WEL', start_time=0):
+                     packages='WEL', start_time=0, default_ifaces=None,
+                     ParticleColumnCount=4, ParticleRowCount=4
+                     ):
         """
         Create a MODPATH simulation file using available MODFLOW boundary
         package data.
@@ -144,8 +146,8 @@ class Modpath(BaseModel):
             (default is 'forward')
         packages : str or list of strings
             Keyword defining the modflow packages used to create initial
-            particle locations. Supported packages are 'WEL' and 'RCH'.
-            (default is 'WEL')
+            particle locations. Supported packages are 'WEL', 'MNW2' and 'RCH'.
+            (default is 'WEL').
         start_time : float or tuple
             Sets the value of MODPATH reference time relative to MODFLOW time.
             float : value of MODFLOW simulation time at which to start the particle tracking simulation.
@@ -153,6 +155,13 @@ class Modpath(BaseModel):
             tuple : (period, step, time fraction) MODFLOW stress period, time step and fraction
                     between 0 and 1 at which to start the particle tracking simulation.
                     Sets the value of MODPATH ReferenceTimeOption to 2.
+        default_ifaces : list
+            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to start particles.
+            (default is None, meaning ifaces will vary depending on packages argument above)
+        ParticleRowCount : int
+            Rows of particles to start on each cell index face (iface).
+        ParticleColumnCount : int
+            Columns of particles to start on each cell index face (iface).
 
         Returns
         -------
@@ -172,6 +181,16 @@ class Modpath(BaseModel):
             ref_time_per_stp = start_time
         else:
             ref_time = start_time
+
+        # set iface particle grids
+        ptrow = ParticleRowCount
+        ptcol = ParticleColumnCount
+        side_faces = [[1, ptrow, ptcol], [2, ptrow, ptcol],
+                      [3, ptrow, ptcol], [4, ptrow, ptcol]]
+        top_face = [5, ptrow, ptcol]
+        botm_face = [6, ptrow, ptcol]
+        if default_ifaces is not None:
+            default_ifaces = [[ifc, ptrow, ptcol] for ifc in default_ifaces]
 
         Grid = 1
         GridCellRegionOption = 1
@@ -211,10 +230,12 @@ class Modpath(BaseModel):
                                                     ReleaseOption,
                                                     CHeadOption])
                             group_region.append([k, i, j, k, i, j])
-                            face_ct.append(6)
-                            ifaces.append([[1, 4, 4], [2, 4, 4],
-                                           [3, 4, 4], [4, 4, 4],
-                                           [5, 4, 4], [6, 4, 4]])
+                            if default_ifaces is None:
+                                ifaces.append(side_faces + [top_face, botm_face])
+                                face_ct.append(6)
+                            else:
+                                ifaces.append(default_ifaces)
+                                face_ct.append(len(default_ifaces))
                             icnt += 1
             # this is kind of a band aid pending refactoring of mpsim class
             elif 'MNW' in package.upper():
@@ -223,15 +244,16 @@ class Modpath(BaseModel):
                 node_data = self.__mf.mnw2.get_allnode_data()
                 node_data.sort(order=['wellid', 'k'])
                 wellids = np.unique(node_data.wellid)
-                side_faces = [[1, 4, 4], [2, 4, 4],
-                              [3, 4, 4], [4, 4, 4]]
-                top_face = [5, 4, 4]
-                botm_face = [6, 4, 4]
+
                 def append_node(ifaces_well, wellid, node_number, k, i, j):
                     """add a single MNW node"""
                     group_region.append([k, i, j, k, i, j])
-                    ifaces.append(ifaces_well)
-                    face_ct.append(len(ifaces_well))
+                    if default_ifaces is None:
+                        ifaces.append(ifaces_well)
+                        face_ct.append(len(ifaces_well))
+                    else:
+                        ifaces.append(default_ifaces)
+                        face_ct.append(len(default_ifaces))
                     group_name.append('{}{}'.format(wellid, node_number))
                     group_placement.append([Grid, GridCellRegionOption,
                                         PlacementOption,
@@ -263,8 +285,12 @@ class Modpath(BaseModel):
                                                 ReleaseStartTime,
                                                 ReleaseOption, CHeadOption])
                         group_region.append([0, i, j, 0, i, j])
-                        face_ct.append(1)
-                        ifaces.append([[6, 1, 1]])
+                        if default_ifaces is None:
+                            face_ct.append(1)
+                            ifaces.append([[6, 1, 1]])
+                        else:
+                            ifaces.append(default_ifaces)
+                            face_ct.append(len(default_ifaces))
 
         SimulationType = 1
         if simtype.lower() == 'endpoint':
