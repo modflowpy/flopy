@@ -2,7 +2,7 @@ import os
 import shutil
 import numpy as np
 import flopy
-from flopy.utils.util_array import Util2d, Util3d, Transient2d
+from flopy.utils.util_array import Util2d, Util3d, Transient2d, Transient3d
 
 out_dir = "temp"
 if os.path.exists(out_dir):
@@ -28,6 +28,38 @@ def test_transient2d():
     t2d2 = Transient2d.from_4d(ml,"rch",{"rech":m4d})
     m4d2 = t2d2.array
     assert np.array_equal(m4d,m4d2)
+
+
+def test_transient3d():
+    nlay = 3
+    nrow = 4
+    ncol = 5
+    nper = 5
+    ml = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol,
+                                   nper=nper)
+
+    # Make a transient 3d array of a constant value
+    t3d = Transient3d(ml, (nlay, nrow, ncol), np.float32, 10., "fake")
+    a1 = t3d.array
+    assert a1.shape == (nper, nlay, nrow, ncol), a1.shape
+
+    # Make a transient 3d array with changing entries and then verify that
+    # they can be reproduced through indexing
+    a = np.arange((nlay * nrow * ncol),
+                  dtype=np.float32).reshape((nlay, nrow, ncol))
+    t3d = {0: a, 2: 1025, 3: a, 4: 1000.}
+    t3d = Transient3d(ml, (nlay, nrow, ncol), np.float32, t3d, "fake")
+    assert np.array_equal(t3d[0].array, a)
+    assert np.array_equal(t3d[1].array, a)
+    assert np.array_equal(t3d[2].array, np.zeros((nlay, nrow, ncol)) + 1025.)
+    assert np.array_equal(t3d[3].array, a)
+    assert np.array_equal(t3d[4].array, np.zeros((nlay, nrow, ncol)) + 1000.)
+
+    # Test changing a value
+    t3d[0] = 1.0
+    assert np.array_equal(t3d[0].array, np.zeros((nlay, nrow, ncol)) + 1.)
+
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
@@ -559,7 +591,8 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path()
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
-    test_transient2d()
+    #test_transient2d()
+    test_transient3d()
     # test_util2d()
     # test_util3d()
     # test_how()
