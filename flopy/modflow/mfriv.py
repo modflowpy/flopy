@@ -61,14 +61,17 @@ class ModflowRiv(Package):
         simulation. Full details of all options to specify stress_period_data
         can be found in the flopy3 boundaries Notebook in the basic
         subdirectory of the examples directory.
-    options : list of strings
-        Package options. (default is None).
+    dtype : custom datatype of stress_period_data.
+        (default is None)
+        If None the default river datatype will be applied.
     naux : int
         number of auxiliary variables
     extension : string
         Filename extension (default is 'riv')
     unitnumber : int
         File unit number (default is 18).
+    options : list of strings
+        Package options. (default is None).        
 
     Attributes
     ----------
