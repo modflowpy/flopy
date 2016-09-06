@@ -356,8 +356,9 @@ class Mnw(object):
             self._set_attributes_from_node_data()
 
         for n in ['k', 'i', 'j']:
-            # need to set for each period
-            self.stress_period_data[n] = self.__dict__[n]
+            if len(self.__dict__[n]) > 0:
+                # need to set for each period
+                self.stress_period_data[n] = [self.__dict__[n][0]]
 
     def make_node_data(self):
         """Makes the node data array from variables entered individually."""
