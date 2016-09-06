@@ -342,8 +342,6 @@ class Mnw(object):
         if stress_period_data is not None:
             for n in stress_period_data.dtype.names:
                 self.stress_period_data[n] = stress_period_data[n]
-            for n in ['k', 'i', 'j']:
-                self.stress_period_data[n] = self.__dict__[n]
 
         # accept node data from structured array
         self.node_data = ModflowMnw2.get_empty_node_data(np.abs(nnodes), aux_names=self.aux)
@@ -356,6 +354,10 @@ class Mnw(object):
             self.make_node_data()
         else:
             self._set_attributes_from_node_data()
+
+        for n in ['k', 'i', 'j']:
+            # need to set for each period
+            self.stress_period_data[n] = self.__dict__[n]
 
     def make_node_data(self):
         """Makes the node data array from variables entered individually."""
@@ -772,6 +774,7 @@ class ModflowMnw2(Package):
             for n in names:
                 self.node_data[n] = node_data[n] # rec array of Mnw properties by node
             self.nodtot = len(self.node_data)
+            self.node_data.sort(order=['wellid', 'k'])
             # Python 3.5.0 produces a segmentation fault when trying to sort BR MNW wells
             #self.node_data.sort(order='wellid', axis=0)
         self.mnw = mnw # dict or list of Mnw objects
@@ -789,7 +792,7 @@ class ModflowMnw2(Package):
                 for n in names:
                     spd[n] = data[n]
                 spd.sort(order='wellid')
-                self.stress_period_data[per] = spd # dict of rec arrays (sp data by mnw)
+                self.stress_period_data[per] = spd
 
         self.itmp = itmp
         self.gwt = gwt
@@ -804,7 +807,17 @@ class ModflowMnw2(Package):
             self.make_node_data(self.mnw)
             self.make_stress_period_data(self.mnw)
 
+        if stress_period_data is not None:
+            if 'k' not in stress_period_data[0].dtype.names:
+                self._add_kij_to_stress_period_data()
+
         self.parent.add_package(self)
+
+    def _add_kij_to_stress_period_data(self):
+        for per in self.stress_period_data.data.keys():
+            for d in ['k', 'i', 'j']:
+                self.stress_period_data[per][d] = [self.mnw[wellid].__dict__[d][0]
+                                                   for wellid in self.stress_period_data[per].wellid]
 
     @staticmethod
     def get_empty_node_data(maxnodes=0, aux_names=None, structured=True, default_value=0):
@@ -1045,6 +1058,7 @@ class ModflowMnw2(Package):
         mnws = np.unique(node_data.wellid)
         for wellid in mnws:
             nd = node_data[node_data.wellid == wellid]
+            k, i, j = nd[['k', 'i', 'j']][0]
             nnodes = Mnw.get_nnodes(nd)
             # if tops and bottoms are specified, flip nnodes
             #maxtop = np.max(nd.ztop)
@@ -1064,6 +1078,7 @@ class ModflowMnw2(Package):
                     continue
                 elif itmp < 0:
                     mnwspd[per] = mnwspd[per-1]
+
             self.mnw[wellid] = Mnw(wellid,
                                    nnodes=nnodes, nper=self.nper,
                                    node_data=nd, stress_period_data=mnwspd,

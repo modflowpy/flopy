@@ -89,6 +89,8 @@ def test_make_package():
                  stress_period_data=stress_period_data,
                  itmp=[2, 2, -1], # reuse second per pumping for last stress period
                  )
+    inds = m4.mnw2.stress_period_data[0][['k', 'i', 'j']]
+    assert np.array_equal(inds, np.array([(2, 1, 1), (1, 3, 3)], dtype=inds.dtype))
     m4.write_input()
 
 
