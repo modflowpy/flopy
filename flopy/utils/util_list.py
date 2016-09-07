@@ -157,13 +157,15 @@ class MfList(object):
         -------
         dropped : MfList without the dropped fields
         """
-        fields = set(fields) if isinstance(fields, list) else fields
-        names = list(set(self.dtype.names).difference(fields))
+        if not isinstance(fields, list):
+            fields = [fields]
+        names = [n for n in self.dtype.names if n not in fields]
         dtype = np.dtype([(k, d) for k, d in self.dtype.descr if k not in fields])
         spd = {}
         for k, v in self.data.items():
-            newarr = np.array(np.zeros_like(self.data[k][names]),
-                              dtype=dtype).view(np.recarray)
+            # because np 1.9 doesn't support indexing by list of columns
+            newarr = np.array([self.data[k][n] for n in names]).transpose()
+            newarr = np.array(map(tuple, newarr), dtype=dtype).view(np.recarray)
             for n in dtype.names:
                 newarr[n] = self.data[k][n]
             spd[k] = newarr

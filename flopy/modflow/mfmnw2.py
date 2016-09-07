@@ -956,7 +956,8 @@ class ModflowMnw2(Package):
                     if mnw[wellid].qlimit < 0:
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
                     # update package stress period data table
-                    kij = list(node_data[node_data.wellid == wellid][['k', 'i', 'j']][0])
+                    ndw = node_data[node_data.wellid == wellid]
+                    kij = [ndw.k[0], ndw.i[0], ndw.j[0]]
                     current_4[i] = tuple(kij + [wellid, qdes, capmult, cprime,
                                     hlim, qcut, qfrcmn, qfrcmx] + xyz)
                     # update well stress period data table
