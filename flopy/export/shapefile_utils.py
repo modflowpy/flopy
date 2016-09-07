@@ -344,6 +344,9 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     if len(recarray) != len(geoms):
         raise IndexError('Number of geometries must equal the number of records!')
 
+    if len(recarray) == 0:
+        raise Exception("Recarray is empty")
+
     geomtype = None
     for g in geoms:
         try:
