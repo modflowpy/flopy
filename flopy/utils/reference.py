@@ -697,21 +697,21 @@ def get_spatialreference(epsg, text='prettywkt'):
     """
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
     try:
-        import requests
-        resp = requests.get(url)
-        text = resp.text.replace("\n", "")
-        return text
+        # For Python 3.0 and later
+        from urllib.request import urlopen
+    except ImportError:
+        # Fall back to Python 2's urllib2
+        from urllib2 import urlopen
+    try:
+        urlobj = urlopen(url)
+        text = urlobj.read().decode()
     except:
-        try:
-            from urllib2 import urlopen
-            urlobj = urlopen(url)
-            text = urlobj.read().replace("\n", "")
-            return text
-        except:
-            e = sys.exc_info()
-            print(e)
-            print('Need an internet connection to look up epsg on spatialreference.org.')
-            return
+        e = sys.exc_info()
+        print(e)
+        print('Need an internet connection to look up epsg on spatialreference.org.')
+        return
+    text = text.replace("\n", "")
+    return text
 
 def getproj4(epsg):
     """Gets projection file (.prj) text for given epsg code from spatialreference.org
