@@ -10,13 +10,13 @@ import flopy
 import numpy as np
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 
-mffiles = glob.glob('../Examples/data/mp6/EXAMPLE*')
+mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
+path = os.path.join('temp', 'mp6')
 
-path = 'temp/mp6/'
 if not os.path.isdir(path):
     os.makedirs(path)
 for f in mffiles:
-    shutil.copy(f, path + os.path.split(f)[1])
+    shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
 
 def test_mpsim():
 
@@ -64,8 +64,8 @@ def test_mpsim():
 
 def test_get_destination_data():
 
-    pthld = PathlineFile(path + 'EXAMPLE-3.pathline')
-    epd = EndpointFile(path + 'EXAMPLE-3.endpoint')
+    pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
+    epd = EndpointFile(os.path.join(path, 'EXAMPLE-3.endpoint'))
 
     well_epd = epd.get_destination_endpoint_data(dest_cells=[(4, 12, 12)])
     well_pthld = pthld.get_destination_pathline_data(dest_cells=[(4, 12, 12)])
@@ -80,7 +80,7 @@ def test_get_destination_data():
     assert np.all(np.in1d(starting_locs, pathline_locs))
 
     # test writing a shapefile of endpoints
-    epd.write_shapefile(well_epd, direction='starting', shpname=path+'starting_locs.shp')
+    epd.write_shapefile(well_epd, direction='starting', shpname=os.path.join(path, 'starting_locs.shp'))
 
     # test writing shapefile of pathlines
     pthld.write_shapefile(well_pthld, one_per_particle=True,
@@ -90,5 +90,6 @@ def test_get_destination_data():
 
 
 if __name__ == '__main__':
+
     test_mpsim()
     test_get_destination_data()

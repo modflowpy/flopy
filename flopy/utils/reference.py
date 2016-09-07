@@ -604,8 +604,8 @@ class epsgRef:
     contains a dictionary, prj, of projection file text keyed by epsg value.
     """
     def __init__(self):
-        import site
-        self.location = os.path.join(site.getsitepackages()[0], 'epsgref.py')
+        sp = [f for f in sys.path if f.endswith('site-packages')][0]
+        self.location = os.path.join(sp, 'epsgref.py')
 
     def _remove_pyc(self):
         try: # get rid of pyc file
