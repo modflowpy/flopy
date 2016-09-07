@@ -1,11 +1,13 @@
 """
 Test shapefile stuff
 """
-try:
-    from importlib import reload # python3
-except:
-    pass # python2 (reload in default namespace)
 import sys
+if sys.version_info[0] == 3:
+    if sys.version_info[1] < 4:
+        from imp import reload # python < 3.4
+    else:
+        from importlib import reload
+# python2 (reload in default namespace)
 sys.path.append('/Users/aleaf/Documents/GitHub/flopy3/')
 import shutil
 import numpy as np
