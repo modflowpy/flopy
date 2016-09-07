@@ -1031,10 +1031,11 @@ class ModflowMnw2(Package):
         from numpy.lib.recfunctions import stack_arrays
 
         nd = []
-        for r in self.node_data:
-            if r.ztop - r.zbotm > 0:
-                startK = get_layer(self.parent.dis, r.i, r.j, r.ztop)
-                endK = get_layer(self.parent.dis, r.i, r.j, r.zbotm)
+        for i in range(len(self.node_data)):
+            r = self.node_data[i]
+            if r['ztop'] - r['zbotm'] > 0:
+                startK = get_layer(self.parent.dis, r['i'], r['j'], r['ztop'])
+                endK = get_layer(self.parent.dis, r['i'], r['j'], r['zbotm'])
                 if startK == endK:
                     r = r.copy()
                     r['k'] = startK
@@ -1044,9 +1045,9 @@ class ModflowMnw2(Package):
                         r = r.copy()
                         r['k'] = k
                         if k > startK:
-                            r['ztop'] = self.parent.dis.botm[k-1, r.i, r.j]
+                            r['ztop'] = self.parent.dis.botm[k-1, r['i'], r['j']]
                         if k < endK:
-                            r['zbotm'] = self.parent.dis.botm[k, r.i, r.j]
+                            r['zbotm'] = self.parent.dis.botm[k, r['i'], r['j']]
                         nd.append(r)
             else:
                 nd.append(r)
@@ -1059,7 +1060,6 @@ class ModflowMnw2(Package):
         mnws = np.unique(node_data.wellid)
         for wellid in mnws:
             nd = node_data[node_data.wellid == wellid]
-            k, i, j = nd[['k', 'i', 'j']][0]
             nnodes = Mnw.get_nnodes(nd)
             # if tops and bottoms are specified, flip nnodes
             #maxtop = np.max(nd.ztop)

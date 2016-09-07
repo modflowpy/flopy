@@ -263,19 +263,21 @@ class Modpath(BaseModel):
 
                 for wellid in wellids:
                     nd = node_data[node_data.wellid == wellid]
+                    k, i, j = nd.k[0], nd.i[0], nd.j[0]
                     if len(nd) == 1:
                         append_node(side_faces + [top_face, botm_face],
-                                    wellid, 0, *nd[['k', 'i', 'j']][0])
+                                    wellid, 0, k, i, j)
                     else:
                         append_node(side_faces + [top_face],
-                                    wellid, 0, *nd[['k', 'i', 'j']][0])
-                        for i in range(len(nd))[1:]:
-                            if i == len(nd) -1:
+                                    wellid, 0, k, i, j)
+                        for n in range(len(nd))[1:]:
+                            k, i, j = nd.k[n], nd.i[n], nd.j[n]
+                            if n == len(nd) -1:
                                 append_node(side_faces + [botm_face],
-                                            wellid, i, *nd[['k', 'i', 'j']][i])
+                                            wellid, n, k, i, j)
                             else:
                                 append_node(side_faces,
-                                            wellid, i, *nd[['k', 'i', 'j']][i])
+                                            wellid, n, k, i, j)
             elif package.upper() == 'RCH':
                 for j in range(nrow):
                     for i in range(ncol):

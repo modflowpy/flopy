@@ -50,7 +50,6 @@ class Polygon:
         """
         self.exterior = tuple(map(tuple, exterior))
         self.interiors = tuple() if interiors is None else (map(tuple, i) for i in interiors)
-        self.patch = self.get_patch()
 
     @property
     def _exterior_x(self):
@@ -76,6 +75,10 @@ class Polygon:
     @property
     def pyshp_parts(self):
         return [list(self.exterior) + [list(i) for i in self.interiors]]
+
+    @property
+    def patch(self):
+        return self.get_patch()
 
     def get_patch(self, **kwargs):
         try:

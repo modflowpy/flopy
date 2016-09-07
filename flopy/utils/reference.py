@@ -607,6 +607,11 @@ class epsgRef:
         import site
         self.location = os.path.join(site.getsitepackages()[0], 'epsgref.py')
 
+    def _remove_pyc(self):
+        try: # get rid of pyc file
+            os.remove(self.location + 'c')
+        except:
+            pass
     def make(self):
         if not os.path.exists(self.location):
             newfile = open(self.location, 'w')
@@ -614,6 +619,7 @@ class epsgRef:
             newfile.close()
     def reset(self, verbose=True):
         os.remove(self.location)
+        self._remove_pyc()
         self.make()
         if verbose:
             print('Resetting {}'.format(self.location))
@@ -689,21 +695,23 @@ def get_spatialreference(epsg, text='prettywkt'):
     url : str
 
     """
+    url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
     try:
         import requests
-    except:
-        raise ImportError('This requires the requests module.')
-        return
-    try:
-        url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
         resp = requests.get(url)
         text = resp.text.replace("\n", "")
         return text
     except:
-        e = sys.exc_info()
-        print(e)
-        print('Need an internet connection to look up epsg on spatialreference.org.')
-        return
+        try:
+            from urllib2 import urlopen
+            urlobj = urlopen(url)
+            text = urlobj.read().replace("\n", "")
+            return text
+        except:
+            e = sys.exc_info()
+            print(e)
+            print('Need an internet connection to look up epsg on spatialreference.org.')
+            return
 
 def getproj4(epsg):
     """Gets projection file (.prj) text for given epsg code from spatialreference.org

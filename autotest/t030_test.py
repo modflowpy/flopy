@@ -1,7 +1,10 @@
 """
 Test shapefile stuff
 """
-import importlib
+try:
+    from importlib import reload # python3
+except:
+    pass # python2 (reload in default namespace)
 import sys
 sys.path.append('/Users/aleaf/Documents/GitHub/flopy3/')
 import shutil
@@ -35,13 +38,13 @@ def test_polygon_from_ij():
                                ('stf', np.object)]).view(np.recarray)
 
     get_vertices = m.sr.get_vertices # function to get the referenced vertices for a model cell
-    geoms = [Polygon(get_vertices(i, j)) for i, j in recarray[['i', 'j']]]
+    geoms = [Polygon(get_vertices(i, j)) for i, j in zip(recarray.i, recarray.j)]
 
     assert geoms[0].type == 'Polygon'
     assert geoms[0].bounds[-1] - 5169784.473861726 < 1e-6
     recarray2shp(recarray, geoms, 'temp/test.shp', epsg=26715)
     import epsgref
-    importlib.reload(epsgref)
+    reload(epsgref)
     from epsgref import prj
     assert 26715 in prj.keys()
     shutil.copy('temp/test.prj', 'temp/26715.prj')
@@ -59,26 +62,29 @@ def test_dtypes():
 def test_epsgref():
 
     ep = epsgRef()
-    ep.make()
+    ep.reset()
 
     import epsgref
     getprj(4326)
-    importlib.reload(epsgref)
+    reload(epsgref)
     from epsgref import prj
     assert 4326 in prj.keys()
 
     ep.add(9999, 'junk')
-    importlib.reload(epsgref)
+    ep._remove_pyc() # have to do this in python 2, otherwise won't refresh
+    reload(epsgref)
     from epsgref import prj
     assert 9999 in prj.keys()
 
     ep.remove(9999)
-    importlib.reload(epsgref)
+    ep._remove_pyc()
+    reload(epsgref)
     from epsgref import prj
     assert 9999 not in prj.keys()
 
     ep.reset()
-    importlib.reload(epsgref)
+    ep._remove_pyc()
+    reload(epsgref)
     from epsgref import prj
     assert len(prj.keys()) == 0
 
