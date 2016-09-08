@@ -27,6 +27,34 @@ class Budget(object):
         assert(self.kstpkper is not None or self.totim is not None), 'Budget object requires either kstpkper ' \
                                                                      'or totim be be specified.'
 
+        # List the field names to be used to slice the recarray
+        # fields = ['ZONE{: >4d}'.format(z) for z in self.zones]
+        fields = [name for name in self.records.dtype.names if 'ZONE' in name]
+
+        self.ins_idx = np.where(self.records['flow_dir'] == 'in')[0]
+        self.out_idx = np.where(self.records['flow_dir'] == 'out')[0]
+
+        ins = self._fields_view(self.records[self.ins_idx], fields)
+        out = self._fields_view(self.records[self.out_idx], fields)
+
+        self.ins_sum = ins.sum(axis=0)
+        self.out_sum = out.sum(axis=0)
+
+        self.ins_minus_out = self.ins_sum - self.out_sum
+        self.ins_plus_out = self.ins_sum + self.out_sum
+
+        pcterr = 100 * (self.ins_minus_out) / ((self.ins_plus_out) / 2.)
+        self.pcterr = [i if not np.isnan(i) else 0 for i in pcterr]
+
+    def get_total_inflow(self):
+        return self.ins_sum
+
+    def get_total_outflow(self):
+        return self.out_sum
+
+    def get_percent_error(self):
+        return self.pcterr
+
     def to_csv(self, fname='zbud.csv', write_format='pandas', formatter=None):
         """
         Saves the Budget object record array to a formatted csv file.
@@ -42,24 +70,6 @@ class Budget(object):
 
         """
         assert write_format.lower() in ['pandas', 'zonbud'], 'Format must be one of "pandas" or "zonbud".'
-        # List the field names to be used to slice the recarray
-        # fields = ['ZONE{: >4d}'.format(z) for z in self.zones]
-        fields = [name for name in self.records.dtype.names if 'ZONE' in name]
-
-        ins_idx = np.where(self.records['flow_dir'] == 'in')[0]
-        out_idx = np.where(self.records['flow_dir'] == 'out')[0]
-
-        ins = self._fields_view(self.records[ins_idx], fields)
-        out = self._fields_view(self.records[out_idx], fields)
-
-        ins_sum = ins.sum(axis=0)
-        out_sum = out.sum(axis=0)
-
-        ins_minus_out = ins_sum-out_sum
-        ins_plus_out = ins_sum+out_sum
-
-        pcterr = 100*(ins_minus_out)/((ins_plus_out)/2.)
-        pcterr = [i if not np.isnan(i) else 0 for i in pcterr]
 
         if formatter is None:
             formatter = '{:.16e}'.format
@@ -71,7 +81,7 @@ class Budget(object):
                 f.write(','.join(self.records.dtype.names)+'\n')
 
                 # Write IN terms
-                for rec in self.records[ins_idx]:
+                for rec in self.records[self.ins_idx]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -79,10 +89,10 @@ class Budget(object):
                         elif isinstance(i, float):
                             items.append(formatter(i))
                     f.write(','.join(items)+'\n')
-                f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in ins_sum])+'\n')
+                f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in self.ins_sum])+'\n')
 
                 # Write OUT terms
-                for rec in self.records[out_idx]:
+                for rec in self.records[self.out_idx]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -90,11 +100,11 @@ class Budget(object):
                         elif isinstance(i, float):
                             items.append(formatter(i))
                     f.write(','.join(items) + '\n')
-                f.write(','.join([' ', 'Total OUT'] + [formatter(i) for i in out_sum])+'\n')
+                f.write(','.join([' ', 'Total OUT'] + [formatter(i) for i in self.out_sum])+'\n')
 
                 # Write mass balance terms
-                f.write(','.join([' ', 'IN-OUT'] + [formatter(i) for i in ins_minus_out])+'\n')
-                f.write(','.join([' ', 'Percent Error'] + [formatter(i) for i in pcterr])+'\n')
+                f.write(','.join([' ', 'IN-OUT'] + [formatter(i) for i in self.ins_minus_out])+'\n')
+                f.write(','.join([' ', 'Percent Error'] + [formatter(i) for i in self.pcterr])+'\n')
 
         elif write_format.lower() == 'zonbud':
             with open(fname, 'w') as f:
@@ -102,7 +112,7 @@ class Budget(object):
                 # Write header
                 if self.kstpkper is not None:
                     header = 'Time Step, {kstp}, Stress Period, {kper}\n'.format(kstp=self.kstpkper[0]+1,
-                                                                                kper=self.kstpkper[1]+1)
+                                                                                 kper=self.kstpkper[1]+1)
 
                 elif self.totim is not None:
                     header = 'Sim. Time, {totim}\n'.format(totim=self.totim)
@@ -112,7 +122,7 @@ class Budget(object):
 
                 # Write IN terms
                 f.write(','.join([' '] + ['IN']*(len(self.records.dtype.names[1:])-1))+'\n')
-                for rec in self.records[ins_idx]:
+                for rec in self.records[self.ins_idx]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -120,11 +130,11 @@ class Budget(object):
                         elif isinstance(i, float):
                             items.append(formatter(i))
                     f.write(','.join(items)+'\n')
-                f.write(','.join(['Total IN'] + [formatter(i) for i in ins_sum])+'\n')
+                f.write(','.join(['Total IN'] + [formatter(i) for i in self.ins_sum])+'\n')
 
                 # Write OUT terms
                 f.write(','.join([' '] + ['OUT']*(len(self.records.dtype.names[1:])-1))+'\n')
-                for rec in self.records[out_idx]:
+                for rec in self.records[self.out_idx]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -132,11 +142,11 @@ class Budget(object):
                         elif isinstance(i, float):
                             items.append(formatter(i))
                     f.write(','.join(items) + '\n')
-                f.write(','.join(['Total OUT'] + [formatter(i) for i in out_sum])+'\n')
+                f.write(','.join(['Total OUT'] + [formatter(i) for i in self.out_sum])+'\n')
 
                 # Write mass balance terms
-                f.write(','.join(['IN-OUT'] + [formatter(i) for i in ins_minus_out])+'\n')
-                f.write(','.join(['Percent Error'] + [formatter(i) for i in pcterr])+'\n')
+                f.write(','.join(['IN-OUT'] + [formatter(i) for i in self.ins_minus_out])+'\n')
+                f.write(','.join(['Percent Error'] + [formatter(i) for i in self.pcterr])+'\n')
 
     def _fields_view(self, a, fields):
         new = a[fields].view(np.float32).reshape(a.shape + (-1,))
@@ -160,8 +170,8 @@ class ZoneBudget(object):
         # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
         # FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
         # SWIADDTO* terms are used by the SWI2 package.
-        internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
-                                    'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
+        internal_flow_terms = ['FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
+                               'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
 
         # OPEN THE CELL-BY-CELL BUDGET BINARY FILE
         self.cbc = CellBudgetFile(cbc_file)
@@ -183,10 +193,14 @@ class ZoneBudget(object):
         self.ff_record_names = [r.strip() for r in self.record_names if r.strip() in internal_flow_terms]
 
         # Check the shape of the cbc budget file arrays
-        self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
+        self.cbc_shape = self.get_model_shape()
         self.nlay, self.nrow, self.ncol = self.cbc_shape
 
         self.float_type = np.float32
+
+    def get_model_shape(self):
+        l, r, c = self.cbc.get_data(idx=0, full3D=True)[0].shape
+        return l, r, c
 
     def get_budget(self, zon, kstpkper=None, totim=None, **kwargs):
         """
@@ -254,7 +268,7 @@ class ZoneBudget(object):
         # Define dtype for the recarray
         self.dtype = np.dtype([('flow_dir', '|S3'),
                                ('record', '|S20')] +
-                               [('ZONE{: >4d}'.format(z), self.float_type) for z in zones])
+                               [('ZONE {:d}'.format(z), self.float_type) for z in zones])
 
         # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
         # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
@@ -281,54 +295,29 @@ class ZoneBudget(object):
         inflows = []
         outflows = []
 
-        # Get internal flow terms
-        frf, fff, flf, swifrf, swifff, swiflf = self.get_internal_flow_terms(izone, ich)
-        q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
-
-        # Format internal flow output -- INFLOW
-        q_in = {z: OrderedDict([('flow_dir', 'in'),
-                                ('record', 'FROM ZONE{: >4d}'.format(z))])
-                for z in zones}
-        for k, v in q_in.iteritems():
-            for z in zones:
-                v[z] = 0.
-        for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            gpq = [i[-1] for i in list(gp)]
-            q_in[f2z[0]][f2z[1]] = np.sum(gpq)
-
-        # Format internal flow output -- OUTFLOW
-        q_out = {z: OrderedDict([('flow_dir', 'out'),
-                                 ('record', 'TO ZONE{: >4d}'.format(z))])
-                 for z in zones}
-        for k, v in q_out.iteritems():
-            for z in zones:
-                v[z] = 0.
-        for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
-            gpq = [i[-1] for i in list(gp)]
-            q_out[f2z[1]][f2z[0]] = np.sum(gpq)
-
-        # Get CONSTANT HEAD face flows
-        chd_inflow, chd_outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
-        recname = 'CONSTANT HEAD'
-        inflows.append(tuple(['in', recname] + [val for val in chd_inflow]))
-        outflows.append(tuple(['out', recname] + [val for val in chd_outflow]))
-
-        # Get SWIADDTOCH face flows
-        if self.is_swi:
-            recname = 'SWIADDTOCH'
-            chdswi_inflow, chdswi_outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
-            inflows.append(tuple(['in', recname] + [val for val in chdswi_inflow]))
-            outflows.append(tuple(['out', recname] + [val for val in chdswi_outflow]))
-
-        # Accumulate source/sink/storage terms by zone
+        # ACCUMULATE SOURCE/SINK/STORAGE TERMS
         for recname in self.ssst_record_names:
 
-            if 'RECHARGE' in recname:
+            if recname == 'RECHARGE':
                 data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                 budin = np.ma.zeros(self.cbc_shape)
                 budout = np.ma.zeros(self.cbc_shape)
                 budin[data > 0] = data[data > 0]
                 budout[data < 0] = data[data < 0]
+                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone)
+                inflows.append(in_tup)
+                outflows.append(out_tup)
+
+            elif recname == 'CONSTANT HEAD':
+                chd_inflow, chd_outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
+                inflows.append(tuple(['in', recname] + [val for val in chd_inflow]))
+                outflows.append(tuple(['out', recname] + [val for val in chd_outflow]))
+
+            elif recname == 'SWIADDTOCH':
+                 chdswi_inflow, chdswi_outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
+                 inflows.append(tuple(['in', recname] + [val for val in chdswi_inflow]))
+                 outflows.append(tuple(['out', recname] + [val for val in chdswi_outflow]))
+
             else:
                 data = self.cbc_data[recname]
                 budin = np.ma.zeros((self.nlay*self.nrow*self.ncol), self.float_type)
@@ -341,12 +330,36 @@ class ZoneBudget(object):
                         budout.data[idx] += q
                 budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
                 budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
+                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone)
+                inflows.append(in_tup)
+                outflows.append(out_tup)
 
-            in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone)
-            inflows.append(in_tup)
-            outflows.append(out_tup)
+        # ACCUMULATE INTERNAL FLOW TERMS
+        frf, fff, flf, swifrf, swifff, swiflf = self.get_internal_flow_terms(izone, ich)
+        q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
 
-        # Add internal face flows last to maintain order similar to the output from zonbudget program
+        # Format internal flow output -- INFLOW
+        q_in = {z: OrderedDict([('flow_dir', 'in'),
+                                ('record', 'FROM ZONE {:d}'.format(z))])
+                for z in zones}
+        for k, v in q_in.iteritems():
+            for z in zones:
+                v[z] = 0.
+        for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
+            gpq = [i[-1] for i in list(gp)]
+            q_in[f2z[0]][f2z[1]] = np.sum(gpq)
+
+        # Format internal flow output -- OUTFLOW
+        q_out = {z: OrderedDict([('flow_dir', 'out'),
+                                 ('record', 'TO ZONE {:d}'.format(z))])
+                 for z in zones}
+        for k, v in q_out.iteritems():
+            for z in zones:
+                v[z] = 0.
+        for f2z, gp in groupby(q_tups, lambda tup: tup[:2]):
+            gpq = [i[-1] for i in list(gp)]
+            q_out[f2z[1]][f2z[0]] = np.sum(gpq)
+
         for k, v in q_in.iteritems():
             inflows.append(tuple(v.values()))
         for k, v in q_out.iteritems():
@@ -422,8 +435,8 @@ class ZoneBudget(object):
         return new
 
     def _get_source_sink_storage_terms_tuple(self, recname, budin, budout, zones, izone):
-        recin = ['in', recname.strip()] + [budin[(izone == z)].sum() for z in zones]
-        recout = ['out', recname.strip()] + [budout[(izone == z)].sum()*-1 for z in zones]
+        recin = ['in', recname.strip()] + [np.abs(budin[(izone == z)].sum()) for z in zones]
+        recout = ['out', recname.strip()] + [np.abs(budout[(izone == z)].sum()) for z in zones]
         recin = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in recin]
         recout = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in recout]
         return tuple(recin), tuple(recout)
@@ -459,8 +472,8 @@ class ZoneBudget(object):
         # Get indices where flow face values are positive (flow out of higher zone)
         idx_pos = np.where(q >= 0)
 
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_l2r = neg + pos
 
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
@@ -488,8 +501,8 @@ class ZoneBudget(object):
         # Get indices where flow face values are positive (flow out of higher zone)
         idx_pos = np.where(q >= 0)
 
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_r2l = neg + pos
 
         # Sum all flow face and constant head terms
@@ -526,8 +539,8 @@ class ZoneBudget(object):
         # Get indices where flow face values are positive (flow out of higher zone)
         idx_pos = np.where(q >= 0)
 
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_u2d = neg + pos
 
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
@@ -554,8 +567,8 @@ class ZoneBudget(object):
         # Get indices where flow face values are positive (flow out of higher zone)
         idx_pos = np.where(q >= 0)
 
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_d2u = neg + pos
 
         # Returns a tuple of "to zone", "from zone", and the flux
@@ -591,8 +604,8 @@ class ZoneBudget(object):
         # Get indices where flow face values are positive (flow out of higher zone)
         idx_pos = np.where(q >= 0)
 
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_t2b = neg + pos
 
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
@@ -620,8 +633,8 @@ class ZoneBudget(object):
         # Get indices where flow face values are positive (flow out of higher zone)
         idx_pos = np.where(q >= 0)
 
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], q[idx_neg]*-1)
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], q[idx_pos])
+        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_b2t = neg + pos
 
         # Returns a tuple of "to zone", "from zone", and the flux
@@ -659,8 +672,8 @@ class ZoneBudget(object):
 
         # chd_inflow = [q_chd[(q_chd >= 0.) & (izone == z)].sum() for z in zones]
         # chd_outflow = [q_chd[(q_chd < 0.) & (izone == z)].sum()*-1 for z in zones]
-        chd_inflow = [q_chd_in[(izone == z)].sum() for z in zones]
-        chd_outflow = [q_chd_out[(izone == z)].sum()*-1 for z in zones]
+        chd_inflow = [np.abs(q_chd_in[(izone == z)].sum()) for z in zones]
+        chd_outflow = [np.abs(q_chd_out[(izone == z)].sum()) for z in zones]
         chd_inflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow]
         chd_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow]
         return tuple(chd_inflow), tuple(chd_outflow)
