@@ -9,6 +9,7 @@ import os
 import flopy
 import numpy as np
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
+from flopy.modpath.mpsim import StartingLocationsFile
 
 mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
 path = os.path.join('temp', 'mp6')
@@ -60,7 +61,22 @@ def test_mpsim():
     # (not a very robust test)
     sim = mp.create_mpsim(trackdir='backward', simtype='pathline', packages='MNW2')
     mp.write_input()
-    assert True
+
+    sim = flopy.modpath.ModpathSim(model=mp)
+    # starting locations file
+    stl = StartingLocationsFile(model=mp)
+    stldata = StartingLocationsFile.get_empty_starting_locations_data(npt=2)
+    stldata['label'] = ['p1', 'p2']
+    stldata[1]['i0'] = 5
+    stldata[1]['j0'] = 6
+    stldata[1]['xloc0'] = .1
+    stldata[1]['yloc0'] = .2
+    stl.data = stldata
+    mp.write_input()
+    stllines = open(os.path.join(path, 'ex6.loc')).readlines()
+    assert stllines[3].strip() == 'group1'
+    assert int(stllines[4].strip()) == 2
+    assert stllines[6].strip().split()[-1] == 'p2'
 
 def test_get_destination_data():
 
@@ -87,7 +103,6 @@ def test_get_destination_data():
                           direction='starting', shpname='temp/mp6/pathlines_1per.shp')
     pthld.write_shapefile(well_pthld, one_per_particle=False,
                           shpname='temp/mp6/pathlines.shp')
-
 
 if __name__ == '__main__':
 
