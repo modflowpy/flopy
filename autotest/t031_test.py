@@ -77,7 +77,6 @@ def test_mpsim():
     assert stllines[3].strip() == 'group1'
     assert int(stllines[4].strip()) == 2
     assert stllines[6].strip().split()[-1] == 'p2'
-    assert True
 
 def test_get_destination_data():
 

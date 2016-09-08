@@ -165,7 +165,7 @@ class MfList(object):
         for k, v in self.data.items():
             # because np 1.9 doesn't support indexing by list of columns
             newarr = np.array([self.data[k][n] for n in names]).transpose()
-            newarr = np.array(map(tuple, newarr), dtype=dtype).view(np.recarray)
+            newarr = np.array(list(map(tuple, newarr)), dtype=dtype).view(np.recarray)
             for n in dtype.names:
                 newarr[n] = self.data[k][n]
             spd[k] = newarr

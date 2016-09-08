@@ -318,7 +318,7 @@ class ModpathSim(Package):
 
         f_sim.close()
 
-class StartingLocationsFile():
+class StartingLocationsFile(Package):
     """Class for working with MODPATH Starting Locations file for particles.
 
     Parameters
@@ -403,12 +403,9 @@ class StartingLocationsFile():
                 output.write('{}\n{:d}\n'.format(g.decode(), npt))
             txt =''
             for p in self.data:
-                txt += '{:d} {:d} {:d} {:d} {:d} {:d}'.format(p.particleid,
-                                                                    p.particlegroup,
-                                                                    p.initialgrid,
-                                                                    p.k0, p.i0, p.j0)
+                txt += '{:d} {:d} {:d} {:d} {:d} {:d}'.format(*list(p)[:6])
                 fmtstr = ' {0} {0} {0} {0} '.format(float_format)
-                txt += fmtstr.format(p.xloc0, p.yloc0, p.zloc0, p.initialtime)
-                txt += '{}\n'.format(p.label.decode())
+                txt += fmtstr.format(*list(p)[6:10])
+                txt += '{}\n'.format(p[10].decode())
             output.write(txt)
 
