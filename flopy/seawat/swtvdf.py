@@ -249,7 +249,7 @@ class SeawatVdf(Package):
                                                   self.drhodprhd,
                                                   self.prhdref))
             f_vdf.write('%10i\n' % self.nsrhoeos)
-            if self.nsrhoeos is 1:
+            if self.nsrhoeos == 1:
                 f_vdf.write('%10i%10.4f%10.4f\n' % (1, self.denseslp,
                                                     self.crhoref))
             else:

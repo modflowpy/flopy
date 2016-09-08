@@ -1,6 +1,6 @@
 """
 pakbase module
-  This module contains the base package classs from which
+  This module contains the base package class from which
   all of the other packages inherit from.
 
 """

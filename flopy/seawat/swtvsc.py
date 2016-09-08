@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util3d, Transient3d
@@ -63,12 +64,14 @@ class SeawatVsc(Package):
         The size of the AMUCOEFF array in item 3e is 2 (MUNCOEFF = 2).
         If NSMUEOS and MUTEMPOPT are both set to zero, all fluid viscosities
         are set to VISCREF.
-    mtmuspec : int
+    mtmuspec : int, or list of ints (of size nsmueos) if nsmueos > 1
         is the MT3DMS species number corresponding to the adjacent DMUDC and
         CMUREF.
-    dmudc : float
+    dmudc : float, or list of floats (of size nsmueos) if nsmueos > 1
         is the slope of the linear equation that relates fluid viscosity to
         solute concentration.
+    cmuref : float, or list of floats (of size nsmueos) if nsmueos > 1
+        is the reference concentration.
     mtmuspectemp : int
         is the MT3DMS species number that corresponds to temperature. This
         value must be between 1 and NCOMP and should not be listed in
@@ -174,12 +177,12 @@ class SeawatVsc(Package):
         f_vsc.write('%10i\n' % self.mt3dmuflg)
 
         # item 2
-        if isinstance(self.viscmin, int) and self.viscmin is 0:
+        if isinstance(self.viscmin, int) and self.viscmin == 0:
             f_vsc.write('%10i' % self.viscmin)
         else:
             f_vsc.write('%10.3E' % self.viscmin)
 
-        if isinstance(self.viscmax, int) and self.viscmax is 0:
+        if isinstance(self.viscmax, int) and self.viscmax == 0:
             f_vsc.write('%10i\n' % self.viscmax)
         else:
             f_vsc.write('%10.3E\n' % self.viscmax)
@@ -188,28 +191,34 @@ class SeawatVsc(Package):
         if self.mt3dmuflg >= 0:
             f_vsc.write('%10.3E%10.2E%10.2E\n' % (self.viscref, self.dmudc,
                                                   self.cmuref))
+
+        # item 3a-d
         if self.mt3dmuflg == -1:
             f_vsc.write('%10.3E\n' % self.viscref)
             f_vsc.write('%10i%10i\n' % (self.nsmueos, self.mutempopt))
+            if self.nsmueos == 1:
+                f_vsc.write('{} {} {}\n'.format(self.mtmuspec, self.dmudc,
+                                              self.cmuref))
+            else:
+                for iwr in range(self.nsmueos):
+                    f_vsc.write('%10i%10.2E%10.2E\n' % (self.mtmuspec[iwr],
+                                                        self.dmudc[iwr],
+                                                        self.cmuref[iwr]))
 
-            for iwr in range(self.nsmueos):
-                f_vsc.write('%10i%10.2E%10.2E\n' % (self.mtmuspec[iwr],
-                                                    self.dmudc[iwr],
-                                                    self.cmuref[iwr]))
+            # item 3d
+            if self.mutempopt > 0:
+                f_vsc.write('%10i' % self.mtmutempspec)
 
-        if self.mutempopt > 0:
-            f_vsc.write('%10i' % self.mtmutempspec)
+                if self.mutempopt == 1:
+                    string = ' %9.3E %9f %9f %9f\n'
+                elif self.mutempopt == 2:
+                    string = '%10.3E%10f%10f %9f %9f\n'
+                elif self.mutempopt == 3:
+                    string = '%10f %9f\n'
 
-            if self.mutempopt == 1:
-                string = ' %9.3E %9f %9f %9f\n'
-            elif self.mutempopt == 2:
-                string = '%10.3E%10f%10f %9f %9f\n'
-            elif self.mutempopt == 3:
-                string = '%10f %9f\n'
+                f_vsc.write(string % tuple(self.amucoeff))
 
-            f_vsc.write(string % tuple(self.amucoeff))
-
-        # Transient visc array
+        # items 4 and 5, transient visc array
         if self.mt3dmuflg == 0:
 
             nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
