@@ -256,7 +256,9 @@ class ZoneBudget(object):
         # Make sure the input zone array has the same shape as the cell budget file
         if len(z.shape) == 2:
             for i in range(izone.shape[0]):
-                izone[i, :, ] = z
+                izone[i, :, :] = z
+        else:
+            izone = z.copy()
 
         zones = self._find_unique_zones(izone.ravel())
 
