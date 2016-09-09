@@ -1,0 +1,11 @@
+LIST                  2 EXAMPLE.LST
+DIS                   3 EXAMPLE.DIS
+BAS6                  4 EXAMPLE.BA6
+WEL                  12 EXAMPLE.WEL
+RIV                  14 EXAMPLE.RIV
+RCH                  18 EXAMPLE.RCH
+OC                   22 EXAMPLE.OC
+PCG                  23 EXAMPLE.PCG
+LPF                  33 EXAMPLE.LPF
+DATA(BINARY)         50 EXAMPLE.HED
+DATA(BINARY)         53 EXAMPLE.BUD

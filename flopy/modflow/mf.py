@@ -6,6 +6,7 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 
 import os
 import sys
+import inspect
 import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
@@ -569,10 +570,10 @@ class Modflow(BaseModel):
             if item.package is not None:
                 if item.filetype in load_only and item.filetype != "DIS":
                     if not forgive:
-                        try: # For package load methods that don't have a check argument
+                        if "check" in inspect.getargspec(item.package.load):
                             pck = item.package.load(item.filename, ml,
                                                     ext_unit_dict=ext_unit_dict, check=False)
-                        except TypeError:
+                        else:
                             pck = item.package.load(item.filename, ml,
                                                     ext_unit_dict=ext_unit_dict)
                         files_succesfully_loaded.append(item.filename)

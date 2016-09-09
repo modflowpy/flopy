@@ -1,0 +1,15 @@
+EXAMPLE.mpnam
+EXAMPLE-8.mplist
+    3    1    1    1    2    2    2    2    2    2    1    1
+EXAMPLE-8.endpoint
+EXAMPLE-8.timeseries
+    3    1   0.00000
+EXAMPLE-8.locations
+  100
+   1.000000E+03
+    0
+CONSTANT          1  IZONE layer  1
+CONSTANT          1  IZONE layer  2
+CONSTANT          1  IZONE layer  3
+CONSTANT          1  IZONE layer  4
+CONSTANT          2  IZONE layer  5
