@@ -35,5 +35,5 @@ from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
 from .check import check, get_neighbors
 from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
-from .zonbud import ZoneBudget, run_zonbud
+from .zonbud import ZoneBudget
 from .mfgrdfile import MfGrdFile
