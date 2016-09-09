@@ -35,8 +35,8 @@ class Budget(object):
         self.ins_minus_out = self.ins_sum - self.out_sum
         self.ins_plus_out = self.ins_sum + self.out_sum
 
-        pcterr = 100 * (self.ins_minus_out) / ((self.ins_plus_out) / 2.)
-        self.pcterr = [i if not np.isnan(i) else 0 for i in pcterr]
+        pcterr = 100 * self.ins_minus_out / (self.ins_plus_out / 2.)
+        self.pcterr = np.array([i if not np.isnan(i) else 0 for i in pcterr])
 
     def get_total_inflow(self):
         return self.ins_sum
@@ -116,10 +116,10 @@ class Budget(object):
                 f.write(','.join([' '] + ['IN']*(len(self.records.dtype.names[1:])-1))+'\n')
                 for rec in self.records[self.ins_idx]:
                     items = []
-                    for i in rec:
+                    for i in list(rec)[1:]:
                         if isinstance(i, str):
                             items.append(i)
-                        elif isinstance(i, float):
+                        else:
                             items.append(formatter(i))
                     f.write(','.join(items)+'\n')
                 f.write(','.join(['Total IN'] + [formatter(i) for i in self.ins_sum])+'\n')
@@ -128,10 +128,10 @@ class Budget(object):
                 f.write(','.join([' '] + ['OUT']*(len(self.records.dtype.names[1:])-1))+'\n')
                 for rec in self.records[self.out_idx]:
                     items = []
-                    for i in rec:
+                    for i in list(rec)[1:]:
                         if isinstance(i, str):
                             items.append(i)
-                        elif isinstance(i, float):
+                        else:
                             items.append(formatter(i))
                     f.write(','.join(items) + '\n')
                 f.write(','.join(['Total OUT'] + [formatter(i) for i in self.out_sum])+'\n')
