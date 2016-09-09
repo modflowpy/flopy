@@ -162,8 +162,8 @@ class ZoneBudget(object):
         # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
         # FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
         # SWIADDTO* terms are used by the SWI2 package.
-        internal_flow_terms = ['FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
-                               'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
+        internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
+                               'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
@@ -183,7 +183,7 @@ class ZoneBudget(object):
         # Source/sink/storage term record names
         self.ssst_record_names = [rec.strip() for rec in self.record_names if rec.strip() not in internal_flow_terms]
 
-        # Face flow record names
+        # Internal flow record names
         self.ff_record_names = [r.strip() for r in self.record_names if r.strip() in internal_flow_terms]
 
         # Check the shape of the cbc budget file arrays
@@ -274,38 +274,9 @@ class ZoneBudget(object):
                 budout = np.ma.zeros(self.cbc_shape)
                 budin[data > 0] = data[data > 0]
                 budout[data < 0] = data[data < 0]
-                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone)
+                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, izone)
                 inflows.append(in_tup)
                 outflows.append(out_tup)
-
-            elif recname == 'CONSTANT HEAD':
-                # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
-                # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
-                # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
-                # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
-                # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
-                ich = self._get_ich_array()
-                inflow, outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
-                inflows.append(tuple(['in', recname] + [val for val in inflow]))
-                outflows.append(tuple(['out', recname] + [val for val in outflow]))
-
-            elif recname == 'SWIADDTOCH':
-                # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
-                # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
-                # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
-                # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
-                # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
-                ich = self._get_ich_array()
-                inflow, outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
-                inflows.append(tuple(['in', recname] + [val for val in inflow]))
-                outflows.append(tuple(['out', recname] + [val for val in outflow]))
-                # TEMPORARY WARNINGS
-                if ich.count() > 0 and self.is_swi:
-                    chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported' \
-                             'for SWI2 models. Any non-zero results for CONSTANT HEAD and' \
-                             'SWIADDTOCH should be considered erroneous.'
-                    warnings.warn(chwarn, UserWarning)
-                # /TEMPORARY WARNINGS
 
             elif recname == 'DRAINS':
                 data = self.cbc_data[recname]
@@ -313,7 +284,7 @@ class ZoneBudget(object):
                 budout = np.ma.zeros(self.cbc_shape)
                 budin[data > 0] = data[data > 0]
                 budout[data < 0] = data[data < 0]
-                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone)
+                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, izone)
                 inflows.append(in_tup)
                 outflows.append(out_tup)
 
@@ -329,9 +300,46 @@ class ZoneBudget(object):
                         budout.data[idx] += q
                 budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
                 budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
-                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone)
+                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, izone)
                 inflows.append(in_tup)
                 outflows.append(out_tup)
+
+        # ACCUMULATE CONSTANT HEAD TERMS
+        if 'CONSTANT HEAD' in self.ff_record_names:
+            # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
+            # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
+            # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
+            # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
+            # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
+            ich = self._get_ich_array()
+            inflow, outflow = self._get_constant_head_flow_term_tuple(izone, ich)
+            inflows.append(tuple(['in', 'CONSTANT HEAD'] + [val for val in inflow]))
+            outflows.append(tuple(['out', 'CONSTANT HEAD'] + [val for val in outflow]))
+            # TEMPORARY WARNINGS
+            if ich.count() > 0:
+                chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported.' \
+                         'Any non-zero results for CONSTANT HEAD and' \
+                         'SWIADDTOCH should be considered erroneous.'
+                warnings.warn(chwarn, UserWarning)
+                # /TEMPORARY WARNINGS
+
+        if 'SWIADDTOCH' in self.ff_record_names:
+            # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
+            # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
+            # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
+            # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
+            # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
+            ich = self._get_ich_array()
+            inflow, outflow = self._get_constant_head_flow_term_tuple(izone, ich)
+            inflows.append(tuple(['in', 'SWIADDTOCH'] + [val for val in inflow]))
+            outflows.append(tuple(['out', 'SWIADDTOCH'] + [val for val in outflow]))
+            # TEMPORARY WARNINGS
+            if ich.count() > 0 and self.is_swi:
+                chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported' \
+                         'for SWI2 models. Any non-zero results for CONSTANT HEAD and' \
+                         'SWIADDTOCH should be considered erroneous.'
+                warnings.warn(chwarn, UserWarning)
+            # /TEMPORARY WARNINGS
 
         # ACCUMULATE INTERNAL FLOW TERMS
         in_tups, out_tups = self.accumulate_internal_flow(izone, ich)
@@ -460,12 +468,12 @@ class ZoneBudget(object):
         return ich
 
     @staticmethod
-    def _get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone):
-        recin = ['in', recname.strip()] + [np.abs(budin[(izone == z)].sum()) for z in zones]
-        recout = ['out', recname.strip()] + [np.abs(budout[(izone == z)].sum()) for z in zones]
-        recin = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in recin]
-        recout = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in recout]
-        return tuple(recin), tuple(recout)
+    def _get_source_sink_storage_terms_tuple(recname, budin, budout, izone):
+        recin = ['in', recname.strip()] + [np.abs(budin[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+        recout = ['out', recname.strip()] + [np.abs(budout[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+        recin = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in recin])
+        recout = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in recout])
+        return recin, recout
 
     @staticmethod
     def _get_internal_flow_terms_tuple_frf(bud, izone, ich):
@@ -670,7 +678,7 @@ class ZoneBudget(object):
         nzgt = sorted(nzgt_t2b + nzgt_b2t, key=lambda tup: tup[:2])
         return nzgt
 
-    def _get_constant_head_flow_term_tuple(self, zones, izone, ich):
+    def _get_constant_head_flow_term_tuple(self, izone, ich):
 
         q_chd_in = np.zeros(self.cbc_shape, dtype=np.float32)
         q_chd_out = np.zeros(self.cbc_shape, dtype=np.float32)
@@ -705,11 +713,11 @@ class ZoneBudget(object):
             q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
             q_chd_out[(ich == 1) & (q < 0)] += q[(ich == 1) & (q < 0)]
 
-        chd_inflow = [np.abs(q_chd_in[(izone == z)].sum()) for z in zones]
-        chd_outflow = [np.abs(q_chd_out[(izone == z)].sum()) for z in zones]
-        chd_inflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow]
-        chd_outflow = [val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow]
-        return tuple(chd_inflow), tuple(chd_outflow)
+        chd_inflow = [np.abs(q_chd_in[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+        chd_outflow = [np.abs(q_chd_out[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+        chd_inflow = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow])
+        chd_outflow = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow])
+        return chd_inflow, chd_outflow
 
     @staticmethod
     def _find_unique_zones(a):
