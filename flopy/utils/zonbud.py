@@ -141,7 +141,7 @@ class Budget(object):
                 f.write(','.join(['Percent Error'] + [formatter(i) for i in self.pcterr])+'\n')
 
     def _fields_view(self, a, fields):
-        new = a[fields].view(np.float32).reshape(a.shape + (-1,))
+        new = a[fields].view(np.float64).reshape(a.shape + (-1,))
         return new
 
 
@@ -190,7 +190,7 @@ class ZoneBudget(object):
         self.cbc_shape = self.get_model_shape()
         self.nlay, self.nrow, self.ncol = self.cbc_shape
 
-        self.float_type = np.float32
+        self.float_type = np.float64
 
     def get_model_shape(self):
         l, r, c = self.cbc.get_data(idx=0, full3D=True)[0].shape
@@ -680,8 +680,8 @@ class ZoneBudget(object):
 
     def _get_constant_head_flow_term_tuple(self, izone, ich):
 
-        q_chd_in = np.zeros(self.cbc_shape, dtype=np.float32)
-        q_chd_out = np.zeros(self.cbc_shape, dtype=np.float32)
+        q_chd_in = np.zeros(self.cbc_shape, dtype=np.float64)
+        q_chd_out = np.zeros(self.cbc_shape, dtype=np.float64)
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS--FLOW RIGHT FACE
         if self.ncol > 1:
@@ -826,7 +826,7 @@ class ZoneBudget(object):
 #                 zones = [z for z in line_items if z != '']
 #                 col_header = ['Record Name'] + zones
 #                 dtype = [('flow_dir', '|S3'), ('record', '|S20')] + \
-#                         [(col_name, np.float32) for col_name in col_header[1:]]
+#                         [(col_name, np.float64) for col_name in col_header[1:]]
 #             elif line_items[1] == 'IN':
 #                 ins_flag = True
 #                 continue
