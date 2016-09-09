@@ -48,7 +48,7 @@ def test_polygon_from_ij():
     import epsgref
     reload(epsgref)
     from epsgref import prj
-    assert 26715 in prj.keys()
+    assert 26715 in prj
     shutil.copy('temp/test.prj', 'temp/26715.prj')
     recarray2shp(recarray, geoms, 'temp/test.shp', prj='temp/26715.prj')
 
@@ -70,25 +70,25 @@ def test_epsgref():
     getprj(4326)
     reload(epsgref)
     from epsgref import prj
-    assert 4326 in prj.keys()
+    assert 4326 in prj
 
     ep.add(9999, 'junk')
     ep._remove_pyc() # have to do this in python 2, otherwise won't refresh
     reload(epsgref)
     from epsgref import prj
-    assert 9999 in prj.keys()
+    assert 9999 in prj
 
     ep.remove(9999)
     ep._remove_pyc()
     reload(epsgref)
     from epsgref import prj
-    assert 9999 not in prj.keys()
+    assert 9999 not in prj
 
     ep.reset()
     ep._remove_pyc()
     reload(epsgref)
     from epsgref import prj
-    assert len(prj.keys()) == 0
+    assert len(prj) == 0
 
 if __name__ == '__main__':
     test_polygon_from_ij()
