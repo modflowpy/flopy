@@ -29,8 +29,6 @@ class ModflowSwi2(Package):
         minus one. (default is 1).
     istrat : int
         flag indicating the density distribution. (default is 1).
-    nobs : int
-        number of observation locations. (default is 0).
     iswizt : int
         unit number for zeta output. (default is 55).
     ipakcb : int
@@ -188,13 +186,44 @@ class ModflowSwi2(Package):
                  toeslope=0.05, tipslope=0.05, alpha=None, beta=0.1, nadptmx=1,
                  nadptmn=1, adptfct=1.0,
                  nu=0.025, zeta=[0.0], ssz=0.25, isource=0,
-                 obsnam=[], obslrc=[],
+                 obsnam=None, obslrc=None,
                  extension=['swi2', 'zta'], unit_number=29,
                  npln=None):
         """
         Package constructor.
 
         """
+        # Process observations
+        if nobs != 0:
+            print('ModflowSwi2: specification of nobs is deprecated.')
+        nobs = 0
+        if obslrc is not None:
+            if isinstance(obslrc, list) or isinstance(obslrc, tuple):
+                obslrc = np.array(obslrc, dtype=np.int)
+            if isinstance(obslrc, np.ndarray):
+                if obslrc.ndim == 1 and obslrc.size == 3:
+                    obslrc = obslrc.reshape((1, 3))
+            else:
+                errmsg = 'ModflowSwi2: obslrc must be a tuple or ' + \
+                         'list of tuples.'
+                raise Exception(errmsg)
+            nobs = obslrc.shape[0]
+
+            if obsnam is None:
+                obsnam = []
+                for n in range(nobs):
+                    obsnam.append('Obs{:03}'.format(n+1))
+            else:
+                if not isinstance(obsnam, list):
+                    obsnam = [obsnam]
+                if len(obsnam) != nobs:
+                    errmsg = 'ModflowSwi2: obsnam must be a list with a ' + \
+                             'length of {} not {}.'.format(nobs, len(obsnam))
+                    raise Exception(errmsg)
+            if iswiobs < 1:
+                iswiobs = 1053
+
+        # Fill namefile items
         name = ['SWI2', 'DATA(BINARY)']
         units = [unit_number, iswizt]
         extra = ['', 'REPLACE']
@@ -258,11 +287,6 @@ class ModflowSwi2(Package):
                               name='isource')
         #
         self.obsnam = obsnam
-        if isinstance(obslrc, list):
-            obslrc = np.array(obslrc, dtype=np.int)
-        print(obslrc.ndim, obslrc.size, obslrc.shape)
-        if obslrc.ndim == 1 and obslrc.size == 3:
-            obslrc = obslrc.reshape((1, 3))
         self.obslrc = obslrc
         if nobs != 0:
             self.nobs = self.obslrc.shape[0]

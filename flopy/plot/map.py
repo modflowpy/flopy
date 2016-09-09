@@ -404,8 +404,68 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, **kwargs)
+        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, self.layer,
+                                              **kwargs)
         return patch_collection
+
+
+    def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
+        """
+        Contour an array.  If the array is three-dimensional, then the method
+        will contour the layer tied to this class (self.layer).
+
+        Parameters
+        ----------
+        vertc : np.ndarray
+            Array with centroid location of cvfd
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        contour_set : matplotlib.pyplot.contour
+
+        """
+        if 'ncpl' in kwargs:
+            nlay = self.layer + 1
+            ncpl = kwargs.pop('ncpl')
+            if isinstance(ncpl, int):
+                i = int(ncpl)
+                ncpl = np.ones((nlay), dtype=np.int) * i
+            elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
+                ncpl = np.array(ncpl)
+            i0 = 0
+            i1 = 0
+            for k in range(nlay):
+                i0 = i1
+                i1 = i0 + ncpl[k]
+            # retain vertc in selected layer
+            vertc = vertc[i0:i1, :]
+        else:
+            i0 = 0
+            i1 = vertc.shape[0]
+
+        plotarray = a[i0:i1]
+
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        if 'colors' in kwargs.keys():
+            if 'cmap' in kwargs.keys():
+                cmap = kwargs.pop('cmap')
+            cmap = None
+        contour_set = ax.tricontour(vertc[:, 0], vertc[:, 1],
+                                    plotarray, **kwargs)
+
+        return contour_set
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
                        jstep=1, normalize=False, **kwargs):
@@ -549,7 +609,7 @@ class ModelMap(object):
         """
         from matplotlib.collections import LineCollection
         # make sure pathlines is a list
-        if isinstance(pl, np.ndarray):
+        if not isinstance(pl, list):
             pl = [pl]
 
         if 'layer' in kwargs:

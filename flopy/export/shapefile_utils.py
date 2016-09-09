@@ -1,9 +1,12 @@
 """
 Module for exporting and importing flopy model attributes
 """
+import shutil
 import numpy as np
-from ..utils import Util2d, Util3d, Transient2d, MfList
+import numpy.lib.recfunctions as rf
 
+from ..utils import Util2d, Util3d, Transient2d, MfList
+from ..utils.reference import getprj
 
 def write_gridlines_shapefile(filename, sr):
     """
@@ -230,3 +233,157 @@ def shape_attr_name(name, length=6, keep_layer=False):
     if len(n) > length:
         n = n[:length]
     return n
+
+def enforce_10ch_limit(names):
+    """Enforce 10 character limit for fieldnames.
+    Add suffix for duplicate names starting at 0.
+
+    Parameters
+    ----------
+    names : list of strings
+
+    Returns
+    -------
+    names : list of unique strings of len <= 10.
+    """
+    names = [n[:9]+'1' if len(n) > 10 else n
+             for n in names]
+    dups = {x:names.count(x) for x in names}
+    suffix = {n: list(range(len(cnt))) for n, cnt in dups.items() if cnt > 1}
+    for i, n in enumerate(names):
+        if dups[n] > 1:
+            names[i] = n[:9] + str(suffix[n].pop(0))
+    return names
+
+def get_pyshp_field_info(dtypename):
+    """Get pyshp dtype information for a given numpy dtype."""
+    fields = {'int': ('N', 20, 0),
+              '<i': ('N', 20, 0),
+              'float': ('F', 20, 12),
+              '<f': ('F', 20, 0),
+              'bool': ('L', 1),
+              'b1': ('L', 1),
+              'str': ('C', 50),
+              'object': ('C', 50)}
+    k = [k for k in fields.keys() if k in dtypename.lower()]
+    if len(k) == 1:
+        return fields[k[0]]
+    else:
+        return fields['str']
+
+def get_pyshp_field_dtypes(code):
+    """Returns a numpy dtype for a pyshp field type."""
+    dtypes = {'N': np.int,
+              'F': np.float,
+              'L': np.bool,
+              'C': np.object}
+    return dtypes.get(code, np.object)
+
+def shp2recarray(shpname):
+    """Read a shapefile into a numpy recarray.
+
+    Parameters
+    ----------
+    shpname : str
+        ESRI Shapefile.
+
+    Returns
+    -------
+    recarray : np.recarray
+    """
+    try:
+        import shapefile as sf
+    except Exception as e:
+        raise Exception("io.to_shapefile(): error " +
+                        "importing shapefile - try pip install pyshp")
+    from flopy.utils.geometry import shape
+
+    sfobj = sf.Reader(shpname)
+    dtype = [(f[0], get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
+
+    geoms = [shape(s) for s in sfobj.iterShapes()]
+    records = [tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())]
+    dtype += [('geometry', np.object)]
+    #recfunctions.append_fields(array, names='tmp1', data=col1,
+    #                                           asrecarray=True)
+
+    recarray = np.array(records, dtype=dtype).view(np.recarray)
+    return recarray
+
+def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
+    """Write a numpy record array to a shapefile, using a corresponding
+    list of geometries.
+
+    Parameters
+    ----------
+    recarray : np.recarry
+        Numpy record array with attribute information that will go in the shapefile
+    geoms : list of flopy.utils.geometry objects
+        The number of geometries in geoms must equal the number of records in recarray.
+    shpname : str
+        Path for the output shapefile
+    epsg : int
+        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+    prj : str
+        Existing projection file to be used with new shapefile.
+
+    Notes
+    -----
+    Uses pyshp.
+    epsg code requires an internet connection the first time to get the projection
+    file text from spatialreference.org, but then stashes the text in the file
+    epsgref.py (located in the site-packages folder) for subsequent use. See
+    flopy.reference for more details.
+
+    """
+    try:
+        import shapefile as sf
+    except Exception as e:
+        raise Exception("io.to_shapefile(): error " +
+                        "importing shapefile - try pip install pyshp")
+    if len(recarray) != len(geoms):
+        raise IndexError('Number of geometries must equal the number of records!')
+
+    if len(recarray) == 0:
+        raise Exception("Recarray is empty")
+
+    geomtype = None
+    for g in geoms:
+        try:
+            geomtype = g.shapeType
+        except:
+            continue
+    w = sf.Writer(geomtype)
+    w.autoBalance = 1
+    # set up the attribute fields
+    names = enforce_10ch_limit(recarray.dtype.names)
+    for i, npdtype in enumerate(recarray.dtype.descr):
+        w.field(names[i], *get_pyshp_field_info(npdtype[1]))
+
+    # write the geometry and attributes for each record
+    if geomtype == 5:
+        for i, r in enumerate(recarray):
+            w.poly(geoms[i].pyshp_parts)
+            w.record(*r)
+    elif geomtype == 3:
+        for i, r in enumerate(recarray):
+            w.line(geoms[i].pyshp_parts)
+            w.record(*r)
+    elif geomtype == 1:
+        for i, r in enumerate(recarray):
+            w.point(*geoms[i].pyshp_parts)
+            w.record(*r)
+    w.save(shpname)
+    print('wrote {}'.format(shpname))
+
+    # write the projection file
+    prjname = shpname.split('.')[0] + '.prj'
+    # write projection file from epsg code
+    if epsg is not None:
+        prjtxt = getprj(epsg)
+        if prjtxt is not None:
+            with open(prjname, 'w') as output:
+                output.write(prjtxt)
+    # copy a supplied prj file
+    if prj is not None:
+        shutil.copy(prj, prjname)

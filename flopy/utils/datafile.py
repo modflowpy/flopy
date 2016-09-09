@@ -22,6 +22,8 @@ class Header(object):
         if filetype is None:
             self.header_type = None
         else:
+            if isinstance(filetype, bytes):
+                filetype = filetype.decode()
             self.header_type = filetype.lower()
         if self.header_type in self.header_types:
             if self.header_type == 'head':
