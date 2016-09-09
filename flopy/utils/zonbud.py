@@ -1,15 +1,7 @@
 from __future__ import print_function
 import os
-import sys
 import numpy as np
-import subprocess as sp
 import warnings
-import threading
-if sys.version_info > (3,0):
-    import queue as Queue
-else:
-    import Queue
-from datetime import datetime
 from itertools import groupby
 from collections import OrderedDict
 from .binaryfile import CellBudgetFile
@@ -86,7 +78,7 @@ class Budget(object):
                     for i in rec:
                         if isinstance(i, str):
                             items.append(i)
-                        elif isinstance(i, float):
+                        else:
                             items.append(formatter(i))
                     f.write(','.join(items)+'\n')
                 f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in self.ins_sum])+'\n')
@@ -97,7 +89,7 @@ class Budget(object):
                     for i in rec:
                         if isinstance(i, str):
                             items.append(i)
-                        elif isinstance(i, float):
+                        else:
                             items.append(formatter(i))
                     f.write(','.join(items) + '\n')
                 f.write(','.join([' ', 'Total OUT'] + [formatter(i) for i in self.out_sum])+'\n')
@@ -161,8 +153,8 @@ class ZoneBudget(object):
 
     >>>from flopy.utils import ZoneBudget
     >>>zb = ZoneBudget('zonebudtest.cbc')
-    >>>zbud = zb.get_budget('GWBasins.zon')
-    >>>zbud.to_csv()
+    >>>bud = zb.get_budget('GWBasins.zon')
+    >>>bud.to_csv()
     """
     def __init__(self, cbc_file):
 
@@ -173,8 +165,10 @@ class ZoneBudget(object):
         internal_flow_terms = ['FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
                                'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
 
-        # OPEN THE CELL-BY-CELL BUDGET BINARY FILE
-        self.cbc = CellBudgetFile(cbc_file)
+        if isinstance(cbc_file, CellBudgetFile):
+            self.cbc = cbc_file
+        elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
+            self.cbc = CellBudgetFile(cbc_file)
 
         # All record names in the cell-by-cell budget binary file
         self.record_names = self.cbc.unique_record_names()
@@ -264,26 +258,8 @@ class ZoneBudget(object):
             ' match the cell by cell' \
             ' budget file {}'.format(izone.shape, self.cbc_shape)
 
-        # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
-        # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
-        # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
-        # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
-        # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
-        ich = np.ma.zeros(self.cbc_shape, np.int32)
-        ich.mask = True
-        # chd = self.cbc_data['CONSTANT HEAD']
-        chd = self.cbc.get_data(text='CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
-        for l, r, c in zip(*np.where(chd != 0.)):
-            ich[l, r, c] = 1
-            ich.mask[l, r, c] = False
-
-        # TEMPORARY WARNINGS
-        if ich.count() > 0 and self.is_swi:
-            chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported' \
-                     'for SWI2 models. Any non-zero results for CONSTANT HEAD and' \
-                     'SWIADDTOCH should be considered erroneous.'
-            warnings.warn(chwarn, UserWarning)
-        # /TEMPORARY WARNINGS
+        # Initialize ICH array
+        ich = np.zeros(self.cbc_shape, dtype=np.int32)
 
         # Create containers for budget term tuples
         inflows = []
@@ -303,14 +279,43 @@ class ZoneBudget(object):
                 outflows.append(out_tup)
 
             elif recname == 'CONSTANT HEAD':
+                # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
+                # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
+                # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
+                # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
+                # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
+                ich = self._get_ich_array()
                 inflow, outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
                 inflows.append(tuple(['in', recname] + [val for val in inflow]))
                 outflows.append(tuple(['out', recname] + [val for val in outflow]))
 
             elif recname == 'SWIADDTOCH':
+                # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
+                # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
+                # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
+                # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
+                # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
+                ich = self._get_ich_array()
                 inflow, outflow = self._get_constant_head_flow_term_tuple(zones, izone, ich)
                 inflows.append(tuple(['in', recname] + [val for val in inflow]))
                 outflows.append(tuple(['out', recname] + [val for val in outflow]))
+                # TEMPORARY WARNINGS
+                if ich.count() > 0 and self.is_swi:
+                    chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported' \
+                             'for SWI2 models. Any non-zero results for CONSTANT HEAD and' \
+                             'SWIADDTOCH should be considered erroneous.'
+                    warnings.warn(chwarn, UserWarning)
+                # /TEMPORARY WARNINGS
+
+            elif recname == 'DRAINS':
+                data = self.cbc_data[recname]
+                budin = np.ma.zeros(self.cbc_shape)
+                budout = np.ma.zeros(self.cbc_shape)
+                budin[data > 0] = data[data > 0]
+                budout[data < 0] = data[data < 0]
+                in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone)
+                inflows.append(in_tup)
+                outflows.append(out_tup)
 
             else:
                 data = self.cbc_data[recname]
@@ -329,11 +334,25 @@ class ZoneBudget(object):
                 outflows.append(out_tup)
 
         # ACCUMULATE INTERNAL FLOW TERMS
+        in_tups, out_tups = self.accumulate_internal_flow(izone, ich)
+        inflows.extend(in_tups)
+        outflows.extend(out_tups)
+
+        # Combine inflows and outflows and return a Budget object
+        q = inflows + outflows
+        dtype = np.dtype([('flow_dir', '|S3'),
+                          ('record', '|S20')] +
+                         [('ZONE {:d}'.format(z), self.float_type) for z in zones])
+        return Budget(np.array(q, dtype=dtype), kstpkper=kstpkper, totim=totim)
+
+    def accumulate_internal_flow(self, izone, ich):
         # Each flow term is a tuple of (from zone, to zone, flux)
-        frf, fff, flf, swifrf, swifff, swiflf = self.get_internal_flow_terms(izone, ich)
+        frf, fff, flf, swifrf, swifff, swiflf = self._get_internal_flow_terms(izone, ich)
 
         # Combine and sort flux tuples
         q_tups = sorted(frf + fff + flf + swifrf + swifff + swiflf)
+
+        zones = self._find_unique_zones(izone.ravel())
 
         # Set starting values--INFLOW
         q_in = {z: OrderedDict([('flow_dir', 'in'),
@@ -357,24 +376,16 @@ class ZoneBudget(object):
             q_in[from_zone][to_zone] = val
             q_out[to_zone][from_zone] = val
 
+        in_tups, out_tups = [], []
         # Pull the from/to zone/flux tuples back out and append them to a list
         for v in q_in.values():
-            inflows.append(tuple(v.values()))
+            in_tups.append(tuple(v.values()))
         for v in q_out.values():
-            outflows.append(tuple(v.values()))
+            out_tups.append(tuple(v.values()))
 
-        q = inflows + outflows
+        return in_tups, out_tups
 
-        # Define dtype for the recarray
-        dtype = np.dtype([('flow_dir', '|S3'),
-                          ('record', '|S20')] +
-                         [('ZONE {:d}'.format(z), self.float_type) for z in zones])
-
-        q = Budget(np.array(q, dtype=dtype), kstpkper=kstpkper, totim=totim)
-        return q
-
-    def get_internal_flow_terms(self, izone, ich):
-
+    def _get_internal_flow_terms(self, izone, ich):
         # PROCESS EACH INTERNAL FLOW RECORD IN THE CELL-BY-CELL BUDGET FILE
         frf, fff, flf, swifrf, swifff, swiflf = [], [], [], [], [], []
         for recname in self.ff_record_names:
@@ -437,6 +448,16 @@ class ZoneBudget(object):
     def _fields_view(self, a, fields):
         new = a[fields].view(self.float_type).reshape(a.shape + (-1,))
         return new
+
+    def _get_ich_array(self):
+        ich = np.ma.zeros(self.cbc_shape, np.int32)
+        ich.mask = True
+        kstpkper = self.cbc.get_kstpkper()[0]
+        chd = self.cbc.get_data(text='CONSTANT HEAD', kstpkper=kstpkper, full3D=True)[0]
+        for l, r, c in zip(*np.where(chd != 0.)):
+            ich[l, r, c] = 1
+            ich.mask[l, r, c] = False
+        return ich
 
     @staticmethod
     def _get_source_sink_storage_terms_tuple(recname, budin, budout, zones, izone):
@@ -696,6 +717,16 @@ class ZoneBudget(object):
         return z
 
 
+# import sys
+# import subprocess as sp
+# import threading
+# if sys.version_info > (3, 0):
+#     import queue as Queue
+# else:
+#     import Queue
+# from datetime import datetime
+#
+#
 # def run_zonbud(zonarray, cbcfile='modflowtest.cbc', listingfile_prefix='zbud', zonbud_ws='.',
 #                zonbud_exe='zonbud.exe', title='ZoneBudget Test', budget_option='A', kstpkper=None,
 #                iprn=-1, silent=True):
