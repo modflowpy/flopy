@@ -17,19 +17,29 @@ def test_vdf_vsc():
 
     # Test different variations of instantiating vsc
     vsc = flopy.seawat.SeawatVsc(m)
+    m.write_input()
     m.remove_package('VSC')
+
     vsc = flopy.seawat.SeawatVsc(m, mt3dmuflg=0)
+    m.write_input()
     m.remove_package('VSC')
+
     vsc = flopy.seawat.SeawatVsc(m, mt3dmuflg=0, mtmutempspec=0)
+    m.write_input()
     m.remove_package('VSC')
+
     vsc = flopy.seawat.SeawatVsc(m, mt3dmuflg=-1)
+    m.write_input()
     m.remove_package('VSC')
+
     vsc = flopy.seawat.SeawatVsc(m, mt3dmuflg=-1, nsmueos=1)
+    m.write_input()
     m.remove_package('VSC')
 
     vsc = flopy.seawat.SeawatVsc(m, mt3dmuflg=1)
-
     m.write_input()
+    m.remove_package('VSC')
+
     return
 
 
