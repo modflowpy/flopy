@@ -17,7 +17,8 @@ def test_rchload():
     dis1 = flopy.modflow.ModflowDis(m1, nlay=nlay, nrow=nrow, ncol=ncol,
                                    nper=nper)
     a = np.random.random((nrow, ncol))
-    rech1 = Util2d(m1, (nrow, ncol), np.float32, a, 'rech', cnstnt=1.0)
+    rech1 = Util2d(m1, (nrow, ncol), np.float32, a, 'rech', cnstnt=1.0,
+                   how='openclose')
     rch1 = flopy.modflow.ModflowRch(m1, rech={0: rech1})
     m1.write_input()
 
@@ -35,7 +36,8 @@ def test_rchload():
     dis2 = flopy.modflow.ModflowDis(m2, nlay=nlay, nrow=nrow, ncol=ncol,
                                     nper=nper)
     a = np.random.random((nrow, ncol))
-    rech2 = Util2d(m2, (nrow, ncol), np.float32, a, 'rech', cnstnt=2.0)
+    rech2 = Util2d(m2, (nrow, ncol), np.float32, a, 'rech', cnstnt=2.0,
+                   how='openclose')
     rch2 = flopy.modflow.ModflowRch(m2, rech={0: rech2})
     m2.write_input()
 

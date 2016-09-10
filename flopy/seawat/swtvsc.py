@@ -174,49 +174,35 @@ class SeawatVsc(Package):
         f_vsc = open(self.fn_path, 'w')
 
         # item 1
-        f_vsc.write('%10i\n' % self.mt3dmuflg)
+        f_vsc.write('{}\n'.format(self.mt3dmuflg))
 
         # item 2
-        if isinstance(self.viscmin, int) and self.viscmin == 0:
-            f_vsc.write('%10i' % self.viscmin)
-        else:
-            f_vsc.write('%10.3E' % self.viscmin)
-
-        if isinstance(self.viscmax, int) and self.viscmax == 0:
-            f_vsc.write('%10i\n' % self.viscmax)
-        else:
-            f_vsc.write('%10.3E\n' % self.viscmax)
+        f_vsc.write('{} {}\n'.format(self.viscmin, self.viscmax))
 
         # item 3
         if self.mt3dmuflg >= 0:
-            f_vsc.write('%10.3E%10.2E%10.2E\n' % (self.viscref, self.dmudc,
-                                                  self.cmuref))
+            f_vsc.write('{} {} {}\n'.format(self.viscref, self.dmudc,
+                                            self.cmuref))
 
         # item 3a-d
         if self.mt3dmuflg == -1:
-            f_vsc.write('%10.3E\n' % self.viscref)
-            f_vsc.write('%10i%10i\n' % (self.nsmueos, self.mutempopt))
+            f_vsc.write('{}\n'.format(self.viscref))
+            f_vsc.write('{} {}\n'.format(self.nsmueos, self.mutempopt))
             if self.nsmueos == 1:
                 f_vsc.write('{} {} {}\n'.format(self.mtmuspec, self.dmudc,
                                               self.cmuref))
             else:
                 for iwr in range(self.nsmueos):
-                    f_vsc.write('%10i%10.2E%10.2E\n' % (self.mtmuspec[iwr],
-                                                        self.dmudc[iwr],
-                                                        self.cmuref[iwr]))
+                    f_vsc.write('{} {} {}\n'.format(self.mtmuspec[iwr],
+                                                    self.dmudc[iwr],
+                                                    self.cmuref[iwr]))
 
             # item 3d
             if self.mutempopt > 0:
-                f_vsc.write('%10i' % self.mtmutempspec)
-
-                if self.mutempopt == 1:
-                    string = ' %9.3E %9f %9f %9f\n'
-                elif self.mutempopt == 2:
-                    string = '%10.3E%10f%10f %9f %9f\n'
-                elif self.mutempopt == 3:
-                    string = '%10f %9f\n'
-
-                f_vsc.write(string % tuple(self.amucoeff))
+                s = '{} '.format(self.mtmutempspec)
+                for a in tuple(self.amucoeff):
+                    s += '{} '.format(a)
+                f_vsc.write(s + '\n')
 
         # items 4 and 5, transient visc array
         if self.mt3dmuflg == 0:
@@ -228,11 +214,11 @@ class SeawatVsc(Package):
 
                 # item 4 (and possibly 5)
                 if itmp > 0:
-                    f_vsc.write('%10i\n' % (self.invisc))
+                    f_vsc.write('{}\n'.format(self.invisc))
                     f_vsc.write(file_entry_visc)
 
                 else:
-                    f_vsc.write('%10i\n' % (itmp))
+                    f_vsc.write('{}\n'.format(itmp))
 
         f_vsc.close()
         return
