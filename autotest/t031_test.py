@@ -101,7 +101,9 @@ def test_get_destination_data():
     assert np.all(np.in1d(starting_locs, pathline_locs))
 
     # test writing a shapefile of endpoints
-    epd.write_shapefile(well_epd, direction='starting', shpname=os.path.join(path, 'starting_locs.shp'))
+    epd.write_shapefile(well_epd, direction='starting',
+                        shpname=os.path.join(path, 'starting_locs.shp'),
+                        sr=m.sr)
 
     # test writing shapefile of pathlines
     pthld.write_shapefile(well_pthld, one_per_particle=True,
