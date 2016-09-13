@@ -80,7 +80,13 @@ def test_mpsim():
     assert stllines[6].strip().split()[-1] == 'p2'
 
 def test_get_destination_data():
+    m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
+    m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0, rotation=30)
+
+    m.dis.export(path + '/dis.shp')
+    m.riv.export(path + '/riv.shp')
+    
     pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
     epd = EndpointFile(os.path.join(path, 'EXAMPLE-3.endpoint'))
 
