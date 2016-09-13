@@ -95,15 +95,13 @@ def test_get_destination_data():
     assert len(set(well_epd.particleid).difference(set(well_pthld.particleid))) == 0
 
     # check that all starting locations are included in the pathline data
-    # (pathline data slice not just endpoings)pinfo.[0:1] [0]
+    # (pathline data slice not just endpoints)
     starting_locs = well_epd[['k0', 'i0', 'j0']]
     pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(), dtype=starting_locs.dtype)
     assert np.all(np.in1d(starting_locs, pathline_locs))
 
     # test writing a shapefile of endpoints
-    epd.write_shapefile(well_epd, direction='starting',
-                        shpname=os.path.join(path, 'starting_locs.shp'),
-                        sr=m.sr)
+    epd.write_shapefile(well_epd, direction='starting', shpname=os.path.join(path, 'starting_locs.shp'))
 
     # test writing shapefile of pathlines
     pthld.write_shapefile(well_pthld, one_per_particle=True,
