@@ -286,13 +286,8 @@ class PathlineFile():
         pth = pth.copy()
         pth.sort(order=['particleid', 'time'])
 
-        length_mult = 1.
-        rot = 0
-        if sr is not None:
-            rot = sr.rotation
-            length_mult = sr.length_multiplier
-            if epsg is None:
-                epsg = sr.epsg
+        if sr is None:
+            sr = SpatialReference()
 
         particles = np.unique(pth.particleid)
         geoms = []
@@ -308,9 +303,7 @@ class PathlineFile():
             for pid in particles:
                 ra = pth[pth.particleid == pid]
 
-                x, y = SpatialReference.rotate(ra.x * length_mult,
-                                               ra.y * length_mult,
-                                               theta=rot)
+                x, y = sr.transform(ra.x, ra.y)
                 z = ra.z
                 geoms.append(LineString(list(zip(x, y, z))))
                 pthdata.append((pid,
@@ -332,16 +325,14 @@ class PathlineFile():
             pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
             for pid in particles:
                 ra = pth[pth.particleid == pid]
-                x, y = SpatialReference.rotate(ra.x * length_mult,
-                                               ra.y * length_mult,
-                                               theta=rot)
+                x, y = sr.transform(ra.x, ra.y)
                 z = ra.z
                 geoms += [LineString([(x[i-1], y[i-1], z[i-1]),
                                           (x[i], y[i], z[i])])
                              for i in np.arange(1, (len(ra)))]
                 pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
 
-        recarray2shp(pthdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
+        recarray2shp(pthdata, geoms, shpname=shpname, epsg=sr.epsg, **kwargs)
 
 
 class EndpointFile():
@@ -611,14 +602,6 @@ class EndpointFile():
         if epd is None:
             epd = self.get_alldata()
 
-        length_mult = 1.
-        rot = 0
-        if sr is not None:
-            rot = sr.rotation
-            length_mult = sr.length_multiplier
-            if epsg is None:
-                epsg = sr.epsg
-
         if direction.lower() == 'ending':
             xcol, ycol, zcol = 'x', 'y', 'z'
         elif direction.lower() == 'starting':
@@ -627,10 +610,9 @@ class EndpointFile():
             errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
                      'or "starting".'
             raise Exception(errmsg)
-
-        x, y = SpatialReference.rotate(epd[xcol] * length_mult,
-                                       epd[ycol] * length_mult,
-                                       theta=rot)
+        if sr is None:
+            sr = SpatialReference()
+        x, y = sr.transform(epd[xcol], epd[ycol])
         z = epd[zcol]
 
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]

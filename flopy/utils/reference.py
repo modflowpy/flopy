@@ -410,6 +410,19 @@ class SpatialReference(object):
                                                          (y - yorigin)
         return xrot, yrot
 
+    def transform(self, x, y):
+        """
+        Given x and y array-like values, apply rotation, scale and offset,
+        to convert them from model coordinates to real-world coordinates.
+        """
+        x, y = SpatialReference.rotate(x * self.length_multiplier,
+                                       y * self.length_multiplier,
+                                       theta=self.rotation,
+                                       xorigin=0, yorigin=self.yedge[0])
+        x += self.xul
+        y += self.yul - self.yedge[0]
+        return x, y
+
 
     def get_extent(self):
         """

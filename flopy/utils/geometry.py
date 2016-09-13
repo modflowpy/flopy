@@ -1,6 +1,7 @@
 """
 Container objects for working with geometric information
 """
+import collections
 import numpy as np
 
 class Polygon:
@@ -237,8 +238,11 @@ class Point:
         -----
         z information is only stored if it was entered.
         """
+        while len(coordinates) == 1:
+            coordinates = coordinates[0]
+
         self.coords = coordinates
-        if len(coordinates) == 2:
+        if len(coordinates) == 3:
             self.has_z = True
 
     @property
