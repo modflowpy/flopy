@@ -1,7 +1,6 @@
 """
 Container objects for working with geometric information
 """
-import collections
 import numpy as np
 
 class Polygon:

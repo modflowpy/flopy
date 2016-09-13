@@ -10,14 +10,15 @@ import flopy
 import numpy as np
 from flopy.utils.reference import SpatialReference
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
+from flopy.modpath.mpsim import StartingLocationsFile
 
 mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
 path = os.path.join('temp', 'mp6')
 
 if not os.path.isdir(path):
     os.makedirs(path)
-#for f in mffiles:
-#    shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
+for f in mffiles:
+    shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
 
 def test_mpsim():
 
@@ -61,16 +62,24 @@ def test_mpsim():
     # (not a very robust test)
     sim = mp.create_mpsim(trackdir='backward', simtype='pathline', packages='MNW2')
     mp.write_input()
-    assert True
+
+    sim = flopy.modpath.ModpathSim(model=mp)
+    # starting locations file
+    stl = StartingLocationsFile(model=mp)
+    stldata = StartingLocationsFile.get_empty_starting_locations_data(npt=2)
+    stldata['label'] = ['p1', 'p2']
+    stldata[1]['i0'] = 5
+    stldata[1]['j0'] = 6
+    stldata[1]['xloc0'] = .1
+    stldata[1]['yloc0'] = .2
+    stl.data = stldata
+    mp.write_input()
+    stllines = open(os.path.join(path, 'ex6.loc')).readlines()
+    assert stllines[3].strip() == 'group1'
+    assert int(stllines[4].strip()) == 2
+    assert stllines[6].strip().split()[-1] == 'p2'
 
 def test_get_destination_data():
-
-    m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
-
-    m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0, rotation=30)
-
-    m.dis.export(path + '/dis.shp')
-    m.riv.export(path + '/riv.shp')
 
     pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
     epd = EndpointFile(os.path.join(path, 'EXAMPLE-3.endpoint'))
@@ -99,12 +108,6 @@ def test_get_destination_data():
     pthld.write_shapefile(well_pthld, one_per_particle=False,
                           sr=m.sr,
                           shpname='temp/mp6/pathlines.shp')
-    # test that endpoints were rotated and written correctly
-    from flopy.export.shapefile_utils import shp2recarray
-    ra = shp2recarray(os.path.join(path, 'starting_locs.shp'))
-    p3 = ra.geometry[ra.particleid == 3][0]
-    xorig, yorig = m.sr.transform(well_epd.x0[0], well_epd.y0[0])
-    assert p3.x - xorig + p3.y - yorig < 1e-4
 
 if __name__ == '__main__':
 
