@@ -84,9 +84,6 @@ def test_get_destination_data():
 
     m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0, rotation=30)
 
-    m.dis.export(path + '/dis.shp')
-    m.riv.export(path + '/riv.shp')
-    
     pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
     epd = EndpointFile(os.path.join(path, 'EXAMPLE-3.endpoint'))
 

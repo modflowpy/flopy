@@ -41,9 +41,8 @@ class PathlineFile():
     >>> import flopy
     >>> pthobj = flopy.utils.PathlineFile('model.mppth')
     >>> p1 = pthobj.get_data(partid=1)
-
-
     """
+    kijnames = ['k', 'i', 'j', 'particleid', 'particlegroup', 'linesegmentindex']
 
     def __init__(self, filename, verbose=False):
         """
@@ -58,12 +57,8 @@ class PathlineFile():
         self.nid = self._data['particleid'].max()
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
-        self._data['k'] -= 1
-        self._data['i'] -= 1
-        self._data['j'] -= 1
-        self._data['particleid'] -= 1
-        self._data['particlegroup'] -= 1
-        self._data['linesegmentindex'] -= 1
+        for n in self.kijnames:
+            self._data[n] -= 1
         # close the input file
         self.file.close()
         return
@@ -331,7 +326,9 @@ class PathlineFile():
                                           (x[i], y[i], z[i])])
                              for i in np.arange(1, (len(ra)))]
                 pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
-
+        # convert back to one-based
+        for n in set(self.kijnames).intersection(set(pthdata.dtype.names)):
+            pthdata[n] += 1
         recarray2shp(pthdata, geoms, shpname=shpname, epsg=sr.epsg, **kwargs)
 
 
@@ -369,6 +366,7 @@ class EndpointFile():
 
 
     """
+    kijnames = ['k0', 'i0', 'j0', 'k', 'i', 'j', 'particleid', 'particlegroup']
 
     def __init__(self, filename, verbose=False):
         """
@@ -383,14 +381,9 @@ class EndpointFile():
         self.nid = self._data['particleid'].max()
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
-        self._data['k0'] -= 1
-        self._data['i0'] -= 1
-        self._data['j0'] -= 1
-        self._data['k'] -= 1
-        self._data['i'] -= 1
-        self._data['j'] -= 1
-        self._data['particleid'] -= 1
-        self._data['particlegroup'] -= 1
+        for n in self.kijnames:
+            self._data[n] -= 1
+
         # close the input file
         self.file.close()
         return
@@ -598,7 +591,7 @@ class EndpointFile():
         from flopy.utils.geometry import Point
         from flopy.export.shapefile_utils import recarray2shp
 
-        epd = endpoint_data
+        epd = endpoint_data.copy()
         if epd is None:
             epd = self.get_alldata()
 
@@ -616,4 +609,7 @@ class EndpointFile():
         z = epd[zcol]
 
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
+        # convert back to one-based
+        for n in self.kijnames:
+            epd[n] += 1
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
