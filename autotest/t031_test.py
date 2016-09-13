@@ -83,6 +83,7 @@ def test_get_destination_data():
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
     m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0, rotation=30)
+    m.dis.export(path + '/dis.shp')
 
     pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
     epd = EndpointFile(os.path.join(path, 'EXAMPLE-3.endpoint'))
@@ -94,7 +95,7 @@ def test_get_destination_data():
     assert len(set(well_epd.particleid).difference(set(well_pthld.particleid))) == 0
 
     # check that all starting locations are included in the pathline data
-    # (pathline data slice not just endpoings)
+    # (pathline data slice not just endpoings)pinfo.[0:1] [0]
     starting_locs = well_epd[['k0', 'i0', 'j0']]
     pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(), dtype=starting_locs.dtype)
     assert np.all(np.in1d(starting_locs, pathline_locs))
@@ -111,6 +112,21 @@ def test_get_destination_data():
     pthld.write_shapefile(well_pthld, one_per_particle=False,
                           sr=m.sr,
                           shpname='temp/mp6/pathlines.shp')
+
+    # test that endpoints were rotated and written correctly
+    from flopy.export.shapefile_utils import shp2recarray
+    ra = shp2recarray(os.path.join(path, 'starting_locs.shp'))
+    p3 = ra.geometry[ra.particleid == 4][0]
+    xorig, yorig = m.sr.transform(well_epd.x0[0], well_epd.y0[0])
+    assert p3.x - xorig + p3.y - yorig < 1e-4
+    assert p3.x - 858.845726812 + p3.y - 2112.4355653 < 1e-4 # this also checks for 1-based
+
+    # test that particle attribute information is consistent with pathline file
+    ra = shp2recarray(os.path.join(path, 'pathlines.shp'))
+    inds = (ra.particleid == 8) & (ra.i == 12) & (ra.j == 12)
+    assert ra.time[inds][0] - 20181.7 < .1
+    assert ra.xloc[inds][0] - 0.933 < .01
+
 
 if __name__ == '__main__':
 
