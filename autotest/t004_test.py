@@ -60,6 +60,12 @@ def test_transient3d():
     t3d[0] = 1.0
     assert np.array_equal(t3d[0].array, np.zeros((nlay, nrow, ncol)) + 1.)
 
+    # Check itmp and file_entry
+    itmp, file_entry_dense = t3d.get_kper_entry(0)
+    assert itmp == 1
+    itmp, file_entry_dense = t3d.get_kper_entry(1)
+    assert itmp == -1
+
 
 def test_util2d():
     ml = flopy.modflow.Modflow()
