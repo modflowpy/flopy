@@ -41,9 +41,8 @@ class PathlineFile():
     >>> import flopy
     >>> pthobj = flopy.utils.PathlineFile('model.mppth')
     >>> p1 = pthobj.get_data(partid=1)
-
-
     """
+    kijnames = ['k', 'i', 'j', 'particleid', 'particlegroup', 'linesegmentindex']
 
     def __init__(self, filename, verbose=False):
         """
@@ -58,12 +57,8 @@ class PathlineFile():
         self.nid = self._data['particleid'].max()
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
-        self._data['k'] -= 1
-        self._data['i'] -= 1
-        self._data['j'] -= 1
-        self._data['particleid'] -= 1
-        self._data['particlegroup'] -= 1
-        self._data['linesegmentindex'] -= 1
+        for n in self.kijnames:
+            self._data[n] -= 1
         # close the input file
         self.file.close()
         return
@@ -286,13 +281,8 @@ class PathlineFile():
         pth = pth.copy()
         pth.sort(order=['particleid', 'time'])
 
-        length_mult = 1.
-        rot = 0
-        if sr is not None:
-            rot = sr.rotation
-            length_mult = sr.length_multiplier
-            if epsg is None:
-                epsg = sr.epsg
+        if sr is None:
+            sr = SpatialReference()
 
         particles = np.unique(pth.particleid)
         geoms = []
@@ -308,9 +298,7 @@ class PathlineFile():
             for pid in particles:
                 ra = pth[pth.particleid == pid]
 
-                x, y = SpatialReference.rotate(ra.x * length_mult,
-                                               ra.y * length_mult,
-                                               theta=rot)
+                x, y = sr.transform(ra.x, ra.y)
                 z = ra.z
                 geoms.append(LineString(list(zip(x, y, z))))
                 pthdata.append((pid,
@@ -332,16 +320,16 @@ class PathlineFile():
             pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
             for pid in particles:
                 ra = pth[pth.particleid == pid]
-                x, y = SpatialReference.rotate(ra.x * length_mult,
-                                               ra.y * length_mult,
-                                               theta=rot)
+                x, y = sr.transform(ra.x, ra.y)
                 z = ra.z
                 geoms += [LineString([(x[i-1], y[i-1], z[i-1]),
                                           (x[i], y[i], z[i])])
                              for i in np.arange(1, (len(ra)))]
                 pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
-
-        recarray2shp(pthdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
+        # convert back to one-based
+        for n in set(self.kijnames).intersection(set(pthdata.dtype.names)):
+            pthdata[n] += 1
+        recarray2shp(pthdata, geoms, shpname=shpname, epsg=sr.epsg, **kwargs)
 
 
 class EndpointFile():
@@ -378,6 +366,7 @@ class EndpointFile():
 
 
     """
+    kijnames = ['k0', 'i0', 'j0', 'k', 'i', 'j', 'particleid', 'particlegroup']
 
     def __init__(self, filename, verbose=False):
         """
@@ -392,14 +381,9 @@ class EndpointFile():
         self.nid = self._data['particleid'].max()
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
-        self._data['k0'] -= 1
-        self._data['i0'] -= 1
-        self._data['j0'] -= 1
-        self._data['k'] -= 1
-        self._data['i'] -= 1
-        self._data['j'] -= 1
-        self._data['particleid'] -= 1
-        self._data['particlegroup'] -= 1
+        for n in self.kijnames:
+            self._data[n] -= 1
+
         # close the input file
         self.file.close()
         return
@@ -607,17 +591,9 @@ class EndpointFile():
         from flopy.utils.geometry import Point
         from flopy.export.shapefile_utils import recarray2shp
 
-        epd = endpoint_data
+        epd = endpoint_data.copy()
         if epd is None:
             epd = self.get_alldata()
-
-        length_mult = 1.
-        rot = 0
-        if sr is not None:
-            rot = sr.rotation
-            length_mult = sr.length_multiplier
-            if epsg is None:
-                epsg = sr.epsg
 
         if direction.lower() == 'ending':
             xcol, ycol, zcol = 'x', 'y', 'z'
@@ -627,11 +603,13 @@ class EndpointFile():
             errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
                      'or "starting".'
             raise Exception(errmsg)
-
-        x, y = SpatialReference.rotate(epd[xcol] * length_mult,
-                                       epd[ycol] * length_mult,
-                                       theta=rot)
+        if sr is None:
+            sr = SpatialReference()
+        x, y = sr.transform(epd[xcol], epd[ycol])
         z = epd[zcol]
 
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
+        # convert back to one-based
+        for n in self.kijnames:
+            epd[n] += 1
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
