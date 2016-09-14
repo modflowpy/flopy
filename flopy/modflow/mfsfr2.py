@@ -977,9 +977,15 @@ class ModflowSfr2(Package):
 
             if i == 0:
                 f_sfr.write(' '.join(fmts[1:4]).format(thickm, elevupdn, width) + ' ')
-                f_sfr.write(' '.join(fmts[5:8]).format(thts, thti, eps) + ' ')
+                if self.isfropt in [4, 5]:
+                    f_sfr.write(' '.join(fmts[5:8]).format(thts, thti, eps) + ' ')
+
                 if self.isfropt == 5:
                     f_sfr.write(fmts[8].format(uhc) + ' ')
+                    
+            elif i > 0 and self.isfropt == 0:
+                f_sfr.write(' '.join(fmts[1:4]).format(thickm, elevupdn, width) + ' ')
+
         elif self.isfropt in [0, 4, 5] and icalc >= 2:
             f_sfr.write(fmts[0].format(hcond) + ' ')
 
