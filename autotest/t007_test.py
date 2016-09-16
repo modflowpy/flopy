@@ -168,6 +168,9 @@ def test_sr():
                                    delc=delc, top=top, botm=botm)
     bas = flopy.modflow.ModflowBas(ms,ifrefm=True)
 
+    # test instantiation of an empty sr object
+    sr = flopy.utils.reference.SpatialReference()
+
     sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,delc=ms.dis.delc.array,lenuni=3,
                                       xul=321,yul=123,rotation=20)
     assert ms.sr.yul == 100

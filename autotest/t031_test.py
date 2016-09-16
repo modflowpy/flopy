@@ -83,6 +83,7 @@ def test_get_destination_data():
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
     m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0, rotation=30)
+    sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=1000, yul=1000, rotation=30)
     m.dis.export(path + '/dis.shp')
 
     pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
@@ -109,6 +110,13 @@ def test_get_destination_data():
     pthld.write_shapefile(well_pthld, one_per_particle=True,
                           direction='starting', sr=m.sr,
                           shpname='temp/mp6/pathlines_1per.shp')
+    pthld.write_shapefile(well_pthld, one_per_particle=True,
+                          direction='ending', sr=m.sr,
+                          shpname='temp/mp6/pathlines_1per_end.shp')
+    # test writing shapefile of pathlines
+    pthld.write_shapefile(well_pthld, one_per_particle=True,
+                          direction='starting', sr=sr,
+                          shpname='temp/mp6/pathlines_1per2.shp')
     pthld.write_shapefile(well_pthld, one_per_particle=False,
                           sr=m.sr,
                           shpname='temp/mp6/pathlines.shp')
@@ -127,6 +135,29 @@ def test_get_destination_data():
     assert ra.time[inds][0] - 20181.7 < .1
     assert ra.xloc[inds][0] - 0.933 < .01
 
+    # test that k, i, j are correct for single geometry pathlines, forwards and backwards
+    ra = shp2recarray(os.path.join(path, 'pathlines_1per.shp'))
+    assert ra.i[0] == 4, ra.j[0] == 5
+    ra = shp2recarray(os.path.join(path, 'pathlines_1per_end.shp'))
+    assert ra.i[0] == 13, ra.j[0] == 13
+
+    # test use of arbitrary spatial reference and offset
+    ra = shp2recarray(os.path.join(path, 'pathlines_1per2.shp'))
+    p3_2 = ra.geometry[ra.particleid == 4][0]
+    assert p3.x - 1858.845726812 + p3.y - 1112.4355653 < 1e-4
+
+    xul = 3628793
+    yul = 21940389
+
+    m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
+
+    m.sr = flopy.utils.reference.SpatialReference(delr=m.dis.delr, delc=m.dis.delc, lenuni=1,
+                                                                     xul=xul, yul=yul, rotation=0.0)
+    m.dis.export(path + '/dis2.shp')
+    pthobj = flopy.utils.PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
+    pthobj.write_shapefile(shpname='temp/mp6/pathlines_1per3.shp',
+                           direction='ending',
+                           sr=m.sr)
 
 if __name__ == '__main__':
 
