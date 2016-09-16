@@ -127,7 +127,7 @@ def test_get_destination_data():
     p3 = ra.geometry[ra.particleid == 4][0]
     xorig, yorig = m.sr.transform(well_epd.x0[0], well_epd.y0[0])
     assert p3.x - xorig + p3.y - yorig < 1e-4
-    assert p3.x - 858.845726812 + p3.y - 2112.4355653 < 1e-4 # this also checks for 1-based
+    assert np.abs(p3.x - 858.845726812 + p3.y - 2112.4355653 < 1e-4) # this also checks for 1-based
 
     # test that particle attribute information is consistent with pathline file
     ra = shp2recarray(os.path.join(path, 'pathlines.shp'))
@@ -144,7 +144,7 @@ def test_get_destination_data():
     # test use of arbitrary spatial reference and offset
     ra = shp2recarray(os.path.join(path, 'pathlines_1per2.shp'))
     p3_2 = ra.geometry[ra.particleid == 4][0]
-    assert p3.x - 1858.845726812 + p3.y - 1112.4355653 < 1e-4
+    assert np.abs(p3.x - 1858.845726812 + p3.y - 1112.4355653) < 1e-4
 
     xul = 3628793
     yul = 21940389

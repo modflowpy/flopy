@@ -80,7 +80,7 @@ class SpatialReference(object):
         
     """
 
-    def __init__(self, delr=[1.0], delc=[1.0], lenuni=1, xul=None, yul=None, rotation=0.0,
+    def __init__(self, delr=None, delc=None, lenuni=1, xul=None, yul=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
 
         for delrc in [delr, delc]:
@@ -99,7 +99,7 @@ class SpatialReference(object):
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
-        self.set_spatialreference(xul, yul, rotation)
+        self.set_spatialreference(xul, yul, yll, rotation)
         self.length_multiplier = length_multiplier
 
     @property
@@ -316,7 +316,7 @@ class SpatialReference(object):
         return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
                 "proj4_str":self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
+    def set_spatialreference(self, xul=None, yul=None, yll=None, rotation=0.0):
         """
             set spatial reference - can be called from model instance
         """
@@ -330,6 +330,10 @@ class SpatialReference(object):
             self.yul = np.add.reduce(self.delc)
         else:
             self.yul = yul
+        if yll is None:
+            self.yll = self.yul - self.yedge[0]
+        else:
+            self.yll = yll
         self.rotation = rotation
         self._reset()
 
@@ -422,9 +426,9 @@ class SpatialReference(object):
         x, y = SpatialReference.rotate(x * self.length_multiplier,
                                        y * self.length_multiplier,
                                        theta=self.rotation,
-                                       xorigin=0, yorigin=self.yedge[0])
+                                       xorigin=0, yorigin=0)
         x += self.xul
-        y += self.yul - self.yedge[0]
+        y += self.yll
         return x, y
 
 
