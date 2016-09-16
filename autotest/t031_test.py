@@ -148,8 +148,7 @@ def test_get_destination_data():
 
     xul = 3628793
     yul = 21940389
-    sr = flopy.utils.reference.SpatialReference(delr=400, delc=400, lenuni=1,
-                                                                     xul=xul, yul=yul, rotation=0.0)
+
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
     m.sr = flopy.utils.reference.SpatialReference(delr=m.dis.delr, delc=m.dis.delc, lenuni=1,

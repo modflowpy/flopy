@@ -80,8 +80,12 @@ class SpatialReference(object):
         
     """
 
-    def __init__(self, delr=1.0, delc=1.0, lenuni=1, xul=None, yul=None, rotation=0.0,
+    def __init__(self, delr=[1.0], delc=[1.0], lenuni=1, xul=None, yul=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
+
+        for delrc in [delr, delc]:
+            if isinstance(delrc, float) or isinstance(delrc, int):
+                raise TypeError("delr and delcs must be an array or sequences equal in length to the number of rows/columns.")
         self.delc = np.atleast_1d(np.array(delc)) * length_multiplier
         self.delr = np.atleast_1d(np.array(delr)) * length_multiplier
 
