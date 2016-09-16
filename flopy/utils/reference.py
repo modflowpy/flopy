@@ -80,14 +80,20 @@ class SpatialReference(object):
         
     """
 
-    def __init__(self, delr=None, delc=None, lenuni=1, xul=None, yul=None, yll=None, rotation=0.0,
+    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1, xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
                 raise TypeError("delr and delcs must be an array or sequences equal in length to the number of rows/columns.")
+
         self.delc = np.atleast_1d(np.array(delc)) * length_multiplier
         self.delr = np.atleast_1d(np.array(delr)) * length_multiplier
+
+        if delr.sum() == 0 or delc.sum() == 0:
+            if xll is None or yll is None:
+                print('Warning: no grid spacing or lower-left corner supplied. Origin will be set to zero.')
+                xll, yll = 0, 0
 
         self.lenuni = lenuni
         self._proj4_str = proj4_str
@@ -99,7 +105,7 @@ class SpatialReference(object):
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
-        self.set_spatialreference(xul, yul, yll, rotation)
+        self.set_spatialreference(xul, yul, xll, yll, rotation)
         self.length_multiplier = length_multiplier
 
     @property
@@ -316,22 +322,32 @@ class SpatialReference(object):
         return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
                 "proj4_str":self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, yll=None, rotation=0.0):
+    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0):
         """
             set spatial reference - can be called from model instance
         """
-
+        theta = -rotation * np.pi / 180.
         # Set origin and rotation
         if xul is None:
-            self.xul = 0.
+            if xll is not None:
+                self.xul = xll - np.sin(theta) * self.yedge[0]
+            else:
+                self.xul = 0.
         else:
             self.xul = xul
         if yul is None:
-            self.yul = np.add.reduce(self.delc)
+            if yll is not None:
+                self.yul = yll + np.cos(theta) * self.yedge[0]
+            else:
+                self.yul = np.add.reduce(self.delc)
         else:
             self.yul = yul
+        if xll is None:
+            self.xll = self.xul + np.sin(theta) * self.yedge[0]
+        else:
+            self.xll = xll
         if yll is None:
-            self.yll = self.yul - self.yedge[0]
+            self.yll = self.yul - np.cos(theta) * self.yedge[0]
         else:
             self.yll = yll
         self.rotation = rotation
@@ -389,8 +405,7 @@ class SpatialReference(object):
         self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter,
                                                           self.ycenter)
         self._xcentergrid, self._ycentergrid = self.transform(self._xcentergrid,
-                                                          self._ycentergrid,
-                                                          self.rotation)
+                                                              self._ycentergrid)
 
     def _set_xygrid(self):
         self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
@@ -417,12 +432,13 @@ class SpatialReference(object):
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
+        x += self.xll
+        y += self.yll
         x, y = SpatialReference.rotate(x * self.length_multiplier,
                                        y * self.length_multiplier,
                                        theta=self.rotation,
-                                       xorigin=0, yorigin=0)
-        x += self.xul
-        y += 0#self.yll
+                                       xorigin=self.xll, yorigin=self.yll)
+
         return x, y
 
 
