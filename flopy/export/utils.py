@@ -730,13 +730,15 @@ def util3d_helper(f, u3d, **kwargs):
                 #    array[u3d.model.bas6.ibound.array == 0] = np.NaN
                 #elif u3d.model.btn is not None and 'icbund' not in var_name:
                 #    array[u3d.model.btn.icbund.array == 0] = np.NaN
-                array[mask] = np.NaN
+                if mask is not None:
+                    array[mask] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
                 mx, mn = np.nanmax(array), np.nanmin(array)
             else:
                 mx, mn = np.nanmax(array), np.nanmin(array)
-                array[mask] = netcdf.FILLVALUE
+                if mask is not None:
+                    array[mask] = netcdf.FILLVALUE
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
                 if u3d.model.bas6 is not None and "ibound" not in var_name:

@@ -912,7 +912,7 @@ class Transient3d(object):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None,
-                 bin=False,array_free_format=None):
+                 bin=False, array_free_format=None):
 
         if isinstance(value, Transient3d):
             for attr in value.__dict__.items():
@@ -927,7 +927,7 @@ class Transient3d(object):
         self.shape = shape
         self.dtype = dtype
         self.__value = value
-        self.name = name
+        self.name_base = name
         self.fmtin = fmtin
         self.cnstst = cnstnt
         self.iprn = iprn
@@ -1053,19 +1053,12 @@ class Transient3d(object):
         """
         parse an argument into a Util3d instance
         """
-        #name = self.name + '_StressPeriod_{}'.format(kper+1)
-        #name = arg.name_base
-        u3d = []
-        for k in range(self.shape[0]):
-            if isinstance(arg, float) or isinstance(arg, int):
-                a = arg
-            else:
-                a = arg[k]
-            name = '{}{}'.format(arg.name_base[k], k+1).replace(' ', '_')
-            u3d.append(Util2d(self.model, (self.shape[1], self.shape[2]),
-                              self.dtype, a, fmtin=self.fmtin, name=name,
-                              locat=self.locat,
-                              array_free_format=self.array_free_format))
+        name = '{}_period{}'.format(self.name_base, kper + 1)
+        u3d = Util3d(self.model, self.shape, self.dtype, arg,
+                     fmtin=self.fmtin, name=name,
+#                     ext_filename=ext_filename,
+                     locat=self.locat,
+                     array_free_format=self.array_free_format)
         return u3d
 
 

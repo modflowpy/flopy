@@ -668,17 +668,20 @@ def cvfd_to_patch_collection(verts, iverts):
         points = []
         for iv in ivertlist:
             points.append((verts[iv, 0], verts[iv, 1]))
-        iv = ivertlist[0]
-        points.append((verts[iv, 0], verts[iv, 1]))
+        # close the polygon, if necessary
+        if ivertlist[0] != ivertlist[-1]:
+            iv = ivertlist[0]
+            points.append((verts[iv, 0], verts[iv, 1]))
         ptchs.append(Polygon(points))
     pc = PatchCollection(ptchs)
     return pc
 
 
-def plot_cvfd(verts, iverts, ax=None, cmap='Dark2', edgecolor='scaled',
-              facecolor='scaled', a=None, masked_values=None, **kwargs):
+def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
+              edgecolor='scaled', facecolor='scaled', a=None,
+              masked_values=None, **kwargs):
     """
-    Generic function for plotting a control volume finite different grid of
+    Generic function for plotting a control volume finite difference grid of
     information.
 
     Parameters
@@ -687,6 +690,11 @@ def plot_cvfd(verts, iverts, ax=None, cmap='Dark2', edgecolor='scaled',
         2d array of x and y points.
     iverts : list of lists
         should be of len(ncells) with a list of vertex number for each cell
+    ax : matplotlib.pylot axis
+        matplotlib.pyplot axis instance. Default is None
+    layer : int
+        layer to extract. Used in combination to the optional ncpl
+        parameter. Default is 0
     linewidth : float
         Width of all lines. (default is 1)
     cmap : string
@@ -724,6 +732,43 @@ def plot_cvfd(verts, iverts, ax=None, cmap='Dark2', edgecolor='scaled',
     else:
         vmax = None
 
+    if 'ncpl' in kwargs:
+        nlay = layer + 1
+        ncpl = kwargs.pop('ncpl')
+        if isinstance(ncpl, int):
+            i = int(ncpl)
+            ncpl = np.ones((nlay), dtype=np.int) * i
+        elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
+            ncpl = np.array(ncpl)
+        i0 = 0
+        i1 = 0
+        for k in range(nlay):
+            i0 = i1
+            i1 = i0 + ncpl[k]
+        # retain iverts in selected layer
+        iverts = iverts[i0:i1]
+        # retain vertices in selected layer
+        tverts = []
+        for iv in iverts:
+            for iloc in iv:
+                tverts.append((verts[iloc, 0], verts[iloc, 1]))
+        verts = np.array(tverts)
+        # calculate offset for starting vertex in layer based on
+        # global vertex numbers
+        iadj = iverts[0][0]
+        # reset iverts to relative vertices in selected layer
+        tiverts = []
+        for iv in iverts:
+            i = []
+            for t in iv:
+                i.append(t-iadj)
+            tiverts.append(i)
+        iverts = tiverts
+    else:
+        i0 = 0
+        i1 = len(iverts)
+
+    # get current axis
     if ax is None:
         ax = plt.gca()
     cm = plt.get_cmap(cmap)
@@ -752,7 +797,7 @@ def plot_cvfd(verts, iverts, ax=None, cmap='Dark2', edgecolor='scaled',
             pc.set_edgecolor('none')
         else:
             pc.set_edgecolor(edgecolor)
-        pc.set_array(a)
+        pc.set_array(a[i0:i1])
         pc.set_clim(vmin=vmin, vmax=vmax)
     # add the patch collection to the axis
     ax.add_collection(pc)

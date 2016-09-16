@@ -2,6 +2,8 @@
 Module spatial referencing for flopy model objects
 
 """
+import sys
+import os
 import numpy as np
 
 
@@ -32,6 +34,16 @@ class SpatialReference(object):
 
     proj4_str: str
         a PROJ4 string that identifies the grid in space. warning: case sensitive!
+
+    epsg : int
+        EPSG code that identifies the grid in space. Can be used in lieu of proj4.
+        PROJ4 attribute will auto-populate if there is an internet connection
+        (via get_proj4 method).
+        See https://www.epsg-registry.org/ or spatialreference.org
+
+    length_multiplier : float
+        multiplier to convert model units to spatial reference units.
+        delr and delc above will be multiplied by this value. (default=1.)
 
     Attributes
     ----------
@@ -68,18 +80,27 @@ class SpatialReference(object):
         
     """
 
-    def __init__(self, delr=1.0, delc=1.0, lenuni=1, xul=None, yul=None, rotation=0.0,
-                 proj4_str="EPSG:4326",units=None):
-        self.delc = np.atleast_1d(np.array(delc))
-        self.delr = np.atleast_1d(np.array(delr))
+    def __init__(self, delr=[1.0], delc=[1.0], lenuni=1, xul=None, yul=None, rotation=0.0,
+                 proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
+
+        for delrc in [delr, delc]:
+            if isinstance(delrc, float) or isinstance(delrc, int):
+                raise TypeError("delr and delcs must be an array or sequences equal in length to the number of rows/columns.")
+        self.delc = np.atleast_1d(np.array(delc)) * length_multiplier
+        self.delr = np.atleast_1d(np.array(delr)) * length_multiplier
 
         self.lenuni = lenuni
         self._proj4_str = proj4_str
+
+        self.epsg = epsg
+        if epsg is not None:
+            self._proj4_str = getproj4(epsg)
 
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
         self.set_spatialreference(xul, yul, rotation)
+        self.length_multiplier = length_multiplier
 
     @property
     def proj4_str(self):
@@ -393,6 +414,19 @@ class SpatialReference(object):
                                                          (y - yorigin)
         return xrot, yrot
 
+    def transform(self, x, y):
+        """
+        Given x and y array-like values, apply rotation, scale and offset,
+        to convert them from model coordinates to real-world coordinates.
+        """
+        x, y = SpatialReference.rotate(x * self.length_multiplier,
+                                       y * self.length_multiplier,
+                                       theta=self.rotation,
+                                       xorigin=0, yorigin=self.yedge[0])
+        x += self.xul
+        y += self.yul - self.yedge[0]
+        return x, y
+
 
     def get_extent(self):
         """
@@ -581,4 +615,133 @@ class SpatialReference(object):
 
         return b
 
+class epsgRef:
+    """Sets up a local database of projection file text referenced by epsg code.
+    The database is located in the site packages folder in epsgref.py, which
+    contains a dictionary, prj, of projection file text keyed by epsg value.
+    """
+    def __init__(self):
+        sp = [f for f in sys.path if f.endswith('site-packages')][0]
+        self.location = os.path.join(sp, 'epsgref.py')
 
+    def _remove_pyc(self):
+        try: # get rid of pyc file
+            os.remove(self.location + 'c')
+        except:
+            pass
+    def make(self):
+        if not os.path.exists(self.location):
+            newfile = open(self.location, 'w')
+            newfile.write('prj = {}\n')
+            newfile.close()
+    def reset(self, verbose=True):
+        os.remove(self.location)
+        self._remove_pyc()
+        self.make()
+        if verbose:
+            print('Resetting {}'.format(self.location))
+    def add(self, epsg, prj):
+        """add an epsg code to epsgref.py"""
+        with open(self.location, 'a') as epsgfile:
+            epsgfile.write("prj[{:d}] = '{}'\n".format(epsg, prj))
+    def remove(self, epsg):
+        """removes an epsg entry from epsgref.py"""
+        from epsgref import prj
+        self.reset(verbose=False)
+        if epsg in prj.keys():
+            del prj[epsg]
+        for epsg, prj in prj.items():
+            self.add(epsg, prj)
+    @staticmethod
+    def show():
+        import importlib
+        import epsgref
+        importlib.reload(epsgref)
+        from epsgref import prj
+        for k, v in prj.items():
+            print('{}:\n{}\n'.format(k, v))
+
+
+def getprj(epsg, addlocalreference=True):
+    """Gets projection file (.prj) text for given epsg code from spatialreference.org
+    See: https://www.epsg-registry.org/
+
+    Parameters
+    ----------
+    epsg : int
+        epsg code for coordinate system
+    addlocalreference : boolean
+        adds the projection file text associated with epsg to a local
+        database, epsgref.py, located in site-packages.
+
+    Returns
+    -------
+    prj : str
+        text for a projection (*.prj) file.
+    """
+    epsgfile = epsgRef()
+    prj = None
+    try:
+        from epsgref import prj
+        prj = prj.get(epsg)
+    except:
+        epsgfile.make()
+
+    if prj is None:
+        prj = get_spatialreference(epsg, text='prettywkt')
+    if addlocalreference:
+        epsgfile.add(epsg, prj)
+    return prj
+
+def get_spatialreference(epsg, text='prettywkt'):
+    """Gets text for given epsg code and text format from spatialreference.org
+    Fetches the reference text using the url:
+        http://spatialreference.org/ref/epsg/<epsg code>/<text>/
+
+    See: https://www.epsg-registry.org/
+
+    Parameters
+    ----------
+    epsg : int
+        epsg code for coordinate system
+    text : str
+        string added to url
+
+    Returns
+    -------
+    url : str
+
+    """
+    url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
+    try:
+        # For Python 3.0 and later
+        from urllib.request import urlopen
+    except ImportError:
+        # Fall back to Python 2's urllib2
+        from urllib2 import urlopen
+    try:
+        urlobj = urlopen(url)
+        text = urlobj.read().decode()
+    except:
+        e = sys.exc_info()
+        print(e)
+        print('Need an internet connection to look up epsg on spatialreference.org.')
+        return
+    text = text.replace("\n", "")
+    return text
+
+def getproj4(epsg):
+    """Gets projection file (.prj) text for given epsg code from spatialreference.org
+    See: https://www.epsg-registry.org/
+
+    Parameters
+    ----------
+    epsg : int
+        epsg code for coordinate system
+
+    Returns
+    -------
+    prj : str
+        text for a projection (*.prj) file.
+    """
+    return get_spatialreference(epsg, text='proj4')
