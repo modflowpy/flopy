@@ -186,6 +186,15 @@ def test_sr():
     xt, yt = sr.transform(x, y)
     assert np.sum(yt - sr.ycentergrid[:, 0]) < 1e-3
 
+    # test input using ul vs ll
+    xll, yll = sr.xll, sr.yll
+    sr2 = flopy.utils.SpatialReference(delr=ms.dis.delr.array, delc=ms.dis.delc.array, lenuni=3,
+                                       xll=xll, yll=yll, rotation=20)
+    assert sr2.xul == sr.xul
+    assert sr2.yul == sr.yul
+    assert np.array_equal(sr.xcentergrid, sr2.xcentergrid)
+    assert np.array_equal(sr.ycentergrid, sr2.ycentergrid)
+
     ms.sr.lenuni = 1
     assert ms.sr.lenuni == 1
 
