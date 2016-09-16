@@ -25,10 +25,16 @@ class SpatialReference(object):
 
     xul : float
         the x coordinate of the upper left corner of the grid
-
+        Enter either xul and yul or xll and yll.
     yul : float
         the y coordinate of the upper left corner of the grid
-
+        Enter either xul and yul or xll and yll.
+    xll : float
+        the x coordinate of the lower left corner of the grid
+        Enter either xul and yul or xll and yll.
+    yll : float
+        the y coordinate of the lower left corner of the grid
+        Enter either xul and yul or xll and yll.
     rotation : float
         the counter-clockwise rotation (in degrees) of the grid
 
@@ -326,6 +332,11 @@ class SpatialReference(object):
         """
             set spatial reference - can be called from model instance
         """
+        if xul is not None and xll is not None:
+            raise ValueError('both xul and xll entered. Please enter either xul, yul or xll, yll.')
+        if yul is not None and yll is not None:
+            raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
+
         theta = -rotation * np.pi / 180.
         # Set origin and rotation
         if xul is None:
