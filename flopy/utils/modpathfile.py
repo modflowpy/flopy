@@ -306,7 +306,7 @@ class PathlineFile():
                                 ra.time.max(),
                                 ra.k[loc_inds],
                                 ra.i[loc_inds],
-                                ra.k[loc_inds]))
+                                ra.j[loc_inds]))
             pthdata = np.array(pthdata, dtype=[('particleid', np.int),
                                                ('particlegroup', np.int),
                                                ('time', np.float),
