@@ -388,19 +388,13 @@ class SpatialReference(object):
     def _set_xycentergrid(self):
         self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter,
                                                           self.ycenter)
-        self._xcentergrid, self._ycentergrid = self.rotate(self._xcentergrid,
+        self._xcentergrid, self._ycentergrid = self.transform(self._xcentergrid,
                                                           self._ycentergrid,
-                                                          self.rotation,
-                                                          0, self.yedge[0])
-        self._xcentergrid += self.xul
-        self._ycentergrid += self.yul - self.yedge[0]
+                                                          self.rotation)
 
     def _set_xygrid(self):
         self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
-        self._xgrid, self._ygrid = self.rotate(self._xgrid, self._ygrid, self.rotation,
-                                               0, self.yedge[0])
-        self._xgrid += self.xul
-        self._ygrid += self.yul - self.yedge[0]
+        self._xgrid, self._ygrid = self.transform(self._xgrid, self._ygrid)
 
 
     @staticmethod
@@ -428,7 +422,7 @@ class SpatialReference(object):
                                        theta=self.rotation,
                                        xorigin=0, yorigin=0)
         x += self.xul
-        y += self.yll
+        y += 0#self.yll
         return x, y
 
 
@@ -445,24 +439,16 @@ class SpatialReference(object):
         y1 = self.yedge[-1]
 
         # upper left point
-        x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
-        x0r += self.xul
-        y0r += self.yul - self.yedge[0]
+        x0r, y0r = self.transform(x0, y0)
 
         # upper right point
-        x1r, y1r = self.rotate(x1, y0, self.rotation, 0, self.yedge[0])
-        x1r += self.xul
-        y1r += self.yul - self.yedge[0]
+        x1r, y1r = self.transform(x1, y0)
 
         # lower right point
-        x2r, y2r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
-        x2r += self.xul
-        y2r += self.yul - self.yedge[0]
+        x2r, y2r = self.transform(x1, y1)
 
         # lower left point
-        x3r, y3r = self.rotate(x0, y1, self.rotation, 0, self.yedge[0])
-        x3r += self.xul
-        y3r += self.yul - self.yedge[0]
+        x3r, y3r = self.transform(x0, y1)
 
         xmin = min(x0r, x1r, x2r, x3r)
         xmax = max(x0r, x1r, x2r, x3r)
@@ -486,12 +472,8 @@ class SpatialReference(object):
             x1 = x0
             y0 = ymin
             y1 = ymax
-            x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.transform(x0, y0)
+            x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
 
         #horizontal lines
@@ -500,12 +482,8 @@ class SpatialReference(object):
             x1 = xmax
             y0 = self.yedge[i]
             y1 = y0
-            x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.transform(x0, y0)
+            x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
         return lines
 
