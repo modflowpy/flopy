@@ -96,7 +96,7 @@ class SpatialReference(object):
         self.delc = np.atleast_1d(np.array(delc)) * length_multiplier
         self.delr = np.atleast_1d(np.array(delr)) * length_multiplier
 
-        if delr.sum() == 0 or delc.sum() == 0:
+        if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
                 print('Warning: no grid spacing or lower-left corner supplied. Origin will be set to zero.')
                 xll, yll = 0, 0
