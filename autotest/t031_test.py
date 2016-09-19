@@ -83,7 +83,7 @@ def test_get_destination_data():
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
     m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0, rotation=30)
-    sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=1000, yul=1000, rotation=30)
+    sr = SpatialReference(delr=list(m.dis.delr), delc=list(m.dis.delc), xul=1000, yul=1000, rotation=30)
     sr2 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=30)
     m.dis.export(path + '/dis.shp')
 
