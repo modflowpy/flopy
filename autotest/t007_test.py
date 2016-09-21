@@ -1,5 +1,6 @@
 # Test export module
 import os
+import numpy as np
 import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -185,12 +186,34 @@ def test_sr():
                                    delc=delc, top=top, botm=botm)
     bas = flopy.modflow.ModflowBas(ms, ifrefm=True)
 
+    # test instantiation of an empty sr object
+    sr = flopy.utils.reference.SpatialReference()
+
     sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
                                       delc=ms.dis.delc.array, lenuni=3,
                                       xul=321, yul=123, rotation=20)
     assert ms.sr.yul == 100
     ms.sr.xul = 111
     assert ms.sr.xul == 111
+
+    # test that transform for arbitrary coordinates
+    # is working in same as transform for model grid
+    x, y = ms.sr.xcenter, ms.sr.ycenter[0]
+    xt, yt = sr.transform(x, y)
+    assert np.sum(xt - sr.xcentergrid[0]) < 1e-3
+    x, y = ms.sr.xcenter[0], ms.sr.ycenter
+    xt, yt = sr.transform(x, y)
+    assert np.sum(yt - sr.ycentergrid[:, 0]) < 1e-3
+
+    # test input using ul vs ll
+    xll, yll = sr.xll, sr.yll
+    sr2 = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
+                                       delc=ms.dis.delc.array, lenuni=3,
+                                       xll=xll, yll=yll, rotation=20)
+    assert sr2.xul == sr.xul
+    assert sr2.yul == sr.yul
+    assert np.array_equal(sr.xcentergrid, sr2.xcentergrid)
+    assert np.array_equal(sr.ycentergrid, sr2.ycentergrid)
 
     ms.sr.lenuni = 1
     assert ms.sr.lenuni == 1
@@ -342,8 +365,8 @@ if __name__ == '__main__':
     # test_netcdf_overloads()
     # test_netcdf_classmethods()
     # build_netcdf()
-    build_sfr_netcdf()
-    # test_sr()
+    # build_sfr_netcdf()
+    test_sr()
     # test_free_format_flag()
     # test_export_output()
     # for namfile in namfiles:

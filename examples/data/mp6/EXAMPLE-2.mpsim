@@ -1,0 +1,21 @@
+EXAMPLE.mpnam
+EXAMPLE-2.mplist
+    1    2    1    1    2    2    1    1    2    2    1    1
+EXAMPLE-2.endpoint
+    3    1   1.00000
+    1
+PG00            
+    1    1    1   0.000000E+00    1    1
+    5   13   13    5   13   13
+    5
+    1   10   10
+    2   10   10
+    3   10   10
+    4   10   10
+    6   10   10
+    0
+CONSTANT          1  IZONE layer  1
+CONSTANT          1  IZONE layer  2
+CONSTANT          1  IZONE layer  3
+CONSTANT          1  IZONE layer  4
+CONSTANT          2  IZONE layer  5

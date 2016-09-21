@@ -146,6 +146,31 @@ class MfList(object):
 
         return new_dict
 
+    def drop(self, fields):
+        """drop fields from an MfList
+
+        Parameters
+        ----------
+        fields : list or set of field names to drop
+
+        Returns
+        -------
+        dropped : MfList without the dropped fields
+        """
+        if not isinstance(fields, list):
+            fields = [fields]
+        names = [n for n in self.dtype.names if n not in fields]
+        dtype = np.dtype([(k, d) for k, d in self.dtype.descr if k not in fields])
+        spd = {}
+        for k, v in self.data.items():
+            # because np 1.9 doesn't support indexing by list of columns
+            newarr = np.array([self.data[k][n] for n in names]).transpose()
+            newarr = np.array(list(map(tuple, newarr)), dtype=dtype).view(np.recarray)
+            for n in dtype.names:
+                newarr[n] = self.data[k][n]
+            spd[k] = newarr
+        return MfList(self.package, spd, dtype=dtype)
+
     @property
     def data(self):
         return self.__data
@@ -828,8 +853,9 @@ class MfList(object):
             raise NotImplementedError()
         arrays = {}
         for name in self.dtype.names[i0:]:
-            arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
-            arrays[name] = arr.copy()
+            if not self.dtype.fields[name][0] == object:
+                arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
+                arrays[name] = arr.copy()
 
         # if this kper is not found
         if kper not in self.data.keys():

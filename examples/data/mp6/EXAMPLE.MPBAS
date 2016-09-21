@@ -1,0 +1,17 @@
+  1.000E+30  1.00E+20  HNOFLO,HDRY
+    2  NDefaultIFACE
+RECHARGE        
+   6  DefaultIFACE
+ET              
+   6  DefaultIFACE
+ 1 0 0 0 0
+CONSTANT          1  IBNDMP layer  1
+CONSTANT          1  IBNDMP layer  2
+CONSTANT          1  IBNDMP layer  3
+CONSTANT          1  IBNDMP layer  4
+CONSTANT          1  IBNDMP layer  5
+CONSTANT   3.000000E-01  POR layer  1
+CONSTANT   3.000000E-01  POR layer  2
+CONSTANT   3.000000E-01  POR layer  3
+CONSTANT   3.000000E-01  POR layer  4
+CONSTANT   3.000000E-01  POR layer  5

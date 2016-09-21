@@ -208,7 +208,15 @@ class BaseModel(object):
             if pname in pp.name:
                 if self.verbose:
                     print('removing Package: ', pp.name)
-                self.packagelist.pop(i)
+
+                # Remove the package object from the model's packagelist
+                p = self.packagelist.pop(i)
+
+                # Remove the package unit number from the list of package
+                # units stored with the model
+                for iu in p.unit_number:
+                    if iu in self.package_units:
+                        self.package_units.remove(iu)
                 return
         raise StopIteration(
             'Package name ' + pname + ' not found in Package list')
@@ -312,7 +320,8 @@ class BaseModel(object):
                 ' either fname or unit must be passed to remove_external()')
         return
 
-    def add_existing_package(self, filename,ptype=None, copy_to_model_ws=True):
+    def add_existing_package(self, filename, ptype=None,
+                             copy_to_model_ws=True):
         """ add an existing package to a model instance.
         Parameters
         ----------
