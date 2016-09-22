@@ -8,6 +8,14 @@ import numpy.lib.recfunctions as rf
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..utils.reference import getprj
 
+def import_shapefile():
+    try:
+        import shapefile as sf
+        return sf
+    except Exception as e:
+        raise Exception("io.to_shapefile(): error " +
+                        "importing shapefile - try pip install pyshp")
+
 def write_gridlines_shapefile(filename, sr):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative
@@ -94,6 +102,33 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
                 rec.append(array[i, j])
             wr.record(*rec)
     wr.save(filename)
+
+def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9):
+
+    sf = import_shapefile()
+    verts = sr.vertices
+
+    w = sf.Writer(5) # polygon
+    w.autoBalance = 1
+    # set up the attribute fields
+    names = ['row', 'column'] + list(array_dict.keys())
+    names = enforce_10ch_limit(names)
+    dtypes = [('row', np.dtype('int')), ('column', np.dtype('int'))] + \
+             [(name, arr.dtype) for name, arr in array_dict.items()]
+
+    # set-up array of attributes of shape ncells x nattributes
+    col = list(range(1, sr.ncol + 1)) * sr.nrow
+    row = sorted(list(range(1, sr.nrow + 1)) * sr.ncol)
+    at = np.vstack([row, col] + [arr.ravel() for arr in array_dict.values()]).transpose()
+    at[np.isnan(at)] = nan_val
+
+    for i, npdtype in enumerate(dtypes):
+        w.field(names[i], *get_pyshp_field_info(npdtype[1].name))
+
+    for i, r in enumerate(at):
+        w.poly([verts[i]])
+        w.record(*r)
+    w.save(filename)
 
 
 def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None,

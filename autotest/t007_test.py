@@ -252,7 +252,6 @@ def test_sr_scaling():
     xur, yur = ms3.sr.get_vertices(0, ncol-1)[3]
     assert xur == xll + ms3.sr.length_multiplier * delr * ncol
     assert yur == yll + ms3.sr.length_multiplier * delc * nrow
-    assert True
 
 def test_netcdf_classmethods():
     import os

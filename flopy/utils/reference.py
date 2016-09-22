@@ -450,9 +450,7 @@ class SpatialReference(object):
         y += self.yll
         x, y = SpatialReference.rotate(x, y, theta=self.rotation,
                                        xorigin=self.xll, yorigin=self.yll)
-
         return x, y
-
 
     def get_extent(self):
         """
@@ -514,7 +512,6 @@ class SpatialReference(object):
             x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
         return lines
-
 
     def get_xcenter_array(self):
         """
@@ -581,6 +578,23 @@ class SpatialReference(object):
         pts.append([xgrid[i+1, j+1], ygrid[i+1, j+1]])
         pts.append([xgrid[i, j+1], ygrid[i, j+1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
+        return pts
+
+    @property
+    def vertices(self):
+        """Get vertices for whole grid.
+
+        Returns
+        -------
+        pts : list
+            List of cell vertices in C-style (row-major) order (same as np.ravel())
+        """
+        xgrid, ygrid = self.xgrid, self.ygrid
+        ij = list(map(list, zip(xgrid[:-1, :-1].ravel(), ygrid[:-1, :-1].ravel())))
+        i1j = map(list, zip(xgrid[1:, :-1].ravel(), ygrid[1:, :-1].ravel()))
+        i1j1 = map(list, zip(xgrid[1:, 1:].ravel(), ygrid[1:, 1:].ravel()))
+        ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
+        pts = list(map(list, zip(ij, i1j, i1j1, ij1, ij)))
         return pts
 
     def interpolate(self, a, xi, method='nearest'):
