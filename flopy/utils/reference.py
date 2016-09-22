@@ -93,8 +93,8 @@ class SpatialReference(object):
             if isinstance(delrc, float) or isinstance(delrc, int):
                 raise TypeError("delr and delcs must be an array or sequences equal in length to the number of rows/columns.")
 
-        self.delc = np.atleast_1d(np.array(delc)) * length_multiplier
-        self.delr = np.atleast_1d(np.array(delr)) * length_multiplier
+        self.delc = np.atleast_1d(np.array(delc)) #* length_multiplier
+        self.delr = np.atleast_1d(np.array(delr)) #* length_multiplier
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
@@ -111,8 +111,9 @@ class SpatialReference(object):
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
-        self.set_spatialreference(xul, yul, xll, yll, rotation)
         self.length_multiplier = length_multiplier
+        self.set_spatialreference(xul, yul, xll, yll, rotation)
+
 
     @property
     def proj4_str(self):
@@ -341,24 +342,24 @@ class SpatialReference(object):
         # Set origin and rotation
         if xul is None:
             if xll is not None:
-                self.xul = xll - np.sin(theta) * self.yedge[0]
+                self.xul = xll - np.sin(theta) * self.yedge[0] * self.length_multiplier
             else:
                 self.xul = 0.
         else:
             self.xul = xul
         if yul is None:
             if yll is not None:
-                self.yul = yll + np.cos(theta) * self.yedge[0]
+                self.yul = yll + np.cos(theta) * self.yedge[0] * self.length_multiplier
             else:
-                self.yul = np.add.reduce(self.delc)
+                self.yul = np.add.reduce(self.delc) * self.length_multiplier
         else:
             self.yul = yul
         if xll is None:
-            self.xll = self.xul + np.sin(theta) * self.yedge[0]
+            self.xll = self.xul + np.sin(theta) * self.yedge[0] * self.length_multiplier
         else:
             self.xll = xll
         if yll is None:
-            self.yll = self.yul - np.cos(theta) * self.yedge[0]
+            self.yll = self.yul - np.cos(theta) * self.yedge[0] * self.length_multiplier
         else:
             self.yll = yll
         self.rotation = rotation
@@ -443,11 +444,11 @@ class SpatialReference(object):
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
+        x *= self.length_multiplier
+        y *= self.length_multiplier
         x += self.xll
         y += self.yll
-        x, y = SpatialReference.rotate(x * self.length_multiplier,
-                                       y * self.length_multiplier,
-                                       theta=self.rotation,
+        x, y = SpatialReference.rotate(x, y, theta=self.rotation,
                                        xorigin=self.xll, yorigin=self.yll)
 
         return x, y

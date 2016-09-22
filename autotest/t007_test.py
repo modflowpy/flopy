@@ -228,6 +228,31 @@ def test_sr():
     ms1.sr = sr
     assert ms1.sr == ms.sr
 
+def test_sr_scaling():
+    nlay, nrow, ncol = 1, 10, 5
+    delr, delc = 250, 500
+    xll, yll = 286.80, 29.03
+    # test scaling of length units
+    ms2 = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                                   delc=delc)
+    ms2.sr = flopy.utils.SpatialReference(delr=ms2.dis.delr.array, delc=ms2.dis.delc.array, lenuni=3,
+                                          xll=xll, yll=yll, rotation=0)
+    ms2.sr.epsg = 26715
+    ms2.dis.export(os.path.join('temp', 'dis2.shp'))
+    ms3 = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                                   delc=delc)
+    ms3.sr = flopy.utils.SpatialReference(delr=ms3.dis.delr.array, delc=ms2.dis.delc.array, lenuni=3,
+                                          length_multiplier=.3048,
+                                          xll=xll, yll=yll, rotation=0)
+    ms3.dis.export(os.path.join('temp', 'dis3.shp'), epsg=26715)
+    assert np.array_equal(ms3.sr.get_vertices(nrow-1, 0)[1], [ms3.sr.xll, ms3.sr.yll])
+    assert np.array_equal(ms3.sr.get_vertices(nrow-1, 0)[1], ms2.sr.get_vertices(nrow-1, 0)[1])
+    xur, yur = ms3.sr.get_vertices(0, ncol-1)[3]
+    assert xur == xll + ms3.sr.length_multiplier * delr * ncol
+    assert yur == yll + ms3.sr.length_multiplier * delc * nrow
+    assert True
 
 def test_netcdf_classmethods():
     import os
@@ -332,7 +357,8 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     #build_netcdf()
     #build_sfr_netcdf()
-    test_sr()
+    #test_sr()
+    test_sr_scaling()
     #test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:

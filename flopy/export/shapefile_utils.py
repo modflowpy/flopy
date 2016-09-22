@@ -96,7 +96,8 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     wr.save(filename)
 
 
-def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None, **kwargs):
+def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None,
+                                  **kwargs):
     """
     Wrapper function for writing a shapefile of model data.  If package_names is
     not None, then search through the requested packages looking for arrays that
@@ -182,9 +183,15 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                                 name = shape_attr_name(u2d.name)
                                 name += '_{:03d}'.format(i + 1)
                                 array_dict[name] = u2d.array
-
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.sr, array_dict)
+    # write the projection file
+    if ml.sr.epsg is None:
+        epsg = kwargs.get('epsg', None)
+    else:
+        epsg = ml.sr.epsg
+    prj = kwargs.get('prj', None)
+    write_prj(filename, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -374,8 +381,10 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
             w.point(*geoms[i].pyshp_parts)
             w.record(*r)
     w.save(shpname)
+    write_prj(shpname, epsg, prj)
     print('wrote {}'.format(shpname))
 
+def write_prj(shpname, epsg=None, prj=None):
     # write the projection file
     prjname = shpname.split('.')[0] + '.prj'
     # write projection file from epsg code
