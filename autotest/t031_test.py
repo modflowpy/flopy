@@ -169,7 +169,15 @@ def test_get_destination_data():
                            direction='ending',
                            sr=m.sr)
 
-if __name__ == '__main__':
+def test_loadtxt():
+    from flopy.utils.flopy_io import loadtxt
+    pthfile = os.path.join(path, 'EXAMPLE-3.pathline')
+    pthld = PathlineFile(pthfile)
+    ra = loadtxt(pthfile, delimiter=' ', skiprows=3, dtype=pthld.dtype)
+    ra2 = loadtxt(pthfile, delimiter=' ', skiprows=3, dtype=pthld.dtype, use_pandas=False)
+    assert np.array_equal(ra, ra2)
 
+if __name__ == '__main__':
     test_mpsim()
     test_get_destination_data()
+    test_loadtxt()
