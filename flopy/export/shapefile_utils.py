@@ -403,16 +403,17 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
         w.field(names[i], *get_pyshp_field_info(npdtype[1]))
 
     # write the geometry and attributes for each record
+    ralist = recarray.tolist()
     if geomtype == 5:
-        for i, r in enumerate(recarray):
+        for i, r in enumerate(ralist):
             w.poly(geoms[i].pyshp_parts)
             w.record(*r)
     elif geomtype == 3:
-        for i, r in enumerate(recarray):
+        for i, r in enumerate(ralist):
             w.line(geoms[i].pyshp_parts)
             w.record(*r)
     elif geomtype == 1:
-        for i, r in enumerate(recarray):
+        for i, r in enumerate(ralist):
             w.point(*geoms[i].pyshp_parts)
             w.record(*r)
     w.save(shpname)

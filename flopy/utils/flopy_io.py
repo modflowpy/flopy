@@ -235,7 +235,7 @@ def loadtxt(file, delimiter=None, dtype=None, skiprows=0, use_pandas=True, **kwa
         If true, the much faster pandas.read_csv method is used.
     kwargs : dict
         Keyword arguments passed to numpy.loadtxt or pandas.read_csv.
-        
+
     Returns
     -------
     ra : np.recarray

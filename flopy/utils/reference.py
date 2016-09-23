@@ -77,6 +77,10 @@ class SpatialReference(object):
     ycentergrid : ndarray
         numpy meshgrid of row centers
 
+    vertices : 1D array
+        1D array of cell vertices for whole grid in C-style (row-major) order (same as np.ravel())
+
+
     Notes
     -----
 
@@ -251,6 +255,7 @@ class SpatialReference(object):
         self._ygrid = None
         self._ycentergrid = None
         self._xcentergrid = None
+        self._vertices = None
 
     @property
     def nrow(self):
@@ -582,20 +587,17 @@ class SpatialReference(object):
 
     @property
     def vertices(self):
-        """Get vertices for whole grid.
+        if self._vertices is None:
+            self._set_cell_vertices()
+        return self._vertices
 
-        Returns
-        -------
-        pts : list
-            List of cell vertices in C-style (row-major) order (same as np.ravel())
-        """
+    def _set_vertices(self):
         xgrid, ygrid = self.xgrid, self.ygrid
         ij = list(map(list, zip(xgrid[:-1, :-1].ravel(), ygrid[:-1, :-1].ravel())))
         i1j = map(list, zip(xgrid[1:, :-1].ravel(), ygrid[1:, :-1].ravel()))
         i1j1 = map(list, zip(xgrid[1:, 1:].ravel(), ygrid[1:, 1:].ravel()))
         ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
-        pts = list(map(list, zip(ij, i1j, i1j1, ij1, ij)))
-        return pts
+        self._vertices = np.array(map(list, zip(ij, i1j, i1j1, ij1, ij)))
 
     def interpolate(self, a, xi, method='nearest'):
         """
