@@ -748,7 +748,7 @@ class MfList(object):
                                       names=names, filenames=filenames,
                                       mflay=mflay, **kwargs)
         else:
-            arr_dict = self.to_array(kper)
+            arr_dict = self.to_array(kper, mask=True)
 
             try:
                 arr = arr_dict[key]
@@ -895,7 +895,9 @@ class MfList(object):
                 idx = cnt > 0.
                 arr[idx] /= cnt[idx]
             if mask:
-                arr[cnt == 0] = np.NaN
+                arr = np.ma.masked_where(cnt == 0., arr)
+                arr[cnt == 0.] = np.NaN
+
             arrays[name] = arr.copy()
         # elif mask:
         #     for name, arr in arrays.items():
