@@ -977,9 +977,15 @@ class ModflowSfr2(Package):
 
             if i == 0:
                 f_sfr.write(' '.join(fmts[1:4]).format(thickm, elevupdn, width) + ' ')
-                f_sfr.write(' '.join(fmts[5:8]).format(thts, thti, eps) + ' ')
+                if self.isfropt in [4, 5]:
+                    f_sfr.write(' '.join(fmts[5:8]).format(thts, thti, eps) + ' ')
+
                 if self.isfropt == 5:
                     f_sfr.write(fmts[8].format(uhc) + ' ')
+                    
+            elif i > 0 and self.isfropt == 0:
+                f_sfr.write(' '.join(fmts[1:4]).format(thickm, elevupdn, width) + ' ')
+
         elif self.isfropt in [0, 4, 5] and icalc >= 2:
             f_sfr.write(fmts[0].format(hcond) + ' ')
 
@@ -1386,7 +1392,7 @@ class check:
         self._txt_footer(headertxt, txt, 'overlapping conductance')
 
     def elevations(self):
-        """checks for multiple SFR reaches in one cell; and whether more than one reach has Cond > 0
+        """checks streambed elevations for downstream rises and inconsistencies with model grid
         """
         headertxt = 'Checking segment_data for downstream rises in streambed elevation...\n'
         txt = ''
@@ -1520,7 +1526,7 @@ class check:
             reach_data = recfunctions.append_fields(reach_data, names='modeltop', data=tops, asrecarray=True)
 
             txt += self._boolean_compare(reach_data[['k', 'i', 'j', 'iseg', 'ireach',
-                                                     'strtop', 'modeltop', 'reachID']].copy(),
+                                                     'strtop', 'modeltop', 'strhc1', 'reachID']].copy(),
                                          col1='strtop', col2='modeltop',
                                          level0txt='{} reaches encountered with streambed above model top.',
                                          level1txt='Model top violations:',

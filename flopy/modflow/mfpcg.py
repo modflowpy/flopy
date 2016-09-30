@@ -38,7 +38,7 @@ class ModflowPcg(Package):
         upper bound on the maximum eigenvalue is 2.0, or whether the estimate
         will be calculated. nbpol = 2 is used to specify the value is 2.0;
         for any other value of nbpol, the estimate is calculated. Convergence
-        is generally insensitive to this parameter. (default is 2).
+        is generally insensitive to this parameter. (default is 0).
     iprpcg : int
         solver print out interval. (default is 0).
     mutpcg : int

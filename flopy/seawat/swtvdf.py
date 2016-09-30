@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
-
+from ..utils.util_array import Transient3d
 
 class SeawatVdf(Package):
     """
@@ -137,7 +137,9 @@ class SeawatVdf(Package):
         If INDENSE = 2, values read for the DENSE array are assumed to
         represent solute concentration, and will be converted to density
         values using the equation of state.
-    dense : float or array of floats (nlay, nrow, ncol)
+    dense : Transient3d
+        A float or array of floats (nlay, nrow, ncol) should be assigned as
+        values to a dictionary related to keys of period number.  dense
         is the fluid density array read for each layer using the MODFLOW-2000
         U2DREL array reader. The DENSE array is read only if MT3DRHOFLG is
         equal to zero. The DENSE array may also be entered in terms of solute
@@ -164,6 +166,11 @@ class SeawatVdf(Package):
     kwargs, it will overwrite mtdnconc. Same goes for denseslp, which has
     become drhodc.
 
+    When loading an existing SEAWAT model that has DENSE specified as
+    concentrations, the load process will convert those concentrations into
+    density values using the equation of state.  This is only relevant when
+    mtdnconc (or mt3drhoflg) is set to zero.
+
     Examples
     --------
 
@@ -175,7 +182,7 @@ class SeawatVdf(Package):
     unitnumber = 37
     def __init__(self, model, mtdnconc=1, mfnadvfd=1, nswtcpl=1, iwtable=1,
                  densemin=1.000, densemax=1.025, dnscrit=1e-2, denseref=1.000,
-                 denseslp=.025, crhoref=0, firstdt=0.001, indense=0,
+                 denseslp=.025, crhoref=0, firstdt=0.001, indense=1,
                  dense=1.000, nsrhoeos=1, drhodprhd=4.46e-3, prhdref=0.,
                  extension='vdf', unitnumber=None, **kwargs):
         if unitnumber is None:
@@ -197,9 +204,13 @@ class SeawatVdf(Package):
         self.prhdref = prhdref
         self.firstdt = firstdt
         self.indense = indense
-        if dense is not None:
-            self.dense = Util3d(model, (nlay, nrow, ncol), np.float32, dense,
-                                 name='dense')
+        if self.mtdnconc == 0:
+            self.dense = Transient3d(model, (nlay, nrow, ncol), np.float32,
+                                     dense, name='dense_',
+                                     locat=self.unit_number[0])
+        else:
+            # dense not needed for most cases so setting to None
+            self.dense = None
         self.parent.add_package(self)
         return
 
@@ -227,7 +238,7 @@ class SeawatVdf(Package):
 
         # item 4
         if self.mtdnconc >= 0:
-            if self.nsrhoeos is 1:
+            if self.nsrhoeos == 1:
                 f_vdf.write('%10.4f%10.4f\n' % (self.denseref, self.denseslp))
             else:
                 f_vdf.write('%10.4f%10.4f\n' % (self.denseref,
@@ -238,7 +249,7 @@ class SeawatVdf(Package):
                                                   self.drhodprhd,
                                                   self.prhdref))
             f_vdf.write('%10i\n' % self.nsrhoeos)
-            if self.nsrhoeos is 1:
+            if self.nsrhoeos == 1:
                 f_vdf.write('%10i%10.4f%10.4f\n' % (1, self.denseslp,
                                                     self.crhoref))
             else:
@@ -251,13 +262,21 @@ class SeawatVdf(Package):
         # item 5
         f_vdf.write('%10f\n' % (self.firstdt))
 
-        # item 6
-        if (self.mtdnconc == 0):
-            f_vdf.write('%10i\n' % (self.indense))
+        # Transient DENSE array
+        if self.mtdnconc == 0:
 
-        # item 7
-            if (self.indense > 0):
-                f_vdf.write(self.dense.get_file_entry())
+            nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+            for kper in range(nper):
+
+                itmp, file_entry_dense = self.dense.get_kper_entry(kper)
+
+                # item 6 (and possibly 7)
+                if itmp > 0:
+                    f_vdf.write('%10i\n' % (self.indense))
+                    f_vdf.write(file_entry_dense)
+
+                else:
+                    f_vdf.write('%10i\n' % (itmp))
 
         f_vdf.close()
         return
@@ -316,7 +335,9 @@ class SeawatVdf(Package):
                 break
 
         # Determine problem dimensions
-        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        nrow, ncol, nlay, npertemp = model.get_nrow_ncol_nlay_nper()
+        if nper is None:
+            nper = npertemp
 
         # Item 1: MT3DRHOFLG MFNADVFD NSWTCPL IWTABLE - line already read above
         if model.verbose:
@@ -401,20 +422,35 @@ class SeawatVdf(Package):
         indense = None
         dense = None
         if mt3drhoflg == 0:
-            if model.verbose:
-                print('   loading INDENSE...')
-            line = f.readline()
-            t = line.strip().split()
-            indense = int(t[0])
 
-            if indense > 0:
-                dense = [0] * nlay
-                for k in range(nlay):
-                    if model.verbose:
-                        print('   loading DENSE layer {0:3d}...'.format(k + 1))
-                    t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                     'dense', ext_unit_dict)
-                    dense[k] = t
+            # Create dense as a Transient3D record
+            dense = {}
+
+            for iper in range(nper):
+
+                if model.verbose:
+                    print('   loading INDENSE '
+                          'for stress period {}...'.format(iper + 1))
+                line = f.readline()
+                t = line.strip().split()
+                indense = int(t[0])
+
+                if indense > 0:
+                    name = 'DENSE_StressPeriod_{}'.format(iper)
+                    t = Util3d.load(f, model, (nlay, nrow, ncol),
+                                    np.float32, name, ext_unit_dict)
+                    if indense == 2:
+                        t = t.array
+                        t = denseref + drhodc * t
+                        t = Util3d(model, (nlay, nrow, ncol), np.float32, t,
+                                   name, ext_unit_dict=ext_unit_dict)
+                    dense[iper] = t
+
+            dense = Transient3d(model, (nlay, nrow, ncol), np.float32,
+                                dense, name='dense_')
+
+            # Set indense = 1 because all concentrations converted to density
+            indense = 1
 
         # Construct and return vdf package
         vdf = SeawatVdf(model, mt3drhoflg=mt3drhoflg, mfnadvfd=mfnadvfd,
@@ -423,5 +459,6 @@ class SeawatVdf(Package):
                         dnscrit=dnscrit, denseref=denseref, drhodc=drhodc,
                         drhodprhd=drhodprhd, prhdref=prhdref,
                         nsrhoeos=nsrhoeos, mtrhospec=mtrhospec,
-                        crhoref=crhoref, indense=indense, dense=dense)
+                        crhoref=crhoref, firstdt=firstdt, indense=indense,
+                        dense=dense)
         return vdf

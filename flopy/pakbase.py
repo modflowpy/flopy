@@ -1,6 +1,6 @@
 """
 pakbase module
-  This module contains the base package classs from which
+  This module contains the base package class from which
   all of the other packages inherit from.
 
 """
@@ -240,8 +240,12 @@ class Package(object):
 
             # check for confined layers above convertable layers
             confined = False
+            thickstrt = False
+            for option in self.options:
+                if option.lower() == 'thickstrt':
+                    thickstrt = True
             for i, l in enumerate(self.laytyp.array.tolist()):
-                if l == 0 or l < 0 and self.thickstrt:
+                if l == 0 or l < 0 and thickstrt:
                     confined = True
                     continue
                 if confined and l > 0:

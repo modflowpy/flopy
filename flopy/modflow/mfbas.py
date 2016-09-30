@@ -26,6 +26,9 @@ class ModflowBas(Package):
         The ibound array (the default is 1).
     strt : array of floats, optional
         An array of starting heads (the default is 1.0).
+    ifrefm : bool, optional
+        Indication if data should be read using free format (the default is 
+        True).
     ixsec : bool, optional
         Indication of whether model is cross sectional or not (the default is
         False).
@@ -40,7 +43,7 @@ class ModflowBas(Package):
     hnoflo : float
         Head value assigned to inactive cells (default is -999.99).
     extension : str, optional
-        File extension (default is 'bas'.
+        File extension (default is 'bas').
     unitnumber : int, optional
         FORTRAN unit number for this package (default is 13).
 

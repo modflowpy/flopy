@@ -228,3 +228,43 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
 
     wel = ModflowWel(model,stress_period_data=sp_data)
     return wel
+
+def loadtxt(file, delimiter=None, dtype=None, skiprows=0, use_pandas=True, **kwargs):
+    """Use pandas if it is available to load a text file
+    (significantly faster than n.loadtxt or genfromtxt;
+    see http://stackoverflow.com/questions/18259393/numpy-loading-csv-too-slow-compared-to-matlab)
+
+    Parameters
+    ----------
+    file : file or str
+        File, filename, or generator to read.
+    delimiter : str, optional
+        The string used to separate values. By default, this is any whitespace.
+    dtype : data-type, optional
+        Data-type of the resulting array
+    skiprows : int, optional
+        Skip the first skiprows lines; default: 0.
+    use_pandas : bool
+        If true, the much faster pandas.read_csv method is used.
+    kwargs : dict
+        Keyword arguments passed to numpy.loadtxt or pandas.read_csv.
+
+    Returns
+    -------
+    ra : np.recarray
+        Numpy record array of file contents.
+    """
+    try:
+        import pandas as pd
+        if delimiter is None:
+            kwargs['delim_whitespace'] = True
+        if isinstance(dtype, np.dtype) and 'names' not in kwargs:
+            kwargs['names'] = dtype.names
+    except:
+        pd = False
+
+    if use_pandas and pd:
+        df = pd.read_csv(file, dtype=dtype, skiprows=skiprows, **kwargs)
+        return df.to_records(index=False)
+    else:
+        return np.loadtxt(file, dtype=dtype, skiprows=skiprows, **kwargs)
