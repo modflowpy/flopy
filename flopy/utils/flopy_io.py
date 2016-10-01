@@ -40,11 +40,10 @@ def line_parse(line):
     Convert a line of text into to a list of values.  This handles the
     case where a free formatted MODFLOW input file may have commas in
     it.
-
     """
-    line = line.split(';')[0] # ; denotes comment
+    for comment_flag in [';', '#']:
+        line = line.split(comment_flag)[0]
     line = line.replace(',', ' ')
-    line = line.split(';')[0] # discard comments
     return line.strip().split()
 
 def pop_item(line, dtype=str):
