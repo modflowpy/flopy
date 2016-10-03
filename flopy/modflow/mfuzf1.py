@@ -492,7 +492,8 @@ class ModflowUzf1(Package):
             f = open(filename, 'r')
         # dataset 0 -- header
         while True:
-            line = next(f)
+            line = f.readline() # can't use next() because util2d uses readline()
+            # (can't mix iteration types in python 2)
             if line[0] != '#':
                 break
         # determine problem dimensions
@@ -542,7 +543,7 @@ class ModflowUzf1(Package):
         uzgag = {}
         if nuzgag > 0:
             for i in range(nuzgag):
-                iuzrow, iuzcol, iftunit, iuzopt = _parse8(next(f))
+                iuzrow, iuzcol, iftunit, iuzopt = _parse8(f.readline())
                 tmp = [iuzrow, iuzcol] if iftunit > 0 else []
                 tmp.append(iftunit)
                 if iuzopt > 0:
@@ -552,7 +553,7 @@ class ModflowUzf1(Package):
         # dataset 9
         for per in range(nper):
             print('stress period {}:'.format(per+1))
-            line = line_parse(next(f))
+            line = line_parse(f.readline())
             nuzf1 = _pop_item(line, int)
 
             # dataset 10
@@ -561,19 +562,19 @@ class ModflowUzf1(Package):
 
             if ietflg > 0:
                 # dataset 11
-                line = line_parse(next(f))
+                line = line_parse(f.readline())
                 nuzf2 = _pop_item(line, int)
                 if nuzf2 > 0:
                     # dataset 12
                     load_util2d('pet', np.float32, per=per)
                 # dataset 13
-                line = line_parse(next(f))
+                line = line_parse(f.readline())
                 nuzf3 = _pop_item(line, int)
                 if nuzf3 > 0:
                     # dataset 14
                     load_util2d('extdp', np.float32, per=per)
                 # dataset 15
-                line = line_parse(next(f))
+                line = line_parse(f.readline())
                 nuzf4 = _pop_item(line, int)
                 if nuzf4 > 0:
                     # dataset 16
