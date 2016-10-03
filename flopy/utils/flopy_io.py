@@ -254,11 +254,12 @@ def loadtxt(file, delimiter=None, dtype=None, skiprows=0, use_pandas=True, **kwa
         Numpy record array of file contents.
     """
     try:
-        import pandas as pd
-        if delimiter is None:
-            kwargs['delim_whitespace'] = True
-        if isinstance(dtype, np.dtype) and 'names' not in kwargs:
-            kwargs['names'] = dtype.names
+        if use_pandas:
+            import pandas as pd
+            if delimiter.isspace():
+                kwargs['delim_whitespace'] = True
+            if isinstance(dtype, np.dtype) and 'names' not in kwargs:
+                kwargs['names'] = dtype.names
     except:
         pd = False
 

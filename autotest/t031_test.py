@@ -178,6 +178,6 @@ def test_loadtxt():
     assert np.array_equal(ra, ra2)
 
 if __name__ == '__main__':
-    test_mpsim()
-    test_get_destination_data()
+    #test_mpsim()
+    #test_get_destination_data()
     test_loadtxt()
