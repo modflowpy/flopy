@@ -13,7 +13,7 @@ import numpy as np
 
 cpth = os.path.join('temp/uzf')
 if not os.path.isdir(cpth):
-    os.mkdirs(cpth)
+    os.makedirs(cpth)
 
 def test_load_and_write():
 
