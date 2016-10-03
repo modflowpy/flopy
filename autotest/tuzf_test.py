@@ -37,7 +37,7 @@ def test_load_and_write():
     m.model_ws = cpth
     uzf.write_file()
     m2 = flopy.modflow.Modflow('UZFtest2_2', model_ws=cpth)
-    dis = flopy.modflow.ModflowDis(nrow=m.nrow, ncol=m.ncol, model=m2)
+    dis = flopy.modflow.ModflowDis(nrow=m.nrow, ncol=m.ncol, nper=12, model=m2)
     uzf2 = flopy.modflow.ModflowUzf1.load(cpth + '/UZFtest2.uzf', m2)
     attrs = dir(uzf)
     for attr in attrs:
@@ -45,6 +45,12 @@ def test_load_and_write():
         if isinstance(a1, Util2d):
             a2 = uzf2.__getattribute__(attr)
             assert a1 == a2
+        # some parameters such as finf are stored as lists of util2d arrays
+        elif attr in ['finf', 'extwc', 'pet', 'extdp']:
+            if isinstance(a1, list):
+                l2 = uzf2.__getattribute__(attr)
+                for i, a in enumerate(a1):
+                    assert a == l2[i]
 
 def test_create():
 
@@ -54,6 +60,11 @@ def test_create():
         shutil.copy(f, cpth)
     m = flopy.modflow.Modflow.load('UZFtest2.nam', version='mf2005', exe_name='mf2005',
                                    model_ws=cpth, load_only=['ghb', 'dis', 'bas6', 'oc', 'sip', 'lpf', 'sfr'])
+    rm = [True if '.uz' in f else False for f in m.external_fnames]
+    m.external_fnames = [f for i, f in enumerate(m.external_fnames) if not rm[i]]
+    m.external_binflag = [f for i, f in enumerate(m.external_binflag) if not rm[i]]
+    m.external_output = [f for i, f in enumerate(m.external_output) if not rm[i]]
+    m.external_units = [f for i, f in enumerate(m.external_output) if not rm[i]]
 
     datpth = os.path.join('..', 'examples', 'data', 'uzf_examples')
     irnbndpth = os.path.join(datpth, 'irunbnd.dat')
@@ -64,6 +75,8 @@ def test_create():
 
     finf = np.loadtxt(os.path.join(datpth, 'finf.dat'))
     finf = np.reshape(finf, (m.nper, m.nrow, m.ncol))
+
+    extwc = np.loadtxt(os.path.join(datpth, 'extwc.dat'))
 
     uzgag = {-68: [-68],
              65: [3, 6, 65, 1],
@@ -81,13 +94,32 @@ def test_create():
                                     vks=vks,
                                     finf=finf,
                                     eps=3.5,
-                                    thts=0.35,
+                                    thts=0.3,
                                     pet=5.000000E-08,
                                     extdp=15.,
-                                    extwc=0.1
+                                    extwc=extwc
                                     )
     m.write_input()
 
+    m2 = flopy.modflow.Modflow.load('UZFtest2.nam', version='mf2005', exe_name='mf2005',
+                                   verbose=True,
+                                   model_ws=os.path.split(gpth)[0])
+    # verify that all of the arrays in the created UZF package are the same as those in the loaded example
+    attrs = dir(uzf)
+    for attr in attrs:
+        print(attr)
+        a1 = uzf.__getattribute__(attr)
+        if isinstance(a1, Util2d):
+            a2 = m2.uzf.__getattribute__(attr)
+            assert np.array_equal(a1.array, a2.array)
+        elif attr in ['finf', 'extwc', 'pet', 'extdp']:
+            if isinstance(a1, list):
+                l2 = m2.uzf.__getattribute__(attr)
+                for i, a in enumerate(a1):
+                    # the created finf arrays all have a mult of 1
+                    assert np.array_equal(a.array, l2[i].array)
+
+
 if __name__ == '__main__':
-    #test_load_and_write()
+    test_load_and_write()
     test_create()

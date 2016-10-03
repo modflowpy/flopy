@@ -303,40 +303,43 @@ class ModflowUzf1(Package):
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
         self.finf = []
-        if isinstance(finf, np.ndarray):
-            finf = [finf[per, :, :] for per in range(finf.shape[0])]
-        if not isinstance(finf, list):
-            finf = [finf]
-        for i, a in enumerate(finf):
+        for i, a in enumerate(self._2list(finf)):
             b = Util2d(model, (nrow, ncol), np.float32, a, name='finf_' + str(i + 1))
             self.finf.append(b)
         if ietflg > 0:
             # Data Set 12
             # [PET (NCOL, NROW)] – U2DREL
             self.pet = []
-            if (not isinstance(pet, list)):
-                pet = [pet]
-            for i, a in enumerate(pet):
+            for i, a in enumerate(self._2list(pet)):
                 b = Util2d(model, (nrow, ncol), np.float32, a, name='pet_' + str(i + 1))
                 self.pet.append(b)
             # Data Set 14
             # [EXTDP (NCOL, NROW)] – U2DREL
             self.extdp = []
-            if not isinstance(extdp, list):
-                extdp = [extdp]
-            for i, a in enumerate(extdp):
+            for i, a in enumerate(self._2list(extdp)):
                 b = Util2d(model, (nrow, ncol), np.float32, a, name='extdp_' + str(i + 1))
                 self.extdp.append(b)
             # Data Set 16
             # [EXTWC (NCOL, NROW)] – U2DREL
             if iuzfopt > 0:
                 self.extwc = []
-                if (not isinstance(extwc, list)):
-                    extwc = [extwc]
-                for i, a in enumerate(extwc):
+                for i, a in enumerate(self._2list(extwc)):
                     b = Util2d(model, (nrow, ncol), np.float32, a, name='extwc_' + str(i + 1))
                     self.extwc.append(b)
         self.parent.add_package(self)
+
+    def _2list(self, arg):
+        # input as a 3D array
+        if isinstance(arg, np.ndarray) and len(arg.shape) == 3:
+            lst = [arg[per, :, :] for per in range(arg.shape[0])]
+        # input is not a 3D array, and not a list
+        # (could be numeric value or 2D array)
+        elif not isinstance(arg, list):
+            lst = [arg]
+        # input was already a list
+        else:
+            lst = arg
+        return lst
 
     def ncells(self):
         # Returns the  maximum number of cells that have recharge (developped for MT3DMS SSM package)
