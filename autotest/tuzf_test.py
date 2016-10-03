@@ -79,7 +79,13 @@ def test_create():
                                     iuzfbnd=m.bas6.ibound.array,
                                     irunbnd=irunbnd,
                                     vks=vks,
-                                    finf=finf)
+                                    finf=finf,
+                                    eps=3.5,
+                                    thts=0.35,
+                                    pet=5.000000E-08,
+                                    extdp=15.,
+                                    extwc=0.1
+                                    )
     m.write_input()
 
 if __name__ == '__main__':
