@@ -4,11 +4,16 @@ test UZF package
 import sys
 sys.path.insert(0, '..')
 import os
+import shutil
+import glob
+import numpy as np
 import flopy
 from flopy.utils.util_array import Util2d
 import numpy as np
 
 cpth = os.path.join('temp/uzf')
+if not os.path.isdir(cpth):
+    os.mkdirs(cpth)
 
 def test_load_and_write():
 
@@ -41,6 +46,42 @@ def test_load_and_write():
             a2 = uzf2.__getattribute__(attr)
             assert a1 == a2
 
+def test_create():
+
+
+    gpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'UZFtest2.*')
+    for f in glob.glob(gpth):
+        shutil.copy(f, cpth)
+    m = flopy.modflow.Modflow.load('UZFtest2.nam', version='mf2005', exe_name='mf2005',
+                                   model_ws=cpth, load_only=['ghb', 'dis', 'bas6', 'oc', 'sip', 'lpf', 'sfr'])
+
+    datpth = os.path.join('..', 'examples', 'data', 'uzf_examples')
+    irnbndpth = os.path.join(datpth, 'irunbnd.dat')
+    irunbnd = np.loadtxt(irnbndpth)
+
+    vksbndpth = os.path.join(datpth, 'vks.dat')
+    vks = np.loadtxt(vksbndpth)
+
+    finf = np.loadtxt(os.path.join(datpth, 'finf.dat'))
+    finf = np.reshape(finf, (m.nper, m.nrow, m.ncol))
+
+    uzgag = {-68: [-68],
+             65: [3, 6, 65, 1],
+             66: [6, 3, 66, 2],
+             67: [10, 5, 67, 3]}
+
+    uzf = flopy.modflow.ModflowUzf1(m,
+                                    nuztop=1, iuzfopt=1, irunflg=1, ietflg=1,
+                                    iuzfcb1=0,
+                                    iuzfcb2=61,  # binary output of recharge and groundwater discharge
+                                    ntrail2=25, nsets=20, nuzgag=4,
+                                    surfdep=1.0, uzgag=uzgag,
+                                    iuzfbnd=m.bas6.ibound.array,
+                                    irunbnd=irunbnd,
+                                    vks=vks,
+                                    finf=finf)
+    m.write_input()
+
 if __name__ == '__main__':
-    test_load_and_write()
-    #test_make_package()
+    #test_load_and_write()
+    test_create()

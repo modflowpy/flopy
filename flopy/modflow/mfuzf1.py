@@ -303,6 +303,8 @@ class ModflowUzf1(Package):
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
         self.finf = []
+        if isinstance(finf, np.ndarray):
+            finf = [finf[per, :, :] for per in range(finf.shape[0])]
         if not isinstance(finf, list):
             finf = [finf]
         for i, a in enumerate(finf):
