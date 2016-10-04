@@ -207,12 +207,12 @@ class ZoneBudget(object):
         l, r, c = self.cbc.get_data(idx=0, full3D=True)[0].shape
         return l, r, c
 
-    def get_budget(self, zon, kstpkper=None, **kwargs):
+    def get_budget(self, z, kstpkper=None):
         """
 
         Parameters
         ----------
-        zon
+        z
         kstpkper
         totim
         kwargs
@@ -227,55 +227,21 @@ class ZoneBudget(object):
         assert kstpkper in self.get_kstpkper(), 'The specified time step/stress period' \
                                                 ' does not exist {}'.format(kstpkper)
 
-        # # Get budget data from cell budget file
-        # if kstpkper is not None:
-        #     self.cbc_data = OrderedDict([(recname.strip(), self.cbc.get_data(text=recname, kstpkper=kstpkper, verbose=True)[0])
-        #                                  for recname in self.record_names if recname.strip()])
-        # elif totim is not None:
-        #     self.cbc_data = OrderedDict([(recname.strip(), self.cbc.get_data(text=recname, totim=totim)[0])
-        #                                  for recname in self.record_names if recname.strip()])
-        # else:
-        #     print('Reading budget for last timestep/stress period.')
-        #     kstpkper = self.cbc.get_kstpkper()[-1]
-        #     self.cbc_data = OrderedDict([(recname.strip(), self.cbc.get_data(text=recname, kstpkper=kstpkper)[0])
-        #                                  for recname in self.record_names if recname.strip()])
-
-        # OPEN THE ZONE FILE (OR ARRAY) AND FIND THE UNIQUE SET OF ZONES CONTAINED THEREIN
-        izone = np.zeros(self.cbc_shape, np.int32)
-        if isinstance(zon, str):
-            if os.path.isfile(zon):
-                if 'skiprows' in kwargs:
-                    skiprows = kwargs.pop('skiprows')
-                else:
-                    skiprows = None
-                try:
-                    z = np.loadtxt(zon, dtype=np.int32, skiprows=skiprows)
-                except Exception as e:
-                    print(e)
-        elif isinstance(zon, np.ndarray):
-            z = zon
-        elif isinstance(zon, np.ma.masked_array):
-            z = zon
-        else:
-            s = 'Input zones format is not recognized.'
-            raise Exception(s)
-
         # Make sure the input zone array has the same shape as the cell budget file
         if len(z.shape) == 2:
+            izone = np.zeros(self.cbc_shape, np.int32)
             for i in range(izone.shape[0]):
                 izone[i, :, :] = z
         else:
             izone = z.copy()
 
+        # FIND THE UNIQUE SET OF ZONES CONTAINED THEREIN
         zones = self._find_unique_zones(izone.ravel())
 
         assert izone.shape == self.cbc_shape, \
             'Shape of input zone array {} does not' \
             ' match the cell by cell' \
             ' budget file {}'.format(izone.shape, self.cbc_shape)
-
-        # # Initialize ICH array
-        # ich = np.zeros(self.cbc_shape, dtype=np.int32)
 
         # Create containers for budget term tuples
         inflows = []
@@ -292,7 +258,6 @@ class ZoneBudget(object):
                 budout[data < 0] = data[data < 0]
 
             else:
-                # data = self.cbc_data[recname]
                 data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=False)[0]
                 budin = np.ma.zeros((self.nlay*self.nrow*self.ncol), self.float_type)
                 budout = np.ma.zeros((self.nlay*self.nrow*self.ncol), self.float_type)
@@ -317,7 +282,6 @@ class ZoneBudget(object):
             # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
             # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
             # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
-            # ich = self._get_ich_array()
             inflow, outflow = self._get_constant_head_flow_term_tuple(kstpkper, izone)
             inflows.append(tuple(['in', 'CONSTANT HEAD'] + [val for val in inflow]))
             outflows.append(tuple(['out', 'CONSTANT HEAD'] + [val for val in outflow]))
@@ -335,7 +299,6 @@ class ZoneBudget(object):
             # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
             # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
             # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
-            # ich = self._get_ich_array()
             inflow, outflow = self._get_constant_head_flow_term_tuple(kstpkper, izone)
             inflows.append(tuple(['in', 'SWIADDTOCH'] + [val for val in inflow]))
             outflows.append(tuple(['out', 'SWIADDTOCH'] + [val for val in outflow]))
@@ -405,32 +368,26 @@ class ZoneBudget(object):
         for recname in self.ift_record_names:
             if recname == 'FLOW RIGHT FACE':
                 if self.ncol >= 2:
-                    # bud = self.cbc_data[recname]
                     bud = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                     frf = self._get_internal_flow_terms_tuple_frf(bud, izone)
             elif recname == 'FLOW FRONT FACE':
                 if self.nrow >= 2:
-                    # bud = self.cbc_data[recname]
                     bud = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                     fff = self._get_internal_flow_terms_tuple_fff(bud, izone)
             elif recname == 'FLOW LOWER FACE':
                 if self.nlay >= 2:
-                    # bud = self.cbc_data[recname]
                     bud = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                     flf = self._get_internal_flow_terms_tuple_flf(bud, izone)
             elif recname == 'SWIADDTOFRF':
                 if self.ncol >= 2:
-                    # bud = self.cbc_data[recname]
                     bud = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                     swifrf = self._get_internal_flow_terms_tuple_frf(bud, izone)
             elif recname == 'SWIADDTOFFF':
                 if self.nrow >= 2:
-                    # bud = self.cbc_data[recname]
                     bud = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                     swifff = self._get_internal_flow_terms_tuple_fff(bud, izone)
             elif recname == 'SWIADDTOFLF':
                 if self.nlay >= 2:
-                    # bud = self.cbc_data[recname]
                     bud = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                     swiflf = self._get_internal_flow_terms_tuple_flf(bud, izone)
         return frf, fff, flf, swifrf, swifff, swiflf
@@ -501,7 +458,7 @@ class ZoneBudget(object):
         q = bud[l, r, c-1]
 
         # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if self.ich.count() > 0:
+        if np.count_nonzero(self.ich):
             q[(self.ich[l, r, c] == 1) & (self.ich[l, r, c-1] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
@@ -531,7 +488,7 @@ class ZoneBudget(object):
         q = bud[l, r, c]
 
         # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if self.ich.count() > 0:
+        if np.count_nonzero(self.ich):
             q[(self.ich[l, r, c] == 1) & (self.ich[l, r, c-1] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
@@ -569,7 +526,7 @@ class ZoneBudget(object):
         q = bud[l, r-1, c]
 
         # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if self.ich.count() > 0:
+        if np.count_nonzero(self.ich):
             q[(self.ich[l, r, c] == 1) & (self.ich[l, r-1, c] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
@@ -598,7 +555,7 @@ class ZoneBudget(object):
         q = bud[l, r, c]
 
         # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if self.ich.count() > 0:
+        if np.count_nonzero(self.ich):
             q[(self.ich[l, r, c] == 1) & (self.ich[l, r-1, c] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
@@ -636,7 +593,7 @@ class ZoneBudget(object):
         q = bud[l-1, r, c]
 
         # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if self.ich.count() > 0:
+        if np.count_nonzero(self.ich):
             q[(self.ich[l, r, c] == 1) & (self.ich[l-1, r, c] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
@@ -666,7 +623,7 @@ class ZoneBudget(object):
         q = bud[l, r, c]
 
         # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if self.ich.count() > 0:
+        if np.count_nonzero(self.ich):
             q[(self.ich[l, r, c] == 1) & (self.ich[l-1, r, c] == 1)] = 0.
 
         # Get indices where flow face values are negative (flow into higher zone)
@@ -694,42 +651,6 @@ class ZoneBudget(object):
             q_chd_in[(self.ich == 1) & (q > 0)] += q[(self.ich == 1) & (q > 0)]
             q_chd_out[(self.ich == 1) & (q < 0)] += q[(self.ich == 1) & (q < 0)]
 
-        # # CALCULATE FLOW TO CONSTANT-HEAD CELLS--FLOW RIGHT FACE
-        # if self.ncol > 1:
-        #     # q = self.cbc_data['FLOW RIGHT FACE']
-        #     recname = 'FLOW RIGHT FACE'
-        #     q = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-        #     # q_chd = np.zeros_like(q)
-        #     # q_chd[(ich != 0)] = q[(ich != 0)]
-        #     # q_chd_in[q_chd > 0] += q_chd[q_chd > 0]
-        #     # q_chd_out[q_chd < 0] += q_chd[q_chd < 0]
-        #     q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
-        #     q_chd_out[(ich == 1) & (q < 0)] += q[(ich == 1) & (q < 0)]
-        #
-        # # CALCULATE FLOW TO CONSTANT-HEAD CELLS--FLOW FRONT FACE
-        # if self.nrow > 1:
-        #     # q = self.cbc_data['FLOW FRONT FACE']
-        #     recname = 'FLOW FRONT FACE'
-        #     q = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-        #     # q_chd = np.zeros_like(q)
-        #     # q_chd[(ich != 0)] = q[(ich != 0)]
-        #     # q_chd_in[q_chd > 0] += q_chd[q_chd > 0]
-        #     # q_chd_out[q_chd < 0] += q_chd[q_chd < 0]
-        #     q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
-        #     q_chd_out[(ich == 1) & (q < 0)] += q[(ich == 1) & (q < 0)]
-        #
-        # # CALCULATE FLOW TO CONSTANT-HEAD CELLS--FLOW LOWER FACE
-        # if self.nlay > 1:
-        #     # q = self.cbc_data['FLOW LOWER FACE']
-        #     recname = 'FLOW LOWER FACE'
-        #     q = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-        #     # q_chd = np.zeros_like(q)
-        #     # q_chd[(ich != 0)] = q[(ich != 0)]
-        #     # q_chd_in[q_chd > 0] += q_chd[q_chd > 0]
-        #     # q_chd_out[q_chd < 0] += q_chd[q_chd < 0]
-        #     q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
-        #     q_chd_out[(ich == 1) & (q < 0)] += q[(ich == 1) & (q < 0)]
-
         chd_inflow = [np.abs(q_chd_in[(izone == z)].sum()) for z in np.unique(izone.ravel())]
         chd_outflow = [np.abs(q_chd_out[(izone == z)].sum()) for z in np.unique(izone.ravel())]
         chd_inflow = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow])
@@ -740,241 +661,3 @@ class ZoneBudget(object):
     def _find_unique_zones(a):
         z = [int(i) for i in np.unique(a)]
         return z
-
-
-# import sys
-# import subprocess as sp
-# import threading
-# if sys.version_info > (3, 0):
-#     import queue as Queue
-# else:
-#     import Queue
-# from datetime import datetime
-#
-#
-# def run_zonbud(zonarray, cbcfile='modflowtest.cbc', listingfile_prefix='zbud', zonbud_ws='.',
-#                zonbud_exe='zonbud.exe', title='ZoneBudget Test', budget_option='A', kstpkper=None,
-#                iprn=-1, silent=True):
-#     """
-#
-#     Parameters
-#     ----------
-#     zonarray : array of ints (nlay, nrow, ncol)
-#         integer-array of zone numbers
-#     cbcfile : str
-#         name of the cell-by-cell budget file
-#     listingfile_prefix : str
-#         name of the listingfile
-#     zonbud_ws : str
-#         directory where ZoneBudget output will be stored
-#     zonbud_exe : str
-#         name of the ZoneBudget executable
-#     title : str
-#         title to be printed in the listing file
-#     budget_option : str
-#         must be one of "A" (for all timesteps) or "L" for a user-specified list of timesteps
-#     kstpkper : list
-#         list of zero-based timestep/stress periods for which budgets will be calculated
-#     iprn : integer
-#         specifies whether or not the zone values are printed in the output file
-#         if less than zero, zone values will not be printed
-#
-#     Returns
-#     -------
-#     zbud, an ordered dictionary of recarrays.
-#
-#     Examples
-#     -------
-#     >>> import flopy
-#     >>> zbud = flopy.utils.run_zonbud(zonarray, cbcfile='modflowtest.cbc')
-#     """
-#
-#     # Need to catch some errors early on, ZoneBudget likes to crash without any feedback
-#     # Locked output files, non-existent input, etc.
-#     #
-#     if not os.path.isfile(cbcfile):
-#         s = 'The specified cell by cell budget file does not exist: {}'.format(cbcfile)
-#         raise Exception(s)
-#     assert budget_option.upper() in ['A', 'L'], 'Please enter a valid budget option ("A" for all or "L" for' \
-#                                                 ' a list of times).'
-#     listingfile_prefix = listingfile_prefix.split('.')[0]
-#     zonfile = os.path.join(zonbud_ws, listingfile_prefix + '.zon')
-#     listingfile = os.path.join(zonbud_ws, listingfile_prefix + ' csv')
-#     outfile = os.path.join(zonbud_ws, listingfile_prefix + '.csv')
-#     args = [listingfile, cbcfile, title, zonfile, budget_option]
-#     if budget_option == 'L':
-#         assert kstpkper is not None, 'You have chosen budget option "L", please enter a ' \
-#                                      'list of times. For example (0, 0) for timestep 1 ' \
-#                                      'of stress period 1.'
-#         kstpkper_args = ['{kstp},{kper}'.format(kstp=kk[0]+1, kper=kk[1]+1) for kk in kstpkper]
-#         kstpkper_args.append('0,0')
-#         args += kstpkper_args
-#
-#     try:
-#         with open(outfile, 'w') as f:
-#             pass
-#     except IOError:
-#         s = 'Output file is not writable. Please check to make sure you have access to the file location ' \
-#             'and that the file is not currently locked by another process.'
-#         raise Exception(s)
-#
-#     _write_zonfile(zonarray, zonfile, iprn)
-#     _call(zonbud_exe, args, zonbud_ws, silent)
-#     zbud = _parse_zbud_file(outfile)
-#     return zbud
-#
-#
-# def _parse_zbud_file(zf):
-#     assert os.path.isfile(zf), 'Output zonebudget file {} does not exist or cannot be read.'.format(zf)
-#     kstpkper = []
-#     ins = OrderedDict()
-#     outs = OrderedDict()
-#     ins_flag = False
-#     outs_flag = False
-#     with open(zf) as f:
-#         for line in f:
-#             line_items = [i.strip() for i in line.split(',')]
-#             if line_items[0] == 'Time Step':
-#                 kk = (int(line_items[1])-1, int(line_items[3])-1)
-#                 kstpkper.append(kk)
-#                 ins[kk] = []
-#                 outs[kk] = []
-#             elif 'ZONE' in line_items[1]:
-#                 zones = [z for z in line_items if z != '']
-#                 col_header = ['Record Name'] + zones
-#                 dtype = [('flow_dir', '|S3'), ('record', '|S20')] + \
-#                         [(col_name, np.float64) for col_name in col_header[1:]]
-#             elif line_items[1] == 'IN':
-#                 ins_flag = True
-#                 continue
-#             elif line_items[0] == 'Total IN':
-#                 ins_flag = False
-#             elif line_items[1] == 'OUT':
-#                 outs_flag = True
-#                 continue
-#             elif line_items[0] == 'Total OUT':
-#                 outs_flag = False
-#             if ins_flag:
-#                 z = [x for x in line_items if x != '']
-#                 z.insert(0, 'in')
-#                 z[2:] = [float(zz) for zz in z[2:]]
-#                 ins[kk].append(tuple(z))
-#             elif outs_flag:
-#                 z = [x for x in line_items if x != '']
-#                 z.insert(0, 'out')
-#                 z[2:] = [float(zz) for zz in z[2:]]
-#                 outs[kk].append(tuple(z))
-#     zbud = OrderedDict()
-#     for kk in kstpkper:
-#         try:
-#             dat = ins[kk] + outs[kk]
-#             zbud[kk] = np.array(dat, dtype=dtype)
-#         except Exception as e:
-#             print(e)
-#             return None
-#     return zbud
-#
-#
-# def _write_zonfile(izone, zonfile, iprn):
-#     assert 'int' in str(izone.dtype), 'Input zone array (dtype={}) must be an integer array.'.format(izone.dtype)
-#     if len(izone.shape) == 2:
-#         nlay = 1
-#         nrow, ncol = izone.shape
-#         z = np.zeros((nlay, nrow, ncol))
-#         z[0, :, :] = izone
-#         izone = z
-#     elif len(izone.shape) == 3:
-#         nlay, nrow, ncol = izone.shape
-#
-#     with open(zonfile, 'w') as f:
-#         f.write('{} {} {}\n'.format(nlay, nrow, ncol))
-#
-#         for lay in range(nlay):
-#             f.write('INTERNAL ({ncol}I4) {iprn}\n'.format(ncol=ncol, iprn=iprn))
-#             for row in range(nrow):
-#                 f.write(''.join(['{:4d}'.format(int(val)) for val in izone[lay, row, :]])+'\n')
-#
-#         #     f.write('INTERNAL (free) {iprn}\n'.format(iprn=iprn))
-#         #     for row in range(nrow):
-#         #         f.write(' '.join(['{:d}'.format(int(val)) for val in izone[lay, row, :]])+'\n')
-#         # f.write('ALLZONES ' + ' '.join([str(int(z)) for z in np.unique(izone)])+'\n')
-#     return
-#
-#
-# def is_exe(fpath):
-#     """
-#     Taken from flopy.mbase
-#
-#     """
-#     return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-#
-#
-# def which(program):
-#     """
-#     Taken from flopy.mbase
-#
-#     """
-#     fpath, fname = os.path.split(program)
-#     if fpath:
-#         if is_exe(program):
-#             return program
-#     else:
-#         # test for exe in current working directory
-#         if is_exe(program):
-#             return program
-#         # test for exe in path statement
-#         for path in os.environ["PATH"].split(os.pathsep):
-#             path = path.strip('"')
-#             exe_file = os.path.join(path, program)
-#             if is_exe(exe_file):
-#                 return exe_file
-#     return None
-#
-#
-# def _call(exe_name, args, zonbud_ws='./', silent=True):
-#
-#     # success = False
-#     # buff = []
-#
-#     # Check to make sure that program and namefile exist
-#     exe = which(exe_name)
-#     if exe is None:
-#         import platform
-#
-#         if platform.system() in 'Windows':
-#             if not exe_name.lower().endswith('.exe'):
-#                 exe = which(exe_name + '.exe')
-#     if exe is None:
-#         s = 'The program {} does not exist or is not executable.'.format(
-#             exe_name)
-#         raise Exception(s)
-#     else:
-#         if not silent:
-#             s = 'FloPy is using the following executable to run ZoneBudget: {}'.format(
-#                 exe)
-#             print(s)
-#
-#     # simple little function for the thread to target
-#     def q_output(output,q):
-#             for line in iter(output.readline,b''):
-#                 q.put(line)
-#             #time.sleep(1)
-#             #output.close()
-#     argsstr = ''.join([arg+os.linesep for arg in args])
-#     proc = sp.Popen([exe_name], stdin=sp.PIPE, stdout=sp.PIPE, cwd=zonbud_ws)
-#     stdout = proc.communicate(input=argsstr)[0]
-#     if not silent:
-#         print(stdout)
-#     while True:
-#         line = proc.stdout.readline()
-#         c = line.decode('utf-8')
-#         if c != '':
-#             c = c.rstrip('\r\n')
-#             # if report == True:
-#                 # buff.append(c)
-#             if not silent:
-#                 print(c)
-#         else:
-#             # success = True
-#             break
-#     return
