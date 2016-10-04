@@ -40,7 +40,7 @@ def test_load():
     assert np.array_equal(mnw2_2.node_data, mnw2_3.node_data)
     assert (mnw2_2.stress_period_data[0].qdes - mnw2_3.stress_period_data[0].qdes).max() < 0.01
     assert np.abs(mnw2_2.stress_period_data[0].qdes - mnw2_3.stress_period_data[0].qdes).min() < 0.01
-
+    
 
 def test_make_package():
     m4 = flopy.modflow.Modflow('mnw2example', model_ws=cpth)

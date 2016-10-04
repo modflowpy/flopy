@@ -8,7 +8,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
-import numpy.lib.recfunctions as rf
+from flopy.utils.flopy_io import loadtxt
 
 class PathlineFile():
     """
@@ -52,7 +52,7 @@ class PathlineFile():
         self.fname = filename
         self.dtype, self.outdtype = self._get_dtypes()
         self._build_index()
-        self._data = np.loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
+        self._data = loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
         # set number of particle ids
         self.nid = self._data['particleid'].max()
         # convert layer, row, and column indices; particle id and group; and
@@ -317,7 +317,8 @@ class PathlineFile():
         # geometry for each row in PathLine file
         else:
             dtype = pth.dtype
-            pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
+            #pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
+            pthdata = []
             for pid in particles:
                 ra = pth[pth.particleid == pid]
                 x, y = sr.transform(ra.x, ra.y)
@@ -325,7 +326,9 @@ class PathlineFile():
                 geoms += [LineString([(x[i-1], y[i-1], z[i-1]),
                                           (x[i], y[i], z[i])])
                              for i in np.arange(1, (len(ra)))]
-                pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
+                #pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
+                pthdata += ra[1:].tolist()
+            pthdata = np.array(pthdata, dtype=dtype).view(np.recarray)
         # convert back to one-based
         for n in set(self.kijnames).intersection(set(pthdata.dtype.names)):
             pthdata[n] += 1
@@ -376,7 +379,7 @@ class EndpointFile():
         self.fname = filename
         self.dtype = self._get_dtypes()
         self._build_index()
-        self._data = np.loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
+        self._data = loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
         # set number of particle ids
         self.nid = self._data['particleid'].max()
         # convert layer, row, and column indices; particle id and group; and
