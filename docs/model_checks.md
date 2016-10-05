@@ -32,6 +32,9 @@ FloPy Model Checks
 | DISU | NaN values in top and bottom arrays | Not supported | Error |
 | DISU | discretization that violates the 1.5 rule | Not supported | Warning |
 | DISU | large changes in elevation | Not supported | Warning |
+| MNW2 | ITMP >= 0 for first stress period | Supported | Error |
+| MNW2 | ITMP > MNWMAX | Supported | Error |
+| MNWI | MNWI present without MNW2 package | Supported | Warning |
 | RCH | unusually high or low R/T ratios | Supported | Warning |
 | RCH | NRCHOP not specified as 3 | Supported | Warning |
 | SFR | continuity in segment and reach numbering | Supported | Error |
@@ -47,6 +50,7 @@ FloPy Model Checks
 | SFR | gaps in segment and reach routing | Not supported | Warning |
 | SFR | outlets in interior of model domain | Not supported | Warning |
 | WEL | PHIRAMP is < 1 and should be close to recommended value of 0.001 | Not supported | Warning |
+| MPSIM | invalid stop times | Supported | 
 
 
 ## Visualizations
