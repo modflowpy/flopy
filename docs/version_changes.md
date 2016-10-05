@@ -3,7 +3,19 @@ FloPy Changes
 
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.
-* Document your new features.
+* Additions to SpatialReference class:
+	* xll, yll input option
+	* transform method to convert model coordinates to real-world coordinates
+	* epsg and length_multiplier arguments
+* Export:
+	* Added writing of prj files to shapefile export; prj information can be passed through spatial reference class, or given as an EPSG code or existing prj file path
+	* Added NetCDF export to MNW2
+* Additions to MODPATH:
+	* shapefile export of MODPATH Pathline and Endpoint data
+	* Modpath.create_mpsim() supports MNW2
+	* creation of MODPATH StartingLocations files
+	* Easy subsetting of endpoint and pathline results to destination cells of interest  
+	
 
 * Bug fixes:
   1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
@@ -11,6 +23,7 @@ FloPy Changes
   3. Fixed bug in BinaryHeader.set_values method that prevented setting of entries based on passed kwargs.
   4. Fixed bugs in reading and writing SEAWAT Viscosity package.
   5. The DENSE and VISC arrays are now Transient3d objects, so they may change by stress period.
+  6. MNW2: fixed bug with k, i, j node input option and issues with loading at model level
 
 
 ### Version 3.2.5
