@@ -645,16 +645,19 @@ class ZoneBudget(object):
         q_chd_in = np.zeros(self.cbc_shape, dtype=np.float64)
         q_chd_out = np.zeros(self.cbc_shape, dtype=np.float64)
 
+        warned = False
         for recname in self.ift_record_names:
             if recname not in ['CONSTANT HEAD', 'SWIADDTOCH']:
                 q = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
                 if not isinstance(q, np.recarray):
-                    mf88warn = 'Use of a MODFLOW-88 style budget files with the {recname} \n' \
-                               'record may result in the partial cancellation of ' \
-                               'fluxes in cells where bi-directional flow occurs. \n' \
-                               'Please use the "COMPACT BUDGET" option of the Output ' \
-                               'Control package.'.format(recname=recname)
-                    warnings.warn(mf88warn, UserWarning)
+                    if not warned:
+                        mf88warn = 'Use of a MODFLOW-88 style budget file may result in \n' \
+                                   'the partial cancellation of fluxes in constant head ' \
+                                   'cells where bi-directional flow occurs. \n' \
+                                   'Please use the "COMPACT BUDGET" option of the Output ' \
+                                   'Control package.'
+                        warnings.warn(mf88warn, UserWarning)
+                        warned = True
                 q_chd_in[(self.ich == 1) & (q > 0)] += q[(self.ich == 1) & (q > 0)]
                 q_chd_out[(self.ich == 1) & (q < 0)] += q[(self.ich == 1) & (q < 0)]
 
