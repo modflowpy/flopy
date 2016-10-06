@@ -397,7 +397,7 @@ class ModelMap(object):
             should be of len(ncells) with a list of vertex number for each cell
 
         kwargs : dictionary
-            Keyword arguments passed to plotutil.plot_shapefile()
+            Keyword arguments passed to plotutil.plot_cvfd()
 
         """
         if 'ax' in kwargs:
