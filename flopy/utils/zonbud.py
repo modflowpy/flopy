@@ -216,12 +216,12 @@ class ZoneBudget(object):
 
     def get_budget(self, z, kstpkper=None):
         """
-        Creates a budget, by zone, for the specified time step/stress period.
+        Creates a budget for the specified zones and time step/stress period.
 
         Parameters
         ----------
-        z
-        kstpkper
+        z:
+        kstpkper:
 
         Returns
         -------
@@ -251,29 +251,30 @@ class ZoneBudget(object):
             ' budget file {}'.format(izone.shape, self.cbc_shape)
 
         # Create containers for budget term tuples
+        # The first two items in each tuple are flow direction and budget record name
+        # The remainder of the tuple items are the fluxes to/from each zone
+        # Example, inflow from river leakage aggregated over 4 zones:
+        # ('in', 'RIVER LEAKAGE', 0.0, 0.00419, 0.0, 0.0)
         inflows = []
         outflows = []
 
-        # ACCUMULATE CONSTANT HEAD TERMS (do this first to match output from the zonbud program executable)
+        # ACCUMULATE CONSTANT HEAD TERM
+        # (do this first to match output from the zonbud program executable)
         if 'CONSTANT HEAD' in self.chd_record_names:
-            # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
-            # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
-            # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
-            # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
-            # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
             recname = 'CONSTANT HEAD'
             inflow, outflow = self._get_constant_head_flow_term_tuple(recname, kstpkper, izone)
             inflows.append(tuple(['in', recname] + [val for val in inflow]))
             outflows.append(tuple(['out', recname] + [val for val in outflow]))
             if np.count_nonzero(self.ich) > 0:
                 # TEMPORARY WARNINGS
-                chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported. ' \
+                chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported.\n' \
                          'Any non-zero results for CONSTANT HEAD and ' \
                          'SWIADDTOCH should be considered erroneous.'
                 warnings.warn(chwarn, UserWarning)
                 # /TEMPORARY WARNINGS
 
-        # ACCUMULATE SOURCE/SINK/STORAGE TERMS (e.g. recharge, drains, wells, mnw, riv, etc.)
+        # ACCUMULATE SOURCE/SINK/STORAGE TERMS
+        # (e.g. recharge, drains, wells, mnw, riv, etc.)
         for recname in self.ssst_record_names:
 
             data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
@@ -320,20 +321,17 @@ class ZoneBudget(object):
             inflows.append(in_tup)
             outflows.append(out_tup)
 
+        # ACCUMULATE SWIADDTOCH
+        # (do this last to match output from the zonbud program executable)
         if 'SWIADDTOCH' in self.chd_record_names:
-            # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
-            # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
-            # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
-            # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
-            # FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
             recname = 'SWIADDTOCH'
             inflow, outflow = self._get_constant_head_flow_term_tuple(recname, kstpkper, izone)
             inflows.append(tuple(['in', recname] + [val for val in inflow]))
             outflows.append(tuple(['out', recname] + [val for val in outflow]))
             if np.count_nonzero(self.ich) > 0:
                 # TEMPORARY WARNINGS
-                chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported' \
-                         'for SWI2 models. Any non-zero results for CONSTANT HEAD and ' \
+                chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported ' \
+                         'for SWI2 models. \nAny non-zero results for CONSTANT HEAD and ' \
                          'SWIADDTOCH should be considered erroneous.'
                 warnings.warn(chwarn, UserWarning)
                 # /TEMPORARY WARNINGS
@@ -663,8 +661,11 @@ class ZoneBudget(object):
         return nzgt
 
     def _get_constant_head_flow_term_tuple(self, recname, kstpkper, izone):
-
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS FROM THE FACE FLOW RECORDS
+        # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
+        # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
+        # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
+        # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
+        # FLOW.
         q_chd_in = np.zeros(self.cbc_shape, dtype=np.float64)
         q_chd_out = np.zeros(self.cbc_shape, dtype=np.float64)
 
@@ -674,8 +675,6 @@ class ZoneBudget(object):
         elif recname == 'SWIADDTOCH':
             ich = self.ich_swi
             ff_records = [n for n in self.ift_record_names if 'SWI' in n]
-
-        chd = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
 
         for ff in ff_records:
             q = self.cbc.get_data(text=ff, kstpkper=kstpkper)[0]
