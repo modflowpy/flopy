@@ -277,45 +277,39 @@ class ZoneBudget(object):
         # (e.g. recharge, drains, wells, mnw, riv, etc.)
         for recname in self.ssst_record_names:
 
-            data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-            budin = np.ma.zeros(self.cbc_shape, self.float_type)
-            budout = np.ma.zeros(self.cbc_shape, self.float_type)
-            budin[data > 0] = data[data > 0]
-            budout[data < 0] = data[data < 0]
+            if recname in ['RECHARGE']:
+                data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                budin = np.ma.zeros(self.cbc_shape, self.float_type)
+                budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                budin[data > 0] = data[data > 0]
+                budout[data < 0] = data[data < 0]
 
-            # if recname in ['RECHARGE', 'DRAINS']:
-            #     data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-            #     budin = np.ma.zeros(self.cbc_shape, self.float_type)
-            #     budout = np.ma.zeros(self.cbc_shape, self.float_type)
-            #     budin[data > 0] = data[data > 0]
-            #     budout[data < 0] = data[data < 0]
-            #
-            # else:
-            #     data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=False)[0]
-            #
-            #     if not isinstance(data, np.recarray):
-            #         # Not a recarray, probably due to using old MF88-style budget file
-            #         mf88warn = 'Use of a MODFLOW-88 style budget files with the {recname} \n'\
-            #                    'record may result in the partial cancellation of ' \
-            #                    'fluxes in cells where bi-directional flow occurs. \n' \
-            #                    'Please use the "COMPACT BUDGET" option of the Output ' \
-            #                    'Control package.'.format(recname=recname)
-            #         warnings.warn(mf88warn, UserWarning)
-            #         budin = np.ma.zeros(self.cbc_shape, self.float_type)
-            #         budout = np.ma.zeros(self.cbc_shape, self.float_type)
-            #         budin[data > 0] = data[data > 0]
-            #         budout[data < 0] = data[data < 0]
-            #     else:
-            #         budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
-            #         budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
-            #         for [node, q] in zip(data['node'], data['q']):
-            #             idx = node - 1
-            #             if q > 0:
-            #                 budin.data[idx] += q
-            #             elif q < 0:
-            #                 budout.data[idx] += q
-            #         budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
-            #         budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
+            else:
+                data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=False)[0]
+
+                if not isinstance(data, np.recarray):
+                    # Not a recarray, probably due to using old MF88-style budget file
+                    mf88warn = 'Use of a MODFLOW-88 style budget files with the {recname}\n'\
+                               'record may result in erroneous budget results for cells\n' \
+                               'containing multiple boundaries of the same type. \n' \
+                               'Please use the "COMPACT BUDGET" option of the Output ' \
+                               'Control package.'.format(recname=recname)
+                    warnings.warn(mf88warn, UserWarning)
+                    budin = np.ma.zeros(self.cbc_shape, self.float_type)
+                    budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                    budin[data > 0] = data[data > 0]
+                    budout[data < 0] = data[data < 0]
+                else:
+                    budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                    budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                    for [node, q] in zip(data['node'], data['q']):
+                        idx = node - 1
+                        if q > 0:
+                            budin.data[idx] += q
+                        elif q < 0:
+                            budout.data[idx] += q
+                    budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
+                    budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
 
             in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, izone)
             inflows.append(in_tup)
