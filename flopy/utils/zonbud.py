@@ -12,13 +12,15 @@ class Budget(object):
     ZoneBudget Budget class. This is a wrapper around a numpy record array to allow users
     to save the record array to a formatted csv file.
     """
-    def __init__(self, records, kstpkper=None, totim=None):
+    def __init__(self, records, **kwargs):
         self.records = records
-        self.kstpkper = kstpkper
-        self.totim = totim
-        assert(self.kstpkper is not None or self.totim is not None), 'Budget object requires either kstpkper ' \
-                                                                     'or totim be be specified.'
-
+        # if 'kstpkper' in kwargs.keys():
+        #     self.kstpkper =
+        # self.kstpkper = kstpkper
+        # self.totim = totim
+        # assert(self.kstpkper is not None or self.totim is not None), 'Budget object requires either kstpkper ' \
+        #                                                              'or totim be be specified.'
+        self.kwargs = kwargs
         # List the field names to be used to slice the recarray
         # fields = ['ZONE{: >4d}'.format(z) for z in self.zones]
         fields = [name for name in self.records.dtype.names if 'ZONE' in name]
@@ -102,12 +104,13 @@ class Budget(object):
             with open(fname, 'w') as f:
 
                 # Write header
-                if self.kstpkper is not None:
-                    header = 'Time Step, {kstp}, Stress Period, {kper}\n'.format(kstp=self.kstpkper[0]+1,
-                                                                                 kper=self.kstpkper[1]+1)
-
-                elif self.totim is not None:
-                    header = 'Sim. Time, {totim}\n'.format(totim=self.totim)
+                if 'kstpkper' in self.kwargs.keys():
+                    header = 'Time Step, {kstp}, Stress Period, {kper}\n'.format(kstp=self.kwargs['kstpkper'][0]+1,
+                                                                                 kper=self.kwargs['kstpkper'][1]+1)
+                elif 'totim' in self.kwargs.keys():
+                    header = 'Sim. Time, {totim}\n'.format(totim=self.kwargs['totim'])
+                else:
+                    raise Exception('No stress period/time step or time specified.')
 
                 f.write(header)
                 f.write(','.join([' '] + [field for field in self.records.dtype.names[2:]])+'\n')
@@ -214,7 +217,7 @@ class ZoneBudget(object):
         l, r, c = self.cbc.get_data(idx=0, full3D=True)[0].shape
         return l, r, c
 
-    def get_budget(self, z, kstpkper=None):
+    def get_budget(self, z, **kwargs):
         """
         Creates a budget for the specified zones and time step/stress period.
 
@@ -227,12 +230,16 @@ class ZoneBudget(object):
         -------
         Budget object
         """
-        # If the user does not specify the time step/stress period, use the last one
-        if kstpkper is None:
-            print('Getting budget for last time step/stress period.')
-            kstpkper = self.cbc.get_kstpkper()[-1]
-        assert kstpkper in self.get_kstpkper(), 'The specified time step/stress period' \
-                                                ' does not exist {}'.format(kstpkper)
+        if 'kstpkper' in kwargs.keys():
+            s = 'The specified time step/stress period' \
+                ' does not exist {}'.format(kwargs['kstpkper'])
+            assert kwargs['kstpkper'] in self.cbc.get_kstpkper(), print(s)
+        elif 'totim' in kwargs.keys():
+            s = 'The time ' \
+                ' does not exist {}'.format(kwargs['totim'])
+            assert kwargs['kstpkper'] in self.cbc.get_times(), print(s)
+        else:
+            raise Exception('No stress period/time step or time specified.')
 
         # Make sure the input zone array has the same shape as the cell budget file
         if len(z.shape) == 2:
@@ -262,7 +269,7 @@ class ZoneBudget(object):
         # (do this first to match output from the zonbud program executable)
         if 'CONSTANT HEAD' in self.chd_record_names:
             recname = 'CONSTANT HEAD'
-            inflow, outflow = self._get_constant_head_flow_term_tuple(recname, kstpkper, izone)
+            inflow, outflow = self._get_constant_head_flow_term_tuple(recname, izone, **kwargs)
             inflows.append(tuple(['in', recname] + [val for val in inflow]))
             outflows.append(tuple(['out', recname] + [val for val in outflow]))
             if np.count_nonzero(self.ich) > 0:
@@ -278,14 +285,21 @@ class ZoneBudget(object):
         for recname in self.ssst_record_names:
 
             if recname in ['RECHARGE']:
-                data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
+                """
+                Update this piece--use full3D=False and grab it as a list. First
+                item is a layer array and the other is a data array.
+                """
+                rlay, rdata = self.cbc.get_data(text=recname, full3D=False, **kwargs)[0]
+                data = np.ma.zeros(self.cbc_shape, self.float_type)
+
+                data = self.cbc.get_data(text=recname, full3D=True, **kwargs)[0]
                 budin = np.ma.zeros(self.cbc_shape, self.float_type)
                 budout = np.ma.zeros(self.cbc_shape, self.float_type)
                 budin[data > 0] = data[data > 0]
                 budout[data < 0] = data[data < 0]
 
             else:
-                data = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=False)[0]
+                data = self.cbc.get_data(text=recname, full3D=False, **kwargs)[0]
 
                 if not isinstance(data, np.recarray):
                     # Not a recarray, probably due to using old MF88-style budget file
@@ -319,7 +333,7 @@ class ZoneBudget(object):
         # (do this last to match output from the zonbud program executable)
         if 'SWIADDTOCH' in self.chd_record_names:
             recname = 'SWIADDTOCH'
-            inflow, outflow = self._get_constant_head_flow_term_tuple(recname, kstpkper, izone)
+            inflow, outflow = self._get_constant_head_flow_term_tuple(recname, izone, **kwargs)
             inflows.append(tuple(['in', recname] + [val for val in inflow]))
             outflows.append(tuple(['out', recname] + [val for val in outflow]))
             if np.count_nonzero(self.ich) > 0:
@@ -331,7 +345,7 @@ class ZoneBudget(object):
                 # /TEMPORARY WARNINGS
 
         # ACCUMULATE INTERNAL FACE FLOW TERMS
-        in_tups, out_tups = self.accumulate_internal_flow(kstpkper, izone)
+        in_tups, out_tups = self.accumulate_internal_flow(izone, **kwargs)
         inflows.extend(in_tups)
         outflows.extend(out_tups)
 
@@ -340,9 +354,9 @@ class ZoneBudget(object):
         dtype_list = [('flow_dir', '|S3'), ('record', '|S20')]
         dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in zones]
         dtype = np.dtype(dtype_list)
-        return Budget(np.array(q, dtype=dtype), kstpkper=kstpkper)
+        return Budget(np.array(q, dtype=dtype), **kwargs)
 
-    def accumulate_internal_flow(self, kstpkper, izone):
+    def accumulate_internal_flow(self, izone, **kwargs):
         """
         Accumulate, by zone, fluxes for the face flow records.
 
@@ -351,7 +365,7 @@ class ZoneBudget(object):
         :return:
         """
         # Each flow term is a tuple of ("from zone", "to zone", "absolute flux")
-        frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf = self._get_internal_flow_terms(kstpkper, izone)
+        frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf = self._get_internal_flow_terms(izone, **kwargs)
 
         # Combine and sort flux tuples
         q_tups = sorted(frf + fff + flf + swiadd2frf + swiadd2fff + swiadd2flf)
@@ -389,7 +403,7 @@ class ZoneBudget(object):
 
         return in_tups, out_tups
 
-    def _get_internal_flow_terms(self, kstpkper, izone):
+    def _get_internal_flow_terms(self, izone, **kwargs):
         """
         Process each internal flow record in the cell-by-cell budget file
 
@@ -400,27 +414,27 @@ class ZoneBudget(object):
         frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf = [], [], [], [], [], []
         for recname in self.ift_record_names:
             if recname == 'FLOW RIGHT FACE':
-                frf = self._get_internal_flow_terms_tuple_frf(recname, kstpkper, izone)
+                frf = self._get_internal_flow_terms_tuple_frf(recname, izone, **kwargs)
             elif recname == 'FLOW FRONT FACE':
-                fff = self._get_internal_flow_terms_tuple_fff(recname, kstpkper, izone)
+                fff = self._get_internal_flow_terms_tuple_fff(recname, izone, **kwargs)
             elif recname == 'FLOW LOWER FACE':
-                flf = self._get_internal_flow_terms_tuple_flf(recname, kstpkper, izone)
+                flf = self._get_internal_flow_terms_tuple_flf(recname, izone, **kwargs)
             elif recname == 'SWIADDTOFRF':
-                swiadd2frf = self._get_internal_flow_terms_tuple_frf(recname, kstpkper, izone)
+                swiadd2frf = self._get_internal_flow_terms_tuple_frf(recname, izone, **kwargs)
             elif recname == 'SWIADDTOFFF':
-                swiadd2fff = self._get_internal_flow_terms_tuple_fff(recname, kstpkper, izone)
+                swiadd2fff = self._get_internal_flow_terms_tuple_fff(recname, izone, **kwargs)
             elif recname == 'SWIADDTOFLF':
-                swiadd2flf = self._get_internal_flow_terms_tuple_flf(recname, kstpkper, izone)
+                swiadd2flf = self._get_internal_flow_terms_tuple_flf(recname, izone, **kwargs)
         return frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf
 
-    def _get_internal_flow_terms_tuple_frf(self, recname, kstpkper, izone):
+    def _get_internal_flow_terms_tuple_frf(self, recname, izone, **kwargs):
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS COLUMNS. COMPUTE FLOW ONLY BETWEEN A ZONE
         # AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
         # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K.
         # Accumulate flow from lower zones to higher zones from "left" to "right".
         # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
         # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        bud = self.cbc.get_data(text=recname, kstpkper=kstpkper)[0]
+        bud = self.cbc.get_data(text=recname, **kwargs)[0]
         # if not isinstance(bud, np.recarray):
         #     mf88warn = 'Use of a MODFLOW-88 style budget file may result in \n' \
         #                'the partial cancellation of fluxes in {recname} ' \
@@ -495,13 +509,13 @@ class ZoneBudget(object):
         nzgt = sorted(nzgt_l2r + nzgt_r2l, key=lambda tup: tup[:2])
         return nzgt
 
-    def _get_internal_flow_terms_tuple_fff(self, recname, kstpkper, izone):
+    def _get_internal_flow_terms_tuple_fff(self, recname, izone, **kwargs):
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS ROWS. COMPUTE FLOW ONLY BETWEEN A ZONE
         #  AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
         # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K.
         # Accumulate flow from lower zones to higher zones from "up" to "down".
         # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        bud = self.cbc.get_data(text=recname, kstpkper=kstpkper)[0]
+        bud = self.cbc.get_data(text=recname, **kwargs)[0]
         # if not isinstance(bud, np.recarray):
         #     mf88warn = 'Use of a MODFLOW-88 style budget file may result in \n' \
         #                'the partial cancellation of fluxes in {recname} ' \
@@ -574,13 +588,13 @@ class ZoneBudget(object):
         nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
         return nzgt
 
-    def _get_internal_flow_terms_tuple_flf(self, recname, kstpkper, izone):
+    def _get_internal_flow_terms_tuple_flf(self, recname, izone, **kwargs):
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS LAYERS. COMPUTE FLOW ONLY BETWEEN A ZONE
         #  AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
         # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1.
         # Accumulate flow from lower zones to higher zones from "top" to "bottom".
         # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        bud = self.cbc.get_data(text=recname, kstpkper=kstpkper)[0]
+        bud = self.cbc.get_data(text=recname, **kwargs)[0]
         # if not isinstance(bud, np.recarray):
         #     mf88warn = 'Use of a MODFLOW-88 style budget file may result in \n' \
         #                'the partial cancellation of fluxes in {recname} ' \
@@ -654,7 +668,7 @@ class ZoneBudget(object):
         nzgt = sorted(nzgt_t2b + nzgt_b2t, key=lambda tup: tup[:2])
         return nzgt
 
-    def _get_constant_head_flow_term_tuple(self, recname, kstpkper, izone):
+    def _get_constant_head_flow_term_tuple(self, recname, izone, **kwargs):
         # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
         # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
         # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
@@ -671,7 +685,7 @@ class ZoneBudget(object):
             ff_records = [n for n in self.ift_record_names if 'SWI' in n]
 
         for ff in ff_records:
-            q = self.cbc.get_data(text=ff, kstpkper=kstpkper)[0]
+            q = self.cbc.get_data(text=ff, **kwargs)[0]
             # print(ff, q[(ich == 1)])
 
             q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
