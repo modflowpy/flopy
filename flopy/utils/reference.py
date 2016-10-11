@@ -5,6 +5,7 @@ Module spatial referencing for flopy model objects
 import sys
 import os
 import numpy as np
+import warnings
 
 
 class SpatialReference(object):
@@ -192,6 +193,10 @@ class SpatialReference(object):
             elif "rotation" in item.lower():
                 try:
                     rotation = float(item.split(':')[1])
+                    if rotation != 0.0:
+                        warnings.warn("rotation arg has recently changed. " +\
+                              "It was previously treated as positive clockwise" +\
+                              "It now is positive counterclockwise")
                 except:
                     pass
             elif "proj4_str" in item.lower():
@@ -226,6 +231,10 @@ class SpatialReference(object):
             super(SpatialReference,self).\
                 __setattr__("yul",float(value))
         elif key == "rotation":
+            if float(value) != 0.0:
+                warnings.warn("rotation arg has recently changed. " +\
+                              "It was previously treated as positive clockwise" +\
+                              "It now is positive counterclockwise")
             super(SpatialReference,self).\
                 __setattr__("rotation",float(value))
         elif key == "lenuni":
@@ -367,6 +376,10 @@ class SpatialReference(object):
             self.yll = self.yul - np.cos(theta) * self.yedge[0] * self.length_multiplier
         else:
             self.yll = yll
+        if rotation != 0.0:
+            warnings.warn("rotation arg has recently changed. " +\
+                          "It was previously treated as positive clockwise" +\
+                          "It now is positive counterclockwise")
         self.rotation = rotation
         self._reset()
 
@@ -437,7 +450,10 @@ class SpatialReference(object):
         degrees.
 
         """
-        theta = -theta * np.pi / 180.
+        #jwhite changed on Oct 11 2016 - rotation is now positive CCW
+        #theta = -theta * np.pi / 180.
+        theta = theta * np.pi / 180.
+
         xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
                                                          (y - yorigin)
         yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \

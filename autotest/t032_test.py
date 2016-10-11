@@ -30,7 +30,7 @@ def test_polygon_from_ij():
                                    top=3, botm=botm, model=m)
 
     m.sr = SpatialReference(delr=m.dis.delr * .3048, delc=m.dis.delc * .3048, xul=600000, yul=5170000,
-                            proj4_str='EPSG:26715', rotation=45)
+                            proj4_str='EPSG:26715', rotation=-45)
 
     recarray = np.array([(0, 5, 5, .1, True, 's0'),
                          (1, 4, 5, .2, False, 's1'),
