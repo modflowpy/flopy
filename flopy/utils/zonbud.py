@@ -227,6 +227,7 @@ class ZoneBudget(object):
             assert kwargs['kstpkper'] in self.cbc.get_times(), print(s)
         else:
             raise Exception('No stress period/time step or time specified.')
+        assert isinstance(z, np.ndarray), 'Please pass a valid numpy array of zones.'
 
         # Check for negative zone values
         negative_zones = [iz for iz in np.unique(z) if iz < 0]
@@ -241,16 +242,13 @@ class ZoneBudget(object):
         else:
             izone = z.copy()
 
-        # Get the unique set of zones
-        zones = [int(i) for i in np.unique(izone)]
-
-        ich = np.ma.zeros(self.cbc_shape, np.int32)
-        ich.mask = True
-
         assert izone.shape == self.cbc_shape, \
             'Shape of input zone array {} does not' \
             ' match the cell by cell' \
             ' budget file {}'.format(izone.shape, self.cbc_shape)
+
+        # Initialize a constant head array
+        ich = np.zeros(self.cbc_shape, np.int32)
 
         # Create empty arrays for the inflow and outflow terms.
         # These arrays have the structure: ('flow direction', 'record name', value zone 1, value zone 2, etc.)
@@ -261,8 +259,8 @@ class ZoneBudget(object):
             # Determine where the constant head cells are
             if recname == 'CONSTANT HEAD':
                 chd = self.cbc.get_data(text=recname, full3D=True, **kwargs)[0]
-                ich[np.nonzero(chd)] = 1
-                ich.mask[np.nonzero(chd)] = False
+                ich = np.zeros(self.cbc_shape, np.int32)
+                ich[chd != 0] = 1
                 if np.count_nonzero(ich) > 0:
                     # TEMPORARY WARNINGS
                     chwarn = 'Budget information for CONSTANT HEAD cells is not yet supported.\n' \
@@ -279,14 +277,15 @@ class ZoneBudget(object):
                 self._accumulate_flow_flf(recname, izone, ich, **kwargs)
             elif recname == 'SWIADDTOCH':
                 chd = self.cbc.get_data(text=recname, full3D=True, **kwargs)[0]
-                ich[np.nonzero(chd)] = 1
-                ich.mask[np.nonzero(chd)] = False
+                ich = np.zeros(self.cbc_shape, np.int32)
+                ich[chd != 0] = 1
             elif recname == 'SWIADDTOFRF':
                 self._accumulate_flow_frf(recname, izone, ich, **kwargs)
             elif recname == 'SWIADDTOFFF':
                 self._accumulate_flow_frf(recname, izone, ich, **kwargs)
             elif recname == 'SWIADDTOFLF':
                 self._accumulate_flow_frf(recname, izone, ich, **kwargs)
+
             # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
             # ACCUMULATE THE FLOW BY ZONE
             else:
@@ -345,8 +344,9 @@ class ZoneBudget(object):
     def _initialize_records(self, izone):
         ff = False
         zones = [z for z in np.unique(izone)]
+        nzzones = [z for z in np.unique(izone) if z != 0]
         dtype_list = [('flow_dir', '|S3'), ('record', '|S20')]
-        dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in zones]
+        dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in nzzones]
         dtype = np.dtype(dtype_list)
         self.inflows = np.array([], dtype=dtype)
         self.outflows = np.array([], dtype=dtype)
@@ -359,37 +359,37 @@ class ZoneBudget(object):
 
         for recname in self.ift_record_names:
             if recname == 'FLOW RIGHT FACE' and not ff:
-                recs = [tuple(['in', 'FROM ZONE {}'.format(z)] + [0. for _ in zones]) for z in zones]
+                recs = [tuple(['in', 'FROM ZONE {}'.format(z)] + [0. for _ in nzzones]) for z in zones]
                 recs = np.array(recs, dtype=self.inflows.dtype)
                 self.inflows = np.append(self.inflows, recs)
-                recs = [tuple(['out', 'TO ZONE {}'.format(z)] + [0. for _ in zones]) for z in zones]
+                recs = [tuple(['out', 'TO ZONE {}'.format(z)] + [0. for _ in nzzones]) for z in zones]
                 recs = np.array(recs, dtype=self.outflows.dtype)
                 self.outflows = np.append(self.outflows, recs)
                 ff = True
             elif recname == 'FLOW FRONT FACE' and not ff:
-                recs = [tuple(['in', 'FROM ZONE {}'.format(z)] + [0. for _ in zones]) for z in zones]
+                recs = [tuple(['in', 'FROM ZONE {}'.format(z)] + [0. for _ in nzzones]) for z in zones]
                 recs = np.array(recs, dtype=self.inflows.dtype)
                 self.inflows = np.append(self.inflows, recs)
-                recs = [tuple(['out', 'TO ZONE {}'.format(z)] + [0. for _ in zones]) for z in zones]
+                recs = [tuple(['out', 'TO ZONE {}'.format(z)] + [0. for _ in nzzones]) for z in zones]
                 recs = np.array(recs, dtype=self.outflows.dtype)
                 self.outflows = np.append(self.outflows, recs)
                 ff = True
             elif recname == 'FLOW LOWER FACE' and not ff:
-                recs = [tuple(['in', 'FROM ZONE {}'.format(z)] + [0. for _ in zones]) for z in zones]
+                recs = [tuple(['in', 'FROM ZONE {}'.format(z)] + [0. for _ in nzzones]) for z in zones]
                 recs = np.array(recs, dtype=self.inflows.dtype)
                 self.inflows = np.append(self.inflows, recs)
-                recs = [tuple(['out', 'TO ZONE {}'.format(z)] + [0. for _ in zones]) for z in zones]
+                recs = [tuple(['out', 'TO ZONE {}'.format(z)] + [0. for _ in nzzones]) for z in zones]
                 recs = np.array(recs, dtype=self.outflows.dtype)
                 self.outflows = np.append(self.outflows, recs)
                 ff = True
 
     def _build_empty_record(self, recname, izone):
 
-        zones = [z for z in np.unique(izone)]
-        recs = np.array(tuple(['in', recname] + [0. for _ in zones]),
+        nzzones = [z for z in np.unique(izone) if z != 0]
+        recs = np.array(tuple(['in', recname] + [0. for _ in nzzones]),
                         dtype=self.inflows.dtype)
         self.inflows = np.append(self.inflows, recs)
-        recs = np.array(tuple(['out', recname] + [0. for _ in zones]),
+        recs = np.array(tuple(['out', recname] + [0. for _ in nzzones]),
                         dtype=self.outflows.dtype)
         self.outflows = np.append(self.outflows, recs)
 
@@ -399,7 +399,6 @@ class ZoneBudget(object):
         # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K.
         # Accumulate flow from lower zones to higher zones from "left" to "right".
         # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
-        # Returns a tuple of ("to zone", "from zone", "absolute flux")
         bud = self.cbc.get_data(text=recname, **kwargs)[0]
 
         nz = izone[:, :, 1:]
@@ -433,7 +432,16 @@ class ZoneBudget(object):
         nzgt_l2r = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-        # q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
+        l, r, c = np.where(ich == 1)
+        from_zones = izone[l, r, c-1]
+        to_zones = izone[l, r, c]
+        q = bud[l, r, c-1]
+        q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
+        idx_neg = np.where(q < 0)
+        idx_pos = np.where(q >= 0)
+        chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        nzgt_l2r_chd = chdneg + chdpos
 
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
         # Accumulate flow from lower zones to higher zones from "right" to "left".
@@ -466,16 +474,36 @@ class ZoneBudget(object):
         nzgt_r2l = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+        l, r, c = np.where(ich == 1)
+        from_zones = izone[l, r, c]
+        to_zones = izone[l, r, c]
+        q = bud[l, r, c+1]
+        q[(ich[l, r, c] == 1) & (ich[l, r, c - 1] == 1)] = 0.
+        idx_neg = np.where(q < 0)
+        idx_pos = np.where(q >= 0)
+        chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        nzgt_r2l_chd = chdneg + chdpos
 
-
+        # Update budget arrays
         # Tuple of ("to zone", "from zone", "absolute flux")
-        nzgt = sorted(nzgt_l2r + nzgt_r2l, key=lambda tup: tup[:2])
-
+        nzgt = nzgt_l2r + nzgt_r2l
         for (from_zone, to_zone, flux) in nzgt:
             rowidx1 = np.where((self.inflows['record'] == 'FROM ZONE {}'.format(from_zone)))
             rowidx2 = np.where((self.outflows['record'] == 'TO ZONE {}'.format(to_zone)))
-            self.inflows['ZONE {}'.format(to_zone)][rowidx1] += flux
-            self.outflows['ZONE {}'.format(from_zone)][rowidx2] += flux
+            if to_zone != 0:
+                self.inflows['ZONE {}'.format(to_zone)][rowidx1] += flux
+            if from_zone != 0:
+                self.outflows['ZONE {}'.format(from_zone)][rowidx2] += flux
+        nzgt_chd = nzgt_l2r_chd + nzgt_r2l_chd
+        for (from_zone, to_zone, flux) in nzgt_chd:
+            rowidx1 = np.where((self.inflows['record'] == 'in') & (self.inflows['record'] == 'CONSTANT HEAD'))
+            rowidx2 = np.where((self.inflows['record'] == 'out') & (self.inflows['record'] == 'CONSTANT HEAD'))
+            if to_zone != 0:
+                self.inflows['ZONE {}'.format(to_zone)][rowidx1] += flux
+            if from_zone != 0:
+                self.outflows['ZONE {}'.format(from_zone)][rowidx2] += flux
+
         return
 
     def _accumulate_flow_fff(self, recname, izone, ich, **kwargs):
@@ -515,6 +543,17 @@ class ZoneBudget(object):
         pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_u2d = neg + pos
 
+        # # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+        # l, r, c = np.where(ich == 1)
+        # from_zones = izone[l, r-1, c]
+        # to_zones = izone[l, r, c]
+        # q = bud[l, r-1, c]
+        # q[(ich[l, r, c] == 1) & (ich[l, r, c - 1] == 1)] = 0.
+        # idx_neg = np.where(q < 0)
+        # idx_pos = np.where(q >= 0)
+        # chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        # chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
         # Accumulate flow from lower zones to higher zones from "down" to "up".
         nz = izone[:, :-1, :]
@@ -544,17 +583,28 @@ class ZoneBudget(object):
         pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         nzgt_d2u = neg + pos
 
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-
+        # # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+        # l, r, c = np.where(ich == 1)
+        # from_zones = izone[l, r, c]
+        # to_zones = izone[l, r+1, c]
+        # q = bud[l, r, c]
+        # q[(ich[l, r, c] == 1) & (ich[l, r, c - 1] == 1)] = 0.
+        # idx_neg = np.where(q < 0)
+        # idx_pos = np.where(q >= 0)
+        # chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
+        # chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
 
         # Tuple of ("to zone", "from zone", "absolute flux")
-        nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
-
+        # nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
+        nzgt = nzgt_u2d + nzgt_d2u
         for (from_zone, to_zone, flux) in nzgt:
             rowidx1 = np.where((self.inflows['record'] == 'FROM ZONE {}'.format(from_zone)))
             rowidx2 = np.where((self.outflows['record'] == 'TO ZONE {}'.format(to_zone)))
-            self.inflows['ZONE {}'.format(to_zone)][rowidx1] += flux
-            self.outflows['ZONE {}'.format(from_zone)][rowidx2] += flux
+            if to_zone != 0:
+                self.inflows['ZONE {}'.format(to_zone)][rowidx1] += flux
+            if from_zone != 0:
+                self.outflows['ZONE {}'.format(from_zone)][rowidx2] += flux
+
         return
 
     def _accumulate_flow_flf(self, recname, izone, ich, **kwargs):
@@ -628,7 +678,8 @@ class ZoneBudget(object):
 
 
         # Tuple of ("to zone", "from zone", "absolute flux")
-        nzgt = sorted(nzgt_t2b + nzgt_b2t, key=lambda tup: tup[:2])
+        # nzgt = sorted(nzgt_t2b + nzgt_b2t, key=lambda tup: tup[:2])
+        nzgt = nzgt_t2b + nzgt_b2t
 
         for (from_zone, to_zone, flux) in nzgt:
             rowidx1 = np.where((self.inflows['record'] == 'FROM ZONE {}'.format(from_zone)))
@@ -637,45 +688,48 @@ class ZoneBudget(object):
             self.outflows['ZONE {}'.format(from_zone)][rowidx2] += flux
         return
 
-    def _accumulate_constant_head_flow(self, izone, ich, **kwargs):
-        # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
-        # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
-        # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
-        # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
-        # FLOW.
-        q_chd_in = np.zeros(self.cbc_shape, dtype=np.float64)
-        q_chd_out = np.zeros(self.cbc_shape, dtype=np.float64)
-
-        ff_records = [n for n in self.ift_record_names if 'SWI' not in n and n != 'CONSTANT HEAD']
-
-        # Accumulate the flow faces
-        for ff in ff_records:
-            q = self.cbc.get_data(text=ff, **kwargs)[0]
-
-            q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
-            q_chd_out[(ich == 1) & (q < 0)] += q[(ich == 1) & (q < 0)]
-
-        chd_inflow = [np.abs(q_chd_in[(izone == z)].sum()) for z in np.unique(izone.ravel())]
-        chd_outflow = [np.abs(q_chd_out[(izone == z)].sum()) for z in np.unique(izone.ravel())]
-        chd_inflow = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow])
-        chd_outflow = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow])
-        return chd_inflow, chd_outflow
+    # def _accumulate_constant_head_flow(self, izone, ich, **kwargs):
+    #     # CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
+    #     # CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
+    #     # INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
+    #     # HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
+    #     # FLOW.
+    #     q_chd_in = np.zeros(self.cbc_shape, dtype=np.float64)
+    #     q_chd_out = np.zeros(self.cbc_shape, dtype=np.float64)
+    #
+    #     ff_records = [n for n in self.ift_record_names if 'SWI' not in n and n != 'CONSTANT HEAD']
+    #
+    #     # Accumulate the flow faces
+    #     for ff in ff_records:
+    #         q = self.cbc.get_data(text=ff, **kwargs)[0]
+    #
+    #         q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
+    #         q_chd_out[(ich == 1) & (q < 0)] += q[(ich == 1) & (q < 0)]
+    #
+    #     chd_inflow = [np.abs(q_chd_in[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+    #     chd_outflow = [np.abs(q_chd_out[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+    #     chd_inflow = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_inflow])
+    #     chd_outflow = tuple([val if not type(val) == np.ma.core.MaskedConstant else 0. for val in chd_outflow])
+    #     return chd_inflow, chd_outflow
 
     def _accumulate_ssst_flow(self, recname, budin, budout, izone):
         zones = [z for z in np.unique(izone)]
         recin = [np.abs(budin[(izone == z)].sum()) for z in np.unique(izone.ravel())]
         recout = [np.abs(budout[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+
         rowidx = np.where((self.inflows['flow_dir'] == 'in') & (self.inflows['record'] == recname))
         for idx, flux in enumerate(recin):
             if type(flux) == np.ma.core.MaskedConstant:
                 flux = 0.
-            self.inflows['ZONE {}'.format(zones[idx])][rowidx] += flux
+            if idx != 0:
+                self.inflows['ZONE {}'.format(zones[idx])][rowidx] += flux
 
-        rowidx = np.where((self.inflows['flow_dir'] == 'out') & (self.inflows['record'] == recname))
+        rowidx = np.where((self.outflows['flow_dir'] == 'out') & (self.outflows['record'] == recname))
         for idx, flux in enumerate(recout):
             if type(flux) == np.ma.core.MaskedConstant:
                 flux = 0.
-            self.inflows['ZONE {}'.format(zones[idx])][rowidx] += flux
+            if idx != 0:
+                self.outflows['ZONE {}'.format(zones[idx])][rowidx] += flux
 
     def get_kstpkper(self):
         return self.cbc.get_kstpkper()
