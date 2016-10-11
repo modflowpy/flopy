@@ -143,11 +143,6 @@ class Budget(object):
                 f.write(','.join(['IN-OUT'] + [formatter(i) for i in self.ins_minus_out])+'\n')
                 f.write(','.join(['Percent Error'] + [formatter(i) for i in self.pcterr])+'\n')
 
-    @staticmethod
-    def _fields_view(a, fields):
-        new = a[fields].view(np.float64).reshape(a.shape + (-1,))
-        return new
-
 
 class ZoneBudget(object):
     """
@@ -174,22 +169,31 @@ class ZoneBudget(object):
             self.cbc = cbc_file
         elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
             self.cbc = CellBudgetFile(cbc_file)
+        else:
+            raise Exception('Cannot load cell budget file.')
 
         # All record names in the cell-by-cell budget binary file
         self.record_names = [n.strip() for n in self.cbc.unique_record_names()]
+
+        # Get imeth for each record in the CellBudgetFile record list
+        self.imeth = {}
+        for record in self.cbc.recordarray:
+            self.imeth[record['text'].strip()] = record['imeth']
 
         # Constant head term record names
         self.chd_record_names = [n.strip() for n in self.cbc.unique_record_names()
                                  if n.strip() in chd_terms]
 
-        # Source/sink/storage term record names
-        self.ssst_record_names = [n.strip() for n in self.cbc.unique_record_names()
-                                  if n.strip() not in internal_flow_terms
-                                  and n.strip() not in chd_terms]
-
         # Internal flow record names
         self.ift_record_names = [n.strip() for n in self.cbc.unique_record_names()
                                  if n.strip() in internal_flow_terms]
+
+        # Source/sink/storage term record names
+        # These are all of the terms left over that are not related to constant
+        # head cells or face flow terms
+        self.ssst_record_names = [n.strip() for n in self.cbc.unique_record_names()
+                                  if n.strip() not in self.ift_record_names
+                                  and n.strip() not in self.chd_record_names]
 
         # Check the shape of the cbc budget file arrays
         self.cbc_shape = self.get_model_shape()
@@ -224,7 +228,6 @@ class ZoneBudget(object):
         Parameters
         ----------
         z:
-        kstpkper:
 
         Returns
         -------
@@ -240,6 +243,11 @@ class ZoneBudget(object):
             assert kwargs['kstpkper'] in self.cbc.get_times(), print(s)
         else:
             raise Exception('No stress period/time step or time specified.')
+
+        # Check for negative zone values
+        negative_zones = [iz for iz in np.unique(z) if iz < 0]
+        if len(negative_zones) > 0:
+            raise Exception('Negative zone value(s) found:', negative_zones)
 
         # Make sure the input zone array has the same shape as the cell budget file
         if len(z.shape) == 2:
@@ -281,49 +289,94 @@ class ZoneBudget(object):
                 # /TEMPORARY WARNINGS
 
         # ACCUMULATE SOURCE/SINK/STORAGE TERMS
-        # (e.g. recharge, drains, wells, mnw, riv, etc.)
+        # NOT AN INTERNAL FLOW TERM, ACCUMULATE THE FLOW BY ZONE
+        # These are all of the terms left over that are not related to constant
+        # head cells or face flow terms
         for recname in self.ssst_record_names:
 
-            if recname in ['RECHARGE']:
-                """
-                Update this piece--use full3D=False and grab it as a list. First
-                item is a layer array and the other is a data array.
-                """
-                rlay, rdata = self.cbc.get_data(text=recname, full3D=False, **kwargs)[0]
-                data = np.ma.zeros(self.cbc_shape, self.float_type)
+            imeth = self.imeth[recname]
+            data = self.cbc.get_data(text=recname, **kwargs)[0]
 
-                data = self.cbc.get_data(text=recname, full3D=True, **kwargs)[0]
+            if imeth == 2 or imeth == 5:
+                # LIST
+                budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                for [node, q] in zip(data['node'], data['q']):
+                    idx = node - 1
+                    if q > 0:
+                        budin.data[idx] += q
+                    elif q < 0:
+                        budout.data[idx] += q
+                budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
+                budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
+
+            elif imeth == 0 or imeth == 1:
+                # FULL 3-D ARRAY
                 budin = np.ma.zeros(self.cbc_shape, self.float_type)
                 budout = np.ma.zeros(self.cbc_shape, self.float_type)
                 budin[data > 0] = data[data > 0]
                 budout[data < 0] = data[data < 0]
 
-            else:
-                data = self.cbc.get_data(text=recname, full3D=False, **kwargs)[0]
+            elif imeth == 3:
+                # 1-LAYER ARRAY WITH LAYER INDICATOR ARRAY
+                rlay, rdata = data[0], data[1]
+                data = np.ma.zeros(self.cbc_shape, self.float_type)
+                for (r, c), l in np.ndenumerate(rlay):
+                    data[l-1, r, c] = rdata[r, c]
+                budin = np.ma.zeros(self.cbc_shape, self.float_type)
+                budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                budin[data > 0] = data[data > 0]
+                budout[data < 0] = data[data < 0]
 
-                if not isinstance(data, np.recarray):
-                    # Not a recarray, probably due to using old MF88-style budget file
-                    mf88warn = 'Use of a MODFLOW-88 style budget files with the {recname}\n'\
-                               'record may result in erroneous budget results for cells\n' \
-                               'containing multiple boundaries of the same type. \n' \
-                               'Please use the "COMPACT BUDGET" option of the Output ' \
-                               'Control package.'.format(recname=recname)
-                    warnings.warn(mf88warn, UserWarning)
-                    budin = np.ma.zeros(self.cbc_shape, self.float_type)
-                    budout = np.ma.zeros(self.cbc_shape, self.float_type)
-                    budin[data > 0] = data[data > 0]
-                    budout[data < 0] = data[data < 0]
-                else:
-                    budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
-                    budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
-                    for [node, q] in zip(data['node'], data['q']):
-                        idx = node - 1
-                        if q > 0:
-                            budin.data[idx] += q
-                        elif q < 0:
-                            budout.data[idx] += q
-                    budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
-                    budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
+            elif imeth == 4:
+                # 1-LAYER ARRAY THAT DEFINES LAYER 1
+                budin = np.ma.zeros(self.cbc_shape, self.float_type)
+                budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                r, c = np.where(data > 0)
+                budin[0, r, c] = data[r, c]
+                r, c = np.where(data < 0)
+                budout[0, r, c] = data[r, c]
+
+            # if recname == 'RECHARGE':
+            #     """
+            #     Update this piece--use full3D=False and grab it as a list. First
+            #     item is a layer array and the other is a data array.
+            #     """
+            #     rlay, rdata = self.cbc.get_data(text=recname, full3D=False, **kwargs)[0]
+            #     data = np.ma.zeros(self.cbc_shape, self.float_type)
+            #
+            #     data = self.cbc.get_data(text=recname, full3D=True, **kwargs)[0]
+            #     budin = np.ma.zeros(self.cbc_shape, self.float_type)
+            #     budout = np.ma.zeros(self.cbc_shape, self.float_type)
+            #     budin[data > 0] = data[data > 0]
+            #     budout[data < 0] = data[data < 0]
+            #
+            # else:
+            #     data = self.cbc.get_data(text=recname, full3D=False, **kwargs)[0]
+            #
+            #     if not isinstance(data, np.recarray):
+            #         # Not a recarray, probably due to using old MF88-style budget file
+            #         mf88warn = 'Use of a MODFLOW-88 style budget files with the {recname}\n'\
+            #                    'record may result in erroneous budget results for cells\n' \
+            #                    'containing multiple boundaries of the same type. \n' \
+            #                    'Please use the "COMPACT BUDGET" option of the Output ' \
+            #                    'Control package.'.format(recname=recname)
+            #         warnings.warn(mf88warn, UserWarning)
+            #         budin = np.ma.zeros(self.cbc_shape, self.float_type)
+            #         budout = np.ma.zeros(self.cbc_shape, self.float_type)
+            #         budin[data > 0] = data[data > 0]
+            #         budout[data < 0] = data[data < 0]
+            #     else:
+            #         budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+            #         budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+            #         for [node, q] in zip(data['node'], data['q']):
+            #             idx = node - 1
+            #             if q > 0:
+            #                 budin.data[idx] += q
+            #             elif q < 0:
+            #                 budout.data[idx] += q
+            #         budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
+            #         budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
 
             in_tup, out_tup = self._get_source_sink_storage_terms_tuple(recname, budin, budout, izone)
             inflows.append(in_tup)
@@ -345,7 +398,7 @@ class ZoneBudget(object):
                 # /TEMPORARY WARNINGS
 
         # ACCUMULATE INTERNAL FACE FLOW TERMS
-        in_tups, out_tups = self.accumulate_internal_flow(izone, **kwargs)
+        in_tups, out_tups = self._accumulate_internal_flow(izone, **kwargs)
         inflows.extend(in_tups)
         outflows.extend(out_tups)
 
@@ -356,16 +409,29 @@ class ZoneBudget(object):
         dtype = np.dtype(dtype_list)
         return Budget(np.array(q, dtype=dtype), **kwargs)
 
-    def accumulate_internal_flow(self, izone, **kwargs):
+    def _accumulate_internal_flow(self, izone, **kwargs):
         """
-        Accumulate, by zone, fluxes for the face flow records.
+        Accumulate fluxes for the face flow records.
 
         :param kstpkper:
         :param izone:
         :return:
         """
         # Each flow term is a tuple of ("from zone", "to zone", "absolute flux")
-        frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf = self._get_internal_flow_terms(izone, **kwargs)
+        frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf = [], [], [], [], [], []
+        for recname in self.ift_record_names:
+            if recname == 'FLOW RIGHT FACE':
+                frf = self._get_internal_flow_terms_tuple_frf(recname, izone, **kwargs)
+            elif recname == 'FLOW FRONT FACE':
+                fff = self._get_internal_flow_terms_tuple_fff(recname, izone, **kwargs)
+            elif recname == 'FLOW LOWER FACE':
+                flf = self._get_internal_flow_terms_tuple_flf(recname, izone, **kwargs)
+            elif recname == 'SWIADDTOFRF':
+                swiadd2frf = self._get_internal_flow_terms_tuple_frf(recname, izone, **kwargs)
+            elif recname == 'SWIADDTOFFF':
+                swiadd2fff = self._get_internal_flow_terms_tuple_fff(recname, izone, **kwargs)
+            elif recname == 'SWIADDTOFLF':
+                swiadd2flf = self._get_internal_flow_terms_tuple_flf(recname, izone, **kwargs)
 
         # Combine and sort flux tuples
         q_tups = sorted(frf + fff + flf + swiadd2frf + swiadd2fff + swiadd2flf)
@@ -402,30 +468,6 @@ class ZoneBudget(object):
             out_tups.append(tuple(v.values()))
 
         return in_tups, out_tups
-
-    def _get_internal_flow_terms(self, izone, **kwargs):
-        """
-        Process each internal flow record in the cell-by-cell budget file
-
-        :param kstpkper:
-        :param izone:
-        :return:
-        """
-        frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf = [], [], [], [], [], []
-        for recname in self.ift_record_names:
-            if recname == 'FLOW RIGHT FACE':
-                frf = self._get_internal_flow_terms_tuple_frf(recname, izone, **kwargs)
-            elif recname == 'FLOW FRONT FACE':
-                fff = self._get_internal_flow_terms_tuple_fff(recname, izone, **kwargs)
-            elif recname == 'FLOW LOWER FACE':
-                flf = self._get_internal_flow_terms_tuple_flf(recname, izone, **kwargs)
-            elif recname == 'SWIADDTOFRF':
-                swiadd2frf = self._get_internal_flow_terms_tuple_frf(recname, izone, **kwargs)
-            elif recname == 'SWIADDTOFFF':
-                swiadd2fff = self._get_internal_flow_terms_tuple_fff(recname, izone, **kwargs)
-            elif recname == 'SWIADDTOFLF':
-                swiadd2flf = self._get_internal_flow_terms_tuple_flf(recname, izone, **kwargs)
-        return frf, fff, flf, swiadd2frf, swiadd2fff, swiadd2flf
 
     def _get_internal_flow_terms_tuple_frf(self, recname, izone, **kwargs):
         # ACCUMULATE FLOW BETWEEN ZONES ACROSS COLUMNS. COMPUTE FLOW ONLY BETWEEN A ZONE
@@ -677,6 +719,8 @@ class ZoneBudget(object):
         q_chd_in = np.zeros(self.cbc_shape, dtype=np.float64)
         q_chd_out = np.zeros(self.cbc_shape, dtype=np.float64)
 
+        # Find the relevant flow face record names in case there this
+        # model uses the SWI package
         if recname == 'CONSTANT HEAD':
             ich = self.ich
             ff_records = [n for n in self.ift_record_names if 'SWI' not in n]
@@ -684,9 +728,9 @@ class ZoneBudget(object):
             ich = self.ich_swi
             ff_records = [n for n in self.ift_record_names if 'SWI' in n]
 
+        # Accumulate the flow faces
         for ff in ff_records:
             q = self.cbc.get_data(text=ff, **kwargs)[0]
-            # print(ff, q[(ich == 1)])
 
             q_chd_in[(ich == 1) & (q > 0)] += q[(ich == 1) & (q > 0)]
             q_chd_out[(ich == 1) & (q < 0)] += q[(ich == 1) & (q < 0)]
@@ -714,27 +758,7 @@ class ZoneBudget(object):
     def get_indices(self):
         return self.cbc.get_indices()
 
-    # def get_ssst_names(self):
-    #     return self.ssst_record_names
-    #
-    # def get_ssst_cbc_array(self, recname, kstpkper=None, totim=None):
-    #     try:
-    #         recname = [n for n in self.ssst_record_names if n.strip() == recname][0]
-    #     except IndexError:
-    #         s = 'Please enter a valid source/sink/storage record name. Use ' \
-    #                                                'get_ssst_names() to view a list.'
-    #         print(s)
-    #         return
-    #     if kstpkper is not None:
-    #         a = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-    #     elif totim is not None:
-    #         a = self.cbc.get_data(text=recname, totim=totim, full3D=True)[0]
-    #     else:
-    #         print('Reading budget for last timestep/stress period.')
-    #         kstpkper = self.cbc.get_kstpkper()[-1]
-    #         a = self.cbc.get_data(text=recname, kstpkper=kstpkper, full3D=True)[0]
-    #     return a
 
-    # def _fields_view(self, a, fields):
-    #     new = a[fields].view(self.float_type).reshape(a.shape + (-1,))
-    #     return new
+def _fields_view(a, fields):
+    new = a[fields].view(np.float64).reshape(a.shape + (-1,))
+    return new
