@@ -11,40 +11,25 @@ class Budget(object):
     """
     def __init__(self, records, **kwargs):
         self.records = records
-        # if 'kstpkper' in kwargs.keys():
-        #     self.kstpkper =
-        # self.kstpkper = kstpkper
-        # self.totim = totim
-        # assert(self.kstpkper is not None or self.totim is not None), 'Budget object requires either kstpkper ' \
-        #                                                              'or totim be be specified.'
         self.kwargs = kwargs
-        # List the field names to be used to slice the recarray
-        # fields = ['ZONE{: >4d}'.format(z) for z in self.zones]
-        fields = [name for name in self.records.dtype.names if 'ZONE' in name]
-
-        self.ins_idx = np.where(self.records['flow_dir'] == 'in')[0]
-        self.out_idx = np.where(self.records['flow_dir'] == 'out')[0]
-
-        ins = _fields_view(self.records[self.ins_idx], fields)
-        out = _fields_view(self.records[self.out_idx], fields)
-
-        self.ins_sum = ins.sum(axis=0)
-        self.out_sum = out.sum(axis=0)
-
-        self.ins_minus_out = self.ins_sum - self.out_sum
-        self.ins_plus_out = self.ins_sum + self.out_sum
-
-        pcterr = 100 * self.ins_minus_out / (self.ins_plus_out / 2.)
-        self.pcterr = np.array([i if not np.isnan(i) else 0 for i in pcterr])
+        self._zonefields = [name for name in self.records.dtype.names if 'ZONE' in name]
 
     def get_total_inflow(self):
-        return self.ins_sum
+        idx = np.where(self.records['flow_dir'] == 'in')[0]
+        ins = _fields_view(self.records[idx], self._zonefields)
+        return ins.sum(axis=0)
 
     def get_total_outflow(self):
-        return self.out_sum
+        idx = np.where(self.records['flow_dir'] == 'out')[0]
+        out = _fields_view(self.records[idx], self._zonefields)
+        return out.sum(axis=0)
 
     def get_percent_error(self):
-        return self.pcterr
+        ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
+        ins_plus_out = self.get_total_inflow() + self.get_total_outflow()
+        pcterr = 100 * ins_minus_out / (ins_plus_out / 2.)
+        pcterr = np.array([i if not np.isnan(i) else 0 for i in pcterr])
+        return pcterr
 
     def to_csv(self, fname, write_format='pandas', formatter=None):
         """
@@ -72,7 +57,7 @@ class Budget(object):
                 f.write(','.join(self.records.dtype.names)+'\n')
 
                 # Write IN terms
-                for rec in self.records[self.ins_idx]:
+                for rec in self.records[np.where(self.records['flow_dir'] == 'in')[0]]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -80,10 +65,11 @@ class Budget(object):
                         else:
                             items.append(formatter(i))
                     f.write(','.join(items)+'\n')
-                f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in self.ins_sum])+'\n')
+                ins_sum = self.get_total_inflow()
+                f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
-                for rec in self.records[self.out_idx]:
+                for rec in self.records[np.where(self.records['flow_dir'] == 'out')[0]]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -91,11 +77,14 @@ class Budget(object):
                         else:
                             items.append(formatter(i))
                     f.write(','.join(items) + '\n')
-                f.write(','.join([' ', 'Total OUT'] + [formatter(i) for i in self.out_sum])+'\n')
+                out_sum = self.get_total_outflow()
+                f.write(','.join([' ', 'Total OUT'] + [formatter(i) for i in out_sum])+'\n')
 
                 # Write mass balance terms
-                f.write(','.join([' ', 'IN-OUT'] + [formatter(i) for i in self.ins_minus_out])+'\n')
-                f.write(','.join([' ', 'Percent Error'] + [formatter(i) for i in self.pcterr])+'\n')
+                ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
+                pcterr = self.get_percent_error()
+                f.write(','.join([' ', 'IN-OUT'] + [formatter(i) for i in ins_minus_out])+'\n')
+                f.write(','.join([' ', 'Percent Error'] + [formatter(i) for i in pcterr])+'\n')
 
         elif write_format.lower() == 'zonbud':
             with open(fname, 'w') as f:
@@ -114,7 +103,7 @@ class Budget(object):
 
                 # Write IN terms
                 f.write(','.join([' '] + ['IN']*(len(self.records.dtype.names[1:])-1))+'\n')
-                for rec in self.records[self.ins_idx]:
+                for rec in self.records[np.where(self.records['flow_dir'] == 'in')[0]]:
                     items = []
                     for i in list(rec)[1:]:
                         if isinstance(i, str):
@@ -122,11 +111,12 @@ class Budget(object):
                         else:
                             items.append(formatter(i))
                     f.write(','.join(items)+'\n')
-                f.write(','.join(['Total IN'] + [formatter(i) for i in self.ins_sum])+'\n')
+                ins_sum = self.get_total_inflow()
+                f.write(','.join(['Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
                 f.write(','.join([' '] + ['OUT']*(len(self.records.dtype.names[1:])-1))+'\n')
-                for rec in self.records[self.out_idx]:
+                for rec in self.records[np.where(self.records['flow_dir'] == 'out')[0]]:
                     items = []
                     for i in list(rec)[1:]:
                         if isinstance(i, str):
@@ -134,11 +124,14 @@ class Budget(object):
                         else:
                             items.append(formatter(i))
                     f.write(','.join(items) + '\n')
-                f.write(','.join(['Total OUT'] + [formatter(i) for i in self.out_sum])+'\n')
+                out_sum = self.get_total_outflow()
+                f.write(','.join(['Total OUT'] + [formatter(i) for i in out_sum])+'\n')
 
                 # Write mass balance terms
-                f.write(','.join(['IN-OUT'] + [formatter(i) for i in self.ins_minus_out])+'\n')
-                f.write(','.join(['Percent Error'] + [formatter(i) for i in self.pcterr])+'\n')
+                ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
+                pcterr = self.get_percent_error()
+                f.write(','.join(['IN-OUT'] + [formatter(i) for i in ins_minus_out])+'\n')
+                f.write(','.join(['Percent Error'] + [formatter(i) for i in pcterr])+'\n')
 
 
 class ZoneBudget(object):
