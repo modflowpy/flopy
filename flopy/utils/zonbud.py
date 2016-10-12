@@ -243,78 +243,89 @@ class ZoneBudget(object):
         # These arrays have the structure: ('flow direction', 'record name', value zone 1, value zone 2, etc.)
         self._initialize_records(izone)
 
-        for recname in self.record_names:
+        # Create a throwaway list of all record names
+        reclist = list(self.record_names)
 
-            if recname == 'CONSTANT HEAD':
-                chd = self.cbc.get_data(text=recname, full3D=True, **kwargs)[0]
-                ich = np.zeros(self.cbc_shape, np.int32)
-                ich[chd != 0] = 1
-            elif recname == 'FLOW RIGHT FACE':
-                self._accumulate_flow_frf(recname, izone, ich, **kwargs)
-            elif recname == 'FLOW FRONT FACE':
-                self._accumulate_flow_fff(recname, izone, ich, **kwargs)
-            elif recname == 'FLOW LOWER FACE':
-                self._accumulate_flow_flf(recname, izone, ich, **kwargs)
-            elif recname == 'SWIADDTOCH':
-                swichd = self.cbc.get_data(text=recname, full3D=True, **kwargs)[0]
-                swiich = np.zeros(self.cbc_shape, np.int32)
-                swiich[swichd != 0] = 1
-            elif recname == 'SWIADDTOFRF':
-                self._accumulate_flow_frf(recname, izone, swiich, **kwargs)
-            elif recname == 'SWIADDTOFFF':
-                self._accumulate_flow_frf(recname, izone, swiich, **kwargs)
-            elif recname == 'SWIADDTOFLF':
-                self._accumulate_flow_frf(recname, izone, swiich, **kwargs)
+        if 'CONSTANT HEAD' in reclist:
+            reclist.remove('CONSTANT HEAD')
+            chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True, **kwargs)[0]
+            ich = np.zeros(self.cbc_shape, np.int32)
+            ich[chd != 0] = 1
+        if 'FLOW RIGHT FACE' in reclist:
+            reclist.remove('FLOW RIGHT FACE')
+            self._accumulate_flow_frf('FLOW RIGHT FACE', izone, ich, **kwargs)
+        if 'FLOW FRONT FACE' in reclist:
+            reclist.remove('FLOW FRONT FACE')
+            self._accumulate_flow_fff('FLOW FRONT FACE', izone, ich, **kwargs)
+        if 'FLOW LOWER FACE' in reclist:
+            reclist.remove('FLOW LOWER FACE')
+            self._accumulate_flow_flf('FLOW LOWER FACE', izone, ich, **kwargs)
+        if 'SWIADDTOCH' in reclist:
+            reclist.remove('SWIADDTOCH')
+            swichd = self.cbc.get_data(text='SWIADDTOCH', full3D=True, **kwargs)[0]
+            swiich = np.zeros(self.cbc_shape, np.int32)
+            swiich[swichd != 0] = 1
+        if 'SWIADDTOFRF' in reclist:
+            reclist.remove('SWIADDTOFRF')
+            self._accumulate_flow_frf('SWIADDTOFRF', izone, swiich, **kwargs)
+        if 'SWIADDTOFFF' in reclist:
+            reclist.remove('SWIADDTOFFF')
+            self._accumulate_flow_fff('SWIADDTOFFF', izone, swiich, **kwargs)
+        if 'SWIADDTOFLF' in reclist:
+            reclist.remove('SWIADDTOFLF')
+            self._accumulate_flow_flf('SWIADDTOFLF', izone, swiich, **kwargs)
 
-            # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
-            # ACCUMULATE THE FLOW BY ZONE
-            else:
-                imeth = self.imeth[recname]
-                data = self.cbc.get_data(text=recname, **kwargs)[0]
+        # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
+        # ACCUMULATE THE FLOW BY ZONE
+        # iterate over remaining items in the list
+        for recname in reclist:
 
-                if imeth == 2 or imeth == 5:
-                    # LIST
-                    budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
-                    budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
-                    for [node, q] in zip(data['node'], data['q']):
-                        idx = node - 1
-                        if q > 0:
-                            budin.data[idx] += q
-                        elif q < 0:
-                            budout.data[idx] += q
-                    budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
-                    budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
-                    self._accumulate_ssst_flow(recname, budin, budout, izone)
+            imeth = self.imeth[recname]
+            data = self.cbc.get_data(text=recname, **kwargs)[0]
 
-                elif imeth == 0 or imeth == 1:
-                    # FULL 3-D ARRAY
-                    budin = np.ma.zeros(self.cbc_shape, self.float_type)
-                    budout = np.ma.zeros(self.cbc_shape, self.float_type)
-                    budin[data > 0] = data[data > 0]
-                    budout[data < 0] = data[data < 0]
-                    self._accumulate_ssst_flow(recname, budin, budout, izone)
+            if imeth == 2 or imeth == 5:
+                # LIST
+                budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                for [node, q] in zip(data['node'], data['q']):
+                    idx = node - 1
+                    if q > 0:
+                        budin.data[idx] += q
+                    elif q < 0:
+                        budout.data[idx] += q
+                budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
+                budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
+                self._accumulate_ssst_flow(recname, budin, budout, izone)
 
-                elif imeth == 3:
-                    # 1-LAYER ARRAY WITH LAYER INDICATOR ARRAY
-                    rlay, rdata = data[0], data[1]
-                    data = np.ma.zeros(self.cbc_shape, self.float_type)
-                    for (r, c), l in np.ndenumerate(rlay):
-                        data[l-1, r, c] = rdata[r, c]
-                    budin = np.ma.zeros(self.cbc_shape, self.float_type)
-                    budout = np.ma.zeros(self.cbc_shape, self.float_type)
-                    budin[data > 0] = data[data > 0]
-                    budout[data < 0] = data[data < 0]
-                    self._accumulate_ssst_flow(recname, budin, budout, izone)
+            elif imeth == 0 or imeth == 1:
+                # FULL 3-D ARRAY
+                budin = np.ma.zeros(self.cbc_shape, self.float_type)
+                budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                budin[data > 0] = data[data > 0]
+                budout[data < 0] = data[data < 0]
+                self._accumulate_ssst_flow(recname, budin, budout, izone)
 
-                elif imeth == 4:
-                    # 1-LAYER ARRAY THAT DEFINES LAYER 1
-                    budin = np.ma.zeros(self.cbc_shape, self.float_type)
-                    budout = np.ma.zeros(self.cbc_shape, self.float_type)
-                    r, c = np.where(data > 0)
-                    budin[0, r, c] = data[r, c]
-                    r, c = np.where(data < 0)
-                    budout[0, r, c] = data[r, c]
-                    self._accumulate_ssst_flow(recname, budin, budout, izone)
+            elif imeth == 3:
+                # 1-LAYER ARRAY WITH LAYER INDICATOR ARRAY
+                rlay, rdata = data[0], data[1]
+                data = np.ma.zeros(self.cbc_shape, self.float_type)
+                for (r, c), l in np.ndenumerate(rlay):
+                    data[l - 1, r, c] = rdata[r, c]
+                budin = np.ma.zeros(self.cbc_shape, self.float_type)
+                budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                budin[data > 0] = data[data > 0]
+                budout[data < 0] = data[data < 0]
+                self._accumulate_ssst_flow(recname, budin, budout, izone)
+
+            elif imeth == 4:
+                # 1-LAYER ARRAY THAT DEFINES LAYER 1
+                budin = np.ma.zeros(self.cbc_shape, self.float_type)
+                budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                r, c = np.where(data > 0)
+                budin[0, r, c] = data[r, c]
+                r, c = np.where(data < 0)
+                budout[0, r, c] = data[r, c]
+                self._accumulate_ssst_flow(recname, budin, budout, izone)
 
         return Budget(self.zonbudrecords, **kwargs)
 
@@ -706,167 +717,6 @@ class ZoneBudget(object):
             self._update_record('in', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
             self._update_record('out', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
-
-    def _get_internal_flow_terms_tuple_frf(self, recname, kstpkper, izone):
-        # ACCUMULATE FLOW BETWEEN ZONES ACROSS COLUMNS. COMPUTE FLOW ONLY BETWEEN A ZONE
-        # AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
-        # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K.
-        # Accumulate flow from lower zones to higher zones from "left" to "right".
-        # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
-        # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        bud = self.cbc.get_data(text=recname, kstpkper=kstpkper)[0]
-        # if not isinstance(bud, np.recarray):
-        #     mf88warn = 'Use of a MODFLOW-88 style budget file may result in \n' \
-        #                'the partial cancellation of fluxes in {recname} ' \
-        #                'cells where bi-directional flow occurs. \n' \
-        #                'If using MODFLOW-2000 or later, please use the ' \
-        #                '"COMPACT BUDGET" option of the Output Control package.'.format(recname=recname)
-        #     warnings.warn(mf88warn, UserWarning)
-
-        nz = izone[:, :, 1:]
-        nzl = izone[:, :, :-1]
-        l, r, c = np.where(nz > nzl)
-
-        # Adjust column values to account for the starting position of "nz"
-        c += 1
-
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r, c - 1]
-
-        # Define the zone to which flow is going
-        to_zones = izone[l, r, c]
-
-        # Get the face flow
-        q = bud[l, r, c - 1]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if np.count_nonzero(self.ich):
-            q[(self.ich[l, r, c] == 1) & (self.ich[l, r, c - 1] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
-
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
-        nzgt_l2r = neg + pos
-
-        # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
-        # Accumulate flow from lower zones to higher zones from "right" to "left".
-        # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
-        nz = izone[:, :, :-1]
-        nzr = izone[:, :, 1:]
-        l, r, c = np.where(nz > nzr)
-
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r, c]
-
-        # Define the zone to which flow is going
-        to_zones = izone[l, r, c + 1]
-
-        # Get the face flow
-        q = bud[l, r, c]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if np.count_nonzero(self.ich):
-            q[(self.ich[l, r, c] == 1) & (self.ich[l, r, c - 1] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
-
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
-        nzgt_r2l = neg + pos
-
-        # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        nzgt = sorted(nzgt_l2r + nzgt_r2l, key=lambda tup: tup[:2])
-        return nzgt
-
-    def _get_internal_flow_terms_tuple_fff(self, recname, kstpkper, izone):
-        # ACCUMULATE FLOW BETWEEN ZONES ACROSS ROWS. COMPUTE FLOW ONLY BETWEEN A ZONE
-        #  AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
-        # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K.
-        # Accumulate flow from lower zones to higher zones from "up" to "down".
-        # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        bud = self.cbc.get_data(text=recname, kstpkper=kstpkper)[0]
-        # if not isinstance(bud, np.recarray):
-        #     mf88warn = 'Use of a MODFLOW-88 style budget file may result in \n' \
-        #                'the partial cancellation of fluxes in {recname} ' \
-        #                'cells where bi-directional flow occurs. \n' \
-        #                'If using MODFLOW-2000 or later, please use the ' \
-        #                '"COMPACT BUDGET" option of the Output Control package.'.format(recname=recname)
-        #     warnings.warn(mf88warn, UserWarning)
-
-        nz = izone[:, 1:, :]
-        nzu = izone[:, :-1, :]
-        l, r, c = np.where(nz < nzu)
-        # Adjust column values by +1 to account for the starting position of "nz"
-        r += 1
-
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r - 1, c]
-
-        # Define the zone to which flow is going
-        to_zones = izone[l, r, c]
-
-        # Get the face flow
-        q = bud[l, r - 1, c]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if np.count_nonzero(self.ich):
-            q[(self.ich[l, r, c] == 1) & (self.ich[l, r - 1, c] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
-
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
-        nzgt_u2d = neg + pos
-
-        # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
-        # Accumulate flow from lower zones to higher zones from "down" to "up".
-        nz = izone[:, :-1, :]
-        nzd = izone[:, 1:, :]
-        l, r, c = np.where(nz < nzd)
-
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r, c]
-
-        # Define the zone to which flow is going
-        to_zones = izone[l, r + 1, c]
-
-        # Get the face flow
-        q = bud[l, r, c]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        if np.count_nonzero(self.ich):
-            q[(self.ich[l, r, c] == 1) & (self.ich[l, r - 1, c] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
-
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
-        nzgt_d2u = neg + pos
-
-        # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        nzgt = sorted(nzgt_u2d + nzgt_d2u, key=lambda tup: tup[:2])
-        return nzgt
 
     def _accumulate_ssst_flow(self, recname, budin, budout, izone):
         zones = [z for z in np.unique(izone)]
