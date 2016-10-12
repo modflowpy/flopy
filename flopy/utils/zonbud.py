@@ -236,12 +236,14 @@ class ZoneBudget(object):
             ' match the cell by cell' \
             ' budget file {}'.format(izone.shape, self.cbc_shape)
 
+        lstzon = [z for z in np.unique(izone)]
+
         # Initialize a constant head array
         ich = np.zeros(self.cbc_shape, np.int32)
 
         # Create empty arrays for the inflow and outflow terms.
         # These arrays have the structure: ('flow direction', 'record name', value zone 1, value zone 2, etc.)
-        self._initialize_records(izone)
+        self._initialize_records(lstzon)
 
         # Create a throwaway list of all record names
         reclist = list(self.record_names)
@@ -295,16 +297,12 @@ class ZoneBudget(object):
                         budout.data[idx] += q
                 budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
                 budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
-                self._accumulate_ssst_flow(recname, budin, budout, izone)
-
             elif imeth == 0 or imeth == 1:
                 # FULL 3-D ARRAY
                 budin = np.ma.zeros(self.cbc_shape, self.float_type)
                 budout = np.ma.zeros(self.cbc_shape, self.float_type)
                 budin[data > 0] = data[data > 0]
                 budout[data < 0] = data[data < 0]
-                self._accumulate_ssst_flow(recname, budin, budout, izone)
-
             elif imeth == 3:
                 # 1-LAYER ARRAY WITH LAYER INDICATOR ARRAY
                 rlay, rdata = data[0], data[1]
@@ -315,8 +313,6 @@ class ZoneBudget(object):
                 budout = np.ma.zeros(self.cbc_shape, self.float_type)
                 budin[data > 0] = data[data > 0]
                 budout[data < 0] = data[data < 0]
-                self._accumulate_ssst_flow(recname, budin, budout, izone)
-
             elif imeth == 4:
                 # 1-LAYER ARRAY THAT DEFINES LAYER 1
                 budin = np.ma.zeros(self.cbc_shape, self.float_type)
@@ -325,60 +321,52 @@ class ZoneBudget(object):
                 budin[0, r, c] = data[r, c]
                 r, c = np.where(data < 0)
                 budout[0, r, c] = data[r, c]
-                self._accumulate_ssst_flow(recname, budin, budout, izone)
+
+            self._accumulate_ssst_flow(recname, budin, budout, izone, lstzon)
 
         return Budget(self.zonbudrecords, **kwargs)
 
-    def _build_empty_record(self, flow_dir, recname, izone):
-
-        nzzones = [z for z in np.unique(izone) if z != 0]
-        recs = np.array(tuple([flow_dir, recname] + [0. for _ in nzzones]),
+    def _build_empty_record(self, flow_dir, recname, lstzon):
+        recs = np.array(tuple([flow_dir, recname] + [0. for _ in lstzon if _ != 0]),
                         dtype=self.zonbudrecords.dtype)
         self.zonbudrecords = np.append(self.zonbudrecords, recs)
-        # recs = np.array(tuple(['in', recname] + [0. for _ in nzzones]),
-        #                 dtype=self.inflows.dtype)
-        # self.inflows = np.append(self.inflows, recs)
-        # recs = np.array(tuple(['out', recname] + [0. for _ in nzzones]),
-        #                 dtype=self.outflows.dtype)
-        # self.outflows = np.append(self.outflows, recs)
 
-    def _initialize_records(self, izone):
-        zones = [z for z in np.unique(izone)]
-        nzzones = [z for z in np.unique(izone) if z != 0]
+    def _initialize_records(self, lstzon):
 
         # Initialize the record array
         dtype_list = [('flow_dir', '|S3'), ('record', '|S20')]
-        dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in nzzones]
+        dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in lstzon if z != 0]
         dtype = np.dtype(dtype_list)
         self.zonbudrecords = np.array([], dtype=dtype)
 
         # Add "in" records
         if 'CONSTANT HEAD' in self.record_names:
-            self._build_empty_record('in', 'CONSTANT HEAD', izone)
+            self._build_empty_record('in', 'CONSTANT HEAD', lstzon)
 
         for recname in self.ssst_record_names:
-            self._build_empty_record('in', recname, izone)
+            self._build_empty_record('in', recname, lstzon)
 
         # internal flow records
-        for z in zones:
-            self._build_empty_record('in', 'FROM ZONE {}'.format(z), izone)
+        for z in lstzon:
+            self._build_empty_record('in', 'FROM ZONE {}'.format(z), lstzon)
 
         # Add "out" records
         if 'CONSTANT HEAD' in self.record_names:
-            self._build_empty_record('out', 'CONSTANT HEAD', izone)
+            self._build_empty_record('out', 'CONSTANT HEAD', lstzon)
 
         for recname in self.ssst_record_names:
-            self._build_empty_record('out', recname, izone)
+            self._build_empty_record('out', recname, lstzon)
 
         # internal flow records
-        for z in zones:
-            self._build_empty_record('out', 'TO ZONE {}'.format(z), izone)
+        for z in lstzon:
+            self._build_empty_record('out', 'TO ZONE {}'.format(z), lstzon)
 
         return
 
     def _update_record(self, flow_dir, recname, colname, flux):
         if colname != 'ZONE 0':
-            rowidx = np.where((self.zonbudrecords['flow_dir'] == flow_dir) & (self.zonbudrecords['record'] == recname))
+            rowidx = np.where((self.zonbudrecords['flow_dir'] == flow_dir) &
+                              (self.zonbudrecords['record'] == recname))
             self.zonbudrecords[colname][rowidx] += flux
         return
 
@@ -718,18 +706,17 @@ class ZoneBudget(object):
             self._update_record('out', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
-    def _accumulate_ssst_flow(self, recname, budin, budout, izone):
-        zones = [z for z in np.unique(izone)]
-        recin = [np.abs(budin[(izone == z)].sum()) for z in np.unique(izone.ravel())]
-        recout = [np.abs(budout[(izone == z)].sum()) for z in np.unique(izone.ravel())]
+    def _accumulate_ssst_flow(self, recname, budin, budout, izone, lstzon):
+        recin = [np.abs(budin[(izone == z)].sum()) for z in lstzon]
+        recout = [np.abs(budout[(izone == z)].sum()) for z in lstzon]
         for idx, flux in enumerate(recin):
             if type(flux) == np.ma.core.MaskedConstant:
                 flux = 0.
-            self._update_record('in', recname, 'ZONE {}'.format(zones[idx]), flux)
+            self._update_record('in', recname, 'ZONE {}'.format(lstzon[idx]), flux)
         for idx, flux in enumerate(recout):
             if type(flux) == np.ma.core.MaskedConstant:
                 flux = 0.
-            self._update_record('out', recname, 'ZONE {}'.format(zones[idx]), flux)
+            self._update_record('out', recname, 'ZONE {}'.format(lstzon[idx]), flux)
         return
 
     def get_kstpkper(self):
