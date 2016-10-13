@@ -28,7 +28,7 @@ class Budget(object):
         ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
         ins_plus_out = self.get_total_inflow() + self.get_total_outflow()
         pcterr = 100 * ins_minus_out / (ins_plus_out / 2.)
-        pcterr = np.array([i if not np.isnan(i) else 0 for i in pcterr])
+        pcterr = np.nan_to_num(pcterr)
         return pcterr
 
     def to_csv(self, fname, write_format='pandas', formatter=None):
