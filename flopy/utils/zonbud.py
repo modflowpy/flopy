@@ -150,8 +150,9 @@ class ZoneBudget(object):
         # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
         # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
         # FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
-        # SWIADDTO* terms are used by the SWI2 package.
-        internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE']
+        # SWIADDTO--- terms are used by the SWI2 groundwater flow process.
+        internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
+                               'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
@@ -168,15 +169,11 @@ class ZoneBudget(object):
         for record in self.cbc.recordarray:
             self.imeth[record['text'].strip()] = record['imeth']
 
-        # Internal flow record names
-        self.ift_record_names = [n.strip() for n in self.cbc.unique_record_names()
-                                 if n.strip() in internal_flow_terms]
-
         # Source/sink/storage term record names
-        # These are all of the terms left over that are not related to constant
+        # These are all of the terms that are not related to constant
         # head cells or face flow terms
         self.ssst_record_names = [n.strip() for n in self.cbc.unique_record_names()
-                                  if n.strip() not in self.ift_record_names]
+                                  if n.strip() not in internal_flow_terms]
 
         # Check the shape of the cbc budget file arrays
         self.cbc_shape = self.get_model_shape()
@@ -186,13 +183,14 @@ class ZoneBudget(object):
         return
 
     def get_model_shape(self):
-        l, r, c = self.cbc.get_data(idx=0, full3D=True)[0].shape
-        return l, r, c
+        return self.cbc.get_data(idx=0, full3D=True)[0].shape
 
     def get_budget(self, z, **kwargs):
         """
         Creates a budget for the specified zone array. Pass keyword arguments to specify
-        the time step/stress period or sim. time for which a budget is desired.
+        the time step/stress period or sim. time for which a budget is desired. Valid
+        keywords are "kstpkper" and "totim". Currently, this function only supports the
+        use of a single time step/stress period or time.
 
         :param z: A numpy.ndarray containing to zones to be used.
         :param kwargs:
@@ -208,6 +206,8 @@ class ZoneBudget(object):
                 ' does not exist {}'.format(kwargs['totim'])
             assert kwargs['totim'] in self.cbc.get_times(), print(s)
         else:
+            # FUTURE: Return a list of budgets for each time step/stress period
+            # in the CellBudgetFile
             raise Exception('No stress period/time step or time specified.')
         assert isinstance(z, np.ndarray), 'Please pass zones as type {}'.format(np.ndarray)
 
@@ -217,10 +217,12 @@ class ZoneBudget(object):
             raise Exception('Negative zone value(s) found:', negative_zones)
 
         # Make sure the input zone array has the same shape as the cell budget file
-        if len(z.shape) == 2:
+        if len(z.shape) == 2 and self.nlay == 1:
             izone = np.zeros(self.cbc_shape, np.int32)
-            for i in range(izone.shape[0]):
-                izone[i, :, :] = z
+            izone[0, :, :] = z[:, :]
+
+        elif len(z.shape) == 2 and self.nlay > 1:
+            raise Exception('Zone array and CellBudgetFile shapes do not match.')
         else:
             izone = z.copy()
 
@@ -229,13 +231,14 @@ class ZoneBudget(object):
             ' match the cell by cell' \
             ' budget file {}'.format(izone.shape, self.cbc_shape)
 
+        # List of unique zones numbers
         lstzon = [z for z in np.unique(izone)]
 
         # Initialize a constant head array
         ich = np.zeros(self.cbc_shape, np.int32)
 
-        # Create empty arrays for the inflow and outflow terms.
-        # These arrays have the structure: ('flow direction', 'record name', value zone 1, value zone 2, etc.)
+        # Create empty array for the budget terms.
+        # This array has the structure: ('flow direction', 'record name', value zone 1, value zone 2, etc.)
         self._initialize_records(lstzon)
 
         # Create a throwaway list of all record names
@@ -314,8 +317,11 @@ class ZoneBudget(object):
                 budin[0, r, c] = data[r, c]
                 r, c = np.where(data < 0)
                 budout[0, r, c] = data[r, c]
+            else:
+                # Should not happen
+                raise Exception('Unrecognized "imeth" for {} record: {}'.format(recname, imeth))
 
-            self._accumulate_ssst_flow(recname, budin, budout, izone, lstzon)
+            self._accumulate_flow_ssst(recname, budin, budout, izone, lstzon)
 
         return Budget(self.zonbudrecords, **kwargs)
 
@@ -335,22 +341,16 @@ class ZoneBudget(object):
         # Add "in" records
         if 'CONSTANT HEAD' in self.record_names:
             self._build_empty_record('in', 'CONSTANT HEAD', lstzon)
-
         for recname in self.ssst_record_names:
             self._build_empty_record('in', recname, lstzon)
-
-        # internal flow records
         for z in lstzon:
             self._build_empty_record('in', 'FROM ZONE {}'.format(z), lstzon)
 
         # Add "out" records
         if 'CONSTANT HEAD' in self.record_names:
             self._build_empty_record('out', 'CONSTANT HEAD', lstzon)
-
         for recname in self.ssst_record_names:
             self._build_empty_record('out', recname, lstzon)
-
-        # internal flow records
         for z in lstzon:
             self._build_empty_record('out', 'TO ZONE {}'.format(z), lstzon)
 
@@ -699,7 +699,7 @@ class ZoneBudget(object):
             self._update_record('out', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
-    def _accumulate_ssst_flow(self, recname, budin, budout, izone, lstzon):
+    def _accumulate_flow_ssst(self, recname, budin, budout, izone, lstzon):
         recin = [np.abs(budin[(izone == z)].sum()) for z in lstzon]
         recout = [np.abs(budout[(izone == z)].sum()) for z in lstzon]
         for idx, flux in enumerate(recin):
