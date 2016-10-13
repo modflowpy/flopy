@@ -16,12 +16,12 @@ class Budget(object):
 
     def get_total_inflow(self):
         idx = np.where(self.records['flow_dir'] == 'in')[0]
-        ins = _fields_view(self.records[idx], self._zonefields)
+        ins = _numpyvoid2numeric(self.records[self._zonefields][idx])
         return ins.sum(axis=0)
 
     def get_total_outflow(self):
         idx = np.where(self.records['flow_dir'] == 'out')[0]
-        out = _fields_view(self.records[idx], self._zonefields)
+        out = _numpyvoid2numeric(self.records[self._zonefields][idx])
         return out.sum(axis=0)
 
     def get_percent_error(self):
@@ -132,6 +132,7 @@ class Budget(object):
                 pcterr = self.get_percent_error()
                 f.write(','.join(['IN-OUT'] + [formatter(i) for i in ins_minus_out])+'\n')
                 f.write(','.join(['Percent Error'] + [formatter(i) for i in pcterr])+'\n')
+        return
 
 
 class ZoneBudget(object):
@@ -722,6 +723,5 @@ class ZoneBudget(object):
         return self.cbc.get_indices()
 
 
-def _fields_view(a, fields):
-    new = a[fields].view(np.float64).reshape(a.shape + (-1,))
-    return new
+def _numpyvoid2numeric(a):
+    return np.array([list(r) for r in a])
