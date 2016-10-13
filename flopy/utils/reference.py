@@ -103,8 +103,11 @@ class SpatialReference(object):
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
-                print('Warning: no grid spacing or lower-left corner supplied. Origin will be set to zero.')
+                print('Warning: no grid spacing or lower-left corner supplied. '
+                      '\nSetting the offset with xul, yul requires arguments for delr and delc. '
+                      '\nOrigin will be set to zero.')
                 xll, yll = 0, 0
+                xul, yul = None, None
 
         self.lenuni = lenuni
         self._proj4_str = proj4_str

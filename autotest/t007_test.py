@@ -191,6 +191,9 @@ def test_sr():
     # test instantiation of an empty sr object
     sr = flopy.utils.reference.SpatialReference()
 
+    # test instantiation of SR with xul, yul and no grid
+    sr = flopy.utils.reference.SpatialReference(xul=1, yul=1)
+
     sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
                                       delc=ms.dis.delc.array, lenuni=3,
                                       xul=321, yul=123, rotation=20)
@@ -454,7 +457,7 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     #build_netcdf()
     #build_sfr_netcdf()
-    #test_sr()
+    test_sr()
     #test_rotation()
     test_map_rotation()
     #test_sr_scaling()
