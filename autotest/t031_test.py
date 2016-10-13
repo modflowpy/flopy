@@ -2,7 +2,7 @@
 test modpath functionality
 """
 import sys
-sys.path.insert(0, '/Users/aleaf/Documents/GitHub/flopy3')
+sys.path.insert(0, '..')
 import glob
 import shutil
 import os

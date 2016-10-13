@@ -356,7 +356,7 @@ class SpatialReference(object):
         # Set origin and rotation
         if xul is None:
             if xll is not None:
-                self.xul = xll - np.sin(theta) * self.yedge[0] * self.length_multiplier
+                self.xul = xll + np.sin(theta) * self.yedge[0] * self.length_multiplier
             else:
                 self.xul = 0.
         else:
@@ -369,7 +369,7 @@ class SpatialReference(object):
         else:
             self.yul = yul
         if xll is None:
-            self.xll = self.xul + np.sin(theta) * self.yedge[0] * self.length_multiplier
+            self.xll = self.xul - np.sin(theta) * self.yedge[0] * self.length_multiplier
         else:
             self.xll = xll
         if yll is None:

@@ -1,4 +1,6 @@
 # Test export module
+import sys
+sys.path.insert(0, '..')
 import os
 import numpy as np
 import flopy
@@ -272,6 +274,33 @@ def test_sr_scaling():
     assert xur == xll + ms3.sr.length_multiplier * delr * ncol
     assert yur == yll + ms3.sr.length_multiplier * delc * nrow
 
+def test_rotation():
+    m = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
+                                   delr=250.,
+                                   delc=250., top=10, botm=0)
+    xul, yul = 500000, 2934000
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xul=xul, yul=yul, rotation=45.)
+    xll, yll = m.sr.xll, m.sr.yll
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xul=xul, yul=yul, rotation=-45.)
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+    xll2, yll2 = m.sr.xll, m.sr.yll
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xll=xll2, yll=yll2, rotation=-45.)
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xll=xll, yll=yll, rotation=45.)
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+    m.dis.export('temp/0_freyberg.shp')
+    assert True
+
 def test_netcdf_classmethods():
     import os
     import flopy
@@ -389,8 +418,9 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     #build_netcdf()
     #build_sfr_netcdf()
-    #test_sr()
-    test_sr_scaling()
+    test_sr()
+    test_rotation()
+    #test_sr_scaling()
     #test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:
