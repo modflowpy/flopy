@@ -49,7 +49,7 @@ class ModelMap(object):
 
     def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
                  extent=None,
-                 xul=None, yul=None, xll=None, yll=None, rotation=None, length_multiplier=1.):
+                 xul=None, yul=None, xll=None, yll=None, rotation=0., length_multiplier=1.):
         self.model = model
         self.layer = layer
         self.dis = dis
@@ -66,7 +66,7 @@ class ModelMap(object):
             self.sr = SpatialReference(xll, yll, xul, yul, rotation, length_multiplier)
 
         # model map override spatial reference settings
-        if any(elem is not None for elem in (xul, yul, xll, yll, rotation, length_multiplier)):
+        if any(elem is not None for elem in (xul, yul, xll, yll)) or rotation != 0 or length_multiplier != 1.:
             self.sr.set_spatialreference(xul, yul, xll, yll, rotation, length_multiplier)
         '''
         if xul is not None and yul is not None:

@@ -1,6 +1,7 @@
 # Test export module
 import sys
 sys.path.insert(0, '..')
+import copy
 import os
 import numpy as np
 import flopy
@@ -304,6 +305,7 @@ def test_map_rotation():
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
                                    delr=250.,
                                    delc=250., top=10, botm=0)
+    # transformation assigned by arguments
     xul, yul, rotation = 500000, 2934000, 45
     modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul, rotation=rotation)
     lc = modelmap.plot_grid()
@@ -319,6 +321,20 @@ def test_map_rotation():
     lc = modelmap.plot_grid()
     check_vertices()
 
+    # transformation in m.sr
+    sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                               xll=xll, yll=yll, rotation=rotation)
+    m.sr = copy.deepcopy(sr)
+    modelmap = flopy.plot.ModelMap(model=m)
+    lc = modelmap.plot_grid()
+    check_vertices()
+
+    # transformation assign from sr instance
+    m.sr._reset()
+    m.sr.set_spatialreference()
+    modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+    lc = modelmap.plot_grid()
+    check_vertices()
 
 
 def test_netcdf_classmethods():
