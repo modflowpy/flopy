@@ -1,7 +1,6 @@
-from __future__ import print_function
 import os
 import numpy as np
-from .binaryfile import CellBudgetFile
+from flopy.utils.binaryfile import CellBudgetFile
 
 
 class Budget(object):
@@ -156,12 +155,12 @@ class ZoneBudget(object):
             raise Exception('Cannot load cell budget file: {}.'.format(cbc_file))
 
         # All record names in the cell-by-cell budget binary file
-        self.record_names = [n.strip() for n in self.cbc.unique_record_names()]
+        self.record_names = [n.strip().decode("utf-8") for n in self.cbc.unique_record_names()]
 
         # Get imeth for each record in the CellBudgetFile record list
         self.imeth = {}
         for record in self.cbc.recordarray:
-            self.imeth[record['text'].strip()] = record['imeth']
+            self.imeth[record['text'].strip().decode("utf-8")] = record['imeth']
 
         # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
         # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
@@ -201,11 +200,11 @@ class ZoneBudget(object):
         if 'kstpkper' in kwargs.keys():
             s = 'The specified time step/stress period' \
                 ' does not exist {}'.format(kwargs['kstpkper'])
-            assert kwargs['kstpkper'] in self.cbc.get_kstpkper(), print(s)
+            assert kwargs['kstpkper'] in self.cbc.get_kstpkper(), s
         elif 'totim' in kwargs.keys():
             s = 'The time ' \
                 ' does not exist {}'.format(kwargs['totim'])
-            assert kwargs['totim'] in self.cbc.get_times(), print(s)
+            assert kwargs['totim'] in self.cbc.get_times(), s
         else:
             # FUTURE: Return a list of budgets for each time step/stress period
             # in the CellBudgetFile
@@ -334,7 +333,7 @@ class ZoneBudget(object):
     def _initialize_records(self, lstzon):
 
         # Initialize the record array
-        dtype_list = [('flow_dir', '|S3'), ('record', '|S20')]
+        dtype_list = [('flow_dir', (str, 3)), ('record', (str, 20))]
         dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in lstzon if z != 0]
         dtype = np.dtype(dtype_list)
         self.zonbudrecords = np.array([], dtype=dtype)
@@ -398,8 +397,8 @@ class ZoneBudget(object):
         idx_pos = np.where(q >= 0)
 
         # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
         nzgt_l2r = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
@@ -447,8 +446,8 @@ class ZoneBudget(object):
         idx_pos = np.where(q >= 0)
 
         # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
         nzgt_r2l = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
@@ -510,8 +509,8 @@ class ZoneBudget(object):
         idx_pos = np.where(q >= 0)
 
         # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
         nzgt_u2d = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
@@ -558,8 +557,8 @@ class ZoneBudget(object):
         idx_pos = np.where(q >= 0)
 
         # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
         nzgt_d2u = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
@@ -621,8 +620,8 @@ class ZoneBudget(object):
         idx_pos = np.where(q >= 0)
 
         # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
         nzgt_t2b = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
@@ -670,8 +669,8 @@ class ZoneBudget(object):
         idx_pos = np.where(q >= 0)
 
         # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
-        pos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
+        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
         nzgt_b2t = neg + pos
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
@@ -725,3 +724,21 @@ class ZoneBudget(object):
 
 def _numpyvoid2numeric(a):
     return np.array([list(r) for r in a])
+
+
+if __name__ == '__main__':
+
+    from flopy.utils import ZoneBudget
+
+    nrow, ncol = 40, 20
+    zon = np.zeros((1, nrow, ncol), np.int)
+    zon[0, :20, :10] = 1
+    zon[0, :20, 10:] = 2
+    zon[0, 20:, :10] = 3
+    zon[0, 20:, 10:] = 4
+
+    cbc_file = r'E:\local_repo\flopy\examples\data\zonbud_examples\freyberg.gitcbc'
+    zb = ZoneBudget(cbc_file)
+    bud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
+    ins = bud.get_total_inflow()
+    print(ins)
