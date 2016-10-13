@@ -147,19 +147,12 @@ class ZoneBudget(object):
     """
     def __init__(self, cbc_file):
 
-        # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
-        # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
-        # FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
-        # SWIADDTO--- terms are used by the SWI2 groundwater flow process.
-        internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
-                               'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
-
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
         elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
             self.cbc = CellBudgetFile(cbc_file)
         else:
-            raise Exception('Cannot load cell budget file.')
+            raise Exception('Cannot load cell budget file: {}.'.format(cbc_file))
 
         # All record names in the cell-by-cell budget binary file
         self.record_names = [n.strip() for n in self.cbc.unique_record_names()]
@@ -169,11 +162,18 @@ class ZoneBudget(object):
         for record in self.cbc.recordarray:
             self.imeth[record['text'].strip()] = record['imeth']
 
+        # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
+        # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
+        # FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
+        # SWIADDTO--- terms are used by the SWI2 groundwater flow process.
+        internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE', 'FLOW FRONT FACE', 'FLOW LOWER FACE',
+                               'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF', 'SWIADDTOFLF']
+
         # Source/sink/storage term record names
         # These are all of the terms that are not related to constant
         # head cells or face flow terms
-        self.ssst_record_names = [n.strip() for n in self.cbc.unique_record_names()
-                                  if n.strip() not in internal_flow_terms]
+        self.ssst_record_names = [n for n in self.record_names
+                                  if n not in internal_flow_terms]
 
         # Check the shape of the cbc budget file arrays
         self.cbc_shape = self.get_model_shape()

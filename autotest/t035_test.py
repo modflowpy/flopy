@@ -5,7 +5,7 @@ import os
 import numpy as np
 from flopy.utils import ZoneBudget
 
-pth = r'..\examples\data\zonbud_examples'
+pth = '../examples/data/zonbud_examples'
 cbc_f = 'freyberg.gitcbc'
 
 nrow, ncol = 40, 20
