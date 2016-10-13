@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from flopy.utils.binaryfile import CellBudgetFile
+from .binaryfile import CellBudgetFile
 
 
 class Budget(object):
@@ -724,21 +724,3 @@ class ZoneBudget(object):
 
 def _numpyvoid2numeric(a):
     return np.array([list(r) for r in a])
-
-
-if __name__ == '__main__':
-
-    from flopy.utils import ZoneBudget
-
-    nrow, ncol = 40, 20
-    zon = np.zeros((1, nrow, ncol), np.int)
-    zon[0, :20, :10] = 1
-    zon[0, :20, 10:] = 2
-    zon[0, 20:, :10] = 3
-    zon[0, 20:, 10:] = 4
-
-    cbc_file = r'E:\local_repo\flopy\examples\data\zonbud_examples\freyberg.gitcbc'
-    zb = ZoneBudget(cbc_file)
-    bud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
-    ins = bud.get_total_inflow()
-    print(ins)
