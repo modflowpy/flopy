@@ -84,7 +84,7 @@ def test_get_destination_data():
 
     m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0, rotation=30)
     sr = SpatialReference(delr=list(m.dis.delr), delc=list(m.dis.delc), xul=1000, yul=1000, rotation=30)
-    sr2 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=30)
+    sr2 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=-30)
     m.dis.export(path + '/dis.shp')
 
     pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
@@ -132,7 +132,8 @@ def test_get_destination_data():
     p3 = ra.geometry[ra.particleid == 4][0]
     xorig, yorig = m.sr.transform(well_epd.x0[0], well_epd.y0[0])
     assert p3.x - xorig + p3.y - yorig < 1e-4
-    assert np.abs(p3.x - 858.845726812 + p3.y + 2112.4355653) < 1e-4 # this also checks for 1-based
+    xorig, yorig = m.sr.xcentergrid[3, 4], m.sr.ycentergrid[3, 4]
+    assert np.abs(p3.x - xorig + p3.y - yorig) < 1e-4 # this also checks for 1-based
 
     # test that particle attribute information is consistent with pathline file
     ra = shp2recarray(os.path.join(path, 'pathlines.shp'))
@@ -149,12 +150,13 @@ def test_get_destination_data():
     # test use of arbitrary spatial reference and offset
     ra = shp2recarray(os.path.join(path, 'pathlines_1per2.shp'))
     p3_2 = ra.geometry[ra.particleid == 4][0]
-    assert np.abs(p3_2.x[0] - 1858.845726812 + p3_2.y[0] + 1112.4355653) < 1e-4
+    assert np.abs(p3_2.x[0] - sr.xcentergrid[3, 4] + p3_2.y[0] - sr.ycentergrid[3, 4]) < 1e-4
 
     # arbitrary spatial reference with ll specified instead of ul
     ra = shp2recarray(os.path.join(path, 'pathlines_1per2_ll.shp'))
     p3_2 = ra.geometry[ra.particleid == 4][0]
-    assert np.abs(p3_2.x[0] - 1858.845726812 + p3_2.y[0] + 1112.4355653) < 1e-4
+    sr3 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=-30, delr=list(m.dis.delr), delc=list(m.dis.delc))
+    assert np.abs(p3_2.x[0] - sr3.xcentergrid[3, 4] + p3_2.y[0] - sr3.ycentergrid[3, 4]) < 1e-4
 
     xul = 3628793
     yul = 21940389
@@ -179,5 +181,5 @@ def test_loadtxt():
 
 if __name__ == '__main__':
     #test_mpsim()
-    #test_get_destination_data()
-    test_loadtxt()
+    test_get_destination_data()
+    #test_loadtxt()
