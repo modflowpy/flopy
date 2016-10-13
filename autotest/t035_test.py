@@ -10,10 +10,10 @@ cbc_f = 'freyberg.gitcbc'
 
 nrow, ncol = 40, 20
 zon = np.zeros((1, nrow, ncol), np.int)
-zon[0, :nrow/2, :ncol/2] = 1
-zon[0, :nrow/2, ncol/2:] = 2
-zon[0, nrow/2:, :ncol/2] = 3
-zon[0, nrow/2:, ncol/2:] = 4
+zon[0, :20, :10] = 1
+zon[0, :20, 10:] = 2
+zon[0, 20:, :10] = 3
+zon[0, 20:, 10:] = 4
 
 
 def test_zonbud1():
