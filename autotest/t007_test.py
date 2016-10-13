@@ -298,8 +298,28 @@ def test_rotation():
                                         xll=xll, yll=yll, rotation=45.)
     assert m.dis.sr.xgrid[0, 0] == xul
     assert m.dis.sr.ygrid[0, 0] == yul
-    m.dis.export('temp/0_freyberg.shp')
-    assert True
+
+def test_map_rotation():
+    m = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
+                                   delr=250.,
+                                   delc=250., top=10, botm=0)
+    xul, yul, rotation = 500000, 2934000, 45
+    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul, rotation=rotation)
+    lc = modelmap.plot_grid()
+    xll, yll = modelmap.sr.xll, modelmap.sr.yll
+    def check_vertices():
+        xllp, yllp = lc._paths[0].vertices[0]
+        xulp, yulp = lc._paths[0].vertices[1]
+        assert (xllp, yllp) == (xll, yll)
+        assert (xulp, yulp) == (xul, yul)
+    check_vertices()
+
+    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll, rotation=rotation)
+    lc = modelmap.plot_grid()
+    check_vertices()
+
+
 
 def test_netcdf_classmethods():
     import os
@@ -418,8 +438,9 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     #build_netcdf()
     #build_sfr_netcdf()
-    test_sr()
-    test_rotation()
+    #test_sr()
+    #test_rotation()
+    test_map_rotation()
     #test_sr_scaling()
     #test_free_format_flag()
     #test_export_output()

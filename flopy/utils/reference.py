@@ -116,8 +116,7 @@ class SpatialReference(object):
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
-        self.length_multiplier = length_multiplier
-        self.set_spatialreference(xul, yul, xll, yll, rotation)
+        self.set_spatialreference(xul, yul, xll, yll, rotation, length_multiplier)
 
 
     @property
@@ -343,7 +342,7 @@ class SpatialReference(object):
         return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
                 "proj4_str":self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0):
+    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0, length_multiplier=1.):
         """
             set spatial reference - can be called from model instance
         """
@@ -352,6 +351,7 @@ class SpatialReference(object):
         if yul is not None and yll is not None:
             raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
 
+        self.length_multiplier = length_multiplier
         theta = -rotation * np.pi / 180.
         # Set origin and rotation
         if xul is None:
