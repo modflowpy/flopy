@@ -288,7 +288,7 @@ class Modpath(BaseModel):
                                         PlacementOption,
                                         ReleaseStartTime,
                                         ReleaseOption, CHeadOption])
-                group_region.append([0, 0, 0, 0, nrow, ncol])
+                group_region.append([0, 0, 0, 0, nrow-1, ncol-1])
                 if default_ifaces is None:
                     face_ct.append(1)
                     ifaces.append([[6, 1, 1]])
