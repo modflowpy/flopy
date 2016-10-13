@@ -376,7 +376,7 @@ class ZoneBudget(object):
         l, r, c = np.where(nz > nzl)
 
         # Adjust column values to account for the starting position of "nz"
-        c += 1
+        c = np.copy(c) + 1
 
         # Define the zone from which flow is coming
         from_zones = izone[l, r, c-1]
@@ -488,7 +488,7 @@ class ZoneBudget(object):
         nzu = izone[:, :-1, :]
         l, r, c = np.where(nz < nzu)
         # Adjust column values by +1 to account for the starting position of "nz"
-        r += 1
+        r = np.copy(r) + 1
 
         # Define the zone from which flow is coming
         from_zones = izone[l, r-1, c]
@@ -599,7 +599,7 @@ class ZoneBudget(object):
         nzt = izone[:-1, :, :]
         l, r, c = np.where(nz > nzt)
         # Adjust column values by +1 to account for the starting position of "nz"
-        l += 1
+        l = np.copy(l) + 1
 
         # Define the zone from which flow is coming
         from_zones = izone[l-1, r, c]
