@@ -277,9 +277,15 @@ class ZoneBudget(object):
         # ACCUMULATE THE FLOW BY ZONE
         # iterate over remaining items in the list
         for recname in reclist:
-
             imeth = self.imeth[recname]
-            data = self.cbc.get_data(text=recname, **kwargs)[0]
+
+            data = self.cbc.get_data(text=recname, **kwargs)
+            if len(data) == 0:
+                # Empty data, can occur during the first time step of a transient model when
+                # storage terms are zero and not in the cell-budget file.
+                continue
+            else:
+                data = data[0]
 
             if imeth == 2 or imeth == 5:
                 # LIST
