@@ -139,7 +139,7 @@ class MfGrdFile(FlopyBinaryData):
                 iavert = self._datadict['IAVERT']
                 javert = self._datadict['JAVERT']
                 shpvert = self._recorddict['VERTICES'][2]
-                for ivert in range(self._datadict['NCELLS']):
+                for ivert in range(self._datadict['NCPL']):
                     i0 = iavert[ivert] - 1
                     i1 = iavert[ivert+1] - 1
                     iverts.append((javert[i0:i1]-1).tolist())
