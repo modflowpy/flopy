@@ -206,7 +206,7 @@ class ZoneBudget(object):
         elif 'totim' in kwargs.keys():
             s = 'The time ' \
                 ' does not exist {}'.format(kwargs['totim'])
-            assert kwargs['kstpkper'] in self.cbc.get_times(), print(s)
+            assert kwargs['totim'] in self.cbc.get_times(), print(s)
         else:
             raise Exception('No stress period/time step or time specified.')
         assert isinstance(z, np.ndarray), 'Please pass zones as type {}'.format(np.ndarray)
