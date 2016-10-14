@@ -9,22 +9,28 @@ class Budget(object):
     to save the record array to a formatted csv file.
     """
 
-    def __init__(self, recordarray, **kwargs):
+    def __init__(self, recordarray, kstpkper=None, totim=None):
         self.recordarray = recordarray
-        self.kwargs = kwargs
+        self.kstpkper = kstpkper
+        self.totim = totim
         self._zonefields = [name for name in self.recordarray.dtype.names if 'ZONE' in name]
+        if kstpkper is None and totim is None:
+            errmsg = 'Please specify a time step/stress period (kstpkper) ' \
+                     'or simulation time (totim) for which the budget is ' \
+                     'desired.'
+            raise Exception(errmsg)
 
     def get_total_inflow(self):
         # Returns the total inflow, summed by column.
         idx = np.where(self.recordarray['flow_dir'] == 'in')[0]
-        ins = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
-        return ins.sum(axis=0)
+        a = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
+        return np.array(a.sum(axis=0))
 
     def get_total_outflow(self):
         # Returns the total outflow, summed by column.
         idx = np.where(self.recordarray['flow_dir'] == 'out')[0]
-        out = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
-        return out.sum(axis=0)
+        a = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
+        return np.array(a.sum(axis=0))
 
     def get_percent_error(self):
         # Returns the mass-balance percent error between total inflow
@@ -101,14 +107,13 @@ class Budget(object):
             with open(fname, 'w') as f:
 
                 # Write header
-                if 'kstpkper' in self.kwargs.keys():
-                    header = 'Time Step, {kstp}, Stress Period, {kper}\n'.format(kstp=self.kwargs['kstpkper'][0]+1,
-                                                                                 kper=self.kwargs['kstpkper'][1]+1)
-                elif 'totim' in self.kwargs.keys():
-                    header = 'Sim. Time, {totim}\n'.format(totim=self.kwargs['totim'])
-                else:
-                    raise Exception('No stress period/time step or time specified.')
-
+                header = ''
+                if self.kstpkper is not None:
+                    kstp1 = self.kstpkper[0]+1
+                    kper1 = self.kstpkper[1]+1
+                    header = 'Time Step, {kstp}, Stress Period, {kper}\n'.format(kstp=kstp1, kper=kper1)
+                elif self.totim is not None:
+                    header = 'Sim. Time, {totim}\n'.format(totim=self.totim)
                 f.write(header)
                 f.write(','.join([' '] + [field for field in self.recordarray.dtype.names[2:]])+'\n')
 
@@ -200,38 +205,41 @@ class ZoneBudget(object):
     def get_model_shape(self):
         return self.cbc.get_data(idx=0, full3D=True)[0].shape
 
-    def get_budget(self, z, **kwargs):
+    def get_budget(self, z, kstpkper=None, totim=None):
         """
-        Creates a budget for the specified zone array. Pass keyword arguments to specify
-        the time step/stress period or sim. time for which a budget is desired. Valid
-        keywords are "kstpkper" and "totim". Currently, this function only supports the
+        Creates a budget for the specified zone array. This function only supports the
         use of a single time step/stress period or time.
 
         Parameters
         ----------
-        z : numpy.ndarray
+        z : ndarray
             The array containing to zones to be used.
-        kwargs : keyword arguments
-            Keyword arguments that are passed to the get_data() function
-            of the CellBudgetFile object which are used to specify the
-            time step/stress period or simulation time for which budget
-            data are desired. Valid options are "kstpkper" and "totim".
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper).
+            The kstp and kper values are zero based.
+        totim : float
+            The simulation time.
 
         Returns
         -------
         A Budget object
+
         """
         # Check the keyword arguments
-        if len(kwargs) == 0:
-            raise Exception('No stress period/time step or time specified.')
-        elif 'kstpkper' in kwargs.keys():
+        if kstpkper is not None:
             s = 'The specified time step/stress period ' \
-                'does not exist {}'.format(kwargs['kstpkper'])
-            assert kwargs['kstpkper'] in self.cbc.get_kstpkper(), s
-        elif 'totim' in kwargs.keys():
+                'does not exist {}'.format(kstpkper)
+            assert kstpkper in self.cbc.get_kstpkper(), s
+        elif totim is not None:
             s = 'The specified simulation time ' \
-                'does not exist {}'.format(kwargs['totim'])
-            assert kwargs['totim'] in self.cbc.get_times(), s
+                'does not exist {}'.format(totim)
+            assert totim in self.cbc.get_times(), s
+        else:
+            # No time step/stress period or simulation time pass
+            errmsg = 'Please specify a time step/stress period (kstpkper) ' \
+                     'or simulation time (totim) for which the budget is ' \
+                     'desired.'
+            raise Exception(errmsg)
 
         # Zones must be passed as an array
         assert isinstance(z, np.ndarray), 'Please pass zones as type {}'.format(np.ndarray)
@@ -278,32 +286,32 @@ class ZoneBudget(object):
 
         if 'CONSTANT HEAD' in reclist:
             reclist.remove('CONSTANT HEAD')
-            chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True, **kwargs)[0]
+            chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True, kstpkper=kstpkper, totim=totim)[0]
             ich = np.zeros(self.cbc_shape, np.int32)
             ich[chd != 0] = 1
         if 'FLOW RIGHT FACE' in reclist:
             reclist.remove('FLOW RIGHT FACE')
-            self._accumulate_flow_frf('FLOW RIGHT FACE', izone, ich, **kwargs)
+            self._accumulate_flow_frf('FLOW RIGHT FACE', izone, ich, kstpkper=kstpkper, totim=totim)
         if 'FLOW FRONT FACE' in reclist:
             reclist.remove('FLOW FRONT FACE')
-            self._accumulate_flow_fff('FLOW FRONT FACE', izone, ich, **kwargs)
+            self._accumulate_flow_fff('FLOW FRONT FACE', izone, ich, kstpkper=kstpkper, totim=totim)
         if 'FLOW LOWER FACE' in reclist:
             reclist.remove('FLOW LOWER FACE')
-            self._accumulate_flow_flf('FLOW LOWER FACE', izone, ich, **kwargs)
+            self._accumulate_flow_flf('FLOW LOWER FACE', izone, ich, kstpkper=kstpkper, totim=totim)
         if 'SWIADDTOCH' in reclist:
             reclist.remove('SWIADDTOCH')
-            swichd = self.cbc.get_data(text='SWIADDTOCH', full3D=True, **kwargs)[0]
+            swichd = self.cbc.get_data(text='SWIADDTOCH', full3D=True, kstpkper=kstpkper, totim=totim)[0]
             swiich = np.zeros(self.cbc_shape, np.int32)
             swiich[swichd != 0] = 1
         if 'SWIADDTOFRF' in reclist:
             reclist.remove('SWIADDTOFRF')
-            self._accumulate_flow_frf('SWIADDTOFRF', izone, swiich, **kwargs)
+            self._accumulate_flow_frf('SWIADDTOFRF', izone, swiich, kstpkper=kstpkper, totim=totim)
         if 'SWIADDTOFFF' in reclist:
             reclist.remove('SWIADDTOFFF')
-            self._accumulate_flow_fff('SWIADDTOFFF', izone, swiich, **kwargs)
+            self._accumulate_flow_fff('SWIADDTOFFF', izone, swiich, kstpkper=kstpkper, totim=totim)
         if 'SWIADDTOFLF' in reclist:
             reclist.remove('SWIADDTOFLF')
-            self._accumulate_flow_flf('SWIADDTOFLF', izone, swiich, **kwargs)
+            self._accumulate_flow_flf('SWIADDTOFLF', izone, swiich, kstpkper=kstpkper, totim=totim)
 
         # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
         # ACCUMULATE THE FLOW BY ZONE
@@ -311,7 +319,7 @@ class ZoneBudget(object):
         for recname in reclist:
             imeth = self.imeth[recname]
 
-            data = self.cbc.get_data(text=recname, **kwargs)
+            data = self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)
             if len(data) == 0:
                 # Empty data, can occur during the first time step of a transient model when
                 # storage terms are zero and not in the cell-budget file.
@@ -365,7 +373,7 @@ class ZoneBudget(object):
         # to a csv file. Pass along the kwargs which hold the desired time
         # step/stress period or totim so we can print it to the header of
         # the output file.
-        return Budget(self.zonbudrecords, **kwargs)
+        return Budget(self.zonbudrecords, kstpkper=kstpkper, totim=totim)
 
     def _build_empty_record(self, flow_dir, recname, lstzon):
         # Builds empty records based on the specified flow direction and
