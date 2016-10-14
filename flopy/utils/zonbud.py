@@ -33,7 +33,7 @@ class Budget(object):
         ----------
         recordlist : tuple or list of tuples
             A tuple or list of tuples containing flow direction and the name of
-            the record desired [('in', 'STORAGE'), ('out', 'TO ZONE 1')].
+            the record desired [('in', 'STORAGE'), ('OUT', 'TO ZONE 1')].
         zones : int or list of ints
             The zone(s) for which budget records are desired.
 
@@ -231,12 +231,12 @@ class Budget(object):
         # and percent error summed by column.
 
         # Compute inflows
-        idx = np.where(self._recordarray['flow_dir'] == 'in')[0]
+        idx = np.where(self._recordarray['flow_dir'] == 'IN')[0]
         a = _numpyvoid2numeric(self._recordarray[self._zonefields][idx])
         intot = np.array(a.sum(axis=0))
 
         # Compute outflows
-        idx = np.where(self._recordarray['flow_dir'] == 'out')[0]
+        idx = np.where(self._recordarray['flow_dir'] == 'OUT')[0]
         a = _numpyvoid2numeric(self._recordarray[self._zonefields][idx])
         outot = np.array(a.sum(axis=0))
 
@@ -286,7 +286,7 @@ class Budget(object):
                 f.write(','.join(self._recordarray.dtype.names)+'\n')
 
                 # Write IN terms
-                select_indices = np.where(self._recordarray['flow_dir'] == 'in')
+                select_indices = np.where(self._recordarray['flow_dir'] == 'IN')
                 for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in rec:
@@ -299,7 +299,7 @@ class Budget(object):
                 f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
-                select_indices = np.where(self._recordarray['flow_dir'] == 'out')
+                select_indices = np.where(self._recordarray['flow_dir'] == 'OUT')
                 for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in rec:
@@ -333,7 +333,7 @@ class Budget(object):
 
                 # Write IN terms
                 f.write(','.join([' '] + ['IN']*(len(self._recordarray.dtype.names[1:])-1))+'\n')
-                select_indices = np.where(self._recordarray['flow_dir'] == 'in')
+                select_indices = np.where(self._recordarray['flow_dir'] == 'IN')
                 for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in list(rec)[1:]:
@@ -347,7 +347,7 @@ class Budget(object):
 
                 # Write OUT terms
                 f.write(','.join([' '] + ['OUT']*(len(self._recordarray.dtype.names[1:])-1))+'\n')
-                select_indices = np.where(self._recordarray['flow_dir'] == 'out')
+                select_indices = np.where(self._recordarray['flow_dir'] == 'OUT')
                 for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in list(rec)[1:]:
@@ -607,25 +607,25 @@ class ZoneBudget(object):
 
         # Add "in" records
         if 'STORAGE' in self.record_names:
-            self._build_empty_record('in', 'STORAGE', lstzon)
+            self._build_empty_record('IN', 'STORAGE', lstzon)
         if 'CONSTANT HEAD' in self.record_names:
-            self._build_empty_record('in', 'CONSTANT HEAD', lstzon)
+            self._build_empty_record('IN', 'CONSTANT HEAD', lstzon)
         for recname in self.ssst_record_names:
             if recname != 'STORAGE':
-                self._build_empty_record('in', recname, lstzon)
+                self._build_empty_record('IN', recname, lstzon)
         for z in lstzon:
-            self._build_empty_record('in', 'FROM ZONE {}'.format(z), lstzon)
+            self._build_empty_record('IN', 'FROM ZONE {}'.format(z), lstzon)
 
         # Add "out" records
         if 'STORAGE' in self.record_names:
-            self._build_empty_record('out', 'STORAGE', lstzon)
+            self._build_empty_record('OUT', 'STORAGE', lstzon)
         if 'CONSTANT HEAD' in self.record_names:
-            self._build_empty_record('out', 'CONSTANT HEAD', lstzon)
+            self._build_empty_record('OUT', 'CONSTANT HEAD', lstzon)
         for recname in self.ssst_record_names:
             if recname != 'STORAGE':
-                self._build_empty_record('out', recname, lstzon)
+                self._build_empty_record('OUT', recname, lstzon)
         for z in lstzon:
-            self._build_empty_record('out', 'TO ZONE {}'.format(z), lstzon)
+            self._build_empty_record('OUT', 'TO ZONE {}'.format(z), lstzon)
         return
 
     def _update_record(self, flow_dir, recname, colname, flux):
@@ -691,9 +691,9 @@ class ZoneBudget(object):
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
-            self._update_record('in', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
+            self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
         for (from_zone, to_zone, flux) in chdpos:
-            self._update_record('out', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
+            self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
         # Accumulate flow from lower zones to higher zones from "right" to "left".
@@ -740,15 +740,15 @@ class ZoneBudget(object):
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
-            self._update_record('in', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
+            self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
         for (from_zone, to_zone, flux) in chdpos:
-            self._update_record('out', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
+            self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
         # Update records
         nzgt = nzgt_l2r + nzgt_r2l
         for (from_zone, to_zone, flux) in nzgt:
-            self._update_record('in', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
-            self._update_record('out', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
+            self._update_record('IN', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
+            self._update_record('OUT', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
     def _accumulate_flow_fff(self, recname, izone, ich, **kwargs):
@@ -803,9 +803,9 @@ class ZoneBudget(object):
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
-            self._update_record('in', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
+            self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
         for (from_zone, to_zone, flux) in chdpos:
-            self._update_record('out', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
+            self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
         # Accumulate flow from lower zones to higher zones from "down" to "up".
@@ -851,15 +851,15 @@ class ZoneBudget(object):
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
-            self._update_record('in', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
+            self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
         for (from_zone, to_zone, flux) in chdpos:
-            self._update_record('out', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
+            self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
         # Update records
         nzgt = nzgt_u2d + nzgt_d2u
         for (from_zone, to_zone, flux) in nzgt:
-            self._update_record('in', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
-            self._update_record('out', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
+            self._update_record('IN', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
+            self._update_record('OUT', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
     def _accumulate_flow_flf(self, recname, izone, ich, **kwargs):
@@ -914,9 +914,9 @@ class ZoneBudget(object):
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
-            self._update_record('in', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
+            self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
         for (from_zone, to_zone, flux) in chdpos:
-            self._update_record('out', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
+            self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
         # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
         # Accumulate flow from lower zones to higher zones from "right" to "left".
@@ -963,15 +963,15 @@ class ZoneBudget(object):
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
-            self._update_record('in', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
+            self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(to_zone), flux)
         for (from_zone, to_zone, flux) in chdpos:
-            self._update_record('out', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
+            self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
         # Update records
         nzgt = nzgt_t2b + nzgt_b2t
         for (from_zone, to_zone, flux) in nzgt:
-            self._update_record('in', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
-            self._update_record('out', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
+            self._update_record('IN', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
+            self._update_record('OUT', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
     def _accumulate_flow_ssst(self, recname, budin, budout, izone, lstzon):
@@ -981,11 +981,11 @@ class ZoneBudget(object):
         for idx, flux in enumerate(recin):
             if type(flux) == np.ma.core.MaskedConstant:
                 flux = 0.
-            self._update_record('in', recname, 'ZONE {}'.format(lstzon[idx]), flux)
+            self._update_record('IN', recname, 'ZONE {}'.format(lstzon[idx]), flux)
         for idx, flux in enumerate(recout):
             if type(flux) == np.ma.core.MaskedConstant:
                 flux = 0.
-            self._update_record('out', recname, 'ZONE {}'.format(lstzon[idx]), flux)
+            self._update_record('OUT', recname, 'ZONE {}'.format(lstzon[idx]), flux)
         return
 
     def get_kstpkper(self):
