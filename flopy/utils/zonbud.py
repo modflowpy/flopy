@@ -8,22 +8,27 @@ class Budget(object):
     ZoneBudget Budget class. This is a wrapper around a numpy record array to allow users
     to save the record array to a formatted csv file.
     """
-    def __init__(self, records, **kwargs):
-        self.records = records
+
+    def __init__(self, recordarray, **kwargs):
+        self.records = recordarray
         self.kwargs = kwargs
         self._zonefields = [name for name in self.records.dtype.names if 'ZONE' in name]
 
     def get_total_inflow(self):
+        # Returns the total inflow, summed by column.
         idx = np.where(self.records['flow_dir'] == 'in')[0]
         ins = _numpyvoid2numeric(self.records[self._zonefields][idx])
         return ins.sum(axis=0)
 
     def get_total_outflow(self):
+        # Returns the total outflow, summed by column.
         idx = np.where(self.records['flow_dir'] == 'out')[0]
         out = _numpyvoid2numeric(self.records[self._zonefields][idx])
         return out.sum(axis=0)
 
     def get_percent_error(self):
+        # Returns the mass-balance percent error between total inflow
+        # and total outflow, summed by column.
         ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
         ins_plus_out = self.get_total_inflow() + self.get_total_outflow()
         pcterr = 100 * ins_minus_out / (ins_plus_out / 2.)
@@ -32,16 +37,18 @@ class Budget(object):
 
     def to_csv(self, fname, write_format='pandas', formatter=None):
         """
-        Saves the Budget object record array to a formatted csv file.
+        Saves the Budget object record array to a formatted
+        comma-separated values file.
 
         Parameters
         ----------
-        fname
-        write_format
-        formatter
+        fname: str, Name of the output comma-separated values file.
+        write_format: str, Write option for output comma-separated values file.
+        formatter: function, String-formatter function for floats
 
         Returns
         -------
+        None
 
         """
         assert write_format.lower() in ['pandas', 'zonbud'], 'Format must be one of "pandas" or "zonbud".'
@@ -142,7 +149,8 @@ class ZoneBudget(object):
 
     >>>from flopy.utils import ZoneBudget
     >>>zb = ZoneBudget('zonebudtest.cbc')
-    >>>bud = zb.get_budget('GWBasins.zon', kstpkper=(0, 0))
+    >>>zon = np.loadtxt('zones.txt')
+    >>>bud = zb.get_budget(zon, kstpkper=(0, 0))
     >>>bud.to_csv('zonebudtest.csv')
     """
     def __init__(self, cbc_file):
@@ -197,34 +205,43 @@ class ZoneBudget(object):
         :return:
         Budget object
         """
-        if 'kstpkper' in kwargs.keys():
-            s = 'The specified time step/stress period' \
-                ' does not exist {}'.format(kwargs['kstpkper'])
+        # Check the keyword arguments
+        if len(kwargs) == 0:
+            raise Exception('No stress period/time step or time specified.')
+        elif 'kstpkper' in kwargs.keys():
+            s = 'The specified time step/stress period ' \
+                'does not exist {}'.format(kwargs['kstpkper'])
             assert kwargs['kstpkper'] in self.cbc.get_kstpkper(), s
         elif 'totim' in kwargs.keys():
-            s = 'The time ' \
-                ' does not exist {}'.format(kwargs['totim'])
+            s = 'The specified simulation time ' \
+                'does not exist {}'.format(kwargs['totim'])
             assert kwargs['totim'] in self.cbc.get_times(), s
-        else:
-            # FUTURE: Return a list of budgets for each time step/stress period
-            # in the CellBudgetFile
-            raise Exception('No stress period/time step or time specified.')
+
+        # Zones must be passed as an array
         assert isinstance(z, np.ndarray), 'Please pass zones as type {}'.format(np.ndarray)
 
         # Check for negative zone values
-        negative_zones = [iz for iz in np.unique(z) if iz < 0]
-        if len(negative_zones) > 0:
-            raise Exception('Negative zone value(s) found:', negative_zones)
+        for z in np.unique(z):
+            if z < 0:
+                raise Exception('Negative zone value(s) found:', z)
 
         # Make sure the input zone array has the same shape as the cell budget file
         if len(z.shape) == 2 and self.nlay == 1:
+            # Reshape a 2-D array to 3-D to match output from
+            # the CellBudgetFile object.
             izone = np.zeros(self.cbc_shape, np.int32)
             izone[0, :, :] = z[:, :]
-
         elif len(z.shape) == 2 and self.nlay > 1:
-            raise Exception('Zone array and CellBudgetFile shapes do not match.')
-        else:
+            # 2-D array specified, but model is more than 1 layer. Don't assume
+            # user wants same zones for all layers.
+            raise Exception('Zone array and CellBudgetFile shapes '
+                            'do not match {} {}'.format(z.shape, self.cbc_shape))
+        elif len(z.shape) == 3 and self.nlay > 1:
+            # Shapes match
             izone = z.copy()
+        else:
+            raise Exception('Zone array and CellBudgetFile shapes '
+                            'do not match {} {}'.format(z.shape, self.cbc_shape))
 
         assert izone.shape == self.cbc_shape, \
             'Shape of input zone array {} does not' \
@@ -234,7 +251,8 @@ class ZoneBudget(object):
         # List of unique zones numbers
         lstzon = [z for z in np.unique(izone)]
 
-        # Initialize a constant head array
+        # Initialize an array to track where the constant head cells
+        # are located.
         ich = np.zeros(self.cbc_shape, np.int32)
 
         # Create empty array for the budget terms.
@@ -326,19 +344,26 @@ class ZoneBudget(object):
             else:
                 # Should not happen
                 raise Exception('Unrecognized "imeth" for {} record: {}'.format(recname, imeth))
-
             self._accumulate_flow_ssst(recname, budin, budout, izone, lstzon)
 
+        # Create the budget object, which is primarily a wrapper around the
+        # budget record array that allows the user to write out the budget
+        # to a csv file. Pass along the kwargs which hold the desired time
+        # step/stress period or totim so we can print it to the header of
+        # the output file.
         return Budget(self.zonbudrecords, **kwargs)
 
     def _build_empty_record(self, flow_dir, recname, lstzon):
+        # Builds empty records based on the specified flow direction and
+        # record name for the given list of zones.
         recs = np.array(tuple([flow_dir, recname] + [0. for _ in lstzon if _ != 0]),
                         dtype=self.zonbudrecords.dtype)
         self.zonbudrecords = np.append(self.zonbudrecords, recs)
+        return
 
     def _initialize_records(self, lstzon):
-
-        # Initialize the record array
+        # Initialize the budget record array which will store all of the
+        # fluxes in the cell-budget file.
         dtype_list = [('flow_dir', (str, 3)), ('record', (str, 20))]
         dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in lstzon if z != 0]
         dtype = np.dtype(dtype_list)
@@ -359,10 +384,12 @@ class ZoneBudget(object):
             self._build_empty_record('out', recname, lstzon)
         for z in lstzon:
             self._build_empty_record('out', 'TO ZONE {}'.format(z), lstzon)
-
         return
 
     def _update_record(self, flow_dir, recname, colname, flux):
+        # Update the budget record array with the flux for the specified
+        # flow direction (in/out), record name, and column (exclusive of
+        # ZONE 0).
         if colname != 'ZONE 0':
             rowidx = np.where((self.zonbudrecords['flow_dir'] == flow_dir) &
                               (self.zonbudrecords['record'] == recname))
@@ -706,6 +733,7 @@ class ZoneBudget(object):
         return
 
     def _accumulate_flow_ssst(self, recname, budin, budout, izone, lstzon):
+        # Source/sink/storage terms are accumulated by zone
         recin = [np.abs(budin[(izone == z)].sum()) for z in lstzon]
         recout = [np.abs(budout[(izone == z)].sum()) for z in lstzon]
         for idx, flux in enumerate(recin):
@@ -719,14 +747,21 @@ class ZoneBudget(object):
         return
 
     def get_kstpkper(self):
+        # Courtesy access to the CellBudgetFile method
         return self.cbc.get_kstpkper()
 
     def get_times(self):
+        # Courtesy access to the CellBudgetFile method
         return self.cbc.get_times()
 
     def get_indices(self):
+        # Courtesy access to the CellBudgetFile method
         return self.cbc.get_indices()
 
 
 def _numpyvoid2numeric(a):
+    # The budget record array has multiple dtypes and a slice returns
+    # the flexible-type numpy.void which must be converted to a numeric
+    # type prior to performing reducing functions such as sum() or
+    # mean()
     return np.array([list(r) for r in a])
