@@ -114,7 +114,7 @@ class Budget(object):
             select_fields = ['ZONE {}'.format(z) for z in zones]
         else:
             select_fields = self._zonefields
-        select_indices = np.where(self._massbalance['recname'] == 'INFLOW')
+        select_indices = np.where(self._massbalance['record'] == 'INFLOW')
         records = self._massbalance[select_fields][select_indices]
         array = np.array([r for r in records[0]])
         return array
@@ -150,7 +150,7 @@ class Budget(object):
             select_fields = ['ZONE {}'.format(z) for z in zones]
         else:
             select_fields = self._zonefields
-        select_indices = np.where(self._massbalance['recname'] == 'OUTFLOW')
+        select_indices = np.where(self._massbalance['record'] == 'OUTFLOW')
         records = self._massbalance[select_fields][select_indices]
         array = np.array([r for r in records[0]])
         return array
@@ -186,7 +186,7 @@ class Budget(object):
             select_fields = ['ZONE {}'.format(z) for z in zones]
         else:
             select_fields = self._zonefields
-        select_indices = np.where(self._massbalance['recname'] == 'ERROR')
+        select_indices = np.where(self._massbalance['record'] == 'ERROR')
         records = self._massbalance[select_fields][select_indices]
         array = np.array([r for r in records[0]])
         return array
@@ -222,7 +222,7 @@ class Budget(object):
             select_fields = ['ZONE {}'.format(z) for z in zones]
         else:
             select_fields = self._zonefields
-        select_fields = ['recname'] + select_fields
+        select_fields = ['record'] + select_fields
         records = self._massbalance[select_fields]
         return records
 
@@ -247,7 +247,7 @@ class Budget(object):
         pcterr = np.nan_to_num(pcterr)
 
         # Create the mass-balance record array
-        dtype_list = [('recname', (str, 7))] + [('{}'.format(f), np.float64) for f in self._zonefields]
+        dtype_list = [('record', (str, 7))] + [('{}'.format(f), np.float64) for f in self._zonefields]
         dtype = np.dtype(dtype_list)
         mb = np.array([], dtype=dtype)
         mb = np.append(mb, np.array(tuple(['INFLOW'] + list(intot)), dtype=dtype))
