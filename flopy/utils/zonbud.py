@@ -252,17 +252,15 @@ class ZoneBudget(object):
             # user wants same zones for all layers.
             raise Exception('Zone array and CellBudgetFile shapes '
                             'do not match {} {}'.format(z.shape, self.cbc_shape))
-        elif len(z.shape) == 3 and self.nlay > 1:
-            # Shapes match
+        elif len(z.shape) == 3:
             izone = z.copy()
         else:
-            raise Exception('Zone array and CellBudgetFile shapes '
-                            'do not match {} {}'.format(z.shape, self.cbc_shape))
+            raise Exception('Shape of the zone array is not recognized {}'.format(z.shape))
 
         assert izone.shape == self.cbc_shape, \
-            'Shape of input zone array {} does not' \
-            ' match the cell by cell' \
-            ' budget file {}'.format(izone.shape, self.cbc_shape)
+            'Shape of input zone array {} does not ' \
+            'match the cell by cell ' \
+            'budget file {}'.format(izone.shape, self.cbc_shape)
 
         # List of unique zones numbers
         lstzon = [z for z in np.unique(izone)]
