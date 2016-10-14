@@ -237,9 +237,9 @@ class ZoneBudget(object):
         assert isinstance(z, np.ndarray), 'Please pass zones as type {}'.format(np.ndarray)
 
         # Check for negative zone values
-        for z in np.unique(z):
-            if z < 0:
-                raise Exception('Negative zone value(s) found:', z)
+        for zi in np.unique(z):
+            if zi < 0:
+                raise Exception('Negative zone value(s) found:', zi)
 
         # Make sure the input zone array has the same shape as the cell budget file
         if len(z.shape) == 2 and self.nlay == 1:
@@ -255,7 +255,7 @@ class ZoneBudget(object):
         elif len(z.shape) == 3:
             izone = z.copy()
         else:
-            raise Exception('Shape of the zone array is not recognized {}'.format(z.shape))
+            raise Exception('Shape of the zone array is not recognized: {}'.format(z.shape))
 
         assert izone.shape == self.cbc_shape, \
             'Shape of input zone array {} does not ' \
