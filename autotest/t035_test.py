@@ -32,6 +32,15 @@ def test_zonbud_write_csv_totim():
     zbud.to_csv(os.path.join(pth, 'zbud_pandas.csv'), write_format='pandas')
 
 
+def test_zonbud_budget():
+
+    zb = ZoneBudget(os.path.join(pth, cbc_f))
+    zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
+    recordlist = [('in', 'CONSTANT HEAD'), ('in', 'FROM ZONE 1')]
+    zbud.get_records(recordlist=recordlist, zones=[1, 3])
+    zbud.get_records()
+
+
 def test_zonbud_mass_balance():
 
     zb = ZoneBudget(os.path.join(pth, cbc_f))
@@ -42,9 +51,12 @@ def test_zonbud_mass_balance():
     zbud.get_total_inflow(zones=[1, 2]).sum()
     zbud.get_percent_error()
 
+
 if __name__ == '__main__':
+
     test_zonbud_write_csv_kstpkper()
     test_zonbud_write_csv_totim()
+    test_zonbud_budget()
     test_zonbud_mass_balance()
 
 
