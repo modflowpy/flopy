@@ -10,17 +10,78 @@ class Budget(object):
     """
 
     def __init__(self, recordarray, kstpkper=None, totim=None):
-        self.recordarray = recordarray
-        self.kstpkper = kstpkper
-        self.totim = totim
-        self._zonefields = [name for name in self.recordarray.dtype.names if 'ZONE' in name]
         if kstpkper is None and totim is None:
             errmsg = 'Please specify a time step/stress period (kstpkper) ' \
                      'or simulation time (totim) for which the budget is ' \
                      'desired.'
             raise Exception(errmsg)
+        self._recordarray = recordarray
+        self.kstpkper = kstpkper
+        self.totim = totim
+        self._zonefields = [name for name in self._recordarray.dtype.names if 'ZONE' in name]
         self._massbalance = self._compute_mass_balance()
         return
+
+    def get_records(self, recordlist=None, zones=None):
+        """
+        Returns the budget record array. Optionally, pass a list of
+        (flow_dir, recname) tuples to get a subset of records. Pass
+        a list of zones to get the desired records for just those
+        zones.
+
+        Parameters
+        ----------
+        recordlist : tuple or list of tuples
+            A tuple or list of tuples containing flow direction and the name of
+            the record desired [('in', 'STORAGE'), ('out', 'TO ZONE 1')].
+        zones : int or list of ints
+            The zone(s) for which budget records are desired.
+
+        Returns
+        -------
+        records : numpy record array
+            An array of the budget records
+
+        """
+        if recordlist is not None:
+            if isinstance(recordlist, tuple):
+                recordlist = [recordlist]
+            elif isinstance(recordlist, list):
+                recordlist = recordlist
+            else:
+                errmsg = 'Input records are not recognized. Please ' \
+                         'pass a tuple of (flow_dir, recordname) or list of tuples.'
+                raise Exception(errmsg)
+            select_records = []
+            for flowdir, recname in recordlist:
+                select_record = np.where((self._recordarray['flow_dir'] == flowdir) &
+                                         (self._recordarray['record'] == recname))
+                select_records.append(select_record[0])
+            select_records = np.array(select_records)
+
+        else:
+            flowdirs = self._recordarray['flow_dir']
+            recnames = self._recordarray['record']
+            select_records = np.where((self._recordarray['flow_dir'] == flowdirs) &
+                                      (self._recordarray['record'] == recnames))
+        if zones is not None:
+            if isinstance(zones, int):
+                zones = [zones]
+            elif isinstance(zones, list):
+                zones = zones
+            else:
+                errmsg = 'Input zones are not recognized. Please ' \
+                         'pass an integer or list of integers.'
+                raise Exception(errmsg)
+            for zone in zones:
+                errmsg = 'Zone {} is not in the record array.'.format(zone)
+                assert 'ZONE {}'.format(zone) in self._zonefields, errmsg
+            select_fields = ['ZONE {}'.format(z) for z in zones]
+        else:
+            select_fields = self._zonefields
+        select_fields = ['flow_dir', 'record'] + select_fields
+        records = self._recordarray[select_fields][select_records]
+        return records
 
     def get_total_inflow(self, zones=None):
         """
@@ -170,13 +231,13 @@ class Budget(object):
         # and percent error summed by column.
 
         # Compute inflows
-        idx = np.where(self.recordarray['flow_dir'] == 'in')[0]
-        a = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
+        idx = np.where(self._recordarray['flow_dir'] == 'in')[0]
+        a = _numpyvoid2numeric(self._recordarray[self._zonefields][idx])
         intot = np.array(a.sum(axis=0))
 
         # Compute outflows
-        idx = np.where(self.recordarray['flow_dir'] == 'out')[0]
-        a = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
+        idx = np.where(self._recordarray['flow_dir'] == 'out')[0]
+        a = _numpyvoid2numeric(self._recordarray[self._zonefields][idx])
         outot = np.array(a.sum(axis=0))
 
         # Compute percent error
@@ -222,11 +283,11 @@ class Budget(object):
             with open(fname, 'w') as f:
 
                 # Write header
-                f.write(','.join(self.recordarray.dtype.names)+'\n')
+                f.write(','.join(self._recordarray.dtype.names)+'\n')
 
                 # Write IN terms
-                select_indices = np.where(self.recordarray['flow_dir'] == 'in')
-                for rec in self.recordarray[select_indices[0]]:
+                select_indices = np.where(self._recordarray['flow_dir'] == 'in')
+                for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -238,8 +299,8 @@ class Budget(object):
                 f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
-                select_indices = np.where(self.recordarray['flow_dir'] == 'out')
-                for rec in self.recordarray[select_indices[0]]:
+                select_indices = np.where(self._recordarray['flow_dir'] == 'out')
+                for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -268,12 +329,12 @@ class Budget(object):
                 elif self.totim is not None:
                     header = 'Sim. Time, {totim}\n'.format(totim=self.totim)
                 f.write(header)
-                f.write(','.join([' '] + [field for field in self.recordarray.dtype.names[2:]])+'\n')
+                f.write(','.join([' '] + [field for field in self._recordarray.dtype.names[2:]])+'\n')
 
                 # Write IN terms
-                f.write(','.join([' '] + ['IN']*(len(self.recordarray.dtype.names[1:])-1))+'\n')
-                select_indices = np.where(self.recordarray['flow_dir'] == 'in')
-                for rec in self.recordarray[select_indices[0]]:
+                f.write(','.join([' '] + ['IN']*(len(self._recordarray.dtype.names[1:])-1))+'\n')
+                select_indices = np.where(self._recordarray['flow_dir'] == 'in')
+                for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in list(rec)[1:]:
                         if isinstance(i, str):
@@ -285,9 +346,9 @@ class Budget(object):
                 f.write(','.join(['Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
-                f.write(','.join([' '] + ['OUT']*(len(self.recordarray.dtype.names[1:])-1))+'\n')
-                select_indices = np.where(self.recordarray['flow_dir'] == 'out')
-                for rec in self.recordarray[select_indices[0]]:
+                f.write(','.join([' '] + ['OUT']*(len(self._recordarray.dtype.names[1:])-1))+'\n')
+                select_indices = np.where(self._recordarray['flow_dir'] == 'out')
+                for rec in self._recordarray[select_indices[0]]:
                     items = []
                     for i in list(rec)[1:]:
                         if isinstance(i, str):
