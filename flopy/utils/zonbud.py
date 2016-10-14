@@ -10,20 +10,20 @@ class Budget(object):
     """
 
     def __init__(self, recordarray, **kwargs):
-        self.records = recordarray
+        self.recordarray = recordarray
         self.kwargs = kwargs
-        self._zonefields = [name for name in self.records.dtype.names if 'ZONE' in name]
+        self._zonefields = [name for name in self.recordarray.dtype.names if 'ZONE' in name]
 
     def get_total_inflow(self):
         # Returns the total inflow, summed by column.
-        idx = np.where(self.records['flow_dir'] == 'in')[0]
-        ins = _numpyvoid2numeric(self.records[self._zonefields][idx])
+        idx = np.where(self.recordarray['flow_dir'] == 'in')[0]
+        ins = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
         return ins.sum(axis=0)
 
     def get_total_outflow(self):
         # Returns the total outflow, summed by column.
-        idx = np.where(self.records['flow_dir'] == 'out')[0]
-        out = _numpyvoid2numeric(self.records[self._zonefields][idx])
+        idx = np.where(self.recordarray['flow_dir'] == 'out')[0]
+        out = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
         return out.sum(axis=0)
 
     def get_percent_error(self):
@@ -42,9 +42,12 @@ class Budget(object):
 
         Parameters
         ----------
-        fname: str, Name of the output comma-separated values file.
-        write_format: str, Write option for output comma-separated values file.
-        formatter: function, String-formatter function for floats
+        fname : str
+            The name of the output comma-separated values file.
+        write_format : str
+            A write option for output comma-separated values file.
+        formatter : function
+            A string-formatter function for formatting floats.
 
         Returns
         -------
@@ -60,10 +63,11 @@ class Budget(object):
             with open(fname, 'w') as f:
 
                 # Write header
-                f.write(','.join(self.records.dtype.names)+'\n')
+                f.write(','.join(self.recordarray.dtype.names)+'\n')
 
                 # Write IN terms
-                for rec in self.records[np.where(self.records['flow_dir'] == 'in')[0]]:
+                select_indices = np.where(self.recordarray['flow_dir'] == 'in')
+                for rec in self.recordarray[select_indices[0]]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -75,7 +79,8 @@ class Budget(object):
                 f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
-                for rec in self.records[np.where(self.records['flow_dir'] == 'out')[0]]:
+                select_indices = np.where(self.recordarray['flow_dir'] == 'out')
+                for rec in self.recordarray[select_indices[0]]:
                     items = []
                     for i in rec:
                         if isinstance(i, str):
@@ -105,11 +110,12 @@ class Budget(object):
                     raise Exception('No stress period/time step or time specified.')
 
                 f.write(header)
-                f.write(','.join([' '] + [field for field in self.records.dtype.names[2:]])+'\n')
+                f.write(','.join([' '] + [field for field in self.recordarray.dtype.names[2:]])+'\n')
 
                 # Write IN terms
-                f.write(','.join([' '] + ['IN']*(len(self.records.dtype.names[1:])-1))+'\n')
-                for rec in self.records[np.where(self.records['flow_dir'] == 'in')[0]]:
+                f.write(','.join([' '] + ['IN']*(len(self.recordarray.dtype.names[1:])-1))+'\n')
+                select_indices = np.where(self.recordarray['flow_dir'] == 'in')
+                for rec in self.recordarray[select_indices[0]]:
                     items = []
                     for i in list(rec)[1:]:
                         if isinstance(i, str):
@@ -121,8 +127,9 @@ class Budget(object):
                 f.write(','.join(['Total IN'] + [formatter(i) for i in ins_sum])+'\n')
 
                 # Write OUT terms
-                f.write(','.join([' '] + ['OUT']*(len(self.records.dtype.names[1:])-1))+'\n')
-                for rec in self.records[np.where(self.records['flow_dir'] == 'out')[0]]:
+                f.write(','.join([' '] + ['OUT']*(len(self.recordarray.dtype.names[1:])-1))+'\n')
+                select_indices = np.where(self.recordarray['flow_dir'] == 'out')
+                for rec in self.recordarray[select_indices[0]]:
                     items = []
                     for i in list(rec)[1:]:
                         if isinstance(i, str):
@@ -200,10 +207,19 @@ class ZoneBudget(object):
         keywords are "kstpkper" and "totim". Currently, this function only supports the
         use of a single time step/stress period or time.
 
-        :param z: A numpy.ndarray containing to zones to be used.
-        :param kwargs:
-        :return:
-        Budget object
+        Parameters
+        ----------
+        z : numpy.ndarray
+            The array containing to zones to be used.
+        kwargs : keyword arguments
+            Keyword arguments that are passed to the get_data() function
+            of the CellBudgetFile object which are used to specify the
+            time step/stress period or simulation time for which budget
+            data are desired. Valid options are "kstpkper" and "totim".
+
+        Returns
+        -------
+        A Budget object
         """
         # Check the keyword arguments
         if len(kwargs) == 0:
