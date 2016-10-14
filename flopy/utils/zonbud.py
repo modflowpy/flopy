@@ -19,27 +19,180 @@ class Budget(object):
                      'or simulation time (totim) for which the budget is ' \
                      'desired.'
             raise Exception(errmsg)
+        self._massbalance = self._compute_mass_balance()
+        return
 
-    def get_total_inflow(self):
-        # Returns the total inflow, summed by column.
+    def get_total_inflow(self, zones=None):
+        """
+        Returns the total inflow, summed by column. Optionally, pass a
+        list of integer zones to get the total inflow for just those zones.
+
+        Parameters
+        ----------
+        zones : int, list of ints
+            The zone(s) for which total inflow is desired.
+
+        Returns
+        -------
+        array : numpy array
+            An array of the total inflow values
+
+        """
+        if zones is not None:
+            if isinstance(zones, int):
+                zones = [zones]
+            elif isinstance(zones, list):
+                zones = zones
+            else:
+                errmsg = 'Input zones are not recognized. Please ' \
+                         'pass an integer or list of integers.'
+                raise Exception(errmsg)
+            for zone in zones:
+                errmsg = 'Zone {} is not in the record array.'.format(zone)
+                assert 'ZONE {}'.format(zone) in self._zonefields, errmsg
+            select_fields = ['ZONE {}'.format(z) for z in zones]
+        else:
+            select_fields = self._zonefields
+        select_indices = np.where(self._massbalance['recname'] == 'INFLOW')
+        records = self._massbalance[select_fields][select_indices]
+        array = np.array([r for r in records[0]])
+        return array
+
+    def get_total_outflow(self, zones=None):
+        """
+        Returns the total outflow, summed by column. Optionally, pass a
+        list of integer zones to get the total outflow for just those zones.
+
+        Parameters
+        ----------
+        zones : int, list of ints
+            The zone(s) for which total outflow is desired.
+
+        Returns
+        -------
+        array : numpy array
+            An array of the total outflow values
+
+        """
+        if zones is not None:
+            if isinstance(zones, int):
+                zones = [zones]
+            elif isinstance(zones, list):
+                zones = zones
+            else:
+                errmsg = 'Input zones are not recognized. Please ' \
+                         'pass an integer or list of integers.'
+                raise Exception(errmsg)
+            for zone in zones:
+                errmsg = 'Zone {} is not in the record array.'.format(zone)
+                assert 'ZONE {}'.format(zone) in self._zonefields, errmsg
+            select_fields = ['ZONE {}'.format(z) for z in zones]
+        else:
+            select_fields = self._zonefields
+        select_indices = np.where(self._massbalance['recname'] == 'OUTFLOW')
+        records = self._massbalance[select_fields][select_indices]
+        array = np.array([r for r in records[0]])
+        return array
+
+    def get_percent_error(self, zones=None):
+        """
+        Returns the percent error, summed by column. Optionally, pass a
+        list of integer zones to get the percent error for just those zones.
+
+        Parameters
+        ----------
+        zones : int, list of ints
+            The zone(s) for which percent error is desired.
+
+        Returns
+        -------
+        array : numpy array
+            An array of the percent error values
+
+        """
+        if zones is not None:
+            if isinstance(zones, int):
+                zones = [zones]
+            elif isinstance(zones, list):
+                zones = zones
+            else:
+                errmsg = 'Input zones are not recognized. Please ' \
+                         'pass an integer or list of integers.'
+                raise Exception(errmsg)
+            for zone in zones:
+                errmsg = 'Zone {} is not in the record array.'.format(zone)
+                assert 'ZONE {}'.format(zone) in self._zonefields, errmsg
+            select_fields = ['ZONE {}'.format(z) for z in zones]
+        else:
+            select_fields = self._zonefields
+        select_indices = np.where(self._massbalance['recname'] == 'ERROR')
+        records = self._massbalance[select_fields][select_indices]
+        array = np.array([r for r in records[0]])
+        return array
+
+    def get_mass_balance(self, zones=None):
+        """
+        Returns the mass-balance records. Optionally, pass a
+        list of integer zones to get the mass-balance records for just those zones.
+
+        Parameters
+        ----------
+        zones : int, list of ints
+            The zone(s) for which percent error is desired.
+
+        Returns
+        -------
+        records : numpy record array
+            An array of the mass-balance records
+
+        """
+        if zones is not None:
+            if isinstance(zones, int):
+                zones = [zones]
+            elif isinstance(zones, list):
+                zones = zones
+            else:
+                errmsg = 'Input zones are not recognized. Please ' \
+                         'pass an integer or list of integers.'
+                raise Exception(errmsg)
+            for zone in zones:
+                errmsg = 'Zone {} is not in the record array.'.format(zone)
+                assert 'ZONE {}'.format(zone) in self._zonefields, errmsg
+            select_fields = ['ZONE {}'.format(z) for z in zones]
+        else:
+            select_fields = self._zonefields
+        select_fields = ['recname'] + select_fields
+        records = self._massbalance[select_fields]
+        return records
+
+    def _compute_mass_balance(self):
+        # Returns a record array with total inflow, total outflow,
+        # and percent error summed by column.
+
+        # Compute inflows
         idx = np.where(self.recordarray['flow_dir'] == 'in')[0]
         a = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
-        return np.array(a.sum(axis=0))
+        intot = np.array(a.sum(axis=0))
 
-    def get_total_outflow(self):
-        # Returns the total outflow, summed by column.
+        # Compute outflows
         idx = np.where(self.recordarray['flow_dir'] == 'out')[0]
         a = _numpyvoid2numeric(self.recordarray[self._zonefields][idx])
-        return np.array(a.sum(axis=0))
+        outot = np.array(a.sum(axis=0))
 
-    def get_percent_error(self):
-        # Returns the mass-balance percent error between total inflow
-        # and total outflow, summed by column.
-        ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
-        ins_plus_out = self.get_total_inflow() + self.get_total_outflow()
+        # Compute percent error
+        ins_minus_out = intot - outot
+        ins_plus_out = intot + outot
         pcterr = 100 * ins_minus_out / (ins_plus_out / 2.)
         pcterr = np.nan_to_num(pcterr)
-        return pcterr
+
+        # Create the mass-balance record array
+        dtype_list = [('recname', (str, 7))] + [('{}'.format(f), np.float64) for f in self._zonefields]
+        dtype = np.dtype(dtype_list)
+        mb = np.array([], dtype=dtype)
+        mb = np.append(mb, np.array(tuple(['INFLOW'] + list(intot)), dtype=dtype))
+        mb = np.append(mb, np.array(tuple(['OUTFLOW'] + list(outot)), dtype=dtype))
+        mb = np.append(mb, np.array(tuple(['ERROR'] + list(pcterr)), dtype=dtype))
+        return mb
 
     def to_csv(self, fname, write_format='pandas', formatter=None):
         """
@@ -392,18 +545,24 @@ class ZoneBudget(object):
         self.zonbudrecords = np.array([], dtype=dtype)
 
         # Add "in" records
+        if 'STORAGE' in self.record_names:
+            self._build_empty_record('in', 'STORAGE', lstzon)
         if 'CONSTANT HEAD' in self.record_names:
             self._build_empty_record('in', 'CONSTANT HEAD', lstzon)
         for recname in self.ssst_record_names:
-            self._build_empty_record('in', recname, lstzon)
+            if recname != 'STORAGE':
+                self._build_empty_record('in', recname, lstzon)
         for z in lstzon:
             self._build_empty_record('in', 'FROM ZONE {}'.format(z), lstzon)
 
         # Add "out" records
+        if 'STORAGE' in self.record_names:
+            self._build_empty_record('out', 'STORAGE', lstzon)
         if 'CONSTANT HEAD' in self.record_names:
             self._build_empty_record('out', 'CONSTANT HEAD', lstzon)
         for recname in self.ssst_record_names:
-            self._build_empty_record('out', recname, lstzon)
+            if recname != 'STORAGE':
+                self._build_empty_record('out', recname, lstzon)
         for z in lstzon:
             self._build_empty_record('out', 'TO ZONE {}'.format(z), lstzon)
         return

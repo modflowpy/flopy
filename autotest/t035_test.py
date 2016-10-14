@@ -16,33 +16,35 @@ zon[0, 20:, :10] = 3
 zon[0, 20:, 10:] = 4
 
 
-def test_zonbud1():
+def test_zonbud_write_csv_kstpkper():
+
+    zb = ZoneBudget(os.path.join(pth, cbc_f))
+    zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
+    zbud.to_csv(os.path.join(pth, 'zbud.csv'), write_format='zonbud')
+    zbud.to_csv(os.path.join(pth, 'zbud_pandas.csv'), write_format='pandas')
+
+
+def test_zonbud_write_csv_totim():
+
+    zb = ZoneBudget(os.path.join(pth, cbc_f))
+    zbud = zb.get_budget(zon, totim=zb.get_times()[-1])
+    zbud.to_csv(os.path.join(pth, 'zbud.csv'), write_format='zonbud')
+    zbud.to_csv(os.path.join(pth, 'zbud_pandas.csv'), write_format='pandas')
+
+
+def test_zonbud_mass_balance():
 
     zb = ZoneBudget(os.path.join(pth, cbc_f))
     zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
 
-    zbud.get_total_outflow()
-    zbud.get_total_inflow()
+    zbud.get_mass_balance()
+    zbud.get_total_outflow(zones=3)
+    zbud.get_total_inflow(zones=[1, 2]).sum()
     zbud.get_percent_error()
-
-    zbud.to_csv(os.path.join(pth, 'zbud.csv'), write_format='zonbud')
-    zbud.to_csv(os.path.join(pth, 'zbud_pandas.csv'), write_format='pandas')
-
-
-def test_zonbud2():
-
-    zb = ZoneBudget(os.path.join(pth, cbc_f))
-    zbud = zb.get_budget(zon, totim=zb.get_times()[-1])
-
-    zbud.get_total_outflow()
-    zbud.get_total_inflow()
-    zbud.get_percent_error()
-
-    zbud.to_csv(os.path.join(pth, 'zbud.csv'), write_format='zonbud')
-    zbud.to_csv(os.path.join(pth, 'zbud_pandas.csv'), write_format='pandas')
 
 if __name__ == '__main__':
-    test_zonbud1()
-    test_zonbud2()
+    test_zonbud_write_csv_kstpkper()
+    test_zonbud_write_csv_totim()
+    test_zonbud_mass_balance()
 
 
