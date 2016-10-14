@@ -36,8 +36,10 @@ def test_zonbud_budget():
 
     zb = ZoneBudget(os.path.join(pth, cbc_f))
     zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
-    recordlist = [('in', 'CONSTANT HEAD'), ('in', 'FROM ZONE 1')]
-    zbud.get_records(recordlist=recordlist, zones=[1, 3])
+    recordlist = [('IN', 'CONSTANT HEAD'), ('IN', 'FROM ZONE 1')]
+    recs = zbud.get_records(recordlist=recordlist, zones=[1, 3])
+    if recs.shape[1] == 0:
+        raise Exception('No records returned.')
     zbud.get_records()
 
 
@@ -46,10 +48,18 @@ def test_zonbud_mass_balance():
     zb = ZoneBudget(os.path.join(pth, cbc_f))
     zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
 
-    zbud.get_mass_balance()
-    zbud.get_total_outflow(zones=3)
-    zbud.get_total_inflow(zones=[1, 2]).sum()
-    zbud.get_percent_error()
+    recs = zbud.get_mass_balance()
+    if recs.shape == 0:
+        raise Exception('No records returned.')
+    recs = zbud.get_total_outflow(zones=3)
+    if recs.shape == 0:
+        raise Exception('No records returned.')
+    recs = zbud.get_total_inflow(zones=[1, 2])
+    if recs.shape == 0:
+        raise Exception('No records returned.')
+    recs = zbud.get_percent_error()
+    if recs.shape == 0:
+        raise Exception('No records returned.')
 
 
 if __name__ == '__main__':
