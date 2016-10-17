@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from .binaryfile import CellBudgetFile
+from copy import copy
 
 
 class Budget(object):
@@ -22,7 +23,7 @@ class Budget(object):
         self._massbalance = self._compute_mass_balance()
         return
 
-    def get_records(self, recordlist=None, zones=None):
+    def get_records(self, recordlist=None, zones=None, aliases=None):
         """
         Returns the budget record array. Optionally, pass a list of
         (flow_dir, recname) tuples to get a subset of records. Pass
@@ -36,6 +37,12 @@ class Budget(object):
             the record desired [('IN', 'STORAGE'), ('OUT', 'TO ZONE 1')].
         zones : int or list of ints
             The zone(s) for which budget records are desired.
+        aliases : dictionary
+            A dictionary with key, value pairs of zones and aliases. Replaces
+            the corresponding record and field names with the aliases provided.
+            NOTE: When using this option in conjunction with a list of zones,
+            the zone(s) passed may either be all strings (aliases) or
+            integers, but may not not mixed.
 
         Returns
         -------
@@ -43,6 +50,59 @@ class Budget(object):
             An array of the budget records
 
         """
+        # Return a copy of the record array
+        recordarray = self._recordarray.copy()
+
+        # If the user has passed a dictionary of aliases, convert relevant field
+        # names and records to comply with te desired names.
+        if aliases is not None:
+            assert isinstance(aliases, dict), 'Input aliases not recognized. Please pass a dictionary ' \
+                                              'with key,value pairs of zone/alias.'
+            newfieldnames = list(recordarray.dtype.names)
+            for idx, name in enumerate(newfieldnames):
+                if 'ZONE' in name:
+                    zone = int(name.split()[-1])
+                    if zone in aliases.keys():
+                        newfieldnames[idx] = aliases[zone]
+            recordarray.dtype.names = newfieldnames
+
+            for idx, r in np.ndenumerate(recordarray):
+                pieces = r['record'].split()
+                if 'ZONE' in pieces:
+                    zone = int(pieces[-1])
+                    if zone in aliases.keys():
+                        newrecname = '{} {}'.format(pieces[0], aliases[zone])
+                        recordarray[idx]['record'] = newrecname
+
+        if zones is not None:
+            if isinstance(zones, int):
+                zones = [zones]
+            elif isinstance(zones, list) or isinstance(zones, tuple):
+                zones = zones
+            else:
+                errmsg = 'Input zones are not recognized. Please ' \
+                         'pass an integer or list of integers.'
+                raise Exception(errmsg)
+            if aliases is None:
+                for zone in zones:
+                    errmsg = 'Zone {} is not in the record array.'.format(zone)
+                    assert 'ZONE {}'.format(zone) in self._zonefields, errmsg
+                select_fields = ['ZONE {}'.format(z) for z in zones]
+            else:
+                # for alias in aliases.values():
+                #     errmsg = 'Zone {} is not in the record array.'.format(alias)
+                #     assert '{}'.format(alias) in self._zonefields, errmsg
+                if isinstance(zones[0], str):
+                    select_fields = [z for z in zones]
+                else:
+                    select_fields = [aliases[z] for z in zones]
+        else:
+            if aliases is None:
+                select_fields = self._zonefields
+            else:
+                select_fields = [name for name in newfieldnames if name not in ['flow_dir', 'record']]
+        select_fields = ['flow_dir', 'record'] + select_fields
+
         if recordlist is not None:
             if isinstance(recordlist, tuple):
                 recordlist = [recordlist]
@@ -54,31 +114,16 @@ class Budget(object):
                 raise Exception(errmsg)
             select_records = np.array([], dtype=np.int64)
             for flowdir, recname in recordlist:
-                r = np.where((self._recordarray['flow_dir'] == flowdir) &
-                             (self._recordarray['record'] == recname))
+                r = np.where((recordarray['flow_dir'] == flowdir) &
+                             (recordarray['record'] == recname))
                 select_records = np.append(select_records, r[0])
         else:
-            flowdirs = self._recordarray['flow_dir']
-            recnames = self._recordarray['record']
-            select_records = np.where((self._recordarray['flow_dir'] == flowdirs) &
-                                      (self._recordarray['record'] == recnames))
-        if zones is not None:
-            if isinstance(zones, int):
-                zones = [zones]
-            elif isinstance(zones, list) or isinstance(zones, tuple):
-                zones = zones
-            else:
-                errmsg = 'Input zones are not recognized. Please ' \
-                         'pass an integer or list of integers.'
-                raise Exception(errmsg)
-            for zone in zones:
-                errmsg = 'Zone {} is not in the record array.'.format(zone)
-                assert 'ZONE {}'.format(zone) in self._zonefields, errmsg
-            select_fields = ['ZONE {}'.format(z) for z in zones]
-        else:
-            select_fields = self._zonefields
-        select_fields = ['flow_dir', 'record'] + select_fields
-        records = self._recordarray[select_fields][select_records]
+            flowdirs = recordarray['flow_dir']
+            recnames = recordarray['record']
+            select_records = np.where((recordarray['flow_dir'] == flowdirs) &
+                                      (recordarray['record'] == recnames))
+
+        records = recordarray[select_fields][select_records]
         return records
 
     def get_total_inflow(self, zones=None):
