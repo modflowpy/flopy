@@ -57,7 +57,6 @@ class Budget(object):
                 r = np.where((self._recordarray['flow_dir'] == flowdir) &
                              (self._recordarray['record'] == recname))
                 select_records = np.append(select_records, r[0])
-            select_records = (np.array(select_records, dtype=np.int64))
         else:
             flowdirs = self._recordarray['flow_dir']
             recnames = self._recordarray['record']
