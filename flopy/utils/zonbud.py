@@ -298,7 +298,7 @@ class Budget(object):
         mb = np.append(mb, np.array(tuple(['ERROR'] + list(pcterr)), dtype=dtype))
         return mb
 
-    def to_csv(self, fname, write_format='pandas', formatter=None):
+    def to_csv(self, fname, write_format='zonbud', formatter=None):
         """
         Saves the Budget object record array to a formatted
         comma-separated values file.
