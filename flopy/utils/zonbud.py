@@ -33,7 +33,7 @@ class Budget(object):
         ----------
         recordlist : tuple or list of tuples
             A tuple or list of tuples containing flow direction and the name of
-            the record desired [('in', 'STORAGE'), ('OUT', 'TO ZONE 1')].
+            the record desired [('IN', 'STORAGE'), ('OUT', 'TO ZONE 1')].
         zones : int or list of ints
             The zone(s) for which budget records are desired.
 
