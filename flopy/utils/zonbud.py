@@ -52,13 +52,12 @@ class Budget(object):
                 errmsg = 'Input records are not recognized. Please ' \
                          'pass a tuple of (flow_dir, recordname) or list of tuples.'
                 raise Exception(errmsg)
-            select_records = []
+            select_records = np.array([], dtype=np.int64)
             for flowdir, recname in recordlist:
-                select_record = np.where((self._recordarray['flow_dir'] == flowdir) &
-                                         (self._recordarray['record'] == recname))
-                select_records.append(select_record[0])
-            select_records = np.array(select_records)
-
+                r = np.where((self._recordarray['flow_dir'] == flowdir) &
+                             (self._recordarray['record'] == recname))
+                select_records = np.append(select_records, r[0])
+            select_records = (np.array(select_records, dtype=np.int64))
         else:
             flowdirs = self._recordarray['flow_dir']
             recnames = self._recordarray['record']
@@ -67,7 +66,7 @@ class Budget(object):
         if zones is not None:
             if isinstance(zones, int):
                 zones = [zones]
-            elif isinstance(zones, list):
+            elif isinstance(zones, list) or isinstance(zones, tuple):
                 zones = zones
             else:
                 errmsg = 'Input zones are not recognized. Please ' \
@@ -102,7 +101,7 @@ class Budget(object):
         if zones is not None:
             if isinstance(zones, int):
                 zones = [zones]
-            elif isinstance(zones, list):
+            elif isinstance(zones, list) or isinstance(zones, tuple):
                 zones = zones
             else:
                 errmsg = 'Input zones are not recognized. Please ' \
@@ -138,7 +137,7 @@ class Budget(object):
         if zones is not None:
             if isinstance(zones, int):
                 zones = [zones]
-            elif isinstance(zones, list):
+            elif isinstance(zones, list) or isinstance(zones, tuple):
                 zones = zones
             else:
                 errmsg = 'Input zones are not recognized. Please ' \
@@ -174,7 +173,7 @@ class Budget(object):
         if zones is not None:
             if isinstance(zones, int):
                 zones = [zones]
-            elif isinstance(zones, list):
+            elif isinstance(zones, list) or isinstance(zones, tuple):
                 zones = zones
             else:
                 errmsg = 'Input zones are not recognized. Please ' \
@@ -210,7 +209,7 @@ class Budget(object):
         if zones is not None:
             if isinstance(zones, int):
                 zones = [zones]
-            elif isinstance(zones, list):
+            elif isinstance(zones, list) or isinstance(zones, tuple):
                 zones = zones
             else:
                 errmsg = 'Input zones are not recognized. Please ' \
