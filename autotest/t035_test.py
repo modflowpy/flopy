@@ -36,11 +36,12 @@ def test_zonbud_budget():
 
     zb = ZoneBudget(os.path.join(pth, cbc_f))
     zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
-    recordlist = [('IN', 'CONSTANT HEAD'), ('IN', 'FROM ZONE 1')]
-    recs = zbud.get_records(recordlist=recordlist, zones=[1, 3])
+
+    recs = zbud.get_records()
     if recs.shape[0] == 0:
         raise Exception('No records returned.')
-    recs = zbud.get_records()
+    recordlist = [('IN', 'CONSTANT HEAD'), ('IN', 'FROM ZONE 1')]
+    recs = zbud.get_records(recordlist=recordlist, zones=[1, 3])
     if recs.shape[0] == 0:
         raise Exception('No records returned.')
 
