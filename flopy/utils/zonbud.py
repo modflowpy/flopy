@@ -2,6 +2,7 @@ import os
 import numpy as np
 from .binaryfile import CellBudgetFile
 from copy import copy
+from itertools import groupby
 
 
 class Budget(object):
@@ -712,12 +713,34 @@ class ZoneBudget(object):
         idx_neg = np.where(q < 0)
 
         # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
 
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        nzgt_l2r = neg + pos
+        # Create an interable tuple of (from zone, to zone, flux)
+        # Then group tuple by (from_zone, to_zone) and sum the flux vlues
+        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
+        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
         l, r, c = np.where(ich == 1)
@@ -730,7 +753,7 @@ class ZoneBudget(object):
         q = bud[l, r, c-1]
         q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
         idx_neg = np.where(q < 0)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
@@ -761,12 +784,34 @@ class ZoneBudget(object):
         idx_neg = np.where(q < 0)
 
         # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
 
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        nzgt_r2l = neg + pos
+        # Create an interable tuple of (from zone, to zone, flux)
+        # Then group tuple by (from_zone, to_zone) and sum the flux vlues
+        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
+        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
         l, r, c = np.where(ich == 1)
@@ -779,7 +824,7 @@ class ZoneBudget(object):
         q = bud[l, r, c]
         q[(ich[l, r, c] == 1) & (ich[l, r, c+1] == 1)] = 0.
         idx_neg = np.where(q < 0)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
         chdneg = zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg]))
         chdpos = zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos]))
         for (from_zone, to_zone, flux) in chdneg:
@@ -787,11 +832,6 @@ class ZoneBudget(object):
         for (from_zone, to_zone, flux) in chdpos:
             self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
-        # Update records
-        nzgt = nzgt_l2r + nzgt_r2l
-        for (from_zone, to_zone, flux) in nzgt:
-            self._update_record('IN', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
-            self._update_record('OUT', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
     def _accumulate_flow_fff(self, recname, izone, ich, **kwargs):
@@ -824,12 +864,34 @@ class ZoneBudget(object):
         idx_neg = np.where(q < 0)
 
         # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
 
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        nzgt_u2d = neg + pos
+        # Create an interable tuple of (from zone, to zone, flux)
+        # Then group tuple by (from_zone, to_zone) and sum the flux vlues
+        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
+        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
         l, r, c = np.where(ich == 1)
@@ -872,12 +934,34 @@ class ZoneBudget(object):
         idx_neg = np.where(q < 0)
 
         # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
 
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        nzgt_d2u = neg + pos
+        # Create an interable tuple of (from zone, to zone, flux)
+        # Then group tuple by (from_zone, to_zone) and sum the flux vlues
+        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
+        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
         l, r, c = np.where(ich == 1)
@@ -898,11 +982,6 @@ class ZoneBudget(object):
         for (from_zone, to_zone, flux) in chdpos:
             self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
-        # Update records
-        nzgt = nzgt_u2d + nzgt_d2u
-        for (from_zone, to_zone, flux) in nzgt:
-            self._update_record('IN', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
-            self._update_record('OUT', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
     def _accumulate_flow_flf(self, recname, izone, ich, **kwargs):
@@ -935,12 +1014,34 @@ class ZoneBudget(object):
         idx_neg = np.where(q < 0)
 
         # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
 
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        nzgt_t2b = neg + pos
+        # Create an interable tuple of (from zone, to zone, flux)
+        # Then group tuple by (from_zone, to_zone) and sum the flux vlues
+        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
+        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
         l, r, c = np.where(ich == 1)
@@ -961,9 +1062,8 @@ class ZoneBudget(object):
         for (from_zone, to_zone, flux) in chdpos:
             self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
-        # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
-        # Accumulate flow from lower zones to higher zones from "right" to "left".
-        # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
+        # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1.
+        # Accumulate flow from lower zones to higher zones from "bottom" to "top".
         nz = izone[:-1, :, :]
         nzb = izone[1:, :, :]
         l, r, c = np.where(nz < nzb)
@@ -984,12 +1084,34 @@ class ZoneBudget(object):
         idx_neg = np.where(q < 0)
 
         # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q >= 0)
+        idx_pos = np.where(q > 0)
 
-        # Create tuples of ("to zone", "from zone", "absolute flux")
-        neg = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        pos = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        nzgt_b2t = neg + pos
+        # Create an interable tuple of (from zone, to zone, flux)
+        # Then group tuple by (from_zone, to_zone) and sum the flux vlues
+        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
+        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
+        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
+            from_zone, to_zone = idx
+            flux = np.sum([tup[-1] for tup in list(flux_tups)])
+            self._update_record('IN',
+                                'FROM ZONE {}'.format(from_zone),
+                                'ZONE {}'.format(to_zone),
+                                flux)
+            self._update_record('OUT',
+                                'TO ZONE {}'.format(to_zone),
+                                'ZONE {}'.format(from_zone),
+                                flux)
 
         # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
         l, r, c = np.where(ich == 1)
@@ -1010,11 +1132,6 @@ class ZoneBudget(object):
         for (from_zone, to_zone, flux) in chdpos:
             self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(from_zone), flux)
 
-        # Update records
-        nzgt = nzgt_t2b + nzgt_b2t
-        for (from_zone, to_zone, flux) in nzgt:
-            self._update_record('IN', 'FROM ZONE {}'.format(from_zone), 'ZONE {}'.format(to_zone), flux)
-            self._update_record('OUT', 'TO ZONE {}'.format(to_zone), 'ZONE {}'.format(from_zone), flux)
         return
 
     def _accumulate_flow_ssst(self, recname, budin, budout, izone, lstzon):
