@@ -432,7 +432,7 @@ class ZoneBudget(object):
     def get_model_shape(self):
         return self.cbc.get_data(idx=0, full3D=True)[0].shape
 
-    def get_budget(self, z, kstpkper=None, totim=None, aliases=None):
+    def get_budget(self, z, kstpkper=None, totim=None, aliases=None, mult=None):
         """
         Creates a budget for the specified zone array. This function only supports the
         use of a single time step/stress period or time.
@@ -452,6 +452,10 @@ class ZoneBudget(object):
             NOTE: When using this option in conjunction with a list of zones,
             the zone(s) passed may either be all strings (aliases), all
             integers, or mixed.
+        mult : float or int
+            The number by which the numerical portions of the structured array
+            will be multiplied. Use this to convert from native model units to
+            another unit.
 
         Returns
         -------
@@ -622,6 +626,8 @@ class ZoneBudget(object):
         # to a csv file. Pass along the kwargs which hold the desired time
         # step/stress period or totim so we can print it to the header of
         # the output file.
+        if mult is not None:
+            self._multiply_records(mult)
         return Budget(self.zonbudrecords, kstpkper=kstpkper, totim=totim)
 
     @staticmethod
@@ -689,6 +695,12 @@ class ZoneBudget(object):
         rowidx = np.where((self.zonbudrecords['flow_dir'] == flow_dir) &
                           (self.zonbudrecords['record'] == recname))
         self.zonbudrecords[colname][rowidx] += flux
+        return
+
+    def _multiply_records(self, mult):
+        for f in self._zonefieldnames:
+            a = np.array([r for r in self.zonbudrecords[f]]) * mult
+            self.zonbudrecords[f] = a
         return
 
     def _accumulate_flow_frf(self, recname, izone, ich, **kwargs):

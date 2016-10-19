@@ -80,13 +80,20 @@ def test_zonbud_aliases():
     recs = zbud.get_records()
     if recs.shape[0] == 0:
         raise Exception('No records returned.')
-    print(recs.dtype)
-    print(recs)
     recordlist = [('IN', 'FROM Mike')]
     recs = zbud.get_records(recordlist=recordlist, zones=['Trey', 3])
-    print(recs.dtype)
-    print(recs)
+    if recs.shape[0] == 0:
+        raise Exception('No records returned.')
     return
+
+
+def test_zonbud_mult():
+
+    zb = ZoneBudget(os.path.join(pth, cbc_f))
+    cfd = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
+    print(cfd.get_records())
+    mgd = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1], mult=7.48052/1000000)
+    print(mgd.get_records())
 
 
 if __name__ == '__main__':
@@ -96,3 +103,4 @@ if __name__ == '__main__':
     test_zonbud_aliases()
     test_zonbud_budget()
     test_zonbud_mass_balance()
+    test_zonbud_mult()
