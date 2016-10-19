@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import numpy as np
 from .binaryfile import CellBudgetFile
@@ -587,44 +588,44 @@ class ZoneBudget(object):
 
             if imeth == 2 or imeth == 5:
                 # LIST
-                budin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
-                budout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                qin = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
+                qout = np.ma.zeros((self.nlay * self.nrow * self.ncol), self.float_type)
                 for [node, q] in zip(data['node'], data['q']):
                     idx = node - 1
                     if q > 0:
-                        budin.data[idx] += q
+                        qin.data[idx] += q
                     elif q < 0:
-                        budout.data[idx] += q
-                budin = np.ma.reshape(budin, (self.nlay, self.nrow, self.ncol))
-                budout = np.ma.reshape(budout, (self.nlay, self.nrow, self.ncol))
+                        qout.data[idx] += q
+                qin = np.ma.reshape(qin, (self.nlay, self.nrow, self.ncol))
+                qout = np.ma.reshape(qout, (self.nlay, self.nrow, self.ncol))
             elif imeth == 0 or imeth == 1:
                 # FULL 3-D ARRAY
-                budin = np.ma.zeros(self.cbc_shape, self.float_type)
-                budout = np.ma.zeros(self.cbc_shape, self.float_type)
-                budin[data > 0] = data[data > 0]
-                budout[data < 0] = data[data < 0]
+                qin = np.ma.zeros(self.cbc_shape, self.float_type)
+                qout = np.ma.zeros(self.cbc_shape, self.float_type)
+                qin[data > 0] = data[data > 0]
+                qout[data < 0] = data[data < 0]
             elif imeth == 3:
                 # 1-LAYER ARRAY WITH LAYER INDICATOR ARRAY
                 rlay, rdata = data[0], data[1]
                 data = np.ma.zeros(self.cbc_shape, self.float_type)
                 for (r, c), l in np.ndenumerate(rlay):
                     data[l - 1, r, c] = rdata[r, c]
-                budin = np.ma.zeros(self.cbc_shape, self.float_type)
-                budout = np.ma.zeros(self.cbc_shape, self.float_type)
-                budin[data > 0] = data[data > 0]
-                budout[data < 0] = data[data < 0]
+                qin = np.ma.zeros(self.cbc_shape, self.float_type)
+                qout = np.ma.zeros(self.cbc_shape, self.float_type)
+                qin[data > 0] = data[data > 0]
+                qout[data < 0] = data[data < 0]
             elif imeth == 4:
                 # 1-LAYER ARRAY THAT DEFINES LAYER 1
-                budin = np.ma.zeros(self.cbc_shape, self.float_type)
-                budout = np.ma.zeros(self.cbc_shape, self.float_type)
+                qin = np.ma.zeros(self.cbc_shape, self.float_type)
+                qout = np.ma.zeros(self.cbc_shape, self.float_type)
                 r, c = np.where(data > 0)
-                budin[0, r, c] = data[r, c]
+                qin[0, r, c] = data[r, c]
                 r, c = np.where(data < 0)
-                budout[0, r, c] = data[r, c]
+                qout[0, r, c] = data[r, c]
             else:
                 # Should not happen
                 raise Exception('Unrecognized "imeth" for {} record: {}'.format(recname, imeth))
-            self._accumulate_flow_ssst(recname, budin, budout, izone, lstzon)
+            self._accumulate_flow_ssst(recname, qin, qout, izone, lstzon)
 
         # Create the budget object, which is primarily a wrapper around the
         # budget record array that allows the user to write out the budget
@@ -677,560 +678,535 @@ class ZoneBudget(object):
         # flow direction (in/out), record name, and column (exclusive of
         # ZONE 0).
         if colname != 'ZONE 0':
+
+            if 'ZONE' in recname:
+                # Make sure the flux is between different zones
+                recname_z = int(recname.split()[-1])
+                colname_z = int(colname.split()[-1])
+                if recname_z == colname_z:
+                    errmsg = 'Circular flow detected: {}\t{}\t{}\t{}'.format(flow_dir,
+                                                                             recname,
+                                                                             colname,
+                                                                             flux)
+                    raise Exception(errmsg)
+
             rowidx = np.where((self.zonbudrecords['flow_dir'] == flow_dir) &
                               (self.zonbudrecords['record'] == recname))
             self.zonbudrecords[colname][rowidx] += flux
         return
 
     def _accumulate_flow_frf(self, recname, izone, ich, **kwargs):
-        # ACCUMULATE FLOW BETWEEN ZONES ACROSS COLUMNS. COMPUTE FLOW ONLY BETWEEN A ZONE
-        # AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
-        # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K.
-        # Accumulate flow from lower zones to higher zones from "left" to "right".
-        # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
-        bud = self.cbc.get_data(text=recname, **kwargs)[0]
+        """
+        C
+        C-----"FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
+        C-----COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
+        C-----ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
+        C-----1ST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K
+        300   IF(NCOL.LT.2) RETURN
+              DO 340 K=1,NLAY
+              DO 340 I=1,NROW
+              DO 340 J=2,NCOL
+              NZ=IZONE(J,I,K)
+              JL=J-1
+              NZL=IZONE(JL,I,K)
+              IF(NZL.LE.NZ) GO TO 340
+        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
+              IF(ICH(J,I,K).EQ.1 .AND. ICH(J-1,I,K).EQ.1) GO TO 340
+              DBUFF=BUFFD(JL,I,K)
+              IF(DBUFF.LT.DZERO) THEN
+                 VBZNFL(2,NZ,NZL)=VBZNFL(2,NZ,NZL)-DBUFF
+              ELSE
+                 VBZNFL(1,NZ,NZL)=VBZNFL(1,NZ,NZL)+DBUFF
+              END IF
+          340 CONTINUE
+        C
+        C-----FLOW BETWEEN NODE J,I,K AND J+1,I,K
+              DO 370 K=1,NLAY
+              DO 370 I=1,NROW
+              DO 370 J=1,NCOL-1
+              NZ=IZONE(J,I,K)
+              JR=J+1
+              NZR=IZONE(JR,I,K)
+              IF(NZR.LE.NZ) GO TO 370
+        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
+              IF(ICH(J,I,K).EQ.1 .AND. ICH(J+1,I,K).EQ.1) GO TO 370
+              DBUFF=BUFFD(J,I,K)
+              IF(DBUFF.LT.DZERO) THEN
+                 VBZNFL(1,NZ,NZR)=VBZNFL(1,NZ,NZR)-DBUFF
+              ELSE
+                 VBZNFL(2,NZ,NZR)=VBZNFL(2,NZ,NZR)+DBUFF
+              END IF
+          370 CONTINUE
+        C
+        C-----CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+              DO 395 K=1,NLAY
+              DO 395 I=1,NROW
+              DO 395 J=1,NCOL
+              IF(ICH(J,I,K).EQ.0) GO TO 395
+              NZ=IZONE(J,I,K)
+              IF(NZ.EQ.0) GO TO 395
+              IF(J.EQ.NCOL) GO TO 380
+              IF(ICH(J+1,I,K).EQ.1) GO TO 380
+              DBUFF=BUFFD(J,I,K)
+              IF(DBUFF.EQ.DZERO) THEN
+              ELSE IF(DBUFF.LT.DZERO) THEN
+                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)-DBUFF
+              ELSE
+                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)+DBUFF
+              END IF
+        380   IF(J.EQ.1) GO TO 395
+              IF(ICH(J-1,I,K).EQ.1) GO TO 395
+              DBUFF=BUFFD(J-1,I,K)
+              IF(DBUFF.EQ.DZERO) THEN
+              ELSE IF(DBUFF.LT.DZERO) THEN
+                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)-DBUFF
+              ELSE
+                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)+DBUFF
+              END IF
+        395   CONTINUE
+              RETURN
+        """
+        if self.ncol >= 2:
+            data = self.cbc.get_data(text=recname, **kwargs)[0]
 
-        nz = izone[:, :, 1:]
-        nzl = izone[:, :, :-1]
-        l, r, c = np.where(nz > nzl)
+            # "FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
+            # COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
+            # ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
+            # 1ST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K
 
-        # Adjust column values to account for the starting position of "nz"
-        c = np.copy(c) + 1
+            l, r, c = np.where(izone[:, :, 1:] > izone[:, :, :-1])
 
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r, c-1]
+            # Adjust column values to account for the starting position of "nz"
+            c = np.copy(c) + 1
 
-        # Define the zone to which flow is going
-        to_zones = izone[l, r, c]
+            # Define the zone from which flow is coming
+            cl = c-1
+            nzl = izone[l, r, cl]
 
-        # Get the face flow
-        q = bud[l, r, c - 1]
+            # Define the zone to which flow is going
+            nz = izone[l, r, c]
 
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
+            # Get the face flow
+            q = data[l, r, cl]
 
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
+            # Get indices where flow face values are positive (flow out of higher zone)
+            # Don't include CH to CH flow (can occur if CHTOCH option is used)
+            # Create an interable tuple of (from zone, to zone, flux)
+            # Then group tuple by (from_zone, to_zone) and sum the flux values
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
+            fluxes = sum_flux_tuples(nzl[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q > 0)
+            # Get indices where flow face values are negative (flow into higher zone)
+            # Don't include CH to CH flow (can occur if CHTOCH option is used)
+            # Create an interable tuple of (from zone, to zone, flux)
+            # Then group tuple by (from_zone, to_zone) and sum the flux values
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzl[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Create an interable tuple of (from zone, to zone, flux)
-        # Then group tuple by (from_zone, to_zone) and sum the flux values
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
+            # FLOW BETWEEN NODE J,I,K AND J+1,I,K
+            l, r, c = np.where(izone[:, :, :-1] > izone[:, :, 1:])
 
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-        l, r, c = np.where(ich == 1)
-        l, r, c = l[c > 0], r[c > 0], c[c > 0]
-        from_zones = izone[l, r, c-1]
-        to_zones = izone[l, r, c]
-        q = bud[l, r, c-1]
-        q[(ich[l, r, c] == 1) & (ich[l, r, c-1] == 1)] = 0.
-        idx_neg = np.where(q < 0)
-        idx_pos = np.where(q > 0)
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
+            # Define the zone from which flow is coming
+            nz = izone[l, r, c]
 
-        # CALCULATE FLOW BETWEEN NODE J,I,K AND J+1,I,K.
-        # Accumulate flow from lower zones to higher zones from "right" to "left".
-        # Flow into the higher zone will be <0 Flow Right Face from the adjacent cell to the "left".
-        nz = izone[:, :, :-1]
-        nzr = izone[:, :, 1:]
-        l, r, c = np.where(nz > nzr)
+            # Define the zone to which flow is going
+            cr = c+1
+            nzr = izone[l, r, cr]
 
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r, c]
+            # Get the face flow
+            q = data[l, r, c]
 
-        # Define the zone to which flow is going
-        to_zones = izone[l, r, c+1]
+            # Get indices where flow face values are positive (flow out of higher zone)
+            # Don't include CH to CH flow (can occur if CHTOCH option is used)
+            # Create an interable tuple of (from zone, to zone, flux)
+            # Then group tuple by (from_zone, to_zone) and sum the flux values
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzr[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Get the face flow
-        q = bud[l, r, c]
+            # Get indices where flow face values are negative (flow into higher zone)
+            # Don't include CH to CH flow (can occur if CHTOCH option is used)
+            # Create an interable tuple of (from zone, to zone, flux)
+            # Then group tuple by (from_zone, to_zone) and sum the flux values
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
+            fluxes = sum_flux_tuples(nzr[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        q[(ich[l, r, c] == 1) & (ich[l, r, c+1] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q > 0)
-
-        # Create an interable tuple of (from zone, to zone, flux)
-        # Then group tuple by (from_zone, to_zone) and sum the flux values
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-        l, r, c = np.where(ich == 1)
-        l, r, c = l[c < self.ncol-1], r[c < self.ncol-1], c[c < self.ncol-1]
-        from_zones = izone[l, r, c]
-        to_zones = izone[l, r, c+1]
-        q = bud[l, r, c]
-        q[(ich[l, r, c] == 1) & (ich[l, r, c+1] == 1)] = 0.
-        idx_neg = np.where(q < 0)
-        idx_pos = np.where(q > 0)
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
+            # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+            l, r, c = np.where(ich == 1)
+            l, r, c = l[c > 0], r[c > 0], c[c > 0]
+            cl = c - 1
+            nzl = izone[l, r, cl]
+            nz = izone[l, r, c]
+            q = data[l, r, cl]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
+            fluxes = sum_flux_tuples(nzl[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(tz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzl[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(fz), flux)
+            l, r, c = np.where(ich == 1)
+            l, r, c = l[c < self.ncol-1], r[c < self.ncol-1], c[c < self.ncol-1]
+            nz = izone[l, r, c]
+            cr = c+1
+            nzr = izone[l, r, cr]
+            q = data[l, r, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzr[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(tz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
+            fluxes = sum_flux_tuples(nzr[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(fz), flux)
         return
 
     def _accumulate_flow_fff(self, recname, izone, ich, **kwargs):
-        # ACCUMULATE FLOW BETWEEN ZONES ACROSS ROWS. COMPUTE FLOW ONLY BETWEEN A ZONE
-        #  AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
-        # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K.
-        # Accumulate flow from lower zones to higher zones from "up" to "down".
-        # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        bud = self.cbc.get_data(text=recname, **kwargs)[0]
+        """
+        C
+        C-----"FLOW FRONT FACE"
+        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
+        400   IF(NROW.LT.2) RETURN
+              DO 440 K=1,NLAY
+              DO 440 I=2,NROW
+              DO 440 J=1,NCOL
+              NZ=IZONE(J,I,K)
+              IA=I-1
+              NZA=IZONE(J,IA,K)
+              IF(NZA.LE.NZ) GO TO 440
+        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
+              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I-1,K).EQ.1) GO TO 440
+              DBUFF=BUFFD(J,IA,K)
+              IF(DBUFF.LT.DZERO) THEN
+                 VBZNFL(2,NZ,NZA)=VBZNFL(2,NZ,NZA)-DBUFF
+              ELSE
+                 VBZNFL(1,NZ,NZA)=VBZNFL(1,NZ,NZA)+DBUFF
+              END IF
+          440 CONTINUE
+        C
+        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K
+              DO 470 K=1,NLAY
+              DO 470 I=1,NROW-1
+              DO 470 J=1,NCOL
+              NZ=IZONE(J,I,K)
+              IB=I+1
+              NZB=IZONE(J,IB,K)
+              IF(NZB.LE.NZ) GO TO 470
+        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
+              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I+1,K).EQ.1) GO TO 470
+              DBUFF=BUFFD(J,I,K)
+              IF(DBUFF.LT.DZERO) THEN
+                 VBZNFL(1,NZ,NZB)=VBZNFL(1,NZ,NZB)-DBUFF
+              ELSE
+                 VBZNFL(2,NZ,NZB)=VBZNFL(2,NZ,NZB)+DBUFF
+              END IF
+          470 CONTINUE
+        C
+        C-----CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+              DO 495 K=1,NLAY
+              DO 495 I=1,NROW
+              DO 495 J=1,NCOL
+              IF(ICH(J,I,K).EQ.0) GO TO 495
+              NZ=IZONE(J,I,K)
+              IF(NZ.EQ.0) GO TO 495
+              IF(I.EQ.NROW) GO TO 480
+              IF(ICH(J,I+1,K).EQ.1) GO TO 480
+              DBUFF=BUFFD(J,I,K)
+              IF(DBUFF.EQ.DZERO) THEN
+              ELSE IF(DBUFF.LT.DZERO) THEN
+                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)-DBUFF
+              ELSE
+                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)+DBUFF
+              END IF
+        480   IF(I.EQ.1) GO TO 495
+              IF(ICH(J,I-1,K).EQ.1) GO TO 495
+              DBUFF=BUFFD(J,I-1,K)
+              IF(DBUFF.EQ.DZERO) THEN
+              ELSE IF(DBUFF.LT.DZERO) THEN
+                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)-DBUFF
+              ELSE
+                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)+DBUFF
+              END IF
+        495   CONTINUE
+              RETURN
+        """
+        if self.nrow >= 2:
+            data = self.cbc.get_data(text=recname, **kwargs)[0]
 
-        nz = izone[:, 1:, :]
-        nzu = izone[:, :-1, :]
-        l, r, c = np.where(nz < nzu)
-        # Adjust column values by +1 to account for the starting position of "nz"
-        r = np.copy(r) + 1
+            # "FLOW FRONT FACE"
+            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
+            l, r, c = np.where(izone[:, 1:, :] < izone[:, :-1, :])
+            r = np.copy(r) + 1
+            ra = r-1
+            nza = izone[l, ra, c]
+            nz = izone[l, r, c]
+            q = data[l, ra, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
+            fluxes = sum_flux_tuples(nza[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nza[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r-1, c]
+            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
+            l, r, c = np.where(izone[:, :-1, :] < izone[:, 1:, :])
+            nz = izone[l, r, c]
+            rb = r + 1
+            nzb = izone[l, rb, c]
+            q = data[l, r, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzb[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
+            fluxes = sum_flux_tuples(nzb[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Define the zone to which flow is going
-        to_zones = izone[l, r, c]
-
-        # Get the face flow
-        q = bud[l, r-1, c]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        q[(ich[l, r, c] == 1) & (ich[l, r-1, c] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q > 0)
-
-        # Create an interable tuple of (from zone, to zone, flux)
-        # Then group tuple by (from_zone, to_zone) and sum the flux values
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-        l, r, c = np.where(ich == 1)
-
-        # Can't accumulate up-to-down for cells on top edge of model (r = 0)
-        l, r, c = l[r > 0], r[r > 0], c[r > 0]
-
-        from_zones = izone[l, r-1, c]
-        to_zones = izone[l, r, c]
-        q = bud[l, r-1, c]
-        q[(ich[l, r, c] == 1) & (ich[l, r-1, c] == 1)] = 0.
-        idx_neg = np.where(q < 0)
-        idx_pos = np.where(q >= 0)
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-
-        # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
-        # Accumulate flow from lower zones to higher zones from "down" to "up".
-        nz = izone[:, :-1, :]
-        nzd = izone[:, 1:, :]
-        l, r, c = np.where(nz < nzd)
-
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r, c]
-
-        # Define the zone to which flow is going
-        to_zones = izone[l, r+1, c]
-
-        # Get the face flow
-        q = bud[l, r, c]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        q[(ich[l, r, c] == 1) & (ich[l, r+1, c] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q > 0)
-
-        # Create an interable tuple of (from zone, to zone, flux)
-        # Then group tuple by (from_zone, to_zone) and sum the flux values
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-        l, r, c = np.where(ich == 1)
-
-        # Can't accumulate down-to-up for cells on bottom edge of model (r = nrow)
-        l, r, c = l[r < self.nrow-1], r[r < self.nrow-1], c[r < self.nrow-1]
-
-        from_zones = izone[l, r, c]
-        to_zones = izone[l, r+1, c]
-        q = bud[l, r, c]
-        q[(ich[l, r, c] == 1) & (ich[l, r+1, c] == 1)] = 0.
-        idx_neg = np.where(q < 0)
-        idx_pos = np.where(q >= 0)
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
+            # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+            l, r, c = np.where(ich == 1)
+            l, r, c = l[r > 0], r[r > 0], c[r > 0]
+            ra = r-1
+            nza = izone[l, ra, c]
+            nz = izone[l, r, c]
+            q = data[l, ra, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
+            fluxes = sum_flux_tuples(nza[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(tz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nza[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(fz), flux)
+            l, r, c = np.where(ich == 1)
+            l, r, c = l[r < self.nrow-1], r[r < self.nrow-1], c[r < self.nrow-1]
+            nz = izone[l, r, c]
+            rb = r+1
+            nzb = izone[l, rb, c]
+            q = data[l, r, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzb[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(tz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
+            fluxes = sum_flux_tuples(nzb[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(fz), flux)
         return
 
     def _accumulate_flow_flf(self, recname, izone, ich, **kwargs):
-        # ACCUMULATE FLOW BETWEEN ZONES ACROSS LAYERS. COMPUTE FLOW ONLY BETWEEN A ZONE
-        #  AND A HIGHER ZONE -- FLOW FROM ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
-        # FIRST, CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1.
-        # Accumulate flow from lower zones to higher zones from "top" to "bottom".
-        # Returns a tuple of ("to zone", "from zone", "absolute flux")
-        bud = self.cbc.get_data(text=recname, **kwargs)[0]
+        """
+        C
+        C-----"FLOW LOWER FACE"
+        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
+        500   IF(NLAY.LT.2) RETURN
+              DO 540 K=2,NLAY
+              DO 540 I=1,NROW
+              DO 540 J=1,NCOL
+              NZ=IZONE(J,I,K)
+              KA=K-1
+              NZA=IZONE(J,I,KA)
+              IF(NZA.LE.NZ) GO TO 540
+        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
+              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I,K-1).EQ.1) GO TO 540
+              DBUFF=BUFFD(J,I,KA)
+              IF(DBUFF.LT.DZERO) THEN
+                 VBZNFL(2,NZ,NZA)=VBZNFL(2,NZ,NZA)-DBUFF
+              ELSE
+                 VBZNFL(1,NZ,NZA)=VBZNFL(1,NZ,NZA)+DBUFF
+              END IF
+          540 CONTINUE
+        C
+        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1
+              DO 570 K=1,NLAY-1
+              DO 570 I=1,NROW
+              DO 570 J=1,NCOL
+              NZ=IZONE(J,I,K)
+              KB=K+1
+              NZB=IZONE(J,I,KB)
+              IF(NZB.LE.NZ) GO TO 570
+        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
+              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I,K+1).EQ.1) GO TO 570
+              DBUFF=BUFFD(J,I,K)
+              IF(DBUFF.LT.DZERO) THEN
+                 VBZNFL(1,NZ,NZB)=VBZNFL(1,NZ,NZB)-DBUFF
+              ELSE
+                 VBZNFL(2,NZ,NZB)=VBZNFL(2,NZ,NZB)+DBUFF
+              END IF
+          570 CONTINUE
+        C
+        C-----CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+              DO 595 K=1,NLAY
+              DO 595 I=1,NROW
+              DO 595 J=1,NCOL
+              IF(ICH(J,I,K).EQ.0) GO TO 595
+              NZ=IZONE(J,I,K)
+              IF(NZ.EQ.0) GO TO 595
+              IF(K.EQ.NLAY) GO TO 580
+              IF(ICH(J,I,K+1).EQ.1) GO TO 580
+              DBUFF=BUFFD(J,I,K)
+              IF(DBUFF.EQ.DZERO) THEN
+              ELSE IF(DBUFF.LT.DZERO) THEN
+                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)-DBUFF
+              ELSE
+                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)+DBUFF
+              END IF
+        580   IF(K.EQ.1) GO TO 595
+              IF(ICH(J,I,K-1).EQ.1) GO TO 595
+              DBUFF=BUFFD(J,I,K-1)
+              IF(DBUFF.EQ.DZERO) THEN
+              ELSE IF(DBUFF.LT.DZERO) THEN
+                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)-DBUFF
+              ELSE
+                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)+DBUFF
+              END IF
+        595   CONTINUE
+              RETURN
+        """
+        if self.nlay >= 2:
+            data = self.cbc.get_data(text=recname, **kwargs)[0]
 
-        nz = izone[1:, :, :]
-        nzt = izone[:-1, :, :]
-        l, r, c = np.where(nz > nzt)
-        # Adjust column values by +1 to account for the starting position of "nz"
-        l = np.copy(l) + 1
+            # "FLOW LOWER FACE"
+            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
+            l, r, c = np.where(izone[1:, :, :] > izone[:-1, :, :])
+            l = np.copy(l) + 1
+            la = l - 1
+            nza = izone[la, r, c]
+            nz = izone[l, r, c]
+            q = data[la, r, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
+            fluxes = sum_flux_tuples(nza[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                print(1, fz, tz, flux)
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nza[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                print(2, fz, tz, flux)
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Define the zone from which flow is coming
-        from_zones = izone[l-1, r, c]
+            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1
+            l, r, c = np.where(izone[:-1, :, :] < izone[1:, :, :])
+            nz = izone[l, r, c]
+            lb = l + 1
+            nzb = izone[lb, r, c]
+            q = data[l, r, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzb[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                print(3, fz, tz, flux)
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
+            fluxes = sum_flux_tuples(nzb[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                print(4, fz, tz, flux)
+                self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
+                self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
-        # Define the zone to which flow is going
-        to_zones = izone[l, r, c]
-
-        # Get the face flow
-        q = bud[l-1, r, c]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        q[(ich[l, r, c] == 1) & (ich[l-1, r, c] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q > 0)
-
-        # Create an interable tuple of (from zone, to zone, flux)
-        # Then group tuple by (from_zone, to_zone) and sum the flux values
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-        l, r, c = np.where(ich == 1)
-        l, r, c = l[l > 0], r[l > 0], c[l > 0]
-        from_zones = izone[l-1, r, c]
-        to_zones = izone[l, r, c]
-        q = bud[l-1, r, c]
-        q[(ich[l, r, c] == 1) & (ich[l-1, r, c] == 1)] = 0.
-        idx_neg = np.where(q < 0)
-        idx_pos = np.where(q > 0)
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-
-        # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1.
-        # Accumulate flow from lower zones to higher zones from "bottom" to "top".
-        nz = izone[:-1, :, :]
-        nzb = izone[1:, :, :]
-        l, r, c = np.where(nz < nzb)
-
-        # Define the zone from which flow is coming
-        from_zones = izone[l, r, c]
-
-        # Define the zone to which flow is going
-        to_zones = izone[l+1, r, c]
-
-        # Get the face flow
-        q = bud[l, r, c]
-
-        # Don't include CH to CH flow (can occur if CHTOCH option is used)
-        q[(ich[l, r, c] == 1) & (ich[l+1, r, c] == 1)] = 0.
-
-        # Get indices where flow face values are negative (flow into higher zone)
-        idx_neg = np.where(q < 0)
-
-        # Get indices where flow face values are positive (flow out of higher zone)
-        idx_pos = np.where(q > 0)
-
-        # Create an interable tuple of (from zone, to zone, flux)
-        # Then group tuple by (from_zone, to_zone) and sum the flux values
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-
-        # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-        l, r, c = np.where(ich == 1)
-        l, r, c = l[l < self.nlay - 1], r[l < self.nlay - 1], c[l < self.nlay - 1]
-        from_zones = izone[l, r, c]
-        to_zones = izone[l+1, r, c]
-        q = bud[l, r, c]
-        q[(ich[l, r, c] == 1) & (ich[l+1, r, c] == 1)] = 0.
-        idx_neg = np.where(q < 0)
-        idx_pos = np.where(q >= 0)
-        nzgt = tuple(zip(from_zones[idx_pos], to_zones[idx_pos], np.abs(q[idx_pos])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
-        nzgt = tuple(zip(to_zones[idx_neg], from_zones[idx_neg], np.abs(q[idx_neg])))
-        for idx, flux_tups in groupby(nzgt, lambda tup: tup[:2]):
-            from_zone, to_zone = idx
-            flux = np.sum([tup[-1] for tup in list(flux_tups)])
-            self._update_record('IN',
-                                'FROM ZONE {}'.format(from_zone),
-                                'ZONE {}'.format(to_zone),
-                                flux)
-            self._update_record('OUT',
-                                'TO ZONE {}'.format(to_zone),
-                                'ZONE {}'.format(from_zone),
-                                flux)
+            # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+            l, r, c = np.where(ich == 1)
+            l, r, c = l[l > 0], r[l > 0], c[l > 0]
+            la = l - 1
+            nza = izone[la, r, c]
+            nz = izone[l, r, c]
+            q = data[la, r, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
+            fluxes = sum_flux_tuples(nza[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(tz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nza[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(fz), flux)
+            l, r, c = np.where(ich == 1)
+            l, r, c = l[l < self.nlay - 1], r[l < self.nlay - 1], c[l < self.nlay - 1]
+            nz = izone[l, r, c]
+            lb = l + 1
+            nzb = izone[lb, r, c]
+            q = data[l, r, c]
+            idx = np.where((q > 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
+            fluxes = sum_flux_tuples(nz[idx],
+                                     nzb[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('OUT', 'CONSTANT HEAD', 'ZONE {}'.format(tz), flux)
+            idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
+            fluxes = sum_flux_tuples(nzb[idx],
+                                     nz[idx],
+                                     np.abs(q[idx]))
+            for (fz, tz, flux) in fluxes:
+                self._update_record('IN', 'CONSTANT HEAD', 'ZONE {}'.format(fz), flux)
         return
 
-    def _accumulate_flow_ssst(self, recname, budin, budout, izone, lstzon):
+    def _accumulate_flow_ssst(self, recname, qin, qout, izone, lstzon):
         # Source/sink/storage terms are accumulated by zone
-        recin = [np.abs(budin[(izone == z)].sum()) for z in lstzon]
-        recout = [np.abs(budout[(izone == z)].sum()) for z in lstzon]
+        recin = [np.abs(qin[(izone == z)].sum()) for z in lstzon]
+        recout = [np.abs(qout[(izone == z)].sum()) for z in lstzon]
         for idx, flux in enumerate(recin):
             if type(flux) == np.ma.core.MaskedConstant:
                 flux = 0.
@@ -1261,7 +1237,8 @@ def _numpyvoid2numeric(a):
     # mean()
     return np.array([list(r) for r in a])
 
-def arr2ascii(X, fname, width=None):
+
+def arr2ascii(fname, X, width=None):
     """
     Saves a numpy array in a format readable by the zonebudget program executable.
 
@@ -1329,6 +1306,30 @@ def arr2ascii(X, fname, width=None):
             else:
                 f.write('INTERNAL\t({nvals}I8)\n'.format(nvals=ncol))
                 for row in range(nrow):
-                    vals = X[lay, row, :]
+                    vals = X[lay, row, :].ravel()
                     f.write(''.join(['{:>8}'.format(int(val)) for val in vals]) + '\n')
     return
+
+
+def sum_flux_tuples(fromzones, tozones, fluxes):
+    tup = zip(fromzones, tozones, fluxes)
+    sorted_tups = sort_tuple(tup)
+
+    # Group the sorted tuples by (from zone, to zone)
+    # itertools.groupby() returns the index (from zone, to zone) and
+    # a list of the tuples with that index
+    fluxes = []
+    for (fz, tz), ftup in groupby(sorted_tups, lambda tup: tup[:2]):
+        f = np.sum([tup[-1] for tup in list(ftup)])
+        fluxes.append((fz, tz, f))
+    return fluxes
+
+
+def sort_tuple(tup, n=2):
+    """
+    Sort a tuple by the first n values
+    :param tup:
+    :param n:
+    :return:
+    """
+    return tuple(sorted(tup, key=lambda t: t[:n]))
