@@ -689,7 +689,6 @@ class ZoneBudget(object):
                                                                              colname,
                                                                              flux)
                     raise Exception(errmsg)
-
             rowidx = np.where((self.zonbudrecords['flow_dir'] == flow_dir) &
                               (self.zonbudrecords['record'] == recname))
             self.zonbudrecords[colname][rowidx] += flux
@@ -965,7 +964,7 @@ class ZoneBudget(object):
             # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
             l, r, c = np.where(izone[:, 1:, :] < izone[:, :-1, :])
             r = np.copy(r) + 1
-            ra = r-1
+            ra = r - 1
             nza = izone[l, ra, c]
             nz = izone[l, r, c]
             q = data[l, ra, c]
@@ -1118,7 +1117,7 @@ class ZoneBudget(object):
 
             # "FLOW LOWER FACE"
             # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
-            l, r, c = np.where(izone[1:, :, :] > izone[:-1, :, :])
+            l, r, c = np.where(izone[1:, :, :] < izone[:-1, :, :])
             l = np.copy(l) + 1
             la = l - 1
             nza = izone[la, r, c]
@@ -1129,7 +1128,6 @@ class ZoneBudget(object):
                                      nz[idx],
                                      np.abs(q[idx]))
             for (fz, tz, flux) in fluxes:
-                print(1, fz, tz, flux)
                 self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
                 self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
             idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
@@ -1137,7 +1135,6 @@ class ZoneBudget(object):
                                      nza[idx],
                                      np.abs(q[idx]))
             for (fz, tz, flux) in fluxes:
-                print(2, fz, tz, flux)
                 self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
                 self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
@@ -1152,7 +1149,6 @@ class ZoneBudget(object):
                                      nzb[idx],
                                      np.abs(q[idx]))
             for (fz, tz, flux) in fluxes:
-                print(3, fz, tz, flux)
                 self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
                 self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
             idx = np.where((q < 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
@@ -1160,7 +1156,6 @@ class ZoneBudget(object):
                                      nz[idx],
                                      np.abs(q[idx]))
             for (fz, tz, flux) in fluxes:
-                print(4, fz, tz, flux)
                 self._update_record('IN', 'FROM ZONE {}'.format(fz), 'ZONE {}'.format(tz), flux)
                 self._update_record('OUT', 'TO ZONE {}'.format(tz), 'ZONE {}'.format(fz), flux)
 
