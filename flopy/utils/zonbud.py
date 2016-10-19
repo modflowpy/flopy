@@ -513,10 +513,9 @@ class ZoneBudget(object):
         if aliases is not None:
             assert isinstance(aliases, dict), 'Input aliases not recognized. Please pass a dictionary ' \
                                               'with key,value pairs of zone/alias.'
-
             # Replace the relevant field names (ignore zone 0)
             for z, a in iter(aliases.items()):
-                if z != 0:
+                if z != 0 and z in self._zonefieldnamedict.keys():
                     self._zonefieldnamedict[z] = a
 
         recnames = self._get_internal_flow_record_names(self._zonefieldnamedict)
@@ -645,7 +644,7 @@ class ZoneBudget(object):
     def _initialize_records(self):
         # Initialize the budget record array which will store all of the
         # fluxes in the cell-budget file.
-        dtype_list = [('flow_dir', (str, 3)), ('record', (str, 20))]
+        dtype_list = [('flow_dir', (str, 3)), ('record', (str, 50))]
         dtype_list += [(n, self.float_type) for n in self._zonefieldnames]
         dtype = np.dtype(dtype_list)
         self.zonbudrecords = np.array([], dtype=dtype)
