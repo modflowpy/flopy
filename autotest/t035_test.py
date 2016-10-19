@@ -14,6 +14,7 @@ zon[0, :20, :10] = 1
 zon[0, :20, 10:] = 2
 zon[0, 20:, :10] = 3
 zon[0, 20:, 10:] = 4
+zon = np.random.randint(5, size=(1, 40, 20))
 
 
 def test_zonbud_write_csv_kstpkper():
@@ -22,6 +23,7 @@ def test_zonbud_write_csv_kstpkper():
     zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
     zbud.to_csv(os.path.join(pth, 'zbud.csv'), write_format='zonbud')
     zbud.to_csv(os.path.join(pth, 'zbud_pandas.csv'), write_format='pandas')
+    return
 
 
 def test_zonbud_write_csv_totim():
@@ -30,6 +32,7 @@ def test_zonbud_write_csv_totim():
     zbud = zb.get_budget(zon, totim=zb.get_times()[-1])
     zbud.to_csv(os.path.join(pth, 'zbud.csv'), write_format='zonbud')
     zbud.to_csv(os.path.join(pth, 'zbud_pandas.csv'), write_format='pandas')
+    return
 
 
 def test_zonbud_budget():
@@ -44,6 +47,7 @@ def test_zonbud_budget():
     recs = zbud.get_records(recordlist=recordlist, zones=[1, 3])
     if recs.shape[0] == 0:
         raise Exception('No records returned.')
+    return
 
 
 def test_zonbud_mass_balance():
@@ -63,18 +67,26 @@ def test_zonbud_mass_balance():
     recs = zbud.get_percent_error()
     if recs.shape[0] == 0:
         raise Exception('No records returned.')
+    return
 
 
 def test_zonbud_aliases():
 
     zb = ZoneBudget(os.path.join(pth, cbc_f))
-    zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
 
-    aliases = {1: 'Trey', 2: 'Mike', 3: 'John', 4: 'Page'}
-    zbud.get_records(aliases=aliases)
-    zbud.get_records(zones=[1, 3], aliases=aliases)
-    zbud.get_records(zones=['Mike'], aliases=aliases)
-    zbud.get_mass_balance(zones=[1, 3])
+    aliases = {1: 'Trey', 2: 'Mike', 4: 'Page', 0: 'Carini'}
+    zbud = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1], aliases=aliases)
+    zbud.to_csv(os.path.join(pth, 'zbud_aliases.csv'), write_format='zonbud')
+    recs = zbud.get_records()
+    if recs.shape[0] == 0:
+        raise Exception('No records returned.')
+    print(recs.dtype)
+    print(recs)
+    recordlist = [('IN', 'FROM Mike')]
+    recs = zbud.get_records(recordlist=recordlist, zones=['Trey', 3])
+    print(recs.dtype)
+    print(recs)
+    return
 
 
 if __name__ == '__main__':
