@@ -21,7 +21,7 @@ class Budget(object):
         self._recordarray = recordarray
         self.kstpkper = kstpkper
         self.totim = totim
-        self._zonefields = [name for name in self._recordarray.dtype.names if 'ZONE' in name]
+        self._zonefields = [name for name in self._recordarray.dtype.names if name not in ['flow_dir', 'record']]
         self._massbalance = self._compute_mass_balance()
         return
 
@@ -532,6 +532,8 @@ class ZoneBudget(object):
         # List of unique zones numbers
         lstzon = [z for z in np.unique(izone)]
 
+        self._zonefieldnames = ['ZONE {}'.format(z) for z in lstzon if z != 0]
+
         # Initialize an array to track where the constant head cells
         # are located.
         ich = np.zeros(self.cbc_shape, np.int32)
@@ -634,10 +636,10 @@ class ZoneBudget(object):
         # the output file.
         return Budget(self.zonbudrecords, kstpkper=kstpkper, totim=totim)
 
-    def _build_empty_record(self, flow_dir, recname, lstzon):
+    def _build_empty_record(self, flow_dir, recname):
         # Builds empty records based on the specified flow direction and
         # record name for the given list of zones.
-        recs = np.array(tuple([flow_dir, recname] + [0. for _ in lstzon if _ != 0]),
+        recs = np.array(tuple([flow_dir, recname] + [0. for _ in self._zonefieldnames]),
                         dtype=self.zonbudrecords.dtype)
         self.zonbudrecords = np.append(self.zonbudrecords, recs)
         return
@@ -645,32 +647,31 @@ class ZoneBudget(object):
     def _initialize_records(self, lstzon):
         # Initialize the budget record array which will store all of the
         # fluxes in the cell-budget file.
-        dtype_list = [('flow_dir', (str, 3)), ('record', (str, 20))]
-        dtype_list += [('ZONE {:d}'.format(z), self.float_type) for z in lstzon if z != 0]
+        dtype_list = [('flow_dir', (str, 3)), ('record', (str, 20))] + self._zonefieldnames
         dtype = np.dtype(dtype_list)
         self.zonbudrecords = np.array([], dtype=dtype)
 
         # Add "in" records
         if 'STORAGE' in self.record_names:
-            self._build_empty_record('IN', 'STORAGE', lstzon)
+            self._build_empty_record('IN', 'STORAGE')
         if 'CONSTANT HEAD' in self.record_names:
-            self._build_empty_record('IN', 'CONSTANT HEAD', lstzon)
+            self._build_empty_record('IN', 'CONSTANT HEAD')
         for recname in self.ssst_record_names:
             if recname != 'STORAGE':
-                self._build_empty_record('IN', recname, lstzon)
-        for z in lstzon:
-            self._build_empty_record('IN', 'FROM ZONE {}'.format(z), lstzon)
+                self._build_empty_record('IN', recname)
+        for n in self._zonefieldnames:
+            self._build_empty_record('IN', 'FROM {}'.format(n))
 
         # Add "out" records
         if 'STORAGE' in self.record_names:
-            self._build_empty_record('OUT', 'STORAGE', lstzon)
+            self._build_empty_record('OUT', 'STORAGE')
         if 'CONSTANT HEAD' in self.record_names:
-            self._build_empty_record('OUT', 'CONSTANT HEAD', lstzon)
+            self._build_empty_record('OUT', 'CONSTANT HEAD')
         for recname in self.ssst_record_names:
             if recname != 'STORAGE':
-                self._build_empty_record('OUT', recname, lstzon)
-        for z in lstzon:
-            self._build_empty_record('OUT', 'TO ZONE {}'.format(z), lstzon)
+                self._build_empty_record('OUT', recname)
+        for n in self._zonefieldnames:
+            self._build_empty_record('OUT', 'TO {}'.format(n))
         return
 
     def _update_record(self, flow_dir, recname, colname, flux):
@@ -679,16 +680,19 @@ class ZoneBudget(object):
         # ZONE 0).
         if colname != 'ZONE 0':
 
+            # Make sure the flux is between different zones
             if 'ZONE' in recname:
-                # Make sure the flux is between different zones
-                recname_z = int(recname.split()[-1])
-                colname_z = int(colname.split()[-1])
-                if recname_z == colname_z:
-                    errmsg = 'Circular flow detected: {}\t{}\t{}\t{}'.format(flow_dir,
-                                                                             recname,
-                                                                             colname,
-                                                                             flux)
-                    raise Exception(errmsg)
+                a = int(recname.split()[-1])
+                b = int(colname.split()[-1])
+            else:
+                a = recname
+                b = colname
+            if a == b:
+                errmsg = 'Circular flow detected: {}\t{}\t{}\t{}'.format(flow_dir,
+                                                                         recname,
+                                                                         colname,
+                                                                         flux)
+                raise Exception(errmsg)
             rowidx = np.where((self.zonbudrecords['flow_dir'] == flow_dir) &
                               (self.zonbudrecords['record'] == recname))
             self.zonbudrecords[colname][rowidx] += flux
