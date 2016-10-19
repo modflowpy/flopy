@@ -90,10 +90,21 @@ def test_zonbud_aliases():
 def test_zonbud_mult():
 
     zb = ZoneBudget(os.path.join(pth, cbc_f))
-    cfd = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1])
-    print(cfd.get_records())
-    mgd = zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1], mult=7.48052/1000000)
-    print(mgd.get_records())
+    zb.get_budget(zon, kstpkper=zb.get_kstpkper()[-1], mult=7.48052/1000000)
+
+
+def test_zonbud2():
+    """
+    A new way to create a budget--cuts out the "middle man" by incorporating
+    the functions provided by the Budget class directly in the ZoneBudget
+    object. This should reduce confusion between the "get_budget()" function
+    of the ZoneBudget object and the "get_records()" object of the Budget
+    object; we now only have to deal with 1 object.
+    """
+    from flopy.utils.zonbud import ZoneBudget2
+    zb = ZoneBudget2(os.path.join(pth, cbc_f), zon, kstpkper=(0, 0))
+    zb.to_csv(os.path.join(pth, 'zbud2.csv'))
+    zb.get_records()
 
 
 if __name__ == '__main__':
@@ -104,3 +115,4 @@ if __name__ == '__main__':
     test_zonbud_budget()
     test_zonbud_mass_balance()
     test_zonbud_mult()
+    test_zonbud2()
