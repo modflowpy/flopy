@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import numpy as np
 from .binaryfile import CellBudgetFile
 from copy import copy
@@ -75,8 +76,13 @@ class ZoneBudget(object):
         self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
         self.nlay, self.nrow, self.ncol = self.cbc_shape
 
-        self.float_type = np.float64
-        self.int_type = np.int64
+        # Set float and integer types
+        self.float_type = np.float32
+        self.int_type = np.int32
+        is_64bit = sys.maxsize > 2**32
+        if is_64bit:
+            self.float_type = np.float64
+            self.int_type = np.int64
 
         # Make sure the input zone array has the same shape as the cell budget file
         if len(z.shape) == 2 and self.nlay == 1:
@@ -213,7 +219,7 @@ class ZoneBudget(object):
                 errmsg = 'Input records are not recognized. Please ' \
                          'pass a tuple of (flow_dir, recordname) or list of tuples.'
                 raise Exception(errmsg)
-            select_records = np.array([], dtype=np.int64)
+            select_records = np.array([], dtype=self.int_type)
             for flowdir, recname in recordlist:
                 r = np.where((recordarray['flow_dir'] == flowdir) &
                              (recordarray['record'] == recname))
@@ -525,12 +531,12 @@ class ZoneBudget(object):
 
         # Initialize an array to track where the constant head cells
         # are located.
-        ich = np.zeros(self.cbc_shape, np.int32)
+        ich = np.zeros(self.cbc_shape, self.int_type)
 
         if 'CONSTANT HEAD' in reclist:
             reclist.remove('CONSTANT HEAD')
             chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True, kstpkper=self.kstpkper, totim=self.totim)[0]
-            ich = np.zeros(self.cbc_shape, np.int32)
+            ich = np.zeros(self.cbc_shape, self.int_type)
             ich[chd != 0] = 1
         if 'FLOW RIGHT FACE' in reclist:
             reclist.remove('FLOW RIGHT FACE')
@@ -544,7 +550,7 @@ class ZoneBudget(object):
         if 'SWIADDTOCH' in reclist:
             reclist.remove('SWIADDTOCH')
             swichd = self.cbc.get_data(text='SWIADDTOCH', full3D=True, kstpkper=self.kstpkper, totim=self.totim)[0]
-            swiich = np.zeros(self.cbc_shape, np.int32)
+            swiich = np.zeros(self.cbc_shape, self.int_type)
             swiich[swichd != 0] = 1
         if 'SWIADDTOFRF' in reclist:
             reclist.remove('SWIADDTOFRF')
@@ -1279,7 +1285,7 @@ class ZoneBudget(object):
         pcterr = np.nan_to_num(pcterr)
 
         # Create the mass-balance record array
-        dtype_list = [('record', (str, 7))] + [('{}'.format(f), np.float64) for f in self._zonefieldnames]
+        dtype_list = [('record', (str, 7))] + [('{}'.format(f), self.float_type) for f in self._zonefieldnames]
         dtype = np.dtype(dtype_list)
         mb = np.array([], dtype=dtype)
         mb = np.append(mb, np.array(tuple(['INFLOW'] + list(intot)), dtype=dtype))
