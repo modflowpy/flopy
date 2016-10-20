@@ -1401,8 +1401,41 @@ def write_zbarray(fname, X, width=None):
 
 
 def read_zbarray(fname):
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+    nlay = int(lines[0].split()[0])
+    nrow = int(lines[0].split()[1])
+    ncol = int(lines[0].split()[2])
 
-    return
+    zones = np.zeros((nlay, nrow, ncol), dtype=np.int64)
+
+    # Find the list indices at which each layer begins
+    indices = []
+    for idx, line in enumerate(lines):
+        if 'INTERNAL' in line:
+            indices.append(idx+1)
+
+    s = 'Number of layers defined ({}) ' \
+        'does not match nlay ({}).'.format(len(indices), nlay)
+    assert len(indices) == nlay, s
+
+    for lay in range(nlay):
+        start = indices[lay]
+        if lay < nlay - 1:
+            end = indices[lay + 1] - 1
+        else:
+            end = len(lines)
+
+        vals = []
+        chunk = lines[start:end]
+        for line in chunk:
+            vals.extend([int(v) for v in line.split()])
+        vals = np.array(vals, dtype=np.int64)
+        vals = vals.reshape((nrow, ncol))
+
+        zones[lay, :, :] = vals[:, :]
+
+    return zones
 
 
 def sum_flux_tuples(fromzones, tozones, fluxes):

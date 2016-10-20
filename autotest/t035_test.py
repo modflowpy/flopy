@@ -4,6 +4,7 @@ Test zonbud utility
 import os
 import numpy as np
 from flopy.utils import ZoneBudget
+from flopy.utils.zonbud import read_zbarray, write_zbarray
 
 pth = '../examples/data/zonbud_examples'
 cbc_f = 'freyberg.gitcbc'
@@ -84,6 +85,15 @@ def test_zonbud_mult():
     return
 
 
+def test_zonbud_readwrite_zbarray():
+    x = np.random.randint(200, size=(1, 150, 20))
+    write_zbarray('randint', x)
+    z = read_zbarray('randint')
+    if not np.array_equal(x, z):
+        raise Exception('Input and output arrays do not match.')
+    return
+
+
 if __name__ == '__main__':
     test_zonbud_write_csv_kstpkper()
     test_zonbud_write_csv_totim()
@@ -91,3 +101,4 @@ if __name__ == '__main__':
     test_zonbud_budget()
     test_zonbud_mass_balance()
     test_zonbud_mult()
+    test_zonbud_readwrite_zbarray()
