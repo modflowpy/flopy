@@ -110,9 +110,13 @@ class ZoneBudget(object):
             assert isinstance(aliases, dict), 'Input aliases not recognized. Please pass a dictionary ' \
                                               'with key,value pairs of zone/alias.'
             # Replace the relevant field names (ignore zone 0)
+            seen = []
             for z, a in iter(aliases.items()):
                 if z != 0 and z in self._zonefieldnamedict.keys():
+                    if z in seen:
+                        raise Exception('Zones may not have more than 1 alias.')
                     self._zonefieldnamedict[z] = a
+                    seen.append(z)
 
         recnames = self._get_internal_flow_record_names()
         self._iflow_from_recnames, self._iflow_to_recnames = recnames
