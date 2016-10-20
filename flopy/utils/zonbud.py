@@ -32,11 +32,12 @@ class ZoneBudget(object):
 
     Example usage:
 
-    >>>from flopy.utils.zonbud import ZoneBudget2
-    >>>zon = np.loadtxt('zones.txt')
-    >>>bud = ZoneBudget2('zonebudtest.cbc', zon, kstpkper=(0, 0))
+    >>>from flopy.utils.zonbud import ZoneBudget, read_zbarray
+    >>>zon = read_zbarray('zone_input_file')
+    >>>bud = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
     >>>bud.to_csv('zonebudtest.csv')
     >>>bud.get_records()
+    >>>mgd = bud * 7.48052 / 1000000
     """
     def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None):
 
@@ -71,7 +72,7 @@ class ZoneBudget(object):
             raise Exception(errmsg)
 
         # Check the shape of the cbc budget file arrays
-        self.cbc_shape = self.get_model_shape()
+        self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
         self.nlay, self.nrow, self.ncol = self.cbc_shape
 
         self.float_type = np.float64
@@ -150,7 +151,7 @@ class ZoneBudget(object):
         return
 
     def get_model_shape(self):
-        return self.cbc.get_data(idx=0, full3D=True)[0].shape
+        return self.nlay, self.nrow, self.ncol
 
     def get_records(self, recordlist=None, zones=None):
         """
@@ -1414,7 +1415,6 @@ def read_zbarray(fname):
     for idx, line in enumerate(lines):
         if 'INTERNAL' in line:
             indices.append(idx+1)
-
     s = 'Number of layers defined ({}) ' \
         'does not match nlay ({}).'.format(len(indices), nlay)
     assert len(indices) == nlay, s
@@ -1430,9 +1430,7 @@ def read_zbarray(fname):
         chunk = lines[start:end]
         for line in chunk:
             vals.extend([int(v) for v in line.split()])
-        vals = np.array(vals, dtype=np.int64)
-        vals = vals.reshape((nrow, ncol))
-
+        vals = np.array(vals, dtype=np.int64).reshape((nrow, ncol))
         zones[lay, :, :] = vals[:, :]
 
     return zones
