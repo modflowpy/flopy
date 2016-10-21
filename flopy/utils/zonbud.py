@@ -149,15 +149,8 @@ class ZoneBudget(object):
         self.ssst_record_names = [n for n in self.record_names
                                   if n not in internal_flow_terms]
 
-        # Create empty array for the budget terms.
-        # This array has the structure: ('flow direction', 'record name', value zone 1, value zone 2, etc.)
-        dtype_list = [('flow_dir', (str, 3)), ('record', (str, 50))]
-        dtype_list += [(n, self.float_type) for n in self._zonefieldnames]
-        dtype = np.dtype(dtype_list)
-        self.recordarray = np.array([], dtype=dtype)
-        self._initialize_records()
         self._compute_budget()
-        self._massbalance = self._compute_mass_balance()
+        self._compute_mass_balance()
         return
 
     def get_model_shape(self):
@@ -526,6 +519,9 @@ class ZoneBudget(object):
         Creates a budget for the specified zone array. This function only supports the
         use of a single time step/stress period or time.
         """
+        # Initialize the budget record array
+        self._initialize_records()
+
         # Create a throwaway list of all record names
         reclist = list(self.record_names)
 
@@ -640,6 +636,13 @@ class ZoneBudget(object):
     def _initialize_records(self):
         # Initialize the budget record array which will store all of the
         # fluxes in the cell-budget file.
+
+        # Create empty array for the budget terms.
+        # This array has the structure: ('flow direction', 'record name', value zone 1, value zone 2, etc.)
+        dtype_list = [('flow_dir', (str, 3)), ('record', (str, 50))]
+        dtype_list += [(n, self.float_type) for n in self._zonefieldnames]
+        dtype = np.dtype(dtype_list)
+        self.recordarray = np.array([], dtype=dtype)
 
         # Add "in" records
         if 'STORAGE' in self.record_names:
@@ -1291,7 +1294,9 @@ class ZoneBudget(object):
         mb = np.append(mb, np.array(tuple(['INFLOW'] + list(intot)), dtype=dtype))
         mb = np.append(mb, np.array(tuple(['OUTFLOW'] + list(outot)), dtype=dtype))
         mb = np.append(mb, np.array(tuple(['ERROR'] + list(pcterr)), dtype=dtype))
-        return mb
+
+        self._massbalance = mb
+        return
 
     def __mul__(self, other):
         recordarray = self.recordarray.copy()
