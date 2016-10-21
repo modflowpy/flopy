@@ -1481,7 +1481,22 @@ def read_zbarray(fname):
                     lay += 1
             elif locat == 'EXTERNAL':
                 # READ EXTERNAL FILE
-                vals = np.loadtxt(rowitems[0])
+                fname = rowitems[0]
+                if not os.path.isfile(fname):
+                    errmsg = 'Could not find external file "{}"'.format(fname)
+                    raise Exception(errmsg)
+                with open(fname, 'r') as ext_f:
+                    ext_flines = ext_f.readlines()
+                for ext_frow in ext_flines:
+                    ext_frowitems = ext_frow.strip().split()
+                    rowvals = [int(v) for v in ext_frowitems]
+                    vals.extend(rowvals)
+                if len(vals) != datalen:
+                    errmsg = 'The number of values read from external ' \
+                             'file "{}" does not match the expected ' \
+                             'number.'.format(len(vals))
+                    raise Exception(errmsg)
+                vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
                 zones[lay, :, :] = vals[:, :]
                 lay += 1
             else:
