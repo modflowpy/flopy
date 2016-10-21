@@ -1446,34 +1446,37 @@ def read_zbarray(fname):
 
             if locat == 'CONSTANT':
                 iconst = rowitems[1]
-                zones[lay, :, :] = iconst
-                continue
-            # else:
-            #     fmt = rowitems[1].strip('()')
-            #     fmtin = fmt.split('I')[0]
-            #     iprn = fmt.split('I')[1]
+            else:
+                fmt = rowitems[1].strip('()')
+                fmtin = int(fmt.split('I')[0])
+                iprn = int(fmt.split('I')[1])
 
         # ZONE DATA
         else:
-            if locat == 'INTERNAL':
+            if locat == 'CONSTANT':
+                zones[lay, :, :] = iconst
+                lay += 1
+            elif locat == 'INTERNAL':
                 # READ ZONES
-                vals.extend([int(v) for v in rowitems])
+                rowvals = [int(v) for v in rowitems]
+                if len(rowvals) != fmtin:
+                    errmsg = 'Number of values on this row ({}) ' \
+                             'does not match fmtin ({})'.format(len(rowvals), fmtin)
+                    raise Exception(errmsg)
+                vals.extend(rowvals)
                 if len(vals) == datalen:
                     # place values for the previous layer into the zone array
                     vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
                     zones[lay, :, :] = vals[:, :]
-                    if lay == nlay - 1:
-                        return zones
-                    else:
-                        lay += 1
+                    lay += 1
             elif locat == 'EXTERNAL':
                 # READ EXTERNAL FILE
                 vals = np.loadtxt(rowitems[0])
                 zones[lay, :, :] = vals[:, :]
-                if lay == nlay - 1:
-                    return zones
-                else:
-                    lay += 1
+                lay += 1
+            else:
+                raise Exception('Locat not recognized: {}'.format(locat))
+    return zones
 
 
 def read_zbarray_old(fname):
