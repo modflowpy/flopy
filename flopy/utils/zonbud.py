@@ -1434,14 +1434,10 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
 
 def read_zbarray(fname):
 
-    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
-
     with open(fname, 'r') as f:
         lines = f.readlines()
-    nlay = int(lines[0].split()[0])
-    nrow = int(lines[0].split()[1])
-    ncol = int(lines[0].split()[2])
 
+    nlay, nrow, ncol = [int(v) for v in lines[0].strip().split()]
     zones = np.zeros((nlay, nrow, ncol), dtype=np.int64)
 
     # Initialize layer
@@ -1450,6 +1446,9 @@ def read_zbarray(fname):
     # The number of values to read before placing
     # them into the zone array
     datalen = nrow * ncol
+
+    # List of valid values for LOCAT
+    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
 
     # ITERATE OVER THE ROWS
     for row in lines[1:]:
@@ -1461,7 +1460,7 @@ def read_zbarray(fname):
             locat = rowitems[0]
 
             if locat == 'CONSTANT':
-                iconst = rowitems[1]
+                iconst = int(rowitems[1])
             else:
                 fmt = rowitems[1].strip('()')
                 fmtin, iprn = [int(v) for v in fmt.split('I')]
