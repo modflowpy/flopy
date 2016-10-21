@@ -1394,8 +1394,9 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
     else:
         fmtin = ncol
 
-    if iprn is None:
-        iprn = len(str(X.max())) + 3
+    iprnmin = len(str(X.max()))
+    if iprn is None or iprn <= iprnmin:
+        iprn = iprnmin + 1
 
     formatter_str = '{{:>{iprn}}}'.format(iprn=iprn)
     formatter = formatter_str.format
@@ -1413,16 +1414,17 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
                     rowvals = X[lay, row, :].ravel()
                     start = 0
                     end = start + fmtin
-                    while end <= len(rowvals):
-                        vals = rowvals[start:end]
+                    vals = rowvals[start:end]
+                    while len(vals) > 0:
                         s = ''.join([formatter(int(val)) for val in vals]) + '\n'
                         f.write(s)
                         start = end
                         end = start + fmtin
-                    vals = rowvals[start:end]
-                    if len(vals) > 0:
-                        s = ''.join([formatter(int(val)) for val in vals]) + '\n'
-                        f.write(s)
+                        vals = rowvals[start:end]
+                    # vals = rowvals[start:end]
+                    # if len(vals) > 0:
+                    #     s = ''.join([formatter(int(val)) for val in vals]) + '\n'
+                    #     f.write(s)
             elif fmtin == ncol:
                 for row in range(nrow):
                     vals = X[lay, row, :].ravel()

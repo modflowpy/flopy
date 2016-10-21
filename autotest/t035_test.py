@@ -78,7 +78,7 @@ def test_zonbud_aliases():
 def test_zonbud_mult():
     cfd = ZoneBudget(os.path.join(pth, cbc_f), zon, kstpkper=(0, 0))
     cfd.to_csv(os.path.join(pth, 'zbud_zonbud.csv'))
-    mgd = cfd*(7.4808/1000000)
+    mgd = cfd*(7.48052/1000000)
     mgd.to_csv(os.path.join(pth, 'zbud_zonbud.csv'))
     cfd2 = cfd.copy()
     cfd2.to_csv(os.path.join(pth, 'zbud_zonbud.csv'))
@@ -88,7 +88,7 @@ def test_zonbud_mult():
 def test_zonbud_readwrite_zbarray():
     x = np.random.randint(100, 200, size=(5, 150, 200))
     write_zbarray(os.path.join(pth, 'randint'), x)
-    write_zbarray(os.path.join(pth, 'randint'), x, fmtin=35, iprn=13)
+    write_zbarray(os.path.join(pth, 'randint'), x, fmtin=35, iprn=2)
     z = read_zbarray(os.path.join(pth, 'randint'))
     if not np.array_equal(x, z):
         raise Exception('Input and output arrays do not match.')
