@@ -1343,7 +1343,7 @@ def _numpyvoid2numeric(a):
     return np.array([list(r) for r in a])
 
 
-def write_zbarray(fname, X, width=None):
+def write_zbarray(fname, X, fmtin=None, iprn=None):
     """
     Saves a numpy array in a format readable by the zonebudget program executable.
 
@@ -1380,39 +1380,53 @@ def write_zbarray(fname, X, width=None):
 
     """
     if len(X.shape) == 2:
-        nlay = 1
-        nrow, ncol = X.shape
-        b = np.zeros((nlay, nrow, ncol), dtype=np.int64)
+        b = np.zeros((1, X.shape[0], X.shape[1]), dtype=np.int32)
         b[0, :, :] = X[:, :]
         X = b.copy()
-    elif len(X.shape) == 3:
-        nlay, nrow, ncol = X.shape
+    elif len(X.shape) < 2 or len(X.shape) > 3:
+        raise Exception('Shape of the input array is not recognized: {}'.format(X.shape))
+
+    nlay, nrow, ncol = X.shape
+
+    if fmtin is not None:
+        assert fmtin < ncol, 'The specified width is greater than the ' \
+                             'number of columns in the array.'
     else:
-        raise Exception('Shape of the input array is not recognized: {}'.format(a.shape))
+        fmtin = ncol
+
+    if iprn is None:
+        iprn = len(str(X.max())) + 3
+
+    formatter_str = '{{:>{iprn}}}'.format(iprn=iprn)
+    formatter = formatter_str.format
 
     with open(fname, 'w') as f:
-        f.write('{nlay} {nrow} {ncol}\n'.format(nlay=nlay,
-                                                nrow=nrow,
-                                                ncol=ncol))
+        header = '{nlay} {nrow} {ncol}\n'.format(nlay=nlay,
+                                                 nrow=nrow,
+                                                 ncol=ncol)
+        f.write(header)
         for lay in range(nlay):
-            if width is not None:
-                assert width < ncol, 'The specified width is greater than the ' \
-                                     'number of columns in the array.'
-                f.write('INTERNAL\t({nvals}I8)\n'.format(nvals=width))
+            record_2 = 'INTERNAL\t({fmtin}I{iprn})\n'.format(fmtin=fmtin, iprn=iprn)
+            f.write(record_2)
+            if fmtin < ncol:
+                for row in range(nrow):
+                    rowvals = X[lay, row, :].ravel()
+                    start = 0
+                    end = start + fmtin
+                    while end <= len(rowvals):
+                        vals = rowvals[start:end]
+                        s = ''.join([formatter(int(val)) for val in vals]) + '\n'
+                        f.write(s)
+                        start = end
+                        end = start + fmtin
+                    vals = rowvals[start:end]
+                    if len(vals) > 0:
+                        s = ''.join([formatter(int(val)) for val in vals]) + '\n'
+                        f.write(s)
+            elif fmtin == ncol:
                 for row in range(nrow):
                     vals = X[lay, row, :].ravel()
-                    i = 1
-                    while i <= round(ncol/width):
-                        chunk = vals[i * width - 1:i * width - 1 + width]
-                        f.write(''.join(['{:>8}'.format(int(val)) for val in chunk]) + '\n')
-                        i += 1
-                    chunk = vals[i * width - 1:]
-                    f.write(''.join(['{:>8}'.format(int(val)) for val in chunk]) + '\n')
-            else:
-                f.write('INTERNAL\t({nvals}I8)\n'.format(nvals=ncol))
-                for row in range(nrow):
-                    vals = X[lay, row, :].ravel()
-                    f.write(''.join(['{:>8}'.format(int(val)) for val in vals]) + '\n')
+                    f.write(''.join([formatter(int(val)) for val in vals]) + '\n')
     return
 
 
@@ -1448,8 +1462,7 @@ def read_zbarray(fname):
                 iconst = rowitems[1]
             else:
                 fmt = rowitems[1].strip('()')
-                fmtin = int(fmt.split('I')[0])
-                iprn = int(fmt.split('I')[1])
+                fmtin, iprn = [int(v) for v in fmt.split('I')]
 
         # ZONE DATA
         else:
@@ -1459,10 +1472,6 @@ def read_zbarray(fname):
             elif locat == 'INTERNAL':
                 # READ ZONES
                 rowvals = [int(v) for v in rowitems]
-                if len(rowvals) != fmtin:
-                    errmsg = 'Number of values on this row ({}) ' \
-                             'does not match fmtin ({})'.format(len(rowvals), fmtin)
-                    raise Exception(errmsg)
                 vals.extend(rowvals)
                 if len(vals) == datalen:
                     # place values for the previous layer into the zone array
@@ -1476,41 +1485,8 @@ def read_zbarray(fname):
                 lay += 1
             else:
                 raise Exception('Locat not recognized: {}'.format(locat))
-    return zones
 
-
-def read_zbarray_old(fname):
-    with open(fname, 'r') as f:
-        lines = f.readlines()
-    nlay = int(lines[0].split()[0])
-    nrow = int(lines[0].split()[1])
-    ncol = int(lines[0].split()[2])
-
-    zones = np.zeros((nlay, nrow, ncol), dtype=np.int64)
-
-    # Find the list indices at which each layer begins
-    indices = []
-    for idx, line in enumerate(lines):
-        if 'INTERNAL' in line:
-            indices.append(idx+1)
-    s = 'Number of layers defined ({}) ' \
-        'does not match nlay ({}).'.format(len(indices), nlay)
-    assert len(indices) == nlay, s
-
-    for lay in range(nlay):
-        start = indices[lay]
-        if lay < nlay - 1:
-            end = indices[lay + 1] - 1
-        else:
-            end = len(lines)
-
-        vals = []
-        chunk = lines[start:end]
-        for line in chunk:
-            vals.extend([int(v) for v in line.split()])
-        vals = np.array(vals, dtype=np.int64).reshape((nrow, ncol))
-        zones[lay, :, :] = vals[:, :]
-
+        # IGNORE COMPOSITE ZONES
     return zones
 
 
