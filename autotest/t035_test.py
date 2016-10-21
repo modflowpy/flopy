@@ -87,8 +87,8 @@ def test_zonbud_mult():
 
 def test_zonbud_readwrite_zbarray():
     x = np.random.randint(200, size=(1, 150, 20))
-    write_zbarray('randint', x)
-    z = read_zbarray('randint')
+    write_zbarray(os.path.join(pth, 'randint'), x)
+    z = read_zbarray(os.path.join(pth, 'randint'))
     if not np.array_equal(x, z):
         raise Exception('Input and output arrays do not match.')
     return

@@ -1417,6 +1417,66 @@ def write_zbarray(fname, X, width=None):
 
 
 def read_zbarray(fname):
+
+    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
+
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+    nlay = int(lines[0].split()[0])
+    nrow = int(lines[0].split()[1])
+    ncol = int(lines[0].split()[2])
+
+    zones = np.zeros((nlay, nrow, ncol), dtype=np.int64)
+
+    # Initialize layer
+    lay = 0
+
+    # The number of values to read before placing
+    # them into the zone array
+    datalen = nrow * ncol
+
+    # ITERATE OVER THE ROWS
+    for row in lines[1:]:
+        rowitems = row.strip().split()
+
+        # HEADER
+        if rowitems[0] in locats:
+            vals = []
+            locat = rowitems[0]
+
+            if locat == 'CONSTANT':
+                iconst = rowitems[1]
+                zones[lay, :, :] = iconst
+                continue
+            # else:
+            #     fmt = rowitems[1].strip('()')
+            #     fmtin = fmt.split('I')[0]
+            #     iprn = fmt.split('I')[1]
+
+        # ZONE DATA
+        else:
+            if locat == 'INTERNAL':
+                # READ ZONES
+                vals.extend([int(v) for v in rowitems])
+                if len(vals) == datalen:
+                    # place values for the previous layer into the zone array
+                    vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
+                    zones[lay, :, :] = vals[:, :]
+                    if lay == nlay - 1:
+                        return zones
+                    else:
+                        lay += 1
+            elif locat == 'EXTERNAL':
+                # READ EXTERNAL FILE
+                vals = np.loadtxt(rowitems[0])
+                zones[lay, :, :] = vals[:, :]
+                if lay == nlay - 1:
+                    return zones
+                else:
+                    lay += 1
+
+
+def read_zbarray_old(fname):
     with open(fname, 'r') as f:
         lines = f.readlines()
     nlay = int(lines[0].split()[0])
