@@ -82,6 +82,7 @@ def test_zonbud_mult():
     mgd.to_csv(os.path.join(pth, 'zbud_zonbud.csv'))
     cfd2 = cfd.copy()
     cfd2.to_csv(os.path.join(pth, 'zbud_zonbud.csv'))
+    cfd2 / 5
     return
 
 

@@ -1307,7 +1307,7 @@ class ZoneBudget(object):
         newobj.recordarray = recordarray
         return newobj
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         recordarray = self.recordarray.copy()
         for f in self._zonefieldnames:
             a = np.array([r for r in recordarray[f]]) / other
