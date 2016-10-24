@@ -2,7 +2,7 @@
 test MNW2 package
 """
 import sys
-sys.path.insert(0, '/Users/aleaf/Documents/GitHub/flopy3')
+sys.path.insert(0, '..')
 import os
 import flopy
 import numpy as np

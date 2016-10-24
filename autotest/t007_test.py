@@ -1,4 +1,7 @@
 # Test export module
+import sys
+sys.path.insert(0, '..')
+import copy
 import os
 import numpy as np
 import flopy
@@ -188,6 +191,9 @@ def test_sr():
     # test instantiation of an empty sr object
     sr = flopy.utils.reference.SpatialReference()
 
+    # test instantiation of SR with xul, yul and no grid
+    sr = flopy.utils.reference.SpatialReference(xul=1, yul=1)
+
     sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
                                       delc=ms.dis.delc.array, lenuni=3,
                                       xul=321, yul=123, rotation=20)
@@ -271,6 +277,68 @@ def test_sr_scaling():
     xur, yur = ms3.sr.get_vertices(0, ncol-1)[3]
     assert xur == xll + ms3.sr.length_multiplier * delr * ncol
     assert yur == yll + ms3.sr.length_multiplier * delc * nrow
+
+def test_rotation():
+    m = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
+                                   delr=250.,
+                                   delc=250., top=10, botm=0)
+    xul, yul = 500000, 2934000
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xul=xul, yul=yul, rotation=45.)
+    xll, yll = m.sr.xll, m.sr.yll
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xul=xul, yul=yul, rotation=-45.)
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+    xll2, yll2 = m.sr.xll, m.sr.yll
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xll=xll2, yll=yll2, rotation=-45.)
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                        xll=xll, yll=yll, rotation=45.)
+    assert m.dis.sr.xgrid[0, 0] == xul
+    assert m.dis.sr.ygrid[0, 0] == yul
+
+def test_map_rotation():
+    m = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
+                                   delr=250.,
+                                   delc=250., top=10, botm=0)
+    # transformation assigned by arguments
+    xul, yul, rotation = 500000, 2934000, 45
+    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul, rotation=rotation)
+    lc = modelmap.plot_grid()
+    xll, yll = modelmap.sr.xll, modelmap.sr.yll
+    def check_vertices():
+        xllp, yllp = lc._paths[0].vertices[0]
+        xulp, yulp = lc._paths[0].vertices[1]
+        assert (xllp, yllp) == (xll, yll)
+        assert (xulp, yulp) == (xul, yul)
+    check_vertices()
+
+    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll, rotation=rotation)
+    lc = modelmap.plot_grid()
+    check_vertices()
+
+    # transformation in m.sr
+    sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                                               xll=xll, yll=yll, rotation=rotation)
+    m.sr = copy.deepcopy(sr)
+    modelmap = flopy.plot.ModelMap(model=m)
+    lc = modelmap.plot_grid()
+    check_vertices()
+
+    # transformation assign from sr instance
+    m.sr._reset()
+    m.sr.set_spatialreference()
+    modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+    lc = modelmap.plot_grid()
+    check_vertices()
+
 
 def test_netcdf_classmethods():
     import os
@@ -389,8 +457,10 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     #build_netcdf()
     #build_sfr_netcdf()
-    #test_sr()
-    test_sr_scaling()
+    test_sr()
+    #test_rotation()
+    test_map_rotation()
+    #test_sr_scaling()
     #test_free_format_flag()
     #test_export_output()
     #for namfile in namfiles:
