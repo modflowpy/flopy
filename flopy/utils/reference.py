@@ -586,11 +586,12 @@ class SpatialReference(object):
         f = open(filename,'w')
         f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
         f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))
-        for c in self.delc:
-            f.write("{0:15.6E} ".format(c))
-        f.write('\n')
+
         for r in self.delr:
             f.write("{0:15.6E} ".format(r))
+        f.write('\n')
+        for c in self.delc:
+            f.write("{0:15.6E} ".format(c))
         f.write('\n')
         return
 
@@ -707,7 +708,7 @@ class epsgRef:
             print('{}:\n{}\n'.format(k, v))
 
 
-def getprj(epsg, addlocalreference=True):
+def getprj(epsg, addlocalreference=True, text='esriwkt'):
     """Gets projection file (.prj) text for given epsg code from spatialreference.org
     See: https://www.epsg-registry.org/
 
@@ -733,12 +734,12 @@ def getprj(epsg, addlocalreference=True):
         epsgfile.make()
 
     if prj is None:
-        prj = get_spatialreference(epsg, text='prettywkt')
+        prj = get_spatialreference(epsg, text=text)
     if addlocalreference:
         epsgfile.add(epsg, prj)
     return prj
 
-def get_spatialreference(epsg, text='prettywkt'):
+def get_spatialreference(epsg, text='esriwkt'):
     """Gets text for given epsg code and text format from spatialreference.org
     Fetches the reference text using the url:
         http://spatialreference.org/ref/epsg/<epsg code>/<text>/
