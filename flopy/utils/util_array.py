@@ -1835,6 +1835,15 @@ class Util2d(object):
             raise NotImplementedError(
                 "Util2d.__mul__() not implemented for non-scalars")
 
+    def __eq__(self, other):
+        if not isinstance(other, Util2d):
+            return False
+        if not np.array_equal(other.array, self.array):
+            return False
+        if other.cnstnt != self.cnstnt:
+            return False
+        return True
+
     def __getitem__(self, k):
         if isinstance(k, int):
             if len(self.shape) == 1:
@@ -1888,6 +1897,9 @@ class Util2d(object):
 
     def sum(self):
         return self.array.sum()
+
+    def unique(self):
+        return np.unique(self.array)
 
     @property
     def format(self):
@@ -2433,7 +2445,9 @@ class Util2d(object):
         if you are using fixed format record types,make sure 
         ext_unit_dict has been initialized from the NAM file
         """
-
+        if shape == (0, 0):
+            raise IndexError('No information on model grid dimensions. '
+                             'Need nrow, ncol to load a Util2d array.')
         curr_unit = None
         if ext_unit_dict is not None:
             # determine the current file's unit number

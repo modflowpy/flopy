@@ -23,14 +23,26 @@ def _fmt_string(array, float_format='{}'):
                             "in dtype:" + vtype)
     return fmt_string
 
+def _pop_item(line, dtype=str):
+    if len(line) > 0:
+        if dtype == str:
+            return line.pop(0)
+        elif dtype == float:
+            return float(line.pop(0))
+        elif dtype == int:
+            # handle strings like this:
+            # '-10.'
+            return int(float(line.pop(0)))
+    return 0
+
 def line_parse(line):
     """
     Convert a line of text into to a list of values.  This handles the
     case where a free formatted MODFLOW input file may have commas in
     it.
-
     """
-    line = line.split(';')[0] # ; denotes comment
+    for comment_flag in [';', '#']:
+        line = line.split(comment_flag)[0]
     line = line.replace(',', ' ')
     return line.strip().split()
 
@@ -215,3 +227,44 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
 
     wel = ModflowWel(model,stress_period_data=sp_data)
     return wel
+
+def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True, **kwargs):
+    """Use pandas if it is available to load a text file
+    (significantly faster than n.loadtxt or genfromtxt;
+    see http://stackoverflow.com/questions/18259393/numpy-loading-csv-too-slow-compared-to-matlab)
+
+    Parameters
+    ----------
+    file : file or str
+        File, filename, or generator to read.
+    delimiter : str, optional
+        The string used to separate values. By default, this is any whitespace.
+    dtype : data-type, optional
+        Data-type of the resulting array
+    skiprows : int, optional
+        Skip the first skiprows lines; default: 0.
+    use_pandas : bool
+        If true, the much faster pandas.read_csv method is used.
+    kwargs : dict
+        Keyword arguments passed to numpy.loadtxt or pandas.read_csv.
+
+    Returns
+    -------
+    ra : np.recarray
+        Numpy record array of file contents.
+    """
+    try:
+        if use_pandas:
+            import pandas as pd
+            if delimiter.isspace():
+                kwargs['delim_whitespace'] = True
+            if isinstance(dtype, np.dtype) and 'names' not in kwargs:
+                kwargs['names'] = dtype.names
+    except:
+        pd = False
+
+    if use_pandas and pd:
+        df = pd.read_csv(file, dtype=dtype, skiprows=skiprows, **kwargs)
+        return df.to_records(index=False)
+    else:
+        return np.loadtxt(file, dtype=dtype, skiprows=skiprows, **kwargs)

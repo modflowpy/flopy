@@ -8,6 +8,14 @@ import numpy.lib.recfunctions as rf
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..utils.reference import getprj
 
+def import_shapefile():
+    try:
+        import shapefile as sf
+        return sf
+    except Exception as e:
+        raise Exception("io.to_shapefile(): error " +
+                        "importing shapefile - try pip install pyshp")
+
 def write_gridlines_shapefile(filename, sr):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative
@@ -95,8 +103,36 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             wr.record(*rec)
     wr.save(filename)
 
+def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9):
 
-def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None, **kwargs):
+    sf = import_shapefile()
+    verts = sr.vertices
+
+    w = sf.Writer(5) # polygon
+    w.autoBalance = 1
+    # set up the attribute fields
+    names = ['row', 'column'] + list(array_dict.keys())
+    names = enforce_10ch_limit(names)
+    dtypes = [('row', np.dtype('int')), ('column', np.dtype('int'))] + \
+             [(name, arr.dtype) for name, arr in array_dict.items()]
+
+    # set-up array of attributes of shape ncells x nattributes
+    col = list(range(1, sr.ncol + 1)) * sr.nrow
+    row = sorted(list(range(1, sr.nrow + 1)) * sr.ncol)
+    at = np.vstack([row, col] + [arr.ravel() for arr in array_dict.values()]).transpose()
+    at[np.isnan(at)] = nan_val
+
+    for i, npdtype in enumerate(dtypes):
+        w.field(names[i], *get_pyshp_field_info(npdtype[1].name))
+
+    for i, r in enumerate(at):
+        w.poly([verts[i]])
+        w.record(*r)
+    w.save(filename)
+
+
+def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None,
+                                  **kwargs):
     """
     Wrapper function for writing a shapefile of model data.  If package_names is
     not None, then search through the requested packages looking for arrays that
@@ -182,9 +218,15 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                                 name = shape_attr_name(u2d.name)
                                 name += '_{:03d}'.format(i + 1)
                                 array_dict[name] = u2d.array
-
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.sr, array_dict)
+    # write the projection file
+    if ml.sr.epsg is None:
+        epsg = kwargs.get('epsg', None)
+    else:
+        epsg = ml.sr.epsg
+    prj = kwargs.get('prj', None)
+    write_prj(filename, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -361,21 +403,24 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
         w.field(names[i], *get_pyshp_field_info(npdtype[1]))
 
     # write the geometry and attributes for each record
+    ralist = recarray.tolist()
     if geomtype == 5:
-        for i, r in enumerate(recarray):
+        for i, r in enumerate(ralist):
             w.poly(geoms[i].pyshp_parts)
             w.record(*r)
     elif geomtype == 3:
-        for i, r in enumerate(recarray):
+        for i, r in enumerate(ralist):
             w.line(geoms[i].pyshp_parts)
             w.record(*r)
     elif geomtype == 1:
-        for i, r in enumerate(recarray):
+        for i, r in enumerate(ralist):
             w.point(*geoms[i].pyshp_parts)
             w.record(*r)
     w.save(shpname)
+    write_prj(shpname, epsg, prj)
     print('wrote {}'.format(shpname))
 
+def write_prj(shpname, epsg=None, prj=None):
     # write the projection file
     prjname = shpname.split('.')[0] + '.prj'
     # write projection file from epsg code

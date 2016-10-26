@@ -128,8 +128,9 @@ class Modpath(BaseModel):
 
     def create_mpsim(self, simtype='pathline', trackdir='forward',
                      packages='WEL', start_time=0, default_ifaces=None,
-                     ParticleColumnCount=4, ParticleRowCount=4
-                     ):
+                     ParticleColumnCount=4, ParticleRowCount=4,
+                     MinRow=0, MinColumn=0, MaxRow=None, MaxColumn=None,
+    ):
         """
         Create a MODPATH simulation file using available MODFLOW boundary
         package data.
@@ -279,20 +280,21 @@ class Modpath(BaseModel):
                                 append_node(side_faces,
                                             wellid, n, k, i, j)
             elif package.upper() == 'RCH':
-                for j in range(nrow):
-                    for i in range(ncol):
-                        group_name.append('rch')
-                        group_placement.append([Grid, GridCellRegionOption,
-                                                PlacementOption,
-                                                ReleaseStartTime,
-                                                ReleaseOption, CHeadOption])
-                        group_region.append([0, i, j, 0, i, j])
-                        if default_ifaces is None:
-                            face_ct.append(1)
-                            ifaces.append([[6, 1, 1]])
-                        else:
-                            ifaces.append(default_ifaces)
-                            face_ct.append(len(default_ifaces))
+                #for j in range(nrow):
+                #    for i in range(ncol):
+                #        group_name.append('rch')
+                group_name.append('rch')
+                group_placement.append([Grid, GridCellRegionOption,
+                                        PlacementOption,
+                                        ReleaseStartTime,
+                                        ReleaseOption, CHeadOption])
+                group_region.append([0, 0, 0, 0, nrow-1, ncol-1])
+                if default_ifaces is None:
+                    face_ct.append(1)
+                    ifaces.append([[6, 1, 1]])
+                else:
+                    ifaces.append(default_ifaces)
+                    face_ct.append(len(default_ifaces))
 
         SimulationType = 1
         if simtype.lower() == 'endpoint':

@@ -5,6 +5,7 @@ Module spatial referencing for flopy model objects
 import sys
 import os
 import numpy as np
+import warnings
 
 
 class SpatialReference(object):
@@ -25,10 +26,16 @@ class SpatialReference(object):
 
     xul : float
         the x coordinate of the upper left corner of the grid
-
+        Enter either xul and yul or xll and yll.
     yul : float
         the y coordinate of the upper left corner of the grid
-
+        Enter either xul and yul or xll and yll.
+    xll : float
+        the x coordinate of the lower left corner of the grid
+        Enter either xul and yul or xll and yll.
+    yll : float
+        the y coordinate of the lower left corner of the grid
+        Enter either xul and yul or xll and yll.
     rotation : float
         the counter-clockwise rotation (in degrees) of the grid
 
@@ -71,6 +78,10 @@ class SpatialReference(object):
     ycentergrid : ndarray
         numpy meshgrid of row centers
 
+    vertices : 1D array
+        1D array of cell vertices for whole grid in C-style (row-major) order (same as np.ravel())
+
+
     Notes
     -----
 
@@ -80,10 +91,23 @@ class SpatialReference(object):
         
     """
 
-    def __init__(self, delr=1.0, delc=1.0, lenuni=1, xul=None, yul=None, rotation=0.0,
+    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1, xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
-        self.delc = np.atleast_1d(np.array(delc)) * length_multiplier
-        self.delr = np.atleast_1d(np.array(delr)) * length_multiplier
+
+        for delrc in [delr, delc]:
+            if isinstance(delrc, float) or isinstance(delrc, int):
+                raise TypeError("delr and delcs must be an array or sequences equal in length to the number of rows/columns.")
+
+        self.delc = np.atleast_1d(np.array(delc)) #* length_multiplier
+        self.delr = np.atleast_1d(np.array(delr)) #* length_multiplier
+
+        if self.delr.sum() == 0 or self.delc.sum() == 0:
+            if xll is None or yll is None:
+                print('Warning: no grid spacing or lower-left corner supplied. '
+                      '\nSetting the offset with xul, yul requires arguments for delr and delc. '
+                      '\nOrigin will be set to zero.')
+                xll, yll = 0, 0
+                xul, yul = None, None
 
         self.lenuni = lenuni
         self._proj4_str = proj4_str
@@ -95,8 +119,8 @@ class SpatialReference(object):
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
-        self.set_spatialreference(xul, yul, rotation)
-        self.length_multiplier = length_multiplier
+        self.set_spatialreference(xul, yul, xll, yll, rotation, length_multiplier)
+
 
     @property
     def proj4_str(self):
@@ -171,6 +195,10 @@ class SpatialReference(object):
             elif "rotation" in item.lower():
                 try:
                     rotation = float(item.split(':')[1])
+                    if rotation != 0.0:
+                        warnings.warn("rotation arg has recently changed. " +\
+                              "It was previously treated as positive clockwise" +\
+                              "It now is positive counterclockwise")
                 except:
                     pass
             elif "proj4_str" in item.lower():
@@ -205,6 +233,10 @@ class SpatialReference(object):
             super(SpatialReference,self).\
                 __setattr__("yul",float(value))
         elif key == "rotation":
+            if float(value) != 0.0:
+                warnings.warn("rotation arg has recently changed. " +\
+                              "It was previously treated as positive clockwise" +\
+                              "It now is positive counterclockwise")
             super(SpatialReference,self).\
                 __setattr__("rotation",float(value))
         elif key == "lenuni":
@@ -234,6 +266,7 @@ class SpatialReference(object):
         self._ygrid = None
         self._ycentergrid = None
         self._xcentergrid = None
+        self._vertices = None
 
     @property
     def nrow(self):
@@ -312,20 +345,44 @@ class SpatialReference(object):
         return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
                 "proj4_str":self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
+    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0, length_multiplier=1.):
         """
             set spatial reference - can be called from model instance
         """
+        if xul is not None and xll is not None:
+            raise ValueError('both xul and xll entered. Please enter either xul, yul or xll, yll.')
+        if yul is not None and yll is not None:
+            raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
 
+        self.length_multiplier = length_multiplier
+        theta = -rotation * np.pi / 180.
         # Set origin and rotation
         if xul is None:
-            self.xul = 0.
+            if xll is not None:
+                self.xul = xll + np.sin(theta) * self.yedge[0] * self.length_multiplier
+            else:
+                self.xul = 0.
         else:
             self.xul = xul
         if yul is None:
-            self.yul = np.add.reduce(self.delc)
+            if yll is not None:
+                self.yul = yll + np.cos(theta) * self.yedge[0] * self.length_multiplier
+            else:
+                self.yul = np.add.reduce(self.delc) * self.length_multiplier
         else:
             self.yul = yul
+        if xll is None:
+            self.xll = self.xul - np.sin(theta) * self.yedge[0] * self.length_multiplier
+        else:
+            self.xll = xll
+        if yll is None:
+            self.yll = self.yul - np.cos(theta) * self.yedge[0] * self.length_multiplier
+        else:
+            self.yll = yll
+        if rotation != 0.0:
+            warnings.warn("rotation arg has recently changed. " +\
+                          "It was previously treated as positive clockwise" +\
+                          "It now is positive counterclockwise")
         self.rotation = rotation
         self._reset()
 
@@ -380,19 +437,12 @@ class SpatialReference(object):
     def _set_xycentergrid(self):
         self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter,
                                                           self.ycenter)
-        self._xcentergrid, self._ycentergrid = self.rotate(self._xcentergrid,
-                                                          self._ycentergrid,
-                                                          self.rotation,
-                                                          0, self.yedge[0])
-        self._xcentergrid += self.xul
-        self._ycentergrid += self.yul - self.yedge[0]
+        self._xcentergrid, self._ycentergrid = self.transform(self._xcentergrid,
+                                                              self._ycentergrid)
 
     def _set_xygrid(self):
         self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
-        self._xgrid, self._ygrid = self.rotate(self._xgrid, self._ygrid, self.rotation,
-                                               0, self.yedge[0])
-        self._xgrid += self.xul
-        self._ygrid += self.yul - self.yedge[0]
+        self._xgrid, self._ygrid = self.transform(self._xgrid, self._ygrid)
 
 
     @staticmethod
@@ -403,7 +453,10 @@ class SpatialReference(object):
         degrees.
 
         """
-        theta = -theta * np.pi / 180.
+        #jwhite changed on Oct 11 2016 - rotation is now positive CCW
+        #theta = -theta * np.pi / 180.
+        theta = theta * np.pi / 180.
+
         xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
                                                          (y - yorigin)
         yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
@@ -415,14 +468,13 @@ class SpatialReference(object):
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
-        x, y = SpatialReference.rotate(x * self.length_multiplier,
-                                       y * self.length_multiplier,
-                                       theta=self.rotation,
-                                       xorigin=0, yorigin=self.yedge[0])
-        x += self.xul
-        y += self.yul - self.yedge[0]
+        x *= self.length_multiplier
+        y *= self.length_multiplier
+        x += self.xll
+        y += self.yll
+        x, y = SpatialReference.rotate(x, y, theta=self.rotation,
+                                       xorigin=self.xll, yorigin=self.yll)
         return x, y
-
 
     def get_extent(self):
         """
@@ -437,24 +489,16 @@ class SpatialReference(object):
         y1 = self.yedge[-1]
 
         # upper left point
-        x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
-        x0r += self.xul
-        y0r += self.yul - self.yedge[0]
+        x0r, y0r = self.transform(x0, y0)
 
         # upper right point
-        x1r, y1r = self.rotate(x1, y0, self.rotation, 0, self.yedge[0])
-        x1r += self.xul
-        y1r += self.yul - self.yedge[0]
+        x1r, y1r = self.transform(x1, y0)
 
         # lower right point
-        x2r, y2r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
-        x2r += self.xul
-        y2r += self.yul - self.yedge[0]
+        x2r, y2r = self.transform(x1, y1)
 
         # lower left point
-        x3r, y3r = self.rotate(x0, y1, self.rotation, 0, self.yedge[0])
-        x3r += self.xul
-        y3r += self.yul - self.yedge[0]
+        x3r, y3r = self.transform(x0, y1)
 
         xmin = min(x0r, x1r, x2r, x3r)
         xmax = max(x0r, x1r, x2r, x3r)
@@ -478,12 +522,8 @@ class SpatialReference(object):
             x1 = x0
             y0 = ymin
             y1 = ymax
-            x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.transform(x0, y0)
+            x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
 
         #horizontal lines
@@ -492,15 +532,10 @@ class SpatialReference(object):
             x1 = xmax
             y0 = self.yedge[i]
             y1 = y0
-            x0r, y0r = self.rotate(x0, y0, self.rotation, 0, self.yedge[0])
-            x0r += self.xul
-            y0r += self.yul - self.yedge[0]
-            x1r, y1r = self.rotate(x1, y1, self.rotation, 0, self.yedge[0])
-            x1r += self.xul
-            y1r += self.yul - self.yedge[0]
+            x0r, y0r = self.transform(x0, y0)
+            x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
         return lines
-
 
     def get_xcenter_array(self):
         """
@@ -551,11 +586,12 @@ class SpatialReference(object):
         f = open(filename,'w')
         f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
         f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))
-        for c in self.delc:
-            f.write("{0:15.6E} ".format(c))
-        f.write('\n')
+
         for r in self.delr:
             f.write("{0:15.6E} ".format(r))
+        f.write('\n')
+        for c in self.delc:
+            f.write("{0:15.6E} ".format(c))
         f.write('\n')
         return
 
@@ -568,6 +604,20 @@ class SpatialReference(object):
         pts.append([xgrid[i, j+1], ygrid[i, j+1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
         return pts
+
+    @property
+    def vertices(self):
+        if self._vertices is None:
+            self._set_cell_vertices()
+        return self._vertices
+
+    def _set_vertices(self):
+        xgrid, ygrid = self.xgrid, self.ygrid
+        ij = list(map(list, zip(xgrid[:-1, :-1].ravel(), ygrid[:-1, :-1].ravel())))
+        i1j = map(list, zip(xgrid[1:, :-1].ravel(), ygrid[1:, :-1].ravel()))
+        i1j1 = map(list, zip(xgrid[1:, 1:].ravel(), ygrid[1:, 1:].ravel()))
+        ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
+        self._vertices = np.array(map(list, zip(ij, i1j, i1j1, ij1, ij)))
 
     def interpolate(self, a, xi, method='nearest'):
         """
@@ -658,7 +708,7 @@ class epsgRef:
             print('{}:\n{}\n'.format(k, v))
 
 
-def getprj(epsg, addlocalreference=True):
+def getprj(epsg, addlocalreference=True, text='esriwkt'):
     """Gets projection file (.prj) text for given epsg code from spatialreference.org
     See: https://www.epsg-registry.org/
 
@@ -684,12 +734,12 @@ def getprj(epsg, addlocalreference=True):
         epsgfile.make()
 
     if prj is None:
-        prj = get_spatialreference(epsg, text='prettywkt')
+        prj = get_spatialreference(epsg, text=text)
     if addlocalreference:
         epsgfile.add(epsg, prj)
     return prj
 
-def get_spatialreference(epsg, text='prettywkt'):
+def get_spatialreference(epsg, text='esriwkt'):
     """Gets text for given epsg code and text format from spatialreference.org
     Fetches the reference text using the url:
         http://spatialreference.org/ref/epsg/<epsg code>/<text>/
