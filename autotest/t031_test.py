@@ -2,7 +2,7 @@
 test modpath functionality
 """
 import sys
-sys.path.insert(0, '/Users/aleaf/Documents/GitHub/flopy3')
+sys.path.insert(0, '..')
 import glob
 import shutil
 import os
@@ -179,7 +179,10 @@ def test_loadtxt():
     ra2 = loadtxt(pthfile, delimiter=' ', skiprows=3, dtype=pthld.dtype, use_pandas=False)
     assert np.array_equal(ra, ra2)
 
+    #epfilewithnans = os.path.join('../examples/data/mp6/', 'freybergmp.mpend')
+    #epd = EndpointFile(epfilewithnans)
+
 if __name__ == '__main__':
     #test_mpsim()
-    test_get_destination_data()
-    #test_loadtxt()
+    #test_get_destination_data()
+    test_loadtxt()
