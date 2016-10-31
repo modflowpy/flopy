@@ -518,12 +518,11 @@ class ZoneBudget(object):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        ignore_attrs = ['cbc', 'recordarray']
+        ignore_attrs = ['cbc']
         for k, v in self.__dict__.items():
             if k not in ignore_attrs:
                 setattr(result, k, copy.deepcopy(v, memo))
         result.cbc = self.cbc
-        result.recordarray = self.recordarray.copy()
         return result
 
     def _compute_budget(self):
