@@ -1,9 +1,9 @@
 from __future__ import print_function
 import os
 import sys
+import copy
 import numpy as np
 from .binaryfile import CellBudgetFile
-from copy import copy
 from itertools import groupby
 from collections import OrderedDict
 
@@ -512,7 +512,19 @@ class ZoneBudget(object):
         return records
 
     def copy(self):
-        return copy(self)
+        return copy.deepcopy(self)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        ignore_attrs = ['cbc', 'recordarray']
+        for k, v in self.__dict__.items():
+            if k not in ignore_attrs:
+                setattr(result, k, copy.deepcopy(v, memo))
+        result.cbc = self.cbc
+        result.recordarray = self.recordarray.copy()
+        return result
 
     def _compute_budget(self):
         """

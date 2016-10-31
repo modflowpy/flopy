@@ -81,6 +81,8 @@ def test_zonbud_mult():
     mgd = cfd*(7.48052/1000000)
     mgd.to_csv(os.path.join(pth, 'zbud_zonbud.csv'))
     cfd2 = cfd.copy()
+    if cfd.recordarray is cfd2.recordarray:
+        raise Exception('Copied object is a shallow copy.')
     cfd2.to_csv(os.path.join(pth, 'zbud_zonbud.csv'))
     cfd2 / 5
     return
