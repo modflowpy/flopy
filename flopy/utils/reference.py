@@ -103,8 +103,11 @@ class SpatialReference(object):
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
-                print('Warning: no grid spacing or lower-left corner supplied. Origin will be set to zero.')
+                print('Warning: no grid spacing or lower-left corner supplied. '
+                      '\nSetting the offset with xul, yul requires arguments for delr and delc. '
+                      '\nOrigin will be set to zero.')
                 xll, yll = 0, 0
+                xul, yul = None, None
 
         self.lenuni = lenuni
         self._proj4_str = proj4_str
@@ -116,8 +119,7 @@ class SpatialReference(object):
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
-        self.length_multiplier = length_multiplier
-        self.set_spatialreference(xul, yul, xll, yll, rotation)
+        self.set_spatialreference(xul, yul, xll, yll, rotation, length_multiplier)
 
 
     @property
@@ -343,7 +345,7 @@ class SpatialReference(object):
         return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
                 "proj4_str":self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0):
+    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0, length_multiplier=1.):
         """
             set spatial reference - can be called from model instance
         """
@@ -352,11 +354,12 @@ class SpatialReference(object):
         if yul is not None and yll is not None:
             raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
 
+        self.length_multiplier = length_multiplier
         theta = -rotation * np.pi / 180.
         # Set origin and rotation
         if xul is None:
             if xll is not None:
-                self.xul = xll - np.sin(theta) * self.yedge[0] * self.length_multiplier
+                self.xul = xll + np.sin(theta) * self.yedge[0] * self.length_multiplier
             else:
                 self.xul = 0.
         else:
@@ -369,7 +372,7 @@ class SpatialReference(object):
         else:
             self.yul = yul
         if xll is None:
-            self.xll = self.xul + np.sin(theta) * self.yedge[0] * self.length_multiplier
+            self.xll = self.xul - np.sin(theta) * self.yedge[0] * self.length_multiplier
         else:
             self.xll = xll
         if yll is None:
@@ -583,11 +586,12 @@ class SpatialReference(object):
         f = open(filename,'w')
         f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
         f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))
-        for c in self.delc:
-            f.write("{0:15.6E} ".format(c))
-        f.write('\n')
+
         for r in self.delr:
             f.write("{0:15.6E} ".format(r))
+        f.write('\n')
+        for c in self.delc:
+            f.write("{0:15.6E} ".format(c))
         f.write('\n')
         return
 
@@ -704,7 +708,7 @@ class epsgRef:
             print('{}:\n{}\n'.format(k, v))
 
 
-def getprj(epsg, addlocalreference=True):
+def getprj(epsg, addlocalreference=True, text='esriwkt'):
     """Gets projection file (.prj) text for given epsg code from spatialreference.org
     See: https://www.epsg-registry.org/
 
@@ -730,12 +734,12 @@ def getprj(epsg, addlocalreference=True):
         epsgfile.make()
 
     if prj is None:
-        prj = get_spatialreference(epsg, text='prettywkt')
+        prj = get_spatialreference(epsg, text=text)
     if addlocalreference:
         epsgfile.add(epsg, prj)
     return prj
 
-def get_spatialreference(epsg, text='prettywkt'):
+def get_spatialreference(epsg, text='esriwkt'):
     """Gets text for given epsg code and text format from spatialreference.org
     Fetches the reference text using the url:
         http://spatialreference.org/ref/epsg/<epsg code>/<text>/
