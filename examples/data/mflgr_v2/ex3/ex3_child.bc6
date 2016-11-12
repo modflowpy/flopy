@@ -1,0 +1,15 @@
+        41 -888.0000         0 1.0000000         1         0
+01 03 03 03 03 03 
+  CONSTANT 1.0000000                                          TRPY all layers
+  CONSTANT 1.0000000                                          HY    layer 1
+  CONSTANT 0.1800000                                          VCONT layer 1
+  CONSTANT 1.0000000                                          HY    layer 2
+  CONSTANT 0.1800000                                          VCONT layer 2
+  CONSTANT 1.0000000                                          HY    layer 3
+  CONSTANT 0.1800000                                          VCONT layer 3
+  CONSTANT 1.0000000                                          HY    layer 4
+  CONSTANT 0.1800000                                          VCONT layer 4
+  CONSTANT 1.0000000                                          HY    layer 5
+  CONSTANT 0.1800000                                          VCONT layer 5
+  CONSTANT 1.0000000                                          HY    layer 6
+  CONSTANT 0.1800000                                          VCONT layer 6
