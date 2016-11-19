@@ -11,7 +11,8 @@ import os
 import subprocess as sp
 import shutil
 import threading
-if sys.version_info > (3,0):
+
+if sys.version_info > (3, 0):
     import queue as Queue
 else:
     import Queue
@@ -193,7 +194,6 @@ class BaseModel(object):
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
 
-
     def remove_package(self, pname):
         """
         Remove a package from this model
@@ -336,6 +336,7 @@ class BaseModel(object):
         if ptype is None:
             ptype = filename.split('.')[-1]
         ptype = str(ptype).upper()
+
         # for pak in self.packagelist:
         #     if ptype in pak.name:
         #         print("BaseModel.add_existing_package() warning: " +\
@@ -351,13 +352,11 @@ class BaseModel(object):
         if copy_to_model_ws:
             base_filename = os.path.split(filename)[-1]
             fake_package.file_name = [base_filename]
-            shutil.copy2(filename,os.path.join(self.model_ws,base_filename))
+            shutil.copy2(filename, os.path.join(self.model_ws, base_filename))
         else:
             fake_package.file_name = [filename]
         fake_package.allowDuplicates = True
         self.add_package(fake_package)
-
-
 
     def get_name_file_entries(self):
         """
@@ -373,8 +372,7 @@ class BaseModel(object):
                 if p.unit_number[i] == 0:
                     continue
                 s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                               p.unit_number[
-                                                                   i],
+                                                               p.unit_number[i],
                                                                p.file_name[i],
                                                                p.extra[i]))
         return s
@@ -491,11 +489,12 @@ class BaseModel(object):
 
     def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
-        for ext_file, output in zip(self.external_fnames, self.external_output):
-            #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+        for ext_file, output in zip(self.external_fnames,
+                                    self.external_output):
+            # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
             # this is a wicked mess
             if output:
-                #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+                # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
                 new_ext_file = ext_file
             else:
                 fpth = os.path.abspath(os.path.join(old_pth, ext_file))
@@ -527,7 +526,7 @@ class BaseModel(object):
     def __setattr__(self, key, value):
 
         if key == "free_format_input":
-            #if self.bas6 is not None:
+            # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
             super(BaseModel, self).__setattr__(key, value)
 
@@ -969,14 +968,14 @@ def run_model(exe_name, namefile, model_ws='./',
         raise Exception(s)
 
     # simple little function for the thread to target
-    def q_output(output,q):
-            for line in iter(output.readline,b''):
-                q.put(line)
-            #time.sleep(1)
-            #output.close()
+    def q_output(output, q):
+        for line in iter(output.readline, b''):
+            q.put(line)
+            # time.sleep(1)
+            # output.close()
 
     proc = sp.Popen([exe_name, namefile],
-                    stdout=sp.PIPE, cwd=model_ws)
+                    stdout=sp.PIPE, stderr=sp.STDOUT, cwd=model_ws)
 
     if not async:
         while True:
@@ -994,14 +993,13 @@ def run_model(exe_name, namefile, model_ws='./',
                 break
         return success, buff
 
-
-    #some tricks for the async stdout reading
+    # some tricks for the async stdout reading
     q = Queue.Queue()
-    thread = threading.Thread(target=q_output,args=(proc.stdout,q))
+    thread = threading.Thread(target=q_output, args=(proc.stdout, q))
     thread.daemon = True
     thread.start()
 
-    failed_words = ["fail","error"]
+    failed_words = ["fail", "error"]
     last = datetime.now()
     lastsec = 0.
     while True:
@@ -1017,7 +1015,7 @@ def run_model(exe_name, namefile, model_ws='./',
                 now = datetime.now()
                 dt = now - last
                 tsecs = dt.total_seconds() - lastsec
-                line = "(elapsed:{0})-->{1}".format(tsecs,line)
+                line = "(elapsed:{0})-->{1}".format(tsecs, line)
                 lastsec = tsecs + lastsec
                 buff.append(line)
                 if not silent:
