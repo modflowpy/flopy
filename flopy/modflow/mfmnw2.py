@@ -744,12 +744,17 @@ class ModflowMnw2(Package):
 
     def __init__(self, model, mnwmax=0, nodtot=None, iwl2cb=0, mnwprnt=0, aux=[],
                  node_data=None, mnw=None, stress_period_data=None, itmp=[],
-                 extension='mnw2', unitnumber=34, gwt=False):
+                 extension='mnw2', unitnumber=None, gwt=False):
         """
         Package constructor
         """
-        Package.__init__(self, model, extension, 'MNW2',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name, and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowMnw2.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name, and unit number
+        Package.__init__(self, model, extension, ModflowMnw2.ftype(),
+                         unitnumber)
 
         self.url = 'mnw2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
@@ -1238,6 +1243,16 @@ class ModflowMnw2(Package):
                             f_mnw.write(fmt.format(*self.stress_period_data[per][['qfrcmn', 'qfrcmx']][n]))
                         f_mnw.write('\n')
         f_mnw.close()
+
+
+    @staticmethod
+    def ftype():
+        return 'MNW2'
+
+
+    @staticmethod
+    def defaultunit():
+        return 34
 
 
 def _parse_1(line):

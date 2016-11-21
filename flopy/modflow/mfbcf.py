@@ -76,13 +76,19 @@ class ModflowBcf(Package):
     >>> bcf = flopy.modflow.ModflowBcf(ml)
 
     """
-
     def __init__(self, model, ipakcb=53, intercellt=0, laycon=3, trpy=1.0,
                  hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0,
                  tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01,
                  extension='bcf', unitnumber=15):
-        Package.__init__(self, model, extension, 'BCF6', unitnumber)
+
+        if unitnumber is None:
+            unitnumber = ModflowBcf.defaultunit()
+
+        Package.__init__(self, model, extension, ModflowBcf.ftype(),
+                         unitnumber)
+
         self.url = 'bcf.htm'
+
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Set values of all parameters
         self.intercellt = Util2d(model, (nlay,), np.int, intercellt,
@@ -281,10 +287,26 @@ class ModflowBcf(Package):
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'wetdry', ext_unit_dict)
                 wetdry[k, :, :] = t.array
 
+        # set package unit number
+        unitnumber = 15
+        for key, value in ext_unit_dict.items():
+            if value.filetype == 'BCF6':
+                unitnumber = key
+
         # create instance of bcf object
         bcf = ModflowBcf(model, ipakcb=ipakcb, intercellt=intercellt, laycon=laycon, trpy=trpy, hdry=hdry,
                          iwdflg=iwdflg, wetfct=wetfct, iwetit=iwetit, ihdwet=ihdwet,
-                         tran=tran, hy=hy, vcont=vcont, sf1=sf1, sf2=sf2, wetdry=wetdry)
+                         tran=tran, hy=hy, vcont=vcont, sf1=sf1, sf2=sf2, wetdry=wetdry,
+                         unitnumber=unitnumber)
 
         # return bcf object
         return bcf
+
+
+    @staticmethod
+    def ftype():
+        return 'BCF6'
+
+    @staticmethod
+    def defaultunit():
+        return 15

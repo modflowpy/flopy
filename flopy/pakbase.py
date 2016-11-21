@@ -6,12 +6,15 @@ pakbase module
 """
 
 from __future__ import print_function
-import numpy as np
-from .utils import Util2d, Util3d, Transient2d, MfList, check
-from numpy.lib.recfunctions import stack_arrays
+
 import os
-from .modflow.mfparbc import ModflowParBc as mfparbc
 import webbrowser as wb
+
+import numpy as np
+from numpy.lib.recfunctions import stack_arrays
+
+from .modflow.mfparbc import ModflowParBc as mfparbc
+from .utils import Util2d, Util3d, Transient2d, MfList, check
 
 
 class Package(object):
@@ -63,7 +66,7 @@ class Package(object):
                     else:
                         s = s + ' {0:s} (list, items = {1:d}\n'.format(attr,
                                                                        len(
-                                                                               value))
+                                                                           value))
                 elif (isinstance(value, np.ndarray)):
                     s = s + ' {0:s} (array, shape = {1:s})\n'.format(attr,
                                                                      value.shape.__str__()[
@@ -80,17 +83,17 @@ class Package(object):
             if isinstance(item, MfList):
                 if not isinstance(item, list) and not isinstance(item, tuple):
                     assert item in list(
-                            self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
-                            item) + " not in data.keys()"
+                        self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                        item) + " not in data.keys()"
                     return self.stress_period_data[item]
                 else:
                     if item[1] not in self.dtype.names:
                         raise Exception(
-                                "package.__getitem(): item \'" + item + "\' not in dtype names " + str(
-                                        self.dtype.names))
+                            "package.__getitem(): item \'" + item + "\' not in dtype names " + str(
+                                self.dtype.names))
                     assert item[0] in list(
-                            self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
-                            item[0]) + " not in data.keys()"
+                        self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                        item[0]) + " not in data.keys()"
                     if self.stress_period_data.vtype[item[0]] == np.recarray:
                         return self.stress_period_data[item[0]][item[1]]
 
@@ -205,7 +208,7 @@ class Package(object):
                 if isinstance(self.stress_period_data.data[per], np.recarray):
                     spd = self.stress_period_data.data[per]
                     inds = (spd.k, spd.i, spd.j) if self.parent.structured \
-                            else (spd.node)
+                        else (spd.node)
 
                     # General BC checks
                     # check for valid cell indices
@@ -328,8 +331,8 @@ class Package(object):
 
                 # only check specific yield for convertible layers
                 inds = np.array(
-                        [True if l > 0 or l < 0 and 'THICKSRT' in self.options
-                         else False for l in self.laytyp])
+                    [True if l > 0 or l < 0 and 'THICKSRT' in self.options
+                     else False for l in self.laytyp])
                 sarrays['sy'] = sarrays['sy'][inds, :, :]
                 active = active[inds, :, :]
                 chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
@@ -341,7 +344,7 @@ class Package(object):
 
         else:
             txt = 'check method not implemented for {} Package.'.format(
-                    self.name[0])
+                self.name[0])
             if f is not None:
                 if isinstance(f, str):
                     pth = os.path.join(self.parent.model_ws, f)
@@ -364,8 +367,8 @@ class Package(object):
                                                                        'column',
                                                                        name[
                                                                            k].lower().replace(
-                                                                               ' layer ',
-                                                                               ''))
+                                                                           ' layer ',
+                                                                           ''))
                 txt += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k + 1, i + 1,
                                                                  j + 1,
                                                                  v[k, i, j])
@@ -373,7 +376,7 @@ class Package(object):
             txt += '    {:>10s}{:>10s}{:>15s}\n'.format('row', 'column',
                                                         name[
                                                             0].lower().replace(
-                                                                ' layer ', ''))
+                                                            ' layer ', ''))
             for [i, j] in idx:
                 txt += '    {:10d}{:10d}{:15.7g}\n'.format(i + 1, j + 1,
                                                            v[i, j])
@@ -469,15 +472,15 @@ class Package(object):
             if isinstance(value, MfList):
                 if self.parent.verbose:
                     print('plotting {} package MfList instance: {}'.format(
-                            self.name[0], item))
+                        self.name[0], item))
                 if key is None:
                     names = ['{} location stress period {} layer {}'.format(
-                            self.name[0], kper + 1, k + 1)
+                        self.name[0], kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
                     colorbar = False
                 else:
                     names = ['{} {} data stress period {} layer {}'.format(
-                            self.name[0], key, kper + 1, k + 1)
+                        self.name[0], key, kper + 1, k + 1)
                              for k in range(self.parent.nlay)]
                     colorbar = True
 
@@ -492,50 +495,50 @@ class Package(object):
             elif isinstance(value, Util3d):
                 if self.parent.verbose:
                     print('plotting {} package Util3d instance: {}'.format(
-                            self.name[0], item))
+                        self.name[0], item))
                 # fignum = list(range(ifig, ifig + inc))
                 fignum = list(range(ifig, ifig + value.shape[0]))
                 ifig = fignum[-1] + 1
                 caxs.append(
-                        value.plot(filename_base=fileb, file_extension=fext,
-                                   mflay=mflay,
-                                   fignum=fignum, colorbar=True))
+                    value.plot(filename_base=fileb, file_extension=fext,
+                               mflay=mflay,
+                               fignum=fignum, colorbar=True))
             elif isinstance(value, Util2d):
                 if len(value.shape) == 2:
                     if self.parent.verbose:
                         print('plotting {} package Util2d instance: {}'.format(
-                                self.name[0], item))
+                            self.name[0], item))
                     fignum = list(range(ifig, ifig + 1))
                     ifig = fignum[-1] + 1
                     caxs.append(
-                            value.plot(filename_base=fileb,
-                                       file_extension=fext,
-                                       fignum=fignum, colorbar=True))
+                        value.plot(filename_base=fileb,
+                                   file_extension=fext,
+                                   fignum=fignum, colorbar=True))
             elif isinstance(value, Transient2d):
                 if self.parent.verbose:
                     print(
-                            'plotting {} package Transient2d instance: {}'.format(
-                                    self.name[0], item))
+                        'plotting {} package Transient2d instance: {}'.format(
+                            self.name[0], item))
                 fignum = list(range(ifig, ifig + inc))
                 ifig = fignum[-1] + 1
                 caxs.append(
-                        value.plot(filename_base=fileb, file_extension=fext,
-                                   kper=kper,
-                                   fignum=fignum, colorbar=True))
+                    value.plot(filename_base=fileb, file_extension=fext,
+                               kper=kper,
+                               fignum=fignum, colorbar=True))
             elif isinstance(value, list):
                 for v in value:
                     if isinstance(v, Util3d):
                         if self.parent.verbose:
                             print(
-                                    'plotting {} package Util3d instance: {}'.format(
-                                            self.name[0], item))
+                                'plotting {} package Util3d instance: {}'.format(
+                                    self.name[0], item))
                         fignum = list(range(ifig, ifig + inc))
                         ifig = fignum[-1] + 1
                         caxs.append(
-                                v.plot(filename_base=fileb,
-                                       file_extension=fext,
-                                       mflay=mflay,
-                                       fignum=fignum, colorbar=True))
+                            v.plot(filename_base=fileb,
+                                   file_extension=fext,
+                                   mflay=mflay,
+                                   fignum=fignum, colorbar=True))
             else:
                 pass
 
@@ -586,13 +589,13 @@ class Package(object):
     def webdoc(self):
         if self.parent.version == 'mf2k':
             wb.open(
-                    'http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
+                'http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
         elif self.parent.version == 'mf2005':
             wb.open(
-                    'http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + self.url)
+                'http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + self.url)
         elif self.parent.version == 'ModflowNwt':
             wb.open(
-                    'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + self.url)
+                'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + self.url)
 
     def write_file(self, check=False):
         """
@@ -698,9 +701,9 @@ class Package(object):
         for iper in range(nper):
             if model.verbose:
                 print(
-                        "   loading " + str(
-                            pack_type) + " for kper {0:5d}".format(
-                                iper + 1))
+                    "   loading " + str(
+                        pack_type) + " for kper {0:5d}".format(
+                        iper + 1))
             line = f.readline()
             if line == '':
                 break
@@ -735,22 +738,22 @@ class Package(object):
                         fname = os.path.join(*raw)
                         oc_filename = os.path.join(model.model_ws, fname)
                         assert os.path.exists(
-                                oc_filename), "Package.load() error: open/close filename " + \
-                                              oc_filename + " not found"
+                            oc_filename), "Package.load() error: open/close filename " + \
+                                          oc_filename + " not found"
                         try:
                             current = np.genfromtxt(oc_filename,
                                                     dtype=current.dtype)
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(
-                                    "Package.load() error loading open/close file " + oc_filename + \
-                                    " :" + str(e))
+                                "Package.load() error loading open/close file " + oc_filename + \
+                                " :" + str(e))
                         assert current.shape[
                                    0] == itmp, "Package.load() error: open/close rec array from file " + \
                                                oc_filename + " shape (" + str(
-                                current.shape) + \
+                            current.shape) + \
                                                ") does not match itmp: {0:d}".format(
-                                                       itmp)
+                                                   itmp)
                         break
                     try:
                         t = line.strip().split()
@@ -829,11 +832,11 @@ class Package(object):
             else:
                 stress_period_data[iper] = bnd_output
 
+        dtype = pack_type.get_empty(0, aux_names=aux_names,
+                                    structured=model.structured).dtype
         pak = pack_type(model, ipakcb=ipakcb,
-                        stress_period_data=stress_period_data, \
-                        dtype=pack_type.get_empty(0, aux_names=aux_names,
-                                                  structured=model.structured).dtype, \
-                        options=options)
+                        stress_period_data=stress_period_data,
+                        dtype=dtype,  options=options)
         if check:
             pak.check(f='{}.chk'.format(pak.name[0]),
                       verbose=pak.parent.verbose, level=0)

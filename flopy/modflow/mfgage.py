@@ -54,13 +54,18 @@ class ModflowGage(Package):
     """
 
     def __init__(self, model, numgage=0, gage_data=None, files=None,
-                 extension='gage', unitnumber=120, options=None, **kwargs):
+                 extension='gage', unitnumber=None, options=None, **kwargs):
         """
         Package constructor.
 
         """
+
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowGage.defaultunit()
+
         # Call parent init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, 'GAGE', unitnumber)
+        Package.__init__(self, model, extension, ModflowGage.ftype(), unitnumber)
 
         vn = model.version_types[model.version]
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -299,3 +304,13 @@ class ModflowGage(Package):
         gagepak = ModflowGage(model, numgage=numgage,
                               gage_data=gage_data, files=files)
         return gagepak
+
+
+    @staticmethod
+    def ftype():
+        return 'GAGE'
+
+
+    @staticmethod
+    def defaultunit():
+        return 120

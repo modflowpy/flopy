@@ -109,12 +109,16 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=11, xul=None, yul=None, rotation=0.0,
+                 unitnumber=None, xul=None, yul=None, rotation=0.0,
                  proj4_str=None, start_datetime=None):
+
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowDis.defaultunit()
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
-        Package.__init__(self, model, extension, 'DIS', unitnumber)
+        Package.__init__(self, model, extension, ModflowDis.ftype(), unitnumber)
         self.url = 'dis.htm'
         self.nrow = nrow
         self.ncol = ncol
@@ -737,6 +741,17 @@ class ModflowDis(Package):
             dis.check(f='{}.chk'.format(dis.name[0]), verbose=dis.parent.verbose, level=0)
         # return dis object instance
         return dis
+
+
+    @staticmethod
+    def ftype():
+        return 'DIS'
+
+
+    @staticmethod
+    def defaultunit():
+        return 11
+
 
 def get_layer(dis, i, j, elev):
     """Return the layer for an elevation at an i, j location.

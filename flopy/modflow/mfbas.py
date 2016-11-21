@@ -73,17 +73,31 @@ class ModflowBas(Package):
     >>> bas = flopy.modflow.ModflowBas(m)
 
     """
+
+    @staticmethod
+    def ftype():
+        return 'BAS6'
+
+    @staticmethod
+    def defaultunit():
+        return 13
+
     def __init__(self, model, ibound=1, strt=1.0, ifrefm=True, ixsec=False,
                  ichflg=False, stoper=None, hnoflo=-999.99, extension='bas',
-                 unitnumber=13):
+                 unitnumber=None):
         """
         Package constructor.
 
         """
+
+        if unitnumber is None:
+            unitnumber = ModflowBas.defaultunit()
+
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
-        Package.__init__(self, model, extension, 'BAS6', unitnumber)
+        Package.__init__(self, model, extension, ModflowBas.ftype(), unitnumber)
         self.url = 'bas6.htm'
+
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.ibound = Util3d(model, (nlay, nrow, ncol), np.int, ibound,
                               name='ibound', locat=self.unit_number[0])
@@ -281,10 +295,18 @@ class ModflowBas(Package):
         strt = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'strt',
                             ext_unit_dict)
         f.close()
+
+        # set package unit number
+        unitnumber = ModflowBas.defaultunit()
+        for key, value in ext_unit_dict.items():
+            if value.filetype == ModflowBas.ftype():
+                unitnumber = key
+
         #create bas object and return
         bas = ModflowBas(model, ibound=ibound, strt=strt,
                          ixsec=ixsec, ifrefm=ifrefm, ichflg=ichflg,
-                         stoper=stoper, hnoflo=hnoflo)
+                         stoper=stoper, hnoflo=hnoflo,
+                         unitnumber=unitnumber)
         if check:
             bas.check(f='{}.chk'.format(bas.name[0]), verbose=bas.parent.verbose, level=0)
         return bas
