@@ -204,14 +204,18 @@ class ModflowSwt(Package):
                  lnwt=0, izcfl=0, izcfm=0, iglfl=0, iglfm=0, iestfl=0, iestfm=0, ipcsfl=0,
                  ipcsfm=0, istfl=0, istfm=0, gl0=0., sgm=1.7, sgs=2., thick=1., sse=1., ssv=1., cr=0.01, cc=0.25,
                  void=0.82, sub=0., pcsoff=0., pcs=0., ids16=None, ids17=None,
-                 extension='swt', unit_number=35):
+                 extension='swt', unitnumber=None):
         """
         Package constructor.
 
         """
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSwt.defaultunit()
+
         extensions = [extension]
-        name = ['SWT']
-        units = [unit_number]
+        name = [ModflowSwt.ftype()]
+        units = [unitnumber]
         extra = ['']
 
         if iswtoc > 0:
@@ -220,8 +224,9 @@ class ModflowSwt(Package):
             units.append(2054)
             extra.append('REPLACE')
 
+        # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extensions, name=name, unit_number=units,
-                         extra=extra)  # Call ancestor's init to set self.parent, extension, name and unit number
+                         extra=extra)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.heading = '# Subsidence and Aquifer-System Compaction Package for Water-Table Aquifers\n' + \
@@ -595,3 +600,13 @@ class ModflowSwt(Package):
                          pcs=pcs, ids16=ids16, ids17=ids17)
         # return sut-wt instance
         return swt
+
+
+    @staticmethod
+    def ftype():
+        return 'SWT'
+
+
+    @staticmethod
+    def defaultunit():
+        return 35

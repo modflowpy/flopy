@@ -203,13 +203,18 @@ class ModflowSfr2(Package):
                  dataset_5=None,
                  reachinput=False, transroute=False,
                  tabfiles=False, tabfiles_dict=None,
-                 extension='sfr', unitnumber=17):
+                 extension='sfr', unitnumber=None):
 
         """
         Package constructor
         """
-        Package.__init__(self, model, extension, 'SFR',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name, and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSfr2.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name, and unit number
+        Package.__init__(self, model, extension, ModflowSfr2.ftype(),
+                         unitnumber)
 
         self.url = 'sfr2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
@@ -569,6 +574,9 @@ class ModflowSfr2(Package):
                            reachinput=reachinput, transroute=transroute,
                            tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
                            )
+
+
+
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -1115,6 +1123,16 @@ class ModflowSfr2(Package):
             else:
                 continue
         f_sfr.close()
+
+
+    @staticmethod
+    def ftype():
+        return 'SFR'
+
+
+    @staticmethod
+    def defaultunit():
+        return 17
 
 
 class check:

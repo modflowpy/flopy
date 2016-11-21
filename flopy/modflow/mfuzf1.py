@@ -208,9 +208,15 @@ class ModflowUzf1(Package):
                  specifythtr=0, specifythti=0, nosurfleak=0,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
                  uzgag=None,
-                 uzfbud_ext=[], extension='uzf', unitnumber=19):
-        Package.__init__(self, model, extension, ['UZF'],
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
+                 uzfbud_ext=[], extension='uzf', unitnumber=None):
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowUzf1.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension, [ModflowUzf1.ftype()],
+                         unitnumber)
+
         if self.parent.get_package('RCH') != None or self.parent.get_package('EVT') != None:
             print('WARNING!\n The RCH and EVT packages should not be active when the UZF1 package is active!')
         if self.parent.version == 'mf2000':
@@ -592,6 +598,17 @@ class ModflowUzf1(Package):
                            specifythtr=specifythtr, specifythti=specifythti, nosurfleak=nosurfleak,
                            **arrays
                            )
+
+
+    @staticmethod
+    def ftype():
+        return 'UZF'
+
+
+    @staticmethod
+    def defaultunit():
+        return 19
+
 
 def _parse1a(line):
     line = line_parse(line)

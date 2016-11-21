@@ -89,7 +89,7 @@ class ModflowHyd(Package):
 
     def __init__(self, model, nhyd=1, ihydun=1, hydnoh=-999.,
                  obsdata=[['BAS', 'HD', 'I', 1, 0., 0., 'HOBS1']],
-                 extension=['hyd', 'hyd.bin'], unit_number=None):
+                 extension=['hyd', 'hyd.bin'], unitnumber=None):
         """
         Package constructor.
 
@@ -104,7 +104,7 @@ class ModflowHyd(Package):
         else:
             ihydun = 536
         name = [ModflowHyd.ftype(), 'DATA(BINARY)']
-        units = [unit_number, ihydun]
+        units = [unitnumber, ihydun]
         extra = ['', 'REPLACE']
 
         # Call ancestor's init to set self.parent, extension, name and unit number

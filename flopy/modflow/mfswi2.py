@@ -8,9 +8,9 @@ MODFLOW Guide
 
 """
 import sys
-import copy
+
 import numpy as np
-# from numpy import ones, zeros, empty
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
 
@@ -187,12 +187,16 @@ class ModflowSwi2(Package):
                  nadptmn=1, adptfct=1.0,
                  nu=0.025, zeta=[0.0], ssz=0.25, isource=0,
                  obsnam=None, obslrc=None,
-                 extension=['swi2', 'zta'], unit_number=29,
+                 extension=['swi2', 'zta'], unitnumber=None,
                  npln=None):
         """
         Package constructor.
 
         """
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSwi2.defaultunit()
+
         # Process observations
         if nobs != 0:
             print('ModflowSwi2: specification of nobs is deprecated.')
@@ -212,7 +216,7 @@ class ModflowSwi2(Package):
             if obsnam is None:
                 obsnam = []
                 for n in range(nobs):
-                    obsnam.append('Obs{:03}'.format(n+1))
+                    obsnam.append('Obs{:03}'.format(n + 1))
             else:
                 if not isinstance(obsnam, list):
                     obsnam = [obsnam]
@@ -224,8 +228,8 @@ class ModflowSwi2(Package):
                 iswiobs = 1053
 
         # Fill namefile items
-        name = ['SWI2', 'DATA(BINARY)']
-        units = [unit_number, iswizt]
+        name = [ModflowSwi2.ftype(), 'DATA(BINARY)']
+        units = [unitnumber, iswizt]
         extra = ['', 'REPLACE']
         if nobs > 0:
             extension.append('zobs')
@@ -274,9 +278,11 @@ class ModflowSwi2(Package):
         self.nadptmx, self.nadptmn, self.adptfct = nadptmx, nadptmn, adptfct
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu,
+                             name='nu')
         else:
-            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu,
+                             name='nu')
         self.zeta = []
         for i in range(self.nsrf):
             self.zeta.append(Util3d(model, (nlay, nrow, ncol), np.float32,
@@ -311,7 +317,8 @@ class ModflowSwi2(Package):
         # Open file for writing
         f = open(self.fn_path, 'w')
         # First line: heading
-        f.write('{}\n'.format(self.heading))  # Writing heading not allowed in SWI???
+        f.write('{}\n'.format(
+            self.heading))  # Writing heading not allowed in SWI???
         # write dataset 1
         f.write('# Dataset 1\n')
         f.write(
@@ -375,7 +382,7 @@ class ModflowSwi2(Package):
                 # f.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
                 f.write('{} '.format(self.obsnam[i]))
                 for v in self.obslrc[i, :]:
-                    f.write('{:10d}'.format(v+1))
+                    f.write('{:10d}'.format(v + 1))
                 f.write('\n')
 
         # close swi2 file
@@ -614,3 +621,11 @@ class ModflowSwi2(Package):
 
         # return swi2 instance
         return swi2
+
+    @staticmethod
+    def ftype():
+        return 'SWI2'
+
+    @staticmethod
+    def defaultunit():
+        return 29

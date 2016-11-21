@@ -9,6 +9,7 @@ MODFLOW Guide
 """
 
 import sys
+
 from ..pakbase import Package
 
 
@@ -60,13 +61,19 @@ class ModflowSor(Package):
 
     """
 
-    def __init__(self, model, mxiter=200, accl=1, hclose=1e-5, iprsor=0, extension='sor', unitnumber=26):
+    def __init__(self, model, mxiter=200, accl=1, hclose=1e-5, iprsor=0,
+                 extension='sor', unitnumber=None):
         """
         Package constructor.
 
         """
-        Package.__init__(self, model, extension, 'sor',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSor.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension, ModflowSor.ftype(),
+                         unitnumber)
 
         # check if a valid model version has been specified
         if model.version != 'mf2k':
@@ -95,7 +102,8 @@ class ModflowSor(Package):
         f = open(self.fn_path, 'w')
         f.write('{}\n'.format(self.heading))
         f.write('{10d}\n'.format(self.mxiter))
-        f.write('{10.4g}{10.4g}{10d}\n' % (self.accl, self.hclose, self.iprsor))
+        f.write(
+            '{10.4g}{10.4g}{10d}\n' % (self.accl, self.hclose, self.iprsor))
         f.close()
 
     @staticmethod
@@ -138,7 +146,8 @@ class ModflowSor(Package):
             f = open(filename, 'r')
         # dataset 0 -- header
 
-        print('   Warning: load method not completed. default sor object created.')
+        print(
+            '   Warning: load method not completed. default sor object created.')
 
         # close the open file
         f.close()
@@ -148,3 +157,11 @@ class ModflowSor(Package):
 
         # return sor object
         return sor
+
+    @staticmethod
+    def ftype():
+        return 'SOR'
+
+    @staticmethod
+    def defaultunit():
+        return 26

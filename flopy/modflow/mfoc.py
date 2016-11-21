@@ -169,21 +169,34 @@ class ModflowOc(Package):
                     icnt += 1
 
         # set output unit numbers based on oc settings
+        savehead, saveddn, savebud = False, False, False
         for key, value in stress_period_data.items():
             tlist = list(value)
             for t in tlist:
-                if unitnumber[1] == 0:
-                    if 'save head' in t.lower():
+                if 'save head' in t.lower():
+                    savehead = True
+                    if unitnumber[1] == 0:
                         unitnumber[1] = 51
-                if unitnumber[2] == 0:
-                    if 'save drawdown' in t.lower():
+                if 'save drawdown' in t.lower():
+                    saveddn = True
+                    if unitnumber[2] == 0:
                         unitnumber[2] = 52
-                if unitnumber[3] == 0:
-                    if 'save budget' in t.lower():
+                if 'save budget' in t.lower():
+                    savebud = True
+                    if unitnumber[3] == 0:
                         unitnumber[3] = 53
-                if unitnumber[4] == 0:
-                    if 'save ibound' in t.lower():
+                if 'save ibound' in t.lower():
+                    if unitnumber[4] == 0:
                         unitnumber[4] = 54
+
+        # do not create head, ddn, or cbc output files if output is not
+        # specified in the oc stress_period_data
+        if not savehead:
+            unitnumber[1] = 0
+        if not saveddn:
+            unitnumber[2] = 0
+        if not savebud:
+            unitnumber[3] = 0
 
         # extension, name and unit number
         hds_fmt = 'DATA(BINARY)'
@@ -249,29 +262,29 @@ class ModflowOc(Package):
         f_oc.write('{}\n'.format(self.heading))
 
         # write options
-
-        f_oc.write('HEAD PRINT FORMAT {0:3.0f}\n' \
-                   .format(self.ihedfm))
+        line = 'HEAD PRINT FORMAT {0:3.0f}\n' .format(self.ihedfm)
+        f_oc.write(line)
         if self.chedfm is not None:
-            f_oc.write('HEAD SAVE FORMAT {0:20s} LABEL\n' \
-                       .format(self.chedfm))
-        f_oc.write('HEAD SAVE UNIT {0:5.0f}\n' \
-                   .format(self.unit_number[1]))
+            line = 'HEAD SAVE FORMAT {0:20s} LABEL\n'.format(self.chedfm)
+            f_oc.write(line)
+        if self.unit_number[1] != 0:
+            line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.unit_number[1])
+            f_oc.write(line)
 
-        f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n' \
-                   .format(self.iddnfm))
+        f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'.format(self.iddnfm))
         if self.cddnfm is not None:
-            f_oc.write('DRAWDOWN SAVE FORMAT {0:20s} LABEL\n' \
-                       .format(self.cddnfm))
-        f_oc.write('DRAWDOWN SAVE UNIT {0:5.0f}\n' \
-                   .format(self.unit_number[2]))
+            line = 'DRAWDOWN SAVE FORMAT {0:20s} LABEL\n'.format(self.cddnfm)
+            f_oc.write(line)
+        if self.unit_number[2] != 0:
+            line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.unit_number[2])
+            f_oc.write(line)
 
         if self.ibouun > 0:
             if self.cboufm is not None:
-                f_oc.write('IBOUND SAVE FORMAT {0:20s} LABEL\n' \
-                           .format(self.cboufm))
-            f_oc.write('IBOUND SAVE UNIT {0:5.0f}\n' \
-                       .format(self.unit_number[4]))
+                line = 'IBOUND SAVE FORMAT {0:20s} LABEL\n'.format(self.cboufm)
+                f_oc.write(line)
+            line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.unit_number[4])
+            f_oc.write(line)
 
         if self.compact:
             f_oc.write('COMPACT BUDGET AUX\n')

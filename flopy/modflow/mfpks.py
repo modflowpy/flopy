@@ -67,21 +67,26 @@ class ModflowPks(Package):
 
     """
 
-    def __init__(self, model, mxiter=100, innerit=50, \
-                 isolver=1, npc=2, iscl=0, iord=0, ncoresm=1, ncoresv=1, \
-                 damp=1.0, dampt=1.0, relax=0.97, \
-                 ifill=0, droptol=0.0, \
-                 hclose=1e-3, rclose=1e-1, l2norm=None, \
+    def __init__(self, model, mxiter=100, innerit=50,
+                 isolver=1, npc=2, iscl=0, iord=0, ncoresm=1, ncoresv=1,
+                 damp=1.0, dampt=1.0, relax=0.97,
+                 ifill=0, droptol=0.0,
+                 hclose=1e-3, rclose=1e-1, l2norm=None,
                  iprpks=0, mutpks=3,
                  mpi=False, partopt=0, novlapimpsol=1, stenimpsol=2, verbose=0,
-                 partdata=None, \
-                 extension='pks', unitnumber=27):
+                 partdata=None,
+                 extension='pks', unitnumber=None):
         """
         Package constructor.
 
         """
-        Package.__init__(self, model, extension, 'PKS',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowPks.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension, ModflowPks.ftype(),
+                         unitnumber)
 
         # check if a valid model version has been specified
         if model.version == 'mf2k' or model.version == 'mfnwt':
@@ -218,3 +223,13 @@ class ModflowPks(Package):
 
         pks = ModflowPks(model)
         return pks
+
+
+    @staticmethod
+    def ftype():
+        return 'PKS'
+
+
+    @staticmethod
+    def defaultunit():
+        return 27

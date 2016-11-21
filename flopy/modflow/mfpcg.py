@@ -87,12 +87,17 @@ class ModflowPcg(Package):
     def __init__(self, model, mxiter=50, iter1=30, npcond=1,
                  hclose=1e-5, rclose=1e-5, relax=1.0, nbpol=0, iprpcg=0, mutpcg=3,
                  damp=1.0, dampt=1.0, ihcofadd=0,
-                 extension='pcg', unitnumber=27):
+                 extension='pcg', unitnumber=None):
         """
         Package constructor.
 
         """
-        Package.__init__(self, model, extension, 'PCG', unitnumber) # Call ancestor's init to set self.parent, extension, name and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowPcg.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension, ModflowPcg.ftype(), unitnumber)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
@@ -262,3 +267,12 @@ class ModflowPcg(Package):
                          iprpcg=iprpcg, mutpcg=mutpcg, damp=damp, dampt=dampt)
         return pcg
 
+
+    @staticmethod
+    def ftype():
+        return 'PCG'
+
+
+    @staticmethod
+    def defaultunit():
+        return 27
