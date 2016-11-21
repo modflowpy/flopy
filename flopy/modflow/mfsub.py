@@ -635,6 +635,13 @@ class ModflowSub(Package):
         # close file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSub.ftype():
+                    unitnumber = key
+
         # create sub instance
         sub = ModflowSub(model, ipakcb=ipakcb, isuboc=isuboc, idsave=idsave,
                          idrest=idrest,
@@ -643,7 +650,7 @@ class ModflowSub(Package):
                          ln=ln, ldn=ldn, rnb=rnb,
                          hc=hc, sfe=sfe, sfv=sfv, com=com, dp=dp,
                          dstart=dstart, dhc=dhc, dcom=dcom, dz=dz, nz=nz,
-                         ids15=ids15, ids16=ids16)
+                         ids15=ids15, ids16=ids16, unitnumber=unitnumber)
         # return sub instance
         return sub
 

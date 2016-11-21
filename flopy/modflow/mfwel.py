@@ -236,7 +236,15 @@ class ModflowWel(Package):
         if model.verbose:
             sys.stdout.write('loading wel package file...\n')
 
-        return Package.load(model, ModflowWel, f, nper, check=check)
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowWel.ftype():
+                    unitnumber = key
+
+        return Package.load(model, ModflowWel, f, nper, check=check,
+                            unitnumber=unitnumber)
 
     @staticmethod
     def ftype():

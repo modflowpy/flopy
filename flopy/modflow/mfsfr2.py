@@ -562,6 +562,13 @@ class ModflowSfr2(Package):
             else:
                 continue
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype ==ModflowSfr2.ftype():
+                    unitnumber = key
+
         return ModflowSfr2(model, nstrm=nstrm, nss=nss, nsfrpar=nsfrpar, nparseg=nparseg, const=const, dleak=dleak,
                            istcb1=istcb1, istcb2=istcb2,
                            isfropt=isfropt, nstrail=nstrail, isuzn=isuzn, nsfrsets=nsfrsets, irtflg=irtflg,
@@ -572,8 +579,8 @@ class ModflowSfr2(Package):
                            channel_geometry_data=channel_geometry_data,
                            channel_flow_data=channel_flow_data,
                            reachinput=reachinput, transroute=transroute,
-                           tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
-                           )
+                           tabfiles=tabfiles, tabfiles_dict=tabfiles_dict,
+                           unitnumber=unitnumber)
 
 
 

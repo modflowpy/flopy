@@ -159,8 +159,17 @@ class ModflowLmt(Package):
             elif t[0].lower() == 'output_file_format':
                 output_file_format = t[1]
 
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowLmt.ftype():
+                    unitnumber = key
+
         lmt = ModflowLmt(model, output_file_name, output_file_unit,
-                         output_file_header, output_file_format)
+                         output_file_header, output_file_format,
+                         unitnumber=unitnumber)
         return lmt
 
 

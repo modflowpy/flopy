@@ -318,12 +318,20 @@ class ModflowGmg(Package):
         # close the open file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowGmg.ftype():
+                    unitnumber = key
+
         # create the gmg object
         gmg = ModflowGmg(model, mxiter=mxiter, iiter=iiter, iadamp=iadamp,
                          hclose=hclose, rclose=rclose, relax=relax,
                          ioutgmg=ioutgmg, iunitmhc=iunitmhc,
                          ism=ism, isc=isc, damp=damp,
-                         dup=dup, dlow=dlow, chglimit=chglimit)
+                         dup=dup, dlow=dlow, chglimit=chglimit,
+                         unitnumber=unitnumber)
         return gmg
 
 

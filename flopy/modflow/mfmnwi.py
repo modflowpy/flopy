@@ -1,7 +1,9 @@
 import sys
-from ..pakbase import Package
+
 from flopy.utils.flopy_io import line_parse, pop_item
-from ..utils import Util2d, Transient2d, check
+
+from ..pakbase import Package
+from ..utils import check
 
 
 class ModflowMnwi(Package):
@@ -49,7 +51,8 @@ class ModflowMnwi(Package):
 
     """
 
-    def __init__(self, model, wel1flag=1, qsumflag=1, byndflag=1, mnwobs=1, wellid_unit_qndflag_qhbflag_concflag=None,
+    def __init__(self, model, wel1flag=1, qsumflag=1, byndflag=1, mnwobs=1,
+                 wellid_unit_qndflag_qhbflag_concflag=None,
                  extension='mnwi', unitnumber=None):
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -72,7 +75,8 @@ class ModflowMnwi(Package):
         assert self.byndflag >= 0, 'BYNDflag must be greater than or equal to zero.'
 
         if len(self.wellid_unit_qndflag_qhbflag_concflag) != self.mnwobs:
-            print('WARNING: number of listed well ids to be monitored does not match MNWOBS.')
+            print(
+                'WARNING: number of listed well ids to be monitored does not match MNWOBS.')
 
         self.parent.add_package(self)
 
@@ -110,9 +114,18 @@ class ModflowMnwi(Package):
                 if gwt and len(line) > 0:
                     tmp.append(pop_item(line, int))
                 wellid_unit_qndflag_qhbflag_concflag.append(tmp)
-        return ModflowMnwi(model, wel1flag=wel1flag, qsumflag=qsumflag, byndflag=byndflag, mnwobs=mnwobs,
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowMnwi.ftype():
+                    unitnumber = key
+
+        return ModflowMnwi(model, wel1flag=wel1flag, qsumflag=qsumflag,
+                           byndflag=byndflag, mnwobs=mnwobs,
                            wellid_unit_qndflag_qhbflag_concflag=wellid_unit_qndflag_qhbflag_concflag,
-                           extension='mnwi', unitnumber=58)
+                           extension='mnwi', unitnumber=unitnumber)
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -146,7 +159,7 @@ class ModflowMnwi(Package):
         chk = check(self, f=f, verbose=verbose, level=level)
         if "MNW2" not in self.parent.get_package_list():
             chk._add_to_summary(type='Warning', value=0,
-                                             desc='\r    MNWI package present without MNW2 packge.')
+                                desc='\r    MNWI package present without MNW2 packge.')
 
         chk.summarize()
         return chk
@@ -168,7 +181,8 @@ class ModflowMnwi(Package):
         f_mnwi.write('%s\n' % self.heading)
 
         # -Section 1 - WEL1flag QSUMflag SYNDflag
-        f_mnwi.write('%10i%10i%10i\n' % (self.wel1flag, self.qsumflag, self.byndflag))
+        f_mnwi.write(
+            '%10i%10i%10i\n' % (self.wel1flag, self.qsumflag, self.byndflag))
 
         # -Section 2 - MNWOBS
         f_mnwi.write('%10i\n' % self.mnwobs)
@@ -182,20 +196,21 @@ class ModflowMnwi(Package):
             assert qndflag >= 0, 'QNDflag must be greater than or equal to zero.'
             assert qhbflag >= 0, 'QHBflag must be greater than or equal to zero.'
             if len(self.wellid_unit_qndflag_qhbflag_concflag[i]) == 4:
-                f_mnwi.write('%s %2i%10i%10i\n' % (wellid, unit, qndflag, qhbflag))
+                f_mnwi.write(
+                    '%s %2i%10i%10i\n' % (wellid, unit, qndflag, qhbflag))
             elif len(self.wellid_unit_qndflag_qhbflag_concflag[i]) == 5:
                 concflag = self.wellid_unit_qndflag_qhbflag_concflag[i][4]
                 assert 0 <= concflag <= 3, 'CONCflag must be an integer between 0 and 3.'
-                assert isinstance(concflag, int), 'CONCflag must be an integer between 0 and 3.'
-                f_mnwi.write('%s %2i%10i%10i%10i\n' % (wellid, unit, qndflag, qhbflag, concflag))
+                assert isinstance(concflag,
+                                  int), 'CONCflag must be an integer between 0 and 3.'
+                f_mnwi.write('%s %2i%10i%10i%10i\n' % (
+                wellid, unit, qndflag, qhbflag, concflag))
 
         f_mnwi.close()
-
 
     @staticmethod
     def ftype():
         return 'MNWI'
-
 
     @staticmethod
     def defaultunit():

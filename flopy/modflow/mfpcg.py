@@ -8,7 +8,9 @@ MODFLOW Guide
 
 """
 import sys
+
 from ..pakbase import Package
+
 
 class ModflowPcg(Package):
     """
@@ -84,8 +86,10 @@ class ModflowPcg(Package):
     >>> pcg = flopy.modflow.ModflowPcg(m)
 
     """
+
     def __init__(self, model, mxiter=50, iter1=30, npcond=1,
-                 hclose=1e-5, rclose=1e-5, relax=1.0, nbpol=0, iprpcg=0, mutpcg=3,
+                 hclose=1e-5, rclose=1e-5, relax=1.0, nbpol=0, iprpcg=0,
+                 mutpcg=3,
                  damp=1.0, dampt=1.0, ihcofadd=0,
                  extension='pcg', unitnumber=None):
         """
@@ -97,7 +101,8 @@ class ModflowPcg(Package):
             unitnumber = ModflowPcg.defaultunit()
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowPcg.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowPcg.ftype(),
+                         unitnumber)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
@@ -167,7 +172,6 @@ class ModflowPcg(Package):
             f.write('\n')
         f.close()
 
-
     @staticmethod
     def load(f, model, ext_unit_dict=None):
         """
@@ -206,7 +210,7 @@ class ModflowPcg(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
@@ -261,17 +265,24 @@ class ModflowPcg(Package):
         # close the open file
         f.close()
 
-        # create instance of pcg class
-        pcg = ModflowPcg(model, mxiter=mxiter, iter1=iter1, npcond=npcond, ihcofadd=ihcofadd,\
-                         hclose=hclose, rclose=rclose, relax=relax, nbpol=nbpol,\
-                         iprpcg=iprpcg, mutpcg=mutpcg, damp=damp, dampt=dampt)
-        return pcg
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowPcg.ftype():
+                    unitnumber = key
 
+        # create instance of pcg class
+        pcg = ModflowPcg(model, mxiter=mxiter, iter1=iter1, npcond=npcond,
+                         ihcofadd=ihcofadd, hclose=hclose, rclose=rclose,
+                         relax=relax, nbpol=nbpol, iprpcg=iprpcg,
+                         mutpcg=mutpcg, damp=damp, dampt=dampt,
+                         unitnumber=unitnumber)
+        return pcg
 
     @staticmethod
     def ftype():
         return 'PCG'
-
 
     @staticmethod
     def defaultunit():

@@ -204,7 +204,14 @@ class ModflowSwi(Package):
         # close the open file
         f.close()
 
-        swi = ModflowSwi(model)
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSwi.ftype():
+                    unitnumber = key
+
+        swi = ModflowSwi(model, unitnumber=unitnumber)
         return swi
 
     @staticmethod

@@ -170,7 +170,15 @@ class ModflowZon(Package):
             if t.locat is not None:
                 model.add_pop_key_list(t.locat)
             zone_dict[zonnam] = t
-        zon = ModflowZon(model, zone_dict=zone_dict)
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowZon.ftype():
+                    unitnumber = key
+
+        zon = ModflowZon(model, zone_dict=zone_dict, unitnumber=unitnumber)
         return zon
 
 

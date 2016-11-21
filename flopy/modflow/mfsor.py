@@ -152,8 +152,15 @@ class ModflowSor(Package):
         # close the open file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSor.ftype():
+                    unitnumber = key
+
         # create sor object
-        sor = ModflowSor(model)
+        sor = ModflowSor(model, unitnumber=unitnumber)
 
         # return sor object
         return sor

@@ -745,12 +745,20 @@ class ModflowStr(Package):
                 stress_period_data[iper] = bnd_output
                 segment_data[iper] = seg_output
 
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowStr.ftype():
+                    unitnumber = key
+
         strpak = ModflowStr(model, mxacts=mxacts, nss=nss,
                             ntrib=ntrib, ndiv=ndiv, icalc=icalc,
                             const=const, ipakcb=ipakcb,
                             stress_period_data=stress_period_data,
                             segment_data=segment_data,
-                            options=options)
+                            options=options, unitnumber=unitnumber)
         return strpak
 
     @staticmethod

@@ -606,7 +606,8 @@ class Package(object):
         return
 
     @staticmethod
-    def load(model, pack_type, f, nper=None, pop_key_list=None, check=True):
+    def load(model, pack_type, f, nper=None, pop_key_list=None, check=True,
+             unitnumber=None):
         """
         The load method has not been implemented for this package.
 
@@ -640,8 +641,9 @@ class Package(object):
         ipakcb = 0
         try:
             if int(t[1]) != 0:
-                ipakcb = 53
-                pop_key_list = model.pop_key_list(int(t[1]), pop_key_list)
+                #ipakcb = 53
+                #pop_key_list = model.pop_key_list(int(t[1]), pop_key_list)
+                ipakcb = int(t[1])
         except:
             pass
         options = []
@@ -836,7 +838,7 @@ class Package(object):
                                     structured=model.structured).dtype
         pak = pack_type(model, ipakcb=ipakcb,
                         stress_period_data=stress_period_data,
-                        dtype=dtype,  options=options)
+                        dtype=dtype,  options=options, unitnumber=unitnumber)
         if check:
             pak.check(f='{}.chk'.format(pak.name[0]),
                       verbose=pak.parent.verbose, level=0)

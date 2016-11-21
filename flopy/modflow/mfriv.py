@@ -292,7 +292,15 @@ class ModflowRiv(Package):
         if model.verbose:
             sys.stdout.write('loading riv package file...\n')
 
-        return Package.load(model, ModflowRiv, f, nper, check=check)
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowRiv.ftype():
+                    unitnumber = key
+
+        return Package.load(model, ModflowRiv, f, nper, check=check,
+                            unitnumber=unitnumber)
 
 
     @staticmethod

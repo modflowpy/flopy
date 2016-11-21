@@ -492,6 +492,14 @@ class ModflowSms(Package):
                 print('   RCLOSEPCGU {}'.format(rclosepcgu))
                 print('   RELAXPCGU {}'.format(relaxpcgu))
 
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSms.ftype():
+                    unitnumber = key
+
         sms = ModflowSms(model, hclose=hclose, hiclose=hiclose, mxiter=mxiter,
                          iter1=iter1, iprsms=iprsms, nonlinmeth=nonlinmeth,
                          linmeth=linmeth, theta=theta, akappa=akappa,
@@ -501,7 +509,7 @@ class ModflowSms(Package):
                          iredsys=iredsys, rrctol=rrctol, idroptol=idroptol,
                          epsrn=epsrn, clin=clin, ipc=ipc, iscl=iscl,
                          iord=iord, rclosepcgu=rclosepcgu,
-                         relaxpcgu=relaxpcgu)
+                         relaxpcgu=relaxpcgu, unitnumber=unitnumber)
         return sms
 
     @staticmethod

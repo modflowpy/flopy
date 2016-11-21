@@ -9,10 +9,11 @@ MODFLOW Guide
 """
 import os
 import sys
+
 import numpy as np
+
 from ..pakbase import Package
-from ..utils.util_array import Transient3d
-from ..utils import Util3d, read_fixed_var, write_fixed_var
+from ..utils import read_fixed_var, write_fixed_var
 
 
 class ModflowGage(Package):
@@ -65,7 +66,8 @@ class ModflowGage(Package):
             unitnumber = ModflowGage.defaultunit()
 
         # Call parent init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowGage.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowGage.ftype(),
+                         unitnumber)
 
         vn = model.version_types[model.version]
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -301,15 +303,21 @@ class ModflowGage(Package):
                         files.append(relpth)
                         break
 
-        gagepak = ModflowGage(model, numgage=numgage,
-                              gage_data=gage_data, files=files)
-        return gagepak
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowGage.ftype():
+                    unitnumber = key
 
+        gagepak = ModflowGage(model, numgage=numgage,
+                              gage_data=gage_data, files=files,
+                              unitnumber=unitnumber)
+        return gagepak
 
     @staticmethod
     def ftype():
         return 'GAGE'
-
 
     @staticmethod
     def defaultunit():

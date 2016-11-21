@@ -210,7 +210,14 @@ class ModflowChd(Package):
         if model.verbose:
             sys.stdout.write('loading chd package file...\n')
 
-        return Package.load(model, ModflowChd, f, nper)
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowChd.ftype():
+                    unitnumber = key
+
+        return Package.load(model, ModflowChd, f, nper, unitnumber=unitnumber)
 
 
     @staticmethod

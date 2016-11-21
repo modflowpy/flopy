@@ -550,13 +550,21 @@ class ModflowLak(Package):
         lake_lknc = Transient3d(model, (nlay, nrow, ncol), np.float32,
                                 lake_lknc, name='bdlknc_')
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowLak.ftype():
+                    unitnumber = key
+
 
         lakpak = ModflowLak(model, options=options, nlakes=nlakes,
                             ipakcb=ipakcb, theta=theta, nssitr=nssitr,
                             surfdep=surfdep, sscncr=sscncr, stages=stages,
                             stage_range=stage_range, tab_files=tab_files,
                             lakarr=lake_loc, bdlknc=lake_lknc,
-                            sill_data=sill_data, flux_data=flux_data)
+                            sill_data=sill_data, flux_data=flux_data,
+                            unitnumber=unitnumber)
         return lakpak
 
 

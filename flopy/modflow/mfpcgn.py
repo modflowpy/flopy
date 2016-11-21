@@ -295,7 +295,14 @@ class ModflowPcgn(Package):
         # close the open file
         f.close()
 
-        pcgn = ModflowPcgn(model)
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowPcgn.ftype():
+                    unitnumber = key
+
+        pcgn = ModflowPcgn(model, unitnumber=unitnumber)
         return pcgn
 
 

@@ -140,8 +140,15 @@ class ModflowSwr1(Package):
         # close open file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSwr1.ftype():
+                    unitnumber = key
+
         # create swr1 object instance
-        swr1 = ModflowSwr1(model)
+        swr1 = ModflowSwr1(model, unitnumber=unitnumber)
 
         # return swr object
         return swr1

@@ -607,6 +607,14 @@ class ModflowSwi2(Package):
                 obslrc.append([kk, ii, jj])
                 nobs = len(obsname)
 
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSwi2.ftype():
+                    unitnumber = key
+
         # create swi2 instance
         swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs,
                            iswizt=iswizt, ipakcb=ipakcb,
@@ -617,7 +625,8 @@ class ModflowSwi2(Package):
                            beta=beta,
                            nadptmx=nadptmx, nadptmn=nadptmn, adptfct=adptfct,
                            nu=nu, zeta=zeta, ssz=ssz, isource=isource,
-                           obsnam=obsname, obslrc=obslrc)
+                           obsnam=obsname, obslrc=obslrc,
+                           unitnumber=unitnumber)
 
         # return swi2 instance
         return swi2

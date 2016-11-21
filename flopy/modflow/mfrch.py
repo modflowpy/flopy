@@ -351,8 +351,17 @@ class ModflowRch(Package):
                                     ext_unit_dict)
                     current_irch = t
                 irch[iper] = current_irch
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowRch.ftype():
+                    unitnumber = key
+
+        # create recharge package instance
         rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb, rech=rech,
-                         irch=irch)
+                         irch=irch, unitnumber=unitnumber)
         if check:
             rch.check(f='{}.chk'.format(rch.name[0]), verbose=rch.parent.verbose, level=0)
         return rch

@@ -167,7 +167,14 @@ class ModflowPval(Package):
 
             pval_dict[pvalnam] = float(t[1])
 
-        pval = ModflowPval(model, pval_dict=pval_dict)
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowPval.ftype():
+                    unitnumber = key
+
+        pval = ModflowPval(model, pval_dict=pval_dict, unitnumber=unitnumber)
         return pval
 
 

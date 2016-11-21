@@ -336,9 +336,17 @@ class ModflowHfb(Package):
                     bnd_output = stack_arrays((bnd_output, par_current),
                                               asrecarray=True, usemask=False)
 
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowHfb.ftype():
+                    unitnumber = key
+
         hfb = ModflowHfb(model, nphfb=0, mxfb=0, nhfbnp=len(bnd_output),
                          hfb_data=bnd_output,
-                         nacthfb=0, options=options)
+                         nacthfb=0, options=options, unitnumber=unitnumber)
         return hfb
 
 

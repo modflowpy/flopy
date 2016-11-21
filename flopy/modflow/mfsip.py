@@ -207,9 +207,16 @@ class ModflowSip(Package):
         # close the open file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSip.ftype():
+                    unitnumber = key
+
         sip = ModflowSip(model, mxiter=mxiter, nparm=nparm,
                          accl=accl, hclose=hclose, ipcalc=ipcalc,
-                         wseed=wseed, iprsip=iprsip)
+                         wseed=wseed, iprsip=iprsip, unitnumber=unitnumber)
         return sip
 
     @staticmethod

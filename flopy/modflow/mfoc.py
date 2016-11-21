@@ -736,9 +736,10 @@ class ModflowOc(Package):
 
         # reset unit numbers
         unitnumber = [14, 0, 0, 0, 0]
-        for key, value in ext_unit_dict.items():
-            if value.filetype == 'OC':
-                unitnumber[0] = key
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowOc.ftype():
+                    unitnumber[0] = key
         if ihedun > 0:
             unitnumber[1] = ihedun
             model.add_pop_key_list(ihedun)
