@@ -314,8 +314,6 @@ class Modflow(BaseModel):
         if "as_dict" in kwargs:
             as_dict = bool(kwargs.pop("as_dict"))
 
-
-
         savehead = False
         saveddn = False
         savebud = False
@@ -440,25 +438,42 @@ class Modflow(BaseModel):
 
         namefile_path = os.path.join(ml.model_ws, f)
 
-        #set the reference information
+        # set the reference information
         ref_attributes = SpatialReference.\
             attribs_from_namfile_header(namefile_path)
 
         # read name file
         try:
-
             ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
                                                     ml.mfnam_packages,
                                                     verbose=verbose)
         except Exception as e:
-            #print("error loading name file entries from file")
-            #print(str(e))
-            #return None
             raise Exception("error loading name file entries from file:\n" + str(e))
 
         if ml.verbose:
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.
                   format(50 * '-', ext_unit_dict, 50 * '-'))
+
+        # reset unit number for glo file
+        if version == 'mf2k':
+            unitnumber = None
+            for key, value in ext_unit_dict.items():
+                if value.filetype == 'GLOBAL':
+                    unitnumber = key
+                    filepth = os.path.basename(value.filename)
+            if unitnumber is not None:
+                ml.glo.unit_number = [unitnumber]
+                ml.glo.file_name = [filepth]
+
+        # reset unit number for list file
+        unitnumber = None
+        for key, value in ext_unit_dict.items():
+            if value.filetype == 'LIST':
+                unitnumber = key
+                filepth = os.path.basename(value.filename)
+        if unitnumber is not None:
+            ml.lst.unit_number = [unitnumber]
+            ml.lst.file_name = [filepth]
 
         # reset version based on packages in the name file
         for k, v in ext_unit_dict.items():
