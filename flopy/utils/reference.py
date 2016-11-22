@@ -165,6 +165,12 @@ class SpatialReference(object):
         assert units in self.supported_units
         return units
 
+    @property
+    def bounds(self):
+        """Return bounding box in standard GIS order."""
+        xmin, xmax, ymin, ymax = self.get_extent()
+        return xmin, ymin, xmax, ymax
+
     @staticmethod
     def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
@@ -595,6 +601,14 @@ class SpatialReference(object):
         f.write('\n')
         return
 
+    def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
+        """Write a shapefile of the grid with just the row and column attributes"""
+        from flopy.export.shapefile_utils import write_grid_shapefile2
+        if epsg is None and prj is None:
+            epsg = self.epsg
+        write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
+                              epsg=epsg, prj=prj)
+
     def get_vertices(self, i, j):
         pts = []
         xgrid, ygrid = self.xgrid, self.ygrid
@@ -607,17 +621,27 @@ class SpatialReference(object):
 
     @property
     def vertices(self):
+        """Returns a list of vertices for"""
         if self._vertices is None:
-            self._set_cell_vertices()
+            self._set_vertices()
         return self._vertices
 
     def _set_vertices(self):
+        """populate vertices for the whole grid"""
+        jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
+        jj, ii = jj.ravel(), ii.ravel()
+        vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
+        self._vertices = [v.tolist() for v in vrts] # conversion to lists
+
+        """
+        code above is 3x faster
         xgrid, ygrid = self.xgrid, self.ygrid
         ij = list(map(list, zip(xgrid[:-1, :-1].ravel(), ygrid[:-1, :-1].ravel())))
         i1j = map(list, zip(xgrid[1:, :-1].ravel(), ygrid[1:, :-1].ravel()))
         i1j1 = map(list, zip(xgrid[1:, 1:].ravel(), ygrid[1:, 1:].ravel()))
         ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
         self._vertices = np.array(map(list, zip(ij, i1j, i1j1, ij1, ij)))
+        """
 
     def interpolate(self, a, xi, method='nearest'):
         """
