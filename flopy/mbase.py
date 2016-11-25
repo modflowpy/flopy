@@ -176,10 +176,16 @@ class BaseModel(object):
         p : Package object
 
         """
-        for u in p.unit_number:
-            if u in self.package_units or u in self.external_units:
-                print("WARNING: unit {0} of package {1} already in use".format(
-                    u, p.name))
+        for idx, u in enumerate(p.unit_number):
+            if u != 0:
+                if u in self.package_units or u in self.external_units:
+                    try:
+                        pn = p.name[idx]
+                    except:
+                        pn = p.name
+                    msg = "WARNING: unit {} ".format(u) + \
+                          "of package {} already in use".format(pn)
+                    print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:

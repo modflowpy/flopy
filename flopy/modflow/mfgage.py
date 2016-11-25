@@ -55,7 +55,8 @@ class ModflowGage(Package):
     """
 
     def __init__(self, model, numgage=0, gage_data=None, files=None,
-                 extension='gage', unitnumber=None, options=None, **kwargs):
+                 extension='gage', unitnumber=None, options=None,
+                 filenames=None, **kwargs):
         """
         Package constructor.
 
@@ -74,21 +75,29 @@ class ModflowGage(Package):
         dtype = ModflowGage.get_default_dtype()
         if numgage > 0:
             # check the provided file entries
-            if files is None:
-                err = "a list of output gage 'files' must be provided"
-                raise Exception(err)
-            if isinstance(files, np.ndarray):
-                files = files.flatten().aslist()
-            elif isinstance(files, str):
-                files = [files]
-            elif isinstance(files, int) or isinstance(files, float):
-                files = ['{}.go'.format(files)]
-            if len(files) < numgage:
-                err = 'a filename needs to be provided ' + \
-                      'for {} gages '.format(numgage) + \
-                      '- {} filenames were provided'.format(len(files))
-                raise Exception(err)
+            if filenames is None:
+                if files is None:
+                    err = "a list of output gage 'files' must be provided"
+                    raise Exception(err)
+                if isinstance(files, np.ndarray):
+                    files = files.flatten().aslist()
+                elif isinstance(files, str):
+                    files = [files]
+                elif isinstance(files, int) or isinstance(files, float):
+                    files = ['{}.go'.format(files)]
+                if len(files) < numgage:
+                    err = 'a filename needs to be provided ' + \
+                          'for {} gages '.format(numgage) + \
+                          '- {} filenames were provided'.format(len(files))
+                    raise Exception(err)
+            else:
+                if len(filenames) < numgage + 1:
+                    err = "filenames must have a " + \
+                          "length of {} ".format(numgage+1) + \
+                          "the length provided is {}".format(len(filenames))
+                    raise Exception(err)
 
+            # convert gage_data to a recarry, if necessary
             if isinstance(gage_data, np.ndarray):
                 if not gage_data.dtype == dtype:
                     gage_data = np.core.records.fromarrays(
@@ -131,14 +140,14 @@ class ModflowGage(Package):
 
         # Call parent init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra)
+                         unit_number=units, extra=extra, filenames=filenames)
 
-        # reset file name with filepths passed from load method
-        if files is not None:
-            for idx, pth in enumerate(files):
-                if pth is None:
-                    continue
-                self.file_name[idx+1] = pth
+        # # reset file name with filepths passed from load method
+        # if files is not None:
+        #     for idx, pth in enumerate(files):
+        #         if pth is None:
+        #             continue
+        #         self.file_name[idx+1] = pth
 
         vn = model.version_types[model.version]
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -317,13 +326,17 @@ class ModflowGage(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = []
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
                 if value.filetype == ModflowGage.ftype():
                     unitnumber = key
+                    filenames.append(os.path.basename(value.filename))
+        for file in files:
+            filenames.append(os.path.basename(file))
 
         gagepak = ModflowGage(model, numgage=numgage,
-                              gage_data=gage_data, files=files,
+                              gage_data=gage_data, filenames=filenames,
                               unitnumber=unitnumber)
         return gagepak
 

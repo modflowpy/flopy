@@ -24,7 +24,7 @@ class Package(object):
     """
 
     def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1,
-                 extra='', allowDuplicates=False):
+                 extra='', filenames=None, allowDuplicates=False):
         """
         Package init
 
@@ -34,9 +34,15 @@ class Package(object):
             extension = [extension]
         self.extension = []
         self.file_name = []
-        for e in extension:
+        for idx, e in enumerate(extension):
             self.extension.append(e)
             file_name = self.parent.name + '.' + e
+            if filenames is not None:
+                try:
+                    if filenames[idx] is not None:
+                        file_name = filenames[idx]
+                except:
+                    pass
             self.file_name.append(file_name)
         self.fn_path = os.path.join(self.parent.model_ws, self.file_name[0])
         if (not isinstance(name, list)):
