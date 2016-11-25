@@ -178,7 +178,7 @@ class ModflowSwi2(Package):
 
     """
 
-    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=55, ipakcb=53,
+    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=None, ipakcb=0,
                  iswiobs=0, options=None, nsolver=1, iprsol=0, mutsol=3,
                  solver2params={'mxiter': 100, 'iter1': 20, 'npcond': 1,
                                 'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
@@ -196,6 +196,9 @@ class ModflowSwi2(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSwi2.defaultunit()
+
+        if iswizt is None:
+            iswizt = 55
 
         # Process observations
         if nobs != 0:
@@ -224,8 +227,8 @@ class ModflowSwi2(Package):
                     errmsg = 'ModflowSwi2: obsnam must be a list with a ' + \
                              'length of {} not {}.'.format(nobs, len(obsnam))
                     raise Exception(errmsg)
-            if iswiobs < 1:
-                iswiobs = 1053
+            #if iswiobs < 1:
+            #    iswiobs = 1053
 
         # Fill namefile items
         name = [ModflowSwi2.ftype(), 'DATA(BINARY)']
@@ -234,7 +237,7 @@ class ModflowSwi2(Package):
         if nobs > 0:
             extension.append('zobs')
             name.append('DATA')
-            units.append(iswiobs)
+            units.append(abs(iswiobs))
             extra.append('REPLACE')
 
         Package.__init__(self, model, extension=extension, name=name,
@@ -265,7 +268,7 @@ class ModflowSwi2(Package):
         self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, istrat, nobs, \
                                                                        iswizt, iswiobs
         if ipakcb != 0:
-            self.ipakcb = 53
+            self.ipakcb = ipakcb #53
         else:
             self.ipakcb = 0  # 0: no cell by cell terms are written
 
@@ -443,16 +446,16 @@ class ModflowSwi2(Package):
         nobs = int(t[2])
         if int(t[3]) > 0:
             model.add_pop_key_list(int(t[3]))
-            iswizt = 55
+            iswizt = int(t[3])
         if int(t[4]) > 0:
             model.add_pop_key_list(int(t[4]))
-            ipakcb = 56
+            ipakcb = int(t[4])
         else:
             ipakcb = 0
         iswiobs = 0
         if int(t[5]) > 0:
             model.add_pop_key_list(int(t[5]))
-            iswiobs = 1051
+            iswiobs = int(t[5])
         options = []
         adaptive = False
         for idx in range(6, len(t)):

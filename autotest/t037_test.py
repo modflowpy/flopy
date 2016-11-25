@@ -1,5 +1,5 @@
 """
-Some basic tests for LAKE load.
+Some basic tests for SWR2 load.
 """
 
 import os
@@ -9,18 +9,13 @@ import numpy as np
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp')
 
-mf_items = ['l2a_2k.nam', 'lakeex3.nam', 'l1b2k_bath.nam', 'l1b2k.nam',
-            'l1a2k.nam']
-pths = [path, path, path, path, path]
-
-#mf_items = ['l1b2k_bath.nam']
-#mf_items = ['lakeex3.nam']
-#mf_items = ['l1a2k.nam']
-#pths = [path]
+mf_items = ['swiex1.nam', 'swiex2_strat.nam', 'swiex3.nam']
+pths = []
+for val in mf_items:
+    pths.append(path)
 
 
-
-def load_lak(mfnam, pth):
+def load_swi(mfnam, pth):
     exe_name = 'mf2005'
     v = flopy.which(exe_name)
 
@@ -45,12 +40,11 @@ def load_lak(mfnam, pth):
 
     if run:
         try:
-            success, buff = m.run_model(silent=True)
+            success, buff = m.run_model(silent=False)
         except:
             pass
         assert success, 'base model run did not terminate successfully'
         fn0 = os.path.join(lpth, mfnam)
-
 
     # write free format files - wont run without resetting to free format - evt externa file issue
     m.free_format_input = True
@@ -60,15 +54,15 @@ def load_lak(mfnam, pth):
     m.write_input()
     if run:
         try:
-            success, buff = m.run_model(silent=True)
+            success, buff = m.run_model(silent=False)
         except:
             pass
         assert success, 'base model run did not terminate successfully'
         fn1 = os.path.join(apth, mfnam)
 
+    if run:
         fsum = os.path.join(compth,
                             '{}.budget.out'.format(os.path.splitext(mfnam)[0]))
-    if run:
         try:
             success = pymake.compare_budget(fn0, fn1,
                                             max_incpd=0.1, max_cumpd=0.1,
@@ -78,18 +72,15 @@ def load_lak(mfnam, pth):
 
         assert success, 'budget comparison failure'
 
-
     return
 
 
-
-
-def test_mf2005load():
+def test_mf2005swi2load():
     for namfile, pth in zip(mf_items, pths):
-        yield load_lak, namfile, pth
+        yield load_swi, namfile, pth
     return
 
 
 if __name__ == '__main__':
     for namfile, pth in zip(mf_items, pths):
-        load_lak(namfile, pth)
+        load_swi(namfile, pth)

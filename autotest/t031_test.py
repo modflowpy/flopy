@@ -184,5 +184,5 @@ def test_loadtxt():
 
 if __name__ == '__main__':
     #test_mpsim()
-    #test_get_destination_data()
-    test_loadtxt()
+    test_get_destination_data()
+    #test_loadtxt()
