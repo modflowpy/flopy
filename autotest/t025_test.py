@@ -7,11 +7,13 @@ import flopy
 import numpy as np
 
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
-cpth = os.path.join('temp')
+cpth = os.path.join('temp', 't025')
 
-mf_items = ['l2a_2k.nam', 'lakeex3.nam', 'l1b2k_bath.nam', 'l1b2k.nam',
+mf_items = ['l1b2k_bath.nam', 'l2a_2k.nam', 'lakeex3.nam', 'l1b2k.nam',
             'l1a2k.nam']
-pths = [path, path, path, path, path]
+pths = []
+for mi in mf_items:
+    pths.append(path)
 
 #mf_items = ['l1b2k_bath.nam']
 #mf_items = ['lakeex3.nam']

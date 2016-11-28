@@ -504,8 +504,17 @@ class BaseModel(object):
                 # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
                 new_ext_file = ext_file
             else:
-                fpth = os.path.abspath(os.path.join(old_pth, ext_file))
-                new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
+                #fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                #new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
+                fdir = os.path.dirname(ext_file)
+                if fdir == '':
+                    fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                else:
+                    fpth = ext_file
+                ao = os.path.abspath(os.path.dirname(fpth))
+                ep = os.path.abspath(pth)
+                relp = os.path.relpath(ao, ep)
+                new_ext_file = os.path.join(relp, os.path.basename(ext_file))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 
