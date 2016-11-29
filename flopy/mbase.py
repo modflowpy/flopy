@@ -468,16 +468,15 @@ class BaseModel(object):
                     '\ncreating model workspace...\n   {}\n'.format(new_pth))
                 os.makedirs(new_pth)
             except:
-                # print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
-                print(
-                    '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(
-                        new_pth, os.getcwd()))
+                line = '\n{} not valid, workspace-folder '.format(new_pth) + \
+                       'was changed to {}\n'.format(os.getcwd())
+                print(line)
                 new_pth = os.getcwd()
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
-        sys.stdout.write(
-            '\nchanging model workspace...\n   {}\n'.format(new_pth))
+        line = '\nchanging model workspace...\n   {}\n'.format(new_pth)
+        sys.stdout.write(line)
         # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])

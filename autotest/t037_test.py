@@ -4,10 +4,12 @@ Some basic tests for SWR2 load.
 
 import os
 import flopy
-import numpy as np
 
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
-cpth = os.path.join('temp')
+cpth = os.path.join('temp', 't037')
+# make the directory if it does not exist
+if not os.path.isdir(cpth):
+    os.makedirs(cpth)
 
 mf_items = ['swiex1.nam', 'swiex2_strat.nam', 'swiex3.nam']
 pths = []
@@ -46,11 +48,13 @@ def load_swi(mfnam, pth):
         assert success, 'base model run did not terminate successfully'
         fn0 = os.path.join(lpth, mfnam)
 
-    # write free format files - wont run without resetting to free format - evt externa file issue
+    # write free format files -
+    # won't run without resetting to free format - evt external file issue
     m.free_format_input = True
 
     # rewrite files
-    m.change_model_ws(apth, reset_external=True)  # l1b2k_bath wont run without this
+    m.change_model_ws(apth,
+                      reset_external=True)  # l1b2k_bath wont run without this
     m.write_input()
     if run:
         try:
@@ -68,7 +72,7 @@ def load_swi(mfnam, pth):
                                             max_incpd=0.1, max_cumpd=0.1,
                                             outfile=fsum)
         except:
-            print('could not performbudget comparison')
+            print('could not perform budget comparison')
 
         assert success, 'budget comparison failure'
 

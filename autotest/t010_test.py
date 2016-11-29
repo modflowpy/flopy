@@ -9,25 +9,51 @@ import os
 import flopy
 from flopy.modflow.mfsfr2 import check
 
+tpth = os.path.abspath(os.path.join('temp', 't010'))
+# make the directory if it does not exist
+if not os.path.isdir(tpth):
+    os.makedirs(tpth)
 
-def load_check_sfr(mfnam, model_ws, checker_output_path):
+if os.path.split(os.getcwd())[-1] == 'flopy3':
+    path = os.path.join('examples', 'data', 'mf2005_test')
+    cpth = os.path.join('py.test/temp')
+else:
+    path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    cpth = os.path.join(tpth)
+
+sfr_items = {0: {'mfnam': 'test1ss.nam',
+                 'sfrfile': 'test1ss.sfr'},
+             1: {'mfnam': 'test1tr.nam',
+                 'sfrfile': 'test1tr.sfr'},
+             2: {'mfnam': 'testsfr2_tab.nam',
+                 'sfrfile': 'testsfr2_tab_ICALC1.sfr'},
+             3: {'mfnam': 'testsfr2_tab.nam',
+                 'sfrfile': 'testsfr2_tab_ICALC2.sfr'},
+             4: {'mfnam': 'testsfr2.nam',
+                 'sfrfile': 'testsfr2.sfr'},
+             5: {'mfnam': 'UZFtest2.nam',
+                 'sfrfile': 'UZFtest2.sfr'},
+             }
+
+
+def load_check_sfr(i, mfnam, model_ws, checker_output_path):
 
     #print('Testing {}\n'.format(mfnam) + '='*100)
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws)
     m.model_ws = checker_output_path
-    checker_outfile = 'SFRcheck_{}.txt'.format(m.name)
+    checker_outfile = os.path.join(tpth, 'SFRcheck_{}.txt'.format(m.name))
     
-    return m.sfr.check(checker_outfile, level=1)
+    chk = m.sfr.check(checker_outfile, level=1)
+
+    if i == 1:
+        assert 'overlapping conductance' in chk.warnings
+    if i == 2:
+        assert 'segment elevations vs. model grid' in chk.warnings
+
+    return
 
 
 def test_sfrcheck():
-
-    if os.path.split(os.getcwd())[-1] == 'flopy3':
-        path = os.path.join('examples', 'data', 'mf2005_test')
-        cpth = os.path.join('py.test/temp')
-    else:
-        path = os.path.join('..', 'examples', 'data', 'mf2005_test')
-        cpth = os.path.join('temp')
 
     m = flopy.modflow.Modflow.load('test1tr.nam', model_ws=path, verbose=False)
 
@@ -64,31 +90,14 @@ def test_sfrcheck():
     chk.routing()
     assert 'circular routing' in chk.errors
     
-    sfr_items = {0: {'mfnam': 'test1ss.nam',
-                     'sfrfile': 'test1ss.sfr'},
-                 1: {'mfnam': 'test1tr.nam',
-                     'sfrfile': 'test1tr.sfr'},
-                 2: {'mfnam': 'testsfr2_tab.nam',
-                     'sfrfile': 'testsfr2_tab_ICALC1.sfr'},
-                 3: {'mfnam': 'testsfr2_tab.nam',
-                     'sfrfile': 'testsfr2_tab_ICALC2.sfr'},
-                 4: {'mfnam': 'testsfr2.nam',
-                     'sfrfile': 'testsfr2.sfr'},
-                 5: {'mfnam': 'UZFtest2.nam',
-                     'sfrfile': 'UZFtest2.sfr'},
-                 }
-    
 
-    passed = {}
-    warnings = {}
-    
+def test_sfrloadcheck():
     for i, case in sfr_items.items():
-        chk = load_check_sfr(case['mfnam'], model_ws=path, checker_output_path=cpth)
-        passed[i] = chk.passed
-        warnings[i] = chk.warnings
-    assert 'overlapping conductance' in warnings[1]
-    assert 'segment elevations vs. model grid' in warnings[2]
+        yield load_check_sfr, i, case['mfnam'], path, cpth
+
 
 
 if __name__ == '__main__':
     test_sfrcheck()
+    for i, case in sfr_items.items():
+        test_sfrloadcheck(i, case['mfnam'], path, cpth)

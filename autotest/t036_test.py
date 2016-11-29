@@ -11,6 +11,7 @@ cpth = os.path.join('temp', 't036')
 if not os.path.isdir(cpth):
     os.makedirs(cpth)
 
+
 def test_unitnums_load_and_write():
     mfnam = 'testsfr2_tab.nam'
 
@@ -37,7 +38,8 @@ def test_unitnums_load_and_write():
                                    exe_name=exe_name)
     assert m.load_fail is False, 'failed to load all packages'
 
-    msg = 'modflow-2005 testsfr2_tab does not have 1 layer, 7 rows, and 100 colummns'
+    msg = 'modflow-2005 testsfr2_tab does not have ' + \
+          '1 layer, 7 rows, and 100 colummns'
     v = (m.nlay, m.nrow, m.ncol, m.nper)
     assert v == (1, 7, 100, 50), msg
 
@@ -74,6 +76,7 @@ def test_unitnums_load_and_write():
         assert success, 'budget comparison failure'
 
     return
+
 
 if __name__ == '__main__':
     test_unitnums_load_and_write()

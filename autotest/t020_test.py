@@ -25,7 +25,7 @@ def test_mfnwt_run():
         return
 
     modelname = 'watertable'
-    model_ws = os.path.join('temp')
+    model_ws = os.path.join('temp', 't020')
     if not os.path.exists(model_ws):
         os.makedirs(model_ws)
 
