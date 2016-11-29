@@ -176,10 +176,16 @@ class BaseModel(object):
         p : Package object
 
         """
-        for u in p.unit_number:
-            if u in self.package_units or u in self.external_units:
-                print("WARNING: unit {0} of package {1} already in use".format(
-                    u, p.name))
+        for idx, u in enumerate(p.unit_number):
+            if u != 0:
+                if u in self.package_units or u in self.external_units:
+                    try:
+                        pn = p.name[idx]
+                    except:
+                        pn = p.name
+                    msg = "WARNING: unit {} ".format(u) + \
+                          "of package {} already in use".format(pn)
+                    print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
@@ -498,8 +504,17 @@ class BaseModel(object):
                 # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
                 new_ext_file = ext_file
             else:
-                fpth = os.path.abspath(os.path.join(old_pth, ext_file))
-                new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
+                #fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                #new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
+                fdir = os.path.dirname(ext_file)
+                if fdir == '':
+                    fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                else:
+                    fpth = ext_file
+                ao = os.path.abspath(os.path.dirname(fpth))
+                ep = os.path.abspath(pth)
+                relp = os.path.relpath(ao, ep)
+                new_ext_file = os.path.join(relp, os.path.basename(ext_file))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 

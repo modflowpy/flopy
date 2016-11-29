@@ -8,9 +8,9 @@ MODFLOW Guide
 
 """
 import sys
-import copy
+
 import numpy as np
-# from numpy import ones, zeros, empty
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
 
@@ -178,7 +178,7 @@ class ModflowSwi2(Package):
 
     """
 
-    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=55, ipakcb=53,
+    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=None, ipakcb=0,
                  iswiobs=0, options=None, nsolver=1, iprsol=0, mutsol=3,
                  solver2params={'mxiter': 100, 'iter1': 20, 'npcond': 1,
                                 'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
@@ -187,12 +187,19 @@ class ModflowSwi2(Package):
                  nadptmn=1, adptfct=1.0,
                  nu=0.025, zeta=[0.0], ssz=0.25, isource=0,
                  obsnam=None, obslrc=None,
-                 extension=['swi2', 'zta'], unit_number=29,
+                 extension=['swi2', 'zta'], unitnumber=None,
                  npln=None):
         """
         Package constructor.
 
         """
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSwi2.defaultunit()
+
+        if iswizt is None:
+            iswizt = 55
+
         # Process observations
         if nobs != 0:
             print('ModflowSwi2: specification of nobs is deprecated.')
@@ -212,7 +219,7 @@ class ModflowSwi2(Package):
             if obsnam is None:
                 obsnam = []
                 for n in range(nobs):
-                    obsnam.append('Obs{:03}'.format(n+1))
+                    obsnam.append('Obs{:03}'.format(n + 1))
             else:
                 if not isinstance(obsnam, list):
                     obsnam = [obsnam]
@@ -220,17 +227,17 @@ class ModflowSwi2(Package):
                     errmsg = 'ModflowSwi2: obsnam must be a list with a ' + \
                              'length of {} not {}.'.format(nobs, len(obsnam))
                     raise Exception(errmsg)
-            if iswiobs < 1:
-                iswiobs = 1053
+            #if iswiobs < 1:
+            #    iswiobs = 1053
 
         # Fill namefile items
-        name = ['SWI2', 'DATA(BINARY)']
-        units = [unit_number, iswizt]
+        name = [ModflowSwi2.ftype(), 'DATA(BINARY)']
+        units = [unitnumber, iswizt]
         extra = ['', 'REPLACE']
         if nobs > 0:
             extension.append('zobs')
             name.append('DATA')
-            units.append(iswiobs)
+            units.append(abs(iswiobs))
             extra.append('REPLACE')
 
         Package.__init__(self, model, extension=extension, name=name,
@@ -261,7 +268,7 @@ class ModflowSwi2(Package):
         self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, istrat, nobs, \
                                                                        iswizt, iswiobs
         if ipakcb != 0:
-            self.ipakcb = 53
+            self.ipakcb = ipakcb #53
         else:
             self.ipakcb = 0  # 0: no cell by cell terms are written
 
@@ -274,9 +281,11 @@ class ModflowSwi2(Package):
         self.nadptmx, self.nadptmn, self.adptfct = nadptmx, nadptmn, adptfct
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu,
+                             name='nu')
         else:
-            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu,
+                             name='nu')
         self.zeta = []
         for i in range(self.nsrf):
             self.zeta.append(Util3d(model, (nlay, nrow, ncol), np.float32,
@@ -311,7 +320,8 @@ class ModflowSwi2(Package):
         # Open file for writing
         f = open(self.fn_path, 'w')
         # First line: heading
-        f.write('{}\n'.format(self.heading))  # Writing heading not allowed in SWI???
+        f.write('{}\n'.format(
+            self.heading))  # Writing heading not allowed in SWI???
         # write dataset 1
         f.write('# Dataset 1\n')
         f.write(
@@ -375,7 +385,7 @@ class ModflowSwi2(Package):
                 # f.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
                 f.write('{} '.format(self.obsnam[i]))
                 for v in self.obslrc[i, :]:
-                    f.write('{:10d}'.format(v+1))
+                    f.write('{:10d}'.format(v + 1))
                 f.write('\n')
 
         # close swi2 file
@@ -436,16 +446,16 @@ class ModflowSwi2(Package):
         nobs = int(t[2])
         if int(t[3]) > 0:
             model.add_pop_key_list(int(t[3]))
-            iswizt = 55
+            iswizt = int(t[3])
         if int(t[4]) > 0:
             model.add_pop_key_list(int(t[4]))
-            ipakcb = 56
+            ipakcb = int(t[4])
         else:
             ipakcb = 0
         iswiobs = 0
         if int(t[5]) > 0:
             model.add_pop_key_list(int(t[5]))
-            iswiobs = 1051
+            iswiobs = int(t[5])
         options = []
         adaptive = False
         for idx in range(6, len(t)):
@@ -600,6 +610,14 @@ class ModflowSwi2(Package):
                 obslrc.append([kk, ii, jj])
                 nobs = len(obsname)
 
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSwi2.ftype():
+                    unitnumber = key
+
         # create swi2 instance
         swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs,
                            iswizt=iswizt, ipakcb=ipakcb,
@@ -610,7 +628,16 @@ class ModflowSwi2(Package):
                            beta=beta,
                            nadptmx=nadptmx, nadptmn=nadptmn, adptfct=adptfct,
                            nu=nu, zeta=zeta, ssz=ssz, isource=isource,
-                           obsnam=obsname, obslrc=obslrc)
+                           obsnam=obsname, obslrc=obslrc,
+                           unitnumber=unitnumber)
 
         # return swi2 instance
         return swi2
+
+    @staticmethod
+    def ftype():
+        return 'SWI2'
+
+    @staticmethod
+    def defaultunit():
+        return 29

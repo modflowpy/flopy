@@ -168,15 +168,19 @@ class ModflowPcgn(Package):
                  relax=1.0, ifill=0, unit_pc=0, unit_ts=0,
                  adamp=0, damp=1.0, damp_lb=0.001, rate_d=0.1, chglimit=0.,
                  acnvg=0, cnvg_lb=0.001, mcnvg=2, rate_c=-1.0, ipunit=0,
-                 extension='pcgn', unit_number=27):
+                 extension='pcgn', unitnumber=None):
         """
         Package constructor.
 
         """
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowDrn.defaultunit()
+
         if not isinstance(extension, list):
             extension = [extension]
-        name = ['PCGN']
-        units = [unit_number]
+        name = [ModflowPcgn.ftype()]
+        units = [unitnumber]
         extra = ['']
         tu = (unit_pc, unit_ts, ipunit)
         ea = ('pcgni', 'pcgnt', 'pcgno')
@@ -186,8 +190,10 @@ class ModflowPcgn(Package):
                 name.append('DATA')
                 units.append(t)
                 extra.append('REPLACE')
-        Package.__init__(self, model, extension=extension, name=name, unit_number=units,
-                         extra=extra)  # Call ancestor's init to set self.parent, extension, name and unit number
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
@@ -289,5 +295,22 @@ class ModflowPcgn(Package):
         # close the open file
         f.close()
 
-        pcgn = ModflowPcgn(model)
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowPcgn.ftype():
+                    unitnumber = key
+
+        pcgn = ModflowPcgn(model, unitnumber=unitnumber)
         return pcgn
+
+
+    @staticmethod
+    def ftype():
+        return 'PCGN'
+
+
+    @staticmethod
+    def defaultunit():
+        return 27

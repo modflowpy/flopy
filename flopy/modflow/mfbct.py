@@ -11,8 +11,16 @@ class ModflowBct(Package):
                  idisp=1, ixdisp=0, diffnc=0., izod=0, ifod=0, icbund=1,
                  porosity=0.1, bulkd=1., arad=0., dlh=0., dlv=0., dth=0.,
                  dtv=0., sconc=0.,
-                 extension='bct', unitnumber=35):
-        Package.__init__(self, model, extension, 'BCT', unitnumber)
+                 extension='bct', unitnumber=None):
+
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowBct.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit
+        # number
+        Package.__init__(self, model, extension, ModflowBct.ftype(), unitnumber)
+
         self.url = 'bct.htm'
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.itrnsp = itrnsp
@@ -109,4 +117,14 @@ class ModflowBct(Package):
 
 
         return
+
+
+    @staticmethod
+    def ftype():
+        return 'BCT'
+
+
+    @staticmethod
+    def defaultunit():
+        return 35
 

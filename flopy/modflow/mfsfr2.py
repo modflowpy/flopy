@@ -203,13 +203,18 @@ class ModflowSfr2(Package):
                  dataset_5=None,
                  reachinput=False, transroute=False,
                  tabfiles=False, tabfiles_dict=None,
-                 extension='sfr', unitnumber=17):
+                 extension='sfr', unitnumber=None):
 
         """
         Package constructor
         """
-        Package.__init__(self, model, extension, 'SFR',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name, and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSfr2.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name, and unit number
+        Package.__init__(self, model, extension, ModflowSfr2.ftype(),
+                         unitnumber)
 
         self.url = 'sfr2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
@@ -557,6 +562,13 @@ class ModflowSfr2(Package):
             else:
                 continue
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype ==ModflowSfr2.ftype():
+                    unitnumber = key
+
         return ModflowSfr2(model, nstrm=nstrm, nss=nss, nsfrpar=nsfrpar, nparseg=nparseg, const=const, dleak=dleak,
                            istcb1=istcb1, istcb2=istcb2,
                            isfropt=isfropt, nstrail=nstrail, isuzn=isuzn, nsfrsets=nsfrsets, irtflg=irtflg,
@@ -567,8 +579,11 @@ class ModflowSfr2(Package):
                            channel_geometry_data=channel_geometry_data,
                            channel_flow_data=channel_flow_data,
                            reachinput=reachinput, transroute=transroute,
-                           tabfiles=tabfiles, tabfiles_dict=tabfiles_dict
-                           )
+                           tabfiles=tabfiles, tabfiles_dict=tabfiles_dict,
+                           unitnumber=unitnumber)
+
+
+
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -1115,6 +1130,16 @@ class ModflowSfr2(Package):
             else:
                 continue
         f_sfr.close()
+
+
+    @staticmethod
+    def ftype():
+        return 'SFR'
+
+
+    @staticmethod
+    def defaultunit():
+        return 17
 
 
 class check:
