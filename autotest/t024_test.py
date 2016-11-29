@@ -7,9 +7,6 @@ testmodels = [os.path.join(model_ws, f) for f in os.listdir(model_ws)
               if f.endswith('.nam')]
 
 mpth = os.path.join('temp', 't024')
-# make the directory if it does not exist
-if not os.path.isdir(mpth):
-    os.makedirs(mpth)
 
 
 def test_checker_on_load():
@@ -23,8 +20,8 @@ def checker_on_load(mfnam):
     f = os.path.basename(mfnam)
     d = os.path.dirname(mfnam)
     m = flopy.modflow.Modflow.load(f, model_ws=d)
-    assert isinstance(m,
-                      flopy.modflow.Modflow), 'Not a flopy.modflow.Modflow instance'
+    assert isinstance(m, flopy.modflow.Modflow), \
+        'Not a flopy.modflow.Modflow instance'
 
 
 def test_bcs_check():

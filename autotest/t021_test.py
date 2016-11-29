@@ -11,7 +11,7 @@ if not os.path.isdir(mpth):
 
 def test_mflist_external():
     ml = flopy.modflow.Modflow("mflist_test", model_ws=mpth,
-                               external_path="ref")
+                               external_path=os.path.join(mpth, "ref"))
     dis = flopy.modflow.ModflowDis(ml, 1, 10, 10, nper=3, perlen=1.0)
     wel_data = {0: [[0, 0, 0, -1], [1, 1, 1, -1]],
                 1: [[0, 0, 0, -2], [1, 1, 1, -1]]}

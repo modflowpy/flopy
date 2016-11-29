@@ -16,9 +16,17 @@ if not os.path.isdir(cpth):
 mf_items = ['str.nam', 'DG.nam']
 pths = [path, pthgw]
 
+exe_name = 'mf2005dbl'
+v = flopy.which(exe_name)
+
+run = True
+if v is None:
+    run = False
+
 
 def load_str(mfnam, pth):
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=pth, verbose=True)
+    m = flopy.modflow.Modflow.load(mfnam, exe_name=exe_name,
+                                   model_ws=pth, verbose=True)
     assert m.load_fail is False
 
     # rewrite files
@@ -34,6 +42,13 @@ def load_str(mfnam, pth):
     for name in str2.dtype2.names:
         assert np.array_equal(str2.segment_data[0][name],
                               m.str.segment_data[0][name]) is True
+    if run:
+        try:
+            success, buff = m.run_model(silent=False)
+        except:
+            pass
+        assert success, 'base model run did not terminate successfully'
+
     return
 
 

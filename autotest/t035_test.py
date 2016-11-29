@@ -5,8 +5,6 @@ import os
 import flopy
 
 cpth = os.path.join('temp', 't035')
-if not os.path.isdir(cpth):
-    os.makedirs(cpth)
 
 
 def test_load_and_write():
