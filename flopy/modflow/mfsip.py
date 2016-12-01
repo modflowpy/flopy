@@ -9,7 +9,9 @@ MODFLOW Guide
 """
 
 import sys
+
 from ..pakbase import Package
+
 
 class ModflowSip(Package):
     """
@@ -76,12 +78,19 @@ class ModflowSip(Package):
     """
 
     def __init__(self, model, mxiter=200, nparm=5, \
-                 accl=1, hclose=1e-5, ipcalc=1, wseed=0, iprsip=0, extension='sip', unitnumber=25):
+                 accl=1, hclose=1e-5, ipcalc=1, wseed=0, iprsip=0,
+                 extension='sip', unitnumber=25):
         """
         Package constructor.
 
         """
-        Package.__init__(self, model, extension, 'SIP', unitnumber) # Call ancestor's init to set self.parent, extension, name and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSip.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension, ModflowSip.ftype(),
+                         unitnumber)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
@@ -115,13 +124,17 @@ class ModflowSip(Package):
         ifrfm = self.parent.get_ifrefm()
         if ifrfm:
             f.write('{} {}\n'.format(self.mxiter, self.nparm))
-            f.write('{} {} {} {} {}\n'.format(self.accl, self.hclose, self.ipcalc, self.wseed, self.iprsip))
+            f.write(
+                '{} {} {} {} {}\n'.format(self.accl, self.hclose, self.ipcalc,
+                                          self.wseed, self.iprsip))
         else:
             f.write('{:10d}{:10d}\n'.format(self.mxiter, self.nparm))
-            f.write('{:10.3f}{:10.3g}{:10d}{:10.3f}{:10d}\n'.format(self.accl, self.hclose, self.ipcalc,
-                                                                    self.wseed, self.iprsip))
+            f.write('{:10.3f}{:10.3g}{:10d}{:10.3f}{:10d}\n'.format(self.accl,
+                                                                    self.hclose,
+                                                                    self.ipcalc,
+                                                                    self.wseed,
+                                                                    self.iprsip))
         f.close()
-
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
@@ -194,7 +207,22 @@ class ModflowSip(Package):
         # close the open file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSip.ftype():
+                    unitnumber = key
+
         sip = ModflowSip(model, mxiter=mxiter, nparm=nparm,
                          accl=accl, hclose=hclose, ipcalc=ipcalc,
-                         wseed=wseed, iprsip=iprsip)
+                         wseed=wseed, iprsip=iprsip, unitnumber=unitnumber)
         return sip
+
+    @staticmethod
+    def ftype():
+        return 'SIP'
+
+    @staticmethod
+    def defaultunit():
+        return 25

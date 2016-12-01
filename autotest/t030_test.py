@@ -1,8 +1,10 @@
 import os
 import flopy
 
-
-newpth = os.path.join('.', 'temp')
+newpth = os.path.join('.', 'temp', 't030')
+# make the directory if it does not exist
+if not os.path.isdir(newpth):
+    os.makedirs(newpth)
 
 
 def test_vdf_vsc():
@@ -43,7 +45,5 @@ def test_vdf_vsc():
     return
 
 
-
 if __name__ == '__main__':
     test_vdf_vsc()
-

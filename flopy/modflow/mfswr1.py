@@ -52,13 +52,18 @@ class ModflowSwr1(Package):
 
     """
 
-    def __init__(self, model, extension='swr', unitnumber=36):
+    def __init__(self, model, extension='swr', unitnumber=None):
         """
         Package constructor.
 
         """
-        Package.__init__(self, model, extension, 'SWR',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSwr1.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension, ModflowSwr1.ftype(),
+                         unitnumber)
 
         # check if a valid model version has been specified
         if model.version == 'mf2k' or model.version == 'mfusg':
@@ -135,8 +140,25 @@ class ModflowSwr1(Package):
         # close open file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowSwr1.ftype():
+                    unitnumber = key
+
         # create swr1 object instance
-        swr1 = ModflowSwr1(model)
+        swr1 = ModflowSwr1(model, unitnumber=unitnumber)
 
         # return swr object
         return swr1
+
+
+    @staticmethod
+    def ftype():
+        return 'SWR'
+
+
+    @staticmethod
+    def defaultunit():
+        return 36

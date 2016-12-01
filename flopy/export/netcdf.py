@@ -1,4 +1,4 @@
-from __future__ import print_function,division
+from __future__ import print_function, division
 import os
 import platform
 import socket
@@ -14,7 +14,9 @@ ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
 LENUNI = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
 PRECISION_STRS = ["f4", "f8", "i4"]
 
-STANDARD_VARS = ["longitude","latitude","layer","elevation","delr","delc","time"]
+STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "delr", "delc",
+                 "time"]
+
 
 class Logger(object):
     """
@@ -67,14 +69,14 @@ class Logger(object):
             s = str(t) + ' finished: ' + str(phrase) + ", took: " + \
                 str(t - self.items[phrase]) + '\n'
             if self.echo:
-                print(s,)
+                print(s, )
             if self.filename:
                 self.f.write(s)
             self.items.pop(phrase)
         else:
             s = str(t) + ' starting: ' + str(phrase) + '\n'
             if self.echo:
-                print(s,)
+                print(s, )
             if self.filename:
                 self.f.write(s)
             self.items[phrase] = copy.deepcopy(t)
@@ -91,7 +93,7 @@ class Logger(object):
         """
         s = str(datetime.now()) + " WARNING: " + message + '\n'
         if self.echo:
-            print(s,)
+            print(s, )
         if self.filename:
             self.f.write(s)
         return
@@ -169,76 +171,76 @@ class NetCdf(object):
         self.initialize_file(time_values=self.time_values_arg)
         self.log("initializing file")
 
-
-    def __add__(self,other):
+    def __add__(self, other):
         new_net = NetCdf.zeros_like(self)
-        if np.isscalar(other) or isinstance(other,np.ndarray):
+        if np.isscalar(other) or isinstance(other, np.ndarray):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] +\
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] + \
                                                  other
-        elif isinstance(other,NetCdf):
+        elif isinstance(other, NetCdf):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] +\
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] + \
                                                  other.nc.variables[vname][:]
         else:
-            raise Exception("NetCdf.__add__(): unrecognized other:{0}".\
+            raise Exception("NetCdf.__add__(): unrecognized other:{0}". \
                             format(str(type(other))))
         return new_net
 
-    def __sub__(self,other):
+    def __sub__(self, other):
         new_net = NetCdf.zeros_like(self)
-        if np.isscalar(other) or isinstance(other,np.ndarray):
+        if np.isscalar(other) or isinstance(other, np.ndarray):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] -\
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] - \
                                                  other
-        elif isinstance(other,NetCdf):
+        elif isinstance(other, NetCdf):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] -\
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] - \
                                                  other.nc.variables[vname][:]
         else:
-            raise Exception("NetCdf.__sub__(): unrecognized other:{0}".\
+            raise Exception("NetCdf.__sub__(): unrecognized other:{0}". \
                             format(str(type(other))))
         return new_net
 
-    def __mul__(self,other):
+    def __mul__(self, other):
         new_net = NetCdf.zeros_like(self)
-        if np.isscalar(other) or isinstance(other,np.ndarray):
+        if np.isscalar(other) or isinstance(other, np.ndarray):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] *\
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] * \
                                                  other
-        elif isinstance(other,NetCdf):
+        elif isinstance(other, NetCdf):
             for vname in self.var_attr_dict.keys():
-                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] *\
+                new_net.nc.variables[vname][:] = self.nc.variables[vname][:] * \
                                                  other.nc.variables[vname][:]
         else:
-            raise Exception("NetCdf.__mul__(): unrecognized other:{0}".\
+            raise Exception("NetCdf.__mul__(): unrecognized other:{0}". \
                             format(str(type(other))))
         return new_net
 
-
-    def __div__(self,other):
+    def __div__(self, other):
         return self.__truediv__(other)
 
-
-    def __truediv__(self,other):
+    def __truediv__(self, other):
         new_net = NetCdf.zeros_like(self)
         with np.errstate(invalid="ignore"):
-            if np.isscalar(other) or isinstance(other,np.ndarray):
+            if np.isscalar(other) or isinstance(other, np.ndarray):
                 for vname in self.var_attr_dict.keys():
-                    new_net.nc.variables[vname][:] = self.nc.variables[vname][:] /\
+                    new_net.nc.variables[vname][:] = self.nc.variables[vname][
+                                                     :] / \
                                                      other
-            elif isinstance(other,NetCdf):
+            elif isinstance(other, NetCdf):
                 for vname in self.var_attr_dict.keys():
-                    new_net.nc.variables[vname][:] = self.nc.variables[vname][:] /\
-                                                     other.nc.variables[vname][:]
+                    new_net.nc.variables[vname][:] = self.nc.variables[vname][
+                                                     :] / \
+                                                     other.nc.variables[vname][
+                                                     :]
             else:
-                raise Exception("NetCdf.__sub__(): unrecognized other:{0}".\
+                raise Exception("NetCdf.__sub__(): unrecognized other:{0}". \
                                 format(str(type(other))))
             return new_net
 
-    def append(self,other,suffix="_1"):
-        assert isinstance(other,NetCdf) or isinstance(other,dict)
-        if isinstance(other,NetCdf):
+    def append(self, other, suffix="_1"):
+        assert isinstance(other, NetCdf) or isinstance(other, dict)
+        if isinstance(other, NetCdf):
             for vname in other.var_attr_dict.keys():
                 attrs = other.var_attr_dict[vname].copy()
                 var = other.nc.variables[vname]
@@ -251,23 +253,24 @@ class NetCdf(object):
                             attrs["long_name"] += " " + suffix
                     else:
                         continue
-                assert new_vname not in self.nc.variables.keys(),\
-                    "var already exists:{0} in {1}".\
-                        format(new_vname,",".join(self.nc.variables.keys()))
+                assert new_vname not in self.nc.variables.keys(), \
+                    "var already exists:{0} in {1}". \
+                        format(new_vname, ",".join(self.nc.variables.keys()))
                 attrs["max"] = var[:].max()
                 attrs["min"] = var[:].min()
-                new_var = self.create_variable(new_vname,attrs,
-                                              var.dtype,
-                                              dimensions=var.dimensions)
+                new_var = self.create_variable(new_vname, attrs,
+                                               var.dtype,
+                                               dimensions=var.dimensions)
                 new_var[:] = var[:]
         else:
-            for vname,array in other.items():
+            for vname, array in other.items():
                 vname_norm = self.normalize_name(vname)
-                assert vname_norm in self.nc.variables.keys(),"dict var not in " \
-                                                         "self.vars:{0}-->".\
-                                                         format(vname) +\
-                                                        ",".join(self.nc.variables.keys())
-
+                assert vname_norm in self.nc.variables.keys(), "dict var not in " \
+                                                               "self.vars:{0}-->". \
+                                                                   format(
+                    vname) + \
+                                                               ",".join(
+                                                                   self.nc.variables.keys())
 
                 new_vname = vname_norm + suffix
                 assert new_vname not in self.nc.variables.keys()
@@ -277,34 +280,34 @@ class NetCdf(object):
                 attrs["name"] = new_vname
                 attrs["long_name"] = attrs["long_name"] + ' ' + suffix
                 var = self.nc.variables[vname_norm]
-                #assert var.shape == array.shape,\
+                # assert var.shape == array.shape,\
                 #    "{0} shape ({1}) doesn't make array shape ({2})".\
                 #        format(new_vname,str(var.shape),str(array.shape))
-                new_var = self.create_variable(new_vname,attrs,
-                                              var.dtype,
-                                              dimensions=var.dimensions)
+                new_var = self.create_variable(new_vname, attrs,
+                                               var.dtype,
+                                               dimensions=var.dimensions)
                 try:
                     new_var[:] = array
                 except:
-                    new_var[:,0] = array
+                    new_var[:, 0] = array
 
         return
 
-    def copy(self,output_filename):
-        new_net = NetCdf.zeros_like(self,output_filename=output_filename)
+    def copy(self, output_filename):
+        new_net = NetCdf.zeros_like(self, output_filename=output_filename)
         for vname in self.var_attr_dict.keys():
             new_net.nc.variables[vname][:] = self.nc.variables[vname][:]
         return new_net
 
     @classmethod
-    def zeros_like(cls,other,output_filename=None,
-                   verbose=None,logger=None):
-        new_net = NetCdf.empty_like(other,output_filename,verbose=verbose,
+    def zeros_like(cls, other, output_filename=None,
+                   verbose=None, logger=None):
+        new_net = NetCdf.empty_like(other, output_filename, verbose=verbose,
                                     logger=logger)
         # add the vars to the instance
         for vname in other.var_attr_dict.keys():
             if new_net.nc.variables.get(vname) is not None:
-                new_net.logger.warn("variable {0} already defined, skipping".\
+                new_net.logger.warn("variable {0} already defined, skipping". \
                                     format(vname))
                 continue
             new_net.log("adding variable {0}".format(vname))
@@ -317,9 +320,10 @@ class NetCdf(object):
                 mask = None
             new_data = np.zeros_like(data)
             new_data[mask] = FILLVALUE
-            new_var = new_net.create_variable(vname,other.var_attr_dict[vname],
-                                          var.dtype,
-                                          dimensions=var.dimensions)
+            new_var = new_net.create_variable(vname,
+                                              other.var_attr_dict[vname],
+                                              var.dtype,
+                                              dimensions=var.dimensions)
             new_var[:] = new_data
             new_net.log("adding variable {0}".format(vname))
         global_attrs = {}
@@ -330,19 +334,22 @@ class NetCdf(object):
         return new_net
 
     @classmethod
-    def empty_like(cls,other,output_filename=None,
-                   verbose=None,logger=None):
+    def empty_like(cls, other, output_filename=None,
+                   verbose=None, logger=None):
         if output_filename is None:
-            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
+            output_filename = str(
+                time.mktime(datetime.now().timetuple())) + ".nc"
 
         while os.path.exists(output_filename):
-            output_filename = str(time.mktime(datetime.now().timetuple()))+".nc"
-        new_net = cls(output_filename,other.model,
-                      time_values=other.time_values_arg,verbose=verbose,
+            output_filename = str(
+                time.mktime(datetime.now().timetuple())) + ".nc"
+        new_net = cls(output_filename, other.model,
+                      time_values=other.time_values_arg, verbose=verbose,
                       logger=logger)
         return new_net
 
-    def difference(self, other, minuend="self", mask_zero_diff=True,onlydiff=True):
+    def difference(self, other, minuend="self", mask_zero_diff=True,
+                   onlydiff=True):
         """make a new NetCDF instance that is the difference with another
         netcdf file
 
@@ -374,8 +381,8 @@ class NetCdf(object):
 
         """
 
-        assert self.nc is not None,"can't call difference() if nc " +\
-                                   "hasn't been populated"
+        assert self.nc is not None, "can't call difference() if nc " + \
+                                    "hasn't been populated"
         try:
             import netCDF4
         except Exception as e:
@@ -383,19 +390,19 @@ class NetCdf(object):
             self.logger.warn(mess)
             raise Exception(mess)
 
-        if isinstance(other,str):
-            assert os.path.exists(other),"filename 'other' not found:" + \
-                                         "{0}".format(other)
-            other = netCDF4.Dataset(other,'r')
+        if isinstance(other, str):
+            assert os.path.exists(other), "filename 'other' not found:" + \
+                                          "{0}".format(other)
+            other = netCDF4.Dataset(other, 'r')
 
-        assert isinstance(other,netCDF4.Dataset)
+        assert isinstance(other, netCDF4.Dataset)
 
         # check for similar variables
         self_vars = set(self.nc.variables.keys())
         other_vars = set(other.variables)
         diff = self_vars.symmetric_difference(other_vars)
         if len(diff) > 0:
-            self.logger.warn("variables are not the same between the two " +\
+            self.logger.warn("variables are not the same between the two " + \
                              "nc files: " + ','.join(diff))
             return
 
@@ -407,14 +414,14 @@ class NetCdf(object):
                 self.logger.warn("missing dimension in other:{0}".format(d))
                 return
             if len(self_dimens[d]) != len(other_dimens[d]):
-                self.logger.warn("dimension not consistent: "+\
+                self.logger.warn("dimension not consistent: " + \
                                  "{0}:{1}".format(self_dimens[d],
                                                   other_dimens[d]))
                 return
         # should be good to go
         time_values = self.nc.variables.get("time")[:]
-        new_net = NetCdf(self.output_filename.replace(".nc",".diff.nc"),
-                         self.model,time_values=time_values)
+        new_net = NetCdf(self.output_filename.replace(".nc", ".diff.nc"),
+                         self.model, time_values=time_values)
         # add the vars to the instance
         for vname in self_vars:
             if vname not in self.var_attr_dict or \
@@ -429,7 +436,7 @@ class NetCdf(object):
             o_mask, s_mask = None, None
 
             # keep the masks to apply later
-            if isinstance(s_data,np.ma.MaskedArray):
+            if isinstance(s_data, np.ma.MaskedArray):
                 self.logger.warn("masked array for {0}".format(vname))
                 s_mask = s_data.mask
                 s_data = np.array(s_data)
@@ -437,13 +444,12 @@ class NetCdf(object):
             else:
                 np.nan_to_num(s_data)
 
-            if isinstance(o_data,np.ma.MaskedArray):
+            if isinstance(o_data, np.ma.MaskedArray):
                 o_mask = o_data.mask
                 o_data = np.array(o_data)
                 o_data[o_mask] = 0.0
             else:
                 np.nan_to_num(o_data)
-
 
             # difference with self
             if minuend.lower() == "self":
@@ -457,10 +463,13 @@ class NetCdf(object):
 
             # check for non-zero diffs
             if onlydiff and d_data.sum() == 0.0:
-                self.logger.warn("var {0} has zero differences, skipping...".format(vname))
+                self.logger.warn(
+                    "var {0} has zero differences, skipping...".format(vname))
                 continue
 
-            self.logger.warn("resetting diff attrs max,min:{0},{1}".format(d_data.min(),d_data.max()))
+            self.logger.warn(
+                "resetting diff attrs max,min:{0},{1}".format(d_data.min(),
+                                                              d_data.max()))
             attrs = self.var_attr_dict[vname].copy()
             attrs["max"] = np.nanmax(d_data)
             attrs["min"] = np.nanmin(d_data)
@@ -478,20 +487,20 @@ class NetCdf(object):
 
             d_data[np.isnan(d_data)] = FILLVALUE
             if mask_zero_diff:
-                d_data[np.where(d_data==0.0)] = FILLVALUE
+                d_data[np.where(d_data == 0.0)] = FILLVALUE
 
-            var = new_net.create_variable(vname,attrs,
+            var = new_net.create_variable(vname, attrs,
                                           s_var.dtype,
                                           dimensions=s_var.dimensions)
 
             var[:] = d_data
             self.log("processing variable {0}".format(vname))
 
-    def _dt_str(self,dt):
+    def _dt_str(self, dt):
         """ for datetime to string for year < 1900
         """
         dt_str = '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02}Z'.format(
-                dt.year,dt.month,dt.day,dt.hour,dt.minute,dt.second)
+            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
         return dt_str
 
     def write(self):
@@ -536,16 +545,16 @@ class NetCdf(object):
         self.global_attributes["create_platform"] = platform.system()
         self.global_attributes["create_directory"] = os.getcwd()
 
-        htol,rtol = -999,-999
+        htol, rtol = -999, -999
         try:
-            htol,rtol = NetCdf.get_solver_H_R_tols(self.model)
+            htol, rtol = NetCdf.get_solver_H_R_tols(self.model)
         except Exception as e:
-            self.logger.warn("unable to get solver tolerances:" +\
+            self.logger.warn("unable to get solver tolerances:" + \
                              "{0}".format(str(e)))
         self.global_attributes["solver_head_tolerance"] = htol
         self.global_attributes["solver_flux_tolerance"] = rtol
-        for n,v in self.model.sr.attribute_dict.items():
-            self.global_attributes["flopy_sr_"+n] = v
+        for n, v in self.model.sr.attribute_dict.items():
+            self.global_attributes["flopy_sr_" + n] = v
         self.global_attributes["start_datetime"] = self.model.start_datetime
 
         self.fillvalue = FILLVALUE
@@ -581,7 +590,7 @@ class NetCdf(object):
             proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
         try:
-            self.grid_crs = Proj(proj4_str,preseve_units=True,errcheck=True)
+            self.grid_crs = Proj(proj4_str, preseve_units=True, errcheck=True)
 
         except Exception as e:
             self.log("error building grid crs:\n{0}".format(str(e)))
@@ -591,8 +600,8 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        if self.grid_units.lower().startswith('f'): #and \
-               #not self.model.sr.units.startswith("f"):
+        if self.grid_units.lower().startswith('f'):  # and \
+            # not self.model.sr.units.startswith("f"):
             self.log("converting feet to meters")
             sr = copy.deepcopy(self.model.sr)
             sr.delr /= 3.281
@@ -608,7 +617,6 @@ class NetCdf(object):
         else:
             ys = self.model.sr.ycentergrid.copy()
             xs = self.model.sr.xcentergrid.copy()
-
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)
@@ -831,13 +839,14 @@ class NetCdf(object):
         # Normalize variable name
         name = self.normalize_name(name)
         # if this is a core var like a dimension...
-        #long_name = attributes.pop("long_name",name)
+        # long_name = attributes.pop("long_name",name)
         if name in STANDARD_VARS and name in self.nc.variables.keys():
             return
-        if name not in self.var_attr_dict.keys() and\
-           name in self.nc.variables.keys():
+        if name not in self.var_attr_dict.keys() and \
+                        name in self.nc.variables.keys():
             if self.forgive:
-                self.logger.warn("skipping duplicate variable: {0}".format(name))
+                self.logger.warn(
+                    "skipping duplicate variable: {0}".format(name))
                 return
             else:
                 raise Exception("duplicate variable name: {0}".format(name))
@@ -873,8 +882,8 @@ class NetCdf(object):
         self.var_attr_dict[name] = attributes
 
         var = self.nc.createVariable(name, precision_str, dimensions,
-                                     fill_value=self.fillvalue, zlib=True)#,
-                                     #chunksizes=tuple(chunks))
+                                     fill_value=self.fillvalue, zlib=True)  # ,
+        # chunksizes=tuple(chunks))
         for k, v in attributes.items():
             try:
                 var.setncattr(k, v)
@@ -884,8 +893,7 @@ class NetCdf(object):
         self.log("creating variable: " + str(name))
         return var
 
-
-    def add_global_attributes(self,attr_dict):
+    def add_global_attributes(self, attr_dict):
         """ add global attribute to an initialized file
 
         Parameters
@@ -903,8 +911,8 @@ class NetCdf(object):
 
         """
         if self.nc is None:
-            #self.initialize_file()
-            mess = "NetCDF.add_global_attributes() should only "+\
+            # self.initialize_file()
+            mess = "NetCDF.add_global_attributes() should only " + \
                    "be called after the file has been initialized"
             self.logger.warn(mess)
             raise Exception(mess)
@@ -913,14 +921,13 @@ class NetCdf(object):
         self.nc.setncatts(attr_dict)
         self.log("setting global attributes")
 
-
     @staticmethod
     def get_solver_H_R_tols(model):
         if model.pcg is not None:
-            return model.pcg.hclose,model.pcg.rclose
+            return model.pcg.hclose, model.pcg.rclose
         elif model.nwt is not None:
-            return model.nwt.headtol,model.nwt.fluxtol
+            return model.nwt.headtol, model.nwt.fluxtol
         elif model.sip is not None:
-            return model.sip.hclose,-999
+            return model.sip.hclose, -999
         elif model.gmg is not None:
-            return model.gmg.hclose,model.gmg.rclose
+            return model.gmg.hclose, model.gmg.rclose

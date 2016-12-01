@@ -6,7 +6,7 @@ import flopy
 pthtest = os.path.join('..', 'examples', 'data', 'mt3d_test')
 pth2005 = os.path.join(pthtest, 'mf2005mt3d')
 pth2000 = os.path.join(pthtest, 'mf2kmt3d')
-newpth = os.path.join('.', 'temp')
+newpth = os.path.join('.', 'temp', 't012')
 
 mf2k_exe = 'mf2000'
 mf2005_exe = 'mf2005'

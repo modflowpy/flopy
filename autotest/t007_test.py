@@ -1,5 +1,6 @@
 # Test export module
 import sys
+
 sys.path.insert(0, '..')
 import copy
 import os
@@ -10,6 +11,22 @@ pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
 # skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
 skip = []
+
+npth = os.path.join('temp', 't007', 'netcdf')
+# make the directory if it does not exist
+if not os.path.isdir(npth):
+    os.makedirs(npth)
+
+spth = os.path.join('temp', 't007', 'shapefile')
+# make the directory if it does not exist
+if not os.path.isdir(spth):
+    os.makedirs(spth)
+
+tpth = os.path.join('temp', 't007')
+# make the directory if it does not exist
+if not os.path.isdir(tpth):
+    os.makedirs(tpth)
+
 
 def export_netcdf(namfile):
     if namfile in skip:
@@ -34,9 +51,9 @@ def export_netcdf(namfile):
     except:
         return
 
-    fnc = m.export(os.path.join('temp', m.name + '.nc'))
+    fnc = m.export(os.path.join(npth, m.name + '.nc'))
     fnc.write()
-    fnc_name = os.path.join('temp', m.name + '.nc')
+    fnc_name = os.path.join(npth, m.name + '.nc')
     try:
         fnc = m.export(fnc_name)
         fnc.write()
@@ -61,7 +78,7 @@ def export_shapefile(namfile):
 
     assert m, 'Could not load namefile {}'.format(namfile)
     assert isinstance(m, flopy.modflow.Modflow)
-    fnc_name = os.path.join('temp', m.name + '.shp')
+    fnc_name = os.path.join(spth, m.name + '.shp')
     try:
         fnc = m.export(fnc_name)
 
@@ -97,7 +114,7 @@ def test_export_output():
     hds_pth = os.path.join(model_ws, "freyberg.githds")
     hds = flopy.utils.HeadFile(hds_pth)
 
-    out_pth = os.path.join("temp", "freyberg.out.nc")
+    out_pth = os.path.join(npth, "freyberg.out.nc")
     nc = flopy.export.utils.output_helper(out_pth, ml,
                                           {"freyberg.githds": hds})
     var = nc.nc.variables.get("head")
@@ -125,10 +142,10 @@ def test_mbase_sr():
     print(ml.sr)
     assert ml.sr.xul == 500
     assert ml.sr.yul == 10
-    ml.model_ws = "temp"
+    ml.model_ws = tpth
 
     ml.write_input()
-    ml1 = flopy.modflow.Modflow.load("test.nam", model_ws="temp")
+    ml1 = flopy.modflow.Modflow.load("test.nam", model_ws=ml.model_ws)
     assert ml1.sr == ml.sr
     assert ml1.start_datetime == ml.start_datetime
 
@@ -158,7 +175,7 @@ def test_free_format_flag():
     bas.ifrefm = True
     assert ms.free_format_input == bas.ifrefm
 
-    ms.model_ws = "temp"
+    ms.model_ws = tpth
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
     assert ms1.free_format_input == ms.free_format_input
@@ -241,7 +258,7 @@ def test_sr():
     assert ms.start_datetime == "1-1-2016"
     assert ms.dis.start_datetime == "1-1-2016"
 
-    ms.model_ws = "temp"
+    ms.model_ws = tpth
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
     assert ms1.sr == ms.sr
@@ -253,29 +270,35 @@ def test_sr():
     ms1.sr = sr
     assert ms1.sr == ms.sr
 
+
 def test_sr_scaling():
     nlay, nrow, ncol = 1, 10, 5
     delr, delc = 250, 500
     xll, yll = 286.80, 29.03
     # test scaling of length units
-    fm = flopy.modflow
-    ms2 = fm.Modflow()
-    dis = fm.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+    ms2 = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
+                                   delr=delr,
                                    delc=delc)
-    ms2.sr = flopy.utils.SpatialReference(delr=ms2.dis.delr.array, delc=ms2.dis.delc.array, lenuni=3,
+    ms2.sr = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
+                                          delc=ms2.dis.delc.array, lenuni=3,
                                           xll=xll, yll=yll, rotation=0)
     ms2.sr.epsg = 26715
-    ms2.dis.export(os.path.join('temp', 'dis2.shp'))
-    ms3 = fm.Modflow()
-    dis = fm.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+    ms2.dis.export(os.path.join(spth, 'dis2.shp'))
+    ms3 = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol,
+                                   delr=delr,
                                    delc=delc)
-    ms3.sr = flopy.utils.SpatialReference(delr=ms3.dis.delr.array, delc=ms2.dis.delc.array, lenuni=3,
+    ms3.sr = flopy.utils.SpatialReference(delr=ms3.dis.delr.array,
+                                          delc=ms2.dis.delc.array, lenuni=3,
                                           length_multiplier=.3048,
-                                          xll=xll, yll=yll, rotation=30)
-    ms3.dis.export(os.path.join('temp', 'dis3.shp'), epsg=26715)
-    assert np.array_equal(ms3.sr.get_vertices(nrow-1, 0)[1], [ms3.sr.xll, ms3.sr.yll])
-    assert np.array_equal(ms3.sr.get_vertices(nrow-1, 0)[1], ms2.sr.get_vertices(nrow-1, 0)[1])
-    xur, yur = ms3.sr.get_vertices(0, ncol-1)[3]
+                                          xll=xll, yll=yll, rotation=0)
+    ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
+    assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
+                          [ms3.sr.xll, ms3.sr.yll])
+    assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
+                          ms2.sr.get_vertices(nrow - 1, 0)[1])
+    xur, yur = ms3.sr.get_vertices(0, ncol - 1)[3]
     assert xur == xll + ms3.sr.length_multiplier * delr * ncol
     assert yur == yll + ms3.sr.length_multiplier * delc * nrow
 
@@ -307,24 +330,29 @@ def test_rotation():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                        delc=m.dis.delc.array,
                                         xul=xul, yul=yul, rotation=45.)
     xll, yll = m.sr.xll, m.sr.yll
     assert m.dis.sr.xgrid[0, 0] == xul
     assert m.dis.sr.ygrid[0, 0] == yul
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                        delc=m.dis.delc.array,
                                         xul=xul, yul=yul, rotation=-45.)
     assert m.dis.sr.xgrid[0, 0] == xul
     assert m.dis.sr.ygrid[0, 0] == yul
     xll2, yll2 = m.sr.xll, m.sr.yll
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                        delc=m.dis.delc.array,
                                         xll=xll2, yll=yll2, rotation=-45.)
     assert m.dis.sr.xgrid[0, 0] == xul
     assert m.dis.sr.ygrid[0, 0] == yul
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                        delc=m.dis.delc.array,
                                         xll=xll, yll=yll, rotation=45.)
     assert m.dis.sr.xgrid[0, 0] == xul
     assert m.dis.sr.ygrid[0, 0] == yul
+
 
 def test_map_rotation():
     m = flopy.modflow.Modflow(rotation=20.)
@@ -333,23 +361,28 @@ def test_map_rotation():
                                    delc=250., top=10, botm=0)
     # transformation assigned by arguments
     xul, yul, rotation = 500000, 2934000, 45
-    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul, rotation=rotation)
+    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
+                                   rotation=rotation)
     lc = modelmap.plot_grid()
     xll, yll = modelmap.sr.xll, modelmap.sr.yll
+
     def check_vertices():
         xllp, yllp = lc._paths[0].vertices[0]
         xulp, yulp = lc._paths[0].vertices[1]
         assert (xllp, yllp) == (xll, yll)
         assert (xulp, yulp) == (xul, yul)
+
     check_vertices()
 
-    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll, rotation=rotation)
+    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll,
+                                   rotation=rotation)
     lc = modelmap.plot_grid()
     check_vertices()
 
     # transformation in m.sr
-    sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
-                                               xll=xll, yll=yll, rotation=rotation)
+    sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                      delc=m.dis.delc.array,
+                                      xll=xll, yll=yll, rotation=rotation)
     m.sr = copy.deepcopy(sr)
     modelmap = flopy.plot.ModelMap(model=m)
     lc = modelmap.plot_grid()
@@ -380,9 +413,10 @@ def test_netcdf_classmethods():
     ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False,
                                     verbose=True, load_only=[])
 
-    f = ml.export(os.path.join("temp", "freyberg.nc"))
+    f = ml.export(os.path.join(npth, "freyberg.nc"))
     v1_set = set(f.nc.variables.keys())
-    new_f = flopy.export.NetCdf.zeros_like(f)
+    fnc = os.path.join(npth, "freyberg.new.nc")
+    new_f = flopy.export.NetCdf.zeros_like(f, output_filename=fnc)
     v2_set = set(new_f.nc.variables.keys())
     diff = v1_set.symmetric_difference(v2_set)
     assert len(diff) == 0, str(diff)
@@ -435,7 +469,7 @@ def test_shapefile_ibound():
     except:
         return
 
-    shape_name = os.path.join("temp", "test.shp")
+    shape_name = os.path.join(spth, "test.shp")
     nam_file = "freyberg.nam"
     model_ws = os.path.join('..', 'examples', 'data',
                             'freyberg_multilayer_transient')

@@ -199,9 +199,13 @@ class ModflowDisU(Package):
                  tsmult=1, steady=True, extension='disu',
                  unitnumber=11, start_datetime="1/1/1970"):
 
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowDisU.defaultunit()
+
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
-        Package.__init__(self, model, extension, 'DISU', unitnumber)
+        Package.__init__(self, model, extension, ModflowDisU.ftype(), unitnumber)
 
         # Set values of all parameters
         self.url = 'dis.htm'
@@ -705,7 +709,15 @@ class ModflowDisU(Package):
         f_dis.close()
         return
 
-    # def get_node_coordinates(self):
+    @staticmethod
+    def ftype():
+        return 'DISU'
+
+    @staticmethod
+    def defaultunit():
+        return 11
+
+            # def get_node_coordinates(self):
     #     """
     #     Get y, x, and z cell centroids.
     #
