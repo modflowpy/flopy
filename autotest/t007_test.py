@@ -302,6 +302,26 @@ def test_sr_scaling():
     assert xur == xll + ms3.sr.length_multiplier * delr * ncol
     assert yur == yll + ms3.sr.length_multiplier * delc * nrow
 
+def test_namfile_readwrite():
+    nlay, nrow, ncol = 1, 10, 5
+    delr, delc = 250, 500
+    xll, yll = 286.80, 29.03
+    fm = flopy.modflow
+    m = fm.Modflow(modelname='junk', model_ws='temp')
+    dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                                   delc=delc)
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array, lenuni=3,
+                                          length_multiplier=.3048,
+                                          xll=xll, yll=yll, rotation=30)
+
+    # test reading and writing of SR information to namfile
+    m.write_input()
+    m2 = fm.Modflow.load('junk.nam', model_ws='temp')
+    assert m2.sr.xll - xll < 1e-6
+    assert m2.sr.yll - yll < 1e-6
+    assert m2.sr.rotation == 30
+    assert m2.sr.length_multiplier - .3048 < 1e-10
+
 
 def test_rotation():
     m = flopy.modflow.Modflow(rotation=20.)
@@ -488,18 +508,19 @@ def build_sfr_netcdf():
 
 
 if __name__ == '__main__':
-    test_shapefile_ibound()
-    # test_netcdf_overloads()
-    test_netcdf_classmethods()
-    build_netcdf()
-    build_sfr_netcdf()
-    test_sr()
-    test_rotation()
-    test_map_rotation()
-    test_sr_scaling()
-    test_free_format_flag()
-    test_export_output()
-    for namfile in namfiles:
-        # for namfile in ["fhb.nam"]:
-        export_netcdf(namfile)
-        export_shapefile(namfile)
+    #test_shapefile_ibound()
+    #test_netcdf_overloads()
+    #test_netcdf_classmethods()
+    #build_netcdf()
+    #build_sfr_netcdf()
+    #test_sr()
+    #test_rotation()
+    #test_map_rotation()
+    #test_sr_scaling()
+    test_namfile_readwrite()
+    #test_free_format_flag()
+    #test_export_output()
+    #for namfile in namfiles:
+    #for namfile in ["fhb.nam"]:
+        #export_netcdf(namfile)
+        #export_shapefile(namfile)

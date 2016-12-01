@@ -3,6 +3,8 @@ __author__ = 'aleaf'
 import sys
 # sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
+import glob
+import shutil
 import numpy as np
 import matplotlib
 
@@ -203,6 +205,9 @@ def test_example():
                                     channel_flow_data=channel_flow_data,
                                     dataset_5=dataset_5)
 
+    assert istcb2 in m.package_units
+    assert True
+
     # test handling of a 0-D array (produced by genfromtxt sometimes)
     segment_data = np.array(segment_data[0])
     sfr = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const,
@@ -213,8 +218,26 @@ def test_example():
                                     channel_flow_data=channel_flow_data,
                                     dataset_5=dataset_5)
 
+def test_transient_example():
+    path = 'temp'
+    gpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'testsfr2.*')
+    for f in glob.glob(gpth):
+        shutil.copy(f, path)
+    mf = flopy.modflow
+    m = mf.Modflow.load('testsfr2.nam', model_ws=path)
+
+    # test handling of unformatted output file
+    m.sfr.istcb2 = 49
+    m.sfr.unit_number = [m.sfr.unit_number[0], 49]
+    m.package_units.append(49)
+    m.write_input()
+    m2 = mf.Modflow.load('testsfr2.nam', model_ws=path)
+    assert m2.sfr.istcb2 == 49
+    assert m2.sfr.unit_number[1] == 49
+    assert 49 in m2.package_units
 
 if __name__ == '__main__':
-    test_sfr()
-    test_sfr_renumbering()
-    test_example()
+    #test_sfr()
+    #test_sfr_renumbering()
+    #test_example()
+    test_transient_example()
