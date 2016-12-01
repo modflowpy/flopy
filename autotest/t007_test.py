@@ -319,9 +319,8 @@ def test_namfile_readwrite():
     m2 = fm.Modflow.load('junk.nam', model_ws='temp')
     assert m2.sr.xll - xll < 1e-6
     assert m2.sr.yll - yll < 1e-6
-    assert m2.sr.lenuni == 3
     assert m2.sr.rotation == 30
-    assert m2.sr.length_multmiplier - .3048 < 1e-10
+    assert m2.sr.length_multiplier - .3048 < 1e-10
 
 
 def test_rotation():
