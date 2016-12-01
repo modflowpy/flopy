@@ -186,6 +186,7 @@ class SpatialReference(object):
         proj4_str = "EPSG:4326"
         start_datetime = "1/1/1970"
         units = None
+        length_multiplier = 1.
 
         for item in header:
             if "xul" in item.lower():

@@ -212,14 +212,14 @@ class ModflowSfr2(Package):
             unit_number = ModflowSfr2.defaultunit()
 
         # Fill namefile items
-        name = ['SFR', 'DATA']
+        name = [ModflowSfr2.ftype(), 'DATA']
         units = [unit_number, istcb2]
         extension = [extension, 'sfq']
         #extra = ['', 'REPLACE']
 
         # Call ancestor's init to set self.parent, extension, name, and unit number
-        Package.__init__(self, model, extension, ModflowSfr2.ftype(), name=name,
-                         unit_number=unitnumber)
+        Package.__init__(self, model, extension, name=name,
+                         unit_number=units)
 
         self.url = 'sfr2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
@@ -584,7 +584,7 @@ class ModflowSfr2(Package):
                            channel_flow_data=channel_flow_data,
                            reachinput=reachinput, transroute=transroute,
                            tabfiles=tabfiles, tabfiles_dict=tabfiles_dict,
-                           unitnumber=unitnumber)
+                           unit_number=unitnumber)
 
 
 
