@@ -219,10 +219,12 @@ class SpatialReference(object):
                     pass
             elif "units" in item.lower():
                 units = item.split(':')[1].strip()
+            elif "length_multiplier" in item.lower():
+                length_multiplier = float(item.split(':')[1].strip())
 
         return {"xul":xul,"yul":yul,"rotation":rotation,
                 "proj4_str":proj4_str,"start_datetime":start_datetime,
-                "units":units}
+                "units":units, "length_multiplier": length_multiplier}
 
     def __setattr__(self, key, value):
         reset = True
@@ -397,7 +399,8 @@ class SpatialReference(object):
             format(self.xul,self.yul,self.rotation)
         s += "proj4_str:{0}; ".format(self.proj4_str)
         s += "units:{0}; ".format(self.units)
-        s += "lenuni:{0}".format(self.lenuni)
+        s += "lenuni:{0}; ".format(self.lenuni)
+        s += "length_multiplier:{}".format(self.length_multiplier)
         return s
 
     @property
@@ -474,6 +477,7 @@ class SpatialReference(object):
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
+        x, y = x.copy(), y.copy()
         x *= self.length_multiplier
         y *= self.length_multiplier
         x += self.xll
