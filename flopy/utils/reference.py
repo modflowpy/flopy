@@ -590,7 +590,6 @@ class SpatialReference(object):
                 np.add.accumulate(self.delc)))
         return yedge
 
-
     def write_gridSpec(self, filename):
         """ write a PEST-style grid specification file
         """
@@ -623,6 +622,30 @@ class SpatialReference(object):
         pts.append([xgrid[i, j+1], ygrid[i, j+1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
         return pts
+
+    def get_rc(self, x, y):
+        """Return the row and column of a point or sequence of points
+        in real-world coordinates.
+
+        Parameters
+        ----------
+        x : scalar or sequence of x coordinates
+        y : scalar or sequence of y coordinates
+
+        Returns
+        -------
+        r : row or sequence of rows (zero-based)
+        c : column or sequence of columns (zero-based)
+        """
+        if np.isscalar(x):
+            c = (np.abs(self.xcentergrid[0] - x)).argmin()
+            r = (np.abs(self.ycentergrid[:, 0] - y)).argmin()
+        else:
+            xcp = np.array([self.xcentergrid[0]] * (len(x)))
+            ycp = np.array([self.ycentergrid[:, 0]] * (len(x)))
+            c = (np.abs(xcp.transpose() - x)).argmin(axis=0)
+            r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
+        return r, c
 
     @property
     def vertices(self):
