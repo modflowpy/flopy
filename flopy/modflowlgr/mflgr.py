@@ -5,6 +5,7 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 """
 
 import os
+import sys
 
 from ..mbase import BaseModel
 from ..modflow import Modflow
@@ -111,7 +112,7 @@ class ModflowLgr(BaseModel):
         if children is not None:
             if not isinstance(children, list):
                 children = [children]
-        self.children = children
+        self.children_models = children
         if children_data is not None:
             if not isinstance(children_data, list):
                 children_data = [children_data]
@@ -162,6 +163,76 @@ class ModflowLgr(BaseModel):
 
         if self.verbose:
             print('\nWriting packages:')
+
+        # write lgr file
+
+
+        # write parent model
+        self.parent.write_input()
+
+        # write children models
+        for child in self.children_models:
+            child.write_input()
+
+
+    def change_model_ws(self, new_pth=None, reset_external=False):
+
+        """
+        Change the model work space.
+
+        Parameters
+        ----------
+        new_pth : str
+            Location of new model workspace.  If this path does not exist,
+            it will be created. (default is None, which will be assigned to
+            the present working directory).
+
+        Returns
+        -------
+        val : list of strings
+            Can be used to see what packages are in the model, and can then
+            be used with get_package to pull out individual packages.
+
+        """
+        if new_pth is None:
+            new_pth = os.getcwd()
+        if not os.path.exists(new_pth):
+            try:
+                sys.stdout.write(
+                    '\ncreating model workspace...\n   {}\n'.format(new_pth))
+                os.makedirs(new_pth)
+            except:
+                line = '\n{} not valid, workspace-folder '.format(new_pth) + \
+                       'was changed to {}\n'.format(os.getcwd())
+                print(line)
+                new_pth = os.getcwd()
+        # --reset the model workspace
+        old_pth = self._model_ws
+        self._model_ws = new_pth
+        line = '\nchanging model workspace...\n   {}\n'.format(new_pth)
+        sys.stdout.write(line)
+
+        # reset model_ws for the parent
+        lpth = os.path.abspath(old_pth)
+        mpth = os.path.abspath(self.parent._model_ws)
+        rpth = os.path.relpath(mpth, lpth)
+        if rpth == '.':
+            npth = new_pth
+        else:
+            npth = os.path.join(new_pth, rpth)
+        self.parent.change_model_ws(new_pth=npth,
+                                    reset_external=reset_external)
+        # reset model_ws for the children
+        for child in self.children_models:
+            lpth = os.path.abspath(old_pth)
+            mpth = os.path.abspath(child._model_ws)
+            rpth = os.path.relpath(mpth, lpth)
+            if rpth == '.':
+                npth = new_pth
+            else:
+                npth = os.path.join(new_pth, rpth)
+            child.change_model_ws(new_pth=npth,
+                                  reset_external=reset_external)
 
     @staticmethod
     def load(f, version='mflgr', exe_name='mflgr.exe', verbose=False,
@@ -255,7 +326,9 @@ class ModflowLgr(BaseModel):
             raise ValueError(msg)
 
         # load the parent model
-        parent = Modflow.load(pn, verbose=verbose, model_ws=pws)
+        parent = Modflow.load(pn, verbose=verbose, model_ws=pws,
+                              load_only=load_only, forgive=forgive,
+                              check=check)
 
         children_data = []
         children = []
@@ -277,7 +350,8 @@ class ModflowLgr(BaseModel):
             # dataset 8
             line = f.readline()
             t = line.split()
-            ishflg, ibflg, iucbhsv, iucbfsv = int(t[0]), int(t[1]), int(t[2]), int(t[3])
+            ishflg, ibflg, iucbhsv, iucbfsv = int(t[0]), int(t[1]), int(
+                t[2]), int(t[3])
 
             # dataset 9
             line = f.readline()
@@ -297,12 +371,14 @@ class ModflowLgr(BaseModel):
             # dataset 12
             line = f.readline()
             t = line.split()
-            nplbeg, nprbeg, npcbeg = int(t[0]) - 1, int(t[1]) - 1, int(t[2]) - 1
+            nplbeg, nprbeg, npcbeg = int(t[0]) - 1, int(t[1]) - 1, int(
+                t[2]) - 1
 
             # dataset 13
             line = f.readline()
             t = line.split()
-            nplend, nprend, npcend = int(t[0]) - 1, int(t[1]) - 1, int(t[2]) - 1
+            nplend, nprend, npcend = int(t[0]) - 1, int(t[1]) - 1, int(
+                t[2]) - 1
 
             # dataset 14
             line = f.readline()
@@ -322,14 +398,21 @@ class ModflowLgr(BaseModel):
                                           iucbhsv=iucbhsv, iucbfsv=iucbfsv,
                                           mxlgriter=mxlgriter, ioutlgr=ioutlgr,
                                           relaxh=relaxh, relaxf=relaxf,
-                                          hcloselgr=hcloselgr, fcloselgr=fcloselgr,
-                                          nplbeg=nplbeg, nprbeg=nprbeg, npcbeg=npcbeg,
-                                          nplend=nplend, nprend=nprend, npcend=npcend,
+                                          hcloselgr=hcloselgr,
+                                          fcloselgr=fcloselgr,
+                                          nplbeg=nplbeg, nprbeg=nprbeg,
+                                          npcbeg=npcbeg,
+                                          nplend=nplend, nprend=nprend,
+                                          npcend=npcend,
                                           ncpp=ncpp, ncppl=ncppl))
             # load child model
-            children.append(Modflow.load(cn, verbose=verbose, model_ws=cws))
+            children.append(Modflow.load(cn, verbose=verbose, model_ws=cws,
+                                         load_only=load_only, forgive=forgive,
+                                         check=check))
 
-        lgr = ModflowLgr(modelname=modelname, model_ws=model_ws, verbose=verbose,
+        lgr = ModflowLgr(version=version, exe_name=exe_name,
+                         modelname=modelname, model_ws=model_ws,
+                         verbose=verbose,
                          parent=parent,
                          children=children, children_data=children_data)
 
