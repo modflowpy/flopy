@@ -600,23 +600,23 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        if self.grid_units.lower().startswith('f'):  # and \
-            # not self.model.sr.units.startswith("f"):
-            self.log("converting feet to meters")
-            sr = copy.deepcopy(self.model.sr)
-            sr.delr /= 3.281
-            sr.delc /= 3.281
-            if self.model.sr.units.startswith('f'):
-                self.log("converting xul,yul from feet to meters")
-                sr.xul /= 3.281
-                sr.yul /= 3.281
-                self.log("converting xul,yul from feet to meters")
-            ys = sr.ycentergrid.copy()
-            xs = sr.xcentergrid.copy()
-            self.log("converting feet to meters")
-        else:
-            ys = self.model.sr.ycentergrid.copy()
-            xs = self.model.sr.xcentergrid.copy()
+        # if self.grid_units.lower().startswith('f'):  # and \
+        #     # not self.model.sr.units.startswith("f"):
+        #     self.log("converting feet to meters")
+        #     sr = copy.deepcopy(self.model.sr)
+        #     sr.delr /= 3.281
+        #     sr.delc /= 3.281
+        #     if self.model.sr.units.startswith('f'):
+        #         self.log("converting xul,yul from feet to meters")
+        #         sr.xul /= 3.281
+        #         sr.yul /= 3.281
+        #         self.log("converting xul,yul from feet to meters")
+        #     ys = sr.ycentergrid.copy()
+        #     xs = sr.xcentergrid.copy()
+        #     self.log("converting feet to meters")
+        # else:
+        ys = self.model.sr.ycentergrid.copy()
+        xs = self.model.sr.xcentergrid.copy()
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)

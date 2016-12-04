@@ -265,6 +265,8 @@ class SpatialReference(object):
         if reset:
             self._reset()
 
+
+
     def reset(self,**kwargs):
         for key,value in kwargs.items():
             setattr(self,key,value)
@@ -276,6 +278,7 @@ class SpatialReference(object):
         self._ycentergrid = None
         self._xcentergrid = None
         self._vertices = None
+
 
     @property
     def nrow(self):
@@ -364,30 +367,30 @@ class SpatialReference(object):
             raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
 
         self.length_multiplier = length_multiplier
-        theta = -rotation * np.pi / 180.
+        self.theta = -rotation * np.pi / 180.
         # Set origin and rotation
         if xul is None:
             if xll is not None:
-                self.xul = xll + np.sin(theta) * self.yedge[0] * self.length_multiplier
+                self.xul = xll + np.sin(self.theta) * self.yedge[0] * self.length_multiplier
             else:
                 self.xul = 0.
         else:
             self.xul = xul
         if yul is None:
             if yll is not None:
-                self.yul = yll + np.cos(theta) * self.yedge[0] * self.length_multiplier
+                self.yul = yll + np.cos(self.theta) * self.yedge[0] * self.length_multiplier
             else:
                 self.yul = np.add.reduce(self.delc) * self.length_multiplier
         else:
             self.yul = yul
-        if xll is None:
-            self.xll = self.xul - np.sin(theta) * self.yedge[0] * self.length_multiplier
-        else:
-            self.xll = xll
-        if yll is None:
-            self.yll = self.yul - np.cos(theta) * self.yedge[0] * self.length_multiplier
-        else:
-            self.yll = yll
+        # if xll is None:
+        #     self.xll = self.xul - np.sin(theta) * self.yedge[0] * self.length_multiplier
+        # else:
+        #     self.xll = xll
+        # if yll is None:
+        #     self.yll = self.yul - np.cos(theta) * self.yedge[0] * self.length_multiplier
+        # else:
+        #     self.yll = yll
         if rotation != 0.0:
             warnings.warn("rotation arg has recently changed. " +\
                           "It was previously treated as positive clockwise" +\
@@ -403,6 +406,14 @@ class SpatialReference(object):
         s += "lenuni:{0}; ".format(self.lenuni)
         s += "length_multiplier:{}".format(self.length_multiplier)
         return s
+
+    @property
+    def xll(self):
+        return self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+
+    @property
+    def yll(self):
+        return self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
 
     @property
     def xedge(self):
