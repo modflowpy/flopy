@@ -94,6 +94,7 @@ class ModflowLgr(BaseModel):
 
     def __init__(self, modelname='modflowlgrtest', namefile_ext='lgr',
                  version='mflgr', exe_name='mflgr.exe',
+                 iupbhsv=0, iupbfsv=0,
                  parent=None, children=None, children_data=None, model_ws='.',
                  external_path=None,
                  verbose=False, **kwargs):
@@ -108,6 +109,9 @@ class ModflowLgr(BaseModel):
         self.array_format = 'modflow'
 
         self.verbose = verbose
+
+        self.iupbhsv = iupbhsv
+        self.iupbfsv = iupbfsv
 
         self.parent = parent
         if children is not None:
@@ -168,21 +172,30 @@ class ModflowLgr(BaseModel):
         # write lgr file
         self.write_name_file()
 
-
-        # write parent model
+        # write MODFLOW files for parent model
         self.parent.write_input()
 
-        # write children models
+        # write MODFLOW files for the children models
         for child in self.children_models:
             child.write_input()
 
-    def padline(self, line, comment=None):
-        if len(line) < 80:
-            line = '{:80s}'.format(line)
+    def padline(self, line, comment=None, line_len=79):
+        if len(line) < line_len:
+            fmt = '{:' + '{}'.format(line_len) + 's}'
+            line = fmt.format(line)
         if comment is not None:
             line += '  # {}\n'.format(comment)
         return line
 
+    def get_path(self, bpth, pth, fpth=''):
+        lpth = os.path.abspath(bpth)
+        mpth = os.path.abspath(pth)
+        rpth = os.path.relpath(mpth, lpth)
+        if rpth == '.':
+            rpth = fpth
+        else:
+            rpth = os.path.join(rpth, fpth)
+        return rpth
 
     def write_name_file(self):
         """
@@ -198,91 +211,103 @@ class ModflowLgr(BaseModel):
 
         # dataset 2
         line = '{}'.format(self.ngrids)
-        line = self.padline(line, comment='dataset 2 - NGRIDS')
+        line = self.padline(line, comment='data set 2 - ngridsS')
         f.write(line)
 
         # dataset 3
-        pth = os.path.join(self.parent._model_ws, self.parent.namefile)
-        f.write('{}    # dataset 3 - PARENT NAMEFILE\n'.format(pth))
-
-        # dataset 4
-        f.write('GRIDSTATUS  # dataset 4\n')
-
-        # dataset 5
-        line = '{} {}'.format(self.iupbhsv, self.iupbfsv) + \
-               '  # data set 5 - IUPBHSV, IUPBFSV\n'
+        pth = self.get_path(self._model_ws, self.parent._model_ws,
+                            fpth=self.parent.namefile)
+        line = self.padline(pth, comment='data set 3 - parent namefile')
         f.write(line)
 
-        '''
-        # load the parent model
-        parent = Modflow.load(pn, verbose=verbose, model_ws=pws,
-                              load_only=load_only, forgive=forgive,
-                              check=check)
+        # dataset 4
+        line = self.padline('PARENTONLY', comment='data set 4 - gridstatus')
+        f.write(line)
 
-        children_data = []
-        children = []
-        for child in range(nchildren):
+        # dataset 5
+        line = '{} {}'.format(self.iupbhsv, self.iupbfsv)
+        line = self.padline(line, comment='data set 5 - iupbhsv, iupbfsv')
+        f.write(line)
+
+        # dataset 6 to 15 for each child
+        for idx, (child, child_data) in enumerate(zip(self.children_models,
+                                                      self.children_data)):
             # dataset 6
-            line = f.readline()
-            t = line.split()
-            namefile = t[0]
-            cws = os.path.join(model_ws, os.path.dirname(namefile))
-            cn = os.path.basename(namefile)
+            pth = self.get_path(self._model_ws, child._model_ws,
+                                fpth=child.namefile)
+            comment = 'data set 6 - child {} namefile'.format(idx+1)
+            line = self.padline(pth, comment=comment)
+            f.write(line)
 
             # dataset 7
-            line = f.readline()
-            t = line.split()
-            gridstatus = t[0].lower()
-            msg = "GRIDSTATUS for the parent must be 'CHILDONLY'"
-            assert gridstatus == 'childonly', msg
+            comment = 'data set 7 - child {} gridstatus'.format(idx+1)
+            line = self.padline('CHILDONLY',
+                                comment=comment)
+            f.write(line)
 
             # dataset 8
-            line = f.readline()
-            t = line.split()
-            ishflg, ibflg, iucbhsv, iucbfsv = int(t[0]), int(t[1]), int(
-                t[2]), int(t[3])
+            line = '{} {} {} {}'.format(child_data.ishflg, child_data.ibflg,
+                                        child_data.iucbhsv, child_data.iucbfsv)
+            comment = 'data set 8 - child {} '.format(idx+1) + \
+                      'ishflg, ibflg, iucbhsv, iucbfsv'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
             # dataset 9
-            line = f.readline()
-            t = line.split()
-            mxlgriter, ioutlgr = int(t[0]), int(t[1])
+            line = '{} {}'.format(child_data.mxlgriter, child_data.ioutlgr)
+            comment = 'data set 9 - child {} '.format(idx+1) + \
+                      'mxlgriter, ioutlgr'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
             # dataset 10
-            line = f.readline()
-            t = line.split()
-            relaxh, relaxf = float(t[0]), float(t[1])
+            line = '{} {}'.format(child_data.relaxh, child_data.relaxf)
+            comment = 'data set 10 - child {} '.format(idx+1) + \
+                      'relaxh, relaxf'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
             # dataset 11
-            line = f.readline()
-            t = line.split()
-            hcloselgr, fcloselgr = float(t[0]), float(t[1])
+            line = '{} {}'.format(child_data.hcloselgr, child_data.fcloselgr)
+            comment = 'data set 11 - child {} '.format(idx+1) + \
+                      'hcloselgr, fcloselgr'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
             # dataset 12
-            line = f.readline()
-            t = line.split()
-            nplbeg, nprbeg, npcbeg = int(t[0]) - 1, int(t[1]) - 1, int(
-                t[2]) - 1
+            line = '{} {} {}'.format(child_data.nplbeg+1, child_data.nprbeg+1,
+                                     child_data.npcbeg+1)
+            comment = 'data set 12 - child {} '.format(idx+1) + \
+                      'nplbeg, nprbeg, npcbeg'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
             # dataset 13
-            line = f.readline()
-            t = line.split()
-            nplend, nprend, npcend = int(t[0]) - 1, int(t[1]) - 1, int(
-                t[2]) - 1
+            line = '{} {} {}'.format(child_data.nplend+1, child_data.nprend+1,
+                                     child_data.npcend+1)
+            comment = 'data set 13 - child {} '.format(idx+1) + \
+                      'nplend, nprend, npcend'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
             # dataset 14
-            line = f.readline()
-            t = line.split()
-            ncpp = int(t[0])
+            line = '{}'.format(child_data.ncpp)
+            comment = 'data set 14 - child {} '.format(idx+1) + \
+                      'ncpp'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
             # dataset 15
-            line = f.readline()
-            t = line.split()
-            ncppl = []
-            for idx in range(nplend + 1 - nplbeg):
-                ncppl.append(int(t[idx]))
+            line = ''
+            for ndx in child_data.ncppl:
+                line += '{} '.format(ndx)
+            comment = 'data set 15 - child {} '.format(idx+1) + \
+                      'ncppl'
+            line = self.padline(line, comment=comment)
+            f.write(line)
 
-        '''
 
+        # close the lgr control file
         f.close()
 
 
@@ -525,6 +550,7 @@ class ModflowLgr(BaseModel):
         lgr = ModflowLgr(version=version, exe_name=exe_name,
                          modelname=modelname, model_ws=model_ws,
                          verbose=verbose,
+                         iupbhsv=iupbhsv, iupbfsv=iupbfsv,
                          parent=parent,
                          children=children, children_data=children_data)
 

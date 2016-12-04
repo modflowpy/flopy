@@ -47,6 +47,10 @@ def test_load_and_write():
     # write the lgr model in to the new path
     lgr.write_input()
 
+    # run the lgr model
+    #if run:
+    #    lgr.run_model(silent=False)
+
     print('write lgr model files')
 
 
