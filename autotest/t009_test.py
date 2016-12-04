@@ -219,7 +219,7 @@ def test_example():
                                     dataset_5=dataset_5)
 
 def test_transient_example():
-    path = 'temp'
+    path = os.path.join('temp', 't009')
     gpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'testsfr2.*')
     for f in glob.glob(gpth):
         shutil.copy(f, path)

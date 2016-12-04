@@ -9,6 +9,7 @@ import sys
 
 from ..mbase import BaseModel
 from ..modflow import Modflow
+from ..version import __version__
 
 
 class LgrChild():
@@ -165,6 +166,7 @@ class ModflowLgr(BaseModel):
             print('\nWriting packages:')
 
         # write lgr file
+        self.write_name_file()
 
 
         # write parent model
@@ -173,6 +175,116 @@ class ModflowLgr(BaseModel):
         # write children models
         for child in self.children_models:
             child.write_input()
+
+    def padline(self, line, comment=None):
+        if len(line) < 80:
+            line = '{:80s}'.format(line)
+        if comment is not None:
+            line += '  # {}\n'.format(comment)
+        return line
+
+
+    def write_name_file(self):
+        """
+        Write the model name file.
+        """
+        fn_path = os.path.join(self.model_ws, self.namefile)
+        f = open(fn_path, 'w')
+        f.write('{}\n'.format(self.heading))
+
+        # dataset 1
+        line = self.padline('LGR', comment='data set 1')
+        f.write(line)
+
+        # dataset 2
+        line = '{}'.format(self.ngrids)
+        line = self.padline(line, comment='dataset 2 - NGRIDS')
+        f.write(line)
+
+        # dataset 3
+        pth = os.path.join(self.parent._model_ws, self.parent.namefile)
+        f.write('{}    # dataset 3 - PARENT NAMEFILE\n'.format(pth))
+
+        # dataset 4
+        f.write('GRIDSTATUS  # dataset 4\n')
+
+        # dataset 5
+        line = '{} {}'.format(self.iupbhsv, self.iupbfsv) + \
+               '  # data set 5 - IUPBHSV, IUPBFSV\n'
+        f.write(line)
+
+        '''
+        # load the parent model
+        parent = Modflow.load(pn, verbose=verbose, model_ws=pws,
+                              load_only=load_only, forgive=forgive,
+                              check=check)
+
+        children_data = []
+        children = []
+        for child in range(nchildren):
+            # dataset 6
+            line = f.readline()
+            t = line.split()
+            namefile = t[0]
+            cws = os.path.join(model_ws, os.path.dirname(namefile))
+            cn = os.path.basename(namefile)
+
+            # dataset 7
+            line = f.readline()
+            t = line.split()
+            gridstatus = t[0].lower()
+            msg = "GRIDSTATUS for the parent must be 'CHILDONLY'"
+            assert gridstatus == 'childonly', msg
+
+            # dataset 8
+            line = f.readline()
+            t = line.split()
+            ishflg, ibflg, iucbhsv, iucbfsv = int(t[0]), int(t[1]), int(
+                t[2]), int(t[3])
+
+            # dataset 9
+            line = f.readline()
+            t = line.split()
+            mxlgriter, ioutlgr = int(t[0]), int(t[1])
+
+            # dataset 10
+            line = f.readline()
+            t = line.split()
+            relaxh, relaxf = float(t[0]), float(t[1])
+
+            # dataset 11
+            line = f.readline()
+            t = line.split()
+            hcloselgr, fcloselgr = float(t[0]), float(t[1])
+
+            # dataset 12
+            line = f.readline()
+            t = line.split()
+            nplbeg, nprbeg, npcbeg = int(t[0]) - 1, int(t[1]) - 1, int(
+                t[2]) - 1
+
+            # dataset 13
+            line = f.readline()
+            t = line.split()
+            nplend, nprend, npcend = int(t[0]) - 1, int(t[1]) - 1, int(
+                t[2]) - 1
+
+            # dataset 14
+            line = f.readline()
+            t = line.split()
+            ncpp = int(t[0])
+
+            # dataset 15
+            line = f.readline()
+            t = line.split()
+            ncppl = []
+            for idx in range(nplend + 1 - nplbeg):
+                ncppl.append(int(t[idx]))
+
+        '''
+
+        f.close()
+
 
 
     def change_model_ws(self, new_pth=None, reset_external=False):

@@ -37,8 +37,7 @@ def test_load_and_write():
     if run:
         lgr.run_model(silent=False)
 
-
-    # check that a parent and child were red
+    # check that a parent and child were read
     msg = 'modflow-lgr ex3 does not have 2 grids'
     assert lgr.ngrids == 2, msg
 

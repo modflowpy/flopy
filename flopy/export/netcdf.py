@@ -302,8 +302,8 @@ class NetCdf(object):
     @classmethod
     def zeros_like(cls, other, output_filename=None,
                    verbose=None, logger=None):
-        new_net = NetCdf.empty_like(other, output_filename, verbose=verbose,
-                                    logger=logger)
+        new_net = NetCdf.empty_like(other, output_filename=output_filename,
+                                    verbose=verbose, logger=logger)
         # add the vars to the instance
         for vname in other.var_attr_dict.keys():
             if new_net.nc.variables.get(vname) is not None:
@@ -341,8 +341,12 @@ class NetCdf(object):
                 time.mktime(datetime.now().timetuple())) + ".nc"
 
         while os.path.exists(output_filename):
+            print('{}...already exists'.format(output_filename))
             output_filename = str(
                 time.mktime(datetime.now().timetuple())) + ".nc"
+            print('creating temporary netcdf file...' +
+                  '{}'.format(output_filename))
+
         new_net = cls(output_filename, other.model,
                       time_values=other.time_values_arg, verbose=verbose,
                       logger=logger)
@@ -350,7 +354,8 @@ class NetCdf(object):
 
     def difference(self, other, minuend="self", mask_zero_diff=True,
                    onlydiff=True):
-        """make a new NetCDF instance that is the difference with another
+        """
+        make a new NetCDF instance that is the difference with another
         netcdf file
 
         Parameters

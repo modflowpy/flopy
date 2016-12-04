@@ -4,6 +4,7 @@ import sys
 sys.path.insert(0, '..')
 import copy
 import os
+import shutil
 import numpy as np
 import flopy
 
@@ -12,20 +13,23 @@ namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
 # skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
 skip = []
 
-npth = os.path.join('temp', 't007', 'netcdf')
-# make the directory if it does not exist
-if not os.path.isdir(npth):
-    os.makedirs(npth)
-
-spth = os.path.join('temp', 't007', 'shapefile')
-# make the directory if it does not exist
-if not os.path.isdir(spth):
-    os.makedirs(spth)
 
 tpth = os.path.join('temp', 't007')
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
     os.makedirs(tpth)
+
+npth = os.path.join('temp', 't007', 'netcdf')
+# delete the directory if it exists
+if os.path.isdir(npth):
+    shutil.rmtree(npth)
+# make the directory
+os.makedirs(npth)
+
+spth = os.path.join('temp', 't007', 'shapefile')
+# make the directory if it does not exist
+if not os.path.isdir(spth):
+    os.makedirs(spth)
 
 
 def export_netcdf(namfile):
@@ -214,7 +218,10 @@ def test_sr():
     sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
                                       delc=ms.dis.delc.array, lenuni=3,
                                       xul=321, yul=123, rotation=20)
-    assert ms.sr.yul == 100
+
+    txt = 'yul does not approximately equal 100 - ' + \
+          '(xul, yul) = ({}, {})'.format( ms.sr.yul, ms.sr.yul)
+    assert abs(ms.sr.yul - 100) < 1e-3, txt
     ms.sr.xul = 111
     assert ms.sr.xul == 111
 
@@ -299,14 +306,15 @@ def test_sr_scaling():
     one = ms3.sr.get_vertices(nrow - 1, 0)[1]
     two = ms2.sr.get_vertices(nrow - 1, 0)[1]
 
-    #assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
+    # assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
     #                      ms2.sr.get_vertices(nrow - 1, 0)[1])
     assert np.allclose(ms3.sr.get_vertices(nrow - 1, 0)[1],
-                          ms2.sr.get_vertices(nrow - 1, 0)[1])
+                       ms2.sr.get_vertices(nrow - 1, 0)[1])
 
     xur, yur = ms3.sr.get_vertices(0, ncol - 1)[3]
     assert xur == xll + ms3.sr.length_multiplier * delr * ncol
     assert yur == yll + ms3.sr.length_multiplier * delc * nrow
+
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
@@ -318,11 +326,11 @@ def test_dynamic_xll_yll():
                                    delr=delr,
                                    delc=delc)
     sr1 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                          delc=ms2.dis.delc.array, lenuni=3,
-                                          xll=xll, yll=yll, rotation=0)
-    print(sr1.xll,sr1.yll)
-    sr1.length_multiplier = 1.0/3.281
-    print(sr1.xll,sr1.yll)
+                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       xll=xll, yll=yll, rotation=0)
+    print(sr1.xll, sr1.yll)
+    sr1.length_multiplier = 1.0 / 3.281
+    print(sr1.xll, sr1.yll)
 
 
 def test_namfile_readwrite():
@@ -330,16 +338,17 @@ def test_namfile_readwrite():
     delr, delc = 250, 500
     xll, yll = 286.80, 29.03
     fm = flopy.modflow
-    m = fm.Modflow(modelname='junk', model_ws='temp')
+    m = fm.Modflow(modelname='junk', model_ws=os.path.join('temp', 't007'))
     dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
-                                   delc=delc)
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array, lenuni=3,
-                                          length_multiplier=.3048,
-                                          xll=xll, yll=yll, rotation=30)
+                        delc=delc)
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                        delc=m.dis.delc.array, lenuni=3,
+                                        length_multiplier=.3048,
+                                        xll=xll, yll=yll, rotation=30)
 
     # test reading and writing of SR information to namfile
     m.write_input()
-    m2 = fm.Modflow.load('junk.nam', model_ws='temp')
+    m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
     assert m2.sr.xll - xll < 1e-6
     assert m2.sr.yll - yll < 1e-6
     assert m2.sr.rotation == 30
@@ -444,7 +453,6 @@ def test_netcdf_classmethods():
     assert len(diff) == 0, str(diff)
 
 
-
 # def test_netcdf_overloads():
 #     import os
 #     import flopy
@@ -502,8 +510,8 @@ def test_shapefile_ibound():
     shp = shapefile.Reader(shape_name)
     field_names = [item[0] for item in shp.fields][1:]
     ib_idx = field_names.index("ibound_001")
-    assert type(shp.record(0)[ib_idx]) == int, "should be int instead of {0}". \
-        format(type(shp.record(0)[ib_idx]))
+    txt = "should be int instead of {0}".format(type(shp.record(0)[ib_idx]))
+    assert type(shp.record(0)[ib_idx]) == int, txt
 
 
 def test_shapefile():
@@ -532,20 +540,20 @@ def build_sfr_netcdf():
 
 
 if __name__ == '__main__':
-    #test_shapefile_ibound()
-    #test_netcdf_overloads()
-    #test_netcdf_classmethods()
-    #build_netcdf()
-    #build_sfr_netcdf()
-    #test_sr()
-    #test_rotation()
-    #test_map_rotation()
-    #test_sr_scaling()
-    test_dynamic_xll_yll()
-    #test_namfile_readwrite()
-    #test_free_format_flag()
-    #test_export_output()
-    #for namfile in namfiles:
-    #for namfile in ["fhb.nam"]:
-        #export_netcdf(namfile)
-        #export_shapefile(namfile)
+    # test_shapefile_ibound()
+    # test_netcdf_overloads()
+    test_netcdf_classmethods()
+    # build_netcdf()
+    # build_sfr_netcdf()
+    # test_sr()
+    # test_rotation()
+    # test_map_rotation()
+    # test_sr_scaling()
+    # test_dynamic_xll_yll()
+    # test_namfile_readwrite()
+    # test_free_format_flag()
+    # test_export_output()
+    # for namfile in namfiles:
+    # for namfile in ["fhb.nam"]:
+    # export_netcdf(namfile)
+    # export_shapefile(namfile)
