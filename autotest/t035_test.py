@@ -34,7 +34,8 @@ def test_load_and_write():
                                            model_ws=opth, exe_name=exe_name)
 
     # run the lgr model
-    lgr.run_model(silent=False)
+    if run:
+        lgr.run_model(silent=False)
 
 
     # check that a parent and child were red
