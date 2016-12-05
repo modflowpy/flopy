@@ -85,6 +85,9 @@ def export_shapefile(namfile):
     fnc_name = os.path.join(spth, m.name + '.shp')
     try:
         fnc = m.export(fnc_name)
+        #fnc2 = m.export(fnc_name, package_names=None)
+        #fnc3 = m.export(fnc_name, package_names=['DIS'])
+
 
     except Exception as e:
         raise Exception(
@@ -145,7 +148,7 @@ def test_mbase_sr():
                                    xul=500)
     print(ml.sr)
     assert ml.sr.xul == 500
-    assert ml.sr.yul == 10
+    assert ml.sr.yll == -10
     ml.model_ws = tpth
 
     ml.write_input()
@@ -215,13 +218,14 @@ def test_sr():
     # test instantiation of SR with xul, yul and no grid
     sr = flopy.utils.reference.SpatialReference(xul=1, yul=1)
 
+    xul, yul = 321., 123.
     sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
                                       delc=ms.dis.delc.array, lenuni=3,
-                                      xul=321, yul=123, rotation=20)
+                                      xul=xul, yul=yul, rotation=20)
 
-    txt = 'yul does not approximately equal 100 - ' + \
-          '(xul, yul) = ({}, {})'.format( ms.sr.yul, ms.sr.yul)
-    assert abs(ms.sr.yul - 100) < 1e-3, txt
+    #txt = 'yul does not approximately equal 100 - ' + \
+    #      '(xul, yul) = ({}, {})'.format( ms.sr.yul, ms.sr.yul)
+    assert abs(ms.sr.yul - 0) < 1e-3#, txt
     ms.sr.xul = 111
     assert ms.sr.xul == 111
 
@@ -327,11 +331,42 @@ def test_dynamic_xll_yll():
                                    delc=delc)
     sr1 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
                                        delc=ms2.dis.delc.array, lenuni=3,
-                                       xll=xll, yll=yll, rotation=0)
-    print(sr1.xll, sr1.yll)
+                                       xll=xll, yll=yll, rotation=30)
+    xul, yul = sr1.xul, sr1.yul
+    sr1.write_shapefile('temp/lm0.shp')
     sr1.length_multiplier = 1.0 / 3.281
-    print(sr1.xll, sr1.yll)
+    sr1.write_shapefile('temp/lm03048.shp')
+    assert sr1.xll == xll
+    assert sr1.yll == yll
+    sr2 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
+                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       xul=xul, yul=yul, rotation=30)
+    sr2.write_shapefile('temp/lm0_ul.shp')
+    sr2.length_multiplier = 1.0 / 3.281
+    sr2.write_shapefile('temp/lm03048_ul.shp')
+    assert sr2.xul == xul
+    assert sr2.yul == yul
 
+    # test resetting of attributes
+    sr3 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
+                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       xll=xll, yll=yll, rotation=30)
+    # check that xul, yul and xll, yll are being recomputed
+    sr3.xll += 10.
+    sr3.yll += 21.
+    assert sr3.xul - (xul + 10.) < 1e-6
+    assert sr3.yul - (yul + 21.) < 1e-6
+    sr4 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
+                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       xul=xul, yul=yul, rotation=30)
+    sr4.xul += 10.
+    sr4.yul += 21.
+    assert sr4.xll - (xll + 10.) < 1e-6
+    assert sr4.yll - (yll + 21.) < 1e-6
+    sr4.rotation = 0.
+    assert sr4.xll == sr4.xul
+    assert sr4.yll == sr4.yul - sr4.yedge[0]
+    assert True
 
 def test_namfile_readwrite():
     nlay, nrow, ncol = 1, 10, 5
@@ -540,20 +575,22 @@ def build_sfr_netcdf():
 
 
 if __name__ == '__main__':
+    test_shapefile()
     # test_shapefile_ibound()
     # test_netcdf_overloads()
-    test_netcdf_classmethods()
+    #test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    # test_sr()
-    # test_rotation()
-    # test_map_rotation()
-    # test_sr_scaling()
-    # test_dynamic_xll_yll()
+    test_sr()
+    test_mbase_sr()
+    test_rotation()
+    test_map_rotation()
+    test_sr_scaling()
+    test_dynamic_xll_yll()
     # test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()
-    # for namfile in namfiles:
+    for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-    # export_shapefile(namfile)
+        export_shapefile(namfile)
