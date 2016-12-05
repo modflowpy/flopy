@@ -333,17 +333,13 @@ def test_dynamic_xll_yll():
                                        delc=ms2.dis.delc.array, lenuni=3,
                                        xll=xll, yll=yll, rotation=30)
     xul, yul = sr1.xul, sr1.yul
-    sr1.write_shapefile('temp/lm0.shp')
     sr1.length_multiplier = 1.0 / 3.281
-    sr1.write_shapefile('temp/lm03048.shp')
     assert sr1.xll == xll
     assert sr1.yll == yll
     sr2 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
                                        delc=ms2.dis.delc.array, lenuni=3,
                                        xul=xul, yul=yul, rotation=30)
-    sr2.write_shapefile('temp/lm0_ul.shp')
     sr2.length_multiplier = 1.0 / 3.281
-    sr2.write_shapefile('temp/lm03048_ul.shp')
     assert sr2.xul == xul
     assert sr2.yul == yul
 
