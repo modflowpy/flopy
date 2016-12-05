@@ -90,7 +90,11 @@ class SpatialReference(object):
     accessed
         
     """
-
+    xul, yul = None, None
+    xll, yll = None, None
+    rotation = 0.
+    length_multiplier = 1.
+    origin_loc = 'ul' # or ll
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1, xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
 
@@ -236,11 +240,21 @@ class SpatialReference(object):
             super(SpatialReference,self).\
                 __setattr__("delc",np.atleast_1d(np.array(value)))
         elif key == "xul":
-            super(SpatialReference,self).\
-                __setattr__("xul",float(value))
+            super(SpatialReference, self).\
+                __setattr__("xul", float(value))
         elif key == "yul":
-            super(SpatialReference,self).\
-                __setattr__("yul",float(value))
+            super(SpatialReference, self).\
+                __setattr__("yul", float(value))
+        elif key == "xll":
+            super(SpatialReference, self).\
+                __setattr__("xll", float(value))
+        elif key == "yll":
+            super(SpatialReference, self).\
+                __setattr__("yll", float(value))
+        elif key == "length_multiplier":
+            super(SpatialReference, self).\
+                __setattr__("length_multiplier", float(value))
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
         elif key == "rotation":
             if float(value) != 0.0:
                 warnings.warn("rotation arg has recently changed. " +\
@@ -248,6 +262,7 @@ class SpatialReference(object):
                               "It now is positive counterclockwise")
             super(SpatialReference,self).\
                 __setattr__("rotation",float(value))
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
         elif key == "lenuni":
             super(SpatialReference,self).\
                 __setattr__("lenuni",int(value))
@@ -264,8 +279,6 @@ class SpatialReference(object):
             reset = False
         if reset:
             self._reset()
-
-
 
     def reset(self,**kwargs):
         for key,value in kwargs.items():
@@ -365,38 +378,21 @@ class SpatialReference(object):
             raise ValueError('both xul and xll entered. Please enter either xul, yul or xll, yll.')
         if yul is not None and yll is not None:
             raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
-
-        self.length_multiplier = length_multiplier
-        self.theta = -rotation * np.pi / 180.
-        # Set origin and rotation
-        if xul is None:
-            if xll is not None:
-                self.xul = xll + np.sin(self.theta) * self.yedge[0] * self.length_multiplier
-            else:
-                self.xul = 0.
-        else:
-            self.xul = xul
-        if yul is None:
-            if yll is not None:
-                self.yul = yll + np.cos(self.theta) * self.yedge[0] * self.length_multiplier
-            else:
-                self.yul = np.add.reduce(self.delc) * self.length_multiplier
-        else:
-            self.yul = yul
-        # if xll is None:
-        #     self.xll = self.xul - np.sin(theta) * self.yedge[0] * self.length_multiplier
-        # else:
-        #     self.xll = xll
-        # if yll is None:
-        #     self.yll = self.yul - np.cos(theta) * self.yedge[0] * self.length_multiplier
-        # else:
-        #     self.yll = yll
         if rotation != 0.0:
             warnings.warn("rotation arg has recently changed. " +\
                           "It was previously treated as positive clockwise" +\
                           "It now is positive counterclockwise")
+        # set the origin priority based on the left corner specified
+        # (the other left corner will be calculated)
+        if xll is not None:
+            self.origin_loc = 'll'
+        else:
+            self.origin_loc = 'ul'
+
         self.rotation = rotation
-        self._reset()
+        self.length_multiplier = length_multiplier
+        self.set_origin(xul, yul, xll, yll)
+        #self._reset()
 
     def __repr__(self):
         s = "xul:{0:<G}; yul:{1:<G}; rotation:{2:<G}; ".\
@@ -407,13 +403,33 @@ class SpatialReference(object):
         s += "length_multiplier:{}".format(self.length_multiplier)
         return s
 
-    @property
-    def xll(self):
-        return self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+    def set_origin(self, xul=None, yul=None, xll=None, yll=None):
+        if self.origin_loc == 'll':
+            # calculate coords for upper left corner
+            self.xll = xll if xll is not None else 0.
+            self.yll = yll if yll is not None else 0.
+            self.xul = self.xll + np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+            self.yul = self.yll + np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+
+        if self.origin_loc == 'ul':
+            # calculate coords for lower left corner
+            self.xul = xul if xul is not None else 0.
+            self.yul = yul if yul is not None else 0.
+            self.xll = self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+            self.yll = self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+        self._reset()
+
+    #@property
+    #def xll(self):
+    #    return self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+
+    #@property
+    #def yll(self):
+    #    return self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
 
     @property
-    def yll(self):
-        return self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+    def theta(self):
+        return -self.rotation * np.pi / 180.
 
     @property
     def xedge(self):
@@ -490,6 +506,8 @@ class SpatialReference(object):
         to convert them from model coordinates to real-world coordinates.
         """
         x, y = x.copy(), y.copy()
+        # reset origin in case attributes were modified
+        self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
         x *= self.length_multiplier
         y *= self.length_multiplier
         x += self.xll
