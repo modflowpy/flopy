@@ -528,19 +528,27 @@ class Modflow(BaseModel):
                 dis = item
                 dis_key = key
                 break
-        try:
+        if forgive:
+            try:
+                pck = dis.package.load(dis.filename, ml,
+                                       ext_unit_dict=ext_unit_dict, check=False)
+                files_succesfully_loaded.append(dis.filename)
+                if ml.verbose:
+                    sys.stdout.write('   {:4s} package load...success\n'
+                                     .format(pck.name[0]))
+                ext_unit_dict.pop(dis_key)
+            except Exception as e:
+                s = 'Could not read discretization package: {}. Stopping...' \
+                    .format(os.path.basename(dis.filename))
+                raise Exception(s + " " + str(e))
+        else:
             pck = dis.package.load(dis.filename, ml,
-                                   ext_unit_dict=ext_unit_dict, check=False)
+                                       ext_unit_dict=ext_unit_dict, check=False)
             files_succesfully_loaded.append(dis.filename)
             if ml.verbose:
                 sys.stdout.write('   {:4s} package load...success\n'
                                  .format(pck.name[0]))
             ext_unit_dict.pop(dis_key)
-        except Exception as e:
-            s = 'Could not read discretization package: {}. Stopping...' \
-                .format(os.path.basename(dis.filename))
-            raise Exception(s + " " + str(e))
-
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
         sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array, \
                               lenuni=ml.dis.lenuni, **ref_attributes)

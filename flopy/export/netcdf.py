@@ -302,8 +302,8 @@ class NetCdf(object):
     @classmethod
     def zeros_like(cls, other, output_filename=None,
                    verbose=None, logger=None):
-        new_net = NetCdf.empty_like(other, output_filename, verbose=verbose,
-                                    logger=logger)
+        new_net = NetCdf.empty_like(other, output_filename=output_filename,
+                                    verbose=verbose, logger=logger)
         # add the vars to the instance
         for vname in other.var_attr_dict.keys():
             if new_net.nc.variables.get(vname) is not None:
@@ -341,8 +341,12 @@ class NetCdf(object):
                 time.mktime(datetime.now().timetuple())) + ".nc"
 
         while os.path.exists(output_filename):
+            print('{}...already exists'.format(output_filename))
             output_filename = str(
                 time.mktime(datetime.now().timetuple())) + ".nc"
+            print('creating temporary netcdf file...' +
+                  '{}'.format(output_filename))
+
         new_net = cls(output_filename, other.model,
                       time_values=other.time_values_arg, verbose=verbose,
                       logger=logger)
@@ -350,7 +354,8 @@ class NetCdf(object):
 
     def difference(self, other, minuend="self", mask_zero_diff=True,
                    onlydiff=True):
-        """make a new NetCDF instance that is the difference with another
+        """
+        make a new NetCDF instance that is the difference with another
         netcdf file
 
         Parameters
@@ -600,23 +605,23 @@ class NetCdf(object):
         # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
         self.zs = -1.0 * self.model.dis.zcentroids
 
-        if self.grid_units.lower().startswith('f'):  # and \
-            # not self.model.sr.units.startswith("f"):
-            self.log("converting feet to meters")
-            sr = copy.deepcopy(self.model.sr)
-            sr.delr /= 3.281
-            sr.delc /= 3.281
-            if self.model.sr.units.startswith('f'):
-                self.log("converting xul,yul from feet to meters")
-                sr.xul /= 3.281
-                sr.yul /= 3.281
-                self.log("converting xul,yul from feet to meters")
-            ys = sr.ycentergrid.copy()
-            xs = sr.xcentergrid.copy()
-            self.log("converting feet to meters")
-        else:
-            ys = self.model.sr.ycentergrid.copy()
-            xs = self.model.sr.xcentergrid.copy()
+        # if self.grid_units.lower().startswith('f'):  # and \
+        #     # not self.model.sr.units.startswith("f"):
+        #     self.log("converting feet to meters")
+        #     sr = copy.deepcopy(self.model.sr)
+        #     sr.delr /= 3.281
+        #     sr.delc /= 3.281
+        #     if self.model.sr.units.startswith('f'):
+        #         self.log("converting xul,yul from feet to meters")
+        #         sr.xul /= 3.281
+        #         sr.yul /= 3.281
+        #         self.log("converting xul,yul from feet to meters")
+        #     ys = sr.ycentergrid.copy()
+        #     xs = sr.xcentergrid.copy()
+        #     self.log("converting feet to meters")
+        # else:
+        ys = self.model.sr.ycentergrid.copy()
+        xs = self.model.sr.xcentergrid.copy()
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)
