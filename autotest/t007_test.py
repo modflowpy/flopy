@@ -365,9 +365,9 @@ def test_dynamic_xll_yll():
     assert True
 
 def test_namfile_readwrite():
-    nlay, nrow, ncol = 1, 10, 5
+    nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
-    xll, yll = 286.80, 29.03
+    xll, yll = 272300, 5086000
     fm = flopy.modflow
     m = fm.Modflow(modelname='junk', model_ws=os.path.join('temp', 't007'))
     dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
@@ -577,16 +577,16 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    test_sr()
-    test_mbase_sr()
-    test_rotation()
-    test_map_rotation()
-    test_sr_scaling()
-    test_dynamic_xll_yll()
-    # test_namfile_readwrite()
+    #test_sr()
+    #test_mbase_sr()
+    #test_rotation()
+    #test_map_rotation()
+    #test_sr_scaling()
+    #test_dynamic_xll_yll()
+    test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()
-    for namfile in namfiles:
+    #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-        export_shapefile(namfile)
+    #    export_shapefile(namfile)

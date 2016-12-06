@@ -395,7 +395,7 @@ class SpatialReference(object):
         #self._reset()
 
     def __repr__(self):
-        s = "xul:{0:<G}; yul:{1:<G}; rotation:{2:<G}; ".\
+        s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ".\
             format(self.xul,self.yul,self.rotation)
         s += "proj4_str:{0}; ".format(self.proj4_str)
         s += "units:{0}; ".format(self.units)
