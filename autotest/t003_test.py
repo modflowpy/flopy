@@ -1,5 +1,5 @@
 import flopy
-import os.path
+import os
 
 def test_loadfreyberg():
     cwd = os.getcwd()

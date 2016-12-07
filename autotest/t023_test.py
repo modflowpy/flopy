@@ -3,7 +3,10 @@ import os
 import numpy as np
 import flopy
 
-testpth = os.path.join('.', 'temp')
+testpth = os.path.join('.', 'temp', 't023')
+# make the directory if it does not exist
+if not os.path.isdir(testpth):
+    os.makedirs(testpth)
 
 def test_mt3d_multispecies():
     # modflow model

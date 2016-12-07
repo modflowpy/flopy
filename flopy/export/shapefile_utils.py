@@ -103,7 +103,8 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             wr.record(*rec)
     wr.save(filename)
 
-def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9):
+def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
+                          epsg=None, prj=None):
 
     sf = import_shapefile()
     verts = sr.vertices
@@ -129,6 +130,9 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9):
         w.poly([verts[i]])
         w.record(*r)
     w.save(filename)
+    # write the projection file
+    # write the projection file
+    write_prj(filename, epsg, prj)
 
 
 def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None,

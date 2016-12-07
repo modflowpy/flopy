@@ -22,8 +22,9 @@ Documentation
 
 FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
-FloPy is now citable!  Please see our new paper in Groundwater:
-* [Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N. (2016), Scripting MODFLOW Model Development Using Python and FloPy. Groundwater, 54: 733–739. doi:10.1111/gwat.12413](http://onlinelibrary.wiley.com/doi/10.1111/gwat.12413/full)
+FloPy is citable!  Please see our paper in Groundwater:
+
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N. (2016), Scripting MODFLOW Model Development Using Python and FloPy. Groundwater, 54: 733–739. doi:10.1111/gwat.12413](http://dx.doi.org/10.1111/gwat.12413)
 
 Examples
 -----------------------------------------------

@@ -33,8 +33,8 @@ setup(name=__name__,
       license='New BSD',
       platforms='Windows, Mac OS-X',
       install_requires=['numpy>=1.7', 'matplotlib>=1.3'],
-      packages=['flopy', 'flopy.modflow', 'flopy.modpath', 'flopy.mt3d',
-                'flopy.seawat', 'flopy.utils', 'flopy.plot', 'flopy.pest',
-                'flopy.export'],
+      packages=['flopy', 'flopy.modflow', 'flopy.modflowlgr', 'flopy.modpath',
+                'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot',
+                'flopy.pest', 'flopy.export'],
       # use this version ID if .svn data cannot be found
       version=__version__)

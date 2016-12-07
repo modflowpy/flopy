@@ -7,8 +7,11 @@ import os
 import numpy as np
 import flopy
 
+workspace = os.path.join('temp', 't026')
+# make the directory if it does not exist
+if not os.path.isdir(workspace):
+    os.makedirs(workspace)
 
-workspace = os.path.join('temp')
 seawat_exe = 'swt_v4'
 isseawat = flopy.which(seawat_exe)
 
@@ -43,11 +46,11 @@ ssm_data[0] = ssm_sp1
 
 
 def test_seawat_henry():
-    #SEAWAT model from a modflow model and an mt3d model
+    # SEAWAT model from a modflow model and an mt3d model
     modelname = 'henry'
     mf = flopy.modflow.Modflow(modelname, exe_name='swt_v4',
                                model_ws=workspace)
-    #shortened perlen to 0.1 to make this run faster -- should be about 0.5
+    # shortened perlen to 0.1 to make this run faster -- should be about 0.5
     dis = flopy.modflow.ModflowDis(mf, nlay, nrow, ncol, nper=1, delr=delr,
                                    delc=delc, laycbd=0, top=henry_top,
                                    botm=henry_botm, perlen=0.1, nstp=15)
@@ -88,10 +91,10 @@ def test_seawat_henry():
 
 
 def test_seawat2_henry():
-    #SEAWAT model directly by adding packages
+    # SEAWAT model directly by adding packages
     modelname = 'henry2'
     m = flopy.seawat.swt.Seawat(modelname, 'nam', model_ws=workspace,
-                            exe_name='swt_v4')
+                                exe_name='swt_v4')
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol, nper=1, delr=delr,
                                    delc=delc, laycbd=0, top=henry_top,
                                    botm=henry_botm, perlen=0.1, nstp=15)

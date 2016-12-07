@@ -1,10 +1,8 @@
 import os
 import flopy
-import matplotlib.pyplot as plt
-
 
 pthtest = os.path.join('..', 'examples', 'data', 'mfgrd_test')
-newpth = os.path.join('.', 'temp')
+
 
 def test_mfgrddis():
     grbnam = 'nwtp3.dis.grb'
@@ -26,7 +24,6 @@ def test_mfgrddis():
     assert len(iverts) == 6400, errmsg
 
 
-
 def test_mfgrddisv():
     fn = os.path.join(pthtest, 'flow.disv.grb')
     disv = flopy.utils.MfGrdFile(fn, verbose=True)
@@ -36,6 +33,7 @@ def test_mfgrddisv():
     assert verts.shape == (156, 2), errmsg
     errmsg = 'ncells of flow.disv {} not equal to 218.'.format(len(iverts))
     assert len(iverts) == 218, errmsg
+
 
 if __name__ == '__main__':
     test_mfgrddis()
