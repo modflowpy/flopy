@@ -52,7 +52,7 @@ class ModflowLak(Package):
 
     """
 
-    def __init__(self, model, nlakes=1, ipakcb=0, theta=-1.,
+    def __init__(self, model, nlakes=1, ipakcb=None, theta=-1.,
                  nssitr=0, sscncr=0.0, surfdep=0., stages=1., stage_range=None,
                  tab_files=None, lakarr=None, bdlknc=None,
                  sill_data=None, flux_data=None,
@@ -65,6 +65,13 @@ class ModflowLak(Package):
         if unitnumber is None:
             unitnumber = ModflowLak.defaultunit()
 
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            pth = model.name + '.' + ModflowLak.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, fname=pth)
+        else:
+            ipakcb = 0
+
         # Call parent init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowLak.ftype(), unitnumber)
 
@@ -76,10 +83,7 @@ class ModflowLak(Package):
             options = []
         self.options = options
         self.nlakes = nlakes
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
         self.theta = theta
         self.nssitr = nssitr
         self.sscncr = sscncr

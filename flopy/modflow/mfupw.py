@@ -129,7 +129,7 @@ class ModflowUpw(Package):
     """
 
     def __init__(self, model, laytyp=0, layavg=0, chani=1.0, layvka=0,
-                 laywet=0, ipakcb=53, hdry=-1E+30, iphdry=0,
+                 laywet=0, ipakcb=None, hdry=-1E+30, iphdry=0,
                  hk=1.0, hani=1.0, vka=1.0, ss=1e-5, sy=0.15, vkcb=0.0,
                  noparcheck=False,
                  extension='upw', unitnumber=None):
@@ -142,6 +142,12 @@ class ModflowUpw(Package):
         if unitnumber is None:
             unitnumber = ModflowUpw.defaultunit()
 
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            model.add_externalbudget(ipakcb)
+        else:
+            ipakcb = 0
+
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowUpw.ftype(),
                          unitnumber)
@@ -149,10 +155,7 @@ class ModflowUpw(Package):
         self.url = 'upw_upstream_weighting_package.htm'
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # item 1
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
         self.hdry = hdry  # Head in cells that are converted to dry during a simulation
         self.npupw = 0  # number of UPW parameters
         self.iphdry = iphdry

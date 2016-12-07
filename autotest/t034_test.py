@@ -95,7 +95,7 @@ def test_create():
 
     uzf = flopy.modflow.ModflowUzf1(m,
                                     nuztop=1, iuzfopt=1, irunflg=1, ietflg=1,
-                                    iuzfcb1=0,
+                                    ipakcb=0,
                                     iuzfcb2=61,
                                     # binary output of recharge and groundwater discharge
                                     ntrail2=25, nsets=20, nuzgag=4,

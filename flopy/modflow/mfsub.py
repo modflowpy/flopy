@@ -181,7 +181,7 @@ class ModflowSub(Package):
 
     """
 
-    def __init__(self, model, ipakcb=0, isuboc=0, idsave=0, idrest=0,
+    def __init__(self, model, ipakcb=None, isuboc=0, idsave=0, idrest=0,
                  nndb=1, ndb=1, nmz=1, nn=20, ac1=0., ac2=0.2, itmin=5,
                  ln=0, ldn=0, rnb=1,
                  hc=100000., sfe=1.e-4, sfv=1.e-3, com=0.,
@@ -196,6 +196,13 @@ class ModflowSub(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSub.defaultunit()
+
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            pth = model.name + '.' + ModflowSub.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, fname=pth)
+        else:
+            ipakcb = 0
 
         extensions = [extension]
         name = [ModflowSub.ftype()]
@@ -234,10 +241,7 @@ class ModflowSub(Package):
         self.heading = line
         self.url = 'sub.htm'
 
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
         self.isuboc = isuboc
         self.idsave = idsave
         self.idrest = idrest

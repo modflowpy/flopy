@@ -264,6 +264,45 @@ class BaseModel(object):
 
         return self.get_package(item)
 
+
+    def add_externalbudget(self, unit, fname=None, extension='cbc'):
+        """
+        Add an external cell-by-cell budget file for a package
+
+        Parameters
+        ----------
+        unit : int
+            unit number of external array
+        fname : str
+            filename of external array. (default is None)
+        extension : str
+            extension to use for the cell-by-cell file. Only used if fname
+            is None. (default is cbc)
+
+        """
+        add_cbc = False
+        if unit > 0:
+            # determine if the file is in external_units
+            if abs(unit) in self.external_units:
+                idx = self.external_units.index(abs(unit))
+                self.external_output[idx] = True
+                pth = os.path.basename(self.external_fnames[idx])
+                self.external_fnames[idx] = pth
+            else:
+                add_cbc = True
+
+        if add_cbc:
+            if fname is None:
+                pth = self.name + '.' + extension
+            else:
+                pth = fname
+            self.external_units.append(unit)
+            self.external_binflag.append(True)
+            self.external_output.append(True)
+            self.external_fnames.append(pth)
+        return
+
+
     def add_external(self, fname, unit, binflag=False, output=False):
         """
         Assign an external array so that it will be listed as a DATA or

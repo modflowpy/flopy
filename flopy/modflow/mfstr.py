@@ -187,7 +187,7 @@ class ModflowStr(Package):
     """
 
     def __init__(self, model, mxacts=0, nss=0, ntrib=0, ndiv=0, icalc=0,
-                 const=86400., ipakcb=0,
+                 const=86400., ipakcb=None,
                  dtype=None, stress_period_data=None, segment_data=None,
                  extension='str', unitnumber=None, options=None, **kwargs):
         """
@@ -197,6 +197,13 @@ class ModflowStr(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowStr.defaultunit()
+
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            pth = model.name + '.' + ModflowStr.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, fname=pth)
+        else:
+            ipakcb = 0
 
         # Call parent init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowStr.ftype(),
@@ -210,10 +217,7 @@ class ModflowStr(Package):
         self.ntrib = ntrib
         self.ndiv = ndiv
         self.const = const
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
 
         # issue exception if ntrib is greater than 10
         if ntrib > 10:

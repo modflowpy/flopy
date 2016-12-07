@@ -202,7 +202,7 @@ class ModflowSwt(Package):
 
     """
 
-    def __init__(self, model, ipakcb=0, iswtoc=0, nsystm=1, ithk=0, ivoid=0,
+    def __init__(self, model, ipakcb=None, iswtoc=0, nsystm=1, ithk=0, ivoid=0,
                  istpcs=1, icrcc=0,
                  lnwt=0, izcfl=0, izcfm=0, iglfl=0, iglfm=0, iestfl=0,
                  iestfm=0, ipcsfl=0,
@@ -217,6 +217,13 @@ class ModflowSwt(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSwt.defaultunit()
+
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            pth = model.name + '.' + ModflowSwt.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, fname=pth)
+        else:
+            ipakcb = 0
 
         extensions = [extension]
         name = [ModflowSwt.ftype()]
@@ -240,10 +247,7 @@ class ModflowSwt(Package):
                            model.version)
         self.url = 'swt.htm'
 
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
         self.iswtoc = iswtoc
 
         self.nsystm = nsystm

@@ -193,12 +193,12 @@ def test_example():
     nparseg = 0
     const = 1.486  # constant for manning's equation, units of cfs
     dleak = 0.0001  # closure tolerance for stream stage computation
-    istcb1 = 53  # flag for writing SFR output to cell-by-cell budget (on unit 53)
+    ipakcb = 53  # flag for writing SFR output to cell-by-cell budget (on unit 53)
     istcb2 = 81  # flag for writing SFR output to text file
     dataset_5 = {0: [nss, 0, 0]}  # dataset 5 (see online guide)
 
     sfr = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const,
-                                    dleak=dleak, istcb1=istcb1, istcb2=istcb2,
+                                    dleak=dleak, ipakcb=ipakcb, istcb2=istcb2,
                                     reach_data=reach_data,
                                     segment_data=segment_data,
                                     channel_geometry_data=channel_geometry_data,
@@ -211,7 +211,7 @@ def test_example():
     # test handling of a 0-D array (produced by genfromtxt sometimes)
     segment_data = np.array(segment_data[0])
     sfr = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const,
-                                    dleak=dleak, istcb1=istcb1, istcb2=istcb2,
+                                    dleak=dleak, ipakcb=ipakcb, istcb2=istcb2,
                                     reach_data=reach_data,
                                     segment_data=segment_data,
                                     channel_geometry_data=channel_geometry_data,

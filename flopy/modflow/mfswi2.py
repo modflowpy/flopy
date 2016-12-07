@@ -178,8 +178,9 @@ class ModflowSwi2(Package):
 
     """
 
-    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=None, ipakcb=0,
-                 iswiobs=0, options=None, nsolver=1, iprsol=0, mutsol=3,
+    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=None,
+                 ipakcb=None, iswiobs=0, options=None,
+                 nsolver=1, iprsol=0, mutsol=3,
                  solver2params={'mxiter': 100, 'iter1': 20, 'npcond': 1,
                                 'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
                                 'nbpol': 2, 'damp': 1.0, 'dampt': 1.0},
@@ -196,6 +197,13 @@ class ModflowSwi2(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSwi2.defaultunit()
+
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            pth = model.name + '.' + ModflowSwi2.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, fname=pth)
+        else:
+            ipakcb = 0
 
         if iswizt is None:
             iswizt = 55
@@ -267,10 +275,7 @@ class ModflowSwi2(Package):
 
         self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, istrat, nobs, \
                                                                        iswizt, iswiobs
-        if ipakcb != 0:
-            self.ipakcb = ipakcb #53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
 
         #
         self.nsolver, self.iprsol, self.mutsol = nsolver, iprsol, mutsol

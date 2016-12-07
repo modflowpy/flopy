@@ -42,14 +42,14 @@ def test_load_and_write():
     assert lgr.ngrids == 2, msg
 
     npth = os.path.join(cpth, 'new')
-    lgr.change_model_ws(new_pth=npth)
+    lgr.change_model_ws(new_pth=npth, reset_external=True)
 
     # write the lgr model in to the new path
     lgr.write_input()
 
     # run the lgr model
-    #if run:
-    #    lgr.run_model(silent=False)
+    if run:
+        lgr.run_model(silent=False)
 
     print('write lgr model files')
 

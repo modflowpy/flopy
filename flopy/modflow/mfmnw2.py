@@ -676,14 +676,14 @@ class ModflowMnw2(Package):
         "MNWMAX"--the first value listed in Record 1 (Line 1) of the MNW2 input data file.
         If this is done, then the code will assume that the very next value on that line
         will be the desired value of "NODTOT". The model will then reset "MNWMAX" to its absolute value.
-        The value of "IWL2CB" will become the third value on that line, etc.
-    iwl2cb : int
+        The value of "ipakcb" will become the third value on that line, etc.
+    ipakcb : int
         is a flag and a unit number:
-            if IWL2CB > 0, then it is the unit number to which MNW cell-by-cell flow terms
+            if ipakcb > 0, then it is the unit number to which MNW cell-by-cell flow terms
                 will be recorded whenever cell-by-cell budget data are written to a file
                 (as determined by the outputcontrol options of MODFLOW).
-            if IWL2CB = 0, then MNW cell-by-cell flow terms will not be printed or recorded.
-            if IWL2CB < 0, then well injection or withdrawal rates and water levels in the well
+            if ipakcb = 0, then MNW cell-by-cell flow terms will not be printed or recorded.
+            if ipakcb < 0, then well injection or withdrawal rates and water levels in the well
                 and its multiple cells will be printed in the main MODFLOW listing (output) file
                 whenever cell-by-cell budget data are written to a file
                 (as determined by the output control options of MODFLOW).
@@ -751,7 +751,7 @@ class ModflowMnw2(Package):
 
     """
 
-    def __init__(self, model, mnwmax=0, nodtot=None, iwl2cb=0, mnwprnt=0,
+    def __init__(self, model, mnwmax=0, nodtot=None, ipakcb=0, mnwprnt=0,
                  aux=[],
                  node_data=None, mnw=None, stress_period_data=None, itmp=[],
                  extension='mnw2', unitnumber=None, gwt=False):
@@ -761,6 +761,13 @@ class ModflowMnw2(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowMnw2.defaultunit()
+
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            pth = model.name + '.' + ModflowMnw2.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, fname=pth)
+        else:
+            ipakcb = 0
 
         # Call ancestor's init to set self.parent, extension, name, and unit number
         Package.__init__(self, model, extension, ModflowMnw2.ftype(),
@@ -777,7 +784,7 @@ class ModflowMnw2(Package):
         self.mnwmax = int(
             mnwmax)  # -maximum number of multi-node wells to be simulated
         self.nodtot = nodtot  # user-specified maximum number of nodes
-        self.iwl2cb = iwl2cb
+        self.ipakcb = ipakcb
         self.mnwprnt = int(mnwprnt)  # -verbosity flag
         self.aux = aux  # -list of optional auxilary parameters
 
@@ -949,7 +956,7 @@ class ModflowMnw2(Package):
             if line[0] != '#':
                 break
         # dataset 1
-        mnwmax, nodtot, iwl2cb, mnwprint, option = _parse_1(line)
+        mnwmax, nodtot, ipakcb, mnwprint, option = _parse_1(line)
         # dataset 2
         node_data = ModflowMnw2.get_empty_node_data(0)
         mnw = {}
@@ -1011,7 +1018,7 @@ class ModflowMnw2(Package):
                 if value.filetype == ModflowMnw2.ftype():
                     unitnumber = key
 
-        return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, iwl2cb=iwl2cb,
+        return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, ipakcb=ipakcb,
                            mnwprnt=mnwprint, aux=option,
                            node_data=node_data, mnw=mnw,
                            stress_period_data=stress_period_data, itmp=itmp,
@@ -1220,7 +1227,7 @@ class ModflowMnw2(Package):
         f_mnw.write('{:.0f} '.format(self.mnwmax))
         if self.mnwmax < 0:
             f_mnw.write('{:.0f} '.format(self.nodtot))
-        f_mnw.write('{:.0f} {:.0f}'.format(self.iwl2cb, self.mnwprnt))
+        f_mnw.write('{:.0f} {:.0f}'.format(self.ipakcb, self.mnwprnt))
         if len(self.aux) > 0:
             for abc in self.aux:
                 f_mnw.write(' aux {}'.format(abc))
@@ -1315,13 +1322,13 @@ def _parse_1(line):
     nodtot = None
     if mnwmax < 0:
         nodtot = pop_item(line, int)
-    iwl2cb = pop_item(line, int)
+    ipakcb = pop_item(line, int)
     mnwprint = pop_item(line, int)
     option = []  # aux names
     if len(line) > 0:
         option += [line[i] for i in np.arange(1, len(line)) if
                    'aux' in line[i - 1].lower()]
-    return mnwmax, nodtot, iwl2cb, mnwprint, option
+    return mnwmax, nodtot, ipakcb, mnwprint, option
 
 
 def _parse_2(f):

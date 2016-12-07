@@ -79,7 +79,7 @@ class ModflowBcf(Package):
 
     """
 
-    def __init__(self, model, ipakcb=53, intercellt=0, laycon=3, trpy=1.0,
+    def __init__(self, model, ipakcb=None, intercellt=0, laycon=3, trpy=1.0,
                  hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0,
                  tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01,
                  extension='bcf', unitnumber=15):
@@ -87,6 +87,13 @@ class ModflowBcf(Package):
         if unitnumber is None:
             unitnumber = ModflowBcf.defaultunit()
 
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            model.add_externalbudget(ipakcb)
+        else:
+            ipakcb = 0
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowBcf.ftype(),
                          unitnumber)
 
@@ -100,10 +107,9 @@ class ModflowBcf(Package):
                              locat=self.unit_number[0])
         self.trpy = Util2d(model, (nlay,), np.float32, trpy,
                            name='Anisotropy factor', locat=self.unit_number[0])
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0
+
+        # item 1
+        self.ipakcb = ipakcb
         self.hdry = hdry
         self.iwdflg = iwdflg
         self.wetfct = wetfct

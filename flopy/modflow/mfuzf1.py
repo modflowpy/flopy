@@ -57,12 +57,12 @@ class ModflowUzf1(Package):
         specifies whether or not evapotranspiration (ET) will be simulated.
         ET will not be simulated if IETFLG is zero, otherwise it will be
         simulated. (default is 0)
-    iuzfcb1 : integer
+    ipakcb : integer
         flag for writing ground-water recharge, ET, and ground-water
         discharge to land surface rates to a separate unformatted file using
-        subroutine UBUDSV. If IUZFCB1>0, it is the unit number to which the
+        subroutine UBUDSV. If ipakcb>0, it is the unit number to which the
         cell-by-cell rates will be written when 'SAVE BUDGET' or a non-zero
-        value for ICBCFL is specified in Output Control. If IUZFCB1 less than
+        value for ICBCFL is specified in Output Control. If ipakcb less than
         or equal to 0, cell-by-cell rates will not be written to a file.
         (default is 57)
     iuzfcb2 : integer
@@ -204,7 +204,7 @@ class ModflowUzf1(Package):
     """
 
     def __init__(self, model,
-                 nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, iuzfcb1=57,
+                 nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, ipakcb=None,
                  iuzfcb2=0, ntrail2=10, nsets=20, nuzgag=0,
                  surfdep=1.0,
                  iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35,
@@ -216,6 +216,13 @@ class ModflowUzf1(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUzf1.defaultunit()
+
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            pth = model.name + '.' + ModflowUzf1.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, fname=pth)
+        else:
+            ipakcb = 0
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, [ModflowUzf1.ftype()],
@@ -236,28 +243,28 @@ class ModflowUzf1(Package):
         self.specifythti = specifythti
         self.nosurfleak = nosurfleak
         # Data Set 1b
-        # NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2 [NTRAIL2 NSETS2] NUZGAG SURFDEP
+        # NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 [NTRAIL2 NSETS2] NUZGAG SURFDEP
         self.nuztop = nuztop
         self.iuzfopt = iuzfopt
         self.irunflg = irunflg  # The Streamflow-Routing (SFR2) and(or) the Lake (LAK3) Packages must be active if IRUNFLG is not zero.
         self.ietflg = ietflg
-        self.iuzfcb1 = iuzfcb1
+        self.ipakcb = ipakcb
         self.iuzfcb2 = iuzfcb2
         class_nam = ['UZF']
         if (not isinstance(unitnumber, list)):
             unitnumber = [unitnumber]
         if (not isinstance(extension, list)):
             extension = [extension]
-        if iuzfcb1 > 0 and iuzfcb2 < 1:
-            unitnumber.append(iuzfcb1)
+        if ipakcb > 0 and iuzfcb2 < 1:
+            unitnumber.append(ipakcb)
             extension.append(extension[0] + 'bt1')
             class_nam += ['DATA(BINARY)']
-        elif iuzfcb1 < 1 and iuzfcb2 > 0:
+        elif ipakcb < 1 and iuzfcb2 > 0:
             unitnumber.append(iuzfcb2)
             extension.append(extension[0] + 'bt2')
             class_nam += ['DATA(BINARY)']
-        elif iuzfcb1 > 0 and iuzfcb2 > 0:
-            unitnumber.append(iuzfcb1)
+        elif ipakcb > 0 and iuzfcb2 > 0:
+            unitnumber.append(ipakcb)
             extension.append(extension[0] + 'bt1')
             unitnumber.append(iuzfcb2)
             extension.append(extension[0] + 'bt2')
@@ -397,21 +404,21 @@ class ModflowUzf1(Package):
         del specify_temp
         # Dataset 1b
         if self.iuzfopt > 0:
-            comment = ' #NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2 NTRAIL NSETS NUZGAGES'
+            comment = ' #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NTRAIL NSETS NUZGAGES'
             f_uzf.write(
                 '{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:10d}{8:10d}{9:15.6E}{10:100s}\n'. \
                     format(self.nuztop, self.iuzfopt, self.irunflg,
                            self.ietflg,
-                           self.iuzfcb1, self.iuzfcb2, \
+                           self.ipakcb, self.iuzfcb2, \
                            self.ntrail2, self.nsets, self.nuzgag, self.surfdep,
                            comment))
         else:
-            comment = ' #NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2 NUZGAGES'
+            comment = ' #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NUZGAGES'
             f_uzf.write(
                 '{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:15.6E}{8:100s}\n'. \
                     format(self.nuztop, self.iuzfopt, self.irunflg,
                            self.ietflg,
-                           self.iuzfcb1, self.iuzfcb2, \
+                           self.ipakcb, self.iuzfcb2, \
                            self.nuzgag, self.surfdep, comment))
         f_uzf.write(self.iuzfbnd.get_file_entry())
         if self.irunflg > 0:
@@ -535,7 +542,7 @@ class ModflowUzf1(Package):
         # dataset 1a
         specifythtr, specifythti, nosurfleak = _parse1a(line)
         # dataset 1b
-        nuztop, iuzfopt, irunflg, ietflg, iuzfcb1, iuzfcb2, \
+        nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
         ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
 
         arrays = {'finf': [],
@@ -631,7 +638,7 @@ class ModflowUzf1(Package):
         return ModflowUzf1(model,
                            nuztop=nuztop, iuzfopt=iuzfopt, irunflg=irunflg,
                            ietflg=ietflg,
-                           iuzfcb1=iuzfcb1, iuzfcb2=iuzfcb2,
+                           ipakcb=ipakcb, iuzfcb2=iuzfcb2,
                            ntrail2=ntrail2, nsets=nsets2, nuzgag=nuzgag,
                            surfdep=surfdep, uzgag=uzgag,
                            specifythtr=specifythtr, specifythti=specifythti,
@@ -665,14 +672,14 @@ def _parse1(line):
     iuzfopt = _pop_item(line, int)
     irunflg = _pop_item(line, int)
     ietflag = _pop_item(line, int)
-    iuzfcb1 = _pop_item(line, int)
+    ipakcb = _pop_item(line, int)
     iuzfcb2 = _pop_item(line, int)
     if iuzfopt > 0:
         ntrail2 = _pop_item(line, int)
         nsets2 = _pop_item(line, int)
     nuzgag = _pop_item(line, int)
     surfdep = _pop_item(line, float)
-    return nuztop, iuzfopt, irunflg, ietflag, iuzfcb1, iuzfcb2, ntrail2, nsets2, nuzgag, surfdep
+    return nuztop, iuzfopt, irunflg, ietflag, ipakcb, iuzfcb2, ntrail2, nsets2, nuzgag, surfdep
 
 
 def _parse8(line):
