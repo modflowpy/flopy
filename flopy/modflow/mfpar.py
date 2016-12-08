@@ -235,7 +235,8 @@ class ModflowPar(object):
 
                     clusters.append([lay, mltarr, zonarr, iarr])
                 # add parnam to parm_dict
-                parm_dict[parnam] = {'partyp':partyp, 'parval':parval, 'nclu':nclu, 'clusters':clusters}
+                parm_dict[parnam] = {'partyp':partyp, 'parval':parval,
+                                     'nclu':nclu, 'clusters':clusters}
 
         return par_types, parm_dict
 

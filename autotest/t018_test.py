@@ -4,6 +4,11 @@ import flopy
 import flopy.pest.templatewriter as tplwriter
 import flopy.pest.params as params
 
+mpth = os.path.join('temp', 't018')
+# make the directory if it does not exist
+if not os.path.isdir(mpth):
+    os.makedirs(mpth)
+
 def test_tpl_constant():
     # Define the model dimensions
     nlay = 3
@@ -11,7 +16,7 @@ def test_tpl_constant():
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = flopy.modflow.Modflow(modelname='tpl1', model_ws='./temp')
+    m = flopy.modflow.Modflow(modelname='tpl1', model_ws=mpth)
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol)
     lpf = flopy.modflow.ModflowLpf(m, hk=10.)
 
@@ -37,7 +42,7 @@ def test_tpl_constant():
     tw = tplwriter.TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = os.path.join('./temp', 'tpl1.lpf.tpl')
+    tplfile = os.path.join(mpth, 'tpl1.lpf.tpl')
     assert os.path.isfile(tplfile)
 
     return
@@ -49,7 +54,7 @@ def test_tpl_layered():
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = flopy.modflow.Modflow(modelname='tpl2', model_ws='./temp')
+    m = flopy.modflow.Modflow(modelname='tpl2', model_ws=mpth)
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol)
     lpf = flopy.modflow.ModflowLpf(m, hk=10.)
 
@@ -71,7 +76,7 @@ def test_tpl_layered():
     tw = tplwriter.TemplateWriter(m, [p])
     tw.write_template()
 
-    tplfile = os.path.join('./temp', 'tpl2.lpf.tpl')
+    tplfile = os.path.join(mpth, 'tpl2.lpf.tpl')
     assert os.path.isfile(tplfile)
 
     return
@@ -83,7 +88,7 @@ def test_tpl_zoned():
     ncol = 20
 
     # Create the flopy model object and add the dis and lpf packages
-    m = flopy.modflow.Modflow(modelname='tpl3', model_ws='./temp')
+    m = flopy.modflow.Modflow(modelname='tpl3', model_ws=mpth)
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol)
     lpf = flopy.modflow.ModflowLpf(m, hk=10.)
 
@@ -118,7 +123,7 @@ def test_tpl_zoned():
     tw = tplwriter.TemplateWriter(m, plist)
     tw.write_template()
 
-    tplfile = os.path.join('./temp', 'tpl3.lpf.tpl')
+    tplfile = os.path.join(mpth, 'tpl3.lpf.tpl')
     assert os.path.isfile(tplfile)
 
     return

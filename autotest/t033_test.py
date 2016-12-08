@@ -3,8 +3,12 @@ import numpy as np
 import flopy
 from flopy.utils.util_array import Util2d
 
-newpth = os.path.join('.', 'temp')
+newpth = os.path.join('.', 'temp', 't033')
+# make the directory if it does not exist
+if not os.path.isdir(newpth):
+    os.makedirs(newpth)
 startpth = os.getcwd()
+
 
 def test_rchload():
     nlay = 2
@@ -15,7 +19,7 @@ def test_rchload():
     # create model 1
     m1 = flopy.modflow.Modflow('rchload1', model_ws=newpth)
     dis1 = flopy.modflow.ModflowDis(m1, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   nper=nper)
+                                    nper=nper)
     a = np.random.random((nrow, ncol))
     rech1 = Util2d(m1, (nrow, ncol), np.float32, a, 'rech', cnstnt=1.0,
                    how='openclose')
@@ -50,6 +54,7 @@ def test_rchload():
     a2 = m2l.rch.rech[1].array
     assert np.allclose(a1, a2)
     os.chdir(startpth)
+
 
 if __name__ == '__main__':
     test_rchload()

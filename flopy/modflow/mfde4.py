@@ -109,12 +109,18 @@ class ModflowDe4(Package):
 
     def __init__(self, model, itmx=50, mxup=0, mxlow=0, mxbw=0,
                  ifreq=3, mutd4=0, accl=1., hclose=1e-5, iprd4=1,
-                 extension='de4', unitnumber=28):
+                 extension='de4', unitnumber=None):
         """
         Package constructor.
 
         """
-        Package.__init__(self, model, extension, 'de4', unitnumber)
+
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowDe4.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension, ModflowDe4.ftype(), unitnumber)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
@@ -248,7 +254,25 @@ class ModflowDe4(Package):
             hclose = float(line[30:40].strip())
             iprd4 = int(line[40:50].strip())
 
+
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype ==ModflowDe4.ftype():
+                    unitnumber = key
+
         de4 = ModflowDe4(model, itmx=itmx, mxup=mxup, mxlow=mxlow, mxbw=mxbw,
                          ifreq=ifreq, mutd4=mutd4, accl=accl, hclose=hclose,
-                         iprd4=iprd4)
+                         iprd4=iprd4, unitnumber=unitnumber)
         return de4
+
+
+    @staticmethod
+    def ftype():
+        return 'DE4'
+
+
+    @staticmethod
+    def defaultunit():
+        return 28

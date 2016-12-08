@@ -4,7 +4,10 @@ import flopy
 
 
 pthtest = os.path.join('..', 'examples', 'data', 'swtv4_test')
-newpth = os.path.join('.', 'temp')
+newpth = os.path.join('.', 'temp', 't028')
+# make the directory if it does not exist
+if not os.path.isdir(newpth):
+    os.makedirs(newpth)
 swtv4_exe = 'swt_v4'
 isswtv4 = flopy.which(swtv4_exe)
 runmodel = False

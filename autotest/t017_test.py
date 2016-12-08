@@ -19,10 +19,10 @@ def test_formattedfile_read():
     h0 = h.get_data(totim=times[0])
     h1 = h.get_data(kstpkper=kstpkper[0])
     h2 = h.get_data(idx=0)
-    assert np.array_equal(h0,
-                          h1), 'formatted head read using totim != head read using kstpkper'
-    assert np.array_equal(h0,
-                          h2), 'formatted head read using totim != head read using idx'
+    assert np.array_equal(h0, h1), \
+        'formatted head read using totim != head read using kstpkper'
+    assert np.array_equal(h0, h2), \
+        'formatted head read using totim != head read using idx'
 
     ts = h.get_ts((0, 7, 5))
     assert np.isclose(ts[0, 1], 944.487, 1e-6), \
@@ -108,9 +108,9 @@ def test_cellbudgetfile_readrecord():
     for kk in kstpkper:
         t = v.get_data(kstpkper=kk, text='STREAM LEAKAGE', full3D=True)[0]
         assert t.shape == (
-        1, 15, 10), '3D sfr budget data for kstpkper {} '.format(kk) + \
-                    'does not have correct shape (1, 15,10) - ' + \
-                    'returned shape {}'.format(t[0].shape)
+            1, 15, 10), '3D sfr budget data for kstpkper {} '.format(kk) + \
+                        'does not have correct shape (1, 15,10) - ' + \
+                        'returned shape {}'.format(t[0].shape)
 
     idx = v.get_indices()
     assert idx is None, 'get_indices() without record did not return None'
@@ -152,9 +152,9 @@ def test_cellbudgetfile_readrecord_waux():
     for kk in kstpkper:
         t = v.get_data(kstpkper=kk, text='wells', full3D=True)[0]
         assert t.shape == (
-        1, 15, 10), '3D wel budget data for kstpkper {} '.format(kk) + \
-                    'does not have correct shape (1, 15,10) - ' + \
-                    'returned shape {}'.format(t[0].shape)
+            1, 15, 10), '3D wel budget data for kstpkper {} '.format(kk) + \
+                        'does not have correct shape (1, 15,10) - ' + \
+                        'returned shape {}'.format(t[0].shape)
 
     idx = v.get_indices()
     assert idx is None, 'get_indices() without record did not return None'
@@ -180,7 +180,7 @@ def test_binaryfile_writeread():
     model = 'Pr3_MFNWT_lower.nam'
     ml = flopy.modflow.Modflow.load(model, version='mfnwt', model_ws=pth)
     # change the model work space
-    ml.change_model_ws('temp')
+    ml.change_model_ws(os.path.join('temp', 't017'))
     #
     ncol = ml.dis.ncol
     nrow = ml.dis.nrow
@@ -193,7 +193,7 @@ def test_binaryfile_writeread():
                                              ilay=1, pertim=pertim,
                                              totim=pertim, kstp=1, kper=1)
     b = ml.dis.botm.array[0, :, :].astype(np.float64)
-    pth = os.path.join('temp', 'bottom.hds')
+    pth = os.path.join('temp', 't017', 'bottom.hds')
     flopy.utils.Util2d.write_bin(b.shape, pth, b,
                                  header_data=header)
 
@@ -216,7 +216,7 @@ def test_binaryfile_writeread():
                                              ilay=1, pertim=pertim,
                                              totim=pertim, kstp=1, kper=1)
     b = ml.dis.botm.array[0, :, :].astype(np.float32)
-    pth = os.path.join('temp', 'bottom_single.hds')
+    pth = os.path.join('temp', 't017', 'bottom_single.hds')
     flopy.utils.Util2d.write_bin(b.shape, pth, b,
                                  header_data=header)
 

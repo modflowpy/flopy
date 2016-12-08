@@ -90,7 +90,11 @@ class SpatialReference(object):
     accessed
         
     """
-
+    xul, yul = None, None
+    xll, yll = None, None
+    rotation = 0.
+    length_multiplier = 1.
+    origin_loc = 'ul' # or ll
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1, xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
 
@@ -165,6 +169,12 @@ class SpatialReference(object):
         assert units in self.supported_units
         return units
 
+    @property
+    def bounds(self):
+        """Return bounding box in standard GIS order."""
+        xmin, xmax, ymin, ymax = self.get_extent()
+        return xmin, ymin, xmax, ymax
+
     @staticmethod
     def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
@@ -180,6 +190,7 @@ class SpatialReference(object):
         proj4_str = "EPSG:4326"
         start_datetime = "1/1/1970"
         units = None
+        length_multiplier = 1.
 
         for item in header:
             if "xul" in item.lower():
@@ -213,10 +224,12 @@ class SpatialReference(object):
                     pass
             elif "units" in item.lower():
                 units = item.split(':')[1].strip()
+            elif "length_multiplier" in item.lower():
+                length_multiplier = float(item.split(':')[1].strip())
 
         return {"xul":xul,"yul":yul,"rotation":rotation,
                 "proj4_str":proj4_str,"start_datetime":start_datetime,
-                "units":units}
+                "units":units, "length_multiplier": length_multiplier}
 
     def __setattr__(self, key, value):
         reset = True
@@ -227,11 +240,21 @@ class SpatialReference(object):
             super(SpatialReference,self).\
                 __setattr__("delc",np.atleast_1d(np.array(value)))
         elif key == "xul":
-            super(SpatialReference,self).\
-                __setattr__("xul",float(value))
+            super(SpatialReference, self).\
+                __setattr__("xul", float(value))
         elif key == "yul":
-            super(SpatialReference,self).\
-                __setattr__("yul",float(value))
+            super(SpatialReference, self).\
+                __setattr__("yul", float(value))
+        elif key == "xll":
+            super(SpatialReference, self).\
+                __setattr__("xll", float(value))
+        elif key == "yll":
+            super(SpatialReference, self).\
+                __setattr__("yll", float(value))
+        elif key == "length_multiplier":
+            super(SpatialReference, self).\
+                __setattr__("length_multiplier", float(value))
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
         elif key == "rotation":
             if float(value) != 0.0:
                 warnings.warn("rotation arg has recently changed. " +\
@@ -239,6 +262,7 @@ class SpatialReference(object):
                               "It now is positive counterclockwise")
             super(SpatialReference,self).\
                 __setattr__("rotation",float(value))
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
         elif key == "lenuni":
             super(SpatialReference,self).\
                 __setattr__("lenuni",int(value))
@@ -267,6 +291,7 @@ class SpatialReference(object):
         self._ycentergrid = None
         self._xcentergrid = None
         self._vertices = None
+
 
     @property
     def nrow(self):
@@ -353,46 +378,58 @@ class SpatialReference(object):
             raise ValueError('both xul and xll entered. Please enter either xul, yul or xll, yll.')
         if yul is not None and yll is not None:
             raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
-
-        self.length_multiplier = length_multiplier
-        theta = -rotation * np.pi / 180.
-        # Set origin and rotation
-        if xul is None:
-            if xll is not None:
-                self.xul = xll + np.sin(theta) * self.yedge[0] * self.length_multiplier
-            else:
-                self.xul = 0.
-        else:
-            self.xul = xul
-        if yul is None:
-            if yll is not None:
-                self.yul = yll + np.cos(theta) * self.yedge[0] * self.length_multiplier
-            else:
-                self.yul = np.add.reduce(self.delc) * self.length_multiplier
-        else:
-            self.yul = yul
-        if xll is None:
-            self.xll = self.xul - np.sin(theta) * self.yedge[0] * self.length_multiplier
-        else:
-            self.xll = xll
-        if yll is None:
-            self.yll = self.yul - np.cos(theta) * self.yedge[0] * self.length_multiplier
-        else:
-            self.yll = yll
         if rotation != 0.0:
             warnings.warn("rotation arg has recently changed. " +\
                           "It was previously treated as positive clockwise" +\
                           "It now is positive counterclockwise")
+        # set the origin priority based on the left corner specified
+        # (the other left corner will be calculated)
+        if xll is not None:
+            self.origin_loc = 'll'
+        else:
+            self.origin_loc = 'ul'
+
         self.rotation = rotation
-        self._reset()
+        self.length_multiplier = length_multiplier
+        self.set_origin(xul, yul, xll, yll)
+        #self._reset()
 
     def __repr__(self):
-        s = "xul:{0:<G}; yul:{1:<G}; rotation:{2:<G}; ".\
+        s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ".\
             format(self.xul,self.yul,self.rotation)
         s += "proj4_str:{0}; ".format(self.proj4_str)
         s += "units:{0}; ".format(self.units)
-        s += "lenuni:{0}".format(self.lenuni)
+        s += "lenuni:{0}; ".format(self.lenuni)
+        s += "length_multiplier:{}".format(self.length_multiplier)
         return s
+
+    def set_origin(self, xul=None, yul=None, xll=None, yll=None):
+        if self.origin_loc == 'll':
+            # calculate coords for upper left corner
+            self.xll = xll if xll is not None else 0.
+            self.yll = yll if yll is not None else 0.
+            self.xul = self.xll + np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+            self.yul = self.yll + np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+
+        if self.origin_loc == 'ul':
+            # calculate coords for lower left corner
+            self.xul = xul if xul is not None else 0.
+            self.yul = yul if yul is not None else 0.
+            self.xll = self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+            self.yll = self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+        self._reset()
+
+    #@property
+    #def xll(self):
+    #    return self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
+
+    #@property
+    #def yll(self):
+    #    return self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+
+    @property
+    def theta(self):
+        return -self.rotation * np.pi / 180.
 
     @property
     def xedge(self):
@@ -468,6 +505,9 @@ class SpatialReference(object):
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
+        x, y = x.copy(), y.copy()
+        # reset origin in case attributes were modified
+        self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
         x *= self.length_multiplier
         y *= self.length_multiplier
         x += self.xll
@@ -579,7 +619,6 @@ class SpatialReference(object):
                 np.add.accumulate(self.delc)))
         return yedge
 
-
     def write_gridSpec(self, filename):
         """ write a PEST-style grid specification file
         """
@@ -595,6 +634,14 @@ class SpatialReference(object):
         f.write('\n')
         return
 
+    def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
+        """Write a shapefile of the grid with just the row and column attributes"""
+        from flopy.export.shapefile_utils import write_grid_shapefile2
+        if epsg is None and prj is None:
+            epsg = self.epsg
+        write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
+                              epsg=epsg, prj=prj)
+
     def get_vertices(self, i, j):
         pts = []
         xgrid, ygrid = self.xgrid, self.ygrid
@@ -605,19 +652,53 @@ class SpatialReference(object):
         pts.append([xgrid[i, j], ygrid[i, j]])
         return pts
 
+    def get_rc(self, x, y):
+        """Return the row and column of a point or sequence of points
+        in real-world coordinates.
+
+        Parameters
+        ----------
+        x : scalar or sequence of x coordinates
+        y : scalar or sequence of y coordinates
+
+        Returns
+        -------
+        r : row or sequence of rows (zero-based)
+        c : column or sequence of columns (zero-based)
+        """
+        if np.isscalar(x):
+            c = (np.abs(self.xcentergrid[0] - x)).argmin()
+            r = (np.abs(self.ycentergrid[:, 0] - y)).argmin()
+        else:
+            xcp = np.array([self.xcentergrid[0]] * (len(x)))
+            ycp = np.array([self.ycentergrid[:, 0]] * (len(x)))
+            c = (np.abs(xcp.transpose() - x)).argmin(axis=0)
+            r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
+        return r, c
+
     @property
     def vertices(self):
+        """Returns a list of vertices for"""
         if self._vertices is None:
-            self._set_cell_vertices()
+            self._set_vertices()
         return self._vertices
 
     def _set_vertices(self):
+        """populate vertices for the whole grid"""
+        jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
+        jj, ii = jj.ravel(), ii.ravel()
+        vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
+        self._vertices = [v.tolist() for v in vrts] # conversion to lists
+
+        """
+        code above is 3x faster
         xgrid, ygrid = self.xgrid, self.ygrid
         ij = list(map(list, zip(xgrid[:-1, :-1].ravel(), ygrid[:-1, :-1].ravel())))
         i1j = map(list, zip(xgrid[1:, :-1].ravel(), ygrid[1:, :-1].ravel()))
         i1j1 = map(list, zip(xgrid[1:, 1:].ravel(), ygrid[1:, 1:].ravel()))
         ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
         self._vertices = np.array(map(list, zip(ij, i1j, i1j1, ij1, ij)))
+        """
 
     def interpolate(self, a, xi, method='nearest'):
         """

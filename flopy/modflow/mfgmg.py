@@ -175,13 +175,20 @@ class ModflowGmg(Package):
     """
 
     def __init__(self, model, mxiter=50, iiter=30, iadamp=0, hclose=1e-5, rclose=1e-5, relax=1.0, ioutgmg=0, iunitmhc=0,
-                 ism=0, isc=0, damp=1.0, dup=0.75, dlow=0.01, chglimit=1.0, extension='gmg', unitnumber=27):
+                 ism=0, isc=0, damp=1.0, dup=0.75, dlow=0.01, chglimit=1.0, extension='gmg', unitnumber=None):
         """
         Package constructor.
 
         """
-        Package.__init__(self, model, extension, 'GMG',
-                         unitnumber)  # Call ancestor's init to set self.parent, extension, name and unit number
+
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowGmg.defaultunit()
+
+        # Call ancestor's init to set self.parent, extension, name and unit
+        # number
+        Package.__init__(self, model, extension, ModflowGmg.ftype(),
+                         unitnumber)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
@@ -311,10 +318,28 @@ class ModflowGmg(Package):
         # close the open file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowGmg.ftype():
+                    unitnumber = key
+
         # create the gmg object
         gmg = ModflowGmg(model, mxiter=mxiter, iiter=iiter, iadamp=iadamp,
                          hclose=hclose, rclose=rclose, relax=relax,
                          ioutgmg=ioutgmg, iunitmhc=iunitmhc,
                          ism=ism, isc=isc, damp=damp,
-                         dup=dup, dlow=dlow, chglimit=chglimit)
+                         dup=dup, dlow=dlow, chglimit=chglimit,
+                         unitnumber=unitnumber)
         return gmg
+
+
+    @staticmethod
+    def ftype():
+        return 'GMG'
+
+
+    @staticmethod
+    def defaultunit():
+        return 27

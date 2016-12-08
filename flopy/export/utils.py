@@ -491,6 +491,7 @@ def mflist_helper(f, mfl, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         kper = kwargs.get("kper",None)
+        sparse = kwargs.get("sparse", False)
         if mfl.sr is None:
             raise Exception("MfList.to_shapefile: SpatialReference not set")
         import flopy.utils.flopy_io as fio
@@ -499,16 +500,20 @@ def mflist_helper(f, mfl, **kwargs):
             keys.sort()
         else:
             keys = [kper]
-        array_dict = {}
-        for kk in keys:
-            arrays = mfl.to_array(kk)
-            for name, array in arrays.items():
-                for k in range(array.shape[0]):
-                    #aname = name+"{0:03d}_{1:02d}".format(kk, k)
-                    n = fio.shape_attr_name(name, length=4)
-                    aname = "{}{:03d}{:03d}".format(n, k+1, int(kk)+1)
-                    array_dict[aname] = array[k]
-        shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
+        if not sparse:
+            array_dict = {}
+            for kk in keys:
+                arrays = mfl.to_array(kk)
+                for name, array in arrays.items():
+                    for k in range(array.shape[0]):
+                        #aname = name+"{0:03d}_{1:02d}".format(kk, k)
+                        n = fio.shape_attr_name(name, length=4)
+                        aname = "{}{:03d}{:03d}".format(n, k+1, int(kk)+1)
+                        array_dict[aname] = array[k]
+            shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
+        else:
+            from flopy.export.shapefile_utils import recarray2shp
+            recarray2shp()
 
 
     elif isinstance(f, NetCdf) or isinstance(f,dict):
