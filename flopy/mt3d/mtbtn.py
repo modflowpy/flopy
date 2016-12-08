@@ -74,6 +74,12 @@ class Mt3dBtn(Package):
     OmitDryBudg : str
         Specifies whether or not to include the mass flux terms through dry
         cells in the mass budget written to the listing file.
+    AltWTSorb : str
+        Specifies whether or not to use the MT3DMS formulation (this keyword
+        omitted) for the solid phase, whereby the entire cell thickness is
+        available for interacting with the aqueous phase, even though the
+        aqueous phase may only occupy a portion of the cell's thickness.  When
+        used, only the saturated portion of the cell is available for sorbing
     ncomp : int
         The total number of chemical species in the simulation. (default is
         None, will be changed to 1 if sconc is single value)
@@ -197,10 +203,10 @@ class Mt3dBtn(Package):
     unitnumber = 31
     def __init__(self, model, MFStyleArr=False, DRYCell=False,
                  Legacy99Stor=False, FTLPrint=False, NoWetDryPrint=False,
-                 OmitDryBud=False, nlay=None, nrow=None, ncol=None, nper=None,
-                 ncomp=1, mcomp=1, tunit='D', lunit='M', munit='KG',
-                 laycon=None, delr=None, delc=None, htop=None, dz=None,
-                 prsity=0.30, icbund=1,
+                 OmitDryBud=False, AltWTSorb=False, nlay=None, nrow=None,
+                 ncol=None, nper=None, ncomp=1, mcomp=1, tunit='D', lunit='M',
+                 munit='KG', laycon=None, delr=None, delc=None, htop=None,
+                 dz=None, prsity=0.30, icbund=1,
                  sconc=0.0, cinact=1e30, thkmin=0.01, ifmtcn=0, ifmtnp=0,
                  ifmtrf=0, ifmtdp=0, savucn=True, nprs=0, timprs=None,
                  obs=None, nprobs=1, chkmas=True, nprmas=1,
@@ -226,6 +232,7 @@ class Mt3dBtn(Package):
         self.FTLPrint = FTLPrint
         self.NoWetDryPrint = NoWetDryPrint
         self.OmitDryBud = OmitDryBud
+        self.AltWTSorb = AltWTSorb
         self.ncomp = ncomp
         self.mcomp = mcomp
         self.tunit = tunit
@@ -488,6 +495,8 @@ class Mt3dBtn(Package):
             str1 += ' NOWETDRYPRINT'
         if self.OmitDryBud:
             str1 += ' OMITDRYCELLBUDGET'
+        if self.AltWTSorb:
+            str1 += ' ALTWTSORB'
 
         if str1 != '':
             f_btn.write(str1 + '\n')
@@ -668,6 +677,7 @@ class Mt3dBtn(Package):
         FTLPrint = False
         NoWetDryPrint = False
         OmitDryBud = False
+        AltWTSorb = False
         if m_arr[0].strip().isdigit() is not True:  # If m_arr[0] is not a digit, it is a keyword
             for i in range(0, len(m_arr)):
                 if m_arr[i].upper() == "MODFLOWSTYLEARRAYS":
@@ -684,6 +694,8 @@ class Mt3dBtn(Package):
                     NoWetDryPrint = True
                 if m_arr[i].upper() == "OMITDRYCELLBUDGET":
                     OmitDryBud = True
+                if m_arr[i].upper() == "AltWTSorb":
+                    AltWTSorb = True
 
         # A3
         if model.verbose:
@@ -928,8 +940,8 @@ class Mt3dBtn(Package):
         btn = Mt3dBtn(model, MFStyleArr=MFStyleArr, DRYCell=DRYCell,
                       Legacy99Stor=Legacy99Stor, FTLPrint=FTLPrint,
                       NoWetDryPrint=NoWetDryPrint, OmitDryBud=OmitDryBud,
-                      nlay=nlay, nrow=nrow, ncol=ncol, nper=nper,
-                      ncomp=ncomp, mcomp=mcomp, tunit=tunit,
+                      AltWTSorb=AltWTSorb, nlay=nlay, nrow=nrow, ncol=ncol,
+                      nper=nper, ncomp=ncomp, mcomp=mcomp, tunit=tunit,
                       laycon=laycon, delr=delr, delc=delc, htop=htop, dz=dz,
                       lunit=lunit, munit=munit, prsity=prsity, icbund=icbund,
                       sconc=sconc, cinact=cinact, thkmin=thkmin,
