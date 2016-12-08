@@ -62,6 +62,13 @@ class Mt3dSft(Package):
     crntsf : float
         Is the Courant constraint specific to the SFT time step, its value
         has no bearing upon the groundwater transport solution time step.
+    iprtxmd : int
+        A flag to print SFT solution information to the standard output file.
+        IPRTXMD = 0 means no SFT solution information is printed;
+        IPRTXMD = 1 means SFT solution summary information is printed at the
+        end of every MT3D-USGS outer iteration; and IPRTXMD = 2 means SFT
+        solution details are written for each SFT outer iteration that
+        calls the xMD solver that solved SFT equations.
     coldsf : array of floats
         Represents the initial concentrations in the surface water network.
         The length of the array is equal to the number of stream reaches and
@@ -157,9 +164,9 @@ class Mt3dSft(Package):
     unitnumber = 46
     def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=0,
                  ietsfr=0, isfsolv=0, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
-                 mxitersf=10, crntsf=1.0, coldsf=0.0, dispsf=0.0, nobssf=0,
-                 obs_sf=None, sf_stress_period_data = None, dtype=None,
-                 extension='sft',unitnumber=None, **kwargs):
+                 mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
+                 nobssf=0, obs_sf=None, sf_stress_period_data = None,
+                 dtype=None, extension='sft',unitnumber=None, **kwargs):
         #unit number
         if unitnumber is None:
             unitnumber = self.unitnumber
@@ -184,6 +191,7 @@ class Mt3dSft(Package):
         self.cclosesf = cclosesf
         self.mxitersf = mxitersf
         self.crntsf = crntsf
+        self.iprtxmd = iprtxmd
 
         # Set 1D array values
         self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
@@ -255,10 +263,11 @@ class Mt3dSft(Package):
                     '           # nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
 
         # Item 2
-        f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.5f}{4:10d}{5:10.5f}'
+        f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.5f}{4:10d}{5:10.5f}{6:10d}'
                     .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
-                            self.mxsfbc, self.crntsf) +
-                    ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf\n')
+                            self.mxsfbc, self.crntsf, self.iprtxmd) +
+                    ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' \
+                    'iprtxmd\n')
 
         # Item 3
         f_sft.write(self.coldsf.get_file_entry())
@@ -273,7 +282,8 @@ class Mt3dSft(Package):
         if self.nobssf != 0:
             for iobs in range(self.nobssf):
                 f_sft.write('{0:10d}{1:10d}          # isobs, irobs\n'
-                            .format(self.obs_sf[iobs][0], self.obs_sf[iobs][1]))
+                            .format(self.obs_sf[iobs][0],
+                                    self.obs_sf[iobs][1]))
 
         # Items 7, 8
         # Loop through each stress period and write ssm information
@@ -294,7 +304,8 @@ class Mt3dSft(Package):
         return
 
     @staticmethod
-    def load(f, model, nsfinit=None, nper=None, ncomp=None, ext_unit_dict=None):
+    def load(f, model, nsfinit=None, nper=None, ncomp=None,
+             ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -316,13 +327,14 @@ class Mt3dSft(Package):
             variable defaults to 1, meaning the finite-difference solution is
             invoked.
         wimp : float
-            Is the stream solver time weighting factor.  Ranges between 0.0 and
-            1.0.  Values of 0.0, 0.5, or 1.0 correspond to explicit,
+            Is the stream solver time weighting factor.  Ranges between 0.0
+            and 1.0.  Values of 0.0, 0.5, or 1.0 correspond to explicit,
             Crank-Nicolson, and fully implicit schemes, respectively.
         wups : float
-            Is the space weighting factor employed in the stream network solver.
-            Ranges between 0.0 and 1.0.  Values of 0.0 and 1.0 correspond to a
-            central-in-space and upstream weighting factors, respectively.
+            Is the space weighting factor employed in the stream network
+            solver. Ranges between 0.0 and 1.0.  Values of 0.0 and 1.0
+            correspond to a central-in-space and upstream weighting factors,
+            respectively.
         cclosesf : float
             Is the closure criterion for the SFT solver
         mxitersf : int
@@ -331,6 +343,11 @@ class Mt3dSft(Package):
         crntsf : float
             Is the Courant constraint specific to the SFT time step, its value
             has no bearing upon the groundwater transport solution time step.
+        iprtxmd : int
+            a flag to print SFT solution information to the standard output
+            file. IPRTXMD can equal 0, 1, or 2, and will write increasing
+            amounts of solver information to the standard output file,
+            respectively.
 
         Returns
         -------
@@ -380,7 +397,8 @@ class Mt3dSft(Package):
         line = f.readline()
         if line[0] == '#':
             if model.verbose:
-                print('   SFT package currently does not support comment lines...')
+                print('   SFT package currently does not support comment ' \
+                      'lines...')
                 sys.exit()
 
         if model.verbose:
@@ -400,18 +418,21 @@ class Mt3dSft(Package):
             print('   IOUTOBS {}'.format(ioutobs))
             print('   IETSFR {}'.format(ietsfr))
             if ietsfr == 0:
-                print('   Mass does not exit the model via simulated stream evaporation ')
+                print('   Mass does not exit the model via simulated ' \
+                      'stream evaporation ')
             else:
-                print('   Mass exits the stream network via simulated stream evaporation ')
+                print('   Mass exits the stream network via simulated ' \
+                      'stream evaporation ')
 
-        # Item 2 (ISFSOLV, WIMP, WUPS, CCLOSESF, MXITERSF, CRNTSF)
+        # Item 2 (ISFSOLV, WIMP, WUPS, CCLOSESF, MXITERSF, CRNTSF, IPRTXMD)
         line = f.readline()
         if model.verbose:
-            print('   loading isfsolv, wimp, wups, cclosesf, mxitersf, crntsf...')
+            print('   loading isfsolv, wimp, wups, cclosesf, mxitersf, ' \
+                  'crntsf, iprtxmd...')
 
         vals = line.strip().split()
 
-        if len(vals) < 6 and model.verbose:
+        if len(vals) < 7 and model.verbose:
             print('   not enough values specified in item 2 of SFT input \
                       file, exiting...')
             sys.exit()
@@ -422,6 +443,7 @@ class Mt3dSft(Package):
             cclosesf = float(vals[3])
             mxitersf = int(vals[4])
             crntsf = float(vals[5])
+            iprtxmd = int(vals[6])
         if isfsolv != 1:
             isfsolv = 1
             print('   Resetting isfsolv to 1')
@@ -434,17 +456,18 @@ class Mt3dSft(Package):
             print('   CCLOSESF {}'.format(cclosesf))
             print('   MXITERSF {}'.format(mxitersf))
             print('   CRNTSF {}'.format(crntsf))
+            print('   IPRTXMD {}'.format(iprtxmd))
 
         # Item 3 (COLDSF(NRCH)) Initial concentration
         if model.verbose:
             print('   loading NSFINIT...')
 
             if model.free_format:
-                print('   Using MODFLOW style array reader utilities to read \
-                      NSFINIT')
+                print('   Using MODFLOW style array reader utilities to ' \
+                      'read NSFINIT')
             elif model.array_format == None:
-                print('   Using historic MT3DMS array reader utilities to \
-                      read NSFINIT')
+                print('   Using historic MT3DMS array reader utilities to ' \
+                      'read NSFINIT')
 
         # Because SFT package is a new package, it only accepts free format
         # Don't need to worry about reading fixed format here
@@ -454,11 +477,11 @@ class Mt3dSft(Package):
         # Item 4 (DISPSF(NRCH)) Reach-by-reach dispersion
         if model.verbose:
             if model.free_format:
-                print('   Using MODFLOW style array reader utilities to read \
-                      DISPSF')
+                print('   Using MODFLOW style array reader utilities to ' \
+                      'read DISPSF')
             elif model.free_format is None:
-                print('   Using historic MT3DMS array reader utilities to \
-                      read DISPSF')
+                print('   Using historic MT3DMS array reader utilities to ' \
+                      'read DISPSF')
 
         # Because SFT package is a new package, it only accepts free format.
         # Don't need to worry about reading fixed format here
@@ -535,6 +558,7 @@ class Mt3dSft(Package):
         sft = Mt3dSft(model, nsfinit=nsfinit, mxsfbc=mxsfbc, icbcsf=icbcsf,
                       ioutobs=ioutobs, ietsfr=ietsfr, isfsolv=isfsolv,
                       wimp=wimp, cclosesf=cclosesf, mxitersf=mxitersf,
-                      crntsf=crntsf, coldsf=coldsf, dispsf=dispsf, nobssf=nobssf,
-                      obs_sf=obs_sf, sf_stress_period_data=sf_stress_period_data)
+                      crntsf=crntsf, iprtxmd=iprtxmd, coldsf=coldsf,
+                      dispsf=dispsf, nobssf=nobssf, obs_sf=obs_sf,
+                      sf_stress_period_data=sf_stress_period_data)
         return sft
