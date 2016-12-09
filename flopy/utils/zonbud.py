@@ -512,9 +512,16 @@ class ZoneBudget(object):
         return records
 
     def copy(self):
+        """
+        Return a deepcopy of the object.
+        """
         return copy.deepcopy(self)
 
     def __deepcopy__(self, memo):
+        """
+        Over-rides the default deepcopy behavior. Copy all attributes except
+        the CellBudgetFile object which does not copy nicely.
+        """
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
@@ -522,6 +529,10 @@ class ZoneBudget(object):
         for k, v in self.__dict__.items():
             if k not in ignore_attrs:
                 setattr(result, k, copy.deepcopy(v, memo))
+
+        # Set CellBudgetFile object attribute manually. This is object
+        # read-only so should not be problems with pointers from
+        # multiple objects.
         result.cbc = self.cbc
         return result
 

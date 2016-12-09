@@ -15,7 +15,13 @@ FloPy Changes
 	* Modpath.create_mpsim() supports MNW2
 	* creation of MODPATH StartingLocations files
 	* Easy subsetting of endpoint and pathline results to destination cells of interest  
-	
+* Added utility to provide ZONEBUDGET functionality:
+    * new ZoneBudget class reads a CellBudgetFile and accumulates flows by zone
+    * includes a method to write the budget recarray to a .csv file
+    * ZoneBudget objects support numerical operators to facilitate conversion of units
+    * utilities are included which read/write ZONEBUDGET-style zone files to and from numpy arrays
+    * pass a dictionary of {zone: alias} to rename fields of the recarray from standard "ZONE   1" to more descriptive names (e.g. {1: 'New York', 2: 'Delmarva'}
+
 
 * Bug fixes:
   1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
