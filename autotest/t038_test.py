@@ -207,8 +207,10 @@ def test_zonbud_readwrite_zbarray():
 def junk():
     listf = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient', 'freyberg.list')
     bud = MfListBudget(listf)
-    print(bud.get_record_names())
-    print(bud.get_kstpkper())
+    # print(bud.get_record_names())
+    # print(bud.get_kstpkper())
+    print(bud.get_budget(names=['CONSTANT_HEAD_IN']))
+    # print(bud.get_data(kstpkper=None))
     return
 
 if __name__ == '__main__':
