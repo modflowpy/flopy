@@ -38,7 +38,7 @@ def test_compare_results_2_zonebudget(rtol=1e-5):
             continue
         elif 'ZONE' in items[1]:
             zonenames = [i.strip() for i in items[1:-1]]
-            zonenames = [' '.join(z.split()) for z in zonenames]
+            zonenames = ['_'.join(z.split()) for z in zonenames]
             continue
         elif 'IN' in items[1]:
             flow_dir = 'IN'
@@ -52,7 +52,7 @@ def test_compare_results_2_zonebudget(rtol=1e-5):
             break
         elif 'Total' in items[0] or 'IN-OUT' in items[0] or 'Percent Error' in items[0]:
             continue
-        record = ' '.join(items[0].strip().split())
+        record = '_'.join(items[0].strip().split()) + '_{}'.format(flow_dir)
         vals = [float(i) for i in items[1:-1]]
         row = (flow_dir, record) + tuple(v for v in vals)
         rows.append(row)
@@ -99,7 +99,7 @@ def test_compare_mlt_results_2_zonebudget(rtol=1e-5):
             continue
         elif 'ZONE' in items[1]:
             zonenames = [i.strip() for i in items[1:-1]]
-            zonenames = [' '.join(z.split()) for z in zonenames]
+            zonenames = ['_'.join(z.split()) for z in zonenames]
             continue
         elif 'IN' in items[1]:
             flow_dir = 'IN'
@@ -113,7 +113,7 @@ def test_compare_mlt_results_2_zonebudget(rtol=1e-5):
             break
         elif 'Total' in items[0] or 'IN-OUT' in items[0] or 'Percent Error' in items[0]:
             continue
-        record = ' '.join(items[0].strip().split())
+        record = '_'.join(items[0].strip().split()) + '_{}'.format(flow_dir)
         vals = [float(i) for i in items[1:-1]]
         row = (flow_dir, record) + tuple(v for v in vals)
         rows.append(row)
@@ -159,7 +159,7 @@ def test_zonbud_write_csv_totim():
 def test_zonbud_budget():
     zbud = ZoneBudget(os.path.join(loadpth, cbc_f), zon, kstpkper=(0, 0))
     assert zbud.get_records().shape[0] > 0, 'No records returned.'
-    recordlist = [('IN', 'CONSTANT HEAD'), ('IN', 'FROM ZONE 1')]
+    recordlist = ['CONSTANT_HEAD_IN', 'FROM_ZONE_1_IN']
     assert zbud.get_records(recordlist=recordlist, zones=[1, 3]).shape[0] > 0, 'No records returned.'
     return
 
@@ -178,7 +178,7 @@ def test_zonbud_aliases():
     zbud = ZoneBudget(os.path.join(loadpth, cbc_f), zon, kstpkper=(0, 0), aliases=aliases)
     zbud.to_csv(os.path.join(outpth, 'zbud_aliases.csv'), write_format='zonbud')
     assert zbud.get_records().shape[0] > 0, 'No records returned.'
-    recordlist = [('IN', 'FROM Mike')]
+    recordlist = ['FROM_Mike_IN']
     assert zbud.get_records(recordlist=recordlist, zones=['Trey', 3]).shape[0] > 0, 'No records returned.'
     return
 
