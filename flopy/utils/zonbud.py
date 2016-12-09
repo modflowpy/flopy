@@ -121,7 +121,7 @@ class ZoneBudget(object):
                 if z != 0 and z in self._zonefieldnamedict.keys():
                     if z in seen:
                         raise Exception('Zones may not have more than 1 alias.')
-                    self._zonefieldnamedict[z] = a
+                    self._zonefieldnamedict[z] = '_'.join(a.split())
                     seen.append(z)
 
         self._iflow_from_recnames, self._iflow_to_recnames = self._get_internal_flow_record_names()
@@ -636,11 +636,11 @@ class ZoneBudget(object):
         iflow_from_recnames = OrderedDict([])
         iflow_to_recnames = OrderedDict([])
         if 0 in self.allzones:
-            iflow_from_recnames[0] = 'FROM_ZONE_0'
-            iflow_to_recnames[0] = 'TO_ZONE_0'
+            iflow_from_recnames[0] = 'ZONE_0'
+            iflow_to_recnames[0] = 'ZONE_0'
         for z, a in iter(self._zonefieldnamedict.items()):
-            iflow_from_recnames[z] = 'FROM_{}'.format(a)
-            iflow_to_recnames[z] = 'TO_{}'.format(a)
+            iflow_from_recnames[z] = '{}'.format(a)
+            iflow_to_recnames[z] = '{}'.format(a)
         return iflow_from_recnames, iflow_to_recnames
 
     def _build_empty_record(self, flow_dir, recname):
