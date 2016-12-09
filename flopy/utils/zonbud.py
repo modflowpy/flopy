@@ -372,7 +372,7 @@ class ZoneBudget(object):
             for f in self._zonefieldnames:
                 select_fields.append(f)
 
-        select_indices = np.where(self._massbalance['record'] == 'INFLOW')
+        select_indices = np.where(self._massbalance['record'] == 'TOTAL_IN')
         records = self._massbalance[select_fields][select_indices]
         array = np.array([r for r in records[0]])
         return array
@@ -416,7 +416,7 @@ class ZoneBudget(object):
             for f in self._zonefieldnames:
                 select_fields.append(f)
 
-        select_indices = np.where(self._massbalance['record'] == 'OUTFLOW')
+        select_indices = np.where(self._massbalance['record'] == 'TOTAL_OUT')
         records = self._massbalance[select_fields][select_indices]
         array = np.array([r for r in records[0]])
         return array
@@ -460,7 +460,7 @@ class ZoneBudget(object):
             for f in self._zonefieldnames:
                 select_fields.append(f)
 
-        select_indices = np.where(self._massbalance['record'] == 'ERROR')
+        select_indices = np.where(self._massbalance['record'] == 'PERCENT_DISCREPANCY')
         records = self._massbalance[select_fields][select_indices]
         array = np.array([r for r in records[0]])
         return array
@@ -1328,12 +1328,13 @@ class ZoneBudget(object):
         pcterr = np.nan_to_num(pcterr)
 
         # Create the mass-balance record array
-        dtype_list = [('record', (str, 7))] + [('{}'.format(f), self.float_type) for f in self._zonefieldnames]
+        dtype_list = [('record', (str, 50))] + [('{}'.format(f), self.float_type) for f in self._zonefieldnames]
         dtype = np.dtype(dtype_list)
         mb = np.array([], dtype=dtype)
-        mb = np.append(mb, np.array(tuple(['INFLOW'] + list(intot)), dtype=dtype))
-        mb = np.append(mb, np.array(tuple(['OUTFLOW'] + list(outot)), dtype=dtype))
-        mb = np.append(mb, np.array(tuple(['ERROR'] + list(pcterr)), dtype=dtype))
+        mb = np.append(mb, np.array(tuple(['TOTAL_IN'] + list(intot)), dtype=dtype))
+        mb = np.append(mb, np.array(tuple(['TOTAL_OUT'] + list(outot)), dtype=dtype))
+        mb = np.append(mb, np.array(tuple(['IN-OUT'] + list(intot-outot)), dtype=dtype))
+        mb = np.append(mb, np.array(tuple(['PERCENT_DISCREPANCY'] + list(pcterr)), dtype=dtype))
 
         self._massbalance = mb
         return
