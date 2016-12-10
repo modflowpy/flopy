@@ -1,0 +1,12 @@
+LIST   16 parent/ex3_parent.out
+BAS6    1 parent/ex3_parent.ba6
+BCF6   11 parent/ex3_parent.bc6
+DIS     9 parent/ex3_parent.dis
+OC     10 parent/ex3_parent.oc
+DATA(BINARY) 30 parent/ex3_parent.hed
+DATA(BINARY) 40 parent/ex3_parent.flw
+PCG    12 parent/ex3_parent.pcg
+RIV    15 parent/ex3_parent.riv
+#DATA 70 parent/ex3_parent_bfh.hed
+#DATA 71 parent/ex3_parent_bfh.flw
+DATA 50 parent/ex3_parent.bot

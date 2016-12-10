@@ -1,0 +1,15 @@
+#Meandering River - 6 layers, lgr natural gradient - 03/18/2011
+FREE CHTOCH
+OPEN/CLOSE ex3_child.ib     1   (FREE)          4                       ibound layer 1
+OPEN/CLOSE ex3_child.ib     1   (FREE)          4                       ibound layer 2
+OPEN/CLOSE ex3_child.ib     1   (FREE)          4                       ibound layer 3
+OPEN/CLOSE ex3_child.ib     1   (FREE)          4                       ibound layer 4
+OPEN/CLOSE ex3_child.ib     1   (FREE)          4                       ibound layer 5
+CONSTANT     59                        4                       ibound layer 6
+ -333.0000
+  CONSTANT        47.                 -1                      shead layer 1
+  CONSTANT        47.                 -1                      shead layer 2
+  CONSTANT        47.                 -1                      shead layer 3
+  CONSTANT        47.                 -1                      shead layer 4
+  CONSTANT        47.                 -1                      shead layer 5
+  CONSTANT        47.                 -1                      shead layer 6
