@@ -62,17 +62,21 @@ class ZoneBudget(object):
         self.nlay, self.nrow, self.ncol = self.cbc_shape
         self.cbc_times = self.cbc.get_times()
         self.cbc_kstpkper = self.cbc.get_kstpkper()
+        self.kstpkper = kstpkper
+        self.totim = totim
 
-        if kstpkper is not None:
-            if isinstance(kstpkper, tuple):
-                self.kstpkper = [kstpkper]
+        if self.kstpkper is not None:
+            if isinstance(self.kstpkper, tuple):
+                self.kstpkper = [self.kstpkper]
             for kk in self.kstpkper:
                 s = 'The specified time step/stress period ' \
                     'does not exist {}'.format(kk)
                 assert kk in self.cbc.get_kstpkper(), s
-        elif totim is not None:
-            if isinstance(totim, float):
-                self.totim = [totim]
+        elif self.totim is not None:
+            if isinstance(self.totim, float):
+                self.totim = [self.totim]
+            elif isinstance(totim, int):
+                self.totim = [float(self.totim)]
             for t in self.totim:
                 s = 'The specified simulation time ' \
                     'does not exist {}'.format(t)
@@ -155,11 +159,11 @@ class ZoneBudget(object):
 
         # Build list of budgets
         array_list = []
-        if kstpkper is not None:
+        if self.kstpkper is not None:
             for kk in self.kstpkper:
                 recordarray = self._compute_budget(kstpkper=kk)
                 array_list.append(recordarray)
-        else:
+        elif self.totim is not None:
             for t in self.totim:
                 recordarray = self._compute_budget(totim=t)
                 array_list.append(recordarray)
@@ -169,69 +173,66 @@ class ZoneBudget(object):
     def get_model_shape(self):
         return self.nlay, self.nrow, self.ncol
 
-    def get_budget(self, kstpkper=None, totim=None, recordlist=None, zones=None):
+    def get_budget(self, names=None, zones=None):
 
-        # Need to update this so we can pull individual kstp/kper or times from the
-        # budget list as well as individual records and zones. Check that the input
-        # kstpkper/totim is in self.cbc_kstpkper/self.cbc_times.
+        budget_list = list(self._budget_list)
 
-        # select_fields = ['totim', 'time_step', 'stress_period', 'record']
-        #
-        # if zones is not None:
-        #     if isinstance(zones, int):
-        #         zones = [zones]
-        #     elif isinstance(zones, list) or isinstance(zones, tuple):
-        #         zones = zones
-        #     else:
-        #         errmsg = 'Input zones are not recognized. Please ' \
-        #                  'pass an integer or list of integers.'
-        #         raise Exception(errmsg)
-        #
-        #     for zone in zones:
-        #         if isinstance(zone, int):
-        #             name = 'ZONE_{}'.format(zone)
-        #         else:
-        #             name = zone
-        #         errmsg = '"{}" is not a valid name.'.format(name)
-        #         assert name in self._zonefieldnames, errmsg
-        #         select_fields.append(name)
-        # else:
-        #     for f in self._zonefieldnames:
-        #         select_fields.append(f)
-        #
-        # if recordlist is not None:
-        #     if isinstance(recordlist, tuple):
-        #         recordlist = [recordlist]
-        #     elif isinstance(recordlist, list):
-        #         recordlist = recordlist
-        #     else:
-        #         errmsg = 'Input records are not recognized. Please ' \
-        #                  'pass a tuple of (flow_dir, recordname) or list of tuples.'
-        #         raise Exception(errmsg)
-        #     select_records = np.array([], dtype=self.int_type)
-        #     for recname in recordlist:
-        #         r = np.where((recordarray['record'] == recname))
-        #         select_records = np.append(select_records, r[0])
-        # else:
-        #     recnames = recordarray['record']
-        #     select_records = np.where((recordarray['record'] == recnames))
-        #
-        # budget_list = [a[select_fields][select_records] for a in array_list]
-        return list(self._budget_list)
+        for idx, bud in enumerate(budget_list):
 
-    def to_csv(self, fname, write_format='zonbud', formatter=None):
+            select_fields = ['totim', 'time_step', 'stress_period', 'record']
+
+            if zones is not None:
+                if isinstance(zones, int):
+                    zones = [zones]
+                elif isinstance(zones, list) or isinstance(zones, tuple):
+                    zones = zones
+                else:
+                    errmsg = 'Input zones are not recognized. Please ' \
+                             'pass an integer or list of integers.'
+                    raise Exception(errmsg)
+
+                for zone in zones:
+                    if isinstance(zone, int):
+                        name = 'ZONE_{}'.format(zone)
+                    else:
+                        name = zone
+                    errmsg = '"{}" is not a valid name.'.format(name)
+                    assert name in self._zonefieldnames, errmsg
+                    select_fields.append(name)
+            else:
+                for f in self._zonefieldnames:
+                    select_fields.append(f)
+
+            if names is not None:
+                if isinstance(names, tuple):
+                    names = [names]
+                elif isinstance(names, list):
+                    names = names
+                else:
+                    errmsg = 'Input records are not recognized. Please ' \
+                             'pass a tuple of (flow_dir, recordname) or list of tuples.'
+                    raise Exception(errmsg)
+                select_records = np.array([], dtype=self.int_type)
+                for recname in names:
+                    r = np.where((bud['record'] == recname))
+                    select_records = np.append(select_records, r[0])
+            else:
+                recnames = bud['record']
+                select_records = np.where((bud['record'] == recnames))
+
+            budget_list[idx] = bud[select_fields][select_records]
+
+        return budget_list
+
+    def to_csv(self, fname):
         """
-        Saves the budget record array to a formatted
+        Saves the budget record arrays to a formatted
         comma-separated values file.
 
         Parameters
         ----------
         fname : str
             The name of the output comma-separated values file.
-        write_format : str
-            A write option for output comma-separated values file.
-        formatter : function
-            A string-formatter function for formatting floats.
 
         Returns
         -------
@@ -240,97 +241,15 @@ class ZoneBudget(object):
         """
         # Needs updating to handle the new budget list structure. Write out budgets for all kstpkper
         # if kstpkper is None or pass list of kstpkper/totim to save particular budgets.
+        with open(fname, 'w') as f:
+            # Write header
+            f.write(','.join(self._budget_list[0].dtype.names) + '\n')
+        with open(fname, 'a') as f:
+            for bud in self._budget_list:
 
-        assert write_format.lower() in ['pandas', 'zonbud'], 'Format must be one of "pandas" or "zonbud".'
-
-        if formatter is None:
-            formatter = '{:.16e}'.format
-
-        if write_format.lower() == 'pandas':
-            with open(fname, 'w') as f:
-
-                # Write header
-                f.write(','.join(self.recordarray.dtype.names) + '\n')
-
-                # Write IN terms
-                select_indices = np.where(self.recordarray['flow_dir'] == 'IN')
-                for rec in self.recordarray[select_indices[0]]:
-                    items = []
-                    for i in rec:
-                        if isinstance(i, str):
-                            items.append(i)
-                        else:
-                            items.append(formatter(i))
-                    f.write(','.join(items) + '\n')
-                ins_sum = self.get_total_inflow()
-                f.write(','.join([' ', 'Total IN'] + [formatter(i) for i in ins_sum]) + '\n')
-
-                # Write OUT terms
-                select_indices = np.where(self.recordarray['flow_dir'] == 'OUT')
-                for rec in self.recordarray[select_indices[0]]:
-                    items = []
-                    for i in rec:
-                        if isinstance(i, str):
-                            items.append(i)
-                        else:
-                            items.append(formatter(i))
-                    f.write(','.join(items) + '\n')
-                out_sum = self.get_total_outflow()
-                f.write(','.join([' ', 'Total OUT'] + [formatter(i) for i in out_sum]) + '\n')
-
-                # Write mass balance terms
-                ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
-                pcterr = self.get_percent_error()
-                f.write(','.join([' ', 'IN-OUT'] + [formatter(i) for i in ins_minus_out]) + '\n')
-                f.write(','.join([' ', 'Percent Error'] + [formatter(i) for i in pcterr]) + '\n')
-
-        elif write_format.lower() == 'zonbud':
-            with open(fname, 'w') as f:
-
-                # Write header
-                header = ''
-                if self.kstpkper is not None:
-                    kstp1 = self.kstpkper[0] + 1
-                    kper1 = self.kstpkper[1] + 1
-                    header = 'Time Step, {kstp}, Stress Period, {kper}\n'.format(kstp=kstp1, kper=kper1)
-                elif self.totim is not None:
-                    header = 'Sim. Time, {totim}\n'.format(totim=self.totim)
-                f.write(header)
-                f.write(','.join([' '] + [field for field in self.recordarray.dtype.names[2:]]) + '\n')
-
-                # Write IN terms
-                f.write(','.join([' '] + ['IN'] * (len(self.recordarray.dtype.names[1:]) - 1)) + '\n')
-                select_indices = np.where(self.recordarray['flow_dir'] == 'IN')
-                for rec in self.recordarray[select_indices[0]]:
-                    items = []
-                    for i in list(rec)[1:]:
-                        if isinstance(i, str):
-                            items.append(i)
-                        else:
-                            items.append(formatter(i))
-                    f.write(','.join(items) + '\n')
-                ins_sum = self.get_total_inflow()
-                f.write(','.join(['Total IN'] + [formatter(i) for i in ins_sum]) + '\n')
-
-                # Write OUT terms
-                f.write(','.join([' '] + ['OUT'] * (len(self.recordarray.dtype.names[1:]) - 1)) + '\n')
-                select_indices = np.where(self.recordarray['flow_dir'] == 'OUT')
-                for rec in self.recordarray[select_indices[0]]:
-                    items = []
-                    for i in list(rec)[1:]:
-                        if isinstance(i, str):
-                            items.append(i)
-                        else:
-                            items.append(formatter(i))
-                    f.write(','.join(items) + '\n')
-                out_sum = self.get_total_outflow()
-                f.write(','.join(['Total OUT'] + [formatter(i) for i in out_sum]) + '\n')
-
-                # Write mass balance terms
-                ins_minus_out = self.get_total_inflow() - self.get_total_outflow()
-                pcterr = self.get_percent_error()
-                f.write(','.join(['IN-OUT'] + [formatter(i) for i in ins_minus_out]) + '\n')
-                f.write(','.join(['Percent Error'] + [formatter(i) for i in pcterr]) + '\n')
+                for rowidx in range(bud.shape[0]):
+                    s = ','.join([str(i) for i in list(bud[:][rowidx])])+'\n'
+                    f.write(s)
         return
 
     def copy(self):
