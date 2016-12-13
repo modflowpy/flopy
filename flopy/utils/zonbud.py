@@ -240,9 +240,7 @@ class ZoneBudget(object):
         Returns
         -------
         out : panda dataframes
-            Pandas dataframes with the incremental and cumulative water budget
-            items in list file. A separate pandas dataframe is returned for the
-            incremental and cumulative water budget entries.
+            Pandas dataframe with the budget information.
         Examples
         --------
         >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
@@ -313,27 +311,6 @@ class ZoneBudget(object):
         # multiple objects.
         result.cbc = self.cbc
         return result
-
-    def _totim_from_kstpkper(self, kstpkper):
-        if self.dis is None:
-            return 0.0
-        kstp, kper = kstpkper
-        perlen = self.dis.perlen.array
-        nstp = self.dis.nstp.array[kper]
-        tsmult = self.dis.tsmult.array[kper]
-        kper_len = np.sum(perlen[:kper])
-        this_perlen = perlen[kper]
-        if tsmult == 1:
-            dt1 = this_perlen / float(nstp)
-        else:
-            dt1 = this_perlen * (tsmult - 1.0) / ((tsmult ** nstp) - 1.0)
-        kstp_len = [dt1]
-        for i in range(kstp + 1):
-            kstp_len.append(kstp_len[-1] * tsmult)
-        # kstp_len = np.array(kstp_len)
-        # kstp_len = kstp_len[:kstp].sum()
-        kstp_len = sum(kstp_len[:kstp + 1])
-        return kper_len + kstp_len
 
     def _compute_budget(self, kstpkper=None, totim=None):
         """
