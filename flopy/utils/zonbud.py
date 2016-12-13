@@ -6,6 +6,7 @@ import numpy as np
 from .binaryfile import CellBudgetFile
 from itertools import groupby
 from collections import OrderedDict
+from ..utils.utils_def import totim_to_datetime
 
 
 class ZoneBudget(object):
@@ -33,14 +34,14 @@ class ZoneBudget(object):
 
     Example usage:
 
-    >>>from flopy.utils.zonbud import ZoneBudget, read_zbarray
-    >>>zon = read_zbarray('zone_input_file')
-    >>>bud = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
-    >>>bud.to_csv('zonebudtest.csv')
-    >>>bud.get_records()
-    >>>mgd = bud * 7.48052 / 1000000
+    >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
+    >>> zon = read_zbarray('zone_input_file')
+    >>> bud = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
+    >>> bud.to_csv('zonebudtest.csv')
+    >>> bud.get_records()
+    >>> mgd = bud * 7.48052 / 1000000
     """
-    def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None):
+    def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None, **kwargs):
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
@@ -57,30 +58,47 @@ class ZoneBudget(object):
             if zi < 0:
                 raise Exception('Negative zone value(s) found:', zi)
 
+        self.dis = None
+        self.sr = None
+        if 'model' in kwargs.keys():
+            self.model = kwargs.pop('model')
+            self.sr = self.model.sr
+            self.dis = self.model.dis
+        if 'dis' in kwargs.keys():
+            self.dis = kwargs.pop('dis')
+            self.sr = self.dis.parent.sr
+        if 'sr' in kwargs.keys():
+            self.sr = kwargs.pop('sr')
+        if len(kwargs.keys()) > 0:
+            args = ','.join(kwargs.keys())
+            raise Exception('LayerFile error: unrecognized kwargs: ' + args)
+
         # Check the shape of the cbc budget file arrays
         self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
         self.nlay, self.nrow, self.ncol = self.cbc_shape
         self.cbc_times = self.cbc.get_times()
         self.cbc_kstpkper = self.cbc.get_kstpkper()
-        self.kstpkper = kstpkper
-        self.totim = totim
+        self.kstpkper = None
+        self.totim = None
 
-        if self.kstpkper is not None:
-            if isinstance(self.kstpkper, tuple):
-                self.kstpkper = [self.kstpkper]
-            for kk in self.kstpkper:
+        if kstpkper is not None:
+            if isinstance(kstpkper, tuple):
+                kstpkper = [kstpkper]
+            for kk in kstpkper:
                 s = 'The specified time step/stress period ' \
                     'does not exist {}'.format(kk)
                 assert kk in self.cbc.get_kstpkper(), s
-        elif self.totim is not None:
-            if isinstance(self.totim, float):
-                self.totim = [self.totim]
+            self.kstpkper = kstpkper
+        elif totim is not None:
+            if isinstance(totim, float):
+                totim = [totim]
             elif isinstance(totim, int):
-                self.totim = [float(self.totim)]
-            for t in self.totim:
+                totim = [float(totim)]
+            for t in totim:
                 s = 'The specified simulation time ' \
                     'does not exist {}'.format(t)
                 assert t in self.cbc.get_times(), s
+            self.totim = totim
         else:
             # No time step/stress period or simulation time pass
             self.kstpkper = self.cbc.get_kstpkper()
@@ -213,6 +231,64 @@ class ZoneBudget(object):
                     f.write(s)
         return
 
+    def get_dataframes(self, start_datetime=None, timeunit='D'):
+        """
+        Get pandas dataframes.
+        Parameters
+        ----------
+
+        Returns
+        -------
+        out : panda dataframes
+            Pandas dataframes with the incremental and cumulative water budget
+            items in list file. A separate pandas dataframe is returned for the
+            incremental and cumulative water budget entries.
+        Examples
+        --------
+        >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
+        >>> zon = read_zbarray('zone_input_file')
+        >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
+        >>> df = zb.get_dataframes()
+        """
+        try:
+            import pandas as pd
+        except Exception as e:
+            raise Exception(
+                "ZoneBudget.get_dataframe() error import pandas: " + \
+                str(e))
+
+        valid_timeunit = ['S', 'M', 'H', 'D', 'Y']
+
+        if timeunit.upper() == 'SECONDS':
+            timeunit = 'S'
+        elif timeunit.upper() == 'MINUTES':
+            timeunit = 'M'
+        elif timeunit.upper() == 'HOURS':
+            timeunit = 'H'
+        elif timeunit.upper() == 'DAYS':
+            timeunit = 'D'
+        elif timeunit.upper() == 'YEARS':
+            timeunit = 'Y'
+
+        errmsg = 'Specified time units ({}) not recognized. ' \
+                 'Please use one of '.format(timeunit)
+        assert timeunit in valid_timeunit, errmsg + ', '.join(valid_timeunit) + '.'
+
+        df = pd.DataFrame()
+        for bud in self.get_budget():
+            df = df.append(pd.DataFrame(bud))
+        if start_datetime is not None:
+            totim = totim_to_datetime(df.totim,
+                                      start=pd.to_datetime(start_datetime),
+                                      timeunit=timeunit)
+            df['datetime'] = totim
+            index_cols = ['datetime', 'record']
+        else:
+            index_cols = ['totim', 'record']
+        df = df.set_index(index_cols).sort_index()
+        keep_cols = self._zonefieldnames
+        return df[keep_cols]
+
     def copy(self):
         """
         Return a deepcopy of the object.
@@ -237,6 +313,27 @@ class ZoneBudget(object):
         # multiple objects.
         result.cbc = self.cbc
         return result
+
+    def _totim_from_kstpkper(self, kstpkper):
+        if self.dis is None:
+            return 0.0
+        kstp, kper = kstpkper
+        perlen = self.dis.perlen.array
+        nstp = self.dis.nstp.array[kper]
+        tsmult = self.dis.tsmult.array[kper]
+        kper_len = np.sum(perlen[:kper])
+        this_perlen = perlen[kper]
+        if tsmult == 1:
+            dt1 = this_perlen / float(nstp)
+        else:
+            dt1 = this_perlen * (tsmult - 1.0) / ((tsmult ** nstp) - 1.0)
+        kstp_len = [dt1]
+        for i in range(kstp + 1):
+            kstp_len.append(kstp_len[-1] * tsmult)
+        # kstp_len = np.array(kstp_len)
+        # kstp_len = kstp_len[:kstp].sum()
+        kstp_len = sum(kstp_len[:kstp + 1])
+        return kper_len + kstp_len
 
     def _compute_budget(self, kstpkper=None, totim=None):
         """
