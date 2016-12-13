@@ -170,47 +170,6 @@ def test_zonbud_readwrite_zbarray():
     return
 
 
-def test_dataframes():
-    cbc_f = os.path.join(loadpth, 'freyberg_mlt.cbc')
-    zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
-    zb = ZoneBudget(cbc_f, zon, totim=[1097.])
-    df = zb.get_dataframes()
-    assert(len(df)) > 0, 'No records returned.'
-    df = zb.get_dataframes(start_datetime='1-1-1970')
-    assert (len(df)) > 0, 'No records returned.'
-
-def junk():
-    from flopy.utils import MfListBudget
-    listf = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient', 'freyberg.list')
-    bud = MfListBudget(listf)
-    inc, cum = bud.get_dataframes(start_datetime=None)
-    print(cum.head())
-    # print(bud.get_kstpkper())
-    inc, cum = bud.get_budget()
-    print(repr(inc))
-    # print(bud.get_data(kstpkper=None))
-
-    # zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
-    # cbc_fname = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient', 'freyberg.cbc')
-    # zbud = ZoneBudget(cbc_fname, zon, kstpkper=(0, 1096))
-    # print(zbud.get_budget(recordlist=['CONSTANT_HEAD_IN']))
-    # print(zbud.get_budget(recordlist=['CONSTANT_HEAD_IN']).sum())
-    return
-#
-# def test_zonbud2():
-#     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
-#     # zon = np.ones((3, 40, 20), np.int)
-#     cbc_fname = os.path.join(loadpth, 'freyberg.cbc')
-#     bud = ZoneBudget(cbc_fname, zon, totim=[1095., 1096., 1097.])
-#     # print(len(bud))
-#     a = bud.get_budget()[0]
-#     # for i in range(a.shape[0]):
-#     #     print(i, list(a[:][i]))
-#     bud.to_csv(os.path.join(outpth, 'text.csv'))
-#     mul = bud*-1
-#     # print(repr(mul.get_budget()[-1]))
-#     return
-
 if __name__ == '__main__':
     test_compare2zonebudget()
     test_compare2zonebudget_mlt()
@@ -218,4 +177,3 @@ if __name__ == '__main__':
     test_zonbud_get_budget()
     test_zonbud_copy()
     test_zonbud_readwrite_zbarray()
-    test_dataframes()
