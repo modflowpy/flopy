@@ -36,10 +36,9 @@ class ZoneBudget(object):
 
     >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
     >>> zon = read_zbarray('zone_input_file')
-    >>> bud = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
-    >>> bud.to_csv('zonebudtest.csv')
-    >>> bud.get_records()
-    >>> mgd = bud * 7.48052 / 1000000
+    >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
+    >>> zb.to_csv('zonebudtest.csv')
+    >>> zb_mgd = zb * 7.48052 / 1000000
     """
     def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None, **kwargs):
 
@@ -191,7 +190,50 @@ class ZoneBudget(object):
     def get_model_shape(self):
         return self.nlay, self.nrow, self.ncol
 
+    def get_record_names(self):
+        """
+        Get a list of water budget record names in the file.
+
+        Returns
+        -------
+        out : list of strings
+            List of unique text names in the binary file.
+
+        Example usage:
+
+        >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
+        >>> recnames = zb.get_record_names()
+
+        """
+        names = []
+        for bud in self.get_budget():
+            names.extend(list(bud['record']))
+        return np.unique(names)
+
     def get_budget(self, names=None, zones=None):
+        """
+        Get a list of zonebudget record arrays.
+
+        Parameters
+        ----------
+
+        names : list of strings
+            A list of strings containing the names of the records desired.
+        zones : list of ints or strings
+            A list of integer zone numbers or zone names desired.
+
+        Returns
+        -------
+        budget_list : list of reecord arrays
+            A list of the zonebudget record arrays.
+
+        Example usage:
+
+        >>> names = ['CONSTANT_HEAD_IN', 'RIVER_LEAKAGE_OUT']
+        >>> zones = ['ZONE_1', 'ZONE_2']
+        >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
+        >>> bud = zb.get_budget(names=names, zones=zones)
+        """
         if isinstance(names, str):
             names = [names]
         if isinstance(zones, str):

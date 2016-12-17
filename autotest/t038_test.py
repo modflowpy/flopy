@@ -140,6 +140,15 @@ def test_zonbud_get_budget():
     assert len(zb.get_budget()) == len(cbc.get_kstpkper()), s
     return
 
+def test_zonbud_get_record_names():
+    cbc_f = os.path.join(loadpth, 'freyberg_mlt.cbc')
+    cbc = CellBudgetFile(cbc_f)
+    zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 0))
+    recnames = zb.get_record_names()
+    s = 'No record names returned.'
+    assert len(recnames) > 0, s
+    return
 
 def test_zonbud_aliases():
     cbc_f = 'freyberg.cbc'
@@ -177,3 +186,4 @@ if __name__ == '__main__':
     test_zonbud_get_budget()
     test_zonbud_copy()
     test_zonbud_readwrite_zbarray()
+    test_zonbud_get_record_names()
