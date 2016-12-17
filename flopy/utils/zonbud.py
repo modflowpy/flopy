@@ -191,16 +191,27 @@ class ZoneBudget(object):
     def get_model_shape(self):
         return self.nlay, self.nrow, self.ncol
 
-    def get_budget(self):
-
-        budget_list = list(self._budget_list)
-
-        for idx, bud in enumerate(budget_list):
-
+    def get_budget(self, names=None, zones=None):
+        if isinstance(names, str):
+            names = [names]
+        if isinstance(zones, str):
+            zones = [zones]
+        elif isinstance(zones, int):
+            zones = [zones]
+        if zones is not None:
+            for idx, z in enumerate(zones):
+                if isinstance(z, int):
+                    zones[idx] = 'ZONE_{}'.format(z)
+            select_fields = ['totim', 'time_step', 'stress_period', 'record'] + zones
+        else:
             select_fields = ['totim', 'time_step', 'stress_period', 'record'] + self._zonefieldnames
-            select_records = np.where((bud['record'] == bud['record']))
-            budget_list[idx] = bud[select_fields][select_records]
-
+        budget_list = list(self._budget_list)
+        for idx, bud in enumerate(budget_list):
+            if names is not None:
+                select_records = np.in1d(bud['record'], names)
+            else:
+                select_records = np.where((bud['record'] == bud['record']))
+        budget_list[idx] = bud[select_fields][select_records]
         return budget_list
 
     def to_csv(self, fname):
