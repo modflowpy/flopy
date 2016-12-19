@@ -284,16 +284,24 @@ class ZoneBudget(object):
                     f.write(s)
         return
 
-    def get_dataframes(self, start_datetime=None, timeunit='D'):
+    def get_dataframes(self, start_datetime=None, timeunit='D', index_key='totim'):
         """
         Get pandas dataframes.
         Parameters
         ----------
+        
+        start_datetime : str
+            Datetime string indicating the time at which the simulation starts.
+        timeunit : str
+            String that indicates the time units used in the model.
+        index_key : str
+            Indicates the fields to be used (in addition to "record") in the
+            resulting DataFrame multi-index.
 
         Returns
         -------
-        out : panda dataframes
-            Pandas dataframe with the budget information.
+        out : Pandas DataFrame
+            Pandas DataFrame with the budget information.
         Examples
         --------
         >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
@@ -305,8 +313,10 @@ class ZoneBudget(object):
             import pandas as pd
         except Exception as e:
             raise Exception(
-                "ZoneBudget.get_dataframe() error import pandas: " + \
+                "ZoneBudget.get_dataframes() error import pandas: " + \
                 str(e))
+        valid_index_keys = ['totim', 'kstpkper']
+        assert index_key in valid_index_keys, 'index_key "{}" is not valid.'.format(index_key)
 
         valid_timeunit = ['S', 'M', 'H', 'D', 'Y']
 
@@ -325,20 +335,23 @@ class ZoneBudget(object):
                  'Please use one of '.format(timeunit)
         assert timeunit in valid_timeunit, errmsg + ', '.join(valid_timeunit) + '.'
 
-        df = pd.DataFrame()
+        out = pd.DataFrame()
         for bud in self.get_budget():
-            df = df.append(pd.DataFrame(bud))
+            out = out.append(pd.DataFrame(bud))
         if start_datetime is not None:
-            totim = totim_to_datetime(df.totim,
+            totim = totim_to_datetime(out.totim,
                                       start=pd.to_datetime(start_datetime),
                                       timeunit=timeunit)
-            df['datetime'] = totim
+            out['datetime'] = totim
             index_cols = ['datetime', 'record']
         else:
-            index_cols = ['totim', 'record']
-        df = df.set_index(index_cols).sort_index()
+            if index_key == 'totim':
+                index_cols = ['totim', 'record']
+            elif index_key == 'kstpkper':
+                index_cols = ['time_step', 'stress_period', 'record']
+        out = out.set_index(index_cols).sort_index()
         keep_cols = self._zonefieldnames
-        return df[keep_cols]
+        return out[keep_cols]
 
     def copy(self):
         """
