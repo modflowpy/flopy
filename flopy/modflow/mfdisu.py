@@ -377,7 +377,7 @@ class ModflowDisU(Package):
         return z
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=False):
         """
         Load an existing package.
 
@@ -394,6 +394,8 @@ class ModflowDisU(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default False; not setup yet)
 
         Returns
         -------
@@ -439,9 +441,19 @@ class ModflowDisU(Package):
         njag = int(ll.pop(0))
         ivsd = int(ll.pop(0))
         nper = int(ll.pop(0))
-        itmuni = int(ll.pop(0))
-        lenuni = int(ll.pop(0))
-        idsymrd = int(ll.pop(0))
+        # mimic urword behavior in case these values aren't present on line
+        if len(ll) > 0:
+            itmuni = int(ll.pop(0))
+        else:
+            itmuni = 0
+        if len(ll) > 0:
+            lenuni = int(ll.pop(0))
+        else:
+            lenuni = 0
+        if len(ll) > 0:
+            idsymrd = int(ll.pop(0))
+        else:
+            idsymrd = 0
         if model.verbose:
             print('   NODES {}'.format(nodes))
             print('   NLAY {}'.format(nlay))
