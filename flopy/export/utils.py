@@ -381,6 +381,7 @@ def model_helper(f, ml, **kwargs):
         for pak in ml.packagelist:
             if pak.name[0] in package_names:
                 f = pak.export(f,**kwargs)
+                assert f is not None
         return f
 
     elif isinstance(f,dict):
