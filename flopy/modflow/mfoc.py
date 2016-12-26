@@ -144,6 +144,11 @@ class ModflowOc(Package):
         if unitnumber is None:
             unitnumber = ModflowOc.defaultunit()
 
+        # support structured and unstructured dis
+        dis = model.get_package('DIS')
+        if dis is None:
+            dis = model.get_package('DISU')
+
         # process kwargs
         if 'save_every' in kwargs:
             save_every = int(kwargs.pop('save_every'))
@@ -157,9 +162,9 @@ class ModflowOc(Package):
             else:
                 save_types = ['save head', 'print budget']
             stress_period_data = {}
-            for kper in range(model.dis.nper):
+            for kper in range(dis.nper):
                 icnt = save_every
-                for kstp in range(model.dis.nstp[kper]):
+                for kstp in range(dis.nstp[kper]):
                     if icnt == save_every:
                         stress_period_data[(kper, kstp)] = save_types
                         icnt = 0
@@ -302,7 +307,10 @@ class ModflowOc(Package):
 
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.parent.get_nrow_ncol_nlay_nper()
-        nstp = self.parent.get_package('DIS').nstp
+        dis = self.parent.get_package('DIS')
+        if dis is None:
+            dis = self.parent.get_package('DISU')
+        nstp = dis.nstp
 
         keys = list(self.stress_period_data.keys())
         keys.sort()
@@ -506,7 +514,10 @@ class ModflowOc(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         if nstp is None:
-            nstp = model.get_package('DIS').nstp.array
+            dis = model.get_package('DIS')
+            if dis is None:
+                dis = model.get_package('DISU')
+            nstp = dis.nstp
 
         # initialize
         ihedfm = 0

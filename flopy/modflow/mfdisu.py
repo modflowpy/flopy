@@ -237,10 +237,14 @@ class ModflowDisU(Package):
         self.nodelay = Util2d(model, (self.nlay,), np.int, nodelay,
                                name='nodelay', locat=self.unit_number[0])
 
+        # set ncol and nrow for array readers
+        nrow = None
+        ncol = self.nodelay.array[0, :]
+
         # Top and bot are both 1d arrays of size nodes
-        self.top = Util3d(model, (nlay, 1, nodes), np.float32, top, name='top',
+        self.top = Util3d(model, (nlay, nrow, ncol), np.float32, top, name='top',
                            locat=self.unit_number[0])
-        self.bot = Util3d(model, (nlay, 1, nodes), np.float32, bot, name='bot',
+        self.bot = Util3d(model, (nlay, nrow, ncol), np.float32, bot, name='bot',
                            locat=self.unit_number[0])
 
 
@@ -249,7 +253,7 @@ class ModflowDisU(Package):
             self.area = Util2d(model, (self.nodelay[0],), np.float32, area,
                                 'area', locat=self.unit_number[0])
         else:
-            self.area = Util3d(model, (nlay, 1, nodes), np.float32, area,
+            self.area = Util3d(model, (nlay, nrow, ncol), np.float32, area,
                                 name='area', locat=self.unit_number[0])
 
         # Connectivity and ivc
@@ -321,10 +325,14 @@ class ModflowDisU(Package):
         return
 
     def __calculate_thickness(self):
+        # set ncol and nrow for array readers
+        nrow = None
+        ncol = self.nodelay.array[0, :]
+        nlay = self.nlay
         thk = []
         for k in range(self.nlay):
             thk.append(self.top[k] - self.bot[k])
-        self.__thickness = Util3d(self.parent, (self.nlay, 1, self.nodes),
+        self.__thickness = Util3d(self.parent, (nlay, nrow, ncol),
                                    np.float32, thk, name='thickness')
         return
 

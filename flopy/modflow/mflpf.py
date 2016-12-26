@@ -238,7 +238,13 @@ class ModflowLpf(Package):
         if check:  # allows turning off package checks when writing files at model level
             self.check(f='{}.chk'.format(self.name[0]),
                        verbose=self.parent.verbose, level=1)
+
+        # get model information
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        dis = self.parent.get_package('DIS')
+        if dis is None:
+            dis = self.parent.get_package('DISU')
+
         # Open file for writing
         f = open(self.fn_path, 'w')
         # Item 0: text
@@ -264,7 +270,7 @@ class ModflowLpf(Package):
             f.write('{0:10f}{1:10d}{2:10d}\n'.format(self.wetfct,
                                                      self.iwetit,
                                                      self.ihdwet))
-        transient = not self.parent.get_package('DIS').steady.all()
+        transient = not dis.steady.all()
         for k in range(nlay):
             f.write(self.hk[k].get_file_entry())
             if self.chani[k] < 1:
@@ -274,7 +280,7 @@ class ModflowLpf(Package):
                 f.write(self.ss[k].get_file_entry())
                 if self.laytyp[k] != 0:
                     f.write(self.sy[k].get_file_entry())
-            if self.parent.get_package('DIS').laycbd[k] > 0:
+            if dis.laycbd[k] > 0:
                 f.write(self.vkcb[k].get_file_entry())
             if (self.laywet[k] != 0 and self.laytyp[k] != 0):
                 f.write(self.wetdry[k].get_file_entry())
@@ -481,8 +487,14 @@ class ModflowLpf(Package):
             line = f.readline()
             if line[0] != '#':
                 break
+
         # determine problem dimensions
-        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        nr, nc, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        dis = model.get_package('DIS')
+        if dis is None:
+            dis = model.get_package('DISU')
+
+
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
             print('   loading IBCFCB, HDRY, NPLPF...')
@@ -509,31 +521,37 @@ class ModflowLpf(Package):
                     nocvcorrection = True
                 elif 'NOVFC' in t[k].upper():
                     novfc = True
+
         # LAYTYP array
         if model.verbose:
             print('   loading LAYTYP...')
         laytyp = np.empty((nlay), dtype=np.int)
         laytyp = read1d(f, laytyp)
+
         # LAYAVG array
         if model.verbose:
             print('   loading LAYAVG...')
         layavg = np.empty((nlay), dtype=np.int)
         layavg = read1d(f, layavg)
+
         # CHANI array
         if model.verbose:
             print('   loading CHANI...')
         chani = np.empty((nlay), dtype=np.float32)
         chani = read1d(f, chani)
+
         # LAYVKA array
         if model.verbose:
             print('   loading LAYVKA...')
         layvka = np.empty((nlay), dtype=np.float32)
         layvka = read1d(f, layvka)
+
         # LAYWET array
         if model.verbose:
             print('   loading LAYWET...')
         laywet = np.empty((nlay), dtype=np.int)
         laywet = read1d(f, laywet)
+
         # Item 7: WETFCT, IWETIT, IHDWET
         wetfct, iwetit, ihdwet = None, None, None
         iwetdry = laywet.sum()
@@ -551,7 +569,7 @@ class ModflowLpf(Package):
             # print parm_dict
 
         # non-parameter data
-        transient = not model.get_package('DIS').steady.all()
+        transient = not dis.steady.all()
         hk = [0] * nlay
         hani = [0] * nlay
         vka = [0] * nlay
@@ -559,7 +577,19 @@ class ModflowLpf(Package):
         sy = [0] * nlay
         vkcb = [0] * nlay
         wetdry = [0] * nlay
+
+        # load by layer
         for k in range(nlay):
+
+            # allow for unstructured changing nodes per layer
+            if nr is None:
+                nrow = 1
+                ncol = nc[k]
+            else:
+                nrow = nr
+                ncol = nc
+
+            # hk
             if model.verbose:
                 print('   loading hk layer {0:3d}...'.format(k + 1))
             if 'hk' not in par_types:
@@ -570,6 +600,8 @@ class ModflowLpf(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict,
                                          findlayer=k)
             hk[k] = t
+
+            # hani
             if chani[k] < 1:
                 if model.verbose:
                     print('   loading hani layer {0:3d}...'.format(k + 1))
@@ -581,6 +613,8 @@ class ModflowLpf(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'hani',
                                              parm_dict, findlayer=k)
                 hani[k] = t
+
+            # vka
             if model.verbose:
                 print('   loading vka layer {0:3d}...'.format(k + 1))
             key = 'vka'
@@ -597,7 +631,11 @@ class ModflowLpf(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), key, parm_dict,
                                          findlayer=k)
             vka[k] = t
+
+            # storage properties
             if transient:
+
+                # ss
                 if model.verbose:
                     print('   loading ss layer {0:3d}...'.format(k + 1))
                 if 'ss' not in par_types:
@@ -608,6 +646,8 @@ class ModflowLpf(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'ss',
                                              parm_dict, findlayer=k)
                 ss[k] = t
+
+                # sy
                 if laytyp[k] != 0:
                     if model.verbose:
                         print('   loading sy layer {0:3d}...'.format(k + 1))
@@ -620,8 +660,9 @@ class ModflowLpf(Package):
                         t = mfpar.parameter_fill(model, (nrow, ncol), 'sy',
                                                  parm_dict, findlayer=k)
                     sy[k] = t
-            # if self.parent.get_package('DIS').laycbd[k] > 0:
-            if model.get_package('DIS').laycbd[k] > 0:
+
+            # vkcb
+            if dis.laycbd[k] > 0:
                 if model.verbose:
                     print('   loading vkcb layer {0:3d}...'.format(k + 1))
                 if 'vkcb' not in par_types:
@@ -632,6 +673,8 @@ class ModflowLpf(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb',
                                              parm_dict, findlayer=k)
                 vkcb[k] = t
+
+            # wetdry
             if (laywet[k] != 0 and laytyp[k] != 0):
                 if model.verbose:
                     print('   loading wetdry layer {0:3d}...'.format(k + 1))
