@@ -1176,58 +1176,52 @@ class ZoneBudget(object):
         return recordarray
 
     def __mul__(self, other):
-        newbuds = list(self.get_budget())
-        for idx, bud in enumerate(newbuds):
-            for f in self._zonefieldnames:
-                a = np.array([r for r in bud[f]]) * other
-                bud[f] = a
-            newbuds[idx] = bud
+        newbud = self._budget.copy()
+        for f in self._zonefieldnames:
+            newbud[f] = np.array([r for r in newbud[f]]) * other
         newobj = self.copy()
-        newobj._budget_list = newbuds
+        newobj._budget = newbud
+
+        # newbuds = list(self.get_budget())
+        # for idx, bud in enumerate(newbuds):
+        #     for f in self._zonefieldnames:
+        #         a = np.array([r for r in bud[f]]) * other
+        #         bud[f] = a
+        #     newbuds[idx] = bud
+        # newobj = self.copy()
+        # newobj._budget_list = newbuds
         return newobj
 
     def __truediv__(self, other):
-        newbuds = list(self.get_budget())
-        for idx, bud in enumerate(newbuds):
-            for f in self._zonefieldnames:
-                a = np.array([r for r in bud[f]]) / float(other)
-                bud[f] = a
-            newbuds[idx] = bud
+        newbud = self._budget.copy()
+        for f in self._zonefieldnames:
+            newbud[f] = np.array([r for r in newbud[f]]) / float(other)
         newobj = self.copy()
-        newobj._budget_list = newbuds
+        newobj._budget = newbud
         return newobj
 
     def __div__(self, other):
-        newbuds = list(self.get_budget())
-        for idx, bud in enumerate(newbuds):
-            for f in self._zonefieldnames:
-                a = np.array([r for r in bud[f]]) / float(other)
-                bud[f] = a
-            newbuds[idx] = bud
+        newbud = self._budget.copy()
+        for f in self._zonefieldnames:
+            newbud[f] = np.array([r for r in newbud[f]]) / float(other)
         newobj = self.copy()
-        newobj._budget_list = newbuds
+        newobj._budget = newbud
         return newobj
 
     def __add__(self, other):
-        newbuds = list(self.get_budget())
-        for idx, bud in enumerate(newbuds):
-            for f in self._zonefieldnames:
-                a = np.array([r for r in bud[f]]) + other
-                bud[f] = a
-            newbuds[idx] = bud
+        newbud = self._budget.copy()
+        for f in self._zonefieldnames:
+            newbud[f] = np.array([r for r in newbud[f]]) + other
         newobj = self.copy()
-        newobj._budget_list = newbuds
+        newobj._budget = newbud
         return newobj
 
     def __sub__(self, other):
-        newbuds = list(self.get_budget())
-        for idx, bud in enumerate(newbuds):
-            for f in self._zonefieldnames:
-                a = np.array([r for r in bud[f]]) - other
-                bud[f] = a
-            newbuds[idx] = bud
+        newbud = self._budget.copy()
+        for f in self._zonefieldnames:
+            newbud[f] = np.array([r for r in newbud[f]]) - other
         newobj = self.copy()
-        newobj._budget_list = newbuds
+        newobj._budget = newbud
         return newobj
 
     
