@@ -174,7 +174,7 @@ class ZoneBudget(object):
         self.ssst_record_names = [n for n in self.record_names
                                   if n not in internal_flow_terms]
 
-        # Build list of budgets
+        # Build budget record array
         array_list = []
         if self.kstpkper is not None:
             for kk in self.kstpkper:
@@ -184,7 +184,7 @@ class ZoneBudget(object):
             for t in self.totim:
                 recordarray = self._compute_budget(totim=t)
                 array_list.append(recordarray)
-        self._budget_list = array_list
+        self._budget = np.concatenate(array_list, axis=0)
         return
 
     def get_model_shape(self):
@@ -205,10 +205,7 @@ class ZoneBudget(object):
         >>> recnames = zb.get_record_names()
 
         """
-        names = []
-        for bud in self.get_budget():
-            names.extend(list(bud['record']))
-        return np.unique(names)
+        return np.unique(self._budget['name'])
 
     def get_budget(self, names=None, zones=None):
         """
@@ -244,17 +241,14 @@ class ZoneBudget(object):
             for idx, z in enumerate(zones):
                 if isinstance(z, int):
                     zones[idx] = 'ZONE_{}'.format(z)
-            select_fields = ['totim', 'time_step', 'stress_period', 'record'] + zones
+            select_fields = ['totim', 'time_step', 'stress_period', 'name'] + zones
         else:
-            select_fields = ['totim', 'time_step', 'stress_period', 'record'] + self._zonefieldnames
-        budget_list = list(self._budget_list)
-        for idx, bud in enumerate(budget_list):
-            if names is not None:
-                select_records = np.in1d(bud['record'], names)
-            else:
-                select_records = np.where((bud['record'] == bud['record']))
-        budget_list[idx] = bud[select_fields][select_records]
-        return budget_list
+            select_fields = ['totim', 'time_step', 'stress_period', 'name'] + self._zonefieldnames
+        if names is not None:
+            select_records = np.in1d(self._budget['name'], names)
+        else:
+            select_records = np.where((self._budget['name'] == self._budget['name']))
+        return self._budget[select_fields][select_records]
 
     def to_csv(self, fname):
         """
@@ -346,9 +340,9 @@ class ZoneBudget(object):
             index_cols = ['datetime', 'record']
         else:
             if index_key == 'totim':
-                index_cols = ['totim', 'record']
+                index_cols = ['totim', 'name']
             elif index_key == 'kstpkper':
-                index_cols = ['time_step', 'stress_period', 'record']
+                index_cols = ['time_step', 'stress_period', 'name']
         out = out.set_index(index_cols).sort_index()
         keep_cols = self._zonefieldnames
         return out[keep_cols]
@@ -509,7 +503,7 @@ class ZoneBudget(object):
         # fluxes in the cell-budget file.
 
         # Create empty array for the budget terms.
-        dtype_list = [('totim', '<f4'), ('time_step', '<i4'), ('stress_period', '<i4'), ('record', (str, 50))]
+        dtype_list = [('totim', '<f4'), ('time_step', '<i4'), ('stress_period', '<i4'), ('name', (str, 50))]
         dtype_list += [(n, self.float_type) for n in self._zonefieldnames]
         dtype = np.dtype(dtype_list)
         recordarray = np.array([], dtype=dtype)
@@ -555,7 +549,7 @@ class ZoneBudget(object):
                                                                      colname,
                                                                      flux)
             raise Exception(errmsg)
-        rowidx = np.where((recordarray['record'] == recname))
+        rowidx = np.where((recordarray['name'] == recname))
         recordarray[colname][rowidx] += flux
         return recordarray
 
@@ -1149,11 +1143,11 @@ class ZoneBudget(object):
     def _compute_mass_balance(self, recordarray):
         # Returns a record array with total inflow, total outflow,
         # and percent error summed by column.
-        skipcols = ['time_step', 'stress_period', 'totim', 'record']
+        skipcols = ['time_step', 'stress_period', 'totim', 'name']
 
         # Compute inflows
-        names = np.array([n for n in recordarray['record'] if '_IN' in n])
-        idx = np.in1d(recordarray['record'], names)
+        names = np.array([n for n in recordarray['name'] if '_IN' in n])
+        idx = np.in1d(recordarray['name'], names)
         a = _numpyvoid2numeric(recordarray[self._zonefieldnames][idx])
         intot = np.array(a.sum(axis=0))
         for idx, colname in enumerate([n for n in recordarray.dtype.names if n not in skipcols]):
@@ -1161,8 +1155,8 @@ class ZoneBudget(object):
             recordarray = self._update_record(recordarray, 'TOTAL_IN', colname, flux)
 
         # Compute outflows
-        names = np.array([n for n in recordarray['record'] if '_OUT' in n])
-        idx = np.in1d(recordarray['record'], names)
+        names = np.array([n for n in recordarray['name'] if '_OUT' in n])
+        idx = np.in1d(recordarray['name'], names)
         a = _numpyvoid2numeric(recordarray[self._zonefieldnames][idx])
         outot = np.array(a.sum(axis=0))
         for idx, colname in enumerate([n for n in recordarray.dtype.names if n not in skipcols]):
