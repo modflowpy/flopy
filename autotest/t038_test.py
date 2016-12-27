@@ -142,6 +142,15 @@ def test_zonbud_to_csv():
     return
 
 
+def test_zonbud_math():
+    cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.cbc')
+    zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
+    cmd = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
+    cmd / 35.3147
+    cmd * 12.
+    return
+
+
 def test_zonbud_copy():
     cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.cbc')
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
@@ -165,6 +174,7 @@ if __name__ == '__main__':
     test_compare2zonebudget()
     test_zonbud_aliases()
     test_zonbud_to_csv()
+    test_zonbud_math()
     test_zonbud_copy()
     test_zonbud_readwrite_zbarray()
     test_zonbud_get_record_names()

@@ -1179,15 +1179,6 @@ class ZoneBudget(object):
             newbud[f] = np.array([r for r in newbud[f]]) * other
         newobj = self.copy()
         newobj._budget = newbud
-
-        # newbuds = list(self.get_budget())
-        # for idx, bud in enumerate(newbuds):
-        #     for f in self._zonefieldnames:
-        #         a = np.array([r for r in bud[f]]) * other
-        #         bud[f] = a
-        #     newbuds[idx] = bud
-        # newobj = self.copy()
-        # newobj._budget_list = newbuds
         return newobj
 
     def __truediv__(self, other):
