@@ -292,7 +292,7 @@ class ZoneBudget(object):
 
         Returns
         -------
-        out : Pandas DataFrame
+        df : Pandas DataFrame
             Pandas DataFrame with the budget information.
         Examples
         --------
@@ -327,23 +327,21 @@ class ZoneBudget(object):
                  'Please use one of '.format(timeunit)
         assert timeunit in valid_timeunit, errmsg + ', '.join(valid_timeunit) + '.'
 
-        out = pd.DataFrame()
-        for bud in self.get_budget():
-            out = out.append(pd.DataFrame(bud))
+        df = pd.DataFrame().from_records(self._budget)
         if start_datetime is not None:
-            totim = totim_to_datetime(out.totim,
+            totim = totim_to_datetime(df.totim,
                                       start=pd.to_datetime(start_datetime),
                                       timeunit=timeunit)
-            out['datetime'] = totim
-            index_cols = ['datetime', 'record']
+            df['datetime'] = totim
+            index_cols = ['datetime', 'name']
         else:
             if index_key == 'totim':
                 index_cols = ['totim', 'name']
             elif index_key == 'kstpkper':
                 index_cols = ['time_step', 'stress_period', 'name']
-        out = out.set_index(index_cols).sort_index()
+        df = df.set_index(index_cols).sort_index()
         keep_cols = self._zonefieldnames
-        return out[keep_cols]
+        return df[keep_cols]
 
     def copy(self):
         """
