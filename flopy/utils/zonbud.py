@@ -269,13 +269,11 @@ class ZoneBudget(object):
         # if kstpkper is None or pass list of kstpkper/totim to save particular budgets.
         with open(fname, 'w') as f:
             # Write header
-            f.write(','.join(self._budget_list[0].dtype.names) + '\n')
-        with open(fname, 'a') as f:
-            for bud in self._budget_list:
-
-                for rowidx in range(bud.shape[0]):
-                    s = ','.join([str(i) for i in list(bud[:][rowidx])])+'\n'
-                    f.write(s)
+            f.write(','.join(self._budget.dtype.names) + '\n')
+            # Write rows
+            for rowidx in range(self._budget.shape[0]):
+                s = ','.join([str(i) for i in list(self._budget[:][rowidx])])+'\n'
+                f.write(s)
         return
 
     def get_dataframes(self, start_datetime=None, timeunit='D', index_key='totim'):
