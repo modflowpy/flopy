@@ -33,4 +33,4 @@ from . import modflowlgr
 from . import utils
 from . import plot
 from . import export
-from .mbase import run_model, which
+from .mbase import run_model, which, is_exe

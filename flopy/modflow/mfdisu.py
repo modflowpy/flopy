@@ -237,10 +237,14 @@ class ModflowDisU(Package):
         self.nodelay = Util2d(model, (self.nlay,), np.int, nodelay,
                                name='nodelay', locat=self.unit_number[0])
 
+        # set ncol and nrow for array readers
+        nrow = None
+        ncol = self.nodelay.array[0, :]
+
         # Top and bot are both 1d arrays of size nodes
-        self.top = Util3d(model, (nlay, 1, nodes), np.float32, top, name='top',
+        self.top = Util3d(model, (nlay, nrow, ncol), np.float32, top, name='top',
                            locat=self.unit_number[0])
-        self.bot = Util3d(model, (nlay, 1, nodes), np.float32, bot, name='bot',
+        self.bot = Util3d(model, (nlay, nrow, ncol), np.float32, bot, name='bot',
                            locat=self.unit_number[0])
 
 
@@ -249,7 +253,7 @@ class ModflowDisU(Package):
             self.area = Util2d(model, (self.nodelay[0],), np.float32, area,
                                 'area', locat=self.unit_number[0])
         else:
-            self.area = Util3d(model, (nlay, 1, nodes), np.float32, area,
+            self.area = Util3d(model, (nlay, nrow, ncol), np.float32, area,
                                 name='area', locat=self.unit_number[0])
 
         # Connectivity and ivc
@@ -321,10 +325,14 @@ class ModflowDisU(Package):
         return
 
     def __calculate_thickness(self):
+        # set ncol and nrow for array readers
+        nrow = None
+        ncol = self.nodelay.array[0, :]
+        nlay = self.nlay
         thk = []
         for k in range(self.nlay):
             thk.append(self.top[k] - self.bot[k])
-        self.__thickness = Util3d(self.parent, (self.nlay, 1, self.nodes),
+        self.__thickness = Util3d(self.parent, (nlay, nrow, ncol),
                                    np.float32, thk, name='thickness')
         return
 
@@ -377,7 +385,7 @@ class ModflowDisU(Package):
         return z
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    def load(f, model, ext_unit_dict=None, check=False):
         """
         Load an existing package.
 
@@ -394,6 +402,8 @@ class ModflowDisU(Package):
             handle.  In this case ext_unit_dict is required, which can be
             constructed using the function
             :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default False; not setup yet)
 
         Returns
         -------
@@ -439,9 +449,19 @@ class ModflowDisU(Package):
         njag = int(ll.pop(0))
         ivsd = int(ll.pop(0))
         nper = int(ll.pop(0))
-        itmuni = int(ll.pop(0))
-        lenuni = int(ll.pop(0))
-        idsymrd = int(ll.pop(0))
+        # mimic urword behavior in case these values aren't present on line
+        if len(ll) > 0:
+            itmuni = int(ll.pop(0))
+        else:
+            itmuni = 0
+        if len(ll) > 0:
+            lenuni = int(ll.pop(0))
+        else:
+            lenuni = 0
+        if len(ll) > 0:
+            idsymrd = int(ll.pop(0))
+        else:
+            idsymrd = 0
         if model.verbose:
             print('   NODES {}'.format(nodes))
             print('   NLAY {}'.format(nlay))
