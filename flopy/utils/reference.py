@@ -17,10 +17,10 @@ class SpatialReference(object):
 
     delr : numpy ndarray
         the model discretization delr vector
-
+        (An array of spacings along a row)
     delc : numpy ndarray
         the model discretization delc vector
-
+        (An array of spacings along a column)
     lenuni : int
         the length units flag from the discretization package
 
@@ -171,7 +171,7 @@ class SpatialReference(object):
 
     @property
     def bounds(self):
-        """Return bounding box in standard GIS order."""
+        """Return bounding box in shapely order."""
         xmin, xmax, ymin, ymax = self.get_extent()
         return xmin, ymin, xmax, ymax
 

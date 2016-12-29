@@ -309,24 +309,25 @@ class ModflowUzf1(Package):
         # Data Set 8
         # [IUZROW] [IUZCOL] IFTUNIT [IUZOPT]
         self.uzgag = uzgag
-        if len(uzgag) != nuzgag:
-            print(
-                "WARNING!\nItem 8 doesn't correspond with NUZGAG.\nNUZGAG set to 0")
-            self.nuzgag = 0
-            self.uzgag = []
-        else:
-            self.uzgag = uzgag
-            i = 0
-            for iftunit, l in uzgag.items():
-                unitnumber.append(abs(iftunit))
-                if uzfbud_ext == []:
-                    extension.append(extension[0] + 'b' + str(i))
-                else:
-                    extension.append(uzfbud_ext[i])
-                i += 1
-            Package.__init__(self, model, extension,
-                             class_nam + nuzgag * ['DATA'],
-                             unit_number=unitnumber)
+        if uzgag is not None:
+            if len(uzgag) != nuzgag:
+                print(
+                    "WARNING!\nItem 8 doesn't correspond with NUZGAG.\nNUZGAG set to 0")
+                self.nuzgag = 0
+                self.uzgag = []
+            else:
+                self.uzgag = uzgag
+                i = 0
+                for iftunit, l in uzgag.items():
+                    unitnumber.append(abs(iftunit))
+                    if uzfbud_ext == []:
+                        extension.append(extension[0] + 'b' + str(i))
+                    else:
+                        extension.append(uzfbud_ext[i])
+                    i += 1
+                Package.__init__(self, model, extension,
+                                 class_nam + nuzgag * ['DATA'],
+                                 unit_number=unitnumber)
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
