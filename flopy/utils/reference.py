@@ -95,8 +95,10 @@ class SpatialReference(object):
     rotation = 0.
     length_multiplier = 1.
     origin_loc = 'ul' # or ll
-    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1, xul=None, yul=None, xll=None, yll=None, rotation=0.0,
-                 proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
+    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1,
+                 xul=None, yul=None, xll=None, yll=None, rotation=0.0,
+                 proj4_str="EPSG:4326", epsg=None, units=None,
+                 length_multiplier=1.):
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
@@ -123,7 +125,8 @@ class SpatialReference(object):
         self.supported_units = ["feet","meters"]
         self._units = units
         self._reset()
-        self.set_spatialreference(xul, yul, xll, yll, rotation, length_multiplier)
+        self.set_spatialreference(xul, yul, xll, yll, rotation,
+                                  length_multiplier)
 
 
     @property

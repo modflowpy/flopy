@@ -179,71 +179,207 @@ class ModflowHob(Package):
         None
 
         """
-        # -open file for writing
-        f_hob = open(self.fn_path, 'w')
+        # open file for writing
+        f = open(self.fn_path, 'w')
 
-        # -write header
-        f_hob.write('%s\n' % (self.heading))
+        # write dataset 0
+        f.write('{}\n'.format(self.heading))
 
-        # -write sections 1 & 2
-        f_hob.write(
-            '%10i%10i%10i%10i%10.4g\n' % (self.nh, self.mobs, self.maxm,
-                                          self.iuhobsv, self.hobdry))
-        f_hob.write('%10e\n' % (self.tomulth))  # check format
+        # write dataset 1
+        f.write('{:10d}'.format(self.nh))
+        f.write('{:10d}'.format(self.mobs))
+        f.write('{:10d}'.format(self.maxm))
+        f.write('{:10d}'.format(self.iuhobsv))
+        f.write('{:10.4g}\n'.format(self.hobdry))
 
-        # -write sections 3-6 looping through observations
-        #       for i in range(self.nh):
+        # write dataset 2
+        f.write('{:10d}\n'.format(self.tomulth))  # check format
+
+        # write datasets 3-6
         i = 0
-        while (i < self.nh):
-            if (self.fromlay[i] < self.tolay[i]):  # check if multilayer obs
-                self.layer[i] = self.fromlay[i] - self.tolay[
-                    i] - 1  # if true, reset layer
-            f_hob.write(
-                '{}{:10d}{:10d}{:10d}{:10d}{:10.4g}{:10.4g}{:10.4g}{:10.4g}\n'
-                .format(self.obsnam[i], self.layer[i], self.row[i],
-                        self.column[i],
-                        self.irefsp[i], self.toffset[i], self.roff[i],
-                        self.coff[i],
-                        self.hob[i]))
-            # print ('%s' %self.obsnam[i])
-            # print ('{}'.format(self. obsnam[i]))
+        while i < self.nh:
+            multilayer = False
+            if self.fromlay[i] < self.tolay[i]:
+                multilayer = True
+            if multilayer:  # check if multilayer obs
+                self.layer[i] = self.fromlay[i] - self.tolay[i] - 1
 
+            # write dataset 3
+            f.write('{}'.format(self.obsnam[i]))
+            f.write('{:10d}'.format(self.layer[i]))
+            f.write('{:10d}'.format(self.row[i]))
+            f.write('{:10d}'.format(self.column[i]))
+            f.write('{:10d}'.format(self.irefsp[i]))
+            f.write('{:10.4g}'.format(self.toffset[i]))
+            f.write('{:10.4g}'.format(self.roff[i]))
+            f.write('{:10.4g}'.format(self.coff[i]))
+            f.write('{:10.4g}\n'.format(self.hob[i]))
 
-            # -write section 4 if multilayer obs
+            # write dataset 4 if multilayer obs
+            if multilayer:
+                for j in range(self.fromlay[i], self.tolay[i] + 1):
+                    f.write('{:10d}'.format(j))
+                    f.write('{:10.4g}\n'.format(self.pr[i, j-1]))
 
-            if (self.fromlay[i] < self.tolay[i]):  # check if multilayer obs
-                for j in range(self.fromlay[i],
-                               self.tolay[i] + 1):  # zero indexing!
-                    f_hob.write('%10i%10.4g\n' % (
-                    j, self.pr[i, j - 1]))  # swm: Is this sytax correct????
-
-                    # -write section 5 & 6. Index loop variable
-            if (self.irefsp[i] < 0):
-                f_hob.write('%10i\n' % (self.itt[i]))
-                for j in range(0, -1 * self.irefsp[i]):
-                    f_hob.write(
-                        '{}{:10d}{:10.4g}{:10.4g}\n'.format(self.obsnam[i],
-                                                            abs(self.irefsp[
-                                                                    i]),
-                                                            self.toffset[i],
-                                                            self.hob[i]))
+            # write datasets 5 & 6. Index loop variable
+            if self.irefsp[i] < 0:
+                # data set 5
+                f.write('{:10d}\n'.format(self.itt[i]))
+                # data set 6
+                for j in range(abs(self.irefsp[i])):
+                    f.write('{}'.format(self.obsnam[i]))
+                    f.write('{:10d}'.format(abs(self.irefsp[i])))
+                    f.write('{:10.4g}'.format(self.toffset[i]))
+                    f.write('{:10.4g}\n'.format(self.hob[i]))
                     i += 1
             else:
                 i += 1
 
-        f_hob.close()
+        f.close()
 
-        # swm: BEGIN hack for writing standard file
-        sfname = self.fn_path  # swm:hack
-        sfname += '_ins'  # swm: hack
-        # write header
-        f_ins = open(sfname, 'w')  # swm: hack for standard file
-        f_ins.write('jif @\n')  # swm: hack for standard file
-        f_ins.write(
-            'StandardFile 1 1 %s\n' % (self.nh))  # swm: hack for standard file
-        for i in range(0, self.nh):
-            f_ins.write(
-                '{}\n'.format(self.obsnam[i]))  # swm: hack for standard file
-        # swm: END hack for writing standard file
+        # # swm: BEGIN hack for writing standard file
+        # sfname = self.fn_path  # swm:hack
+        # sfname += '_ins'  # swm: hack
+        # # write header
+        # f_ins = open(sfname, 'w')  # swm: hack for standard file
+        # f_ins.write('jif @\n')  # swm: hack for standard file
+        # f_ins.write(
+        #     'StandardFile 1 1 %s\n' % (self.nh))  # swm: hack for standard file
+        # for i in range(0, self.nh):
+        #     f_ins.write(
+        #         '{}\n'.format(self.obsnam[i]))  # swm: hack for standard file
+        # # swm: END hack for writing standard file
 
         return
+
+    @staticmethod
+    def load(f, model, ext_unit_dict=None, check=True):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
+
+        Returns
+        -------
+        lpf : ModflowLpf object
+            ModflowLpf object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> hobs = flopy.modflow.ModflowHob.load('test.hob', m)
+
+        """
+
+        if model.verbose:
+            sys.stdout.write('loading hobs package file...\n')
+
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+        # dataset 0 -- header
+        while True:
+            line = f.readline()
+            if line[0] != '#':
+                break
+
+        # read dataset 1
+        t = line.strip().split()
+        nh = int(t[0])
+        mobs = int(t[1])
+        maxm = int(t[2])
+        iuhobsv = int(t[3])
+        hobdry = float(t[4])
+
+        # read dataset 2
+        line = f.readline()
+        t = line.strip().split()
+        tomulth = int(t[0])
+
+        # create observation lists
+        obsnam = []
+        layer = []
+        fromlay = []
+        tolay = []
+        row = []
+        column = []
+        irefsp = []
+        toffset = []
+        roff = []
+        coff = []
+        hob = []
+        pr = []
+        itt = []
+
+
+        # read datasets 3-6
+        i = 0
+        while i < nh:
+
+            # read dataset 3
+            line = f.readline()
+            t = line.strip().split()
+            obsnam.append(t[0])
+            tlayer = int(t[1])
+            layer.append(tlayer - 1)
+            row.append(int(t[2]) - 1)
+            column.append(int(t[3]) - 1)
+            tirefsp = int(t[4])
+            irefsp.append(tirefsp)
+            toffset.append(float(t[5]))
+            roff.append(float(t[6]))
+            coff.append(float(t[7]))
+            hob.append(float(t[8]))
+
+            multilayer = False
+            if tlayer < 0:
+                multilayer = True
+
+            # # write dataset 3
+            # f.write('{}'.format(self.obsnam[i]))
+            # f.write('{:10d}'.format(self.layer[i]))
+            # f.write('{:10d}'.format(self.row[i]))
+            # f.write('{:10d}'.format(self.column[i]))
+            # f.write('{:10d}'.format(self.irefsp[i]))
+            # f.write('{:10.4g}'.format(self.toffset[i]))
+            # f.write('{:10.4g}'.format(self.roff[i]))
+            # f.write('{:10.4g}'.format(self.coff[i]))
+            # f.write('{:10.4g}\n'.format(self.hob[i]))
+            #
+            # # write dataset 4 if multilayer obs
+            # if multilayer:
+            #     for j in range(self.fromlay[i], self.tolay[i] + 1):
+            #         f.write('{:10d}'.format(j))
+            #         f.write('{:10.4g}\n'.format(self.pr[i, j-1]))
+            #
+            # # write datasets 5 & 6. Index loop variable
+            # if self.irefsp[i] < 0:
+            #     # data set 5
+            #     f.write('{:10d}\n'.format(self.itt[i]))
+            #     # data set 6
+            #     for j in range(abs(self.irefsp[i])):
+            #         f.write('{}'.format(self.obsnam[i]))
+            #         f.write('{:10d}'.format(abs(self.irefsp[i])))
+            #         f.write('{:10.4g}'.format(self.toffset[i]))
+            #         f.write('{:10.4g}\n'.format(self.hob[i]))
+            #         i += 1
+            # else:
+                i += 1
+
+        f.close()
