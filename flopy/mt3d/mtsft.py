@@ -528,8 +528,8 @@ class Mt3dSft(Package):
 
             # Item 8 ISEGBC, IRCHBC, ISFBCTYP, CBCSF
             if model.verbose:
-                print('   loading {} instances of ISEGBC, IRCHBC, ISFBCTYP, ' \
-                        'CBCSF...'.format(ntmp))
+                print('   loading {} instances of ISEGBC, IRCHBC, ' \
+                        'ISFBCTYP, CBCSF...'.format(ntmp))
             current_sf = 0
             if ntmp > 0:
                 current_sf = np.empty((ntmp), dtype=dtype)

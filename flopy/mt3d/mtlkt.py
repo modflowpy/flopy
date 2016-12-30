@@ -203,9 +203,8 @@ class Mt3dLkt(Package):
 
         >>> import flopy
         >>> import os
-        >>> os.chdir(r'C:\EDM_LT\GitHub\mt3d-usgs\autotest\temp\LKT')
+        >>> os.chdir(r'C:\temp\LKT')
         >>> mt = flopy.mt3d.Mt3dms.load('lkt_mt.nam', exe_name = 'mt3d-usgs_1.0.00.exe',
-        >>>                            model_ws = r'.\LKT',
         >>>                            load_only='btn')
         >>> lkt = flopy.mt3d.Mt3dLkt.load('test.lkt', mt)
 
