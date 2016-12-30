@@ -128,7 +128,7 @@ class Mt3dUzt(Package):
     >>> import os
     >>> mt = flopy.mt3d.Mt3dms.load('Keat_UZF_mt.nam', exe_name = 'mt3d-usgs_1.0.00.exe',
                             model_ws = r'C:\temp\Keating_UZF', load_only='btn')
-    >>> uzt = flopy.mt3d.Mt3dUzt(mt)
+    >>> uzt = flopy.mt3d.Mt3dUzt('Keat_UZF.uzt', mt)
 
     """
 
