@@ -360,11 +360,13 @@ class Mt3dSft(Package):
         >>> import os
         >>> import flopy
 
-        >>> os.chdir(r'C:\EDM_LT\GitHub\mt3d-usgs\autotest\temp\CrnkNic')
+        >>> os.chdir(r'C:\temp\flopy_test\sfr_test')
         >>> mf = flopy.modflow.Modflow.load('CrnkNic_mf.nam', load_only=['dis', 'bas6'])
         >>> sfr = flopy.modflow.ModflowSfr2.load('CrnkNic.sfr2', mf)
         >>> chk = sfr.check()
 
+        >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam', exe_name = 'mt3d-usgs_1.0.00.exe', load_only='btn')
+        >>> sft = flopy.mt3d.Mt3dSft.load('CrnkNic.sft', mt)
 
         """
         if model.verbose:
@@ -465,28 +467,24 @@ class Mt3dSft(Package):
             if model.free_format:
                 print('   Using MODFLOW style array reader utilities to ' \
                       'read NSFINIT')
-            elif model.array_format == None:
+            elif model.array_format == 'mt3d':
                 print('   Using historic MT3DMS array reader utilities to ' \
                       'read NSFINIT')
 
-        # Because SFT package is a new package, it only accepts free format
-        # Don't need to worry about reading fixed format here
         coldsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'nsfinit',
-                                 ext_unit_dict)
+                             ext_unit_dict, array_format=model.array_format)
 
         # Item 4 (DISPSF(NRCH)) Reach-by-reach dispersion
         if model.verbose:
             if model.free_format:
                 print('   Using MODFLOW style array reader utilities to ' \
                       'read DISPSF')
-            elif model.free_format is None:
+            elif model.array_format == 'mt3d':
                 print('   Using historic MT3DMS array reader utilities to ' \
                       'read DISPSF')
 
-        # Because SFT package is a new package, it only accepts free format.
-        # Don't need to worry about reading fixed format here
         dispsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'dispsf',
-                                 ext_unit_dict)
+                                 ext_unit_dict, array_format=model.array_format)
 
         # Item 5 NOBSSF
         if model.verbose:
@@ -506,7 +504,7 @@ class Mt3dSft(Package):
             for i in range(nobssf):
                 line = f.readline()
                 m_arr = line.strip().split()
-                obs_sf.append([int(m_arr[0]), int(m_arr[1])])
+                obs_sf.append([int(m_arr[0])])
             obs_sf = np.array(obs_sf)
             if model.verbose:
                 print('   Surface water concentration observation locations:')
@@ -543,7 +541,7 @@ class Mt3dSft(Package):
                     if cbcsf > 0:
                         for ivar in range(cbcsf):
                             t.append(m_arr[ivar + 3])
-                    current_sf[ibnd] = tuple(t[:len(current_sf.dtype.names)])
+                    current_sf[ibnd] = tuple(map(float, t[:len(current_sf.dtype.names)]))
                 # Convert ISEG IRCH indices to zero-based
                 current_sf['isegbc'] -= 1
                 current_sf['irchbc'] -= 1
