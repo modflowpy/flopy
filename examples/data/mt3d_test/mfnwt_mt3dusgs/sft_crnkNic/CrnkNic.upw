@@ -1,0 +1,13 @@
+#UPW file for model mimicing OTIS application #1
+#
+40  -888   0   0                                #IUPWCB HDRY NPUPW IPHDRY
+1                                               #LAYTYP(NLAY)
+2                                               #LAYAVG(NLAY)
+1                                               #CHANI(NLAY) 
+1                                               #LAYVKA(NLAY) 
+0                                               #LAYWET(NLAY)
+CONSTANT 0.10                                   #HK(NCOL,NROW)
+CONSTANT 1.00                                   #VKA(NCOL,NROW)
+CONSTANT 1E-6                                   #Ss(NCOL,NROW)
+CONSTANT 0.20                                   #Sy(NCOL,NROW)
+
