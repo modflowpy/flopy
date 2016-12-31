@@ -37,7 +37,10 @@ before_install:
     - "sh -e /etc/init.d/xvfb start"
 
 # command to install dependencies
-install: "pip install -r requirements.travis.txt"
+install:
+    - pip install -r requirements.travis.txt
+    - pip install https://github.com/modflowpy/pymake/zipball/develop
+
 
 # command to run tests
 script: 
