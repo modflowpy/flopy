@@ -48,8 +48,8 @@ class ModelMap(object):
     """
 
     def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
-                 extent=None,
-                 xul=None, yul=None, xll=None, yll=None, rotation=0., length_multiplier=1.):
+                 extent=None, xul=None, yul=None, xll=None, yll=None,
+                 rotation=0., length_multiplier=1.):
         self.model = model
         self.layer = layer
         self.dis = dis
@@ -63,19 +63,14 @@ class ModelMap(object):
             # print("warning: the model arg to model map is deprecated")
             self.sr = copy.deepcopy(model.sr)
         else:
-            self.sr = SpatialReference(xll, yll, xul, yul, rotation, length_multiplier)
+            self.sr = SpatialReference(xll, yll, xul, yul, rotation,
+                                       length_multiplier)
 
         # model map override spatial reference settings
-        if any(elem is not None for elem in (xul, yul, xll, yll)) or rotation != 0 or length_multiplier != 1.:
-            self.sr.set_spatialreference(xul, yul, xll, yll, rotation, length_multiplier)
-        '''
-        if xul is not None and yul is not None:
-            self.sr.xul = xul
-        if yul is not None:
-            self.sr.yul = yul
-        if rotation is not None:
-            self.sr.rotation = rotation
-        '''
+        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
+            rotation != 0 or length_multiplier != 1.:
+            self.sr.set_spatialreference(xul, yul, xll, yll, rotation,
+                                         length_multiplier)
         if ax is None:
             try:
                 self.ax = plt.gca()
@@ -88,10 +83,6 @@ class ModelMap(object):
             self._extent = extent
         else:
             self._extent = None
-
-        # why is this non-default color scale used??
-        #  This should be passed as a kwarg by the user to the indivudual plotting method.
-        # self.cmap = plotutil.viridis
 
         return
 
@@ -183,13 +174,14 @@ class ModelMap(object):
 
     def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
         """
-        Make a plot of inactive cells.  If not specified, then pull ibound from the
-        self.ml
+        Make a plot of inactive cells.  If not specified, then pull ibound
+        from the self.ml
 
         Parameters
         ----------
         ibound : numpy.ndarray
             ibound array to plot.  (Default is ibound in 'BAS6' package.)
+
         color_noflow : string
             (Default is 'black')
 
@@ -414,7 +406,6 @@ class ModelMap(object):
                                               **kwargs)
         return patch_collection
 
-
     def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
         """
         Contour an array.  If the array is three-dimensional, then the method
@@ -423,7 +414,7 @@ class ModelMap(object):
         Parameters
         ----------
         vertc : np.ndarray
-            Array with centroid location of cvfd
+            Array with of size (nc, 2) with centroid location of cvfd
         a : numpy.ndarray
             Array to plot.
         masked_values : iterable of floats, ints
@@ -519,8 +510,8 @@ class ModelMap(object):
             if self.model is not None:
                 dis = self.model.dis
             else:
-                print(
-                    "ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
+                print('ModelMap.plot_quiver() error: self.dis is None and dis '
+                      'arg is None.')
                 return
         ib = self.model.bas6.ibound.array
         delr = dis.delr.array

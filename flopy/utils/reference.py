@@ -40,12 +40,13 @@ class SpatialReference(object):
         the counter-clockwise rotation (in degrees) of the grid
 
     proj4_str: str
-        a PROJ4 string that identifies the grid in space. warning: case sensitive!
+        a PROJ4 string that identifies the grid in space. warning: case
+        sensitive!
 
     epsg : int
-        EPSG code that identifies the grid in space. Can be used in lieu of proj4.
-        PROJ4 attribute will auto-populate if there is an internet connection
-        (via get_proj4 method).
+        EPSG code that identifies the grid in space. Can be used in lieu of
+        proj4. PROJ4 attribute will auto-populate if there is an internet
+        connection(via get_proj4 method).
         See https://www.epsg-registry.org/ or spatialreference.org
 
     length_multiplier : float
@@ -79,7 +80,8 @@ class SpatialReference(object):
         numpy meshgrid of row centers
 
     vertices : 1D array
-        1D array of cell vertices for whole grid in C-style (row-major) order (same as np.ravel())
+        1D array of cell vertices for whole grid in C-style (row-major) order
+        (same as np.ravel())
 
 
     Notes
@@ -90,11 +92,13 @@ class SpatialReference(object):
     accessed
         
     """
+
     xul, yul = None, None
     xll, yll = None, None
     rotation = 0.
     length_multiplier = 1.
     origin_loc = 'ul' # or ll
+
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None,
@@ -102,16 +106,20 @@ class SpatialReference(object):
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
-                raise TypeError("delr and delcs must be an array or sequences equal in length to the number of rows/columns.")
+                msg = ('delr and delcs must be an array or sequences equal in '
+                       'length to the number of rows/columns.')
+                raise TypeError(msg)
 
         self.delc = np.atleast_1d(np.array(delc)) #* length_multiplier
         self.delr = np.atleast_1d(np.array(delr)) #* length_multiplier
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
-                print('Warning: no grid spacing or lower-left corner supplied. '
-                      '\nSetting the offset with xul, yul requires arguments for delr and delc. '
-                      '\nOrigin will be set to zero.')
+                msg = ('Warning: no grid spacing or lower-left corner '
+                       'supplied. Setting the offset with xul, yul requires '
+                       'arguments for delr and delc. Origin will be set to '
+                       'zero.')
+                print(msg)
                 xll, yll = 0, 0
                 xul, yul = None, None
 
@@ -122,12 +130,11 @@ class SpatialReference(object):
         if epsg is not None:
             self._proj4_str = getproj4(epsg)
 
-        self.supported_units = ["feet","meters"]
+        self.supported_units = ["feet", "meters"]
         self._units = units
         self._reset()
         self.set_spatialreference(xul, yul, xll, yll, rotation,
                                   length_multiplier)
-
 
     @property
     def proj4_str(self):
@@ -186,7 +193,7 @@ class SpatialReference(object):
             for line in f:
                 if not line.startswith('#'):
                     break
-                header.extend(line.strip().replace('#','').split(';'))
+                header.extend(line.strip().replace('#', '').split(';'))
 
         xul, yul = None, None
         rotation = 0.0
@@ -210,9 +217,10 @@ class SpatialReference(object):
                 try:
                     rotation = float(item.split(':')[1])
                     if rotation != 0.0:
-                        warnings.warn("rotation arg has recently changed. " +\
-                              "It was previously treated as positive clockwise" +\
-                              "It now is positive counterclockwise")
+                        msg = ('rotation arg has recently changed. It was '
+                               'previously treated as positive clockwise. It '
+                               'now is positive counterclockwise.')
+                        warnings.warn(msg)
                 except:
                     pass
             elif "proj4_str" in item.lower():
@@ -230,18 +238,18 @@ class SpatialReference(object):
             elif "length_multiplier" in item.lower():
                 length_multiplier = float(item.split(':')[1].strip())
 
-        return {"xul":xul,"yul":yul,"rotation":rotation,
-                "proj4_str":proj4_str,"start_datetime":start_datetime,
-                "units":units, "length_multiplier": length_multiplier}
+        return {"xul": xul, "yul": yul, "rotation": rotation,
+                "proj4_str": proj4_str, "start_datetime": start_datetime,
+                "units": units, "length_multiplier": length_multiplier}
 
     def __setattr__(self, key, value):
         reset = True
         if key == "delr":
-            super(SpatialReference,self).\
-                __setattr__("delr",np.atleast_1d(np.array(value)))
+            super(SpatialReference, self).\
+                __setattr__("delr", np.atleast_1d(np.array(value)))
         elif key == "delc":
-            super(SpatialReference,self).\
-                __setattr__("delc",np.atleast_1d(np.array(value)))
+            super(SpatialReference, self).\
+                __setattr__("delc", np.atleast_1d(np.array(value)))
         elif key == "xul":
             super(SpatialReference, self).\
                 __setattr__("xul", float(value))
@@ -257,36 +265,39 @@ class SpatialReference(object):
         elif key == "length_multiplier":
             super(SpatialReference, self).\
                 __setattr__("length_multiplier", float(value))
-            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+                            yll=self.yll)
         elif key == "rotation":
             if float(value) != 0.0:
-                warnings.warn("rotation arg has recently changed. " +\
-                              "It was previously treated as positive clockwise" +\
-                              "It now is positive counterclockwise")
+                msg = ('rotation arg has recently changed. It was '
+                       'previously treated as positive clockwise. It '
+                       'now is positive counterclockwise.')
+                warnings.warn(msg)
             super(SpatialReference,self).\
                 __setattr__("rotation",float(value))
-            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+                            yll=self.yll)
         elif key == "lenuni":
-            super(SpatialReference,self).\
-                __setattr__("lenuni",int(value))
+            super(SpatialReference, self).\
+                __setattr__("lenuni", int(value))
         elif key == "units":
             value = value.lower()
             assert value in self.supported_units
-            super(SpatialReference,self).\
-                __setattr__("_units",value)
+            super(SpatialReference, self).\
+                __setattr__("_units", value)
         elif key == "proj4_str":
-            super(SpatialReference,self).\
-                __setattr__("_proj4_str",value)
+            super(SpatialReference, self).\
+                __setattr__("_proj4_str", value)
         else:
-            super(SpatialReference,self).__setattr__(key,value)
+            super(SpatialReference,self).__setattr__(key, value)
             reset = False
         if reset:
             self._reset()
 
-    def reset(self,**kwargs):
-        for key,value in kwargs.items():
-            setattr(self,key,value)
-
+    def reset(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        return
 
     def _reset(self):
         self._xgrid = None
@@ -294,7 +305,7 @@ class SpatialReference(object):
         self._ycentergrid = None
         self._xcentergrid = None
         self._vertices = None
-
+        return
 
     @property
     def nrow(self):
@@ -305,7 +316,7 @@ class SpatialReference(object):
         return self.delr.shape[0]
 
     def __eq__(self, other):
-        if not isinstance(other,SpatialReference):
+        if not isinstance(other, SpatialReference):
             return False
         if other.xul != self.xul:
             return False
@@ -317,9 +328,8 @@ class SpatialReference(object):
             return False
         return True
 
-
     @classmethod
-    def from_namfile(cls,namefile):
+    def from_namfile(cls, namefile):
         attribs = SpatialReference.attribs_from_namfile_header(namefile)
         try:
             attribs.pop("start_datetime")
@@ -327,11 +337,9 @@ class SpatialReference(object):
             pass
         return SpatialReference(**attribs)
 
-
     @classmethod
-    def from_gridspec(cls,gridspec_file,lenuni=0):
-        f = open(gridspec_file,'r')
-        #lines = f.readlines()
+    def from_gridspec(cls, gridspec_file, lenuni=0):
+        f = open(gridspec_file, 'r')
         raw = f.readline().strip().split()
         nrow = int(raw[0])
         ncol = int(raw[1])
@@ -367,24 +375,30 @@ class SpatialReference(object):
         return cls(np.array(delr), np.array(delc),
                    lenuni, xul=xul, yul=yul, rotation=rot)
 
-
     @property
     def attribute_dict(self):
-        return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
-                "proj4_str":self.proj4_str}
+        return {"xul": self.xul, "yul":self.yul, "rotation": self.rotation,
+                "proj4_str": self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0, length_multiplier=1.):
+    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None,
+                             rotation=0.0, length_multiplier=1.):
         """
             set spatial reference - can be called from model instance
+
         """
         if xul is not None and xll is not None:
-            raise ValueError('both xul and xll entered. Please enter either xul, yul or xll, yll.')
+            msg = ('Both xul and xll entered. Please enter either xul, yul or '
+                   'xll, yll.')
+            raise ValueError(msg)
         if yul is not None and yll is not None:
-            raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
+            msg = ('Both yul and yll entered. Please enter either xul, yul or '
+                   'xll, yll.')
+            raise ValueError(msg)
         if rotation != 0.0:
-            warnings.warn("rotation arg has recently changed. " +\
-                          "It was previously treated as positive clockwise" +\
-                          "It now is positive counterclockwise")
+            msg = ('rotation arg has recently changed. It was '
+                   'previously treated as positive clockwise. It '
+                   'now is positive counterclockwise.')
+            warnings.warn(msg)
         # set the origin priority based on the left corner specified
         # (the other left corner will be calculated)
         if xll is not None:
@@ -395,7 +409,7 @@ class SpatialReference(object):
         self.rotation = rotation
         self.length_multiplier = length_multiplier
         self.set_origin(xul, yul, xll, yll)
-        #self._reset()
+        return
 
     def __repr__(self):
         s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ".\
@@ -411,24 +425,21 @@ class SpatialReference(object):
             # calculate coords for upper left corner
             self.xll = xll if xll is not None else 0.
             self.yll = yll if yll is not None else 0.
-            self.xul = self.xll + np.sin(self.theta) * self.yedge[0] * self.length_multiplier
-            self.yul = self.yll + np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+            self.xul = self.xll + (np.sin(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
+            self.yul = self.yll + (np.cos(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
 
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
             self.xul = xul if xul is not None else 0.
             self.yul = yul if yul is not None else 0.
-            self.xll = self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
-            self.yll = self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+            self.xll = self.xul - (np.sin(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
+            self.yll = self.yul - (np.cos(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
         self._reset()
-
-    #@property
-    #def xll(self):
-    #    return self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
-
-    #@property
-    #def yll(self):
-    #    return self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+        return
 
     @property
     def theta(self):
@@ -759,21 +770,25 @@ class epsgRef:
             os.remove(self.location + 'c')
         except:
             pass
+
     def make(self):
         if not os.path.exists(self.location):
             newfile = open(self.location, 'w')
             newfile.write('prj = {}\n')
             newfile.close()
+
     def reset(self, verbose=True):
         os.remove(self.location)
         self._remove_pyc()
         self.make()
         if verbose:
             print('Resetting {}'.format(self.location))
+
     def add(self, epsg, prj):
         """add an epsg code to epsgref.py"""
         with open(self.location, 'a') as epsgfile:
             epsgfile.write("prj[{:d}] = '{}'\n".format(epsg, prj))
+
     def remove(self, epsg):
         """removes an epsg entry from epsgref.py"""
         from epsgref import prj
@@ -782,6 +797,7 @@ class epsgRef:
             del prj[epsg]
         for epsg, prj in prj.items():
             self.add(epsg, prj)
+
     @staticmethod
     def show():
         import importlib
@@ -823,6 +839,7 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
         epsgfile.add(epsg, prj)
     return prj
 
+
 def get_spatialreference(epsg, text='esriwkt'):
     """Gets text for given epsg code and text format from spatialreference.org
     Fetches the reference text using the url:
@@ -860,9 +877,10 @@ def get_spatialreference(epsg, text='esriwkt'):
     text = text.replace("\n", "")
     return text
 
+
 def getproj4(epsg):
-    """Gets projection file (.prj) text for given epsg code from spatialreference.org
-    See: https://www.epsg-registry.org/
+    """Gets projection file (.prj) text for given epsg code from
+    spatialreference.org. See: https://www.epsg-registry.org/
 
     Parameters
     ----------
