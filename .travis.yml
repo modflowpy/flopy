@@ -39,7 +39,6 @@ before_install:
 # command to install dependencies
 install:
     - pip install -r requirements.travis.txt
-    - pip install https://github.com/modflowpy/pymake/zipball/master
 
 
 # command to run tests
