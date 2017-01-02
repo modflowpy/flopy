@@ -10,7 +10,7 @@ import warnings
 
 class SpatialReference(object):
     """
-    a simple class to locate the model grid in x-y space
+    a class to locate a structured model grid in x-y space
 
     Parameters
     ----------
@@ -563,7 +563,8 @@ class SpatialReference(object):
 
     def get_grid_lines(self):
         """
-            get the grid lines as a list
+            Get the grid lines as a list
+
         """
         xmin = self.xedge[0]
         xmax = self.xedge[-1]
@@ -590,6 +591,16 @@ class SpatialReference(object):
             x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
         return lines
+
+    def get_grid_line_collection(self, **kwargs):
+        """
+        Get a LineCollection of the grid
+
+        """
+        from matplotlib.collections import LineCollection
+
+        lc = LineCollection(self.get_grid_lines(), **kwargs)
+        return lc
 
     def get_xcenter_array(self):
         """
@@ -690,6 +701,58 @@ class SpatialReference(object):
             r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
         return r, c
 
+    def get_grid_map_plotter(self):
+        """
+        Create a QuadMesh plotting object for this grid
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        from matplotlib.collections import QuadMesh
+        verts = np.vstack((self.xgrid.flatten(), self.ygrid.flatten())).T
+        qm = QuadMesh(self.ncol, self.nrow, verts)
+        return qm
+
+    def plot_array(self, a):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        a : np.ndarray
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        import matplotlib.pyplot as plt
+        qm = plt.pcolormesh(self.xgrid, self.ygrid, a)
+        return qm
+
+    def contour_array(self, ax, a, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            ax to add the contours
+
+        a : np.ndarray
+            array to contour
+
+        Returns
+        -------
+        contour_set : ContourSet
+
+        """
+        contour_set = ax.contour(self.xcentergrid, self.ycentergrid,
+                                 a, **kwargs)
+        return contour_set
+
     @property
     def vertices(self):
         """Returns a list of vertices for"""
@@ -755,6 +818,241 @@ class SpatialReference(object):
             b[idx] = bn[idx]
 
         return b
+
+
+class SpatialReferenceUnstructured(SpatialReference):
+    """
+    a class to locate an unstructured model grid in x-y space
+
+    Parameters
+    ----------
+
+    verts : ndarray
+        2d array of x and y points.
+
+    iverts : list of lists
+        should be of len(ncells) with a list of vertex numbers for each cell
+
+    ncpl : ndarray
+        array containing the number of cells per layer.  ncpl.sum() must be
+        equal to the total number of cells in the grid.  If all values of ncpl
+        equal len(iverts), then the grid is considered to be layered and the
+        grid specified by verts and iverts applies to all layers. If not then
+        len(iverts) must equal ncpl.sum().
+
+    lenuni : int
+        the length units flag from the discretization package
+
+    proj4_str: str
+        a PROJ4 string that identifies the grid in space. warning: case
+        sensitive!
+
+    epsg : int
+        EPSG code that identifies the grid in space. Can be used in lieu of
+        proj4. PROJ4 attribute will auto-populate if there is an internet
+        connection(via get_proj4 method).
+        See https://www.epsg-registry.org/ or spatialreference.org
+
+    length_multiplier : float
+        multiplier to convert model units to spatial reference units.
+        delr and delc above will be multiplied by this value. (default=1.)
+
+    Attributes
+    ----------
+    xcenter : ndarray
+        array of x cell centers
+
+    ycenter : ndarray
+        array of y cell centers
+
+    vertices : 1D array
+        1D array of cell vertices for whole grid in C-style (row-major) order
+        (same as np.ravel())
+
+
+    Notes
+    -----
+
+    """
+    def __init__(self, xc, yc, verts, iverts, ncpl, layered=True, lenuni=1,
+                 proj4_str="EPSG:4326", epsg=None, units=None,
+                 length_multiplier=1.):
+        self.xc = xc
+        self.yc = yc
+        self.verts = verts
+        self.iverts = iverts
+        self.ncpl = ncpl
+        self.layered = True
+        self.lenuni = lenuni
+        self._proj4_str = proj4_str
+        self.epsg = epsg
+        if epsg is not None:
+            self._proj4_str = getproj4(epsg)
+        self.supported_units = ["feet", "meters"]
+        self._units = units
+        self.length_multiplier = length_multiplier
+
+        # set defaults
+        self.xul = 0.
+        self.yul = 0.
+        self.rotation = 0.
+
+        if self.layered:
+            assert all([n == len(iverts) for n in ncpl])
+            assert self.xc.shape[0] == self.ncpl[0]
+            assert self.yc.shape[0] == self.ncpl[0]
+        else:
+            msg = ('Length of iverts must equal ncpl.sum '
+                   '({} {})'.format(len(iverts), ncpl))
+            assert len(iverts) == ncpl.sum(), msg
+            assert self.xc.shape[0] == self.ncpl.sum()
+            assert self.yc.shape[0] == self.ncpl.sum()
+        return
+
+    @classmethod
+    def from_argus_export(cls, fname, nlay=1):
+        """
+        Create a new SpatialReferenceUnstructured grid from an Argus One
+        Trimesh file
+
+        Parameters
+        ----------
+        fname : string
+            File name
+
+        nlay : int
+            Number of layers to create
+
+        Returns
+        -------
+            sru : flopy.utils.reference.SpatialReferenceUnstructured
+
+        """
+        from ..utils.geometry import get_polygon_centroid
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.split()
+        ncells, nverts = ll[0:2]
+        ncells = int(ncells)
+        nverts = int(nverts)
+        verts = np.empty((nverts, 2), dtype=np.float)
+        xc = np.empty((ncells), dtype=np.float)
+        yc = np.empty((ncells), dtype=np.float)
+
+        #read the vertices
+        f.readline()
+        for ivert in range(nverts):
+            line = f.readline()
+            ll = line.split()
+            c, iv, x, y = ll[0:4]
+            verts[ivert, 0] = x
+            verts[ivert, 1] = y
+
+        #read the cell information and create iverts, xc, and yc
+        iverts = []
+        for icell in range(ncells):
+            line = f.readline()
+            ll = line.split()
+            ivlist = []
+            for ic in ll[2:5]:
+                ivlist.append(int(ic) - 1)
+            if ivlist[0] != ivlist[-1]:
+                ivlist.append(ivlist[0])
+            iverts.append(ivlist)
+            xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, :])
+
+        #close file and return spatial reference
+        f.close()
+        return cls(xc, yc, verts, iverts, np.array(nlay*[len(iverts)]))
+
+    def __setattr__(self, key, value):
+        super(SpatialReference, self).__setattr__(key, value)
+        return
+
+    def get_extent(self):
+        """
+        Get the extent of the grid
+
+        Returns
+        -------
+        extent : tuple
+            min and max grid coordinates
+
+        """
+        xmin = self.verts[:, 0].min()
+        xmax = self.verts[:, 0].max()
+        ymin = self.verts[:, 1].min()
+        ymax = self.verts[:, 1].max()
+        return (xmin, xmax, ymin, ymax)
+
+    def get_xcenter_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell center x
+        coordinate for every cell in the grid in model space - not offset or
+        rotated.
+
+        """
+        return self.xc
+
+    def get_ycenter_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell center x
+        coordinate for every cell in the grid in model space - not offset of
+        rotated.
+
+        """
+        return self.yc
+
+    def plot_array(self, a):
+        """
+        Create a QuadMesh plot of the specified array using patches
+
+        Parameters
+        ----------
+        a : np.ndarray
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        from ..plot import plotutil
+        patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a)
+        return patch_collection
+
+    def get_grid_line_collection(self, **kwargs):
+        """
+        Get a patch collection of the grid
+
+        """
+        from ..plot import plotutil
+        edgecolor = kwargs.pop('colors')
+        pc = plotutil.cvfd_to_patch_collection(self.verts, self.iverts)
+        pc.set(facecolor='none')
+        pc.set(edgecolor=edgecolor)
+        return pc
+
+    def contour_array(self, ax, a, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            ax to add the contours
+
+        a : np.ndarray
+            array to contour
+
+        Returns
+        -------
+        contour_set : ContourSet
+
+        """
+        contour_set = ax.tricontour(self.xcenter, self.ycenter,
+                                    a, **kwargs)
+        return contour_set
+
 
 class epsgRef:
     """Sets up a local database of projection file text referenced by epsg code.
