@@ -233,7 +233,10 @@ class ModflowDisU(Package):
 
         # NODELAY
         if nodelay is None:
-            nodelay = nodes / nlay
+            npl = int(nodes / nlay)
+            nodelay = []
+            for k in range(self.nlay):
+                nodelay.append(npl)
         self.nodelay = Util2d(model, (self.nlay,), np.int, nodelay,
                                name='nodelay', locat=self.unit_number[0])
 
@@ -275,7 +278,7 @@ class ModflowDisU(Package):
 
         # Connection lengths
         if idsymrd == 1:
-            njags = (njag - nodes) / 2
+            njags = int((njag - nodes) / 2)
             if cl1 is None:
                 raise Exception('idsymrd is 1 but cl1 was not specified.')
             if cl2 is None:

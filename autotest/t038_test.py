@@ -19,6 +19,12 @@ for path, subdirs, files in os.walk(usgpth):
         if name.endswith('.nam'):
             usg_files.append(os.path.join(path, name))
 
+#
+def test_load_usg():
+    for fusg in usg_files:
+        d, f = os.path.split(fusg)
+        yield load_model, f, d
+
 # function to load a MODFLOW-USG model and then write it back out
 def load_model(namfile, model_ws):
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws,
