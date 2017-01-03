@@ -525,6 +525,7 @@ class ModflowDisU(Package):
         if ivsd == -1:
             area = Util2d.load(f, model, (1, nodelay[0]), np.float32, 'area',
                                    ext_unit_dict)
+            area = area.array.reshape((nodelay[0]))
         else:
             area = [0] * nlay
             for k in range(nlay):
@@ -533,7 +534,7 @@ class ModflowDisU(Package):
                 area[k] = ak
         if model.verbose:
             for k, ak in enumerate(area):
-                print('   AREA layer {}: {}'.format(k, ak.array))
+                print('   AREA layer {}: {}'.format(k, ak))
 
         # dataset 7 -- iac
         if model.verbose:
