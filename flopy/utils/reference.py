@@ -10,7 +10,7 @@ import warnings
 
 class SpatialReference(object):
     """
-    a simple class to locate the model grid in x-y space
+    a class to locate a structured model grid in x-y space
 
     Parameters
     ----------
@@ -40,12 +40,16 @@ class SpatialReference(object):
         the counter-clockwise rotation (in degrees) of the grid
 
     proj4_str: str
-        a PROJ4 string that identifies the grid in space. warning: case sensitive!
+        a PROJ4 string that identifies the grid in space. warning: case
+        sensitive!
+
+    units : string
+        Units for the grid.  Must be either feet or meters
 
     epsg : int
-        EPSG code that identifies the grid in space. Can be used in lieu of proj4.
-        PROJ4 attribute will auto-populate if there is an internet connection
-        (via get_proj4 method).
+        EPSG code that identifies the grid in space. Can be used in lieu of
+        proj4. PROJ4 attribute will auto-populate if there is an internet
+        connection(via get_proj4 method).
         See https://www.epsg-registry.org/ or spatialreference.org
 
     length_multiplier : float
@@ -79,7 +83,8 @@ class SpatialReference(object):
         numpy meshgrid of row centers
 
     vertices : 1D array
-        1D array of cell vertices for whole grid in C-style (row-major) order (same as np.ravel())
+        1D array of cell vertices for whole grid in C-style (row-major) order
+        (same as np.ravel())
 
 
     Notes
@@ -90,26 +95,34 @@ class SpatialReference(object):
     accessed
         
     """
+
     xul, yul = None, None
     xll, yll = None, None
     rotation = 0.
     length_multiplier = 1.
     origin_loc = 'ul' # or ll
-    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1, xul=None, yul=None, xll=None, yll=None, rotation=0.0,
-                 proj4_str="EPSG:4326", epsg=None, units=None, length_multiplier=1.):
+
+    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1,
+                 xul=None, yul=None, xll=None, yll=None, rotation=0.0,
+                 proj4_str="EPSG:4326", epsg=None, units=None,
+                 length_multiplier=1.):
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
-                raise TypeError("delr and delcs must be an array or sequences equal in length to the number of rows/columns.")
+                msg = ('delr and delcs must be an array or sequences equal in '
+                       'length to the number of rows/columns.')
+                raise TypeError(msg)
 
         self.delc = np.atleast_1d(np.array(delc)) #* length_multiplier
         self.delr = np.atleast_1d(np.array(delr)) #* length_multiplier
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
-                print('Warning: no grid spacing or lower-left corner supplied. '
-                      '\nSetting the offset with xul, yul requires arguments for delr and delc. '
-                      '\nOrigin will be set to zero.')
+                msg = ('Warning: no grid spacing or lower-left corner '
+                       'supplied. Setting the offset with xul, yul requires '
+                       'arguments for delr and delc. Origin will be set to '
+                       'zero.')
+                print(msg)
                 xll, yll = 0, 0
                 xul, yul = None, None
 
@@ -120,11 +133,11 @@ class SpatialReference(object):
         if epsg is not None:
             self._proj4_str = getproj4(epsg)
 
-        self.supported_units = ["feet","meters"]
+        self.supported_units = ["feet", "meters"]
         self._units = units
         self._reset()
-        self.set_spatialreference(xul, yul, xll, yll, rotation, length_multiplier)
-
+        self.set_spatialreference(xul, yul, xll, yll, rotation,
+                                  length_multiplier)
 
     @property
     def proj4_str(self):
@@ -183,7 +196,7 @@ class SpatialReference(object):
             for line in f:
                 if not line.startswith('#'):
                     break
-                header.extend(line.strip().replace('#','').split(';'))
+                header.extend(line.strip().replace('#', '').split(';'))
 
         xul, yul = None, None
         rotation = 0.0
@@ -207,9 +220,10 @@ class SpatialReference(object):
                 try:
                     rotation = float(item.split(':')[1])
                     if rotation != 0.0:
-                        warnings.warn("rotation arg has recently changed. " +\
-                              "It was previously treated as positive clockwise" +\
-                              "It now is positive counterclockwise")
+                        msg = ('rotation arg has recently changed. It was '
+                               'previously treated as positive clockwise. It '
+                               'now is positive counterclockwise.')
+                        warnings.warn(msg)
                 except:
                     pass
             elif "proj4_str" in item.lower():
@@ -227,18 +241,18 @@ class SpatialReference(object):
             elif "length_multiplier" in item.lower():
                 length_multiplier = float(item.split(':')[1].strip())
 
-        return {"xul":xul,"yul":yul,"rotation":rotation,
-                "proj4_str":proj4_str,"start_datetime":start_datetime,
-                "units":units, "length_multiplier": length_multiplier}
+        return {"xul": xul, "yul": yul, "rotation": rotation,
+                "proj4_str": proj4_str, "start_datetime": start_datetime,
+                "units": units, "length_multiplier": length_multiplier}
 
     def __setattr__(self, key, value):
         reset = True
         if key == "delr":
-            super(SpatialReference,self).\
-                __setattr__("delr",np.atleast_1d(np.array(value)))
+            super(SpatialReference, self).\
+                __setattr__("delr", np.atleast_1d(np.array(value)))
         elif key == "delc":
-            super(SpatialReference,self).\
-                __setattr__("delc",np.atleast_1d(np.array(value)))
+            super(SpatialReference, self).\
+                __setattr__("delc", np.atleast_1d(np.array(value)))
         elif key == "xul":
             super(SpatialReference, self).\
                 __setattr__("xul", float(value))
@@ -254,36 +268,39 @@ class SpatialReference(object):
         elif key == "length_multiplier":
             super(SpatialReference, self).\
                 __setattr__("length_multiplier", float(value))
-            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+                            yll=self.yll)
         elif key == "rotation":
             if float(value) != 0.0:
-                warnings.warn("rotation arg has recently changed. " +\
-                              "It was previously treated as positive clockwise" +\
-                              "It now is positive counterclockwise")
+                msg = ('rotation arg has recently changed. It was '
+                       'previously treated as positive clockwise. It '
+                       'now is positive counterclockwise.')
+                warnings.warn(msg)
             super(SpatialReference,self).\
                 __setattr__("rotation",float(value))
-            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
+            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+                            yll=self.yll)
         elif key == "lenuni":
-            super(SpatialReference,self).\
-                __setattr__("lenuni",int(value))
+            super(SpatialReference, self).\
+                __setattr__("lenuni", int(value))
         elif key == "units":
             value = value.lower()
             assert value in self.supported_units
-            super(SpatialReference,self).\
-                __setattr__("_units",value)
+            super(SpatialReference, self).\
+                __setattr__("_units", value)
         elif key == "proj4_str":
-            super(SpatialReference,self).\
-                __setattr__("_proj4_str",value)
+            super(SpatialReference, self).\
+                __setattr__("_proj4_str", value)
         else:
-            super(SpatialReference,self).__setattr__(key,value)
+            super(SpatialReference,self).__setattr__(key, value)
             reset = False
         if reset:
             self._reset()
 
-    def reset(self,**kwargs):
-        for key,value in kwargs.items():
-            setattr(self,key,value)
-
+    def reset(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        return
 
     def _reset(self):
         self._xgrid = None
@@ -291,7 +308,7 @@ class SpatialReference(object):
         self._ycentergrid = None
         self._xcentergrid = None
         self._vertices = None
-
+        return
 
     @property
     def nrow(self):
@@ -302,7 +319,7 @@ class SpatialReference(object):
         return self.delr.shape[0]
 
     def __eq__(self, other):
-        if not isinstance(other,SpatialReference):
+        if not isinstance(other, SpatialReference):
             return False
         if other.xul != self.xul:
             return False
@@ -314,9 +331,8 @@ class SpatialReference(object):
             return False
         return True
 
-
     @classmethod
-    def from_namfile(cls,namefile):
+    def from_namfile(cls, namefile):
         attribs = SpatialReference.attribs_from_namfile_header(namefile)
         try:
             attribs.pop("start_datetime")
@@ -324,11 +340,9 @@ class SpatialReference(object):
             pass
         return SpatialReference(**attribs)
 
-
     @classmethod
-    def from_gridspec(cls,gridspec_file,lenuni=0):
-        f = open(gridspec_file,'r')
-        #lines = f.readlines()
+    def from_gridspec(cls, gridspec_file, lenuni=0):
+        f = open(gridspec_file, 'r')
         raw = f.readline().strip().split()
         nrow = int(raw[0])
         ncol = int(raw[1])
@@ -364,24 +378,30 @@ class SpatialReference(object):
         return cls(np.array(delr), np.array(delc),
                    lenuni, xul=xul, yul=yul, rotation=rot)
 
-
     @property
     def attribute_dict(self):
-        return {"xul":self.xul,"yul":self.yul,"rotation":self.rotation,
-                "proj4_str":self.proj4_str}
+        return {"xul": self.xul, "yul":self.yul, "rotation": self.rotation,
+                "proj4_str": self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None, rotation=0.0, length_multiplier=1.):
+    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None,
+                             rotation=0.0, length_multiplier=1.):
         """
             set spatial reference - can be called from model instance
+
         """
         if xul is not None and xll is not None:
-            raise ValueError('both xul and xll entered. Please enter either xul, yul or xll, yll.')
+            msg = ('Both xul and xll entered. Please enter either xul, yul or '
+                   'xll, yll.')
+            raise ValueError(msg)
         if yul is not None and yll is not None:
-            raise ValueError('both yul and yll entered. Please enter either xul, yul or xll, yll.')
+            msg = ('Both yul and yll entered. Please enter either xul, yul or '
+                   'xll, yll.')
+            raise ValueError(msg)
         if rotation != 0.0:
-            warnings.warn("rotation arg has recently changed. " +\
-                          "It was previously treated as positive clockwise" +\
-                          "It now is positive counterclockwise")
+            msg = ('rotation arg has recently changed. It was '
+                   'previously treated as positive clockwise. It '
+                   'now is positive counterclockwise.')
+            warnings.warn(msg)
         # set the origin priority based on the left corner specified
         # (the other left corner will be calculated)
         if xll is not None:
@@ -392,7 +412,7 @@ class SpatialReference(object):
         self.rotation = rotation
         self.length_multiplier = length_multiplier
         self.set_origin(xul, yul, xll, yll)
-        #self._reset()
+        return
 
     def __repr__(self):
         s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ".\
@@ -408,24 +428,21 @@ class SpatialReference(object):
             # calculate coords for upper left corner
             self.xll = xll if xll is not None else 0.
             self.yll = yll if yll is not None else 0.
-            self.xul = self.xll + np.sin(self.theta) * self.yedge[0] * self.length_multiplier
-            self.yul = self.yll + np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+            self.xul = self.xll + (np.sin(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
+            self.yul = self.yll + (np.cos(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
 
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
             self.xul = xul if xul is not None else 0.
             self.yul = yul if yul is not None else 0.
-            self.xll = self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
-            self.yll = self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+            self.xll = self.xul - (np.sin(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
+            self.yll = self.yul - (np.cos(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
         self._reset()
-
-    #@property
-    #def xll(self):
-    #    return self.xul - np.sin(self.theta) * self.yedge[0] * self.length_multiplier
-
-    #@property
-    #def yll(self):
-    #    return self.yul - np.cos(self.theta) * self.yedge[0] * self.length_multiplier
+        return
 
     @property
     def theta(self):
@@ -549,7 +566,8 @@ class SpatialReference(object):
 
     def get_grid_lines(self):
         """
-            get the grid lines as a list
+            Get the grid lines as a list
+
         """
         xmin = self.xedge[0]
         xmax = self.xedge[-1]
@@ -576,6 +594,16 @@ class SpatialReference(object):
             x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
         return lines
+
+    def get_grid_line_collection(self, **kwargs):
+        """
+        Get a LineCollection of the grid
+
+        """
+        from matplotlib.collections import LineCollection
+
+        lc = LineCollection(self.get_grid_lines(), **kwargs)
+        return lc
 
     def get_xcenter_array(self):
         """
@@ -676,6 +704,58 @@ class SpatialReference(object):
             r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
         return r, c
 
+    def get_grid_map_plotter(self):
+        """
+        Create a QuadMesh plotting object for this grid
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        from matplotlib.collections import QuadMesh
+        verts = np.vstack((self.xgrid.flatten(), self.ygrid.flatten())).T
+        qm = QuadMesh(self.ncol, self.nrow, verts)
+        return qm
+
+    def plot_array(self, a):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        a : np.ndarray
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        import matplotlib.pyplot as plt
+        qm = plt.pcolormesh(self.xgrid, self.ygrid, a)
+        return qm
+
+    def contour_array(self, ax, a, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            ax to add the contours
+
+        a : np.ndarray
+            array to contour
+
+        Returns
+        -------
+        contour_set : ContourSet
+
+        """
+        contour_set = ax.contour(self.xcentergrid, self.ycentergrid,
+                                 a, **kwargs)
+        return contour_set
+
     @property
     def vertices(self):
         """Returns a list of vertices for"""
@@ -742,6 +822,295 @@ class SpatialReference(object):
 
         return b
 
+
+class SpatialReferenceUnstructured(SpatialReference):
+    """
+    a class to locate an unstructured model grid in x-y space
+
+    Parameters
+    ----------
+
+    verts : ndarray
+        2d array of x and y points.
+
+    iverts : list of lists
+        should be of len(ncells) with a list of vertex numbers for each cell
+
+    ncpl : ndarray
+        array containing the number of cells per layer.  ncpl.sum() must be
+        equal to the total number of cells in the grid.
+
+    layered : boolean
+        flag to indicated that the grid is layered.  In this case, the vertices
+        define the grid for single layer, and all layers use this same grid.
+        In this case the ncpl value for each layer must equal len(iverts).
+        If not layered, then verts and iverts are specified for all cells and
+        all layers in the grid.  In this case, npcl.sum() must equal
+        len(iverts).
+
+    lenuni : int
+        the length units flag from the discretization package
+
+    proj4_str: str
+        a PROJ4 string that identifies the grid in space. warning: case
+        sensitive!
+
+    units : string
+        Units for the grid.  Must be either feet or meters
+
+    epsg : int
+        EPSG code that identifies the grid in space. Can be used in lieu of
+        proj4. PROJ4 attribute will auto-populate if there is an internet
+        connection(via get_proj4 method).
+        See https://www.epsg-registry.org/ or spatialreference.org
+
+    length_multiplier : float
+        multiplier to convert model units to spatial reference units.
+        delr and delc above will be multiplied by this value. (default=1.)
+
+    Attributes
+    ----------
+    xcenter : ndarray
+        array of x cell centers
+
+    ycenter : ndarray
+        array of y cell centers
+
+    Notes
+    -----
+
+    """
+    def __init__(self, xc, yc, verts, iverts, ncpl, layered=True, lenuni=1,
+                 proj4_str="EPSG:4326", epsg=None, units=None,
+                 length_multiplier=1.):
+        self.xc = xc
+        self.yc = yc
+        self.verts = verts
+        self.iverts = iverts
+        self.ncpl = ncpl
+        self.layered = layered
+        self.lenuni = lenuni
+        self._proj4_str = proj4_str
+        self.epsg = epsg
+        if epsg is not None:
+            self._proj4_str = getproj4(epsg)
+        self.supported_units = ["feet", "meters"]
+        self._units = units
+        self.length_multiplier = length_multiplier
+
+        # set defaults
+        self.xul = 0.
+        self.yul = 0.
+        self.rotation = 0.
+
+        if self.layered:
+            assert all([n == len(iverts) for n in ncpl])
+            assert self.xc.shape[0] == self.ncpl[0]
+            assert self.yc.shape[0] == self.ncpl[0]
+        else:
+            msg = ('Length of iverts must equal ncpl.sum '
+                   '({} {})'.format(len(iverts), ncpl))
+            assert len(iverts) == ncpl.sum(), msg
+            assert self.xc.shape[0] == self.ncpl.sum()
+            assert self.yc.shape[0] == self.ncpl.sum()
+        return
+
+    def write_shapefile(self, filename='grid.shp'):
+        """
+        Write shapefile of the grid
+
+        Parameters
+        ----------
+        filename : string
+            filename for shapefile
+
+        Returns
+        -------
+
+        """
+        raise NotImplementedError()
+        return
+
+    def write_gridSpec(self, filename):
+        """
+        Write a PEST-style grid specification file
+
+        Parameters
+        ----------
+        filename : string
+            filename for grid specification file
+
+        Returns
+        -------
+
+        """
+        raise NotImplementedError()
+        return
+
+    @classmethod
+    def from_gridspec(cls, fname):
+        """
+        Create a new SpatialReferenceUnstructured grid from an PEST
+        grid specification file
+
+        Parameters
+        ----------
+        fname : string
+            File name for grid specification file
+
+        Returns
+        -------
+            sru : flopy.utils.reference.SpatialReferenceUnstructured
+
+        """
+        raise NotImplementedError()
+        return
+
+    @classmethod
+    def from_argus_export(cls, fname, nlay=1):
+        """
+        Create a new SpatialReferenceUnstructured grid from an Argus One
+        Trimesh file
+
+        Parameters
+        ----------
+        fname : string
+            File name
+
+        nlay : int
+            Number of layers to create
+
+        Returns
+        -------
+            sru : flopy.utils.reference.SpatialReferenceUnstructured
+
+        """
+        from ..utils.geometry import get_polygon_centroid
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.split()
+        ncells, nverts = ll[0:2]
+        ncells = int(ncells)
+        nverts = int(nverts)
+        verts = np.empty((nverts, 2), dtype=np.float)
+        xc = np.empty((ncells), dtype=np.float)
+        yc = np.empty((ncells), dtype=np.float)
+
+        #read the vertices
+        f.readline()
+        for ivert in range(nverts):
+            line = f.readline()
+            ll = line.split()
+            c, iv, x, y = ll[0:4]
+            verts[ivert, 0] = x
+            verts[ivert, 1] = y
+
+        #read the cell information and create iverts, xc, and yc
+        iverts = []
+        for icell in range(ncells):
+            line = f.readline()
+            ll = line.split()
+            ivlist = []
+            for ic in ll[2:5]:
+                ivlist.append(int(ic) - 1)
+            if ivlist[0] != ivlist[-1]:
+                ivlist.append(ivlist[0])
+            iverts.append(ivlist)
+            xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, :])
+
+        #close file and return spatial reference
+        f.close()
+        return cls(xc, yc, verts, iverts, np.array(nlay*[len(iverts)]))
+
+    def __setattr__(self, key, value):
+        super(SpatialReference, self).__setattr__(key, value)
+        return
+
+    def get_extent(self):
+        """
+        Get the extent of the grid
+
+        Returns
+        -------
+        extent : tuple
+            min and max grid coordinates
+
+        """
+        xmin = self.verts[:, 0].min()
+        xmax = self.verts[:, 0].max()
+        ymin = self.verts[:, 1].min()
+        ymax = self.verts[:, 1].max()
+        return (xmin, xmax, ymin, ymax)
+
+    def get_xcenter_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell center x
+        coordinate for every cell in the grid in model space - not offset or
+        rotated.
+
+        """
+        return self.xc
+
+    def get_ycenter_array(self):
+        """
+        Return a numpy one-dimensional float array that has the cell center x
+        coordinate for every cell in the grid in model space - not offset of
+        rotated.
+
+        """
+        return self.yc
+
+    def plot_array(self, a):
+        """
+        Create a QuadMesh plot of the specified array using patches
+
+        Parameters
+        ----------
+        a : np.ndarray
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        from ..plot import plotutil
+        patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a)
+        return patch_collection
+
+    def get_grid_line_collection(self, **kwargs):
+        """
+        Get a patch collection of the grid
+
+        """
+        from ..plot import plotutil
+        edgecolor = kwargs.pop('colors')
+        pc = plotutil.cvfd_to_patch_collection(self.verts, self.iverts)
+        pc.set(facecolor='none')
+        pc.set(edgecolor=edgecolor)
+        return pc
+
+    def contour_array(self, ax, a, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            ax to add the contours
+
+        a : np.ndarray
+            array to contour
+
+        Returns
+        -------
+        contour_set : ContourSet
+
+        """
+        contour_set = ax.tricontour(self.xcenter, self.ycenter,
+                                    a, **kwargs)
+        return contour_set
+
+
 class epsgRef:
     """Sets up a local database of projection file text referenced by epsg code.
     The database is located in the site packages folder in epsgref.py, which
@@ -756,21 +1125,25 @@ class epsgRef:
             os.remove(self.location + 'c')
         except:
             pass
+
     def make(self):
         if not os.path.exists(self.location):
             newfile = open(self.location, 'w')
             newfile.write('prj = {}\n')
             newfile.close()
+
     def reset(self, verbose=True):
         os.remove(self.location)
         self._remove_pyc()
         self.make()
         if verbose:
             print('Resetting {}'.format(self.location))
+
     def add(self, epsg, prj):
         """add an epsg code to epsgref.py"""
         with open(self.location, 'a') as epsgfile:
             epsgfile.write("prj[{:d}] = '{}'\n".format(epsg, prj))
+
     def remove(self, epsg):
         """removes an epsg entry from epsgref.py"""
         from epsgref import prj
@@ -779,6 +1152,7 @@ class epsgRef:
             del prj[epsg]
         for epsg, prj in prj.items():
             self.add(epsg, prj)
+
     @staticmethod
     def show():
         import importlib
@@ -820,6 +1194,7 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
         epsgfile.add(epsg, prj)
     return prj
 
+
 def get_spatialreference(epsg, text='esriwkt'):
     """Gets text for given epsg code and text format from spatialreference.org
     Fetches the reference text using the url:
@@ -857,9 +1232,10 @@ def get_spatialreference(epsg, text='esriwkt'):
     text = text.replace("\n", "")
     return text
 
+
 def getproj4(epsg):
-    """Gets projection file (.prj) text for given epsg code from spatialreference.org
-    See: https://www.epsg-registry.org/
+    """Gets projection file (.prj) text for given epsg code from
+    spatialreference.org. See: https://www.epsg-registry.org/
 
     Parameters
     ----------

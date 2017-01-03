@@ -159,6 +159,7 @@ class Modflow(BaseModel):
             "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
+            "disu": flopy.modflow.ModflowDisU,
             "bcf6": flopy.modflow.ModflowBcf,
             "lpf": flopy.modflow.ModflowLpf,
             "hfb6": flopy.modflow.ModflowHfb,
@@ -180,6 +181,7 @@ class Modflow(BaseModel):
             "pcgn": flopy.modflow.ModflowPcgn,
             "nwt": flopy.modflow.ModflowNwt,
             "pks": flopy.modflow.ModflowPks,
+            "sms": flopy.modflow.ModflowSms,
             "sfr": flopy.modflow.ModflowSfr2,
             "lak": flopy.modflow.ModflowLak,
             "gage": flopy.modflow.ModflowGage,
@@ -242,11 +244,16 @@ class Modflow(BaseModel):
 
     @property
     def nrow_ncol_nlay_nper(self):
+        # structured dis
         dis = self.get_package('DIS')
         if (dis):
             return dis.nrow, dis.ncol, dis.nlay, dis.nper
-        else:
-            return 0, 0, 0, 0
+        # unstructured dis
+        dis = self.get_package('DISU')
+        if (dis):
+            return None, dis.nodelay.array[0, :], dis.nlay, dis.nper
+        # no dis
+        return 0, 0, 0, 0
 
     def get_nrow_ncol_nlay_nper(self):
         return self.nrow_ncol_nlay_nper
@@ -494,8 +501,11 @@ class Modflow(BaseModel):
                 version = 'mfnwt'
             elif v.filetype == 'GLO':
                 version = 'mf2k'
-            elif v.filetype == 'DISU' or v.filetype == 'SMS':
+            elif v.filetype == 'SMS':
                 version = 'mfusg'
+            elif v.filetype == 'DISU':
+                version = 'mfusg'
+                ml.structured = False
 
         # update the modflow version
         ml.set_version(version)
@@ -521,43 +531,49 @@ class Modflow(BaseModel):
                 ml.free_format_input))
 
         # load dis
-        dis = None
+        disnamdata = None
         dis_key = None
         for key, item in ext_unit_dict.items():
             if item.filetype == "DIS":
-                dis = item
+                disnamdata = item
+                dis_key = key
+                break
+            if item.filetype == "DISU":
+                disnamdata = item
                 dis_key = key
                 break
         if forgive:
             try:
-                pck = dis.package.load(dis.filename, ml,
+                dis = disnamdata.package.load(disnamdata.filename, ml,
                                        ext_unit_dict=ext_unit_dict, check=False)
-                files_succesfully_loaded.append(dis.filename)
+                files_succesfully_loaded.append(disnamdata.filename)
                 if ml.verbose:
                     sys.stdout.write('   {:4s} package load...success\n'
-                                     .format(pck.name[0]))
+                                     .format(dis.name[0]))
                 ext_unit_dict.pop(dis_key)
             except Exception as e:
                 s = 'Could not read discretization package: {}. Stopping...' \
-                    .format(os.path.basename(dis.filename))
+                    .format(os.path.basename(disnamdata.filename))
                 raise Exception(s + " " + str(e))
         else:
-            pck = dis.package.load(dis.filename, ml,
+            dis = disnamdata.package.load(disnamdata.filename, ml,
                                        ext_unit_dict=ext_unit_dict, check=False)
-            files_succesfully_loaded.append(dis.filename)
+            files_succesfully_loaded.append(disnamdata.filename)
             if ml.verbose:
                 sys.stdout.write('   {:4s} package load...success\n'
-                                 .format(pck.name[0]))
+                                 .format(dis.name[0]))
             ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
-        sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array, \
-                              lenuni=ml.dis.lenuni, **ref_attributes)
-        ml.dis.sr = sr
-        ml.dis.start_datetime = start_datetime
+        if ml.structured:
+            sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
+                                  lenuni=ml.dis.lenuni, **ref_attributes)
+        else:
+            sr = None
+        dis.sr = sr
+        dis.start_datetime = start_datetime
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.
-
         if bas_key is not None:
             try:
                 pck = bas.package.load(bas.filename, ml,

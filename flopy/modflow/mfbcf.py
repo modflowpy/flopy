@@ -147,7 +147,12 @@ class ModflowBcf(Package):
         None
 
         """
+        # get model information
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+        dis = self.parent.get_package('DIS')
+        if dis is None:
+            dis = self.parent.get_package('DISU')
+
         # Open file for writing
         f_bcf = open(self.fn_path, 'w')
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
@@ -164,7 +169,7 @@ class ModflowBcf(Package):
 
         f_bcf.write('\n')
         f_bcf.write(self.trpy.get_file_entry())
-        transient = not self.parent.get_package('DIS').steady.all()
+        transient = not dis.steady.all()
         for k in range(nlay):
             if (transient == True):
                 f_bcf.write(self.sf1[k].get_file_entry())
@@ -224,13 +229,20 @@ class ModflowBcf(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
+
         # determine problem dimensions
-        nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        nr, nc, nlay, nper = model.get_nrow_ncol_nlay_nper()
+        dis = model.get_package('DIS')
+        if dis is None:
+            dis = model.get_package('DISU')
+
+
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
             print('   loading ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
@@ -241,14 +253,22 @@ class ModflowBcf(Package):
                                                        float(t[3]), \
                                                        int(t[4]), \
                                                        int(t[5])
-        # if ipakcb != 0:
-        #     model.add_pop_key_list(ipakcb)
-        #     ipakcb = 53
+
         # LAYCON array
+        ifrefm = model.get_ifrefm()
         if model.verbose:
             print('   loading LAYCON...')
         line = f.readline()
-        t = line.strip().split()
+        if ifrefm:
+            t = line.strip().split()
+        else:
+            t = []
+            istart = 0
+            for k in range(nlay):
+                lcode = line[istart:istart+2]
+                lcode = lcode.replace(' ', '0')
+                t.append(lcode)
+                istart += 2
         intercellt = np.zeros(nlay, dtype=np.int)
         laycon = np.zeros(nlay, dtype=np.int)
         for k in range(nlay):
@@ -257,61 +277,83 @@ class ModflowBcf(Package):
                 laycon[k] = int(t[k][1])
             else:
                 laycon[k] = int(t[k])
+
         # TRPY array
         if model.verbose:
             print('   loading TRPY...')
         trpy = Util2d.load(f, model, (1, nlay), np.float32, 'trpy',
                            ext_unit_dict)
         trpy = trpy.array.reshape((nlay))
+
         # property data for each layer based on options
-        transient = not model.get_package('DIS').steady.all()
-        sf1 = np.empty((nlay, nrow, ncol), dtype=np.float)
-        tran = np.empty((nlay, nrow, ncol), dtype=np.float)
-        hy = np.empty((nlay, nrow, ncol), dtype=np.float)
+        transient = not dis.steady.all()
+        sf1 = [0] * nlay
+        tran = [0] * nlay
+        hy = [0] * nlay
         if nlay > 1:
-            vcont = np.empty((nlay - 1, nrow, ncol), dtype=np.float)
+            vcont = [0] * (nlay - 1)
         else:
-            vcont = 1.0
-        sf2 = np.empty((nlay, nrow, ncol), dtype=np.float)
-        wetdry = np.empty((nlay, nrow, ncol), dtype=np.float)
+            vcont = [0] * nlay
+        sf2 = [0] * nlay
+        wetdry = [0] * nlay
+
+
+
         for k in range(nlay):
-            if transient == True:
+
+            # allow for unstructured changing nodes per layer
+            if nr is None:
+                nrow = 1
+                ncol = nc[k]
+            else:
+                nrow = nr
+                ncol = nc
+
+            # sf1
+            if transient:
                 if model.verbose:
                     print('   loading sf1 layer {0:3d}...'.format(k + 1))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sf1',
                                 ext_unit_dict)
-                sf1[k, :, :] = t.array
+                sf1[k] = t
+
+            # tran or hy
             if ((laycon[k] == 0) or (laycon[k] == 2)):
                 if model.verbose:
                     print('   loading tran layer {0:3d}...'.format(k + 1))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'tran',
                                 ext_unit_dict)
-                tran[k, :, :] = t.array
+                tran[k] = t
             else:
                 if model.verbose:
                     print('   loading hy layer {0:3d}...'.format(k + 1))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'hy',
                                 ext_unit_dict)
-                hy[k, :, :] = t.array
+                hy[k] = t
+
+            # vcont
             if k < (nlay - 1):
                 if model.verbose:
                     print('   loading vcont layer {0:3d}...'.format(k + 1))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'vcont',
                                 ext_unit_dict)
-                vcont[k, :, :] = t.array
-            if ((transient == True) and (
-                (laycon[k] == 2) or (laycon[k] == 3))):
+                vcont[k] = t
+
+            # sf2
+            if (transient and ((laycon[k] == 2) or (laycon[k] == 3))):
                 if model.verbose:
                     print('   loading sf2 layer {0:3d}...'.format(k + 1))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sf2',
                                 ext_unit_dict)
-                sf2[k, :, :] = t.array
+                sf2[k] = t
+
+            # wetdry
             if ((iwdflg != 0) and ((laycon[k] == 1) or (laycon[k] == 3))):
                 if model.verbose:
                     print('   loading sf2 layer {0:3d}...'.format(k + 1))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'wetdry',
                                 ext_unit_dict)
-                wetdry[k, :, :] = t.array
+                wetdry[k] = t
 
         # set package unit number
         unitnumber = 15

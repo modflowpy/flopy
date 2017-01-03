@@ -380,10 +380,10 @@ def test_namfile_readwrite():
     # test reading and writing of SR information to namfile
     m.write_input()
     m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
-    assert m2.sr.xll - xll < 1e-6
-    assert m2.sr.yll - yll < 1e-6
+    assert abs(m2.sr.xll - xll) < 1e-2
+    assert abs(m2.sr.yll - yll) < 1e-2
     assert m2.sr.rotation == 30
-    assert m2.sr.length_multiplier - .3048 < 1e-10
+    assert abs(m2.sr.length_multiplier - .3048) < 1e-10
 
 
 def test_rotation():

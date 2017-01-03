@@ -735,10 +735,27 @@ class Util3d(object):
 
     @property
     def array(self):
-        a = np.empty((self.shape), dtype=self.dtype)
-        # for i,u2d in self.uds:
-        for i, u2d in enumerate(self.util_2ds):
-            a[i] = u2d.array
+        '''
+        Return a numpy array of the 3D shape.  If an unstructured model, then
+        return an array of size nodes.
+
+        '''
+        nlay, nrow, ncol = self.shape
+        if nrow is not None:
+            # typical 3D case
+            a = np.empty((self.shape), dtype=self.dtype)
+            # for i,u2d in self.uds:
+            for i, u2d in enumerate(self.util_2ds):
+                a[i] = u2d.array
+        else:
+            # unstructured case
+            nodes = ncol.sum()
+            a = np.empty((nodes), dtype=self.dtype)
+            istart = 0
+            for i, u2d in enumerate(self.util_2ds):
+                istop = istart + ncol[i]
+                a[istart:istop] = u2d.array
+                istart = istop
         return a
 
     def build_2d_instances(self):
@@ -773,7 +790,11 @@ class Util3d(object):
                     if self.model.external_path is not None:
                         ext_filename = self.ext_filename_base[i] + str(i + 1) + \
                                        '.ref'
-                    u2d = Util2d(self.model, self.shape[1:], self.dtype, item,
+                    shp = self.shape[1:]
+                    if shp[0] is None:
+                        # allow for unstructured so that ncol changes by layer
+                        shp = (1, self.shape[2][i])
+                    u2d = Util2d(self.model, shp, self.dtype, item,
                                  fmtin=self.fmtin, name=name,
                                  ext_filename=ext_filename,
                                  locat=self.locat,
@@ -817,7 +838,13 @@ class Util3d(object):
         u2ds = []
         for k in range(nlay):
             u2d_name = name + '_Layer_{0}'.format(k)
-            u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, u2d_name,
+            if nrow is None:
+                nr = 1
+                nc = ncol[k]
+            else:
+                nr = nrow
+                nc = ncol
+            u2d = Util2d.load(f_handle, model, (nr, nc), dtype, u2d_name,
                               ext_unit_dict=ext_unit_dict,
                               array_format=array_format)
             u2ds.append(u2d)
