@@ -251,7 +251,7 @@ class Modflow(BaseModel):
         # unstructured dis
         dis = self.get_package('DISU')
         if (dis):
-            return None, dis.nodelay.array[0, :], dis.nlay, dis.nper
+            return None, dis.nodelay.array[:], dis.nlay, dis.nper
         # no dis
         return 0, 0, 0, 0
 
