@@ -43,6 +43,9 @@ class SpatialReference(object):
         a PROJ4 string that identifies the grid in space. warning: case
         sensitive!
 
+    units : string
+        Units for the grid.  Must be either feet or meters
+
     epsg : int
         EPSG code that identifies the grid in space. Can be used in lieu of
         proj4. PROJ4 attribute will auto-populate if there is an internet
@@ -835,10 +838,15 @@ class SpatialReferenceUnstructured(SpatialReference):
 
     ncpl : ndarray
         array containing the number of cells per layer.  ncpl.sum() must be
-        equal to the total number of cells in the grid.  If all values of ncpl
-        equal len(iverts), then the grid is considered to be layered and the
-        grid specified by verts and iverts applies to all layers. If not then
-        len(iverts) must equal ncpl.sum().
+        equal to the total number of cells in the grid.
+
+    layered : boolean
+        flag to indicated that the grid is layered.  In this case, the vertices
+        define the grid for single layer, and all layers use this same grid.
+        In this case the ncpl value for each layer must equal len(iverts).
+        If not layered, then verts and iverts are specified for all cells and
+        all layers in the grid.  In this case, npcl.sum() must equal
+        len(iverts).
 
     lenuni : int
         the length units flag from the discretization package
@@ -846,6 +854,9 @@ class SpatialReferenceUnstructured(SpatialReference):
     proj4_str: str
         a PROJ4 string that identifies the grid in space. warning: case
         sensitive!
+
+    units : string
+        Units for the grid.  Must be either feet or meters
 
     epsg : int
         EPSG code that identifies the grid in space. Can be used in lieu of
@@ -865,11 +876,6 @@ class SpatialReferenceUnstructured(SpatialReference):
     ycenter : ndarray
         array of y cell centers
 
-    vertices : 1D array
-        1D array of cell vertices for whole grid in C-style (row-major) order
-        (same as np.ravel())
-
-
     Notes
     -----
 
@@ -882,7 +888,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         self.verts = verts
         self.iverts = iverts
         self.ncpl = ncpl
-        self.layered = True
+        self.layered = layered
         self.lenuni = lenuni
         self._proj4_str = proj4_str
         self.epsg = epsg
@@ -907,6 +913,57 @@ class SpatialReferenceUnstructured(SpatialReference):
             assert len(iverts) == ncpl.sum(), msg
             assert self.xc.shape[0] == self.ncpl.sum()
             assert self.yc.shape[0] == self.ncpl.sum()
+        return
+
+    def write_shapefile(self, filename='grid.shp'):
+        """
+        Write shapefile of the grid
+
+        Parameters
+        ----------
+        filename : string
+            filename for shapefile
+
+        Returns
+        -------
+
+        """
+        raise NotImplementedError()
+        return
+
+    def write_gridSpec(self, filename):
+        """
+        Write a PEST-style grid specification file
+
+        Parameters
+        ----------
+        filename : string
+            filename for grid specification file
+
+        Returns
+        -------
+
+        """
+        raise NotImplementedError()
+        return
+
+    @classmethod
+    def from_gridspec(cls, fname):
+        """
+        Create a new SpatialReferenceUnstructured grid from an PEST
+        grid specification file
+
+        Parameters
+        ----------
+        fname : string
+            File name for grid specification file
+
+        Returns
+        -------
+            sru : flopy.utils.reference.SpatialReferenceUnstructured
+
+        """
+        raise NotImplementedError()
         return
 
     @classmethod
