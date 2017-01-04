@@ -757,7 +757,7 @@ class Gridgen(object):
 
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(-sr.rotation)
+        s += '  ROTATION_ANGLE = {}\n'.format(sr.rotation)
         s += '  X_OFFSET = {}\n'.format(xllrot)
         s += '  Y_OFFSET = {}\n'.format(yllrot)
         s += '  NLAY = {}\n'.format(self.dis.nlay)
