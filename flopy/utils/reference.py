@@ -403,8 +403,13 @@ class SpatialReference(object):
                    'now is positive counterclockwise.')
             warnings.warn(msg)
         # set the origin priority based on the left corner specified
-        # (the other left corner will be calculated)
-        if xll is not None:
+        # (the other left corner will be calculated).  If none are specified
+        # then default to upper left
+        if xul is None and yul is None and xll is None and yll is None:
+            self.origin_loc = 'ul'
+            xul = 0.
+            yul = self.delc.sum()
+        elif xll is not None:
             self.origin_loc = 'll'
         else:
             self.origin_loc = 'ul'

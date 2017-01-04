@@ -5,7 +5,7 @@ import subprocess
 
 # flopy imports
 from ..modflow.mfdisu import ModflowDisU
-from util_array import read1d, Util2d
+from .util_array import read1d, Util2d
 from ..mbase import which
 
 try:
@@ -85,8 +85,8 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.e30):
     idx = np.isnan(a)
     a[idx] = np.float(nodata)
     # write
-    with open(fname, 'w') as f:
-        f.write(header)
+    with open(fname, 'wb') as f:
+        f.write(header.encode('ascii'))
         np.savetxt(f, a, fmt='%15.6e')
     return
 
