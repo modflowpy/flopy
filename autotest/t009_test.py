@@ -7,6 +7,7 @@ import glob
 import shutil
 import numpy as np
 import matplotlib
+import matplotlib.pyplot as plt
 
 matplotlib.use('agg')
 import flopy
@@ -236,8 +237,17 @@ def test_transient_example():
     assert m2.sfr.unit_number[1] == 49
     assert 49 in m2.package_units
 
+
+def test_sfr_plot():
+    #m = flopy.modflow.Modflow.load('test1ss.nam', model_ws=path, verbose=False)
+    #sfr = m.get_package('SFR')
+    #sfr.plot(key='strtop')
+    #plt.show()
+    #assert True
+
 if __name__ == '__main__':
     #test_sfr()
     #test_sfr_renumbering()
     #test_example()
-    test_transient_example()
+    #test_transient_example()
+    test_sfr_plot()
