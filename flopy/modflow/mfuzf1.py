@@ -218,7 +218,7 @@ class ModflowUzf1(Package):
             unitnumber = ModflowUzf1.defaultunit()
 
         # update external file information with cbc output, if necessary
-        if ipakcb is not None:
+        if ipakcb is not None and ipakcb != 0:
             pth = model.name + '.' + ModflowUzf1.ftype() + '.cbc'
             model.add_externalbudget(ipakcb, fname=pth)
         else:
