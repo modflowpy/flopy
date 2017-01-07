@@ -280,6 +280,7 @@ def shape_attr_name(name, length=6, keep_layer=False):
         n = n[:length]
     return n
 
+
 def enforce_10ch_limit(names):
     """Enforce 10 character limit for fieldnames.
     Add suffix for duplicate names starting at 0.
@@ -301,6 +302,7 @@ def enforce_10ch_limit(names):
             names[i] = n[:9] + str(suffix[n].pop(0))
     return names
 
+
 def get_pyshp_field_info(dtypename):
     """Get pyshp dtype information for a given numpy dtype."""
     fields = {'int': ('N', 20, 0),
@@ -317,6 +319,7 @@ def get_pyshp_field_info(dtypename):
     else:
         return fields['str']
 
+
 def get_pyshp_field_dtypes(code):
     """Returns a numpy dtype for a pyshp field type."""
     dtypes = {'N': np.int,
@@ -324,6 +327,7 @@ def get_pyshp_field_dtypes(code):
               'L': np.bool,
               'C': np.object}
     return dtypes.get(code, np.object)
+
 
 def shp2recarray(shpname):
     """Read a shapefile into a numpy recarray.
@@ -355,6 +359,7 @@ def shp2recarray(shpname):
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
     return recarray
+
 
 def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     """Write a numpy record array to a shapefile, using a corresponding
