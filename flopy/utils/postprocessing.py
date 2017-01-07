@@ -94,5 +94,4 @@ def get_transmissivities(heads, m,
 
     # compute transmissivities
     T = thick * hk
-
     return T
