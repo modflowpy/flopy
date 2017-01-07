@@ -17,8 +17,8 @@ def test_get_transmissivities():
     sctop = [-.25, .5, 1.7, 1.5, 3., 2.5]
     scbot = [-1., -.5, 1.2, 0.5, 1.5, -.2]
     heads = np.array([[1., 2.0, 2.05, 3., 4., 2.5],
-                      [1.1, 2.1, 2.2, 3., 3.5, 3.],
-                      [1.2, 2.3, 2.4, 3., 3.4, 3.2]
+                      [1.1, 2.1, 2.2, 2., 3.5, 3.],
+                      [1.2, 2.3, 2.4, 0.6, 3.4, 3.2]
             ])
     nl, nr = heads.shape
     nc = nr
@@ -37,13 +37,13 @@ def test_get_transmissivities():
     T = get_transmissivities(heads, m, r=r, c=c, sctop=sctop, scbot=scbot)
     assert (T - np.array([[0., 0, 0., 0., 0.2, 0.2],
                           [0., 0., 1., 1., 1., 2.],
-                          [0., 1., 0., 1., 0., 2.]])).sum() < 1e-3
+                          [0., 1., 0., 0.2, 0., 2.]])).sum() < 1e-3
 
     # test without specifying open intervals
     T = get_transmissivities(heads, m, r=r, c=c)
     assert (T - np.array([[0., 0., 0.1, 0.2, 0.2, 0.2],
                           [0.2, 2., 2., 2., 2., 2.],
-                          [2., 2., 2., 2., 2., 2.]])).sum() < 1e-3
+                          [2., 2., 2., 1.2, 2., 2.]])).sum() < 1e-3
 
 if __name__ == '__main__':
     test_get_transmissivities()
