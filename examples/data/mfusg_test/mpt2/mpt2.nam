@@ -1,0 +1,10 @@
+LIST	       2 mpt2.list
+DISU          11 mpt2.disu 
+BAS6          13 mpt2.bas 
+LPF           15 mpt2.lpf
+OC            14 mpt2.oc 
+# cannot load recharge yet --- RCH           16 mpt2.rch
+WEL           17 mpt2.wel
+DATA(BINARY)  51 mpt2.hed REPLACE
+DATA(BINARY)  50 mpt2.bud REPLACE
+SMS           27 mpt2.sms 

@@ -1,0 +1,11 @@
+LIST                  1 45usg.LST
+BAS6                  2 45usg.BAS
+DISU                  3 45usg.DISU
+WEL                  12 45usg.WEL
+DRN                  13 45usg.DRN
+# rch not supported yet -- RCH                  18 45usg.RCH
+OC                   22 45usg.OC
+LPF                  33 45usg.LPF
+SMS                  27 45usg.sms
+DATA(BINARY)         50 45usg.BUD
+DATA(BINARY)         51 45usg.HED

@@ -412,7 +412,10 @@ class ModflowSms(Package):
             if model.verbose:
                 print(
                     '   loading THETA AKAPPA GAMMA AMOMENTUM NUMTRACK BTOL BREDUC RESLIM...')
-            line = f.readline()
+            while True:
+                line = f.readline()
+                if line[0] != '#':
+                    break
             ll = line_parse(line)
             theta = float(ll.pop(0))
             akappa = float(ll.pop(0))
@@ -444,7 +447,10 @@ class ModflowSms(Package):
             if model.verbose:
                 print(
                     '    loading IACL NORDER LEVEL NORTH IREDSYS RRCTOL IDROPTOL EPSRN')
-            line = f.readline()
+            while True:
+                line = f.readline()
+                if line[0] != '#':
+                    break
             ll = line_parse(line)
             iacl = int(ll.pop(0))
             norder = int(ll.pop(0))
@@ -474,7 +480,10 @@ class ModflowSms(Package):
             if model.verbose:
                 print(
                     '    loading [CLIN] IPC ISCL IORD RCLOSEPCGU [RELAXPCGU]')
-            line = f.readline()
+            while True:
+                line = f.readline()
+                if line[0] != '#':
+                    break
             ll = line_parse(line)
             if 'cg' in line.lower():  # this will get cg or bcgs
                 clin = ll.pop(0)

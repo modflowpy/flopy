@@ -109,13 +109,16 @@ class ModelMap(object):
         Returns
         -------
         quadmesh : matplotlib.collections.QuadMesh
+
         """
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
         elif a.ndim == 2:
             plotarray = a
+        elif a.ndim == 1:
+            plotarray = a
         else:
-            raise Exception('Array must be of dimension 2 or 3')
+            raise Exception('Array must be of dimension 1, 2 or 3')
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
@@ -123,8 +126,13 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
-                                 **kwargs)
+
+        # quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
+        #                          **kwargs)
+        quadmesh = self.sr.plot_array(plotarray)
+        quadmesh.set(**kwargs)
+        ax.add_collection(quadmesh)
+
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
         return quadmesh
@@ -152,8 +160,10 @@ class ModelMap(object):
             plotarray = a[self.layer, :, :]
         elif a.ndim == 2:
             plotarray = a
+        elif a.ndim == 1:
+            plotarray = a
         else:
-            raise Exception('Array must be of dimension 2 or 3')
+            raise Exception('Array must be of dimension 1, 2 or 3')
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
@@ -165,8 +175,9 @@ class ModelMap(object):
             if 'cmap' in kwargs.keys():
                 cmap = kwargs.pop('cmap')
             cmap = None
-        contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
-                                 plotarray, **kwargs)
+        # contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
+        #                         plotarray, **kwargs)
+        contour_set = self.sr.contour_array(ax, plotarray, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
 
@@ -271,7 +282,7 @@ class ModelMap(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        lc = self.get_grid_line_collection(**kwargs)
+        lc = self.sr.get_grid_line_collection(**kwargs)
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -819,12 +830,3 @@ class ModelMap(object):
             cb.set_label(colorbar_label)
         return sp
 
-    def get_grid_line_collection(self, **kwargs):
-        """
-        Get a LineCollection of the grid
-
-        """
-        from matplotlib.collections import LineCollection
-
-        lc = LineCollection(self.sr.get_grid_lines(), **kwargs)
-        return lc

@@ -37,7 +37,9 @@ before_install:
     - "sh -e /etc/init.d/xvfb start"
 
 # command to install dependencies
-install: "pip install -r requirements.travis.txt"
+install:
+    - pip install -r requirements.travis.txt
+
 
 # command to run tests
 script: 

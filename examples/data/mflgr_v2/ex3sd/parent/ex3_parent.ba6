@@ -1,9 +1,0 @@
-#Meandering River - 3 layers, natural gradient - 02/15/2006
-FREE CHTOCH
-OPEN/CLOSE parent/ex3_parent.ib     1   (FREE)          8                       ibound layer 1
-OPEN/CLOSE parent/ex3_parent.ib     1   (FREE)          8                       ibound layer 2
-OPEN/CLOSE parent/ex3_parent.ib     1   (FREE)          8                       ibound layer 3
- -999.0000
-OPEN/CLOSE parent/ex3_parent.shd     1.  (FREE)         -1                      shead layer 1
-OPEN/CLOSE parent/ex3_parent.shd     1.  (FREE)         -1                      shead layer 2
-OPEN/CLOSE parent/ex3_parent.shd     1.  (FREE)         -1                      shead layer 3

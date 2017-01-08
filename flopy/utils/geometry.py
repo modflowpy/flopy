@@ -315,3 +315,63 @@ def shape(pyshp_shpobj):
              1: Point}
     flopy_geometype = types[pyshp_shpobj.shapeType]
     return flopy_geometype(pyshp_shpobj.points)
+
+
+def get_polygon_area(verts):
+    """
+    Calculate the area of a closed polygon
+
+    Parameters
+    ----------
+
+    verts : numpy.ndarray
+        polygon vertices
+
+    Returns
+    -------
+    area : float
+        area of polygon centroid
+
+    """
+    nverts = verts.shape[0]
+    a = 0.
+    for iv in range(nverts - 1):
+        x = verts[iv, 0]
+        y = verts[iv, 1]
+        xp1 = verts[iv + 1, 0]
+        yp1 = verts[iv + 1, 1]
+        a += (x * yp1 - xp1 * y)
+    a = abs(a * 0.5)
+    return a
+
+
+def get_polygon_centroid(verts):
+    """
+    Calculate the centroid of a closed polygon
+
+    Parameters
+    ----------
+
+    verts : numpy.ndarray
+        polygon vertices
+
+    Returns
+    -------
+    centroid : tuple
+        (x, y) of polygon centroid
+
+    """
+    nverts = verts.shape[0]
+    cx = 0.
+    cy = 0.
+    for i in range(nverts - 1):
+        x = verts[i, 0]
+        y = verts[i, 1]
+        xp1 = verts[i + 1, 0]
+        yp1 = verts[i + 1, 1]
+        cx += (x + xp1) * (x * yp1 - xp1 * y)
+        cy += (y + yp1) * (x * yp1 - xp1 * y)
+    a = get_polygon_area(verts)
+    cx = cx * 1./ 6. / a
+    cy = cy * 1./ 6. / a
+    return cx, cy

@@ -1,9 +1,0 @@
-         3        15        15         1         1         2
- 0 0 0 
-  CONSTANT 102.94000
-  CONSTANT 68.626667
-  EXTERNAL 50 1.0 (FREE)     5                                 top layer 1
-  EXTERNAL 50 1.0 (FREE)     5                                 bottom layer 1
-  EXTERNAL 50 1.0 (FREE)     5                                 bottom layer 2
-  EXTERNAL 50 1.0 (FREE)     5                                 bottom layer 3
-        1.         1       1.        SS
