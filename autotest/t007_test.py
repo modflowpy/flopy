@@ -208,8 +208,7 @@ def test_sr():
     botm = [-1]
     ms = flopy.modflow.Modflow(rotation=20.)
     dis = flopy.modflow.ModflowDis(ms, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr,
-                                   delc=delc, top=top, botm=botm)
+                                   delr=delr, delc=delc, top=top, botm=botm)
     bas = flopy.modflow.ModflowBas(ms, ifrefm=True)
 
     # test instantiation of an empty sr object
@@ -225,7 +224,7 @@ def test_sr():
 
     #txt = 'yul does not approximately equal 100 - ' + \
     #      '(xul, yul) = ({}, {})'.format( ms.sr.yul, ms.sr.yul)
-    assert abs(ms.sr.yul - 0) < 1e-3#, txt
+    assert abs(ms.sr.yul - Ly) < 1e-3#, txt
     ms.sr.xul = 111
     assert ms.sr.xul == 111
 
@@ -571,19 +570,19 @@ def build_sfr_netcdf():
 
 
 if __name__ == '__main__':
-    test_shapefile()
+    #test_shapefile()
     # test_shapefile_ibound()
     # test_netcdf_overloads()
     #test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    #test_sr()
+    test_sr()
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
     #test_sr_scaling()
     #test_dynamic_xll_yll()
-    test_namfile_readwrite()
+    #test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()
     #for namfile in namfiles:

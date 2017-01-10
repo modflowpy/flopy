@@ -1180,6 +1180,10 @@ class Transient2d(object):
         assert len(shape) == 2, "Transient2d error: shape arg must be " + \
                                 "length two (nrow, ncol), not " + \
                                 str(shape)
+        if shape[0] is None:
+            # allow for unstructured so that ncol changes by layer
+            shape = (1, shape[1][0])
+
         self.shape = shape
         self.dtype = dtype
         self.__value = value

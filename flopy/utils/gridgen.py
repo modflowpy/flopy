@@ -5,7 +5,8 @@ import subprocess
 
 # flopy imports
 from ..modflow.mfdisu import ModflowDisU
-from util_array import read1d, Util2d
+from .util_array import read1d, Util2d
+from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 
 try:
@@ -85,8 +86,8 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.e30):
     idx = np.isnan(a)
     a[idx] = np.float(nodata)
     # write
-    with open(fname, 'w') as f:
-        f.write(header)
+    with open(fname, 'wb') as f:
+        f.write(header.encode('ascii'))
         np.savetxt(f, a, fmt='%15.6e')
     return
 
@@ -118,6 +119,7 @@ class Gridgen(object):
                  surface_interpolation='replicate'):
         self.nodes = 0
         self.nja = 0
+        self.nodelay = np.zeros((dis.nlay), dtype=np.int)
         self._vertdict = {}
         self.dis = dis
         self.model_ws = model_ws
@@ -342,6 +344,16 @@ class Gridgen(object):
         # Create a dictionary that relates nodenumber to vertices
         self._mkvertdict()
 
+        # read and save nodelay array to self
+        fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
+        f = open(fname, 'r')
+        self.nodelay = read1d(f, self.nodelay)
+        f.close()
+
+        # Create a recarray of the grid polygon shapefile
+        shapename = os.path.join(self.model_ws, 'qtgrid')
+        self.qtra = shp2recarray(shapename)
+
         return
 
     def get_vertices(self, nodenumber):
@@ -474,8 +486,7 @@ class Gridgen(object):
             The plot axis.  If not provided it, plt.gca() will be used.
             If there is not a current axis then a new one will be created.
         layer : int
-            Not working!  This should show only this layer, but there is no
-            way to do this yet with plot_shapefile.
+            Layer number to plot
         cmap : string
             Name of colormap to use for polygon shading (default is 'Dark2')
         edgecolor : string
@@ -497,14 +508,18 @@ class Gridgen(object):
 
         """
         import matplotlib.pyplot as plt
-        from flopy.plot import plot_shapefile, shapefile_extents
+        from ..plot import plot_shapefile, shapefile_extents
+
         if ax is None:
             ax = plt.gca()
         shapename = os.path.join(self.model_ws, 'qtgrid')
         xmin, xmax, ymin, ymax = shapefile_extents(shapename)
+
+        idx = np.where(self.qtra.layer == layer)[0]
+
         pc = plot_shapefile(shapename, ax=ax, edgecolor=edgecolor,
                             facecolor=facecolor, cmap=cmap, a=a,
-                            masked_values=masked_values, **kwargs)
+                            masked_values=masked_values, idx=idx, **kwargs)
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
         return pc
@@ -757,7 +772,7 @@ class Gridgen(object):
 
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(-sr.rotation)
+        s += '  ROTATION_ANGLE = {}\n'.format(sr.rotation)
         s += '  X_OFFSET = {}\n'.format(xllrot)
         s += '  Y_OFFSET = {}\n'.format(yllrot)
         s += '  NLAY = {}\n'.format(self.dis.nlay)
