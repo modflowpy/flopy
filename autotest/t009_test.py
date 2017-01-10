@@ -244,6 +244,7 @@ def test_sfr_plot():
     #sfr.plot(key='strtop')
     #plt.show()
     #assert True
+    pass
 
 if __name__ == '__main__':
     #test_sfr()
