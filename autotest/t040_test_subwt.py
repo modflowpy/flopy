@@ -39,10 +39,12 @@ def build_model():
     flopy.modflow.ModflowWel(ml, stress_period_data=
                             {0: sp1_wells, 1: sp2_wells, 2: sp1_wells})
 
-    flopy.modflow.ModflowSubwt(ml)
+    flopy.modflow.ModflowSubwt(ml,iswtoc=1)
 
     ml.write_input()
     ml.run_model()
+
+
 
 if __name__ == "__main__":
     build_model()

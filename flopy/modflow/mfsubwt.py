@@ -377,7 +377,7 @@ class ModflowSubwt(Package):
                                               self.nsystm,self.ithk,
                                               self.ivoid, self.istpcs,
                                               self.icrcc))
-        f.write(self.lnwt.string+'\n')
+        f.write(self.lnwt.string)
         f.write('{} {} {} {} {} {} '.format(self.izcfl, self.izcfm,
                                           self.iglfl, self.iglfm,
                                           self.iestfl,self.iestfm))
@@ -409,7 +409,7 @@ class ModflowSubwt(Package):
             f.write(p[k].get_file_entry())
 
         if self.iswtoc > 0:
-            [f.write("{0}".format(i) for i in self.ds16)]
+            [f.write("{0} ".format(i)) for i in self.ds16]
             f.write('  #dataset 16\n')
             t = self.ds17.copy()
             t[0:4] += 1 #zero-based to one-based
