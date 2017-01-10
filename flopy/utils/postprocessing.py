@@ -3,7 +3,7 @@ import numpy as np
 def get_transmissivities(heads, m,
                          r=None, c=None, x=None, y=None,
                          sctop=None, scbot=None, nodata=-999):
-    """Computes a transmissivities in each model layer at specified locations and open intervals.
+    """Computes transmissivity in each model layer at specified locations and open intervals.
     A saturated thickness is determined for each row, column or x, y location supplied,
     based on the open interval (sctop, scbot), if supplied, otherwise the layer tops and bottoms
     and the water table are used.
