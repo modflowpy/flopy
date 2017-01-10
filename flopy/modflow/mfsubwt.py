@@ -182,7 +182,7 @@ class ModflowSubwt(Package):
                  sgs=2.0,thick=1.0,sse=1.0e-4,ssv=1.0e-3,
                  cr=0.01,cc=0.25,void=0.82,sub=0.0,pcsoff=0.0,
                  pcs=0.0,ds16=None,ds17=None,
-                 extension='sub', unitnumber=33):
+                 extension='swt', unitnumber=33):
         """
         Package constructor.
 
@@ -256,18 +256,18 @@ class ModflowSubwt(Package):
 
         self.lnwt = Util2d(model,(self.nsystm,),np.int,lnwt,name="lnwt",
                            locat=self.unit_number[0])
-        self.gl0 = Util2d(model,(nrow,ncol),np.float,gl0,name="gl0",
+        self.gl0 = Util2d(model,(nrow,ncol),np.float32,gl0,name="gl0",
                           locat=self.unit_number[0])
-        self.sms = Util2d(model,(nrow,ncol),np.float,sms,name="sms",
+        self.sgs = Util2d(model,(nrow,ncol),np.float32,sgs,name="sgs",
                           locat=self.unit_number[0])
-        self.sgm = Util2d(model,(nrow,ncol),np.float,sgm,name="sgm",
+        self.sgm = Util2d(model,(nrow,ncol),np.float32,sgm,name="sgm",
                           locat=self.unit_number[0])
 
         if isinstance(thick,list):
             assert len(thick) == self.nsystm
         else:
             thick = [thick] * self.nsystm
-        self.thick = [Util2d(model,(nrow,ncol),np.float,t,name="thick_nsy{0}"\
+        self.thick = [Util2d(model,(nrow,ncol),np.float32,t,name="thick_nsy{0}"\
                              .format(i),locat=self.unit_number[0])\
                       for i,t in enumerate(thick)]
 
@@ -276,14 +276,14 @@ class ModflowSubwt(Package):
                 assert len(cc) == self.nsystm
             else:
                 cc = [cc] * self.nsystm
-            self.cc = [Util2d(model,(nrow,ncol),np.float,t,name="cc_nsy{0}"\
+            self.cc = [Util2d(model,(nrow,ncol),np.float32,t,name="cc_nsy{0}"\
                              .format(i),locat=self.unit_number[0])\
                        for i,t in enumerate(cc)]
             if isinstance(cr,list):
                 assert len(cr) == self.nsystm
             else:
                 cr = [cr] * self.nsystm
-            self.cr = [Util2d(model,(nrow,ncol),np.float,t,name="cr_nsy{0}"\
+            self.cr = [Util2d(model,(nrow,ncol),np.float32,t,name="cr_nsy{0}"\
                              .format(i),locat=self.unit_number[0])\
                        for i,t in enumerate(cr)]
 
@@ -292,14 +292,14 @@ class ModflowSubwt(Package):
                 assert len(sse) == self.nsystm
             else:
                 sse = [sse] * self.nsystm
-            self.sse = [Util2d(model,(nrow,ncol),np.float,t,name="sse_nsy{0}"\
+            self.sse = [Util2d(model,(nrow,ncol),np.float32,t,name="sse_nsy{0}"\
                              .format(i),locat=self.unit_number[0])\
                         for i,t in enumerate(sse)]
             if isinstance(ssv,list):
                 assert len(ssv) == self.nsystm
             else:
                 ssv = [ssv] * self.nsystm
-            self.ssv = [Util2d(model,(nrow,ncol),np.float,t,name="ssv_nsy{0}"\
+            self.ssv = [Util2d(model,(nrow,ncol),np.float32,t,name="ssv_nsy{0}"\
                              .format(i),locat=self.unit_number[0])\
                         for i,t in enumerate(ssv)]
 
@@ -307,7 +307,7 @@ class ModflowSubwt(Package):
             assert len(void) == self.nsystm
         else:
             void = [void] * self.nsystm
-        self.void = [Util2d(model,(nrow,ncol),np.float,t,name="void_nsy{0}"\
+        self.void = [Util2d(model,(nrow,ncol),np.float32,t,name="void_nsy{0}"\
                              .format(i),locat=self.unit_number[0])\
                      for i,t in enumerate(void)]
 
@@ -315,15 +315,16 @@ class ModflowSubwt(Package):
             assert len(sub) == self.nsystm
         else:
             sub = [sub] * self.nsystm
-        self.sub = [Util2d(model,(nrow,ncol),np.float,t,name="sub_nsy{0}"\
+        self.sub = [Util2d(model,(nrow,ncol),np.float32,t,name="sub_nsy{0}"\
                              .format(i),locat=self.unit_number[0])\
                     for i,t in enumerate(sub)]
 
         if self.istpcs == 0:
-            self.pcs = Util3d(model,(nlay,nrow,ncol),np.float,pcs,name="pcs",
+            self.pcs = Util3d(model,(nlay,nrow,ncol),np.float32,pcs,name="pcs",
                               locat=self.unit_number[0])
+            self.pcsoff = None
         else:
-            self.pcsoff = Util3d(model,(nlay,nrow,ncol),np.float,pcsoff,
+            self.pcsoff = Util3d(model,(nlay,nrow,ncol),np.float32,pcsoff,
                                  name="pcsoff",locat=self.unit_number[0])
 
         if self.iswtoc > 0:
@@ -372,10 +373,10 @@ class ModflowSubwt(Package):
         # First line: heading
         f.write('{}\n'.format(self.heading))
         # write dataset 1
-        f.write(
-            '{} {} {} {} {} {} {}'.format(self.ipakcb, self.iswtoc, self.nsystm,
-                                        self.ithk, self.ivoid, self.istpcs,
-                                        self.icrcc))
+        f.write('{} {} {} {} {} {} {}\n'.format(self.ipakcb, self.iswtoc,
+                                              self.nsystm,self.ithk,
+                                              self.ivoid, self.istpcs,
+                                              self.icrcc))
         f.write(self.lnwt.string+'\n')
         f.write('{} {} {} {} {} {} '.format(self.izcfl, self.izcfm,
                                           self.iglfl, self.iglfm,
@@ -407,7 +408,7 @@ class ModflowSubwt(Package):
         for k in range(nlay):
             f.write(p[k].get_file_entry())
 
-        if self.isuboc > 0:
+        if self.iswtoc > 0:
             [f.write("{0}".format(i) for i in self.ds16)]
             f.write('  #dataset 16\n')
             t = self.ds17.copy()
@@ -631,11 +632,11 @@ class ModflowSubwt(Package):
         unitnumber = None
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSub.ftype():
+                if value.filetype == ModflowSubwt.ftype():
                     unitnumber = key
 
         # create sub instance
-        sub = ModflowSub(model, ipakcb=ipakcb, isuboc=isuboc, idsave=idsave,
+        sub = ModflowSubwt(model, ipakcb=ipakcb, isuboc=isuboc, idsave=idsave,
                          idrest=idrest,
                          nndb=nndb, ndb=ndb, nmz=nmz, nn=nn, ac1=ac1, ac2=ac2,
                          itmin=itmin,
@@ -648,8 +649,8 @@ class ModflowSubwt(Package):
 
     @staticmethod
     def ftype():
-        return 'SUB'
+        return 'SWT'
 
     @staticmethod
     def defaultunit():
-        return 32
+        return 33

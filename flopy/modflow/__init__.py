@@ -47,6 +47,7 @@ from .mfhyd import ModflowHyd
 from .mfhob import ModflowHob
 from .mfflwob import ModflowFlwob
 from .mfaddoutsidefile import mfaddoutsidefile
+from .mfsubwt import ModflowSubwt
 
 # unstructured
 from .mfdisu import ModflowDisU
