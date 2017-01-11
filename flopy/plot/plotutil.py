@@ -514,7 +514,7 @@ def shapefile_get_vertices(shp):
     return vertices
     
 
-def shapefile_to_patch_collection(shp, radius=500.):
+def shapefile_to_patch_collection(shp, radius=500., idx=None):
     """
     Create a patch collection from the shapes in a shapefile
 
@@ -524,6 +524,14 @@ def shapefile_to_patch_collection(shp, radius=500.):
         Name of the shapefile to convert to a PatchCollection.
     radius : float
         Radius of circle for points in the shapefile.  (Default is 500.)
+    idx : iterable int
+        A list or array that contains shape numbers to include in the
+        patch collection.  Return all shapes if not specified.
+
+    Returns
+    -------
+        pc : matplotlib.collections.PatchCollection
+            Patch collection of shapes in the shapefile
 
     """
     try:
@@ -537,14 +545,16 @@ def shapefile_to_patch_collection(shp, radius=500.):
     shapes = sf.shapes()
     nshp = len(shapes)
     ptchs = []
-    for n in range(nshp):
+    if idx is None:
+        idx = range(nshp)
+    for n in idx:
         st = shapes[n].shapeType
         if st in [1, 8, 11, 21]:
-            #points
+            # points
             for p in shapes[n].points:
                 ptchs.append(Circle( (p[0], p[1]), radius=radius))
         elif st in [3, 13, 23]:
-            #line
+            # line
             vertices = []
             for p in shapes[n].points:
                 vertices.append([p[0], p[1]])
@@ -552,7 +562,7 @@ def shapefile_to_patch_collection(shp, radius=500.):
             path = Path(vertices)
             ptchs.append(PathPatch(path, fill=False))
         elif st in [5, 25, 31]:
-            #polygons
+            # polygons
             pts = np.array(shapes[n].points)
             prt = shapes[n].parts
             par = list(prt) + [pts.shape[0]]
@@ -561,10 +571,10 @@ def shapefile_to_patch_collection(shp, radius=500.):
     pc = PatchCollection(ptchs)
     return pc
 
+
 def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
                    edgecolor='scaled', facecolor='scaled',
-                   a=None, masked_values=None,
-                   **kwargs):
+                   a=None, masked_values=None, idx=None, **kwargs):
     """
     Generic function for plotting a shapefile.
 
@@ -586,6 +596,9 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
         Array to plot.
     masked_values : iterable of floats, ints
         Values to mask.
+    idx : iterable int
+        A list or array that contains shape numbers to include in the
+        patch collection.  Return all shapes if not specified.
     kwargs : dictionary
         Keyword arguments that are passed to PatchCollection.set(``**kwargs``).
         Some common kwargs would be 'linewidths', 'linestyles', 'alpha', etc.
@@ -620,7 +633,7 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     if ax is None:
         ax = plt.gca()
     cm = plt.get_cmap(cmap)
-    pc = shapefile_to_patch_collection(shp, radius=radius)
+    pc = shapefile_to_patch_collection(shp, radius=radius, idx=idx)
     pc.set(**kwargs)
     if a is None:
         nshp = len(pc.get_paths())

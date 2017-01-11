@@ -188,7 +188,7 @@ class ModflowDisU(Package):
 
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
-    >>> dis = flopy.modflow.ModflowDisU(m)
+    >>> disu = flopy.modflow.ModflowDisU(m)
 
     """
 
@@ -233,13 +233,16 @@ class ModflowDisU(Package):
 
         # NODELAY
         if nodelay is None:
-            nodelay = nodes / nlay
+            npl = int(nodes / nlay)
+            nodelay = []
+            for k in range(self.nlay):
+                nodelay.append(npl)
         self.nodelay = Util2d(model, (self.nlay,), np.int, nodelay,
                                name='nodelay', locat=self.unit_number[0])
 
         # set ncol and nrow for array readers
         nrow = None
-        ncol = self.nodelay.array[0, :]
+        ncol = self.nodelay.array[:]
 
         # Top and bot are both 1d arrays of size nodes
         self.top = Util3d(model, (nlay, nrow, ncol), np.float32, top, name='top',
@@ -261,6 +264,7 @@ class ModflowDisU(Package):
             raise Exception('iac must be provided')
         self.iac = Util2d(model, (self.nodes,), np.int,
                            iac, name='iac', locat=self.unit_number[0])
+        assert self.iac.array.sum() == njag, 'The sum of iac must equal njag.'
         if ja is None:
             raise Exception('ja must be provided')
         self.ja = Util2d(model, (self.njag,), np.int,
@@ -274,7 +278,7 @@ class ModflowDisU(Package):
 
         # Connection lengths
         if idsymrd == 1:
-            njags = (njag - nodes) / 2
+            njags = int((njag - nodes) / 2)
             if cl1 is None:
                 raise Exception('idsymrd is 1 but cl1 was not specified.')
             if cl2 is None:
@@ -327,7 +331,7 @@ class ModflowDisU(Package):
     def __calculate_thickness(self):
         # set ncol and nrow for array readers
         nrow = None
-        ncol = self.nodelay.array[0, :]
+        ncol = self.nodelay.array
         nlay = self.nlay
         thk = []
         for k in range(self.nlay):
@@ -473,7 +477,7 @@ class ModflowDisU(Package):
             print('   IDSYMRD {}'.format(idsymrd))
 
         # Calculate njags
-        njags = (njag - nodes) / 2
+        njags = int((njag - nodes) / 2)
         if model.verbose:
             print('   NJAGS calculated as {}'.format(njags))
 
@@ -490,6 +494,7 @@ class ModflowDisU(Package):
             print('   loading NODELAY...')
         nodelay = Util2d.load(f, model, (1, nlay), np.int, 'nodelay',
                                ext_unit_dict)
+        nodelay = nodelay.array.reshape((nlay))
         if model.verbose:
             print('   NODELAY {}'.format(nodelay))
 
@@ -502,8 +507,8 @@ class ModflowDisU(Package):
                                ext_unit_dict)
             top[k] = tpk
         if model.verbose:
-            for tpk in top:
-                print('   TOP layer {}: {}'.format(k, tpk))
+            for k, tpk in enumerate(top):
+                print('   TOP layer {}: {}'.format(k, tpk.array))
 
         # dataset 5 -- bot
         if model.verbose:
@@ -514,8 +519,8 @@ class ModflowDisU(Package):
                                ext_unit_dict)
             bot[k] = btk
         if model.verbose:
-            for btk in bot:
-                print('   BOT layer {}: {}'.format(k, btk))
+            for k, btk in enumerate(bot):
+                print('   BOT layer {}: {}'.format(k, btk.array))
 
         # dataset 6 -- area
         if model.verbose:
@@ -523,18 +528,16 @@ class ModflowDisU(Package):
         if ivsd == -1:
             area = Util2d.load(f, model, (1, nodelay[0]), np.float32, 'area',
                                    ext_unit_dict)
+            area = area.array.reshape((nodelay[0]))
         else:
             area = [0] * nlay
-            #area = np.empty((nodes), dtype=np.float32)
-            #istart = 0
             for k in range(nlay):
                 ak = Util2d.load(f, model, (1, nodelay[k]), np.float32, 'ak',
                                    ext_unit_dict)
-                #area[istart : istart + nodelay[k]] = ak.array.reshape((nodelay[k]))
-                #istart += nodelay[k]
                 area[k] = ak
         if model.verbose:
-            print('   AREA {}'.format(area))
+            for k, ak in enumerate(area):
+                print('   AREA layer {}: {}'.format(k, ak))
 
         # dataset 7 -- iac
         if model.verbose:
