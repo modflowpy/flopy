@@ -64,6 +64,7 @@ def build_model():
 
 
 def test_subwt():
+    import copy
     import numpy as np
     import flopy
 
@@ -100,7 +101,7 @@ def test_subwt():
         sp1_wells.append([0,idx[0],idx[1],2200.0])
 
 
-    sp2_wells = sp1_wells.copy()
+    sp2_wells = copy.copy(sp1_wells)
     sp2_wells.append([1, 8, 9, -72000.0])
     sp2_wells.append([3, 11, 6, -72000.0])
 
