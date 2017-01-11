@@ -377,7 +377,9 @@ class ModflowSubwt(Package):
                                               self.nsystm,self.ithk,
                                               self.ivoid, self.istpcs,
                                               self.icrcc))
-        f.write(self.lnwt.string)
+        lnwt = self.lnwt.array + 1
+        [f.write("{} ".format(i)) for i in lnwt]
+        f.write("\n")
         f.write('{} {} {} {} {} {} '.format(self.izcfl, self.izcfm,
                                           self.iglfl, self.iglfm,
                                           self.iestfl,self.iestfm))

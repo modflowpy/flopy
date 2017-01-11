@@ -39,11 +39,20 @@ def build_model():
     flopy.modflow.ModflowWel(ml, stress_period_data=
                             {0: sp1_wells, 1: sp2_wells, 2: sp1_wells})
 
-    flopy.modflow.ModflowSubwt(ml,iswtoc=1)
-
+    flopy.modflow.ModflowSubwt(ml,iswtoc=1,nsystm=4,sgs=2.0,sgm=1.7,
+                               lnwt=[0,1,2,3],thick=[45,70,50,90],icrcc=0,
+                               cr=0.01,cc=0.25,istpcs=1,pcsoff=15.0,
+                               void=0.82,ithk=1,ivoid=1)
+    flopy.modflow.ModflowOc(ml,stress_period_data={(0,0):["save head","save budget"]})
+    flopy.modflow.ModflowPcg(ml,hclose=0.01,rclose=1.0)
     ml.write_input()
     ml.run_model()
-
+    hds_stress = flopy.utils.HeadFile(os.path.join(
+            model_ws,ml.name+".eff_stress.hds"),text="effective stress")
+    print(hds_stress.recordarray)
+    d = hds_stress.get_alldata()
+    d1 = d[:,1,8,9]
+    print(d1)
 
 
 if __name__ == "__main__":
