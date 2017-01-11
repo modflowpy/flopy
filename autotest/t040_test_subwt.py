@@ -32,7 +32,7 @@ def build_model():
 
     #make 6 from subwt manual
     i,j = 8,9
-    fig = plt.figure(figsize=(10,10))
+    fig1 = plt.figure(figsize=(10,10))
     ax1 = plt.subplot(4,1,1)
     ax1.plot(hds_precon[:,0,i,j],color="0.5",dashes=(1,1))
     ax1.plot(hds_eff[:,0,i,j],color='r')
@@ -48,9 +48,9 @@ def build_model():
     ax4.plot(hds_geo[:,1,i,j],color='b')
     plt.savefig(os.path.join(model_ws,"fig6.pdf"))
 
-    plt.close(fig)
 
-    fig = plt.figure(figsize=(10,10))
+
+    fig2 = plt.figure(figsize=(10,10))
     ax1 = plt.subplot(2,1,1)
     ax2 = plt.subplot(2,1,2)
     i1,j1 = 8,9
@@ -65,7 +65,6 @@ def build_model():
 
 def test_subwt():
     import numpy as np
-    import pandas as pd
     import flopy
 
     model_ws = os.path.join("temp","t040_test_subwt")
@@ -91,10 +90,15 @@ def test_subwt():
     ibound[ibound == 5] = -1
     flopy.modflow.ModflowBas(ml, ibound=ibound, strt=100.0)
 
-    sp1_wells = pd.DataFrame(data=np.argwhere(ibound == 2), columns=['i', 'j'])
-    sp1_wells.loc[:, "k"] = 0
-    sp1_wells.loc[:, "flux"] = 2200.0
-    sp1_wells = sp1_wells.loc[:, ["k", "i", "j", "flux"]].values.tolist()
+    #sp1_wells = pd.DataFrame(data=np.argwhere(ibound == 2), columns=['i', 'j'])
+    #sp1_wells.loc[:, "k"] = 0
+    #sp1_wells.loc[:, "flux"] = 2200.0
+    #sp1_wells = sp1_wells.loc[:, ["k", "i", "j", "flux"]].values.tolist()
+    idxs = np.argwhere(ibound==2)
+    sp1_wells = []
+    for idx in idxs:
+        sp1_wells.append([0,idx[0],idx[1],2200.0])
+
 
     sp2_wells = sp1_wells.copy()
     sp2_wells.append([1, 8, 9, -72000.0])

@@ -230,11 +230,25 @@ class ModflowSwt(Package):
         units = [unitnumber]
         extra = ['']
 
+        item16_extensions = ["subsidence.hds", "total_comp.hds",
+                             "inter_comp.hds", "vert_disp.hds",
+                             "precon_stress.hds", "precon_stress_delta.hds",
+                             "geostatic_stress.hds","geostatic_stress_delta.hds",
+                             "eff_stress.hds","eff_stress_delta.hds",
+                             "void_ratio.hds","thick.hds","lay_center.hds"]
+
+        item16_units = [2052 + i for i in range(len(item16_extensions))]
+
         if iswtoc > 0:
             extensions.append('swtbud')
             name.append('DATA(BINARY)')
-            units.append(2054)
+            units.append(2051)
             extra.append('REPLACE')
+            for e, u in zip(item16_extensions, item16_units):
+                extensions.append(e)
+                name.append('DATA(BINARY)')
+                units.append(u)
+                extra.append('REPLACE')
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extensions, name=name,
@@ -317,28 +331,30 @@ class ModflowSwt(Package):
         # output data
         if iswtoc > 0:
             if ids16 is None:
-                ids16 = np.zeros(26, dtype=np.int)
+                self.ids16 = np.zeros((26),dtype=np.int)
+                ui = 0
+                for i in range(1,26,2):
+                    self.ids16[i] = item16_units[ui]
+                    ui += 1
             else:
-                if isinstance(ids16, list):
-                    ids16 = np.array(ids16)
-            # make sure the correct unit is specified
-            for i in range(1, 26, 2):
-                ids16[i] = 2054
-            self.ids16 = ids16
+                if isinstance(ids16,list):
+                    ds16 = np.array(ids16)
+                assert len(ids16) == 26
+                self.ids16 = ids16
+
+
             if ids17 is None:
-                self.iswtoc = 1
-                # save and print everything
-                ids17 = np.ones((1, 30), dtype=np.int)
-                ids17[0, 0] = 0
-                ids17[0, 1] = nper - 1
-                ids17[0, 2] = 0
-                ids17[0, 3] = 9999
+                ids17 = np.ones((30),dtype=np.int)
+                ids17[0] = 0
+                ids17[2] = 0
+                ids17[1] = 9999
+                ids17[3] = 9999
+                self.ids17 = np.atleast_2d(ids17)
             else:
-                if isinstance(ids17, list):
-                    ids17 = np.array(ids17)
-            if len(ids17.shape) == 1:
-                ids17 = np.reshape(ids17, (1, ids17.shape[0]))
-            self.ids17 = ids17
+                if isinstance(ids17,list):
+                    ids17 = np.atleast_2d(np.array(ids17))
+                assert ids17.shape[1] == 30
+                self.ids17 = ids17
 
         # add package to model
         self.parent.add_package(self)
@@ -413,7 +429,7 @@ class ModflowSwt(Package):
 
             # dataset 17
             for k in range(self.iswtoc):
-                t = self.ids17[k, :]
+                t = self.ids17[k, :].copy()
                 t[0:4] += 1
                 for i in t:
                     f.write('{} '.format(i))
