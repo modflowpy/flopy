@@ -126,7 +126,7 @@ class ModflowOc(Package):
     ...   (0, 749): ['print head', 'ddreference'],
     ...   (0, 750): [],
     ...   (0, 999): ['print head']}
-    >>> oc = flopy.modflow.ModflowOc3(m, stress_period_data=spd, cboufm='(20i5)')
+    >>> oc = flopy.modflow.ModflowOc(m, stress_period_data=spd, cboufm='(20i5)')
 
     """
 
@@ -224,9 +224,8 @@ class ModflowOc(Package):
         extra = ['', 'REPLACE', 'REPLACE', 'REPLACE']
         if ibndsav == True:
             name.append('DATA')
-            extension.append('ibo')
             if unitnumber[-1] == 0:
-                unitnumber[-1] == 54
+                unitnumber[-1] = 54
             ibouun = unitnumber[-1]
             extra.append('REPLACE')
 
