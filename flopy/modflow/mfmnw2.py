@@ -551,7 +551,7 @@ class Mnw(object):
             else:
                 self.__dict__[n] = self.node_data[n][0]
 
-    def _write_2(self, f_mnw, float_format='{:.2f}', indent=12):
+    def _write_2(self, f_mnw, float_format=' {:15.7E}', indent=12):
         """write out dataset 2 for MNW.
 
         Parameters
@@ -1233,7 +1233,7 @@ class ModflowMnw2(Package):
                 f_mnw.write(' aux {}'.format(abc))
         f_mnw.write('\n')
 
-    def write_file(self, filename=None, float_format='{:.2f}',
+    def write_file(self, filename=None, float_format=' {:15.7E}',
                    use_tables=True):
         """
         Write the package file.

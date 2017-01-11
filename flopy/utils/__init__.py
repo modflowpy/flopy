@@ -37,3 +37,4 @@ from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
 from .zonbud import ZoneBudget, read_zbarray, write_zbarray
 from .mfgrdfile import MfGrdFile
+from .postprocessing import get_transmissivities

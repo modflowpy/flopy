@@ -37,19 +37,26 @@ class ModflowHyd(Package):
         arr (2 characater string), intyp (1 character string) klay (int),
         xl (float), yl (float), hydlbl (14 character string) for each observation.
 
-        pckg is a 3-character flag to indicate which package is to be addressed by
-        hydmod for the hydrograph of each observation point. arr is a text code
-        indicating which model data value is to be accessed for the hydrograph of
-        each observation point. intyp is a 1-character value to indicate how the
-        data from the specified feature are to be accessed; The two options are
-        'I' for interpolated value or 'C' for cell value (intyp must be 'C' for
-        STR and SFR Package hydrographs. klay is the layer sequence number of the
-        array to be addressed by HYDMOD. xl is the coordinate of the hydrograph
-        point in model units of length measured parallel to model rows, with the
-        origin at the lower left corner of the model grid. yl s the coordinate of
-        the hydrograph point in model units of length measured parallel to model
-        columns, with the origin at the lower left corner of the model grid.
-        hydlbl is used to form a label for the hydrograph.
+        pckg : str
+            is a 3-character flag to indicate which package is to be addressed by
+            hydmod for the hydrograph of each observation point.
+        arr : str
+            is a text code indicating which model data value is to be accessed for the hydrograph of
+            each observation point.
+        intyp : str
+            is a 1-character value to indicate how the data from the specified feature
+            are to be accessed; The two options are 'I' for interpolated value or 'C'
+            for cell value (intyp must be 'C' for STR and SFR Package hydrographs.
+        klay : int
+            is the layer sequence number (one-based) of the array to be addressed by HYDMOD.
+        xl : float
+            is the coordinate of the hydrograph point in model units of length measured
+            parallel to model rows, with the origin at the lower left corner of the model grid.
+        yl : float
+            is the coordinate of the hydrograph point in model units of length measured parallel to model
+            columns, with the origin at the lower left corner of the model grid.
+        hydlbl : str
+            is used to form a label for the hydrograph.
 
 
         The simplest form is a list of lists. For example, if nhyd=3 this
@@ -123,12 +130,12 @@ class ModflowHyd(Package):
         self.hydnoh = hydnoh
 
         dtype = ModflowHyd.get_default_dtype()
+        obs = ModflowHyd.get_empty(nhyd)
         if isinstance(obsdata, list):
             if len(obsdata) != nhyd:
                 raise RuntimeError(
                     'ModflowHyd: nhyd ({}) does not equal length of obsdata ({}).'.format(
                         nhyd, len(obsdata)))
-            obs = ModflowHyd.get_empty(nhyd)
             for idx in range(nhyd):
                 obs['pckg'][idx] = obsdata[idx][0]
                 obs['arr'][idx] = obsdata[idx][1]
@@ -139,6 +146,28 @@ class ModflowHyd(Package):
                 obs['hydlbl'][idx] = obsdata[idx][6]
             obsdata = obs
         elif isinstance(obsdata, np.ndarray):
+            if obsdata.dtype == np.object:
+                if obsdata.shape[1] != len(dtype):
+                    raise IndexError('Incorrect number of fields for obsdata')
+                obsdata = obsdata.transpose()
+                obs['pckg'] = obsdata[0]
+                obs['arr'] = obsdata[1]
+                obs['intyp'] = obsdata[2]
+                obs['klay'] = obsdata[3]
+                obs['xl'] = obsdata[4]
+                obs['yl'] = obsdata[5]
+                obs['hydlbl'] = obsdata[6]
+            else:
+                inds = ['pckg', 'arr', 'intyp', 'klay', 'xl', 'yl', 'hydlbl']
+                for idx in inds:
+                    obs['pckg'] = obsdata['pckg']
+                    obs['arr'] = obsdata['arr']
+                    obs['intyp'] = obsdata['intyp']
+                    obs['klay'] = obsdata['klay']
+                    obs['xl'] = obsdata['xl']
+                    obs['yl'] = obsdata['yl']
+                    obs['hydlbl'] = obsdata['hydlbl']
+            obsdata = obs
             obsdata = obsdata.view(dtype=dtype)
         self.obsdata = obsdata
 

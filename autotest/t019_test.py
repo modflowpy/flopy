@@ -20,6 +20,22 @@ def test_hydmodfile_create():
     hydload = flopy.modflow.ModflowHyd.load(pth, m)
     assert np.array_equal(hyd.obsdata, hydload.obsdata), 'Written hydmod data not equal to loaded hydmod data'
 
+    # test obsdata as recarray
+    obsdata = np.array([(3208, 'BAS', 'HD', 'I', 4, 630486.19, 5124733.18, 'well1')],
+          dtype=[('index', '<i8'),
+                 ('pckg', 'O'),
+                 ('arr', 'O'),
+                 ('intyp', 'O'),
+                 ('klay', '<i8'),
+                 ('xl', '<f8'),
+                 ('yl', '<f8'),
+                 ('hydlbl', 'O')]).view(np.recarray)
+    hyd = flopy.modflow.ModflowHyd(m, obsdata=obsdata)
+
+    # test obsdata as object array
+    obsdata = np.array([('BAS', 'HD', 'I', 4, 630486.19, 5124733.18, 'well1')], dtype=object)
+    hyd = flopy.modflow.ModflowHyd(m, obsdata=obsdata)
+    assert True
     return
 
 
@@ -114,6 +130,6 @@ def test_hydmodfile_read():
 
 
 if __name__ == '__main__':
-    test_hydmodfile_read()
+    #test_hydmodfile_read()
     test_hydmodfile_create()
-    test_hydmodfile_load()
+    #test_hydmodfile_load()
