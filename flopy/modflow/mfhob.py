@@ -331,7 +331,6 @@ class ModflowHob(Package):
         # read datasets 3-6
         i = 0
         while i < nh:
-
             # read dataset 3
             line = f.readline()
             t = line.strip().split()
@@ -351,20 +350,22 @@ class ModflowHob(Package):
             if tlayer < 0:
                 multilayer = True
 
-            # # write dataset 3
-            # f.write('{}'.format(self.obsnam[i]))
-            # f.write('{:10d}'.format(self.layer[i]))
-            # f.write('{:10d}'.format(self.row[i]))
-            # f.write('{:10d}'.format(self.column[i]))
-            # f.write('{:10d}'.format(self.irefsp[i]))
-            # f.write('{:10.4g}'.format(self.toffset[i]))
-            # f.write('{:10.4g}'.format(self.roff[i]))
-            # f.write('{:10.4g}'.format(self.coff[i]))
-            # f.write('{:10.4g}\n'.format(self.hob[i]))
+            # read dataset 4 if multilayer obs
+            if multilayer:
+                minlay = 999
+                maxlay = -999
+            #     for j in range(tlayer):
+            #         line = f.readline()
+            #         d4 = line.strip().split()
+            #         k = 0
+            #         cont = True
+            #         while cont:
+            #             try:
+            #                 mlay = int(d4[k]) - 1
+            #                 pr.append(float(d4[k+1]))
+            #             except:
             #
-            # # write dataset 4 if multilayer obs
-            # if multilayer:
-            #     for j in range(self.fromlay[i], self.tolay[i] + 1):
+            #
             #         f.write('{:10d}'.format(j))
             #         f.write('{:10.4g}\n'.format(self.pr[i, j-1]))
             #
@@ -379,7 +380,10 @@ class ModflowHob(Package):
             #         f.write('{:10.4g}'.format(self.toffset[i]))
             #         f.write('{:10.4g}\n'.format(self.hob[i]))
             #         i += 1
-            # else:
+            else:
+                fromlay.append(tlayer-1)
+                tolay.append(tlayer-1)
+                pr.append(1.)
                 i += 1
 
         f.close()
