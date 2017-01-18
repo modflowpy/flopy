@@ -24,7 +24,7 @@ if v is None:
 
 def test_obs_load_and_write():
     """
-    Test load and write of distributed MODFLOW-LGR example problem
+    test041 load and write of MODFLOW-2005 OBS example problem
     """
     pth = os.path.join('..', 'examples', 'data', 'mf2005_obs')
     opth = os.path.join(cpth, 'tc1-true', 'orig')
