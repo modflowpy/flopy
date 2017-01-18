@@ -269,7 +269,7 @@ class BinaryLayerFile(LayerFile):
                 ilay = header['ilay'] - 1  # change ilay from header to zero-based
                 if ilay != k:
                     continue
-                ipos = self.iposarray[irec]
+                ipos = np.long(self.iposarray[irec])
 
                 # Calculate offset necessary to reach intended cell
                 self.file.seek(ipos + np.long(ioffset), 0)
@@ -703,7 +703,7 @@ class CellBudgetFile(object):
         return select_indices
 
     def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
-                 verbose=False, full3D=False):
+                 full3D=False):
         """
         get data from the budget file.
 
@@ -719,9 +719,6 @@ class CellBudgetFile(object):
         text : str
             The text identifier for the record.  Examples include
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
-        verbose : boolean
-            If true, print additional information to to the screen during the
-            extraction.  (Default is False).
         full3D : boolean
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records writen as part of a
@@ -811,12 +808,12 @@ class CellBudgetFile(object):
             select_indices = select_indices[0]
         recordlist = []
         for idx in select_indices:
-            rec = self.get_record(idx, full3D=full3D, verbose=verbose)
+            rec = self.get_record(idx, full3D=full3D)
             recordlist.append(rec)
 
         return recordlist
 
-    def get_record(self, idx, full3D=False, verbose=False):
+    def get_record(self, idx, full3D=False):
         """
         Get a single data record from the budget file.
 
@@ -824,9 +821,6 @@ class CellBudgetFile(object):
         ----------
         idx : int
             The zero-based record number.  The first record is record 0.
-        verbose : boolean
-            If true, print additional information to to the screen during the
-            extraction.  (Default is False).
         full3D : boolean
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records writen as part of a
@@ -857,11 +851,13 @@ class CellBudgetFile(object):
             idx = np.array([idx])
 
         header = self.recordarray[idx]
-        ipos = self.iposarray[idx]
+        ipos = np.long(self.iposarray[idx])
         self.file.seek(ipos, 0)
         imeth = header['imeth'][0]
 
         t = header['text'][0]
+        if isinstance(t, bytes):
+            t = t.decode('utf-8')
         s = 'Returning ' + str(t).strip() + ' as '
 
         nlay = abs(header['nlay'][0])
@@ -870,14 +866,14 @@ class CellBudgetFile(object):
 
         # default method
         if imeth == 0:
-            if verbose:
+            if self.verbose:
                 s += 'an array of shape ' + str((nlay, nrow, ncol))
                 print(s)
             return binaryread(self.file, self.realtype(1),
                               shape=(nlay, nrow, ncol))
         # imeth 1
         elif imeth == 1:
-            if verbose:
+            if self.verbose:
                 s += 'an array of shape ' + str( (nlay, nrow, ncol) )
                 print(s)
             return binaryread(self.file, self.realtype(1),
@@ -885,13 +881,13 @@ class CellBudgetFile(object):
 
         # imeth 2
         elif imeth == 2:
-            nlist = binaryread(self.file, np.int32)
+            nlist = binaryread(self.file, np.int32)[0]
             dtype = np.dtype([('node', np.int32), ('q', self.realtype)])
-            if verbose:
+            if self.verbose:
                 if full3D:
-                    s += 'a numpy masked array of size ({}{}{})'.format(nlay,
-                                                                        nrow,
-                                                                        ncol)
+                    s += 'a numpy masked array of size ({},{},{})'.format(nlay,
+                                                                          nrow,
+                                                                          ncol)
                 else:
                     s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
                 print(s)
@@ -905,11 +901,11 @@ class CellBudgetFile(object):
         elif imeth == 3:
             ilayer = binaryread(self.file, np.int32, shape=(nrow, ncol))
             data = binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
-            if verbose:
+            if self.verbose:
                 if full3D:
-                    s += 'a numpy masked array of size ({}{}{})'.format(nlay,
-                                                                        nrow,
-                                                                        ncol)
+                    s += 'a numpy masked array of size ({},{},{})'.format(nlay,
+                                                                          nrow,
+                                                                          ncol)
                 else:
                     s += 'a list of two 2D numpy arrays.  '
                     s += 'The first is an integer layer array of shape  ' + \
@@ -928,14 +924,14 @@ class CellBudgetFile(object):
 
         # imeth 4
         elif imeth == 4:
-            if verbose:
-                s += 'a 2d numpy array of shape ' + str((nrow, ncol))
+            if self.verbose:
+                s += 'a 2d numpy array of size ({},{})'.format(nrow, ncol)
                 print(s)
             return binaryread(self.file, self.realtype(1), shape=(nrow, ncol))
 
         # imeth 5
         elif imeth == 5:
-            nauxp1 = binaryread(self.file, np.int32)
+            nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
             l = [('node', np.int32), ('q', self.realtype)]
             for i in range(naux):
@@ -944,15 +940,17 @@ class CellBudgetFile(object):
                     auxname = auxname.decode()
                 l.append((auxname, self.realtype))
             dtype = np.dtype(l)                
-            nlist = binaryread(self.file, np.int32)
+            nlist = binaryread(self.file, np.int32)[0]
             data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
-                if verbose:
-                    s += 'a list array of shape ({}, {}, {})'.format(nlay, nrow, ncol)
+                if self.verbose:
+                    s += 'a list array of shape ({},{},{})'.format(nlay,
+                                                                   nrow,
+                                                                   ncol)
                     print(s)
                 return self.create3D(data, nlay, nrow, ncol)
             else:
-                if verbose:
+                if self.verbose:
                     s += 'a numpy recarray of size (' + str(nlist) + ', {})'.format(2+naux)
                     print(s)
                 return data.view(np.recarray)

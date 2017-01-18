@@ -1,11 +1,15 @@
 # Test reference class
 import os
 import numpy as np
-import matplotlib
+try:
+    import matplotlib
+    matplotlib.use('agg')
+except:
+    matplotlib = None
+
 import flopy
 import shapefile
 
-matplotlib.use('agg')
 
 cpth = os.path.join('temp', 't006')
 # make the directory if it does not exist
@@ -20,7 +24,8 @@ def test_binaryfile_reference():
     h.sr.xul = 1000.0
     h.sr.yul = 200.0
     h.sr.rotation = 15.0
-    assert isinstance(h.plot(), matplotlib.axes.Axes)
+    if matplotlib is not None:
+        assert isinstance(h.plot(), matplotlib.axes.Axes)
     return
 
 
@@ -32,7 +37,8 @@ def test_formattedfile_reference():
     h.sr.xul = 1000.0
     h.sr.yul = 200.0
     h.sr.rotation = 15.0
-    assert isinstance(h.plot(masked_values=[6999.000]), matplotlib.axes.Axes)
+    if matplotlib is not None:
+        assert isinstance(h.plot(masked_values=[6999.000]), matplotlib.axes.Axes)
     return
 
 

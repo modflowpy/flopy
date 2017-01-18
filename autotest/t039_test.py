@@ -76,7 +76,7 @@ def test_compare2zonebudget(rtol=1e-2):
 
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
     cbc_fname = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
-    zb = ZoneBudget(cbc_fname, zon)
+    zb = ZoneBudget(cbc_fname, zon, verbose=False)
     zbutil_recarray = zb.get_budget()
 
     times = np.unique(zonebudget_recarray['totim'])
