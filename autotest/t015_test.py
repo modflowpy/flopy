@@ -3,7 +3,8 @@ __author__ = 'aleaf'
 import os
 try:
     import matplotlib
-    matplotlib.use('agg')
+    if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
+        matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
 except:
     matplotlib = None
 

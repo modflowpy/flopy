@@ -2,7 +2,8 @@
 import numpy as np
 try:
     import matplotlib.pyplot as plt
-    matplotlib.use('agg')
+    if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
+        matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
 except:
     plt = None
 
