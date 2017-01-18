@@ -36,7 +36,11 @@ before_install:
 
 # command to install dependencies
 install:
-    - pip install -r requirements.travis.txt
+    #- pip install -r requirements.travis.txt
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.2 ]];
+      then pip install -r requirements32.travis.txt;
+      else pip install -r requirements.travis.txt;
+      fi
 
 
 # command to run tests
