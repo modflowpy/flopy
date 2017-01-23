@@ -13,6 +13,7 @@ import warnings
 from collections import OrderedDict
 from flopy.utils.datafile import Header, LayerFile
 
+
 class BinaryHeader(Header):
     """
     The binary_header class is a class to create headers for MODFLOW
@@ -82,6 +83,7 @@ class BinaryHeader(Header):
             header.set_values(**kwargs)
         return header.get_values()
 
+
 def binaryread_struct(file, vartype, shape=(1), charlen=16):
     """
     Read text, a scalar value, or an array of values from a binary file.
@@ -143,6 +145,7 @@ def binaryread(file, vartype, shape=(1), charlen=16):
             result = np.reshape(result, shape)
     return result
 
+
 def join_struct_arrays(arrays):
     """
     Simple function that can join two numpy structured arrays.
@@ -156,6 +159,65 @@ def join_struct_arrays(arrays):
     return newrecarray
 
 
+def get_headfile_precision(filename):
+    """
+    Determine precision of a MODFLOW head file.
+
+    Parameters
+    ----------
+    filename : str
+    Name of binary MODFLOW file to determine precision.
+
+    Returns
+    -------
+    result : str
+    Result will be unknown, single, or double
+
+    """
+
+    # Set default result if neither single or double works
+    result = 'unknown'
+
+    # Create string containing set of ascii characters
+    asciiset = ' '
+    for i in range(33, 127):
+        asciiset += chr(i)
+
+    # first try single
+    f = open(filename, 'rb')
+    vartype = [('kstp', '<i4'), ('kper', '<i4'), ('pertim', '<f4'),
+               ('totim', '<f4'), ('text', 'S16')]
+    hdr = binaryread(f, vartype)
+    text = hdr[0][4]
+    try:
+        text = text.decode()
+        for t in text:
+            if t.upper() not in asciiset:
+                raise Exception()
+        result = 'single'
+    except:
+        pass
+
+    # next try double
+    f.seek(0)
+    vartype = [('kstp', '<i4'), ('kper', '<i4'), ('pertim', '<f8'),
+               ('totim', '<f8'), ('text', 'S16')]
+    hdr = binaryread(f, vartype)
+    text = hdr[0][4]
+    try:
+        text = text.decode()
+        for t in text:
+            if t.upper() not in asciiset:
+                raise Exception()
+        result = 'double'
+    except:
+        pass
+
+    # close and return result
+    f.close()
+    return result
+
+
 class BinaryLayerFile(LayerFile):
     """
     The BinaryLayerFile class is the super class from which specific derived
@@ -163,24 +225,25 @@ class BinaryLayerFile(LayerFile):
 
     """
     def __init__(self, filename, precision, verbose, kwargs):
-        super(BinaryLayerFile, self).__init__(filename, precision, verbose, kwargs)
+        super(BinaryLayerFile, self).__init__(filename, precision, verbose,
+                                              kwargs)
         return
-   
 
     def _build_index(self):
         """
         Build the recordarray and iposarray, which maps the header information
         to the position in the binary file.
+
         """
         header = self._get_header()
         self.nrow = header['nrow']
         self.ncol = header['ncol']
-        if self.nrow > 10000 or self.ncol > 10000:
-            s = 'Possible error. ncol ({}) or nrow ({}) > 10000 '.format(self.ncol,
-                                                                         self.nrow)
-            warnings.warn(s)
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
+        if abs(self.nrow * self.ncol) > 10000000:
+            s = 'Possible error. ncol ({}) * nrow ({}) > 10,000,000 '
+            s = s.format(self.ncol, self.nrow)
+            warnings.warn(s)
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)        
@@ -215,7 +278,8 @@ class BinaryLayerFile(LayerFile):
         return
 
     def _read_data(self):
-        return binaryread(self.file, self.realtype, shape=(self.nrow, self.ncol))
+        return binaryread(self.file, self.realtype,
+                          shape=(self.nrow, self.ncol))
 
     def _get_header(self):
         """
@@ -281,6 +345,7 @@ class BinaryLayerFile(LayerFile):
             istat += 1
         return result
 
+
 class HeadFile(BinaryLayerFile):
     """
     HeadFile Class.
@@ -292,7 +357,7 @@ class HeadFile(BinaryLayerFile):
     text : string
         Name of the text string in the head file.  Default is 'head'
     precision : string
-        'single' or 'double'.  Default is 'single'.
+        'auto', 'single' or 'double'.  Default is 'auto'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -331,9 +396,15 @@ class HeadFile(BinaryLayerFile):
 
 
     """
-    def __init__(self, filename, text='head', precision='single',
+    def __init__(self, filename, text='head', precision='auto',
                  verbose=False, **kwargs):
         self.text = text.encode()
+        if precision == 'auto':
+            precision = get_headfile_precision(filename)
+            if precision == 'unknown':
+                s = 'Error. Precision could not be determined for {}'.format(filename)
+                print(s)
+                raise Exception()
         self.header_dtype = BinaryHeader.set_dtype(bintype='Head',
                                                    precision=precision)
         super(HeadFile, self).__init__(filename, precision, verbose, kwargs)
@@ -351,7 +422,7 @@ class UcnFile(BinaryLayerFile):
     text : string
         Name of the text string in the ucn file.  Default is 'CONCENTRATION'
     precision : string
-        'single' or 'double'.  Default is 'single'.
+        'auto', 'single' or 'double'.  Default is 'auto'.
     verbose : bool
         Write information to the screen.  Default is False.
 
@@ -385,9 +456,16 @@ class UcnFile(BinaryLayerFile):
     >>> rec = ucnobj.get_data(kstpkper=(1,1))
 
     """
-    def __init__(self, filename, text='concentration', precision='single',
+    def __init__(self, filename, text='concentration', precision='auto',
                  verbose=False, **kwargs):
         self.text = text.encode()
+        if precision == 'auto':
+            precision = get_headfile_precision(filename)
+        if precision == 'unknown':
+            s = 'Error. Precision could not be determined for {}'.format(
+                filename)
+            print(s)
+            raise Exception()
         self.header_dtype = BinaryHeader.set_dtype(bintype='Ucn',
                                                    precision=precision)
         super(UcnFile, self).__init__(filename, precision, verbose, kwargs)
@@ -507,7 +585,6 @@ class CellBudgetFile(object):
         kstp_len = sum(kstp_len[:kstp+1])
         return kper_len + kstp_len
 
-
     def _build_index(self):
         """
         Build the ordered dictionary, which maps the header information
@@ -577,6 +654,7 @@ class CellBudgetFile(object):
     def _skip_record(self, header):
         """
         Skip over this record, not counting header and header2.
+
         """
         nlay = abs(header['nlay'])
         nrow = header['nrow']
@@ -644,7 +722,6 @@ class CellBudgetFile(object):
                 errmsg = 'The specified text string is not in the budget file.'
                 raise Exception(errmsg)
         return text16
-
 
     def list_records(self):
         """

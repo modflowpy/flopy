@@ -22,7 +22,7 @@ FloPy Changes
     * ZoneBudget objects support numerical operators to facilitate conversion of units
     * utilities are included which read/write ZONEBUDGET-style zone files to and from numpy arrays
     * pass a dictionary of {zone: "alias"} to rename fields to more descriptive names (e.g. {1: 'New York', 2: 'Delmarva'}
-
+* Added new precision='auto' option to flopy.utils.binaryfile for HeadFile and UcnFile readers.  This will automatically try and determine the float precision for head files created by single and double precision versions of MODFLOW.  'auto' is now the default.  Not implemented yet for cell by cell flow file.
 
 * Bug fixes:
   1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
