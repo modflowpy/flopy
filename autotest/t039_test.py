@@ -3,7 +3,8 @@ Test zonbud utility
 """
 import os
 import numpy as np
-from flopy.utils import CellBudgetFile, ZoneBudget, MfListBudget, read_zbarray, write_zbarray
+from flopy.utils import CellBudgetFile, ZoneBudget, \
+    MfListBudget, read_zbarray, write_zbarray
 
 loadpth = os.path.join('..', 'examples', 'data', 'zonbud_examples')
 outpth = os.path.join('temp', 't038')
@@ -22,7 +23,8 @@ def read_zonebudget_file(fname):
 
         # Read time step information for this block
         if "Time Step" in line:
-            kstp, kper, totim = int(items[1]) - 1, int(items[3]) - 1, float(items[5])
+            kstp, kper, totim = int(items[1]) - 1, int(items[3]) - 1, \
+                                float(items[5])
             continue
 
         # Get names of zones
@@ -42,7 +44,8 @@ def read_zonebudget_file(fname):
             continue
 
         # Get mass-balance information for this block
-        elif 'Total' in items[0] or 'IN-OUT' in items[0] or 'Percent Error' in items[0]:
+        elif 'Total' in items[0] or 'IN-OUT' in items[0] or 'Percent Error' in \
+                items[0]:
             continue
 
         # End of block
@@ -73,7 +76,7 @@ def test_compare2zonebudget(rtol=1e-2):
 
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
     cbc_fname = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
-    zb = ZoneBudget(cbc_fname, zon)
+    zb = ZoneBudget(cbc_fname, zon, verbose=False)
     zbutil_recarray = zb.get_budget()
 
     times = np.unique(zonebudget_recarray['totim'])
@@ -88,7 +91,8 @@ def test_compare2zonebudget(rtol=1e-2):
             a1 = np.array([v for v in zb_arr[zonenames][r1[0]][0]])
             a2 = np.array([v for v in zbu_arr[zonenames][r2[0]][0]])
             allclose = np.allclose(a1, a2, rtol)
-            s = 'Zonebudget arrays do not match at time {} ({}).'.format(time, name)
+            s = 'Zonebudget arrays do not match at time {} ({}).'.format(time,
+                                                                         name)
             assert allclose, s
     return
 

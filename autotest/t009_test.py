@@ -6,9 +6,13 @@ import os
 import glob
 import shutil
 import numpy as np
-import matplotlib
+try:
+    import matplotlib
+    if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
+        matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
+except:
+    matplotlib = None
 
-matplotlib.use('agg')
 import flopy
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
@@ -118,8 +122,9 @@ def test_sfr():
 
     m, sfr = sfr_process('UZFtest2.nam', 'UZFtest2.sfr', path)
 
-    assert isinstance(sfr.plot()[0],
-                      matplotlib.axes.Axes)  # test the plot() method
+    if matplotlib is not None:
+        assert isinstance(sfr.plot()[0],
+                          matplotlib.axes.Axes)  # test the plot() method
 
     # trout lake example (only sfr file is included)
     # can add tests for sfr connection with lak package
@@ -236,8 +241,18 @@ def test_transient_example():
     assert m2.sfr.unit_number[1] == 49
     assert 49 in m2.package_units
 
+
+def test_sfr_plot():
+    #m = flopy.modflow.Modflow.load('test1ss.nam', model_ws=path, verbose=False)
+    #sfr = m.get_package('SFR')
+    #sfr.plot(key='strtop')
+    #plt.show()
+    #assert True
+    pass
+
 if __name__ == '__main__':
     #test_sfr()
     #test_sfr_renumbering()
     #test_example()
-    test_transient_example()
+    #test_transient_example()
+    test_sfr_plot()

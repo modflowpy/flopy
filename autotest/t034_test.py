@@ -7,7 +7,6 @@ sys.path.insert(0, '..')
 import os
 import shutil
 import glob
-import numpy as np
 import flopy
 from flopy.utils.util_array import Util2d
 import numpy as np

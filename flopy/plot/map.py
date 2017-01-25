@@ -1,7 +1,10 @@
 import copy
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.colors
+except:
+    plt = None
 from . import plotutil
 from .plotutil import bc_color_dict
 from flopy.utils.reference import SpatialReference
@@ -50,6 +53,11 @@ class ModelMap(object):
     def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
                  extent=None, xul=None, yul=None, xll=None, yll=None,
                  rotation=0., length_multiplier=1.):
+        if plt is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to use ModelMap method'
+            raise Exception(s)
+
         self.model = model
         self.layer = layer
         self.dis = dis

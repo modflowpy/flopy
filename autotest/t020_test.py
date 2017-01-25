@@ -1,5 +1,11 @@
 # Test modflow write adn run
 import numpy as np
+try:
+    import matplotlib.pyplot as plt
+    if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
+        matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
+except:
+    plt = None
 
 
 def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
@@ -14,7 +20,6 @@ def test_mfnwt_run():
     import os
     import platform
     import flopy
-    import matplotlib.pyplot as plt
     exe_name = 'mfnwt'
     if platform.system() == 'Windows':
         exe_name = '{}.exe'.format(exe_name)
@@ -119,27 +124,28 @@ def test_mfnwt_run():
     head = headobj.get_data(totim=times[-1])
 
     # Plot the results
-    fig = plt.figure(figsize=(16, 6))
+    if plt is not None:
+        fig = plt.figure(figsize=(16, 6))
 
-    ax = fig.add_subplot(1, 3, 1)
-    ax.plot(xa, ha, linewidth=8, color='0.5', label='analytical solution')
-    ax.plot(x, head[0, 0, :], color='red', label='MODFLOW-NWT')
-    leg = ax.legend(loc='lower left')
-    leg.draw_frame(False)
-    ax.set_xlabel('Horizontal distance, in m')
-    ax.set_ylabel('Head, in m')
+        ax = fig.add_subplot(1, 3, 1)
+        ax.plot(xa, ha, linewidth=8, color='0.5', label='analytical solution')
+        ax.plot(x, head[0, 0, :], color='red', label='MODFLOW-NWT')
+        leg = ax.legend(loc='lower left')
+        leg.draw_frame(False)
+        ax.set_xlabel('Horizontal distance, in m')
+        ax.set_ylabel('Head, in m')
 
-    ax = fig.add_subplot(1, 3, 2)
-    ax.plot(x, head[0, 0, :] - hac, linewidth=1, color='blue')
-    ax.set_xlabel('Horizontal distance, in m')
-    ax.set_ylabel('Error, in m')
+        ax = fig.add_subplot(1, 3, 2)
+        ax.plot(x, head[0, 0, :] - hac, linewidth=1, color='blue')
+        ax.set_xlabel('Horizontal distance, in m')
+        ax.set_ylabel('Error, in m')
 
-    ax = fig.add_subplot(1, 3, 3)
-    ax.plot(x, 100. * (head[0, 0, :] - hac) / hac, linewidth=1, color='blue')
-    ax.set_xlabel('Horizontal distance, in m')
-    ax.set_ylabel('Percent Error')
+        ax = fig.add_subplot(1, 3, 3)
+        ax.plot(x, 100. * (head[0, 0, :] - hac) / hac, linewidth=1, color='blue')
+        ax.set_xlabel('Horizontal distance, in m')
+        ax.set_ylabel('Percent Error')
 
-    fig.savefig(os.path.join(model_ws, '{}.png'.format(modelname)))
+        fig.savefig(os.path.join(model_ws, '{}.png'.format(modelname)))
 
     return
 

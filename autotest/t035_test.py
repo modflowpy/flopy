@@ -43,6 +43,14 @@ def test_simplelgr_load_and_write():
     lgr = flopy.modflowlgr.ModflowLgr.load('ex3.lgr', verbose=True,
                                            model_ws=opth, exe_name=exe_name)
 
+    # get the namefiles of the parent and child
+    namefiles = lgr.get_namefiles()
+    msg = 'get_namefiles returned {} items instead of 2'.format(len(namefiles))
+    assert len(namefiles) == 2, msg
+    tpth = os.path.dirname(namefiles[0])
+    msg = 'dir path is {} not {}'.format(tpth, opth)
+    assert tpth == opth, msg
+
     # run the lgr model
     if run:
         success, buff = lgr.run_model(silent=False)
@@ -54,6 +62,14 @@ def test_simplelgr_load_and_write():
 
     npth = os.path.join(cpth, 'ex3', 'new')
     lgr.change_model_ws(new_pth=npth, reset_external=True)
+
+    # get the namefiles of the parent and child
+    namefiles = lgr.get_namefiles()
+    msg = 'get_namefiles returned {} items instead of 2'.format(len(namefiles))
+    assert len(namefiles) == 2, msg
+    tpth = os.path.dirname(namefiles[0])
+    msg = 'dir path is {} not {}'.format(tpth, npth)
+    assert tpth == npth, msg
 
     # write the lgr model in to the new path
     lgr.write_input()
