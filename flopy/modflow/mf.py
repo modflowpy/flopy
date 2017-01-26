@@ -194,6 +194,7 @@ class Modflow(BaseModel):
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
             "hyd": flopy.modflow.ModflowHyd,
+            "hob": flopy.modflow.ModflowHob,
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc
         }

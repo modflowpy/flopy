@@ -1,3 +1,5 @@
+
+import sys
 import numpy as np
 from flopy.pakbase import Package
 
@@ -275,8 +277,8 @@ class ModflowHob(Package):
 
         Returns
         -------
-        lpf : ModflowLpf object
-            ModflowLpf object.
+        hob : ModflowHob object
+            ModflowHob object.
 
         Examples
         --------
@@ -288,7 +290,7 @@ class ModflowHob(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading hobs package file...\n')
+            sys.stdout.write('loading hob package file...\n')
 
         if not hasattr(f, 'read'):
             filename = f
@@ -324,13 +326,14 @@ class ModflowHob(Package):
         roff = []
         coff = []
         hob = []
+        mobs = []
         pr = []
         itt = []
+        ds6 = []
 
 
         # read datasets 3-6
-        i = 0
-        while i < nh:
+        for i in range(nh):
             # read dataset 3
             line = f.readline()
             t = line.strip().split()
@@ -346,44 +349,51 @@ class ModflowHob(Package):
             coff.append(float(t[7]))
             hob.append(float(t[8]))
 
-            multilayer = False
-            if tlayer < 0:
-                multilayer = True
-
             # read dataset 4 if multilayer obs
-            if multilayer:
+            if tlayer < 0:
                 minlay = 999
                 maxlay = -999
-            #     for j in range(tlayer):
-            #         line = f.readline()
-            #         d4 = line.strip().split()
-            #         k = 0
-            #         cont = True
-            #         while cont:
-            #             try:
-            #                 mlay = int(d4[k]) - 1
-            #                 pr.append(float(d4[k+1]))
-            #             except:
-            #
-            #
-            #         f.write('{:10d}'.format(j))
-            #         f.write('{:10.4g}\n'.format(self.pr[i, j-1]))
-            #
-            # # write datasets 5 & 6. Index loop variable
-            # if self.irefsp[i] < 0:
-            #     # data set 5
-            #     f.write('{:10d}\n'.format(self.itt[i]))
-            #     # data set 6
-            #     for j in range(abs(self.irefsp[i])):
-            #         f.write('{}'.format(self.obsnam[i]))
-            #         f.write('{:10d}'.format(abs(self.irefsp[i])))
-            #         f.write('{:10.4g}'.format(self.toffset[i]))
-            #         f.write('{:10.4g}\n'.format(self.hob[i]))
-            #         i += 1
+                line = f.readline()
+                d4 = line.strip().split()
+                tmobs = []
+                tpr = []
+                for j in range(0, abs(tlayer), 2):
+                    k = int(d4[j]) - 1
+                    if k < minlay:
+                        minlay = k
+                    if k > maxlay:
+                        maxlay = k
+                    tmobs.append(k)
+                    tpr.append(float(d4[j+1]))
             else:
-                fromlay.append(tlayer-1)
-                tolay.append(tlayer-1)
-                pr.append(1.)
-                i += 1
+                minlay = tlayer - 1
+                maxlay = tlayer - 1
+                tmobs = None
+                tpr = None
+            fromlay.append(minlay)
+            tolay.append(maxlay)
+            mobs.append(tmobs)
+            pr.append(tpr)
 
+            # read datasets 5 & 6. Index loop variable
+            if tirefsp < 0:
+                # read data set 5
+                line = f.readline()
+                d5 = line.strip().split()
+                titt = int(d5[0])
+                # dataset 6
+                tds6 = []
+                for j in range(abs(tirefsp)):
+                    line = f.readline()
+                    t = line.strip().split()
+                    tds6.append([t[0], int(t[1]), float(t[2]), float(t[3])])
+            else:
+                titt = None
+                tds6 = None
+            itt.append(titt)
+            ds6.append(tds6)
+
+        # close the file
         f.close()
+
+        return
