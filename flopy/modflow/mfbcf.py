@@ -260,7 +260,19 @@ class ModflowBcf(Package):
             print('   loading LAYCON...')
         line = f.readline()
         if ifrefm:
-            t = line.strip().split()
+            t = []
+            tt = line.strip().split()
+            for iv in tt:
+                t.append(iv)
+            # read the rest of the laycon values
+            if len(t) < nlay:
+                while True:
+                    line = f.readline()
+                    tt = line.strip().split()
+                    for iv in tt:
+                        t.append(iv)
+                    if len(t) == nlay:
+                        break
         else:
             t = []
             istart = 0
