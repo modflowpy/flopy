@@ -42,10 +42,15 @@ class ZoneBudget(object):
     """
     def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None, **kwargs):
 
+        if 'verbose' in kwargs.keys():
+            verbose = kwargs.pop('verbose')
+        else:
+            verbose = False
+
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
         elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
-            self.cbc = CellBudgetFile(cbc_file)
+            self.cbc = CellBudgetFile(cbc_file, verbose=verbose)
         else:
             raise Exception('Cannot load cell budget file: {}.'.format(cbc_file))
 

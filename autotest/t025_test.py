@@ -4,7 +4,6 @@ Some basic tests for LAKE load.
 
 import os
 import flopy
-import numpy as np
 
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp', 't025')

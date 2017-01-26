@@ -194,6 +194,7 @@ class Modflow(BaseModel):
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
             "hyd": flopy.modflow.ModflowHyd,
+            "hob": flopy.modflow.ModflowHob,
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc
         }
@@ -290,6 +291,7 @@ class Modflow(BaseModel):
     def write_name_file(self):
         """
         Write the model name file.
+
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')

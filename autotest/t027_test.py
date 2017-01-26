@@ -9,7 +9,6 @@ import flopy
 import numpy as np
 import netCDF4
 from flopy.utils.flopy_io import line_parse
-from flopy.utils.util_list import MfList
 
 cpth = os.path.join('temp', 't027')
 # make the directory if it does not exist

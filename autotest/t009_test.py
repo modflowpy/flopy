@@ -6,10 +6,13 @@ import os
 import glob
 import shutil
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+    if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
+        matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
+except:
+    matplotlib = None
 
-matplotlib.use('agg')
 import flopy
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
@@ -119,8 +122,9 @@ def test_sfr():
 
     m, sfr = sfr_process('UZFtest2.nam', 'UZFtest2.sfr', path)
 
-    assert isinstance(sfr.plot()[0],
-                      matplotlib.axes.Axes)  # test the plot() method
+    if matplotlib is not None:
+        assert isinstance(sfr.plot()[0],
+                          matplotlib.axes.Axes)  # test the plot() method
 
     # trout lake example (only sfr file is included)
     # can add tests for sfr connection with lak package

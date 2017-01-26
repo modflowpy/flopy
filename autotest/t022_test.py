@@ -1,7 +1,6 @@
 # Test SWR binary read functionality
 import os
 import flopy
-# import matplotlib.pyplot as plt
 
 pth = os.path.join('..', 'examples', 'data', 'swr_test')
 files = ('SWR004.stg', 'SWR004.flow', 'SWR004.vel', 'swr005.qaq',
