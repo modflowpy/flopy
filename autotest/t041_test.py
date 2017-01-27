@@ -73,7 +73,7 @@ def test_obs_load_and_write():
         assert np.allclose(obs0[:, 0], obs1[:, 0], atol=1e-4), msg
 
         msg = 'new observed heads are not approximately equal'
-        assert np.allclose(obs0[:, 1], obs1[:, 1], atol=1e-6), msg
+        assert np.allclose(obs0[:, 1], obs1[:, 1], atol=1e-4), msg
 
 
 if __name__ == '__main__':
