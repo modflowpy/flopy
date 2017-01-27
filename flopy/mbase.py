@@ -119,6 +119,11 @@ class BaseModel(object):
         self.external_output = []
         self.package_units = []
 
+        # output files
+        self.output_fnames = []
+        self.output_units = []
+        self.output_binflag = []
+
         return
 
     # we don't need these - no need for controlled access to array_free_format
@@ -302,6 +307,92 @@ class BaseModel(object):
             self.external_fnames.append(pth)
         return
 
+
+    def add_output(self, fname, unit, binflag=False, output=False):
+        """
+        Assign an external array so that it will be listed as a DATA or
+        DATA(BINARY) entry in the name file.  This will allow an outside
+        file package to refer to it.
+
+        Parameters
+        ----------
+        fname : str
+            filename of external array
+        unit : int
+            unit number of external array
+        binflag : boolean
+            binary or not. (default is False)
+
+        """
+        if fname in self.output_fnames:
+            print("BaseModel.add_output() warning: " +
+                  "replacing existing filename {0}".format(fname))
+            idx = self.output_fnames.index(fname)
+            self.output_fnames.pop(idx)
+            self.output_units.pop(idx)
+            self.output_binflag.pop(idx)
+
+        self.output_fnames.append(fname)
+        self.output_units.append(unit)
+        self.output_binflag.append(binflag)
+        return
+    
+    
+    def remove_output(self, fname=None, unit=None):
+        """
+        Remove an output file from the model by specifying either the
+        file name or the unit number.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    self.output_fnames.pop(i)
+                    self.output_units.pop(i)
+                    self.output_binflag.pop(i)
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    self.output_fnames.pop(i)
+                    self.output_units.pop(i)
+                    self.output_binflag.pop(i)
+        else:
+            raise Exception(
+                ' either fname or unit must be passed to remove_output()')
+        return
+
+    def get_output(self, fname=None, unit=None):
+        """
+        Get an output file from the model by specifying either the
+        file name or the unit number.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    return self.output_units[i]
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    return self.output_fnames[i]
+        else:
+            raise Exception(
+                ' either fname or unit must be passed to get_output()')
+        return
 
     def add_external(self, fname, unit, binflag=False, output=False):
         """
