@@ -10,7 +10,8 @@ from . import shapefile_utils
 
 
 NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}", "strt": "{0}",
-                   "wel_flux": "{0}^3/{1}", "top": "{0}", "botm": "{0}", "thickness": "{0}",
+                   "wel_flux": "{0}^3/{1}", "top": "{0}","model_top": "{0}",
+                   "botm": "{0}", "thickness": "{0}",
                    "ghb_cond": "{0}/{1}^2", "ghb_bhead": "{0}", "transmissivity": "{0}^2/{1}",
                    "vertical_conductance": "{0}/{1}^2", "primary_storage_coefficient": "1/{1}",
                    "horizontal_hydraulic_conductivity": "{0}/{1}", "riv_cond": "1/{1}",
