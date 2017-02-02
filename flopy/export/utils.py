@@ -460,6 +460,8 @@ def generic_array_helper(f, array, var_name="generic_array",
     attribs["units"] = units
     attribs["min"] = mn
     attribs["max"] = mx
+    if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
+        raise Exception("error processing {0}: all NaNs".format(var_name))
     try:
         var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                 dimensions=dimensions)
@@ -543,6 +545,9 @@ def mflist_helper(f, mfl, **kwargs):
             attribs["coordinates"] = "time layer latitude longitude"
             attribs["min"] = np.nanmin(array)
             attribs["max"] = np.nanmax(array)
+            if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
+                raise Exception("error processing {0}: all NaNs".format(var_name))
+
             if units is not None:
                 attribs["units"] = units
             try:
@@ -650,6 +655,8 @@ def transient2d_helper(f, t2d, **kwargs):
         attribs["units"] = units
         attribs["min"] = mn
         attribs["max"] = mx
+        if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
+                raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("time", "layer", "y", "x"))
@@ -770,6 +777,8 @@ def util3d_helper(f, u3d, **kwargs):
         attribs["units"] = units
         attribs["min"] = mn
         attribs["max"] = mx
+        if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
+            raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("layer", "y", "x"))
@@ -863,7 +872,8 @@ def util2d_helper(f, u2d, **kwargs):
         attribs["units"] = units
         attribs["min"] = mn
         attribs["max"] = mx
-
+        if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
+            raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
             var = f.create_variable(var_name, attribs, precision_str=precision_str,
                                     dimensions=("y", "x"))
