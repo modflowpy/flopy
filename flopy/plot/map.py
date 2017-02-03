@@ -138,9 +138,25 @@ class ModelMap(object):
         # quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
         #                          **kwargs)
         quadmesh = self.sr.plot_array(plotarray)
+
+        # set max and min
+        if 'vmin' in kwargs:
+            vmin = kwargs.pop('vmin')
+        else:
+            vmin = None
+        if 'vmax' in kwargs:
+            vmax = kwargs.pop('vmax')
+        else:
+            vmax = None
+        quadmesh.set_clim(vmin=vmin, vmax=vmax)
+
+        # send rest of kwargs to quadmesh
         quadmesh.set(**kwargs)
+
+        # add collection to axis
         ax.add_collection(quadmesh)
 
+        # set limits
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
         return quadmesh
