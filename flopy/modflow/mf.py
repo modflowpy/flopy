@@ -194,6 +194,7 @@ class Modflow(BaseModel):
             "sub": flopy.modflow.ModflowSub,
             "swt": flopy.modflow.ModflowSwt,
             "hyd": flopy.modflow.ModflowHyd,
+            "hob": flopy.modflow.ModflowHob,
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc
         }
@@ -306,6 +307,8 @@ class Modflow(BaseModel):
                                                self.lst.unit_number[0],
                                                self.lst.file_name[0]))
         f_nam.write('{}'.format(self.get_name_file_entries()))
+
+        # write the external files
         for u, f, b in zip(self.external_units, self.external_fnames,
                            self.external_binflag):
             if u == 0:
@@ -316,6 +319,19 @@ class Modflow(BaseModel):
                     'DATA(BINARY)  {0:3d}  '.format(u) + f + ' REPLACE\n')
             else:
                 f_nam.write('DATA          {0:3d}  '.format(u) + f + '\n')
+
+        # write the output files
+        for u, f, b in zip(self.output_units, self.output_fnames,
+                           self.output_binflag):
+            if u == 0:
+                continue
+            if b:
+                f_nam.write(
+                    'DATA(BINARY)  {0:3d}  '.format(u) + f + ' REPLACE\n')
+            else:
+                f_nam.write('DATA          {0:3d}  '.format(u) + f + '\n')
+
+        # close the name file
         f_nam.close()
         return
 

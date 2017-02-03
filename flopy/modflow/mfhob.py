@@ -1,19 +1,158 @@
+import os
+import sys
+import collections
 import numpy as np
 from flopy.pakbase import Package
 
 
+# Create HeadObservation instance from a time series array
+
+class HeadObservation(object):
+    """
+    Create HeadObservation instance from a time series array
+
+    Parameters
+    ----------
+    tomulth : float
+        time-offset multiplier for head observations. Default is 1.
+    obsnam : string
+        Observation name. Default is 'HOBS'
+    layer : int
+        is the zero-based layer index of the cell in which the head observation
+        is located. If layer is less than zero, hydraulic heads from multiple
+        layers are combined to calculate a simulated value. The number of
+        layers equals the absolute value of layer, or |layer|. Default is 0.
+    row : int
+        zero-based row index for the observation. Default is 0.
+    column : int
+        zero-based column index of the observation. Default is 0.
+    irefsp : int
+        Stress period to which the observation time is referenced. The reference
+        point is the beginning of the specified stress period. If the value of
+        irefsp is negative, there are observations at |irefsp| times.
+    roff : float
+        Fractional offset from center of cell in Y direction (between rows).
+        Default is 0.
+    coff : float
+        Fractional offset from center of cell in X direction (between columns).
+        Default is 0.
+    itt : int
+        Flag that identifies whether head or head changes are used as
+        observations. itt = 1 specified for heads and itt = 2 specified
+        if initial value is head and subsequent changes in head. Only
+        specified if irefsp is < 0. Default is 1.
+    mlay : dictionary of length (|irefsp|)
+        key represents zero-based layer numbers for multilayer observations an
+        value represents the fractional value for each layer of multilayer
+        observations. Only used if irefsp < 0. Default is {0:1.}
+    time_series_data : list or numpy array
+        two-dimensional list or numpy array containing the simulation time of
+        the observation and the observed head [[totim, hob]]. Default is
+        [[0., 0.]]
+
+    Returns
+    -------
+    obs : HeadObservation
+        HeadObservation object.
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> model = flopy.modflow.Modflow()
+    >>> dis = flopy.modflow.ModflowDis(model, nlay=1, nrow=11, ncol=11, nper=2,
+    ... perlen=[1,1])
+    >>> obs = flopy.modflow.HeadObservation(model, layer=0, row=5, column=5,
+    ... time_series_data=[[1.,54.4], [2., 55.2]])
+
+    """
+
+    def __init__(self, model, tomulth=1., obsname='HOBS',
+                 layer=0, row=0, column=0, irefsp=0,
+                 roff=0., coff=0., itt=1, mlay={0: 1.},
+                 time_series_data=[[0., 0.]], names=None):
+
+        self.obsname = obsname
+        self.layer = layer
+        self.row = row
+        self.column = column
+        self.irefsp = irefsp
+        self.roff = roff
+        self.coff = coff
+        self.itt = itt
+
+        # check if multilayer observation
+        self.mlay = mlay
+        self.maxm = 0
+        self.multilayer = False
+        if len(self.mlay.keys()) > 1:
+            self.maxm = len(self.mlay.keys())
+            self.multilayer = True
+            tot = 0.
+            for key, value in self.mlay.items():
+                tot += value
+            if tot != 1.:
+                msg = 'sum of dataset 4 proportions must equal 1.0 - ' + \
+                      'sum of dataset 4 proportions = {}'.format(tot)
+                raise ValueError(msg)
+
+        # convert passed time_series_data to a numpy array
+        if isinstance(time_series_data, list):
+            time_series_data = np.array(time_series_data, dtype=np.float)
+
+        # if a single observation is passed as a list reshape to a
+        # two-dimensional numpy array
+        if len(time_series_data.shape) == 1:
+            time_series_data = np.reshape(time_series_data, (1, 2))
+        shape = time_series_data.shape
+
+        # set the number of observations in this time series
+        self.nobs = shape[0]
+
+        # construct names if not passed
+        if names is None:
+            if self.nobs == 1:
+                names = [obsname]
+            else:
+                names = []
+                for idx in range(self.nobs):
+                    names.append('{}.{}'.format(obsname, idx + 1))
+
+        # create time_series_data
+        self.time_series_data = HeadObservation.get_empty(ncells=shape[0])
+        for idx in range(self.nobs):
+            t = time_series_data[idx, 0]
+            kstp, kper, toffset = model.dis.get_kstp_kper_toffset(t)
+            self.time_series_data[idx]['totim'] = t
+            self.time_series_data[idx]['irefsp'] = kper
+            self.time_series_data[idx]['toffset'] = toffset / tomulth
+            self.time_series_data[idx]['hobs'] = time_series_data[idx, 1]
+            self.time_series_data[idx]['obsname'] = names[idx]
+
+    @staticmethod
+    def get_empty(ncells=0):
+        # get an empty recaray that correponds to dtype
+        dtype = HeadObservation.get_default_dtype()
+        d = np.zeros((ncells, len(dtype)), dtype=dtype)
+        d[:, :] = -1.0E+10
+        d[:]['obsname'] = ''
+        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+
+    @staticmethod
+    def get_default_dtype():
+        # get the default HOB dtype
+        dtype = np.dtype([("totim", np.float32), ("irefsp", np.int),
+                          ("toffset", np.float32),
+                          ("hobs", np.float32), ("obsname", '|S12')])
+        return dtype
+
+
 class ModflowHob(Package):
-    '''
+    """
     Head Observation package class
 
     Parameters
     ----------
-    nh : int
-        Number of head observations
-    mobs : int
-        Number of multilayer head observations
-    maxm : int
-        Maximum number of layers for multilayer heads
     iuhobsv : int
         unit number where output is saved
     hobdry : float
@@ -24,45 +163,17 @@ class ModflowHob(Package):
         toffset must produce a time value in units consistent with other model
         input. tomulth can be dimensionless or can be used to convert the units
         of toffset to the time unit used in the simulation.
-    obsnam : string list of length nh
-        Observation name
-    layer : int list of length nh
-        is the layer index of the cell in which the head observation is located.
-        If layer is less than zero, hydraulic heads from multiple layers are
-        combined to calculate a simulated value. The number of layers equals the
-        absolute value of layer, or |layer|.
-    row : int list of length nh
-        row index for the observation
-    column : int list of length nh
-        column index of the observation
-    irefsp : int of length nh
-        Stress period to which the observation time is referenced. The reference
-        point is the beginning of the specified stress period. If the value of
-        irefsp is negative, there are observations at |irefsp| times.
-    toffset : float list of length nh
-        Fractional offset between time steps
-    roff : float list of length nh
-        Fractional offset from center of cell in Y direction (between rows)
-    coff : float list of length nh
-        Fractional offset from center of cell in X direction (between columns)
-    hob : float list of length nh
-        Observed value
-    fromlay : int of length nh
-        Layer index where observation begins
-    tolay : int of length nh
-        Layer index where observation end
-    mlay : int list of length (maxm,mobs)
-        Layer numbers for multilayer observations
-    pr : float list of length(maxm,mobs)
-        Fractional value for each layer of multilayer observations
-    itt : int
-        Flag that identifies whether head or head changes are used as observations
-        itt = 1 --> heads
-        itt = 2 --> initial value is head and subsequent changes in head
+    obs_data : list of HeadObservation instances
+        list of HeadObservation instances containing all of the data for
+        each observation. Default is None.
+    hobname : str
+        Name of head observation output file. If iuhobsv is greater than 0,
+        and hobname is not provided the model basename with a '.hob.out'
+        extension will be used. Default is None.
     extension : string
-        Filename extension (default is ['hob','obh'])
+        Filename extension (default is ['hob'])
     unitnumber : int
-        File unit number (default is [39, 139])
+        File unit number (default is [39])
 
 
     Attributes
@@ -76,101 +187,87 @@ class ModflowHob(Package):
 
     Notes
 
-    '''
+    Examples
+    --------
 
-    def __init__(self, model, nh=0, mobs=0, maxm=0, iuhobsv=139, hobdry=0,
-                 tomulth=1.0, obsnam=[], layer=[], row=[], column=[],
-                 irefsp=[], toffset=[], roff=[], coff=[], hob=[],
-                 fromlay=[], tolay=[], mlay=[], pr=[], itt=[],
-                 extension=['hob', 'obh'], unitnumber=[39, 139]):
-        # tomulth=1, obsnam=None, layer=None, row=None, column=None,
-        # irefsp=None, toffset=None, roff=None, coff=None, hob=None,
-        # fromlay=None,tolay=None,mlay=None, pr=None, itt=1,
+    >>> import flopy
+    >>> model = flopy.modflow.Modflow()
+    >>> dis = flopy.modflow.ModflowDis(model, nlay=1, nrow=11, ncol=11, nper=2,
+    ... perlen=[1,1])
+    >>> obs = flopy.modflow.HeadObservation(model, layer=0, row=5, column=5,
+    ... time_series_data=[[1.,54.4], [2., 55.2]])
+    >>> hob = flopy.modflow.ModflowHob(model, iuhobsv=51, hobdry=-9999.,
+    ... obs_data=[obs])
+
+
+    """
+
+    def __init__(self, model, iuhobsv=None, hobdry=0, tomulth=1.0,
+                 obs_data=None, hobname=None,
+                 extension=['hob'], unitnumber=None):
         """
         Package constructor
         """
-        name = ['HOB', 'DATA']
-        Package.__init__(self, model, extension, name, unitnumber)
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowHob.defaultunit()
+
+        if iuhobsv is not None:
+            if iuhobsv > 0:
+                if hobname is None:
+                    hobname = model.name + '.hob.out'
+                model.add_output(hobname, iuhobsv, output=True)
+            else:
+                iuhobsv = 0
+
+        # Fill namefile items
+        name = [ModflowHob.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # Call ancestor's init to set self.parent, extension, name and unit
+        # number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra)
 
         self.url = 'hob.htm'
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
                        'generated by Flopy.'
-        self.nh = nh
-        self.mobs = mobs
-        self.maxm = maxm
+
         self.iuhobsv = iuhobsv
         self.hobdry = hobdry
         self.tomulth = tomulth
-        self.obsnam = obsnam
-        self.layer = layer
-        self.row = row
-        self.column = column
-        self.irefsp = irefsp
-        self.toffset = toffset
-        self.roff = roff
-        self.coff = coff
-        self.hob = hob
-        self.fromlay = fromlay
-        self.tolay = tolay
-        self.mlay = mlay  # swm: not needed?
-        self.pr = pr
-        self.itt = itt
 
-        # -create empty arrays of the correct size
-        # self.obsnam = np.empty((self.nh), dtype='str')
-        self.layer = np.zeros((self.nh), dtype='int32')
-        self.row = np.zeros((self.nh), dtype='int32')
-        self.column = np.zeros((self.nh), dtype='int32')
-        self.irefsp = np.zeros((self.nh), dtype='int32')
-        self.toffset = np.zeros((self.nh), dtype='float32')
-        self.roff = np.zeros((self.nh), dtype='float32')
-        self.coff = np.zeros((self.nh), dtype='float32')
-        self.hob = np.zeros((self.nh), dtype='float32')
-        self.fromlay = np.zeros((self.nh), dtype='int32')
-        self.tolay = np.zeros((self.nh), dtype='int32')
-        self.mlay = np.zeros((self.nh), dtype='int32')  # swm: not needed?
-        self.pr = np.zeros((self.nh, self.maxm), dtype='float32')
-        self.itt = np.ones((self.nh), dtype='int32')
+        # make sure obs_data is a list
+        if not isinstance(obs_data, list):
+            obs_data = [obs_data]
 
-        # -assign values to arrays
-        # self.obsnam[:] = np.empty((self.nh), dtype='str')
-        # self.layer[:] = np.zeros((self.nh), dtype='int32')
-        # self.row[:] = np.zeros((self.nh), dtype='int32')
-        # self.column[:] = np.zeros((self.nh), dtype='int32')
-        # self.irefsp[:] = np.zeros((self.nh), dtype='int32')
-        # self.toffset[:] = np.zeros((self.nh), dtype='float32')
-        # self.roff[:] = np.zeros((self.nh), dtype='float32')
-        # self.coff[:] = np.zeros((self.nh), dtype='float32')
-        # self.hob[:] = np.zeros((self.nh), dtype='float32')
-        # self.fromlay[:] = np.zeros((self.nh), dtype='int32')
-        # self.tolay[:] = np.zeros((self.nh), dtype='int32')
-        # self.mlay[:] = np.zeros((self.nh), dtype='int32') #swm: not needed?
-        # self.pr[:,:] = np.zeros((self.nh, self.maxm), dtype='float32')
-        # self.itt[:] = np.zeros((self.nh), dtype='int32')
-        # self.itt[:] = np.ones((self.nh), dtype='int32')
-
-        self.obsnam[:] = obsnam
-        # self.obsnam[:] = np.array(obsnam, dtype='str')
-        self.layer[:] = layer
-        self.row[:] = row
-        self.column[:] = column
-        self.irefsp[:] = irefsp
-        self.toffset[:] = toffset
-        self.roff[:] = roff
-        self.coff[:] = coff
-        self.hob[:] = hob
-        self.fromlay[:] = fromlay
-        self.tolay[:] = tolay
-        # self.mlay[:] = mlay #swm: not needed?
-        self.pr[:, :] = pr
-        self.itt[:] = itt
-
-        # putting in some more checks here
-
+        # set self.obs_data
+        self.obs_data = obs_data
 
         # add checks for input compliance (obsnam length, etc.)
         self.parent.add_package(self)
+
+    def _set_dimensions(self):
+        # make sure each entry of obs_data list is a HeadObservation instance
+        # and calculate nh, mobs, and maxm
+        msg = ''
+        self.nh = 0
+        self.mobs = 0
+        self.maxm = 0
+        for idx, obs in enumerate(self.obs_data):
+            if not isinstance(obs, HeadObservation):
+                msg += 'ModflowHob: obs_data entry {} '.format(idx) + \
+                       'is not a HeadObservation instance.\n'
+                continue
+            self.nh += obs.nobs
+            if obs.multilayer:
+                self.mobs += obs.nobs
+            self.maxm = max(self.maxm, obs.maxm)
+        if msg != '':
+            raise ValueError(msg)
+        return
 
     def write_file(self):
         """
@@ -181,6 +278,9 @@ class ModflowHob(Package):
         None
 
         """
+        # determine the dimensions of HOB data
+        self._set_dimensions()
+
         # open file for writing
         f = open(self.fn_path, 'w')
 
@@ -195,62 +295,70 @@ class ModflowHob(Package):
         f.write('{:10.4g}\n'.format(self.hobdry))
 
         # write dataset 2
-        f.write('{:10d}\n'.format(self.tomulth))  # check format
+        f.write('{:10.4g}\n'.format(self.tomulth))
 
         # write datasets 3-6
-        i = 0
-        while i < self.nh:
-            multilayer = False
-            if self.fromlay[i] < self.tolay[i]:
-                multilayer = True
-            if multilayer:  # check if multilayer obs
-                self.layer[i] = self.fromlay[i] - self.tolay[i] - 1
-
-            # write dataset 3
-            f.write('{}'.format(self.obsnam[i]))
-            f.write('{:10d}'.format(self.layer[i]))
-            f.write('{:10d}'.format(self.row[i]))
-            f.write('{:10d}'.format(self.column[i]))
-            f.write('{:10d}'.format(self.irefsp[i]))
-            f.write('{:10.4g}'.format(self.toffset[i]))
-            f.write('{:10.4g}'.format(self.roff[i]))
-            f.write('{:10.4g}'.format(self.coff[i]))
-            f.write('{:10.4g}\n'.format(self.hob[i]))
-
-            # write dataset 4 if multilayer obs
-            if multilayer:
-                for j in range(self.fromlay[i], self.tolay[i] + 1):
-                    f.write('{:10d}'.format(j))
-                    f.write('{:10.4g}\n'.format(self.pr[i, j-1]))
-
-            # write datasets 5 & 6. Index loop variable
-            if self.irefsp[i] < 0:
-                # data set 5
-                f.write('{:10d}\n'.format(self.itt[i]))
-                # data set 6
-                for j in range(abs(self.irefsp[i])):
-                    f.write('{}'.format(self.obsnam[i]))
-                    f.write('{:10d}'.format(abs(self.irefsp[i])))
-                    f.write('{:10.4g}'.format(self.toffset[i]))
-                    f.write('{:10.4g}\n'.format(self.hob[i]))
-                    i += 1
+        for idx, obs in enumerate(self.obs_data):
+            # dataset 3
+            obsname = obs.obsname
+            if isinstance(obsname, bytes):
+                obsname = obsname.decode('utf-8')
+            line = '{:12s}   '.format(obsname)
+            layer = obs.layer
+            if layer >= 0:
+                layer += 1
+            line += '{:10d}'.format(layer)
+            line += '{:10d}'.format(obs.row + 1)
+            line += '{:10d}'.format(obs.column + 1)
+            irefsp = obs.irefsp
+            if irefsp >= 0:
+                irefsp += 1
+            line += '{:10d}'.format(irefsp)
+            if obs.nobs == 1:
+                toffset = obs.obs_data[0]['toffset']
+                hobs = obs.obs_data[0]['hobs']
             else:
-                i += 1
+                toffset = 0.
+                hobs = 0.
+            line += '{:10.2f}'.format(toffset)
+            line += '{:10.4f}'.format(obs.roff)
+            line += '{:10.4f}'.format(obs.coff)
+            line += '{:10.4f}'.format(hobs)
+            line += '  # DATASET 3 - Observation {}'.format(idx + 1)
+            f.write('{}\n'.format(line))
 
+            # dataset 4
+            if len(obs.mlay.keys()) > 1:
+                line = ''
+                for key, value in obs.items():
+                    line += '{:5d}{:10.4f}'.format(key + 1, value)
+                line += '  # DATASET 4 - Observation {}'.format(idx + 1)
+                f.write('{}\n'.format(line))
+
+            # dataset 5
+            if irefsp < 0:
+                line = '{:10d}'.format(obs.itt)
+                line += 85 * ' '
+                line += '  # DATASET 5 - Observation {}'.format(idx + 1)
+                f.write('{}\n'.format(line))
+
+            # dataset 6:
+            if obs.nobs > 1:
+                for jdx, t in enumerate(obs.time_series_data):
+                    obsname = t['obsname']
+                    if isinstance(obsname, bytes):
+                        obsname = obsname.decode('utf-8')
+                    line = '{:12s}   '.format(obsname)
+                    line += '{:10d}'.format(t['irefsp'] + 1)
+                    line += '{:10.4f}'.format(t['toffset'])
+                    line += '{:10.4f}'.format(t['hobs'])
+                    line += 50 * ' '
+                    line += '  # DATASET 6 - ' + \
+                            'Observation {}.{}'.format(idx + 1, jdx + 1)
+                    f.write('{}\n'.format(line))
+
+        # close the hob package file
         f.close()
-
-        # # swm: BEGIN hack for writing standard file
-        # sfname = self.fn_path  # swm:hack
-        # sfname += '_ins'  # swm: hack
-        # # write header
-        # f_ins = open(sfname, 'w')  # swm: hack for standard file
-        # f_ins.write('jif @\n')  # swm: hack for standard file
-        # f_ins.write(
-        #     'StandardFile 1 1 %s\n' % (self.nh))  # swm: hack for standard file
-        # for i in range(0, self.nh):
-        #     f_ins.write(
-        #         '{}\n'.format(self.obsnam[i]))  # swm: hack for standard file
-        # # swm: END hack for writing standard file
 
         return
 
@@ -277,8 +385,8 @@ class ModflowHob(Package):
 
         Returns
         -------
-        lpf : ModflowLpf object
-            ModflowLpf object.
+        hob : ModflowHob object
+            ModflowHob object.
 
         Examples
         --------
@@ -290,7 +398,7 @@ class ModflowHob(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading hobs package file...\n')
+            sys.stdout.write('loading hob package file...\n')
 
         if not hasattr(f, 'read'):
             filename = f
@@ -304,88 +412,115 @@ class ModflowHob(Package):
         # read dataset 1
         t = line.strip().split()
         nh = int(t[0])
-        mobs = int(t[1])
-        maxm = int(t[2])
+        # mobs = int(t[1])
+        # maxm = int(t[2])
         iuhobsv = int(t[3])
+        #if iuhobsv > 0:
+        #    model.add_pop_key_list(iuhobsv)
         hobdry = float(t[4])
 
         # read dataset 2
         line = f.readline()
         t = line.strip().split()
-        tomulth = int(t[0])
+        tomulth = float(t[0])
 
-        # create observation lists
-        obsnam = []
-        layer = []
-        fromlay = []
-        tolay = []
-        row = []
-        column = []
-        irefsp = []
-        toffset = []
-        roff = []
-        coff = []
-        hob = []
-        pr = []
-        itt = []
-
+        # read observation data
+        obs_data = []
 
         # read datasets 3-6
-        i = 0
-        while i < nh:
+        nobs = 0
+        while True:
             # read dataset 3
             line = f.readline()
             t = line.strip().split()
-            obsnam.append(t[0])
-            tlayer = int(t[1])
-            layer.append(tlayer - 1)
-            row.append(int(t[2]) - 1)
-            column.append(int(t[3]) - 1)
-            tirefsp = int(t[4])
-            irefsp.append(tirefsp)
-            toffset.append(float(t[5]))
-            roff.append(float(t[6]))
-            coff.append(float(t[7]))
-            hob.append(float(t[8]))
-
-            multilayer = False
-            if tlayer < 0:
-                multilayer = True
+            obsnam = t[0]
+            layer = int(t[1])
+            row = int(t[2]) - 1
+            col = int(t[3]) - 1
+            irefsp0 = int(t[4])
+            toffset = float(t[5])
+            roff = float(t[6])
+            coff = float(t[7])
+            hob = float(t[8])
 
             # read dataset 4 if multilayer obs
-            if multilayer:
-                minlay = 999
-                maxlay = -999
-            #     for j in range(tlayer):
-            #         line = f.readline()
-            #         d4 = line.strip().split()
-            #         k = 0
-            #         cont = True
-            #         while cont:
-            #             try:
-            #                 mlay = int(d4[k]) - 1
-            #                 pr.append(float(d4[k+1]))
-            #             except:
-            #
-            #
-            #         f.write('{:10d}'.format(j))
-            #         f.write('{:10.4g}\n'.format(self.pr[i, j-1]))
-            #
-            # # write datasets 5 & 6. Index loop variable
-            # if self.irefsp[i] < 0:
-            #     # data set 5
-            #     f.write('{:10d}\n'.format(self.itt[i]))
-            #     # data set 6
-            #     for j in range(abs(self.irefsp[i])):
-            #         f.write('{}'.format(self.obsnam[i]))
-            #         f.write('{:10d}'.format(abs(self.irefsp[i])))
-            #         f.write('{:10.4g}'.format(self.toffset[i]))
-            #         f.write('{:10.4g}\n'.format(self.hob[i]))
-            #         i += 1
+            if layer > 0:
+                layer -= 1
+                mlay = {layer: 1.}
             else:
-                fromlay.append(tlayer-1)
-                tolay.append(tlayer-1)
-                pr.append(1.)
-                i += 1
+                line = f.readline()
+                t = line.strip().split()
+                mlay = collections.OrderedDict()
+                for j in range(0, abs(layer), 2):
+                    k = int(t[j]) - 1
+                    mlay[k] = float(t[j + 1])
 
+            # read datasets 5 & 6. Index loop variable
+            if irefsp0 > 0:
+                itt = 1
+                irefsp -= 1
+                totim = model.dis.get_totim_from_kper_toffset(irefsp0,
+                                                              toffset * tomulth)
+                names = [obsnam]
+                tsd = [totim, hob]
+                nobs += 1
+            else:
+                names = []
+                tsd = []
+                # read data set 5
+                line = f.readline()
+                t = line.strip().split()
+                itt = int(t[0])
+                # dataset 6
+                for j in range(abs(irefsp0)):
+                    line = f.readline()
+                    t = line.strip().split()
+                    names.append(t[0])
+                    irefsp = int(t[1]) - 1
+                    toffset = float(t[2])
+                    totim = model.dis.get_totim_from_kper_toffset(irefsp,
+                                                                  toffset * tomulth)
+                    hob = float(t[3])
+                    tsd.append([totim, hob])
+                    nobs += 1
+
+            obs_data.append(HeadObservation(model, tomulth=tomulth,
+                                            layer=layer, row=row, column=col,
+                                            irefsp=irefsp0,
+                                            roff=roff, coff=coff,
+                                            obsname=obsnam,
+                                            mlay=mlay, itt=itt,
+                                            time_series_data=tsd,
+                                            names=names))
+            if nobs == nh:
+                break
+
+        # close the file
         f.close()
+
+        # determine specified unit number
+        unitnumber = None
+        hobname = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowHob.ftype():
+                    unitnumber = key
+                if key == iuhobsv:
+                    hobname = os.path.basename(value.filename)
+                    model.add_pop_key_list(iuhobsv)
+
+
+        # create hob object instance
+        hob = ModflowHob(model, iuhobsv=iuhobsv, hobdry=hobdry,
+                         tomulth=tomulth, obs_data=obs_data,
+                         unitnumber=unitnumber, hobname=hobname)
+
+        return hob
+
+    @staticmethod
+    def ftype():
+        return 'HOB'
+
+    @staticmethod
+    def defaultunit():
+        return 39
