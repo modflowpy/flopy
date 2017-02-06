@@ -156,14 +156,14 @@ class Mt3dSft(Package):
     >>>        exe_name = 'mt3d-usgs_1.0.00.exe',
     >>>        model_ws = r'.\CrnkNic',
     >>>        load_only='btn')
-    >>> sft = flopy.mt3d.Mt3dSft.load('CrnkNic.sft', mt)
+    >>> sft = flopy.mt3d.Mt3dSft.load(mt, 'CrnkNic.sft')
 
 
     """
 
     unitnumber = 46
     def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=0,
-                 ietsfr=0, isfsolv=0, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
+                 ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
                  nobssf=0, obs_sf=None, sf_stress_period_data = None,
                  dtype=None, extension='sft',unitnumber=None, **kwargs):
@@ -281,9 +281,8 @@ class Mt3dSft(Package):
         # Item 6
         if self.nobssf != 0:
             for iobs in range(self.nobssf):
-                f_sft.write('{0:10d}{1:10d}          # isobs, irobs\n'
-                            .format(self.obs_sf[iobs][0],
-                                    self.obs_sf[iobs][1]))
+                f_sft.write('{0:10d}                 # location of obs as given by position in list of irch\n'
+                            .format(self.obs_sf[iobs]))
 
         # Items 7, 8
         # Loop through each stress period and write ssm information
