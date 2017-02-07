@@ -225,7 +225,7 @@ class Mt3dSft(Package):
         water boundary conditions.
         """
         type_list = [("isegbc", np.int), ("irchbc", np.int), \
-                     ("isfbctyp", np.int)]
+                     ("isfbctyp", np.float32)]
         if ncomp > 1:
             for comp in range(1,ncomp+1):
                 comp_name = "cbcsf{0:d}".format(comp)
@@ -285,7 +285,7 @@ class Mt3dSft(Package):
                             .format(self.obs_sf[iobs]))
 
         # Items 7, 8
-        # Loop through each stress period and write ssm information
+        # Loop through each stress period and assign source & sink concentrations to stream features
         nper = self.parent.nper
         for kper in range(nper):
             if f_sft.closed == True:
