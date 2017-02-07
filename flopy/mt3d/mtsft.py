@@ -276,7 +276,7 @@ class Mt3dSft(Package):
         f_sft.write(self.dispsf.get_file_entry())
 
         # Item 5
-        f_sft.write('{0:10d}          # nobssf\n'.format(self.nobssf))
+        f_sft.write('{0:10d}                 # nobssf\n'.format(self.nobssf))
 
         # Item 6
         if self.nobssf != 0:
