@@ -334,10 +334,10 @@ class Mt3dms(BaseModel):
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('%s\n' % (self.heading))
-        f_nam.write('%s %3i %s\n' % (self.lst.name[0], self.lst.unit_number[0],
+        f_nam.write('%s %11i %s\n' % (self.lst.name[0], self.lst.unit_number[0],
                                      self.lst.file_name[0]))
         if self.ftlfilename is not None:
-            f_nam.write('%s %3i %s\n' % ('FTL', 39, self.ftlfilename))
+            f_nam.write('%s %12i %s\n' % ('FTL', 39, self.ftlfilename))
         f_nam.write('%s' % self.get_name_file_entries())
         for u, f in zip(self.external_units, self.external_fnames):
             f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
