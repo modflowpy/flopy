@@ -216,7 +216,8 @@ class ModflowHob(Package):
             if iuhobsv > 0:
                 if hobname is None:
                     hobname = model.name + '.hob.out'
-                model.add_output(hobname, iuhobsv, output=True)
+                model.add_output(hobname, iuhobsv,
+                                 package=ModflowHob.ftype())
             else:
                 iuhobsv = 0
 

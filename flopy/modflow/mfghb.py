@@ -106,8 +106,8 @@ class ModflowGhb(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            pth = model.name + '.' + ModflowGhb.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, fname=pth)
+            #pth = model.name + '.' + ModflowGhb.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, package=ModflowGhb.ftype())
         else:
             ipakcb = 0
 

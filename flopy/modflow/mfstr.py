@@ -50,6 +50,11 @@ class ModflowStr(Package):
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is 0).
+    istcb2 : int
+        A flag that is used flag and a unit number for the option to store
+        streamflow out of each reach in an unformatted (binary) file.
+        If istcb2 is greater than zero streamflow data will be saved.
+        (default is None).
     dtype : tuple, list, or numpy array of numpy dtypes
         is a tuple, list, or numpy array containing the dtype for
         datasets 6 and 8 and the dtype for datasets 9 and 10 data in
@@ -187,7 +192,7 @@ class ModflowStr(Package):
     """
 
     def __init__(self, model, mxacts=0, nss=0, ntrib=0, ndiv=0, icalc=0,
-                 const=86400., ipakcb=None,
+                 const=86400., ipakcb=None, istcb2=None,
                  dtype=None, stress_period_data=None, segment_data=None,
                  extension='str', unitnumber=None, options=None, **kwargs):
         """
@@ -200,8 +205,7 @@ class ModflowStr(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            pth = model.name + '.' + ModflowStr.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, fname=pth)
+            model.add_externalbudget(ipakcb, package=ModflowStr.ftype())
         else:
             ipakcb = 0
 
@@ -220,6 +224,7 @@ class ModflowStr(Package):
         self.ndiv = ndiv
         self.const = const
         self.ipakcb = ipakcb
+        self.istcb2 = istcb2
 
         # issue exception if ntrib is greater than 10
         if ntrib > 10:
@@ -383,7 +388,7 @@ class ModflowStr(Package):
             self.mxacts, self.nss,
             self.ntrib, self.ndiv,
             self.icalc, self.const,
-            self.ipakcb, self.ipakcb)
+            self.ipakcb, self.istcb2)
         for opt in self.options:
             line += ' ' + str(opt)
         line += '\n'
@@ -536,7 +541,7 @@ class ModflowStr(Package):
         ipakcb = 0
         try:
             if istcb1 != 0:
-                ipakcb = 53
+                ipakcb = istcb1
                 model.add_pop_key_list(istcb1)
         except:
             pass
@@ -761,7 +766,7 @@ class ModflowStr(Package):
 
         strpak = ModflowStr(model, mxacts=mxacts, nss=nss,
                             ntrib=ntrib, ndiv=ndiv, icalc=icalc,
-                            const=const, ipakcb=ipakcb,
+                            const=const, ipakcb=ipakcb, istcb2=istcb2,
                             stress_period_data=stress_period_data,
                             segment_data=segment_data,
                             options=options, unitnumber=unitnumber)

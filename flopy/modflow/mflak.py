@@ -67,8 +67,8 @@ class ModflowLak(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            pth = model.name + '.' + ModflowLak.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, fname=pth)
+            #pth = model.name + '.' + ModflowLak.ftype() + '.cbc'
+            model.add_externalbudget(ipakcb, package= ModflowLak.ftype())
         else:
             ipakcb = 0
 

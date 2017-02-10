@@ -123,6 +123,7 @@ class BaseModel(object):
         self.output_fnames = []
         self.output_units = []
         self.output_binflag = []
+        self.output_packages = []
 
         return
 
@@ -270,7 +271,8 @@ class BaseModel(object):
         return self.get_package(item)
 
 
-    def add_externalbudget(self, unit, fname=None, extension='cbc'):
+    def add_externalbudget(self, unit, fname=None, extension='cbc',
+                           binflag=True, package=None):
         """
         Add an external cell-by-cell budget file for a package
 
@@ -287,28 +289,42 @@ class BaseModel(object):
         """
         add_cbc = False
         if unit > 0:
+            add_cbc = True
             # determine if the file is in external_units
             if abs(unit) in self.external_units:
                 idx = self.external_units.index(abs(unit))
-                self.external_output[idx] = True
-                pth = os.path.basename(self.external_fnames[idx])
-                self.external_fnames[idx] = pth
-            else:
-                add_cbc = True
+                fname = os.path.basename(self.external_fnames[idx])
+                binflag = self.external_binflag[idx]
+                self.remove_external(unit=unit)
+            # determine if the unit exists in the output data
+            if abs(unit) in self.output_units:
+                add_cbc = False
+                idx = self.output_units.index(abs(unit))
+                if package is not None:
+                    self.output_packages[idx].append(package)
 
         if add_cbc:
             if fname is None:
-                pth = self.name + '.' + extension
-            else:
-                pth = fname
-            self.external_units.append(unit)
-            self.external_binflag.append(True)
-            self.external_output.append(True)
-            self.external_fnames.append(pth)
+                fname = self.name + '.' + extension
+                # check if this file name exists for a different unit number
+                if fname in self.output_fnames:
+                    idx = self.output_fnames.index(fname)
+                    iut = self.output_units[idx]
+                    if iut != unit:
+                        # include unit number in fname if package has
+                        # not been passed
+                        if package is None:
+                            fname = self.name + '.{}.'.format(unit) \
+                                    + extension
+                        # include package name in fname
+                        else:
+                            fname = self.name + '.{}.'.format(package) \
+                                    + extension
+            self.add_output(fname, unit, binflag=binflag, package=package)
         return
 
 
-    def add_output(self, fname, unit, binflag=False, output=False):
+    def add_output(self, fname, unit, binflag=False, package=None):
         """
         Assign an external array so that it will be listed as a DATA or
         DATA(BINARY) entry in the name file.  This will allow an outside
@@ -331,10 +347,15 @@ class BaseModel(object):
             self.output_fnames.pop(idx)
             self.output_units.pop(idx)
             self.output_binflag.pop(idx)
+            self.output_packages.pop(idx)
 
         self.output_fnames.append(fname)
         self.output_units.append(unit)
         self.output_binflag.append(binflag)
+        if package is not None:
+            self.output_packages.append([package])
+        else:
+            self.output_packages.append([])
         return
     
     
@@ -357,12 +378,14 @@ class BaseModel(object):
                     self.output_fnames.pop(i)
                     self.output_units.pop(i)
                     self.output_binflag.pop(i)
+                    self.output_packages.pop(i)
         elif unit is not None:
             for i, u in enumerate(self.output_units):
                 if u == unit:
                     self.output_fnames.pop(i)
                     self.output_units.pop(i)
                     self.output_binflag.pop(i)
+                    self.output_packages.pop(i)
         else:
             raise Exception(
                 ' either fname or unit must be passed to remove_output()')
@@ -385,10 +408,12 @@ class BaseModel(object):
             for i, e in enumerate(self.output_fnames):
                 if fname in e:
                     return self.output_units[i]
+            return None
         elif unit is not None:
             for i, u in enumerate(self.output_units):
                 if u == unit:
                     return self.output_fnames[i]
+            return None
         else:
             raise Exception(
                 ' either fname or unit must be passed to get_output()')
