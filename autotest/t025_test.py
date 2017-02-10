@@ -14,20 +14,15 @@ pths = []
 for mi in mf_items:
     pths.append(path)
 
-#mf_items = ['l1b2k_bath.nam']
-#mf_items = ['lakeex3.nam']
-#mf_items = ['l1a2k.nam']
-#pths = [path]
+exe_name = 'mf2005'
+v = flopy.which(exe_name)
+
+run = True
+if v is None:
+    run = False
 
 
-
-def load_lak(mfnam, pth):
-    exe_name = 'mf2005'
-    v = flopy.which(exe_name)
-
-    run = True
-    if v is None:
-        run = False
+def load_lak(mfnam, pth, run):
     try:
         import pymake
         lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
@@ -48,8 +43,16 @@ def load_lak(mfnam, pth):
         try:
             success, buff = m.run_model(silent=True)
         except:
+            msg = 'could not run base model ' + \
+                  '{}'.format(os.path.splitext(mfnam)[0])
+            print(msg)
             pass
-        assert success, 'base model run did not terminate successfully'
+        msg = 'base model {} '.format(os.path.splitext(mfnam)[0]) + \
+              'run did not terminate successfully'
+        assert success, msg
+        msg = 'base model {} '.format(os.path.splitext(mfnam)[0]) + \
+              'run terminated successfully'
+        print(msg)
         fn0 = os.path.join(lpth, mfnam)
 
 
@@ -61,10 +64,18 @@ def load_lak(mfnam, pth):
     m.write_input()
     if run:
         try:
-            success, buff = m.run_model(silent=True)
+            success, buff = m.run_model(silent=False)
         except:
+            msg = 'could not run new model ' + \
+                  '{}'.format(os.path.splitext(mfnam)[0])
+            print(msg)
             pass
-        assert success, 'base model run did not terminate successfully'
+        msg = 'new model {} '.format(os.path.splitext(mfnam)[0]) + \
+              'run did not terminate successfully'
+        assert success, msg
+        msg = 'new model {} '.format(os.path.splitext(mfnam)[0]) + \
+              'run terminated successfully'
+        print(msg)
         fn1 = os.path.join(apth, mfnam)
 
         fsum = os.path.join(compth,
@@ -75,7 +86,7 @@ def load_lak(mfnam, pth):
                                             max_incpd=0.1, max_cumpd=0.1,
                                             outfile=fsum)
         except:
-            print('could not performbudget comparison')
+            print('could not perform budget comparison')
 
         assert success, 'budget comparison failure'
 
@@ -83,14 +94,12 @@ def load_lak(mfnam, pth):
     return
 
 
-
-
 def test_mf2005load():
     for namfile, pth in zip(mf_items, pths):
-        yield load_lak, namfile, pth
+        yield load_lak, namfile, pth, run
     return
 
 
 if __name__ == '__main__':
     for namfile, pth in zip(mf_items, pths):
-        load_lak(namfile, pth)
+        load_lak(namfile, pth, run)

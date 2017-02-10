@@ -210,7 +210,8 @@ def test_example():
                                     channel_flow_data=channel_flow_data,
                                     dataset_5=dataset_5)
 
-    assert istcb2 in m.package_units
+    #assert istcb2 in m.package_units
+    assert istcb2 in m.output_units
     assert True
 
     # test handling of a 0-D array (produced by genfromtxt sometimes)
@@ -232,14 +233,12 @@ def test_transient_example():
     m = mf.Modflow.load('testsfr2.nam', model_ws=path)
 
     # test handling of unformatted output file
-    m.sfr.istcb2 = 49
-    m.sfr.unit_number = [m.sfr.unit_number[0], 49]
-    m.package_units.append(49)
+    m.sfr.istcb2 = -49
+    m.set_output_attribute(unit=abs(m.sfr.istcb2), attr={'binflag':True})
     m.write_input()
     m2 = mf.Modflow.load('testsfr2.nam', model_ws=path)
-    assert m2.sfr.istcb2 == 49
-    assert m2.sfr.unit_number[1] == 49
-    assert 49 in m2.package_units
+    assert m2.sfr.istcb2 == -49
+    assert m2.get_output_attribute(unit=abs(m2.sfr.istcb2), attr='binflag')
 
 
 def test_sfr_plot():
@@ -251,8 +250,8 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    #test_sfr()
+    test_sfr()
     #test_sfr_renumbering()
     #test_example()
     #test_transient_example()
-    test_sfr_plot()
+    #test_sfr_plot()

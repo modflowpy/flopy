@@ -96,6 +96,10 @@ class ModflowGage(Package):
                           "length of {} ".format(numgage+1) + \
                           "the length provided is {}".format(len(filenames))
                     raise Exception(err)
+                else:
+                    files = []
+                    for n in range(numgage):
+                        files.append(filenames[n+1])
 
             # convert gage_data to a recarry, if necessary
             if isinstance(gage_data, np.ndarray):
@@ -129,25 +133,16 @@ class ModflowGage(Package):
                       'or a list'
                 raise Exception(err)
 
-            # fill gage output information for package initiation
+            # add gage output files to model
             for n in range(numgage):
                 iu = gage_data['unit'][n]
                 gage_data['unit'][n] = iu
-                name.append('DATA')
-                units.append(abs(iu))
-                extension.append('got')
-                extra.append('REPLACE')
+                fname = files[n]
+                model.add_output(fname, abs(iu), package=ModflowGage.ftype())
 
         # Call parent init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=filenames)
-
-        # # reset file name with filepths passed from load method
-        # if files is not None:
-        #     for idx, pth in enumerate(files):
-        #         if pth is None:
-        #             continue
-        #         self.file_name[idx+1] = pth
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -158,6 +153,7 @@ class ModflowGage(Package):
             options = []
         self.options = options
         self.numgage = numgage
+        self.files = files
 
         self.dtype = self.get_default_dtype()
 

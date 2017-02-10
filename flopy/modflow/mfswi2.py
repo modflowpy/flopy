@@ -200,8 +200,7 @@ class ModflowSwi2(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            pth = model.name + '.' + ModflowSwi2.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, fname=pth)
+            model.add_externalbudget(ipakcb, package=ModflowSwi2.ftype())
         else:
             ipakcb = 0
 
