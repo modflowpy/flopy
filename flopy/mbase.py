@@ -419,6 +419,87 @@ class BaseModel(object):
                 ' either fname or unit must be passed to get_output()')
         return
 
+    def set_output_attribute(self, fname=None, unit=None, attr=None):
+        """
+        Set a variable in an output file from the model by specifying either
+        the file name or the unit number and a dictionary with attributes
+        to change.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        idx = None
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    idx = i
+                    break
+            return None
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    idx = i
+                    break
+        else:
+            raise Exception(
+                ' either fname or unit must be passed ' +
+                ' to set_output_attribute()')
+        if attr is not None:
+            if idx is not None:
+                for key, value in attr.items:
+                    if key == 'binflag':
+                        self.output_binflag[idx] = value
+                    elif key == 'fname':
+                        self.output_fnames[idx] = value
+                    elif key == 'unit':
+                        self.output_units[idx] = value
+        return
+
+    def get_output_attribute(self, fname=None, unit=None, attr=None):
+        """
+        Get a attribute for an output file from the model by specifying either
+        the file name or the unit number.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        idx = None
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    idx = i
+                    break
+            return None
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    idx = i
+                    break
+        else:
+            raise Exception(
+                ' either fname or unit must be passed ' +
+                ' to set_output_attribute()')
+        v = None
+        if attr is not None:
+            if idx is not None:
+                if attr == 'binflag':
+                    v = self.output_binflag[idx]
+                elif attr == 'fname':
+                    v = self.output_fnames[idx]
+                elif attr == 'unit':
+                    v = self.output_units[idx]
+        return v
+
     def add_external(self, fname, unit, binflag=False, output=False):
         """
         Assign an external array so that it will be listed as a DATA or
