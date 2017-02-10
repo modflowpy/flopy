@@ -48,6 +48,27 @@ def which(program):
                 return exe_file
     return None
 
+class FileData(object):
+    def __init__(self, fname, unit, binflag=False, output=False, package=None):
+        self.fname = fname
+        self.unit = unit
+        self.binflag = binflag
+        self.output = output
+        self.package = package
+
+class FileData(object):
+    def __init__(self):
+        self.file_data = []
+
+    def add_file(self, fname, unit, binflag=False, output=False, package=None):
+        ipop = []
+        for idx, file_data in enumerate(self.file_data):
+            if file_data.fname == fname or file_data.unit == unit:
+                ipop.append(idx)
+        
+        self.file_data.append(FileData(fname, unit, binflag=binflag,
+                                       output=output, package=package))
+
 
 class BaseModel(object):
     """
