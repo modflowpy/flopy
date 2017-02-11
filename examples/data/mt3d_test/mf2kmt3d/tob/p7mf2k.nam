@@ -4,7 +4,7 @@
 #
 # Output files
 #
-LIST         6       P7.LST
+LIST      1006       P7.LST
 
 # Global input files
 DIS         10       P7.DIS
