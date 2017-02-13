@@ -144,6 +144,16 @@ class ModflowOc(Package):
         if unitnumber is None:
             unitnumber = ModflowOc.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 5:
+                for idx in range(len(filenames), 5):
+                    filenames.append(None)
+
         # support structured and unstructured dis
         dis = model.get_package('DIS')
         if dis is None:
@@ -220,9 +230,7 @@ class ModflowOc(Package):
             binflag = True
             if chedfm is not None:
                 binflag = False
-            fname = None
-            if filenames is not None:
-                fname = filenames[1]
+            fname = filenames[1]
             model.add_output_file(iu, fname=fname, extension=extension[1],
                                   binflag=binflag)
         # drawdown file
@@ -231,9 +239,7 @@ class ModflowOc(Package):
             binflag = True
             if cddnfm is not None:
                 binflag = False
-            fname = None
-            if filenames is not None:
-                fname = filenames[2]
+            fname = filenames[2]
             model.add_output_file(iu, fname=fname, extension=extension[2],
                                   binflag=binflag)
         # budget file
@@ -246,9 +252,7 @@ class ModflowOc(Package):
             binflag = True
             if cboufm is not None:
                 binflag = False
-            fname = None
-            if filenames is not None:
-                fname = filenames[4]
+            fname = filenames[4]
             model.add_output_file(iu, fname=fname, extension=extension[4],
                                   binflag=binflag)
 
@@ -256,13 +260,14 @@ class ModflowOc(Package):
         extra = ['']
         extension = [extension[0]]
         unitnumber = [unitnumber[0]]
-        if filenames is not None:
-            filenames = [filenames[0]]
+
+        # set package name
+        fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=unitnumber,
-                         extra=extra, filenames=filenames)
+                         extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -780,31 +785,34 @@ class ModflowOc(Package):
             for key, value in ext_unit_dict.items():
                 if value.filetype == ModflowOc.ftype():
                     unitnumber[0] = key
-                    filename = os.path.basename(value.filename)
-        filenames = [filename, None, None, None]
+                    fname = os.path.basename(value.filename)
+
+        # initialize filenames list
+        filenames = [fname, None, None, None, None]
+
+        # fill remainder of filenames list
         if ihedun > 0:
             unitnumber[1] = ihedun
-            # model.add_pop_key_list(ihedun)
             try:
                 filenames[1] = os.path.basename(ext_unit_dict[ihedun].filename)
             except:
                 pass
         if iddnun > 0:
             unitnumber[2] = iddnun
-            # model.add_pop_key_list(iddnun)
             try:
                 filenames[2] = os.path.basename(ext_unit_dict[iddnun].filename)
             except:
                 pass
         if ibouun > 0:
             unitnumber[4] = ibouun
-            # model.add_pop_key_list(ibouun)
             try:
                 filenames[4] = os.path.basename(ext_unit_dict[ibouun].filename)
             except:
                 pass
             if cboufm is None:
                 cboufm = True
+
+        # add unit numbers to pop_key_list
         for u in unitnumber:
             model.add_pop_key_list(u)
 

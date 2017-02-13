@@ -105,24 +105,30 @@ class ModflowGhb(Package):
         if unitnumber is None:
             unitnumber = ModflowGhb.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = None
-            if filenames is not None:
-                if isinstance(filenames, list):
-                    fname = filenames[0]
-                elif isinstance(filenames, str):
-                    fname = filenames
-
+            fname = filenames[1]
             model.add_output_file(ipakcb, fname=fname,
                                   package=ModflowGhb.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
         Package.__init__(self, model, extension, ModflowGhb.ftype(),
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
 
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -245,15 +251,7 @@ class ModflowGhb(Package):
         if model.verbose:
             sys.stdout.write('loading ghb package file...\n')
 
-        # determine specified unit number
-        unitnumber = None
-        if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowGhb.ftype():
-                    unitnumber = key
-
         return Package.load(model, ModflowGhb, f, nper, check=check,
-                            unitnumber=unitnumber,
                             ext_unit_dict=ext_unit_dict)
 
 

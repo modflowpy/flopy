@@ -94,22 +94,37 @@ class ModflowDrn(Package):
     """
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
-                 extension='drn', unitnumber=None, options=None, **kwargs):
+                 extension='drn', unitnumber=None, options=None,
+                 filenames=None, **kwargs):
 
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDrn.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            #pth = model.name + '.' + ModflowDrn.ftype() + '.cbc'
-            model.add_output_file(ipakcb, package=ModflowDrn.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowDrn.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
-        Package.__init__(self, model, extension, ModflowDrn.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowDrn.ftype(),
+                         unitnumber, filenames=fname)
 
 
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -228,14 +243,7 @@ class ModflowDrn(Package):
         if model.verbose:
             sys.stdout.write('loading drn package file...\n')
 
-        unitnumber = None
-        if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowDrn.ftype():
-                    unitnumber = key
-
         return Package.load(model, ModflowDrn, f, nper, check=check,
-                            unitnumber=unitnumber,
                             ext_unit_dict=ext_unit_dict)
 
 

@@ -109,23 +109,29 @@ class ModflowWel(Package):
         if unitnumber is None:
             unitnumber = ModflowWel.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = None
-            if filenames is not None:
-                if isinstance(filenames, list):
-                    fname = filenames[0]
-                elif isinstance(filenames, str):
-                    fname = filenames
-
+            fname = filenames[1]
             model.add_output_file(ipakcb, fname=fname,
                                   package=ModflowWel.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call parent init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowWel.ftype(),
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -250,15 +256,7 @@ class ModflowWel(Package):
         if model.verbose:
             sys.stdout.write('loading wel package file...\n')
 
-        # determine specified unit number
-        unitnumber = None
-        if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowWel.ftype():
-                    unitnumber = key
-
         return Package.load(model, ModflowWel, f, nper, check=check,
-                            unitnumber=unitnumber,
                             ext_unit_dict=ext_unit_dict)
 
     @staticmethod

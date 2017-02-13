@@ -144,22 +144,29 @@ class ModflowUpw(Package):
         if unitnumber is None:
             unitnumber = ModflowUpw.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            fname = None
-            if filenames is not None:
-                if isinstance(filenames, list):
-                    fname = filenames[1]
-                elif isinstance(filenames, str):
-                    fname = filenames
+            fname = filenames[1]
             model.add_output_file(ipakcb, fname=fname,
                                   package=ModflowUpw.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowUpw.ftype(),
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
 
         self.heading = '# {} package for '.format(self.name[0]) + \

@@ -199,14 +199,19 @@ class ModflowSwi2(Package):
         if unitnumber is None:
             unitnumber = ModflowSwi2.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 4:
+                for idx in range(len(filenames), 4):
+                    filenames.append(None)
+
         # update external file information with zeta output, if necessary
         if iswizt is not None:
-            fname = None
-            if filenames is not None:
-                if isinstance(filenames, list):
-                    fname = filenames[1]
-                elif isinstance(filenames, str):
-                    fname = filenames
+            fname = filenames[1]
             model.add_output_file(iswizt, fname=fname, extension='zta',
                                   package=ModflowSwi2.ftype())
         else:
@@ -215,12 +220,7 @@ class ModflowSwi2(Package):
         # update external file information with swi2 cell-by-cell output,
         # if necessary
         if ipakcb is not None:
-            fname = None
-            if filenames is not None:
-                if isinstance(filenames, list):
-                    fname = filenames[2]
-                elif isinstance(filenames, str):
-                    fname = filenames
+            fname = filenames[2]
             model.add_output_file(ipakcb, fname=fname,
                                   package=ModflowSwi2.ftype())
         else:
@@ -256,15 +256,10 @@ class ModflowSwi2(Package):
 
         if nobs > 0:
             binflag = False
-            fname = None
+            fname = filenames[3]
             if iswiobs is not None:
                 if iswiobs < 0:
                     binflag = True
-                if filenames is not None:
-                    if isinstance(filenames, list):
-                        fname = filenames[3]
-                    elif isinstance(filenames, str):
-                        fname = filenames
             else:
                 iswiobs = 1053
             # update external file information with swi2 observation output,
@@ -278,13 +273,9 @@ class ModflowSwi2(Package):
         name = [ModflowSwi2.ftype()]
         units = [unitnumber]
         extra = ['']
-        fname = None
-        if filenames is not None:
-            if isinstance(filenames, list):
-                fname = filenames[0]
-            elif isinstance(filenames, str):
-                fname = filenames
-            fname = [fname]
+
+        # set package name
+        fname = [filenames[0]]
 
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
