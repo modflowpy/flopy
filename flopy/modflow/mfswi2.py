@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swi2_seawater_intrusion_pack.htm>`_.
 
 """
+import os
 import sys
 
 import numpy as np
@@ -189,7 +190,7 @@ class ModflowSwi2(Package):
                  nu=0.025, zeta=[0.0], ssz=0.25, isource=0,
                  obsnam=None, obslrc=None,
                  extension=['swi2', 'zta'], unitnumber=None,
-                 npln=None):
+                 npln=None, filenames=None):
         """
         Package constructor.
 
@@ -198,14 +199,32 @@ class ModflowSwi2(Package):
         if unitnumber is None:
             unitnumber = ModflowSwi2.defaultunit()
 
-        # update external file information with cbc output, if necessary
+        # update external file information with zeta output, if necessary
+        if iswizt is not None:
+            fname = None
+            if filenames is not None:
+                if isinstance(filenames, list):
+                    fname = filenames[1]
+                elif isinstance(filenames, str):
+                    fname = filenames
+            model.add_output_file(iswizt, fname=fname, extension='zta',
+                                  package=ModflowSwi2.ftype())
+        else:
+            iswizt = 0
+
+        # update external file information with swi2 cell-by-cell output,
+        # if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowSwi2.ftype())
+            fname = None
+            if filenames is not None:
+                if isinstance(filenames, list):
+                    fname = filenames[2]
+                elif isinstance(filenames, str):
+                    fname = filenames
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowSwi2.ftype())
         else:
             ipakcb = 0
-
-        if iswizt is None:
-            iswizt = 55
 
         # Process observations
         if nobs != 0:
@@ -234,21 +253,41 @@ class ModflowSwi2(Package):
                     errmsg = 'ModflowSwi2: obsnam must be a list with a ' + \
                              'length of {} not {}.'.format(nobs, len(obsnam))
                     raise Exception(errmsg)
-            #if iswiobs < 1:
-            #    iswiobs = 1053
+
+        if nobs > 0:
+            binflag = False
+            fname = None
+            if iswiobs is not None:
+                if iswiobs < 0:
+                    binflag = True
+                if filenames is not None:
+                    if isinstance(filenames, list):
+                        fname = filenames[3]
+                    elif isinstance(filenames, str):
+                        fname = filenames
+            else:
+                iswiobs = 1053
+            # update external file information with swi2 observation output,
+            # if necessary
+            model.add_output_file(iswiobs, fname=fname, binflag=binflag,
+                                  package=ModflowSwi2.ftype())
+        else:
+            iswiobs = 0
 
         # Fill namefile items
-        name = [ModflowSwi2.ftype(), 'DATA(BINARY)']
-        units = [unitnumber, iswizt]
-        extra = ['', 'REPLACE']
-        if nobs > 0:
-            extension.append('zobs')
-            name.append('DATA')
-            units.append(abs(iswiobs))
-            extra.append('REPLACE')
+        name = [ModflowSwi2.ftype()]
+        units = [unitnumber]
+        extra = ['']
+        fname = None
+        if filenames is not None:
+            if isinstance(filenames, list):
+                fname = filenames[0]
+            elif isinstance(filenames, str):
+                fname = filenames
+            fname = [fname]
 
         Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra)
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -619,10 +658,27 @@ class ModflowSwi2(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None, None, None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
                 if value.filetype == ModflowSwi2.ftype():
                     unitnumber = key
+                    filenames[0] = os.path.basename(value.filename)
+
+                if iswizt > 0:
+                    if key == iswizt:
+                        filenames[1] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
+
+                if ipakcb > 0:
+                    if key == ipakcb:
+                        filenames[2] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
+
+                if abs(iswiobs) > 0:
+                    if key == abs(iswiobs):
+                        filenames[3] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
 
         # create swi2 instance
         swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs,
@@ -635,7 +691,7 @@ class ModflowSwi2(Package):
                            nadptmx=nadptmx, nadptmn=nadptmn, adptfct=adptfct,
                            nu=nu, zeta=zeta, ssz=ssz, isource=isource,
                            obsnam=obsname, obslrc=obslrc,
-                           unitnumber=unitnumber)
+                           unitnumber=unitnumber, filenames=filenames)
 
         # return swi2 instance
         return swi2

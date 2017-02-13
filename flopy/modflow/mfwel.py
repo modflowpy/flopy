@@ -99,7 +99,8 @@ class ModflowWel(Package):
     """
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
-                 extension='wel', unitnumber=20, options=None):
+                 extension='wel', unitnumber=None,
+                 options=None, filenames=None):
         """
         Package constructor.
 
@@ -110,7 +111,15 @@ class ModflowWel(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowWel.ftype())
+            fname = None
+            if filenames is not None:
+                if isinstance(filenames, list):
+                    fname = filenames[0]
+                elif isinstance(filenames, str):
+                    fname = filenames
+
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowWel.ftype())
         else:
             ipakcb = 0
 
@@ -249,7 +258,8 @@ class ModflowWel(Package):
                     unitnumber = key
 
         return Package.load(model, ModflowWel, f, nper, check=check,
-                            unitnumber=unitnumber)
+                            unitnumber=unitnumber,
+                            ext_unit_dict=ext_unit_dict)
 
     @staticmethod
     def ftype():

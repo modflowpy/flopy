@@ -94,7 +94,8 @@ class ModflowGhb(Package):
     """
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
-                 no_print=False, options=None, extension='ghb', unitnumber=None):
+                 no_print=False, options=None, extension='ghb',
+                 unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -106,8 +107,15 @@ class ModflowGhb(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            #pth = model.name + '.' + ModflowGhb.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, package=ModflowGhb.ftype())
+            fname = None
+            if filenames is not None:
+                if isinstance(filenames, list):
+                    fname = filenames[0]
+                elif isinstance(filenames, str):
+                    fname = filenames
+
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowGhb.ftype())
         else:
             ipakcb = 0
 
@@ -245,7 +253,8 @@ class ModflowGhb(Package):
                     unitnumber = key
 
         return Package.load(model, ModflowGhb, f, nper, check=check,
-                            unitnumber=unitnumber)
+                            unitnumber=unitnumber,
+                            ext_unit_dict=ext_unit_dict)
 
 
     @staticmethod

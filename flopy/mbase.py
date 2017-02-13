@@ -292,10 +292,10 @@ class BaseModel(object):
         return self.get_package(item)
 
 
-    def add_externalbudget(self, unit, fname=None, extension='cbc',
-                           binflag=True, package=None):
+    def add_output_file(self, unit, fname=None, extension='cbc',
+                        binflag=True, package=None):
         """
-        Add an external cell-by-cell budget file for a package
+        Add an ascii or binary output file file for a package
 
         Parameters
         ----------
@@ -306,6 +306,12 @@ class BaseModel(object):
         extension : str
             extension to use for the cell-by-cell file. Only used if fname
             is None. (default is cbc)
+        binflag : bool
+            boolean flag indicating if the output file is a binary file.
+            Default is True
+        package : str
+            string that defines the package the output file is attached to.
+            Default is None
 
         """
         add_cbc = False
@@ -341,6 +347,8 @@ class BaseModel(object):
                         else:
                             fname = self.name + '.{}.'.format(package) \
                                     + extension
+            else:
+                fname = os.path.basename(fname)
             self.add_output(fname, unit, binflag=binflag, package=package)
         return
 

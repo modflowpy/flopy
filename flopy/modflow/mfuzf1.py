@@ -219,7 +219,7 @@ class ModflowUzf1(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None and ipakcb != 0:
-            model.add_externalbudget(ipakcb, package=ModflowUzf1.ftype())
+            model.add_output_file(ipakcb, package=ModflowUzf1.ftype())
         else:
             ipakcb = 0
 

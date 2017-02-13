@@ -138,16 +138,16 @@ class ModflowLgr(BaseModel):
         ibhsv = self.iupbhsv
         ibfsv = self.iupbhsv
         if ibhsv > 0:
-            self.parent.add_externalbudget(ibhsv)
+            self.parent.add_output_file(ibhsv)
         if ibfsv > 0:
-            self.parent.add_externalbudget(ibfsv)
+            self.parent.add_output_file(ibfsv)
         for child, child_data in zip(self.children_models, self.children_data):
             ibhsv = child_data.iucbhsv
             ibfsv = child_data.iucbfsv
             if ibhsv > 0:
-                child.add_externalbudget(ibhsv)
+                child.add_output_file(ibhsv)
             if ibfsv > 0:
-                child.add_externalbudget(ibfsv)
+                child.add_output_file(ibfsv)
 
         if external_path is not None:
             if os.path.exists(os.path.join(model_ws, external_path)):

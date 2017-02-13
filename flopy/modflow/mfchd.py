@@ -96,14 +96,19 @@ class ModflowChd(Package):
     """
 
     def __init__(self, model, stress_period_data=None, dtype=None,
-                 options=None, extension='chd', unitnumber=None, **kwargs):
+                 options=None, extension='chd', unitnumber=None,
+                 filenames=None, **kwargs):
 
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowChd.defaultunit()
 
+        if filenames is None:
+            filenames = [None]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowChd.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowChd.ftype(),
+                         unitnumber, filenames=[filenames[0]])
 
 
         self.url = 'chd.htm'
@@ -219,7 +224,8 @@ class ModflowChd(Package):
                 if value.filetype == ModflowChd.ftype():
                     unitnumber = key
 
-        return Package.load(model, ModflowChd, f, nper, unitnumber=unitnumber)
+        return Package.load(model, ModflowChd, f, nper, unitnumber=unitnumber,
+                            ext_unit_dict=ext_unit_dict)
 
 
     @staticmethod

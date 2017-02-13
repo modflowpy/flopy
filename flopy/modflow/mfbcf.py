@@ -1,3 +1,4 @@
+import os
 import sys
 
 import numpy as np
@@ -82,20 +83,35 @@ class ModflowBcf(Package):
     def __init__(self, model, ipakcb=None, intercellt=0, laycon=3, trpy=1.0,
                  hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0,
                  tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01,
-                 extension='bcf', unitnumber=15):
+                 extension='bcf', unitnumber=15, filenames=None):
 
         if unitnumber is None:
             unitnumber = ModflowBcf.defaultunit()
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package='BCF6')
+            fname = None
+            if filenames is not None:
+                if isinstance(filenames, list):
+                    fname = filenames[1]
+                elif isinstance(filenames, str):
+                    fname = filenames
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowBcf.ftype())
         else:
             ipakcb = 0
 
+        fname = None
+        if filenames is not None:
+            if isinstance(filenames, list):
+                fname = filenames[0]
+            elif isinstance(filenames, str):
+                fname = filenames
+            fname = [fname]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowBcf.ftype(),
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
         self.url = 'bcf.htm'
 
@@ -368,10 +384,22 @@ class ModflowBcf(Package):
                 wetdry[k] = t
 
         # set package unit number
-        unitnumber = 15
-        for key, value in ext_unit_dict.items():
-            if value.filetype == 'BCF6':
-                unitnumber = key
+        filenames = [None, None]
+        unitnumber = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowBcf.ftype():
+                    unitnumber = key
+                    filenames[0] = os.path.basename(value.filename)
+
+            # add filename for cell-by-cell file to filenames
+            if ipakcb > 0:
+                for key, value in ext_unit_dict.items():
+                    if key == ipakcb:
+                        filenames[1] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
+                        break
+
 
         # create instance of bcf object
         bcf = ModflowBcf(model, ipakcb=ipakcb, intercellt=intercellt,
@@ -380,7 +408,7 @@ class ModflowBcf(Package):
                          ihdwet=ihdwet,
                          tran=tran, hy=hy, vcont=vcont, sf1=sf1, sf2=sf2,
                          wetdry=wetdry,
-                         unitnumber=unitnumber)
+                         unitnumber=unitnumber, filenames=filenames)
 
         # return bcf object
         return bcf

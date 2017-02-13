@@ -223,8 +223,8 @@ class ModflowOc(Package):
             fname = None
             if filenames is not None:
                 fname = filenames[1]
-            model.add_externalbudget(iu, fname=fname, extension=extension[1],
-                                     binflag=binflag)
+            model.add_output_file(iu, fname=fname, extension=extension[1],
+                                  binflag=binflag)
         # drawdown file
         if self.saveddn:
             iu = unitnumber[2]
@@ -234,8 +234,8 @@ class ModflowOc(Package):
             fname = None
             if filenames is not None:
                 fname = filenames[2]
-            model.add_externalbudget(iu, fname=fname, extension=extension[2],
-                                     binflag=binflag)
+            model.add_output_file(iu, fname=fname, extension=extension[2],
+                                  binflag=binflag)
         # budget file
         # Nothing is needed for the budget file
 
@@ -249,8 +249,8 @@ class ModflowOc(Package):
             fname = None
             if filenames is not None:
                 fname = filenames[4]
-            model.add_externalbudget(iu, fname=fname, extension=extension[4],
-                                     binflag=binflag)
+            model.add_output_file(iu, fname=fname, extension=extension[4],
+                                  binflag=binflag)
 
         name = [ModflowOc.ftype()]
         extra = ['']

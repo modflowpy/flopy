@@ -103,7 +103,7 @@ class ModflowDrn(Package):
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
             #pth = model.name + '.' + ModflowDrn.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, package=ModflowDrn.ftype())
+            model.add_output_file(ipakcb, package=ModflowDrn.ftype())
         else:
             ipakcb = 0
 
@@ -235,7 +235,8 @@ class ModflowDrn(Package):
                     unitnumber = key
 
         return Package.load(model, ModflowDrn, f, nper, check=check,
-                            unitnumber=unitnumber)
+                            unitnumber=unitnumber,
+                            ext_unit_dict=ext_unit_dict)
 
 
     @staticmethod

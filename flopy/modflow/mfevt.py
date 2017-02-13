@@ -84,7 +84,7 @@ class ModflowEvt(Package):
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
             #pth = model.name + '.' + ModflowEvt.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, package=ModflowEvt.ftype())
+            model.add_output_file(ipakcb, package=ModflowEvt.ftype())
         else:
             ipakcb = 0
 

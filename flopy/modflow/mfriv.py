@@ -114,7 +114,7 @@ class ModflowRiv(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowRiv.ftype())
+            model.add_output_file(ipakcb, package=ModflowRiv.ftype())
         else:
             ipakcb = 0
 
@@ -306,7 +306,8 @@ class ModflowRiv(Package):
                     unitnumber = key
 
         return Package.load(model, ModflowRiv, f, nper, check=check,
-                            unitnumber=unitnumber)
+                            unitnumber=unitnumber,
+                            ext_unit_dict=ext_unit_dict)
 
 
     @staticmethod

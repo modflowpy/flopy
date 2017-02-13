@@ -613,7 +613,7 @@ class Package(object):
 
     @staticmethod
     def load(model, pack_type, f, nper=None, pop_key_list=None, check=True,
-             unitnumber=None):
+             unitnumber=None, ext_unit_dict=None):
         """
         The load method has not been implemented for this package.
 
@@ -646,10 +646,7 @@ class Package(object):
         t = line.strip().split()
         ipakcb = 0
         try:
-            if int(t[1]) != 0:
-                #ipakcb = 53
-                #pop_key_list = model.pop_key_list(int(t[1]), pop_key_list)
-                ipakcb = int(t[1])
+            ipakcb = int(t[1])
         except:
             pass
         options = []
@@ -842,9 +839,21 @@ class Package(object):
 
         dtype = pack_type.get_empty(0, aux_names=aux_names,
                                     structured=model.structured).dtype
+
+        # set filenames for cell-by-cell file
+        filenames = None
+        if ext_unit_dict is not None:
+            if ipakcb > 0:
+                for key, value in ext_unit_dict.items():
+                    if key == ipakcb:
+                        filenames = [os.path.basename(value.filename)]
+                        model.add_pop_key_list(key)
+                        break
+
         pak = pack_type(model, ipakcb=ipakcb,
                         stress_period_data=stress_period_data,
-                        dtype=dtype,  options=options, unitnumber=unitnumber)
+                        dtype=dtype,  options=options,
+                        unitnumber=unitnumber, filenames=filenames)
         if check:
             pak.check(f='{}.chk'.format(pak.name[0]),
                       verbose=pak.parent.verbose, level=0)

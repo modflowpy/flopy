@@ -220,7 +220,7 @@ class ModflowSfr2(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowSfr2.ftype())
+            model.add_output_file(ipakcb, package=ModflowSfr2.ftype())
         else:
             ipakcb = 0
 
@@ -241,9 +241,9 @@ class ModflowSfr2(Package):
                         pass
                 if fname is None:
                     fname = model.name + '.sfr.{}'.format(ext)
-                model.add_externalbudget(abs(istcb2), fname=fname,
-                                         binflag=binflag,
-                                         package=ModflowSfr2.ftype())
+                model.add_output_file(abs(istcb2), fname=fname,
+                                      binflag=binflag,
+                                      package=ModflowSfr2.ftype())
         else:
             istcb2 = 0
 

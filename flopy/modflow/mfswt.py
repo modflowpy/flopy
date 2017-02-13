@@ -220,7 +220,7 @@ class ModflowSwt(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowSwt.ftype())
+            model.add_output_file(ipakcb, package=ModflowSwt.ftype())
         else:
             ipakcb = 0
 
