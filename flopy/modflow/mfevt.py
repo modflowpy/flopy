@@ -7,6 +7,7 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm>`_.
 
 """
+import os
 import sys
 
 import numpy as np
@@ -49,7 +50,11 @@ class ModflowEvt(Package):
     extension : string
         Filename extension (default is 'evt')
     unitnumber : int
-        File unit number (default is 22).
+        File unit number (default is None).
+    filenames : string or list of strings
+        File name of the package (with extension) or a list with the filename
+        of the package and the cell-by-cell budget file for ipakcb. Default
+        is None.
 
     Attributes
     ----------
@@ -75,22 +80,36 @@ class ModflowEvt(Package):
 
     def __init__(self, model, nevtop=3, ipakcb=None, surf=0., evtr=1e-3, exdp=1.,
                  ievt=1,
-                 extension='evt', unitnumber=None, external=True):
+                 extension='evt', unitnumber=None, filenames=None,
+                 external=True):
 
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowEvt.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            #pth = model.name + '.' + ModflowEvt.ftype() + '.cbc'
-            model.add_output_file(ipakcb, package=ModflowEvt.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowEvt.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowEvt.ftype(),
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -315,11 +334,21 @@ class ModflowEvt(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
                 if value.filetype == ModflowEvt.ftype():
                     unitnumber = key
+                    filenames[0] = os.path.basename(value.filename)
+
+                if ipakcb > 0:
+                    if key == ipakcb:
+                        filenames[1] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
+
+        # set args for unitnumber and filenames
         args["unitnumber"] = unitnumber
+        args["filenames"] = filenames
 
         evt = ModflowEvt(model, **args)
 

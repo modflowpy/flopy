@@ -26,9 +26,13 @@ class ModflowLak(Package):
     options : list of strings
         Package options. (default is None).
     extension : string
-        Filename extension (default is 'str')
+        Filename extension (default is 'lak')
     unitnumber : int
-        File unit number (default is 118).
+        File unit number (default is None).
+    filenames : string or list of strings
+        File name of the package (with extension) or a list with the filename
+        of the package and the cell-by-cell budget file for ipakcb. Default
+        is None.
 
     Methods
     -------
@@ -56,7 +60,8 @@ class ModflowLak(Package):
                  nssitr=0, sscncr=0.0, surfdep=0., stages=1., stage_range=None,
                  tab_files=None, lakarr=None, bdlknc=None,
                  sill_data=None, flux_data=None,
-                 extension='lak', unitnumber=None, options=None, **kwargs):
+                 extension='lak', unitnumber=None, filenames=None,
+                 options=None, **kwargs):
         """
         Package constructor.
 
@@ -65,15 +70,29 @@ class ModflowLak(Package):
         if unitnumber is None:
             unitnumber = ModflowLak.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            #pth = model.name + '.' + ModflowLak.ftype() + '.cbc'
-            model.add_output_file(ipakcb, package= ModflowLak.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package= ModflowLak.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call parent init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowLak.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowLak.ftype(),
+                         unitnumber, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -558,10 +577,17 @@ class ModflowLak(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
                 if value.filetype == ModflowLak.ftype():
                     unitnumber = key
+                    filenames[0] = os.path.basename(value.filename)
+
+                if ipakcb > 0:
+                    if key == ipakcb:
+                        filenames[1] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
 
 
         lakpak = ModflowLak(model, options=options, nlakes=nlakes,
@@ -570,7 +596,7 @@ class ModflowLak(Package):
                             stage_range=stage_range, tab_files=tab_files,
                             lakarr=lake_loc, bdlknc=lake_lknc,
                             sill_data=sill_data, flux_data=flux_data,
-                            unitnumber=unitnumber)
+                            unitnumber=unitnumber, filenames=filenames)
         return lakpak
 
 

@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import os
 import sys
 import numpy as np
 from ..pakbase import Package
@@ -40,7 +41,11 @@ class ModflowRch(Package):
     extension : string
         Filename extension (default is 'rch')
     unitnumber : int
-        File unit number (default is 19).
+        File unit number (default is None).
+    filenames : string or list of strings
+        File name of the package (with extension) or a list with the filename
+        of the package and the cell-by-cell budget file for ipakcb. Default
+        is None.
 
     Attributes
     ----------
@@ -77,7 +82,7 @@ class ModflowRch(Package):
     """
 
     def __init__(self, model, nrchop=3, ipakcb=None, rech=1e-3, irch=0,
-                 extension='rch', unitnumber=None):
+                 extension='rch', unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -86,14 +91,29 @@ class ModflowRch(Package):
         if unitnumber is None:
             unitnumber = ModflowRch.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_output_file(ipakcb, package=ModflowRch.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowRch.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call parent init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowRch.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowRch.ftype(),
+                         unitnumber, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -359,16 +379,25 @@ class ModflowRch(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
                 if value.filetype == ModflowRch.ftype():
                     unitnumber = key
+                    filenames[0] = os.path.basename(value.filename)
+
+                if ipakcb > 0:
+                    if key == ipakcb:
+                        filenames[1] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
 
         # create recharge package instance
-        rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb, rech=rech,
-                         irch=irch, unitnumber=unitnumber)
+        rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb,
+                         rech=rech, irch=irch,
+                         unitnumber=unitnumber, filenames=filenames)
         if check:
-            rch.check(f='{}.chk'.format(rch.name[0]), verbose=rch.parent.verbose, level=0)
+            rch.check(f='{}.chk'.format(rch.name[0]),
+                      verbose=rch.parent.verbose, level=0)
         return rch
 
 
