@@ -660,10 +660,9 @@ class BaseModel(object):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                               p.unit_number[i],
-                                                               p.file_name[i],
-                                                               p.extra[i]))
+                s = s + \
+                    ('{:14s} {:5d}  '.format(p.name[i], p.unit_number[i]) +
+                     '{:s} {:s}\n'.format(p.file_name[i], p.extra[i]))
         return s
 
     def get_package(self, name):

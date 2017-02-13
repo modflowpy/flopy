@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swi2_seawater_intrusion_pack.htm>`_.
 
 """
-import os
 import sys
 
 import numpy as np
@@ -256,16 +255,18 @@ class ModflowSwi2(Package):
 
         if nobs > 0:
             binflag = False
+            ext = 'out'
             fname = filenames[3]
             if iswiobs is not None:
                 if iswiobs < 0:
                     binflag = True
+                    ext = 'bin'
             else:
                 iswiobs = 1053
             # update external file information with swi2 observation output,
             # if necessary
             model.add_output_file(iswiobs, fname=fname, binflag=binflag,
-                                  package=ModflowSwi2.ftype())
+                                  extension=ext, package=ModflowSwi2.ftype())
         else:
             iswiobs = 0
 
@@ -651,25 +652,18 @@ class ModflowSwi2(Package):
         unitnumber = None
         filenames = [None, None, None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSwi2.ftype():
-                    unitnumber = key
-                    filenames[0] = os.path.basename(value.filename)
-
-                if iswizt > 0:
-                    if key == iswizt:
-                        filenames[1] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
-
-                if ipakcb > 0:
-                    if key == ipakcb:
-                        filenames[2] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
-
-                if abs(iswiobs) > 0:
-                    if key == abs(iswiobs):
-                        filenames[3] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSwi2.ftype())
+            if iswizt > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=iswizt)
+            if ipakcb > 0:
+                iu, filenames[2] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+            if abs(iswiobs) > 0:
+                iu, filenames[3] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(iswiobs))
 
         # create swi2 instance
         swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs,

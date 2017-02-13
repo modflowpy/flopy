@@ -658,27 +658,14 @@ class ModflowUzf1(Package):
         filenames = [None, None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict, filetype=ModflowUzf1.ftype())
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowUzf1.ftype())
             if abs(ipakcb) > 0:
                 iu, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=abs(ipakcb))
             if abs(iuzfcb2) > 0:
-                iu, filenames[1] = \
+                iu, filenames[2] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=abs(iuzfcb2))
-            # for key, value in ext_unit_dict.items():
-            #     if value.filetype == ModflowUzf1.ftype():
-            #         unitnumber = key
-            #         filenames[0] = os.path.basename(value.filename)
-            #
-            #     if ipakcb > 0:
-            #         if key == ipakcb:
-            #             filenames[1] = os.path.basename(value.filename)
-            #             model.add_pop_key_list(key)
-            #
-            #     if abs(iuzfcb2) > 0:
-            #         if key == abs(iuzfcb2):
-            #             filenames[2] = os.path.basename(value.filename)
-            #             model.add_pop_key_list(key)
 
         # create uzf object
         return ModflowUzf1(model,

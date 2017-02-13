@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/str.htm>`_.
 
 """
-import os
 import sys
 
 import numpy as np
@@ -209,7 +208,7 @@ class ModflowStr(Package):
         if filenames is None:
             filenames = [None, None, None]
         elif isinstance(filenames, str):
-            filenames = [filenames, None, None, None]
+            filenames = [filenames, None, None]
         elif isinstance(filenames, list):
             if len(filenames) < 3:
                 for idx in range(len(filenames), 3):
@@ -785,20 +784,15 @@ class ModflowStr(Package):
         unitnumber = None
         filenames = [None, None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowStr.ftype():
-                    unitnumber = key
-                    filenames[0] = os.path.basename(value.filename)
-
-                if ipakcb > 0:
-                    if key == ipakcb:
-                        filenames[1] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
-
-                if abs(istcb2) > 0:
-                    if key == abs(istcb2):
-                        filenames[2] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowStr.ftype())
+            if ipakcb > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+            if abs(istcb2) > 0:
+                iu, filenames[2] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(istcb2))
 
         strpak = ModflowStr(model, mxacts=mxacts, nss=nss,
                             ntrib=ntrib, ndiv=ndiv, icalc=icalc,
