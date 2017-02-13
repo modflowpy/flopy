@@ -291,6 +291,23 @@ class BaseModel(object):
 
         return self.get_package(item)
 
+    def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
+                          pop_key=True):
+        iu = None
+        fname = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if key == unit:
+                    iu = key
+                    fname = os.path.basename(value.filename)
+                    break
+                elif value.filetype == filetype:
+                    iu = key
+                    fname = os.path.basename(value.filename)
+                    if pop_key:
+                        self.add_pop_key_list(iu)
+                    break
+        return iu, fname
 
     def add_output_file(self, unit, fname=None, extension='cbc',
                         binflag=True, package=None):

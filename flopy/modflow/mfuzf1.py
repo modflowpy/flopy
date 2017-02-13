@@ -205,27 +205,50 @@ class ModflowUzf1(Package):
 
     def __init__(self, model,
                  nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, ipakcb=None,
-                 iuzfcb2=0, ntrail2=10, nsets=20, nuzgag=0,
+                 iuzfcb2=None, ntrail2=10, nsets=20, nuzgag=0,
                  surfdep=1.0,
                  iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35,
                  thtr=0.15, thti=0.20,
                  specifythtr=0, specifythti=0, nosurfleak=0,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
                  uzgag=None,
-                 uzfbud_ext=[], extension='uzf', unitnumber=None):
+                 uzfbud_ext=[], extension='uzf', unitnumber=None,
+                 filenames=None):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUzf1.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 3:
+                for idx in range(len(filenames), 3):
+                    filenames.append(None)
+
         # update external file information with cbc output, if necessary
-        if ipakcb is not None and ipakcb != 0:
-            model.add_output_file(ipakcb, package=ModflowUzf1.ftype())
+        if ipakcb is not None:
+            fname = filenames[1]
+            model.add_output_file(abs(ipakcb), fname=fname,
+                                  package=ModflowUzf1.ftype())
         else:
             ipakcb = 0
 
+        if iuzfcb2 is not None:
+            fname = filenames[2]
+            model.add_output_file(abs(iuzfcb2), fname=fname,
+                                  package=ModflowUzf1.ftype())
+        else:
+            iuzfcb2 = 0
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, [ModflowUzf1.ftype()],
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
         if self.parent.get_package('RCH') != None or self.parent.get_package(
                 'EVT') != None:
@@ -632,10 +655,30 @@ class ModflowUzf1(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None, None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowUzf1.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict, filetype=ModflowUzf1.ftype())
+            if abs(ipakcb) > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(ipakcb))
+            if abs(iuzfcb2) > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(iuzfcb2))
+            # for key, value in ext_unit_dict.items():
+            #     if value.filetype == ModflowUzf1.ftype():
+            #         unitnumber = key
+            #         filenames[0] = os.path.basename(value.filename)
+            #
+            #     if ipakcb > 0:
+            #         if key == ipakcb:
+            #             filenames[1] = os.path.basename(value.filename)
+            #             model.add_pop_key_list(key)
+            #
+            #     if abs(iuzfcb2) > 0:
+            #         if key == abs(iuzfcb2):
+            #             filenames[2] = os.path.basename(value.filename)
+            #             model.add_pop_key_list(key)
 
         # create uzf object
         return ModflowUzf1(model,
@@ -646,8 +689,7 @@ class ModflowUzf1(Package):
                            surfdep=surfdep, uzgag=uzgag,
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, unitnumber=unitnumber,
-                           **arrays
-                           )
+                           filenames=filenames, **arrays)
 
     @staticmethod
     def ftype():
