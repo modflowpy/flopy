@@ -114,8 +114,7 @@ class ModflowRiv(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            pth = model.name + '.' + ModflowRiv.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, fname=pth)
+            model.add_externalbudget(ipakcb, package=ModflowRiv.ftype())
         else:
             ipakcb = 0
 

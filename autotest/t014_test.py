@@ -33,6 +33,14 @@ def load_str(mfnam, pth):
     m.model_ws = cpth
     m.write_input()
 
+    # attempt to run the model
+    if run:
+        try:
+            success, buff = m.run_model(silent=False)
+        except:
+            pass
+        assert success, 'base model run did not terminate successfully'
+
     # load files
     pth = os.path.join(cpth, '{}.str'.format(m.name))
     str2 = flopy.modflow.ModflowStr.load(pth, m)
@@ -42,12 +50,6 @@ def load_str(mfnam, pth):
     for name in str2.dtype2.names:
         assert np.array_equal(str2.segment_data[0][name],
                               m.str.segment_data[0][name]) is True
-    if run:
-        try:
-            success, buff = m.run_model(silent=False)
-        except:
-            pass
-        assert success, 'base model run did not terminate successfully'
 
     return
 

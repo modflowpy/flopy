@@ -173,61 +173,91 @@ class ModflowOc(Package):
                     icnt += 1
 
         # set output unit numbers based on oc settings
-        savehead, saveddn, savebud = False, False, False
+        self.savehead, self.saveddn, self.savebud, self.saveibnd = False, \
+                                                                   False, \
+                                                                   False, \
+                                                                   False
         for key, value in stress_period_data.items():
             tlist = list(value)
             for t in tlist:
                 if 'save head' in t.lower():
-                    savehead = True
+                    self.savehead = True
                     if unitnumber[1] == 0:
                         unitnumber[1] = 51
                 if 'save drawdown' in t.lower():
-                    saveddn = True
+                    self.saveddn = True
                     if unitnumber[2] == 0:
                         unitnumber[2] = 52
                 if 'save budget' in t.lower():
-                    savebud = True
+                    self.savebud = True
                     if unitnumber[3] == 0 and filenames is None:
                         unitnumber[3] = 53
                 if 'save ibound' in t.lower():
+                    self.saveibnd = True
                     if unitnumber[4] == 0:
                         unitnumber[4] = 54
 
         # do not create head, ddn, or cbc output files if output is not
         # specified in the oc stress_period_data
-        if not savehead:
+        if not self.savehead:
             unitnumber[1] = 0
-        if not saveddn:
+        if not self.saveddn:
             unitnumber[2] = 0
-        if not savebud:
+        if not self.savebud:
             unitnumber[3] = 0
+        if not self.saveibnd:
+            unitnumber[4] = 0
 
-        # extension, name and unit number
-        hds_fmt = 'DATA(BINARY)'
-        ddn_fmt = 'DATA(BINARY)'
-        if chedfm is not None:
-            hds_fmt = 'DATA'
-        if cddnfm is not None:
-            ddn_fmt = 'DATA'
+        self.iuhead = unitnumber[1]
+        self.iuddn = unitnumber[2]
+        self.iubud = unitnumber[3]
+        self.iuibnd = unitnumber[4]
 
-        ibouun = 0
-        ibndsav = False
-        for key in list(stress_period_data.keys()):
-            t = stress_period_data[key]
-            if len(t) > 0:
-                for option in t:
-                    if 'ibound' in option.lower():
-                        ibndsav = True
-                        break
+        # add output files
+        # head file
+        if self.savehead:
+            iu = unitnumber[1]
+            binflag = True
+            if chedfm is not None:
+                binflag = False
+            fname = None
+            if filenames is not None:
+                fname = filenames[1]
+            model.add_externalbudget(iu, fname=fname, extension=extension[1],
+                                     binflag=binflag)
+        # drawdown file
+        if self.saveddn:
+            iu = unitnumber[2]
+            binflag = True
+            if cddnfm is not None:
+                binflag = False
+            fname = None
+            if filenames is not None:
+                fname = filenames[2]
+            model.add_externalbudget(iu, fname=fname, extension=extension[2],
+                                     binflag=binflag)
+        # budget file
+        # Nothing is needed for the budget file
 
-        name = [ModflowOc.ftype(), hds_fmt, ddn_fmt, 'DATA(BINARY)']
-        extra = ['', 'REPLACE', 'REPLACE', 'REPLACE']
-        if ibndsav == True:
-            name.append('DATA')
-            if unitnumber[-1] == 0:
-                unitnumber[-1] = 54
-            ibouun = unitnumber[-1]
-            extra.append('REPLACE')
+        # ibound file
+        ibouun = unitnumber[4]
+        if self.saveibnd:
+            iu = unitnumber[4]
+            binflag = True
+            if cboufm is not None:
+                binflag = False
+            fname = None
+            if filenames is not None:
+                fname = filenames[4]
+            model.add_externalbudget(iu, fname=fname, extension=extension[4],
+                                     binflag=binflag)
+
+        name = [ModflowOc.ftype()]
+        extra = ['']
+        extension = [extension[0]]
+        unitnumber = [unitnumber[0]]
+        if filenames is not None:
+            filenames = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
@@ -251,14 +281,6 @@ class ModflowOc(Package):
 
         self.stress_period_data = stress_period_data
 
-        # # reset file name with filenames passed from load method
-        # if filenames is not None:
-        #     for idx, pth in enumerate(filenames[1:]):
-        #         if pth is None:
-        #             continue
-        #         self.file_name[idx] = os.path.basename(pth)
-
-
         self.parent.add_package(self)
 
     def write_file(self):
@@ -274,28 +296,28 @@ class ModflowOc(Package):
         f_oc.write('{}\n'.format(self.heading))
 
         # write options
-        line = 'HEAD PRINT FORMAT {0:3.0f}\n' .format(self.ihedfm)
+        line = 'HEAD PRINT FORMAT {0:3.0f}\n'.format(self.ihedfm)
         f_oc.write(line)
         if self.chedfm is not None:
             line = 'HEAD SAVE FORMAT {0:20s} LABEL\n'.format(self.chedfm)
             f_oc.write(line)
-        if self.unit_number[1] != 0:
-            line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.unit_number[1])
+        if self.savehead:
+            line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.iuhead)
             f_oc.write(line)
 
         f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'.format(self.iddnfm))
         if self.cddnfm is not None:
             line = 'DRAWDOWN SAVE FORMAT {0:20s} LABEL\n'.format(self.cddnfm)
             f_oc.write(line)
-        if self.unit_number[2] != 0:
-            line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.unit_number[2])
+        if self.saveddn:
+            line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.iuddn)
             f_oc.write(line)
 
-        if self.ibouun > 0:
+        if self.saveibnd:
             if self.cboufm is not None:
                 line = 'IBOUND SAVE FORMAT {0:20s} LABEL\n'.format(self.cboufm)
                 f_oc.write(line)
-            line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.unit_number[4])
+            line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.iuibnd)
             f_oc.write(line)
 
         if self.compact:
@@ -762,21 +784,21 @@ class ModflowOc(Package):
         filenames = [filename, None, None, None]
         if ihedun > 0:
             unitnumber[1] = ihedun
-            #model.add_pop_key_list(ihedun)
+            # model.add_pop_key_list(ihedun)
             try:
                 filenames[1] = os.path.basename(ext_unit_dict[ihedun].filename)
             except:
                 pass
         if iddnun > 0:
             unitnumber[2] = iddnun
-            #model.add_pop_key_list(iddnun)
+            # model.add_pop_key_list(iddnun)
             try:
                 filenames[2] = os.path.basename(ext_unit_dict[iddnun].filename)
             except:
                 pass
         if ibouun > 0:
             unitnumber[4] = ibouun
-            #model.add_pop_key_list(ibouun)
+            # model.add_pop_key_list(ibouun)
             try:
                 filenames[4] = os.path.basename(ext_unit_dict[ibouun].filename)
             except:

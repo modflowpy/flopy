@@ -89,7 +89,7 @@ class ModflowBcf(Package):
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb)
+            model.add_externalbudget(ipakcb, package='BCF6')
         else:
             ipakcb = 0
 
