@@ -133,6 +133,22 @@ class ModflowLgr(BaseModel):
         # the starting external data unit number
         self._next_ext_unit = 2000
 
+        # convert iupbhsv, iupbhsv, iucbhsv, and iucbfsv units from
+        # external_files to output_files
+        ibhsv = self.iupbhsv
+        ibfsv = self.iupbhsv
+        if ibhsv > 0:
+            self.parent.add_output_file(ibhsv)
+        if ibfsv > 0:
+            self.parent.add_output_file(ibfsv)
+        for child, child_data in zip(self.children_models, self.children_data):
+            ibhsv = child_data.iucbhsv
+            ibfsv = child_data.iucbfsv
+            if ibhsv > 0:
+                child.add_output_file(ibhsv)
+            if ibfsv > 0:
+                child.add_output_file(ibfsv)
+
         if external_path is not None:
             if os.path.exists(os.path.join(model_ws, external_path)):
                 print("Note: external_path " + str(external_path) +

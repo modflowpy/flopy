@@ -1,4 +1,5 @@
 # from numpy import empty, zeros, ones, where
+import os
 import sys
 import warnings
 
@@ -727,6 +728,10 @@ class ModflowMnw2(Package):
         Filename extension (default is 'mnw2')
     unitnumber : int
         File unit number (default is 34).
+    filenames : string or list of strings
+        File name of the package (with extension) or a list with the filename
+        of the package and the cell-by-cell budget file for ipakcb. Default
+        is None.
     gwt : boolean
         Flag indicating whether GW transport process is active
 
@@ -754,7 +759,8 @@ class ModflowMnw2(Package):
     def __init__(self, model, mnwmax=0, nodtot=None, ipakcb=0, mnwprnt=0,
                  aux=[],
                  node_data=None, mnw=None, stress_period_data=None, itmp=[],
-                 extension='mnw2', unitnumber=None, gwt=False):
+                 extension='mnw2', unitnumber=None, filenames=None,
+                 gwt=False):
         """
         Package constructor
         """
@@ -762,16 +768,29 @@ class ModflowMnw2(Package):
         if unitnumber is None:
             unitnumber = ModflowMnw2.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            pth = model.name + '.' + ModflowMnw2.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, fname=pth)
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowMnw2.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name, and unit number
         Package.__init__(self, model, extension, ModflowMnw2.ftype(),
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
         self.url = 'mnw2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
@@ -1015,16 +1034,23 @@ class ModflowMnw2(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
                 if value.filetype == ModflowMnw2.ftype():
                     unitnumber = key
+                    filenames[0] = os.path.basename(value.filename)
+
+                if ipakcb > 0:
+                    if key == ipakcb:
+                        filenames[1] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
 
         return ModflowMnw2(model, mnwmax=mnwmax, nodtot=nodtot, ipakcb=ipakcb,
                            mnwprnt=mnwprint, aux=option,
                            node_data=node_data, mnw=mnw,
                            stress_period_data=stress_period_data, itmp=itmp,
-                           unitnumber=unitnumber)
+                           unitnumber=unitnumber, filenames=filenames)
 
     def check(self, f=None, verbose=True, level=1):
         """

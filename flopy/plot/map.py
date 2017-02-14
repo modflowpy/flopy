@@ -137,7 +137,7 @@ class ModelMap(object):
 
         # quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
         #                          **kwargs)
-        quadmesh = self.sr.plot_array(plotarray)
+        quadmesh = self.sr.plot_array(plotarray, ax=ax)
 
         # set max and min
         if 'vmin' in kwargs:

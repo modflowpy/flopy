@@ -96,14 +96,25 @@ class ModflowChd(Package):
     """
 
     def __init__(self, model, stress_period_data=None, dtype=None,
-                 options=None, extension='chd', unitnumber=None, **kwargs):
+                 options=None, extension='chd', unitnumber=None,
+                 filenames=None, **kwargs):
 
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowChd.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowChd.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowChd.ftype(),
+                         unitnumber, filenames=[filenames[0]])
 
 
         self.url = 'chd.htm'
@@ -212,14 +223,8 @@ class ModflowChd(Package):
         if model.verbose:
             sys.stdout.write('loading chd package file...\n')
 
-        # determine specified unit number
-        unitnumber = None
-        if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowChd.ftype():
-                    unitnumber = key
-
-        return Package.load(model, ModflowChd, f, nper, unitnumber=unitnumber)
+        return Package.load(model, ModflowChd, f, nper,
+                            ext_unit_dict=ext_unit_dict)
 
 
     @staticmethod

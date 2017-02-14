@@ -209,7 +209,7 @@ class ModflowSwt(Package):
                  ipcsfm=0, istfl=0, istfm=0, gl0=0., sgm=1.7, sgs=2., thick=1.,
                  sse=1., ssv=1., cr=0.01, cc=0.25,
                  void=0.82, sub=0., pcsoff=0., pcs=0., ids16=None, ids17=None,
-                 extension='swt', unitnumber=None):
+                 extension='swt', unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -218,42 +218,57 @@ class ModflowSwt(Package):
         if unitnumber is None:
             unitnumber = ModflowSwt.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None for x in range(15)]
+        elif isinstance(filenames, str):
+            filenames = [filenames] + [None for x in range(14)]
+        elif isinstance(filenames, list):
+            if len(filenames) < 15:
+                n = 15 - len(filenames) + 1
+                filenames = filenames + [None for x in range(n)]
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            pth = model.name + '.' + ModflowSwt.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, fname=pth)
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowSwt.ftype())
         else:
             ipakcb = 0
+
+        item16_extensions = ["subsidence.hds", "total_comp.hds",
+                             "inter_comp.hds", "vert_disp.hds",
+                             "precon_stress.hds", "precon_stress_delta.hds",
+                             "geostatic_stress.hds",
+                             "geostatic_stress_delta.hds",
+                             "eff_stress.hds", "eff_stress_delta.hds",
+                             "void_ratio.hds", "thick.hds", "lay_center.hds"]
+        item16_units = [2052 + i for i in range(len(item16_extensions))]
+
+        if iswtoc > 0:
+            idx = 0
+            for k in range(1, 26, 2):
+                ext = item16_extensions[idx]
+                if ids16 is None:
+                    iu = item16_units[idx]
+                else:
+                    iu = ids16[k]
+                fname = filenames[idx + 2]
+                model.add_output_file(iu, fname=fname, extension=ext,
+                                      package=ModflowSwt.ftype())
+                idx += 1
 
         extensions = [extension]
         name = [ModflowSwt.ftype()]
         units = [unitnumber]
         extra = ['']
 
-        item16_extensions = ["subsidence.hds", "total_comp.hds",
-                             "inter_comp.hds", "vert_disp.hds",
-                             "precon_stress.hds", "precon_stress_delta.hds",
-                             "geostatic_stress.hds","geostatic_stress_delta.hds",
-                             "eff_stress.hds","eff_stress_delta.hds",
-                             "void_ratio.hds","thick.hds","lay_center.hds"]
-
-        item16_units = [2052 + i for i in range(len(item16_extensions))]
-
-        if iswtoc > 0:
-            extensions.append('swtbud')
-            name.append('DATA(BINARY)')
-            units.append(2051)
-            extra.append('REPLACE')
-            for e, u in zip(item16_extensions, item16_units):
-                extensions.append(e)
-                name.append('DATA(BINARY)')
-                units.append(u)
-                extra.append('REPLACE')
+        # set package name
+        fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extensions, name=name,
-                         unit_number=units,
-                         extra=extra)
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
@@ -332,27 +347,26 @@ class ModflowSwt(Package):
         # output data
         if iswtoc > 0:
             if ids16 is None:
-                self.ids16 = np.zeros((26),dtype=np.int)
+                self.ids16 = np.zeros((26), dtype=np.int)
                 ui = 0
-                for i in range(1,26,2):
+                for i in range(1, 26, 2):
                     self.ids16[i] = item16_units[ui]
                     ui += 1
             else:
-                if isinstance(ids16,list):
+                if isinstance(ids16, list):
                     ds16 = np.array(ids16)
                 assert len(ids16) == 26
                 self.ids16 = ids16
 
-
             if ids17 is None:
-                ids17 = np.ones((30),dtype=np.int)
+                ids17 = np.ones((30), dtype=np.int)
                 ids17[0] = 0
                 ids17[2] = 0
                 ids17[1] = 9999
                 ids17[3] = 9999
                 self.ids17 = np.atleast_2d(ids17)
             else:
-                if isinstance(ids17,list):
+                if isinstance(ids17, list):
                     ids17 = np.atleast_2d(np.array(ids17))
                 assert ids17.shape[1] == 30
                 self.ids17 = ids17
@@ -494,8 +508,8 @@ class ModflowSwt(Package):
                                                              int(t[4]), int(
             t[5]), int(t[6])
 
-        if ipakcb > 0:
-            ipakcb = 53
+        # if ipakcb > 0:
+        #     ipakcb = 53
 
         # read dataset 2
         lnwt = None
@@ -644,9 +658,9 @@ class ModflowSwt(Package):
                     '  loading swt dataset 15 for layer {}\n'.format(kk))
             ids16 = np.empty(26, dtype=np.int)
             ids16 = read1d(f, ids16)
-            for k in range(1, 26, 2):
-                model.add_pop_key_list(ids16[k])
-                ids16[k] = 2054  # all sub-wt data sent to unit 2054
+            #for k in range(1, 26, 2):
+            #    model.add_pop_key_list(ids16[k])
+            #    ids16[k] = 2054  # all sub-wt data sent to unit 2054
             # dataset 17
             ids17 = [0] * iswtoc
             for k in range(iswtoc):
@@ -664,10 +678,24 @@ class ModflowSwt(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None for x in range(15)]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSwt.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSwt.ftype())
+            if ipakcb > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+
+            if iswtoc > 0:
+                ipos = 2
+                for k in range(1, 26, 2):
+                    unit = ids16[k]
+                    if unit > 0:
+                        iu, filenames[ipos] = \
+                            model.get_ext_dict_attr(ext_unit_dict,
+                                                    unit=unit)
+                    ipos += 1
 
         # create sub-wt instance
         swt = ModflowSwt(model, ipakcb=ipakcb, iswtoc=iswtoc, nsystm=nsystm,
@@ -679,7 +707,8 @@ class ModflowSwt(Package):
                          sgs=sgs, thick=thick, sse=sse, ssv=ssv, cr=cr, cc=cc,
                          void=void, sub=sub, pcsoff=pcsoff,
                          pcs=pcs, ids16=ids16, ids17=ids17,
-                         unitnumber=unitnumber)
+                         unitnumber=unitnumber, filenames=filenames)
+
         # return sut-wt instance
         return swt
 

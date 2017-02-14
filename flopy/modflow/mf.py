@@ -300,12 +300,12 @@ class Modflow(BaseModel):
         f_nam.write(" ;start_datetime:{0}\n".format(self.start_datetime))
         if self.version == 'mf2k':
             if self.glo.unit_number[0] > 0:
-                f_nam.write('{:12s} {:3d} {}\n'.format(self.glo.name[0],
-                                                       self.glo.unit_number[0],
-                                                       self.glo.file_name[0]))
-        f_nam.write('{:12s} {:3d} {}\n'.format(self.lst.name[0],
-                                               self.lst.unit_number[0],
-                                               self.lst.file_name[0]))
+                f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
+                                                        self.glo.unit_number[0],
+                                                        self.glo.file_name[0]))
+        f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
+                                                self.lst.unit_number[0],
+                                                self.lst.file_name[0]))
         f_nam.write('{}'.format(self.get_name_file_entries()))
 
         # write the external files
@@ -316,9 +316,9 @@ class Modflow(BaseModel):
             # fr = os.path.relpath(f, self.model_ws)
             if b:
                 f_nam.write(
-                    'DATA(BINARY)  {0:3d}  '.format(u) + f + ' REPLACE\n')
+                    'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
             else:
-                f_nam.write('DATA          {0:3d}  '.format(u) + f + '\n')
+                f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
         # write the output files
         for u, f, b in zip(self.output_units, self.output_fnames,
@@ -327,9 +327,9 @@ class Modflow(BaseModel):
                 continue
             if b:
                 f_nam.write(
-                    'DATA(BINARY)  {0:3d}  '.format(u) + f + ' REPLACE\n')
+                    'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
             else:
-                f_nam.write('DATA          {0:3d}  '.format(u) + f + '\n')
+                f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
         # close the name file
         f_nam.close()
@@ -605,6 +605,7 @@ class Modflow(BaseModel):
                 s = 'Could not read basic package: {}. Stopping...' \
                     .format(os.path.basename(bas.filename))
                 raise Exception(s + " " + str(e))
+
 
         if load_only is None:
             load_only = []

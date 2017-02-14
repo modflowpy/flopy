@@ -723,7 +723,7 @@ class SpatialReference(object):
         qm = QuadMesh(self.ncol, self.nrow, verts)
         return qm
 
-    def plot_array(self, a):
+    def plot_array(self, a, ax=None):
         """
         Create a QuadMesh plot of the specified array using pcolormesh
 
@@ -737,7 +737,9 @@ class SpatialReference(object):
 
         """
         import matplotlib.pyplot as plt
-        qm = plt.pcolormesh(self.xgrid, self.ygrid, a)
+        if ax is None:
+            ax = plt.gca()
+        qm = ax.pcolormesh(self.xgrid, self.ygrid, a)
         return qm
 
     def contour_array(self, ax, a, **kwargs):
