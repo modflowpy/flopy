@@ -213,7 +213,7 @@ class ModflowSfr2(Package):
         """
         # set default unit number of one is not specified
         if unit_number is None:
-            unit_number = [ModflowSfr2.defaultunit()]
+            unit_number = ModflowSfr2.defaultunit()
 
         # set filenames
         if filenames is None:
