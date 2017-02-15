@@ -209,7 +209,7 @@ class Mt3dms(BaseModel):
     """
 
     def __init__(self, modelname='mt3dtest', namefile_ext='nam',
-                 modflowmodel=None, ftlfilename=None,
+                 modflowmodel=None, ftlfilename=None, ftlfree=False,
                  version='mt3dms', exe_name='mt3dms.exe',
                  structured=True, listunit=2, model_ws='.', external_path=None,
                  verbose=False, load=True, silent=0):
@@ -226,6 +226,7 @@ class Mt3dms(BaseModel):
         self.lst = Mt3dList(self, listunit=listunit)
         self.mf = modflowmodel
         self.ftlfilename = ftlfilename
+        self.ftlfree = ftlfree
 
         # external option stuff
         self.array_free_format = False
@@ -334,10 +335,13 @@ class Mt3dms(BaseModel):
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('%s\n' % (self.heading))
-        f_nam.write('%s %11i %s\n' % (self.lst.name[0], self.lst.unit_number[0],
-                                     self.lst.file_name[0]))
+        f_nam.write('%s %15i  %s\n' % (self.lst.name[0], self.lst.unit_number[0],
+                                       self.lst.file_name[0]))
         if self.ftlfilename is not None:
-            f_nam.write('%s %12i %s\n' % ('FTL', 39, self.ftlfilename))
+            if self.ftlfree:
+                f_nam.write('%s %16i  %s  FREE\n' % ('FTL', 39, self.ftlfilename))
+            else:
+                f_nam.write('%s %16i  %s\n' % ('FTL', 39, self.ftlfilename))
         f_nam.write('%s' % self.get_name_file_entries())
         for u, f in zip(self.external_units, self.external_fnames):
             f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
