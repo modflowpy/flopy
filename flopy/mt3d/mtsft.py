@@ -162,15 +162,28 @@ class Mt3dSft(Package):
     """
 
     unitnumber = 46
-    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=0,
+    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=None,
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
                  nobssf=0, obs_sf=None, sf_stress_period_data = None,
-                 dtype=None, extension='sft',unitnumber=None, **kwargs):
+                 filenames=None, dtype=None, extension='sft',unit_number=None, **kwargs):
+
         #unit number
-        if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'SFT', self.unitnumber)
+        # set default unit number of one is not specified
+        if unit_number is None:
+            unit_number = Mt3dSft.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 3:
+                for idx in range(len(filenames), 3):
+                    filenames.append(None)
+
+        Package.__init__(self, model, extension, 'SFT', unit_number)
 
         # Set dimensions
         nrow = model.nrow
@@ -184,6 +197,21 @@ class Mt3dSft(Package):
         self.mxsfbc = mxsfbc
         self.icbcsf = icbcsf
         self.ioutobs = ioutobs
+
+
+        # add sft observation output file
+        if ioutobs is not None:
+            if abs(ioutobs) > 0:
+                ext = 'sftobs'
+                #if ioutobs < 0:  # no support for this yet in MT3D-USGS
+                #    binflag = True
+                #    ext = 'bin'
+                fname = filenames[2]
+                model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
+                                      binflag=False, package=Mt3dSft.ftype())
+        else:
+            ioutobs = 0
+
         self.ietsfr = ietsfr
         self.isfsolv = isfsolv
         self.wimp = wimp
@@ -194,10 +222,21 @@ class Mt3dSft(Package):
         self.iprtxmd = iprtxmd
 
         # Set 1D array values
+        if isinstance(coldsf, (list, np.ndarray)):
+            locat = 19
+        else:
+            locat = self.unit_number[0]
+
         self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
-                             name='coldsf', locat=self.unit_number[0])
+                             name='coldsf', locat=locat)
+
+        if isinstance(dispsf, (list, np.ndarray)):
+            locat = 19
+        else:
+            locat = self.unit_number[0]
+
         self.dispsf = Util2d(model, (nsfinit,), np.float32, dispsf,
-                             name='dispsf', locat=self.unit_number[0])
+                             name='dispsf', locat=locat)
 
         # Set streamflow observation locations
         self.nobssf = nobssf
@@ -260,12 +299,12 @@ class Mt3dSft(Package):
         # Item 1
         f_sft.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}'.format(self.nsfinit,
                     self.mxsfbc, self.icbcsf, self.ioutobs, self.ietsfr) +
-                    '           # nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
+                    '                              # nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
 
         # Item 2
-        f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.5f}{4:10d}{5:10.5f}{6:10d}'
+        f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.7f}{4:10d}{5:10.5f}{6:10d}'
                     .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
-                            self.mxsfbc, self.crntsf, self.iprtxmd) +
+                            self.mxitersf, self.crntsf, self.iprtxmd) +
                     ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' \
                     'iprtxmd\n')
 
@@ -281,7 +320,7 @@ class Mt3dSft(Package):
         # Item 6
         if self.nobssf != 0:
             for iobs in range(self.nobssf):
-                f_sft.write('{0:10d}                 # location of obs as given by position in list of irch\n'
+                f_sft.write('{0:10d}                          # location of obs as given by position in list of irch\n'
                             .format(self.obs_sf[iobs]))
 
         # Items 7, 8
@@ -559,3 +598,13 @@ class Mt3dSft(Package):
                       dispsf=dispsf, nobssf=nobssf, obs_sf=obs_sf,
                       sf_stress_period_data=sf_stress_period_data)
         return sft
+
+
+    @staticmethod
+    def ftype():
+        return 'SFT'
+
+
+    @staticmethod
+    def defaultunit():
+        return 19

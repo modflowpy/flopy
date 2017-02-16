@@ -345,6 +345,18 @@ class Mt3dms(BaseModel):
         f_nam.write('%s' % self.get_name_file_entries())
         for u, f in zip(self.external_units, self.external_fnames):
             f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
+
+        # write the output files
+        for u, f, b in zip(self.output_units, self.output_fnames,
+                           self.output_binflag):
+            if u == 0:
+                continue
+            if b:
+                f_nam.write(
+                    'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
+            else:
+                f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
+
         f_nam.close()
         return
 
