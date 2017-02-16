@@ -228,6 +228,27 @@ class Mt3dms(BaseModel):
         self.ftlfilename = ftlfilename
         self.ftlfree = ftlfree
 
+        # Check whether specified ftlfile exists in model directory; if not, warn user
+
+        if not os.path.isfile(os.path.join(self.model_ws, ftlfilename)):
+            print("User specified FTL file does not exist in model directory")
+            print("MT3D will not work without a linker file")
+        else:
+            # Check that the FTL present in the directory is of the format specified
+            # by the user, i.e., is same as ftlfree
+            # Do this by checking whether the first non-blank character is an apostrophe
+            # If code lands here, then ftlfilename exists, open and read first 4 chars
+            f = open(os.path.join(self.model_ws, ftlfilename))
+            c = f.read(4).decode()
+            # if first non-blank char is an apostrophe, then formatted, otherwise binary
+            if (c.strip()[0] == "'" and self.ftlfree) or \
+                (c.strip()[0] != "'" and not self.ftlfree):
+                pass
+            else:
+                print("Specified value of ftlfree conflicts with FTL file format")
+                print("Switching ftlfree from " + str(self.ftlfree) + ' to ' + str(not self.ftlfree))
+                self.ftlfree = not self.ftlfree # Flip the bool
+
         # external option stuff
         self.array_free_format = False
         self.array_format = 'mt3d'
