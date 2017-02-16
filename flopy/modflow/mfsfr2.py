@@ -219,7 +219,7 @@ class ModflowSfr2(Package):
         if filenames is None:
             filenames = [None, None, None]
         elif isinstance(filenames, str):
-            filenames = [filenames, None, None, None]
+            filenames = [filenames, None, None]
         elif isinstance(filenames, list):
             if len(filenames) < 3:
                 for idx in range(len(filenames), 3):
@@ -229,7 +229,8 @@ class ModflowSfr2(Package):
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
             fname = filenames[1]
-            model.add_output_file(ipakcb, package=ModflowSfr2.ftype())
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowSfr2.ftype())
         else:
             ipakcb = 0
 
