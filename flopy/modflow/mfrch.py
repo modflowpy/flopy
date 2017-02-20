@@ -314,13 +314,7 @@ class ModflowRch(Package):
         # dataset 2
         t = line.strip().split()
         nrchop = int(t[0])
-        ipakcb = 0
-        try:
-            if int(t[1]) != 0:
-                model.add_pop_key_list(int(t[1]))
-                ipakcb = 53
-        except:
-            pass
+        ipakcb = int(t[1])
 
         # dataset 3 and 4 - parameters data
         pak_parms = None
@@ -381,15 +375,13 @@ class ModflowRch(Package):
         unitnumber = None
         filenames = [None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowRch.ftype():
-                    unitnumber = key
-                    filenames[0] = os.path.basename(value.filename)
-
-                if ipakcb > 0:
-                    if key == ipakcb:
-                        filenames[1] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowRch.ftype())
+            if ipakcb > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+            model.add_pop_key_list(ipakcb)
 
         # create recharge package instance
         rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb,

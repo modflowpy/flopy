@@ -841,21 +841,16 @@ class Package(object):
                                     structured=model.structured).dtype
 
         # set package unit number
-        filenames = [None, None]
         unitnumber = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == pack_type.ftype():
-                    unitnumber = key
-                    filenames[0] = os.path.basename(value.filename)
-
-            # set filenames for cell-by-cell file
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=pack_type.ftype())
             if ipakcb > 0:
-                for key, value in ext_unit_dict.items():
-                    if key == ipakcb:
-                        filenames[1] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
-                        break
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+                model.add_pop_key_list(ipakcb)
 
         pak = pack_type(model, ipakcb=ipakcb,
                         stress_period_data=stress_period_data,
