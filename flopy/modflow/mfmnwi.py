@@ -257,8 +257,9 @@ class ModflowMnwi(Package):
         """
         chk = check(self, f=f, verbose=verbose, level=level)
         if "MNW2" not in self.parent.get_package_list():
+            desc = '\r    MNWI package present without MNW2 package.'
             chk._add_to_summary(type='Warning', value=0,
-                                desc='\r    MNWI package present without MNW2 packge.')
+                                desc=desc)
 
         chk.summarize()
         return chk

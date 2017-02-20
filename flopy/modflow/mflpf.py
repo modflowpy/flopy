@@ -271,9 +271,11 @@ class ModflowLpf(Package):
 
         # Open file for writing
         f = open(self.fn_path, 'w')
+
         # Item 0: text
-        f.write('%s\n' % self.heading)
-        # Item 1: IBCFCB, HDRY, NPLPF        
+        f.write('{}\n'.format(self.heading))
+
+        # Item 1: IBCFCB, HDRY, NPLPF
         f.write('{0:10d}{1:10.6G}{2:10d} {3:s}\n'.format(self.ipakcb,
                                                          self.hdry,
                                                          self.nplpf,
