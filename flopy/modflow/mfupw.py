@@ -161,12 +161,18 @@ class ModflowUpw(Package):
         else:
             ipakcb = 0
 
+
+        # Fill namefile items
+        name = [ModflowUpw.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowUpw.ftype(),
-                         unitnumber, filenames=fname)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
 
         self.heading = '# {} package for '.format(self.name[0]) + \
