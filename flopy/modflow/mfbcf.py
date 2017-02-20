@@ -105,7 +105,6 @@ class ModflowBcf(Package):
         else:
             ipakcb = 0
 
-
         # Fill namefile items
         name = [ModflowBcf.ftype()]
         units = [unitnumber]

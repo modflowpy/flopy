@@ -128,16 +128,35 @@ class SeawatVsc(Package):
                  viscref=8.904e-4, nsmueos=0, mutempopt=2, mtmuspec=1,
                  dmudc=1.923e-06, cmuref=0., mtmutempspec=1,
                  amucoeff=None, invisc=-1, visc=-1, extension='vsc',
-                 unitnumber=None, **kwargs):
+                 unitnumber=None, filenames=None, **kwargs):
 
         if len(list(kwargs.keys())) > 0:
             raise Exception("VSC error: unrecognized kwargs: " +
                             ' '.join(list(kwargs.keys())))
 
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'VSC', unitnumber)
+            unitnumber = SeawatVsc.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [SeawatVsc.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+
         self.mt3dmuflg = mt3dmuflg
         self.viscmin = viscmin
         self.viscmax = viscmax
@@ -413,11 +432,28 @@ class SeawatVsc(Package):
             # Set invisc = 1 because all concentrations converted to density
             invisc = 1
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=SeawatVsc.ftype())
 
         # Construct and return vsc package
         vsc = SeawatVsc(model, mt3dmuflg=mt3dmuflg, viscmin=viscmin,
                         viscmax=viscmax, viscref=viscref, nsmueos=nsmueos,
                         mutempopt=mutempopt, mtmuspec=mtmuspec,
                         dmudc=dmudc, cmuref=cmuref, mtmutempspec=mtmutempspec,
-                        amucoeff=amucoeff, invisc=invisc, visc=visc)
+                        amucoeff=amucoeff, invisc=invisc, visc=visc,
+                        unitnumber=unitnumber, filenames=filenames)
         return vsc
+
+
+    @staticmethod
+    def ftype():
+        return 'VSC'
+
+    @staticmethod
+    def defaultunit():
+        return 38
