@@ -161,12 +161,18 @@ class ModflowUpw(Package):
         else:
             ipakcb = 0
 
+
+        # Fill namefile items
+        name = [ModflowUpw.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowUpw.ftype(),
-                         unitnumber, filenames=fname)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
 
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -460,21 +466,16 @@ class ModflowUpw(Package):
                 vkcb[k] = t
 
         # determine specified unit number
-        filenames = [None, None]
         unitnumber = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowUpw.ftype():
-                    unitnumber = key
-                    filenames[0] = os.path.basename(value.filename)
-
-            # set filenames for cell-by-cell file
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowUpw.ftype())
             if ipakcb > 0:
-                for key, value in ext_unit_dict.items():
-                    if key == ipakcb:
-                        filenames[1] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
-                        break
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+                model.add_pop_key_list(ipakcb)
 
         # create upw object
         upw = ModflowUpw(model, ipakcb=ipakcb, iphdry=iphdry, hdry=hdry,

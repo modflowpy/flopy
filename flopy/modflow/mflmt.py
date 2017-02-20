@@ -11,6 +11,7 @@ import os
 import sys
 from ..pakbase import Package
 
+
 class ModflowLmt(Package):
     """
     MODFLOW Link-MT3DMS Package Class.
@@ -31,12 +32,6 @@ class ModflowLmt(Package):
         Header for the output file (default is 'extended')
     output_file_format : {'formatted', 'unformatted'}
         Format of the output file (default is 'unformatted')
-    package_flows : {'sfr', 'lak', 'uzf'}
-        Specifies which package flows should be added to the flow-transport
-        link (FTL) file. These values can quickly raise the file size, and
-        therefore the user must request there addition to the FTL file.
-        Default is not to add these terms to the FTL file by omitting the
-        keyword package_flows from the LMT input file.
     extension : string
         Filename extension (default is 'lmt6')
     unitnumber : int
@@ -65,16 +60,33 @@ class ModflowLmt(Package):
     >>> lmt = flopy.modflow.ModflowLmt(m, output_file_name='mt3d_linkage.ftl')
 
     """
+
     def __init__(self, model, output_file_name='mt3d_link.ftl',
                  output_file_unit=54, output_file_header='extended',
                  output_file_format='unformatted', extension='lmt6',
-                 package_flows=[], unitnumber=None):
+                 unitnumber=None, filenames=None):
+
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowLmt.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowLmt.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowLmt.ftype(), unitnumber)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -84,7 +96,6 @@ class ModflowLmt(Package):
         self.output_file_unit = output_file_unit
         self.output_file_header = output_file_header
         self.output_file_format = output_file_format
-        self.package_flows = package_flows
         self.parent.add_package(self)
         return
 
@@ -97,26 +108,17 @@ class ModflowLmt(Package):
         None
 
         """
-        f_lmt = open(self.fn_path, 'w')
-        f_lmt.write('%s\n' % self.heading)
-        f_lmt.write('%s\n' % ('OUTPUT_FILE_NAME ' + self.output_file_name))
-        f_lmt.write('%s%10i\n' % ('OUTPUT_FILE_UNIT ', self.output_file_unit))
-        f_lmt.write('%s\n' % ('OUTPUT_FILE_HEADER ' + self.output_file_header))
-        f_lmt.write('%s\n' % ('OUTPUT_FILE_FORMAT ' + self.output_file_format))
-        if self.package_flows:  # check that the list is not empty
-            # Generate a string to write
-            pckgs = ''
-            if 'sfr' in [x.lower() for x in self.package_flows]:
-                pckgs += 'SFR '
-            if 'lak' in [x.lower() for x in self.package_flows]:
-                pckgs += 'LAK '
-            if 'uzf' in [x.lower() for x in self.package_flows]:
-                pckgs += 'UZF '
-
-            line = 'PACKAGE_FLOWS ' + pckgs
-            f_lmt.write('%s\n' % (line))
-
-        f_lmt.close()
+        f = open(self.fn_path, 'w')
+        f.write('{}\n'.format(self.heading))
+        f.write('{:20s}\n'.format('OUTPUT_FILE_NAME ' +
+                                  self.output_file_name))
+        f.write('{:20s} {:10d}\n'.format('OUTPUT_FILE_UNIT ',
+                                         self.output_file_unit))
+        f.write('{:20s}\n'.format('OUTPUT_FILE_HEADER ' +
+                                  self.output_file_header))
+        f.write('{:20s}\n'.format('OUTPUT_FILE_FORMAT ' +
+                                  self.output_file_format))
+        f.close()
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
@@ -161,7 +163,6 @@ class ModflowLmt(Package):
         output_file_unit = 333
         output_file_header = 'standard'
         output_file_format = 'unformatted'
-        package_flows = []
 
         if not hasattr(f, 'read'):
             filename = f
@@ -181,32 +182,24 @@ class ModflowLmt(Package):
                 output_file_header = t[1]
             elif t[0].lower() == 'output_file_format':
                 output_file_format = t[1]
-            elif t[0].lower() == 'package_flows':
-                # Multiple entries can follow 'package_flows'
-                if len(t) > 1:
-                    for i in range(1, len(t)):
-                        package_flows.append(t[i])
-
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowLmt.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowLmt.ftype())
 
         lmt = ModflowLmt(model, output_file_name, output_file_unit,
                          output_file_header, output_file_format,
-                         package_flows, unitnumber)
+                         unitnumber=unitnumber, filenames=filenames)
         return lmt
-
 
     @staticmethod
     def ftype():
         return 'LMT6'
 
-
     @staticmethod
     def defaultunit():
         return 30
-

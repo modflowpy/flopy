@@ -1204,7 +1204,7 @@ class BaseModel(object):
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
               normal_msg='normal termination',
-              async=False):
+              async=False, cargs=None):
     """
     This function will run the model using subprocess.Popen.  It
     communicates with the model's stdout asynchronously and reports
@@ -1234,6 +1234,9 @@ def run_model(exe_name, namefile, model_ws='./',
         asynchonously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
         really fast
+    cargs : str or list of strings
+        additional command line arguments to pass to the executable.
+        Default is None
     Returns
     -------
     (success, buff)
@@ -1243,6 +1246,13 @@ def run_model(exe_name, namefile, model_ws='./',
     """
     success = False
     buff = []
+
+    # convert normal_msg to lower case for comparison
+    if isinstance(normal_msg, str):
+        normal_msg = [normal_msg.lower()]
+    elif isinstance(normal_msg, list):
+        for idx, s in enumerate(normal_msg):
+            normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
     exe = which(exe_name)
@@ -1272,7 +1282,18 @@ def run_model(exe_name, namefile, model_ws='./',
             # time.sleep(1)
             # output.close()
 
-    proc = sp.Popen([exe_name, namefile],
+    # create a list of arguments to pass to Popen
+    argv = [exe_name, namefile]
+
+    # add additional arguments to Popen arguments
+    if cargs is not None:
+        if isinstance(cargs, str):
+            cargs = [cargs]
+        for t in cargs:
+            argv.append(t)
+
+    # run the model with Popen
+    proc = sp.Popen(argv,
                     stdout=sp.PIPE, stderr=sp.STDOUT, cwd=model_ws)
 
     if not async:
@@ -1280,8 +1301,10 @@ def run_model(exe_name, namefile, model_ws='./',
             line = proc.stdout.readline()
             c = line.decode('utf-8')
             if c != '':
-                if normal_msg in c.lower():
-                    success = True
+                for msg in normal_msg:
+                    if msg in c.lower():
+                        success = True
+                        break
                 c = c.rstrip('\r\n')
                 if not silent:
                     print('{}'.format(c))
