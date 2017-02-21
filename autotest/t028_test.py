@@ -24,7 +24,7 @@ subds = ['case1', 'case2', '1_classic_case1', '2_classic_case2',
          'case1', 'case2', 'case3', 'case4', 'case5', 'case6', 'case7']
 
 
-def test_seawat2_array_format():
+def test_seawat_array_format():
     d = '2_henry'
     subds = ['1_classic_case1']
     for subd in subds:
@@ -78,4 +78,4 @@ if __name__ == '__main__':
     for d, subd in zip(swtdir, subds):
         run_swtv4(d, subd)
 
-    test_seawat2_array_format()
+    test_seawat_array_format()
