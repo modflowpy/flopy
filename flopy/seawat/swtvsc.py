@@ -163,8 +163,14 @@ class SeawatVsc(Package):
         self.viscref = viscref
         self.nsmueos = nsmueos
         self.mutempopt = mutempopt
+        if not isinstance(mtmuspec, list):
+            mtmuspec = [mtmuspec]
         self.mtmuspec = mtmuspec
+        if not isinstance(dmudc, list):
+            dmudc = [dmudc]
         self.dmudc = dmudc
+        if not isinstance(cmuref, list):
+            cmuref = [cmuref]
         self.cmuref = cmuref
         self.mtmutempspec = mtmutempspec
         if amucoeff is None:
@@ -207,10 +213,15 @@ class SeawatVsc(Package):
         if self.mt3dmuflg == -1:
             f_vsc.write('{}\n'.format(self.viscref))
             f_vsc.write('{} {}\n'.format(self.nsmueos, self.mutempopt))
-            if self.nsmueos == 1:
-                f_vsc.write('{} {} {}\n'.format(self.mtmuspec, self.dmudc,
-                                              self.cmuref))
-            else:
+            # if self.nsmueos == 1:
+            #     f_vsc.write('{} {} {}\n'.format(self.mtmuspec, self.dmudc,
+            #                                   self.cmuref))
+            # else:
+            #     for iwr in range(self.nsmueos):
+            #         f_vsc.write('{} {} {}\n'.format(self.mtmuspec[iwr],
+            #                                         self.dmudc[iwr],
+            #                                         self.cmuref[iwr]))
+            if self.nsmueos > 0:
                 for iwr in range(self.nsmueos):
                     f_vsc.write('{} {} {}\n'.format(self.mtmuspec[iwr],
                                                     self.dmudc[iwr],

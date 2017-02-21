@@ -57,18 +57,28 @@ def test_swtv4():
 
 
 def run_swtv4(d, subd):
+    # set up paths
     pth = os.path.join(pthtest, d, subd)
     testpth = os.path.join(newpth, d + '-' + subd)
     if os.path.isdir(testpth):
         shutil.rmtree(testpth)
     os.mkdir(testpth)
+
     namfile = 'seawat.nam'
     if subd == '6_age_simulation':
         namfile = 'henry_mod.nam'
+
+    # load the existing model
     m = flopy.seawat.swt.Seawat.load(namfile, model_ws=pth,
                                      verbose=verbose)
+
+    # change working directory
     m.change_model_ws(testpth)
+
+    # write input files
     m.write_input()
+
+    # run the model
     if isswtv4 is not None and runmodel:
         success, buff = m.run_model(silent=False)
         assert success, '{} did not run'.format(m.name)
