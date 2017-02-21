@@ -327,14 +327,30 @@ class Mt3dms(BaseModel):
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
-        f_nam.write('%s\n' % (self.heading))
-        f_nam.write('%s %3i %s\n' % (self.lst.name[0], self.lst.unit_number[0],
-                                     self.lst.file_name[0]))
+        f_nam.write('{}\n'.format(self.heading))
+        f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
+                                                self.lst.unit_number[0],
+                                                self.lst.file_name[0]))
         if self.ftlfilename is not None:
-            f_nam.write('%s %3i %s\n' % ('FTL', 39, self.ftlfilename))
-        f_nam.write('%s' % self.get_name_file_entries())
+            f_nam.write('{:14s} {:5d}  {}\n'.format('FTL', 39,
+                                                    self.ftlfilename))
+        f_nam.write('{}'.format(self.get_name_file_entries()))
+
+        # write the external files
         for u, f in zip(self.external_units, self.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
+            f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
+
+        # write the output files
+        for u, f, b in zip(self.output_units, self.output_fnames,
+                           self.output_binflag):
+            if u == 0:
+                continue
+            if b:
+                f_nam.write(
+                    'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
+            else:
+                f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
+
         f_nam.close()
         return
 
