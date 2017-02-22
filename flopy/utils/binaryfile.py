@@ -683,6 +683,9 @@ class CellBudgetFile(object):
                 print('\n')
             nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes + 
                               naux * self.realtype(1).nbytes)
+        elif imeth == 6:
+            nlist = binaryread(self.file, np.int32)[0]
+            nbytes = nlist * (np.int32(1).nbytes*2 + self.realtype(1).nbytes)
         else:
             raise Exception('invalid method code ' + str(imeth))
         if nbytes != 0:
@@ -1030,6 +1033,27 @@ class CellBudgetFile(object):
                 if self.verbose:
                     s += 'a numpy recarray of size (' + str(nlist) + ', {})'.format(2+naux)
                     print(s)
+                return data.view(np.recarray)
+
+        # imeth 6
+        elif imeth == 6:
+            nlist = binaryread(self.file, np.int32)[0]
+            dtype = np.dtype([('node', np.int32), ('node2', np.int32),
+                              ('q', self.realtype)])
+            if self.verbose:
+                if full3D:
+                    #s += 'a numpy masked array of size ({},{},{})'.format(nlay,
+                    #                                                      nrow,
+                    #                                                      ncol)
+                    s += 'full 3D arrays not supported for imeth = 6'
+                else:
+                    s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
+                print(s)
+            data = binaryread(self.file, dtype, shape=(nlist,))
+            if full3D:
+                raise ValueError(s)
+                #return self.create3D(data, nlay, nrow, ncol)
+            else:
                 return data.view(np.recarray)
 
         # should not reach this point
