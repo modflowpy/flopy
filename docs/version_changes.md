@@ -31,6 +31,7 @@ FloPy Changes
   4. Fixed bugs in reading and writing SEAWAT Viscosity package.
   5. The DENSE and VISC arrays are now Transient3d objects, so they may change by stress period.
   6. MNW2: fixed bug with k, i, j node input option and issues with loading at model level
+  7. Fixed bug in ModflowDis.get_cell_volumes().
 
 
 ### Version 3.2.5
