@@ -527,14 +527,14 @@ class CellBudgetFile(object):
 
         if precision == 'single':
             self.realtype = np.float32
-            h2dt = [('imeth', 'i4'), ('delt', 'f4'), ('pertim', 'f4'),
-                    ('totim', 'f4')]
+            ffmt = 'f4'
         elif precision == 'double':
             self.realtype = np.float64
-            h2dt = [('imeth', 'i4'),('delt', 'f8'), ('pertim', 'f8'),
-                    ('totim', 'f8')]
+            ffmt = 'f8'
         else:
             raise Exception('Unknown precision specified: ' + precision)
+        h2dt = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
+                ('totim', ffmt)]
 
         self.dis = None
         self.sr = None
@@ -684,8 +684,19 @@ class CellBudgetFile(object):
             nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes + 
                               naux * self.realtype(1).nbytes)
         elif imeth == 6:
+            # read package name (text2)
+            temp = binaryread(self.file, str, charlen=16)
+            # read rest of list data
+            nauxp1 = binaryread(self.file, np.int32)[0]
+            naux = nauxp1 - 1
+            for i in range(naux):
+                temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
-            nbytes = nlist * (np.int32(1).nbytes*2 + self.realtype(1).nbytes)
+            if self.verbose:
+                print('nlist: ', nlist)
+                print('\n')
+            nbytes = nlist * (np.int32(1).nbytes*2 + self.realtype(1).nbytes +
+                              naux * self.realtype(1).nbytes)
         else:
             raise Exception('invalid method code ' + str(imeth))
         if nbytes != 0:
@@ -1031,28 +1042,35 @@ class CellBudgetFile(object):
                 return self.create3D(data, nlay, nrow, ncol)
             else:
                 if self.verbose:
-                    s += 'a numpy recarray of size (' + str(nlist) + ', {})'.format(2+naux)
+                    s += 'a numpy recarray of size (' + \
+                         str(nlist) + ', {})'.format(2+naux)
                     print(s)
                 return data.view(np.recarray)
 
         # imeth 6
         elif imeth == 6:
+            # read package name (text2)
+            temp = binaryread(self.file, str, charlen=16)
+            # read rest of list data
+            nauxp1 = binaryread(self.file, np.int32)[0]
+            naux = nauxp1 - 1
+            l = [('node', np.int32), ('node2', np.int32), ('q', self.realtype)]
+            for i in range(naux):
+                auxname = binaryread(self.file, str, charlen=16)
+                if not isinstance(auxname, str):
+                    auxname = auxname.decode()
+                l.append((auxname, self.realtype))
+            dtype = np.dtype(l)
             nlist = binaryread(self.file, np.int32)[0]
-            dtype = np.dtype([('node', np.int32), ('node2', np.int32),
-                              ('q', self.realtype)])
+            data = binaryread(self.file, dtype, shape=(nlist,))
             if self.verbose:
                 if full3D:
-                    #s += 'a numpy masked array of size ({},{},{})'.format(nlay,
-                    #                                                      nrow,
-                    #                                                      ncol)
                     s += 'full 3D arrays not supported for imeth = 6'
                 else:
                     s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
                 print(s)
-            data = binaryread(self.file, dtype, shape=(nlist,))
             if full3D:
                 raise ValueError(s)
-                #return self.create3D(data, nlay, nrow, ncol)
             else:
                 return data.view(np.recarray)
 
