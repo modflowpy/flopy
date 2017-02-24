@@ -9,11 +9,28 @@ class Mt3dPhc(Package):
                  scr_output=1, cb_offset=0, smse=['pH', 'pe'], mine=[], ie=[],
                  surf=[], mobkin=[], minkin=[], surfkin=[], imobkin=[], 
                  extension='phc', unitnumber=None):
-        #Call ancestor's init to set self.parent, extension, name and 
-        #unit number
+
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'PHC', unitnumber)
+            unitnumber = Mt3dPhc.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [Mt3dPhc.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         self.os = os
         self.temp = temp
         self.asbin = asbin
@@ -75,3 +92,11 @@ class Mt3dPhc(Package):
             i = i + 1
         f_phc.close()
         return
+
+    @staticmethod
+    def ftype():
+        return 'PHC'
+
+    @staticmethod
+    def defaultunit():
+        return 38

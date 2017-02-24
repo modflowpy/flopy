@@ -39,6 +39,10 @@ class ModflowMnw1(Package):
         Filename extension (default is 'mnw1')
     unitnumber : int
         File unit number (default is 33).
+    filenames : string or list of strings
+        File name of the package (with extension) or a list with the filename
+        of the package and the cell-by-cell budget file for ipakcb. Default
+        is None.
 
     Attributes
     ----------
@@ -72,20 +76,34 @@ class ModflowMnw1(Package):
                  itmp=0,
                  lay_row_col_qdes_mn_multi=None,
                  mnwname=None,
-                 extension='mnw1', unitnumber=33):
+                 extension='mnw1', unitnumber=None, filenames=None):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowMnw1.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            #pth = model.name + '.' + ModflowMnw1.ftype() + '.cbc'
-            model.add_externalbudget(ipakcb, package=ModflowMnw1.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowMnw1.ftype())
         else:
             ipakcb = 0
 
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name, and unit number
-        Package.__init__(self, model, extension, ModflowMnw1.ftype(), unitnumber)
+        Package.__init__(self, model, extension, ModflowMnw1.ftype(),
+                         unitnumber, filenames=fname)
 
         self.url = 'mnw1.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]

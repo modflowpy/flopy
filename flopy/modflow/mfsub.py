@@ -181,14 +181,15 @@ class ModflowSub(Package):
 
     """
 
-    def __init__(self, model, ipakcb=None, isuboc=0, idsave=0, idrest=0,
+    def __init__(self, model, ipakcb=None, isuboc=0, idsave=None, idrest=None,
                  nndb=1, ndb=1, nmz=1, nn=20, ac1=0., ac2=0.2, itmin=5,
                  ln=0, ldn=0, rnb=1,
                  hc=100000., sfe=1.e-4, sfv=1.e-3, com=0.,
                  dp=[1.e-6, 6.e-6, 6.e-4],
                  dstart=1., dhc=100000., dcom=0., dz=1., nz=1,
                  ids15=None, ids16=None,
-                 extension='sub', unitnumber=32):
+                 extension='sub', unitnumber=None,
+                 filenames=None):
         """
         Package constructor.
 
@@ -197,16 +198,33 @@ class ModflowSub(Package):
         if unitnumber is None:
             unitnumber = ModflowSub.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None for x in range(9)]
+        elif isinstance(filenames, str):
+            filenames = [filenames] + [None for x in range(8)]
+        elif isinstance(filenames, list):
+            if len(filenames) < 9:
+                n = 9 - len(filenames) + 1
+                filenames = filenames + [None for x in range(n)]
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowSub.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowSub.ftype())
         else:
             ipakcb = 0
 
-        extensions = [extension]
-        name = [ModflowSub.ftype()]
-        units = [unitnumber]
-        extra = ['']
+        if idsave is not None:
+            fname = filenames[2]
+            model.add_output_file(idsave, fname=fname, extension='rst',
+                                  package=ModflowSub.ftype())
+        else:
+            ipakcb = 0
+
+        if idrest is None:
+            idrest = 0
 
         item15_extensions = ["subsidence.hds", "total_comp.hds",
                              "inter_comp.hds", "vert_disp.hds",
@@ -214,25 +232,29 @@ class ModflowSub(Package):
         item15_units = [2052 + i for i in range(len(item15_extensions))]
 
         if isuboc > 0:
-            extensions.append('subbud')
-            name.append('DATA(BINARY)')
-            units.append(2051)
-            extra.append('REPLACE')
-            for e, u in zip(item15_extensions, item15_units):
-                extensions.append(e)
-                name.append('DATA(BINARY)')
-                units.append(u)
-                extra.append('REPLACE')
+            idx = 0
+            for k in range(1, 12, 2):
+                ext = item15_extensions[idx]
+                if ids15 is None:
+                    iu = item15_units[idx]
+                else:
+                    iu = ids15[k]
+                fname = filenames[idx+3]
+                model.add_output_file(iu, fname=fname, extension=ext,
+                                      package=ModflowSub.ftype())
+                idx += 1
 
-        if idsave > 0:
-            extensions.append('rst')
-            name.append('DATA(BINARY)')
-            units.append(2052)
-            extra.append('REPLACE')
+        extensions = [extension]
+        name = [ModflowSub.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extensions, name=name,
-                         unit_number=units, extra=extra)
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
@@ -464,18 +486,18 @@ class ModflowSub(Package):
         if model.verbose:
             sys.stdout.write('  loading sub dataset 1\n')
         t = line.strip().split()
-        ipakcb, isuboc, nndb, ndb, nmz, nn = int(t[0]), int(t[1]), int(
-            t[2]), int(t[3]), int(t[4]), int(t[5])
+        ipakcb, isuboc, nndb, ndb, nmz, nn = int(t[0]), int(t[1]), int(t[2]), \
+                                             int(t[3]), int(t[4]), int(t[5])
         ac1, ac2 = float(t[6]), float(t[7])
         itmin, idsave, idrest = int(t[8]), int(t[9]), int(t[10])
 
-        if ipakcb > 0:
-            ipakcb = 53
-        if idsave > 0:
-            idsave = 2052
-        if idrest > 0:
-            ext_unit_dict[2053] = ext_unit_dict.pop(idrest)
-            idrest = 2053
+        # if ipakcb > 0:
+        #     ipakcb = 53
+        # if idsave > 0:
+        #     idsave = 2052
+        # if idrest > 0:
+        #     ext_unit_dict[2053] = ext_unit_dict.pop(idrest)
+        #     idrest = 2053
 
         ln = None
         if nndb > 0:
@@ -619,11 +641,11 @@ class ModflowSub(Package):
                     '  loading sub dataset 15 for layer {}\n'.format(kk))
             ids15 = np.empty(12, dtype=np.int)
             ids15 = read1d(f, ids15)
-            iu = 1
-            for k in range(1, 12, 2):
-                model.add_pop_key_list(ids15[k])
-                ids15[k] = 2051 + iu  # all subsidence data sent to unit 2051
-                iu += 1
+            #iu = 1
+            #for k in range(1, 12, 2):
+            #    model.add_pop_key_list(ids15[k])
+            #    ids15[k] = 2051 + iu  # all subsidence data sent to unit 2051
+            #    iu += 1
             # dataset 16
             ids16 = [0] * isuboc
             for k in range(isuboc):
@@ -641,10 +663,27 @@ class ModflowSub(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None for x in range(9)]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSub.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSub.ftype())
+            if ipakcb > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+
+            if idsave > 0:
+                iu, filenames[2] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=idsave)
+
+            if isuboc > 0:
+                ipos = 3
+                for k in range(1, 12, 2):
+                    unit = ids15[k]
+                    if unit > 0:
+                        iu, filenames[ipos] = \
+                            model.get_ext_dict_attr(ext_unit_dict, unit=unit)
+                    ipos += 1
 
         # create sub instance
         sub = ModflowSub(model, ipakcb=ipakcb, isuboc=isuboc, idsave=idsave,
@@ -654,7 +693,8 @@ class ModflowSub(Package):
                          ln=ln, ldn=ldn, rnb=rnb,
                          hc=hc, sfe=sfe, sfv=sfv, com=com, dp=dp,
                          dstart=dstart, dhc=dhc, dcom=dcom, dz=dz, nz=nz,
-                         ids15=ids15, ids16=ids16, unitnumber=unitnumber)
+                         ids15=ids15, ids16=ids16, unitnumber=unitnumber,
+                         filenames=filenames)
         # return sub instance
         return sub
 

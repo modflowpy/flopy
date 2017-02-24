@@ -1,5 +1,6 @@
 __author__ = 'aleaf'
 
+import os
 import sys
 
 sys.path.insert(0, '..')
@@ -204,23 +205,32 @@ class ModflowSfr2(Package):
                  dataset_5=None,
                  reachinput=False, transroute=False,
                  tabfiles=False, tabfiles_dict=None,
-                 extension='sfr', unit_number =None,
+                 extension='sfr', unit_number=None,
                  filenames=None):
 
         """
         Package constructor
         """
         # set default unit number of one is not specified
-        if isinstance(unit_number, list):
-            if len(unit_number) < 1:
-                unit_number = None
         if unit_number is None:
-            unit_number = [ModflowSfr2.defaultunit()]
+            unit_number = ModflowSfr2.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 3:
+                for idx in range(len(filenames), 3):
+                    filenames.append(None)
 
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowSfr2.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowSfr2.ftype())
         else:
             ipakcb = 0
 
@@ -232,29 +242,26 @@ class ModflowSfr2(Package):
                 if istcb2 < 0:
                     binflag = True
                     ext = 'bin'
-                fname = None
-                if filenames is not None:
-                    try:
-                        idx = unit_number.index(abs(istcb2))
-                        fname = filenames[idx]
-                    except:
-                        pass
+                fname = filenames[2]
                 if fname is None:
                     fname = model.name + '.sfr.{}'.format(ext)
-                model.add_externalbudget(abs(istcb2), fname=fname,
-                                         binflag=binflag,
-                                         package=ModflowSfr2.ftype())
+                model.add_output_file(abs(istcb2), fname=fname,
+                                      binflag=binflag,
+                                      package=ModflowSfr2.ftype())
         else:
             istcb2 = 0
 
         # Fill namefile items
         name = [ModflowSfr2.ftype()]
-        units = [unit_number[0]]
+        units = [unit_number]
         extension = [extension]
+
+        # set package name
+        fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name, and unit number
         Package.__init__(self, model, extension, name=name,
-                         unit_number=units)
+                         unit_number=units, filenames=fname)
 
         self.url = 'sfr2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
@@ -600,21 +607,23 @@ class ModflowSfr2(Package):
                 continue
 
         # determine specified unit number
-        unitnumber = []
-        filenames = []
+        unitnumber = None
+        filenames = [None, None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
-                if value.filetype ==ModflowSfr2.ftype():
-                    unitnumber.append(key)
-                    filenames.append(value.filename)
-            for key, value in ext_unit_dict.items():
-                if key == ipakcb:
-                    unitnumber.append(key)
-                    filenames.append(value.filename)
-            for key, value in ext_unit_dict.items():
-                if key == istcb2:
-                    unitnumber.append(key)
-                    filenames.append(value.filename)
+                if value.filetype == ModflowSfr2.ftype():
+                    unitnumber = key
+                    filenames[0] = os.path.basename(value.filename)
+
+                if ipakcb > 0:
+                    if key == ipakcb:
+                        filenames[1] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
+
+                if abs(istcb2) > 0:
+                    if key == abs(istcb2):
+                        filenames[2] = os.path.basename(value.filename)
+                        model.add_pop_key_list(key)
 
 
         return ModflowSfr2(model, nstrm=nstrm, nss=nss, nsfrpar=nsfrpar, nparseg=nparseg, const=const, dleak=dleak,

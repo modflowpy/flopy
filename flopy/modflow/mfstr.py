@@ -194,7 +194,8 @@ class ModflowStr(Package):
     def __init__(self, model, mxacts=0, nss=0, ntrib=0, ndiv=0, icalc=0,
                  const=86400., ipakcb=None, istcb2=None,
                  dtype=None, stress_period_data=None, segment_data=None,
-                 extension='str', unitnumber=None, options=None, **kwargs):
+                 extension='str', unitnumber=None, filenames=None,
+                 options=None, **kwargs):
         """
         Package constructor.
 
@@ -203,15 +204,37 @@ class ModflowStr(Package):
         if unitnumber is None:
             unitnumber = ModflowStr.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 3:
+                for idx in range(len(filenames), 3):
+                    filenames.append(None)
+
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
-            model.add_externalbudget(ipakcb, package=ModflowStr.ftype())
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowStr.ftype())
         else:
             ipakcb = 0
 
+        if istcb2 is not None:
+            fname = filenames[2]
+            model.add_output_file(istcb2, fname=fname,
+                                  package=ModflowStr.ftype())
+        else:
+            ipakcb = 0
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call parent init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, ModflowStr.ftype(),
-                         unitnumber)
+                         unitnumber, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -759,17 +782,25 @@ class ModflowStr(Package):
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None, None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowStr.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowStr.ftype())
+            if ipakcb > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+            if abs(istcb2) > 0:
+                iu, filenames[2] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(istcb2))
 
         strpak = ModflowStr(model, mxacts=mxacts, nss=nss,
                             ntrib=ntrib, ndiv=ndiv, icalc=icalc,
                             const=const, ipakcb=ipakcb, istcb2=istcb2,
                             stress_period_data=stress_period_data,
                             segment_data=segment_data,
-                            options=options, unitnumber=unitnumber)
+                            options=options, unitnumber=unitnumber,
+                            filenames=filenames)
         return strpak
 
     @staticmethod

@@ -291,11 +291,28 @@ class BaseModel(object):
 
         return self.get_package(item)
 
+    def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
+                          pop_key=True):
+        iu = None
+        fname = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if key == unit:
+                    iu = key
+                    fname = os.path.basename(value.filename)
+                    break
+                elif value.filetype == filetype:
+                    iu = key
+                    fname = os.path.basename(value.filename)
+                    if pop_key:
+                        self.add_pop_key_list(iu)
+                    break
+        return iu, fname
 
-    def add_externalbudget(self, unit, fname=None, extension='cbc',
-                           binflag=True, package=None):
+    def add_output_file(self, unit, fname=None, extension='cbc',
+                        binflag=True, package=None):
         """
-        Add an external cell-by-cell budget file for a package
+        Add an ascii or binary output file file for a package
 
         Parameters
         ----------
@@ -306,6 +323,12 @@ class BaseModel(object):
         extension : str
             extension to use for the cell-by-cell file. Only used if fname
             is None. (default is cbc)
+        binflag : bool
+            boolean flag indicating if the output file is a binary file.
+            Default is True
+        package : str
+            string that defines the package the output file is attached to.
+            Default is None
 
         """
         add_cbc = False
@@ -341,6 +364,8 @@ class BaseModel(object):
                         else:
                             fname = self.name + '.{}.'.format(package) \
                                     + extension
+            else:
+                fname = os.path.basename(fname)
             self.add_output(fname, unit, binflag=binflag, package=package)
         return
 
@@ -635,10 +660,9 @@ class BaseModel(object):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                               p.unit_number[i],
-                                                               p.file_name[i],
-                                                               p.extra[i]))
+                s = s + \
+                    ('{:14s} {:5d}  '.format(p.name[i], p.unit_number[i]) +
+                     '{:s} {:s}\n'.format(p.file_name[i], p.extra[i]))
         return s
 
     def get_package(self, name):
@@ -1180,7 +1204,7 @@ class BaseModel(object):
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
               normal_msg='normal termination',
-              async=False):
+              async=False, cargs=None):
     """
     This function will run the model using subprocess.Popen.  It
     communicates with the model's stdout asynchronously and reports
@@ -1210,6 +1234,9 @@ def run_model(exe_name, namefile, model_ws='./',
         asynchonously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
         really fast
+    cargs : str or list of strings
+        additional command line arguments to pass to the executable.
+        Default is None
     Returns
     -------
     (success, buff)
@@ -1219,6 +1246,13 @@ def run_model(exe_name, namefile, model_ws='./',
     """
     success = False
     buff = []
+
+    # convert normal_msg to lower case for comparison
+    if isinstance(normal_msg, str):
+        normal_msg = [normal_msg.lower()]
+    elif isinstance(normal_msg, list):
+        for idx, s in enumerate(normal_msg):
+            normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
     exe = which(exe_name)
@@ -1248,7 +1282,18 @@ def run_model(exe_name, namefile, model_ws='./',
             # time.sleep(1)
             # output.close()
 
-    proc = sp.Popen([exe_name, namefile],
+    # create a list of arguments to pass to Popen
+    argv = [exe_name, namefile]
+
+    # add additional arguments to Popen arguments
+    if cargs is not None:
+        if isinstance(cargs, str):
+            cargs = [cargs]
+        for t in cargs:
+            argv.append(t)
+
+    # run the model with Popen
+    proc = sp.Popen(argv,
                     stdout=sp.PIPE, stderr=sp.STDOUT, cwd=model_ws)
 
     if not async:
@@ -1256,8 +1301,10 @@ def run_model(exe_name, namefile, model_ws='./',
             line = proc.stdout.readline()
             c = line.decode('utf-8')
             if c != '':
-                if normal_msg in c.lower():
-                    success = True
+                for msg in normal_msg:
+                    if msg in c.lower():
+                        success = True
+                        break
                 c = c.rstrip('\r\n')
                 if not silent:
                     print('{}'.format(c))

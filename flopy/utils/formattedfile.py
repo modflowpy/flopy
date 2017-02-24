@@ -196,7 +196,7 @@ class FormattedLayerFile(LayerFile):
         current_col = 0
         result = None
         # Loop until data retreived or eof
-        while (current_col < self.ncol - 1 or self.file.tell() == self.totalbytes) and current_col < i:
+        while (current_col < self.ncol - 1 or self.file.tell() == self.totalbytes) and current_col <= i:
             line = self.file.readline()
             arrline = line.split()
             for val in arrline:
