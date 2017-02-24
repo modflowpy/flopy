@@ -521,6 +521,7 @@ class CellBudgetFile(object):
         self.recordarray = []
         self.iposarray = []
         self.textlist = []
+        self.paknamelist = []
         self.nrecords = 0
         h1dt = [('kstp', 'i4'), ('kper', 'i4'), ('text', 'a16'),
                 ('ncol', 'i4'), ('nrow', 'i4'), ('nlay', 'i4')]
@@ -533,8 +534,10 @@ class CellBudgetFile(object):
             ffmt = 'f8'
         else:
             raise Exception('Unknown precision specified: ' + precision)
-        h2dt = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
+        h2dtr = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
                 ('totim', ffmt)]
+        h2dt = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
+                ('totim', ffmt), ('pakname', 'a16')]
 
         self.dis = None
         self.sr = None
@@ -552,6 +555,7 @@ class CellBudgetFile(object):
             raise Exception('LayerFile error: unrecognized kwargs: '+args)
 
         self.header1_dtype = np.dtype(h1dt)
+        self.header2r_dtype = np.dtype(h2dtr)
         self.header2_dtype = np.dtype(h2dt)
         hdt = h1dt + h2dt
         self.header_dtype = np.dtype(hdt)
@@ -626,6 +630,8 @@ class CellBudgetFile(object):
                 self.kstpkper.append( kstpkper )
             if header['text'] not in self.textlist:
                 self.textlist.append(header['text'])
+            if header['pakname'] not in self.paknamelist:
+                self.paknamelist.append(header['pakname'])
             ipos = self.file.tell()
 
             if self.verbose:
@@ -684,8 +690,8 @@ class CellBudgetFile(object):
             nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes + 
                               naux * self.realtype(1).nbytes)
         elif imeth == 6:
-            # read package name (text2)
-            temp = binaryread(self.file, str, charlen=16)
+            ## read package name (text2)
+            #temp = binaryread(self.file, str, charlen=16)
             # read rest of list data
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
@@ -709,10 +715,16 @@ class CellBudgetFile(object):
         """
         header1 = binaryread(self.file, self.header1_dtype, (1,))
         nlay = header1['nlay']
-        if  nlay < 0:
-            header2 = binaryread(self.file, self.header2_dtype, (1,))
+        if nlay < 0:
+            # read everything except for pakname
+            header2r = binaryread(self.file, self.header2r_dtype, (1,))
+            # convert to dtype with pakname
+            header2 = header2r.astype(self.header2_dtype)
+            # read pakname if imeth == 6
+            if int(header2['imeth']) == 6:
+                header2['pakname'] = binaryread(self.file, str, charlen=16)
         else:
-            header2 = np.array([(0, 0., 0., 0.)], dtype=self.header2_dtype)
+            header2 = np.array([(0, 0., 0., 0., '')], dtype=self.header2_dtype)
         fullheader = join_struct_arrays([header1, header2])
         return fullheader[0]
 
@@ -728,7 +740,7 @@ class CellBudgetFile(object):
                 ttext = text.decode()
             else:
                 ttext = text
-            for t in self.unique_record_names():
+            for t in self._unique_record_names():
                 if ttext.upper() in t.decode():
                     text16 = t
                     break
@@ -736,6 +748,28 @@ class CellBudgetFile(object):
                 errmsg = 'The specified text string is not in the budget file.'
                 raise Exception(errmsg)
         return text16
+
+    def _find_pakname(self, pakname):
+        """
+        Determine if selected record name is in budget file
+
+        """
+        # check and make sure that text is in file
+        pakname16 = None
+        if pakname is not None:
+            if isinstance(pakname, bytes):
+                tpakname = pakname.decode()
+            else:
+                tpakname = pakname
+            for t in self._unique_package_names():
+                if tpakname.upper() in t.decode():
+                    pakname16 = t
+                    break
+            if pakname16 is None:
+                errmsg = 'The specified package name string is not ' + \
+                         'in the budget file.'
+                raise Exception(errmsg)
+        return pakname16
 
     def list_records(self):
         """
@@ -745,7 +779,23 @@ class CellBudgetFile(object):
             print(rec)
         return
 
-    def unique_record_names(self):
+    def list_unique_records(self):
+        """
+        Print a list of unique record names
+        """
+        for rec in self._unique_record_names():
+            print(rec)
+        return
+
+    def list_unique_packages(self):
+        """
+        Print a list of unique package names
+        """
+        for rec in self._unique_package_names():
+            print(rec)
+        return
+
+    def get_unique_record_names(self):
         """
         Get a list of unique record names in the file
 
@@ -756,6 +806,42 @@ class CellBudgetFile(object):
 
         """
         return self.textlist
+
+    def _unique_record_names(self):
+        """
+        Get a list of unique record names in the file
+
+        Returns
+        ----------
+        out : list of strings
+            List of unique text names in the binary file.
+
+        """
+        return self.textlist
+
+    def get_unique_package_names(self):
+        """
+        Get a list of unique package names in the file
+
+        Returns
+        ----------
+        out : list of strings
+            List of unique package names in the binary file.
+
+        """
+        return self.paknamelist
+
+    def _unique_package_names(self):
+        """
+        Get a list of unique package names in the file
+
+        Returns
+        ----------
+        out : list of strings
+            List of unique package names in the binary file.
+
+        """
+        return self.paknamelist
 
     def get_kstpkper(self):
         """
@@ -794,7 +880,7 @@ class CellBudgetFile(object):
         return select_indices
 
     def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
-                 full3D=False):
+                 pakname=None, full3D=False):
         """
         get data from the budget file.
 
@@ -846,42 +932,58 @@ class CellBudgetFile(object):
                 raise Exception(errmsg)
 
         # check and make sure that text is in file
+        text16 = None
         if text is not None:
             text16 = self._find_text(text)
-            # text16 = None
-            # if isinstance(text, bytes):
-            #     ttext = text.decode()
-            # else:
-            #     ttext = text
-            # for t in self.unique_record_names():
-            #     if ttext.upper() in t.decode():
-            #         text16 = t
-            #         break
-            # if text16 is None:
-            #     errmsg = 'The specified text string is not in the budget file.'
-            #     raise Exception(errmsg)
+        pakname16 = None
+        if pakname is not None:
+            pakname16 = self._find_pakname(pakname)
 
         if kstpkper is not None:
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
-            if text is None:
+            if text is None and pakname is None:
                 select_indices = np.where(
                     (self.recordarray['kstp'] == kstp1) &
                     (self.recordarray['kper'] == kper1))
             else:
-                select_indices = np.where(
-                    (self.recordarray['kstp'] == kstp1) &
-                    (self.recordarray['kper'] == kper1) &
-                    (self.recordarray['text'] == text16))
+                if pakname is None and text is not None:
+                    select_indices = np.where(
+                        (self.recordarray['kstp'] == kstp1) &
+                        (self.recordarray['kper'] == kper1) &
+                        (self.recordarray['text'] == text16))
+                elif text is None and pakname is not None:
+                    select_indices = np.where(
+                        (self.recordarray['kstp'] == kstp1) &
+                        (self.recordarray['kper'] == kper1) &
+                        (self.recordarray['pakname'] == pakname16))
+                else:
+                    select_indices = np.where(
+                        (self.recordarray['kstp'] == kstp1) &
+                        (self.recordarray['kper'] == kper1) &
+                        (self.recordarray['text'] == text16) &
+                        (self.recordarray['pakname'] == pakname16))
+
 
         elif totim is not None:
-            if text is None:
+            if text is None and pakname is None:
                 select_indices = np.where(
                     (self.recordarray['totim'] == totim))
             else:
-                select_indices = np.where(
-                    (self.recordarray['totim'] == totim) &
-                    (self.recordarray['text'] == text16))
+                if pakname is None and text is not None:
+                    select_indices = np.where(
+                        (self.recordarray['totim'] == totim) &
+                        (self.recordarray['text'] == text16))
+                elif text is None and pakname is not None:
+                    select_indices = np.where(
+                        (self.recordarray['totim'] == totim) &
+                        (self.recordarray['pakname'] == pakname16))
+                else:
+                    select_indices = np.where(
+                        (self.recordarray['totim'] == totim) &
+                        (self.recordarray['text'] == text16) &
+                        (self.recordarray['pakname'] == pakname16))
+
 
         # allow for idx to be a list or a scalar
         elif idx is not None:
@@ -1049,8 +1151,8 @@ class CellBudgetFile(object):
 
         # imeth 6
         elif imeth == 6:
-            # read package name (text2)
-            temp = binaryread(self.file, str, charlen=16)
+            ## read package name (text2)
+            #temp = binaryread(self.file, str, charlen=16)
             # read rest of list data
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
