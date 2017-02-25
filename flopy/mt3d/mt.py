@@ -240,6 +240,7 @@ class Mt3dms(BaseModel):
             # If code lands here, then ftlfilename exists, open and read first 4 chars
             f = open(os.path.join(self.model_ws, ftlfilename))
             c = f.read(4).decode()
+
             # if first non-blank char is an apostrophe, then formatted, otherwise binary
             if (c.strip()[0] == "'" and self.ftlfree) or \
                 (c.strip()[0] != "'" and not self.ftlfree):
