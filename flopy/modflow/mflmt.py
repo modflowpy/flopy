@@ -32,6 +32,12 @@ class ModflowLmt(Package):
         Header for the output file (default is 'extended')
     output_file_format : {'formatted', 'unformatted'}
         Format of the output file (default is 'unformatted')
+    package_flows : {'sfr', 'lak', 'uzf'}
+        Specifies which package flows should be added to the flow-transport
+        link (FTL) file. These values can quickly raise the file size, and
+        therefore the user must request there addition to the FTL file.
+        Default is not to add these terms to the FTL file by omitting the
+        keyword package_flows from the LMT input file.
     extension : string
         Filename extension (default is 'lmt6')
     unitnumber : int
@@ -64,7 +70,7 @@ class ModflowLmt(Package):
     def __init__(self, model, output_file_name='mt3d_link.ftl',
                  output_file_unit=54, output_file_header='extended',
                  output_file_format='unformatted', extension='lmt6',
-                 unitnumber=None, filenames=None):
+                 package_flows=[], unitnumber=None, filenames=None):
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -96,6 +102,7 @@ class ModflowLmt(Package):
         self.output_file_unit = output_file_unit
         self.output_file_header = output_file_header
         self.output_file_format = output_file_format
+        self.package_flows = package_flows
         self.parent.add_package(self)
         return
 
@@ -118,6 +125,19 @@ class ModflowLmt(Package):
                                   self.output_file_header))
         f.write('{:20s}\n'.format('OUTPUT_FILE_FORMAT ' +
                                   self.output_file_format))
+        if self.package_flows:  # check that the list is not empty
+            # Generate a string to write
+            pckgs = ''
+            if 'sfr' in [x.lower() for x in self.package_flows]:
+                pckgs += 'SFR '
+            if 'lak' in [x.lower() for x in self.package_flows]:
+                pckgs += 'LAK '
+            if 'uzf' in [x.lower() for x in self.package_flows]:
+                pckgs += 'UZF '
+
+            line = 'PACKAGE_FLOWS ' + pckgs
+            f.write('%s\n' % (line))
+
         f.close()
 
     @staticmethod
@@ -163,6 +183,7 @@ class ModflowLmt(Package):
         output_file_unit = 333
         output_file_header = 'standard'
         output_file_format = 'unformatted'
+        package_flows = []
 
         if not hasattr(f, 'read'):
             filename = f
@@ -182,6 +203,12 @@ class ModflowLmt(Package):
                 output_file_header = t[1]
             elif t[0].lower() == 'output_file_format':
                 output_file_format = t[1]
+            elif t[0].lower() == 'package_flows':
+                # Multiple entries can follow 'package_flows'
+                if len(t) > 1:
+                    for i in range(1, len(t)):
+                        package_flows.append(t[i])
+
 
         # determine specified unit number
         unitnumber = None
@@ -193,7 +220,8 @@ class ModflowLmt(Package):
 
         lmt = ModflowLmt(model, output_file_name, output_file_unit,
                          output_file_header, output_file_format,
-                         unitnumber=unitnumber, filenames=filenames)
+                         package_flows, unitnumber=unitnumber, 
+                         filenames=filenames)
         return lmt
 
     @staticmethod
