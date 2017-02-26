@@ -184,11 +184,31 @@ class SeawatVdf(Package):
                  densemin=1.000, densemax=1.025, dnscrit=1e-2, denseref=1.000,
                  denseslp=.025, crhoref=0, firstdt=0.001, indense=1,
                  dense=1.000, nsrhoeos=1, drhodprhd=4.46e-3, prhdref=0.,
-                 extension='vdf', unitnumber=None, **kwargs):
+                 extension='vdf', unitnumber=None, filenames=None, **kwargs):
+
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'VDF', unitnumber)
+            unitnumber = SeawatVdf.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [SeawatVdf.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+
         self.mtdnconc = kwargs.pop('mt3drhoflg', mtdnconc)
         self.mfnadvfd = mfnadvfd
         self.nswtcpl = nswtcpl
@@ -452,6 +472,14 @@ class SeawatVdf(Package):
             # Set indense = 1 because all concentrations converted to density
             indense = 1
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=SeawatVdf.ftype())
+
         # Construct and return vdf package
         vdf = SeawatVdf(model, mt3drhoflg=mt3drhoflg, mfnadvfd=mfnadvfd,
                         nswtcpl=nswtcpl, iwtable=iwtable,
@@ -460,5 +488,14 @@ class SeawatVdf(Package):
                         drhodprhd=drhodprhd, prhdref=prhdref,
                         nsrhoeos=nsrhoeos, mtrhospec=mtrhospec,
                         crhoref=crhoref, firstdt=firstdt, indense=indense,
-                        dense=dense)
+                        dense=dense,
+                        unitnumber=unitnumber, filenames=filenames)
         return vdf
+
+    @staticmethod
+    def ftype():
+        return 'VDF'
+
+    @staticmethod
+    def defaultunit():
+        return 37

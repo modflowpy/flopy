@@ -99,7 +99,7 @@ class ModflowChd(Package):
                  options=None, extension='chd', unitnumber=None,
                  filenames=None, **kwargs):
 
-        # set default unit number of one is not specified
+        # set default unit number if one is not specified
         if unitnumber is None:
             unitnumber = ModflowChd.defaultunit()
 
@@ -112,9 +112,17 @@ class ModflowChd(Package):
             if len(filenames) < 2:
                 filenames.append(None)
 
+        # Fill namefile items
+        name = [ModflowChd.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowChd.ftype(),
-                         unitnumber, filenames=[filenames[0]])
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
 
         self.url = 'chd.htm'

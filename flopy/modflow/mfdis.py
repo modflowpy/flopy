@@ -322,7 +322,7 @@ class ModflowDis(Package):
         """
         vol = np.empty((self.nlay, self.nrow, self.ncol))
         for l in range(self.nlay):
-            vol[l, :, :] *= self.thickness.array[l]
+            vol[l, :, :] = self.thickness.array[l]
         for r in range(self.nrow):
             vol[:, r, :] *= self.delc[r]
         for c in range(self.ncol):

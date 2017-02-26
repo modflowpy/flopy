@@ -65,11 +65,15 @@ class ModflowGage(Package):
         if unitnumber is None:
             unitnumber = ModflowGage.defaultunit()
 
-        # initialize file information for gage ourput
-        name = [ModflowGage.ftype()]
-        units = [unitnumber]
-        extra = ['']
-        extension = [extension]
+        # set filenames
+        if filenames is None:
+            filenames = [None for x in range(numgage+1)]
+        elif isinstance(filenames, str):
+            filenames = [filenames] + [None for x in range(numgage)]
+        elif isinstance(filenames, list):
+            if len(filenames) < numgage+1:
+                for idx in range(len(filenames), numgage+2):
+                    filenames.append(None)
 
         # process gage output files
         dtype = ModflowGage.get_default_dtype()
@@ -138,11 +142,21 @@ class ModflowGage(Package):
                 iu = gage_data['unit'][n]
                 gage_data['unit'][n] = iu
                 fname = files[n]
-                model.add_output(fname, abs(iu), package=ModflowGage.ftype())
+                #model.add_output(fname, abs(iu), package=ModflowGage.ftype())
+                model.add_output_file(iu, fname=fname, binflag=False,
+                                      package=ModflowGage.ftype())
 
-        # Call parent init to set self.parent, extension, name and unit number
+        # Fill namefile items
+        name = [ModflowGage.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=filenames)
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \

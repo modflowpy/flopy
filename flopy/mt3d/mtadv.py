@@ -162,10 +162,30 @@ class Mt3dAdv(Package):
                  itrack=3, wd=0.5,
                  dceps=1e-5, nplane=2, npl=10, nph=40, npmin=5, npmax=80,
                  nlsink=0, npsink=15,
-                 dchmoc=0.0001, extension='adv', unitnumber=None):
+                 dchmoc=0.0001, extension='adv', unitnumber=None,
+                 filenames=None):
+
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'ADV', unitnumber)
+            unitnumber = Mt3dAdv.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [Mt3dAdv.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         self.mixelm = mixelm
         self.percel = percel
         self.mxpart = mxpart
@@ -342,6 +362,14 @@ class Mt3dAdv(Package):
             if model.verbose:
                 print('   DCHMOC {}'.format(dchmoc))
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dAdv.ftype())
+
         # Construct and return adv package
         adv = Mt3dAdv(model, mixelm=mixelm, percel=percel,
                       mxpart=mxpart, nadvfd=nadvfd,
@@ -349,5 +377,14 @@ class Mt3dAdv(Package):
                       dceps=dceps, nplane=nplane, npl=npl, nph=nph,
                       npmin=npmin, npmax=npmax,
                       nlsink=nlsink, npsink=npsink,
-                      dchmoc=dchmoc)
+                      dchmoc=dchmoc, unitnumber=unitnumber,
+                      filenames=filenames)
         return adv
+
+    @staticmethod
+    def ftype():
+        return 'ADV'
+
+    @staticmethod
+    def defaultunit():
+        return 32
