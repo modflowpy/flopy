@@ -221,7 +221,7 @@ def test_mf2000_tob():
                                     exe_name=mf2k_exe)
     mf.model_ws = newpth
     mf.lmt6.output_file_header = 'extended'
-    mf.lmt6.output_file_format = 'unformatted'
+    mf.lmt6.output_file_format = 'formatted'
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
@@ -279,9 +279,9 @@ def test_mfnwt_CrnkNic():
         success, buff = mf.run_model(silent=True)
         assert success, '{} did not run'.format(mf.name)
 
-    namfile = 'CrnkNic.mtnam'
+    namefile = 'CrnkNic.mtnam'
     mt = flopy.mt3d.mt.Mt3dms.load(namefile, model_ws=pth, verbose=True,
-                                   exe_name=mt3d_usgs.exe)
+                                   version='mt3d-usgs', exe_name=mt3d_usgs_exe)
     mt.model_ws = newpth
     ftlfile = 'CrnkNic.ftl'
     mt.ftlfilename = ftlfile

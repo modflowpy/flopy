@@ -176,6 +176,8 @@ class Mt3dSft(Package):
         # set filenames
         if filenames is None:
             filenames = [None, None, None]
+            if abs(ioutobs) > 0:
+                filenames[2] = model.name
         elif isinstance(filenames, str):
             filenames = [filenames, None, None]
         elif isinstance(filenames, list):

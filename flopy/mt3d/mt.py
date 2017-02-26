@@ -229,7 +229,12 @@ class Mt3dms(BaseModel):
         self.ftlfree = ftlfree
 
         # Check whether specified ftlfile exists in model directory; if not, warn user
-
+        if os.path.isfile(os.path.join(self.model_ws, str(modelname + '.' + namefile_ext))):
+            with open(os.path.join(self.model_ws, str(modelname + '.' + namefile_ext))) as nm_file:
+                for line in nm_file:
+                    if line[0:3]=='FTL':
+                        ftlfilename = line.strip().split()[2]
+                        break
         if not os.path.isfile(os.path.join(self.model_ws, ftlfilename)):
             print("User specified FTL file does not exist in model directory")
             print("MT3D will not work without a linker file")
@@ -438,15 +443,17 @@ class Mt3dms(BaseModel):
 
         """
         # test if name file is passed with extension (i.e., is a valid file)
+        modelname_extension = None
         if os.path.isfile(os.path.join(model_ws, f)):
             modelname = f.rpartition('.')[0]
+            modelname_extension = f.rpartition('.')[2]
         else:
             modelname = f
 
         if verbose:
             sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
                              format(modelname, 50 * '-'))
-        mt = Mt3dms(modelname=modelname,
+        mt = Mt3dms(modelname=modelname, namefile_ext=modelname_extension,
                      version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
 
@@ -689,3 +696,4 @@ class Mt3dms(BaseModel):
         r = np.array(r, dtype=dtype)
         r = r.view(np.recarray)
         return r
+
