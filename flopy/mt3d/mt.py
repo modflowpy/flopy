@@ -12,6 +12,9 @@ from .mtrct import Mt3dRct
 from .mtgcg import Mt3dGcg
 from .mttob import Mt3dTob
 from .mtphc import Mt3dPhc
+from .mtuzt import Mt3dUzt
+from .mtsft import Mt3dSft
+from .mtlkt import Mt3dLkt
 
 class Mt3dList(Package):
     """
@@ -206,7 +209,7 @@ class Mt3dms(BaseModel):
     """
 
     def __init__(self, modelname='mt3dtest', namefile_ext='nam',
-                 modflowmodel=None, ftlfilename=None,
+                 modflowmodel=None, ftlfilename=None, ftlfree=False,
                  version='mt3dms', exe_name='mt3dms.exe',
                  structured=True, listunit=2, model_ws='.', external_path=None,
                  verbose=False, load=True, silent=0):
@@ -223,6 +226,34 @@ class Mt3dms(BaseModel):
         self.lst = Mt3dList(self, listunit=listunit)
         self.mf = modflowmodel
         self.ftlfilename = ftlfilename
+        self.ftlfree = ftlfree
+
+        # Check whether specified ftlfile exists in model directory; if not, warn user
+        if os.path.isfile(os.path.join(self.model_ws, str(modelname + '.' + namefile_ext))):
+            with open(os.path.join(self.model_ws, str(modelname + '.' + namefile_ext))) as nm_file:
+                for line in nm_file:
+                    if line[0:3]=='FTL':
+                        ftlfilename = line.strip().split()[2]
+                        break
+        if not os.path.isfile(os.path.join(self.model_ws, ftlfilename)):
+            print("User specified FTL file does not exist in model directory")
+            print("MT3D will not work without a linker file")
+        else:
+            # Check that the FTL present in the directory is of the format specified
+            # by the user, i.e., is same as ftlfree
+            # Do this by checking whether the first non-blank character is an apostrophe
+            # If code lands here, then ftlfilename exists, open and read first 4 chars
+            f = open(os.path.join(self.model_ws, ftlfilename))
+            c = f.read(4).decode()
+
+            # if first non-blank char is an apostrophe, then formatted, otherwise binary
+            if (c.strip()[0] == "'" and self.ftlfree) or \
+                (c.strip()[0] != "'" and not self.ftlfree):
+                pass
+            else:
+                print("Specified value of ftlfree conflicts with FTL file format")
+                print("Switching ftlfree from " + str(self.ftlfree) + ' to ' + str(not self.ftlfree))
+                self.ftlfree = not self.ftlfree # Flip the bool
 
         # external option stuff
         self.array_free_format = False
@@ -262,6 +293,9 @@ class Mt3dms(BaseModel):
             'gcg': Mt3dGcg,
             'tob': Mt3dTob,
             'phc': Mt3dPhc,
+            'lkt': Mt3dLkt,
+            'sft': Mt3dSft,
+            'uzt': Mt3dUzt
         }
         return
 
@@ -327,18 +361,17 @@ class Mt3dms(BaseModel):
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
-        f_nam.write('{}\n'.format(self.heading))
-        f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
-                                                self.lst.unit_number[0],
-                                                self.lst.file_name[0]))
+        f_nam.write('%s\n' % (self.heading))
+        f_nam.write('%s %15i  %s\n' % (self.lst.name[0], self.lst.unit_number[0],
+                                       self.lst.file_name[0]))
         if self.ftlfilename is not None:
-            f_nam.write('{:14s} {:5d}  {}\n'.format('FTL', 39,
-                                                    self.ftlfilename))
-        f_nam.write('{}'.format(self.get_name_file_entries()))
-
-        # write the external files
+            if self.ftlfree:
+                f_nam.write('%s %16i  %s  FREE\n' % ('FTL', 39, self.ftlfilename))
+            else:
+                f_nam.write('%s %16i  %s\n' % ('FTL', 39, self.ftlfilename))
+        f_nam.write('%s' % self.get_name_file_entries())
         for u, f in zip(self.external_units, self.external_fnames):
-            f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
+            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
 
         # write the output files
         for u, f, b in zip(self.output_units, self.output_fnames,
@@ -410,15 +443,17 @@ class Mt3dms(BaseModel):
 
         """
         # test if name file is passed with extension (i.e., is a valid file)
+        modelname_extension = None
         if os.path.isfile(os.path.join(model_ws, f)):
             modelname = f.rpartition('.')[0]
+            modelname_extension = f.rpartition('.')[2]
         else:
             modelname = f
 
         if verbose:
             sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
                              format(modelname, 50 * '-'))
-        mt = Mt3dms(modelname=modelname,
+        mt = Mt3dms(modelname=modelname, namefile_ext=modelname_extension,
                      version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
 
