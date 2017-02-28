@@ -1,5 +1,6 @@
-#UZF Package input for test simulation 2
-      1  1  1  1  53    0 25 20 4  1.0   NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2 NTRAIL NSETS NUZGAGES
+# UZF Package input for test simulation 2
+# NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2 NTRAIL NSETS NUZGAGES
+       1       1       1      1      53       0     25    20        4  1.0   
 INTERNAL          1 (20I4)    6         UZFBND
    1   1   0   0   0   0   0   0   0   0
    1   1   1   0   0   1   1   1   0   0
@@ -50,10 +51,10 @@ INTERNAL   1.0E-6 (10F4.0)    0         VKS
  0.0 0.0 1.0 1.0 1.0 1.0 0.0 0.0 0.0 0.0
 CONSTANT   3.5                           BROOK-COREY EPSILON
 CONSTANT   0.30                          THTS
- 3  6 65  1
- 6  3 66  2
-10  5 67  3
--68
+ 3  6 65  1                              UZGAGE_1
+ 6  3 66  2                              UZGAGE_2
+10  5 67  3                              UZGAGE_3
+-68                                      
  1                                      NUZF1    STRESS PERIOD  1
 INTERNAL   1.000E-09 (10F4.0)    0      FINF     STRESS PERIOD  1
  1.0 2.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0    
