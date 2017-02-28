@@ -293,16 +293,42 @@ def test_mfnwt_CrnkNic():
         os.remove(os.path.join(newpth, ftlfile))
     return
 
+def test_mfnwt_LKT():
+    pth = os.path.join(pthNWT, 'LKT')
+    namefile = 'lkt_mf.nam'
+    mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
+                                    version='mfnwt', verbose=True,
+                                    exe_name=mfnwt_exe)
+    mf.model_ws = newpth
+    mf.write_input()
+    if ismfnwt is not None:
+        success, buff = mf.run_model(silent=True)
+        assert success, '{} did not run'.format(mf.name)
+
+    namefile = 'lkt_mt.nam'
+    mt = flopy.mt3d.mt.Mt3dms.load(namefile, model_ws=pth, verbose=True,
+                                   version='mt3d-usgs', exe_name=mt3d_usgs_exe)
+    mt.model_ws = newpth
+    ftlfile = 'lkt.ftl'
+    mt.ftlfilename = ftlfile
+    mt.write_input()
+    if ismt3dusgs is not None and ismfnwt is not None:
+        success, buff = mt.run_model(silent=False,
+                                     normal_msg='program completed.')
+        assert success, '{} did not run'.format(mt.name)
+        os.remove(os.path.join(newpth, ftlfile))
+    return
 
 
 if __name__ == '__main__':
-    test_mf2005_p07()
-    test_mf2000_p07()
-    test_mf2000_HSSTest()
-    test_mf2000_MultiDiffusion()
-    test_mf2000_P07()
-    test_mf2000_reinject()
-    test_mf2000_SState()
-    test_mf2000_tob()
-    test_mf2000_zeroth()
+#    test_mf2005_p07()
+#    test_mf2000_p07()
+#    test_mf2000_HSSTest()
+#    test_mf2000_MultiDiffusion()
+#    test_mf2000_P07()
+#    test_mf2000_reinject()
+#    test_mf2000_SState()
+#    test_mf2000_tob()
+#    test_mf2000_zeroth()
     test_mfnwt_CrnkNic()
+    test_mfnwt_LKT()

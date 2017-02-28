@@ -166,25 +166,42 @@ class Mt3dSft(Package):
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
                  nobssf=0, obs_sf=None, sf_stress_period_data = None,
-                 filenames=None, dtype=None, extension='sft',unit_number=None, **kwargs):
+                 unitnumber=None, filenames=None, dtype=None,
+                 extension='sft',**kwargs):
 
         #unit number
         # set default unit number of one is not specified
-        if unit_number is None:
-            unit_number = Mt3dSft.defaultunit()
+        if unitnumber is None:
+            unitnumber = Mt3dSft.defaultunit()
 
         # set filenames
         if filenames is None:
-            filenames = [None, None, None]
+            filenames = [None, None]
             if abs(ioutobs) > 0:
-                filenames[2] = model.name
+                filenames[1] = model.name
         elif isinstance(filenames, str):
             filenames = [filenames, None, None]
         elif isinstance(filenames, list):
-            if len(filenames) < 3:
-                for idx in range(len(filenames), 3):
+            if len(filenames) < 2:
+                for idx in range(len(filenames), 2):
                     filenames.append(None)
 
+        if ioutobs is not None:
+            fname = filenames[1]
+            model.add_output_file(abs(ioutobs), fname=fname,
+                                  package=Mt3dSft.ftype())
+        else:
+            ioutobs = 0
+
+        # Fill namefile items
+        name = [Mt3dSft.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        #  Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, 'SFT', unit_number)
 
         # Set dimensions
@@ -592,13 +609,25 @@ class Mt3dSft(Package):
                     print('   No transient boundary conditions specified')
                 pass
 
+        unitnumber = None
+        filenames = [None, None] #1 item for SFT input file, 1 item for SFTOBS file
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dSft.ftype())
+            if abs(ioutobs) > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(ioutobs))
+                model.add_pop_key_list(ioutobs)
+
         # Construct and return SFT package
         sft = Mt3dSft(model, nsfinit=nsfinit, mxsfbc=mxsfbc, icbcsf=icbcsf,
                       ioutobs=ioutobs, ietsfr=ietsfr, isfsolv=isfsolv,
                       wimp=wimp, cclosesf=cclosesf, mxitersf=mxitersf,
                       crntsf=crntsf, iprtxmd=iprtxmd, coldsf=coldsf,
                       dispsf=dispsf, nobssf=nobssf, obs_sf=obs_sf,
-                      sf_stress_period_data=sf_stress_period_data)
+                      sf_stress_period_data=sf_stress_period_data,
+                      unitnumber = unitnumber, filenames=filenames)
         return sft
 
 
