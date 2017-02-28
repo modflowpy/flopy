@@ -735,7 +735,10 @@ class NetCdf(object):
         time[:] = np.asarray(time_values)
 
         # Elevation
-        attribs = {"units": "meters", "standard_name": "elevation",
+        units = "meters"
+        if self.grid_units.lower().startswith('f'):
+            units = "feet"
+        attribs = {"units": units, "standard_name": "elevation",
                    "long_name": "elevation", "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
                    "positive": "down"}

@@ -7,9 +7,7 @@ sys.path.insert(0, '..')
 import os
 import flopy
 import numpy as np
-import netCDF4
 from flopy.utils.flopy_io import line_parse
-from flopy.utils.util_list import MfList
 
 cpth = os.path.join('temp', 't027')
 # make the directory if it does not exist
@@ -19,6 +17,7 @@ mf2005pth = os.path.join('..', 'examples', 'data', 'mnw2_examples')
 
 
 def test_line_parse():
+    """t027 test line_parse method in MNW2 Package class"""
     # ensure that line_parse is working correctly
     # comment handling
     line = line_parse('Well-A  -1                   ; 2a. WELLID,NNODES')
@@ -26,6 +25,7 @@ def test_line_parse():
 
 
 def test_load():
+    """t027 test load of MNW2 Package"""
     # load in the test problem (1 well, 3 stress periods)
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
                                    verbose=True, forgive=False)
@@ -52,6 +52,7 @@ def test_load():
 
 
 def test_make_package():
+    """t027 test make MNW2 Package"""
     m4 = flopy.modflow.Modflow('mnw2example', model_ws=cpth)
     dis = flopy.modflow.ModflowDis(nrow=5, ncol=5, nlay=3, nper=3, top=10,
                                    botm=0, model=m4)
@@ -134,27 +135,36 @@ def test_make_package():
 
 
 def test_export():
-    """test export of package."""
+    """t027 test export of MNW2 Package to netcdf files"""
+    try:
+        import netCDF4
+    except:
+        netCDF4 = None
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
                                    load_only=['dis', 'bas6', 'mnwi', 'mnw2',
                                               'wel'], verbose=True,
                                    check=False)
-    m.wel.export(os.path.join(cpth, 'MNW2-Fig28_well.nc'))
-    m.mnw2.export(os.path.join(cpth, 'MNW2-Fig28.nc'))
-    fpth = os.path.join(cpth, 'MNW2-Fig28.nc')
-    nc = netCDF4.Dataset(fpth)
-    assert np.array_equal(nc.variables['mnw2_qdes'][:, 0, 29, 40],
-                          np.array([0., -10000., -10000.], dtype='float32'))
-    assert np.sum(nc.variables['mnw2_rw'][:, :, 29, 40]) - 5.1987 < 1e-4
+
+    # netDF4 tests
+    if netCDF4 is not None:
+        m.wel.export(os.path.join(cpth, 'MNW2-Fig28_well.nc'))
+        m.mnw2.export(os.path.join(cpth, 'MNW2-Fig28.nc'))
+        fpth = os.path.join(cpth, 'MNW2-Fig28.nc')
+        nc = netCDF4.Dataset(fpth)
+        assert np.array_equal(nc.variables['mnw2_qdes'][:, 0, 29, 40],
+                              np.array([0., -10000., -10000.], dtype='float32'))
+        assert np.sum(nc.variables['mnw2_rw'][:, :, 29, 40]) - 5.1987 < 1e-4
+
     # need to add shapefile test
 
 
 def test_checks():
+    """t027 test MNW2 Package checks in FloPy"""
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
                                    load_only=['dis', 'bas6', 'mnwi', 'wel'],
                                    verbose=True, check=False)
     chk = m.check()
-    assert 'MNWI package present without MNW2 packge.' in '.'.join(
+    assert 'MNWI package present without MNW2 package.' in '.'.join(
         chk.summary_array.desc)
 
 

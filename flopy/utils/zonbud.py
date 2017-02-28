@@ -42,10 +42,15 @@ class ZoneBudget(object):
     """
     def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None, **kwargs):
 
+        if 'verbose' in kwargs.keys():
+            verbose = kwargs.pop('verbose')
+        else:
+            verbose = False
+
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
         elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
-            self.cbc = CellBudgetFile(cbc_file)
+            self.cbc = CellBudgetFile(cbc_file, verbose=verbose)
         else:
             raise Exception('Cannot load cell budget file: {}.'.format(cbc_file))
 
@@ -154,7 +159,7 @@ class ZoneBudget(object):
         self._zonefieldnames = list(self._zonefieldnamedict.values())
 
         # All record names in the cell-by-cell budget binary file
-        self.record_names = [n.strip().decode("utf-8") for n in self.cbc.unique_record_names()]
+        self.record_names = [n.strip().decode("utf-8") for n in self.cbc._unique_record_names()]
 
         # Get imeth for each record in the CellBudgetFile record list
         self.imeth = {}

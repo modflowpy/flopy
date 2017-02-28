@@ -97,10 +97,30 @@ class Mt3dDsp(Package):
     """
     unitnumber = 33
     def __init__(self, model, al=0.01, trpt=0.1, trpv=0.01, dmcoef=1e-9, 
-                 extension='dsp', multiDiff=False, unitnumber=None, **kwargs):
+                 extension='dsp', multiDiff=False, unitnumber=None,
+                 filenames=None, **kwargs):
+
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'DSP', unitnumber)
+            unitnumber = Mt3dDsp.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [Mt3dDsp.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         nrow = model.nrow
         ncol = model.ncol
         nlay = model.nlay
@@ -308,6 +328,23 @@ class Mt3dDsp(Package):
                                 ext_unit_dict, array_format="mt3d")
                     kwargs[name] = u2d
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dDsp.ftype())
+
         dsp = Mt3dDsp(model, al=al, trpt=trpt, trpv=trpv, dmcoef=dmcoef,
-                      multiDiff=multiDiff, **kwargs)
+                      multiDiff=multiDiff, unitnumber=unitnumber,
+                      filenames=filenames, **kwargs)
         return dsp
+
+    @staticmethod
+    def ftype():
+        return 'DSP'
+
+    @staticmethod
+    def defaultunit():
+        return 33

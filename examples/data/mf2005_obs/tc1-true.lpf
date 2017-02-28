@@ -1,0 +1,29 @@
+# LPF input file for test case tc1-true
+#
+  0  -999.  7                Item 1:  ILPFCB HDRY NPLPF
+  0    0                     Item 2:  LAYTYP
+  0    0                     Item 3:  LAYAVG
+1.0  1.0                     Item 4:  CHANI
+  1    1                     Item 5:  LAYVKA: 0 = Kz of model layer; not 0 = Kx/Kz
+  0    0                     Item 6:  LAYWET
+SS_1       SS   1.0E-3   1   Item 8:  PARNAM PARTYP PARVAL NCLU
+  1        FIFTIETH   ALL    Item 9:  LAYER MARRAY ZARRAY [zones]
+HK_1       HK   3.3E-4   1   Item 8:  PARNAM PARTYP PARVAL NCLU
+  1        NONE       ALL    Item 9:  LAYER MARRAY ZARRAY [zones]
+VERT_ANI_1 VANI 1.0      1   Item 8:  PARNAM PARTYP PARVAL NCLU
+  1        NONE       ALL    Item 9:  LAYER MARRAY ZARRAY [zones]
+VERT_K_CB  VKCB 1.3E-7   1   Item 8:  PARNAM PARTYP PARVAL NCLU
+  1        NONE       ALL    Item 9:  LAYER MARRAY ZARRAY [zones]
+SS_2       SS   2.3E-4   1   Item 8:  PARNAM PARTYP PARVAL NCLU
+  2        FIFTIETH   ALL    Item 9:  LAYER MARRAY ZARRAY [zones]
+HK_2       HK   4.3E-5   1   Item 8:  PARNAM PARTYP PARVAL NCLU
+  2        MULTARR_3  ALL    Item 9:  LAYER MARRAY ZARRAY [zones]
+VERT_ANI_2 VANI 1.0      1   Item 8:  PARNAM PARTYP PARVAL NCLU
+  2        NONE       ALL    Item 9:  LAYER MARRAY ZARRAY [zones]
+  21                         Item 10:  print code for HK, layer 1
+  21                         Item 12:  print code for VKA, layer 1
+  21                         Item 13:  print code for SS, layer 1
+  21                         Item 15:  print code for VKCB, layer 1
+  21                         Item 10:  print code for HK, layer 2
+  21                         Item 12:  print code for VKA, layer 2
+  21                         Item 13:  print code for SS, layer 2

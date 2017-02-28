@@ -1,5 +1,5 @@
-GLOBAL 6 case2.glo
-LIST 7 case2.lst
+GLOBAL 1006 case2.glo
+LIST 1007 case2.lst
 BAS6  1 case2.bas
 DIS  12 case2.dis
 BCF6 11 case2.bcf

@@ -2571,28 +2571,28 @@ class Util2d(object):
         current_unit (optional) indicates the unit number of the file being parsed
         """
         free_fmt = ['open/close', 'internal', 'external', 'constant']
-        raw = line.lower().strip().split()
+        raw = line.strip().split()
         freefmt, cnstnt, fmtin, iprn, nunit = None, None, None, -1, None
         fname = None
         isfloat = False
         if dtype == np.float or dtype == np.float32:
             isfloat = True
             # if free format keywords
-        if str(raw[0]) in str(free_fmt):
-            freefmt = raw[0]
-            if raw[0] == 'constant':
+        if str(raw[0].lower()) in str(free_fmt):
+            freefmt = raw[0].lower()
+            if raw[0].lower() == 'constant':
                 if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
-            if raw[0] == 'internal':
+            if raw[0].lower() == 'internal':
                 if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
                 fmtin = raw[2].strip()
                 iprn = int(raw[3])
-            elif raw[0] == 'external':
+            elif raw[0].lower() == 'external':
                 if ext_unit_dict is not None:
                     try:
                         # td = ext_unit_dict[int(raw[1])]
@@ -2609,7 +2609,7 @@ class Util2d(object):
                     cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
-            elif raw[0] == 'open/close':
+            elif raw[0].lower() == 'open/close':
                 fname = raw[1].strip()
                 if isfloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))

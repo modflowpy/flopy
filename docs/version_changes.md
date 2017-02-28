@@ -22,7 +22,7 @@ FloPy Changes
     * ZoneBudget objects support numerical operators to facilitate conversion of units
     * utilities are included which read/write ZONEBUDGET-style zone files to and from numpy arrays
     * pass a dictionary of {zone: "alias"} to rename fields to more descriptive names (e.g. {1: 'New York', 2: 'Delmarva'}
-
+* Added new precision='auto' option to flopy.utils.binaryfile for HeadFile and UcnFile readers.  This will automatically try and determine the float precision for head files created by single and double precision versions of MODFLOW.  'auto' is now the default.  Not implemented yet for cell by cell flow file.
 
 * Bug fixes:
   1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
@@ -31,6 +31,7 @@ FloPy Changes
   4. Fixed bugs in reading and writing SEAWAT Viscosity package.
   5. The DENSE and VISC arrays are now Transient3d objects, so they may change by stress period.
   6. MNW2: fixed bug with k, i, j node input option and issues with loading at model level
+  7. Fixed bug in ModflowDis.get_cell_volumes().
 
 
 ### Version 3.2.5

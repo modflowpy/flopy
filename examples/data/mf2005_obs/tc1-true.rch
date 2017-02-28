@@ -1,0 +1,15 @@
+# RCH file for test case tc1-true
+#
+PARAMETER  2  2                                       NPRCH
+         1         0                                  NRCHOP IRCHBD
+RCH_ZONE_1  RCH  63.072   1                           PARNAM PARTYP B NCLU
+mlt_rch  zones_1          1                             Mult_arr_name, Zone_arr_name, Zone numbers
+RCH_ZONE_2  RCH  31.536   1                           PARNAM PARTYP B NCLU
+mlt_rch  zones_1          2                             Mult_arr_name, Zone_arr_name, Zone numbers
+         2         0                                  INRECH INIRICH for stress period 1
+RCH_ZONE_1
+RCH_ZONE_2
+        -1         0                                  INRECH INIRICH for stress period 2
+        -1         0                                  INRECH INIRICH for stress period 3
+        -1         0                                  INRECH INIRICH for stress period 4
+        -1         0                                  INRECH INIRICH for stress period 5

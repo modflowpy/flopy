@@ -186,8 +186,30 @@ class Mt3dBtn(Package):
                  obs=None, nprobs=1, chkmas=True, nprmas=1,
                  perlen=None, nstp=None, tsmult=None, ssflag=None, dt0=0,
                  mxstrn=50000, ttsmult=1.0, ttsmax=0,
-                 species_names=None, extension='btn', **kwargs):
-        Package.__init__(self, model, extension, 'BTN', self.unitnumber)
+                 species_names=None, extension='btn',
+                 unitnumber=None, filenames=None,
+                 **kwargs):
+
+        if unitnumber is None:
+            unitnumber = Mt3dBtn.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [Mt3dBtn.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # Set these variables from the Modflow model (self.parent.mf) unless
         # they are specified in the constructor.
@@ -848,6 +870,14 @@ class Mt3dBtn(Package):
         # Close the file
         f.close()
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dBtn.ftype())
+
         btn = Mt3dBtn(model, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper,
                       ncomp=ncomp, mcomp=mcomp, tunit=tunit,
                       laycon=laycon, delr=delr, delc=delc, htop=htop, dz=dz,
@@ -858,5 +888,15 @@ class Mt3dBtn(Package):
                       timprs=timprs, obs=obs, nprobs=nprobs, chkmas=chkmas,
                       nprmas=nprmas, perlen=perlen, nstp=nstp, tsmult=tsmult,
                       ssflag=ssflag, dt0=dt0, mxstrn=mxstrn, ttsmult=ttsmult,
-                      ttsmax=ttsmax, **kwargs)
+                      ttsmax=ttsmax,
+                      unitnumber=unitnumber, filenames=filenames,
+                      **kwargs)
         return btn
+
+    @staticmethod
+    def ftype():
+        return 'BTN'
+
+    @staticmethod
+    def defaultunit():
+        return 31

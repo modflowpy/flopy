@@ -158,14 +158,34 @@ class Mt3dRct(Package):
 
     def __init__(self, model, isothm=0, ireact=0, igetsc=1, rhob=None,
                  prsity2=None, srconc=None, sp1=None, sp2=None, rc1=None,
-                 rc2=None, extension='rct', unitnumber=None, **kwargs):
+                 rc2=None, extension='rct', unitnumber=None,
+                 filenames=None, **kwargs):
         """
         Package constructor.
 
         """
+
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'RCT', unitnumber)
+            unitnumber = Mt3dRct.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [Mt3dRct.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         nrow = model.nrow
         ncol = model.ncol
         nlay = model.nlay
@@ -559,10 +579,27 @@ class Mt3dRct(Package):
         # Close the file
         f.close()
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dRct.ftype())
+
         # Construct and return rct package
         rct = Mt3dRct(model, isothm=isothm, ireact=ireact, igetsc=igetsc,
                       rhob=rhob, prsity2=prsity2, srconc=srconc, sp1=sp1,
-                      sp2=sp2, rc1=rc1, rc2=rc2)
+                      sp2=sp2, rc1=rc1, rc2=rc2, unitnumber=unitnumber,
+                      filenames=filenames)
         return rct
 
+
+    @staticmethod
+    def ftype():
+        return 'RCT'
+
+    @staticmethod
+    def defaultunit():
+        return 36
 

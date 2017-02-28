@@ -44,7 +44,7 @@ from .mfgage import ModflowGage
 from .mfsub import ModflowSub
 from .mfswt import ModflowSwt
 from .mfhyd import ModflowHyd
-from .mfhob import ModflowHob
+from .mfhob import ModflowHob, HeadObservation
 from .mfflwob import ModflowFlwob
 from .mfaddoutsidefile import mfaddoutsidefile
 

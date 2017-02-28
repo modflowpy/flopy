@@ -4,7 +4,7 @@
 #
 # Output files
 #
-LIST         6       SState.LST
+LIST      1006       SState.LST
 
 # Global input files
 DIS         10       SState.DIS
