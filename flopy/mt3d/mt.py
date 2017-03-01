@@ -16,6 +16,7 @@ from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
 
+
 class Mt3dList(Package):
     """
     List package class
@@ -35,6 +36,7 @@ class Mt3dList(Package):
     def write_file(self):
         # Not implemented for list class
         return
+
 
 '''
 class Mt3dms(BaseModel):
@@ -158,6 +160,7 @@ class Mt3dms(BaseModel):
     ncomp = property(get_ncomp)
 '''
 
+
 class Mt3dms(BaseModel):
     """
     MT3DMS Model Class.
@@ -228,32 +231,44 @@ class Mt3dms(BaseModel):
         self.ftlfilename = ftlfilename
         self.ftlfree = ftlfree
 
-        # Check whether specified ftlfile exists in model directory; if not, warn user
-        if os.path.isfile(os.path.join(self.model_ws, str(modelname + '.' + namefile_ext))):
-            with open(os.path.join(self.model_ws, str(modelname + '.' + namefile_ext))) as nm_file:
+        # Check whether specified ftlfile exists in model directory; if not,
+        # warn user
+        if os.path.isfile(os.path.join(self.model_ws,
+                                       str(modelname + '.' + namefile_ext))):
+            with open(os.path.join(self.model_ws, str(
+                                    modelname + '.' + namefile_ext))) as nm_file:
                 for line in nm_file:
-                    if line[0:3]=='FTL':
+                    if line[0:3] == 'FTL':
                         ftlfilename = line.strip().split()[2]
                         break
-        if not os.path.isfile(os.path.join(self.model_ws, ftlfilename)):
+        if ftlfilename is None:
             print("User specified FTL file does not exist in model directory")
             print("MT3D will not work without a linker file")
         else:
-            # Check that the FTL present in the directory is of the format specified
-            # by the user, i.e., is same as ftlfree
-            # Do this by checking whether the first non-blank character is an apostrophe
-            # If code lands here, then ftlfilename exists, open and read first 4 chars
-            f = open(os.path.join(self.model_ws, ftlfilename))
-            c = f.read(4).decode()
+            if os.path.isfile(os.path.join(self.model_ws, ftlfilename)):
+                # Check that the FTL present in the directory is of the format
+                # specified by the user, i.e., is same as ftlfree
+                # Do this by checking whether the first non-blank character is
+                # an apostrophe.
+                # If code lands here, then ftlfilename exists, open and read
+                # first 4 characters
+                f = open(os.path.join(self.model_ws, ftlfilename))
+                c = f.read(4).decode()
 
-            # if first non-blank char is an apostrophe, then formatted, otherwise binary
-            if (c.strip()[0] == "'" and self.ftlfree) or \
-                (c.strip()[0] != "'" and not self.ftlfree):
-                pass
-            else:
-                print("Specified value of ftlfree conflicts with FTL file format")
-                print("Switching ftlfree from " + str(self.ftlfree) + ' to ' + str(not self.ftlfree))
-                self.ftlfree = not self.ftlfree # Flip the bool
+                # if first non-blank char is an apostrophe, then formatted,
+                # otherwise binary
+                if (c.strip()[0] == "'" and self.ftlfree) or \
+                        (c.strip()[0] != "'" and not self.ftlfree):
+                    pass
+                else:
+                    msg = "Specified value of ftlfree conflicts with FTL " + \
+                          "file format"
+                    print(msg)
+                    msg = 'Switching ftlfree from ' + \
+                          '{} '.format(str(self.ftlfree)) + \
+                          'to {}'.format(str(not self.ftlfree))
+                    print(msg)
+                    self.ftlfree = not self.ftlfree  # Flip the bool
 
         # external option stuff
         self.array_free_format = False
@@ -301,7 +316,6 @@ class Mt3dms(BaseModel):
 
     def __repr__(self):
         return 'MT3DMS model'
-
 
     @property
     def nlay(self):
@@ -362,11 +376,13 @@ class Mt3dms(BaseModel):
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('%s\n' % (self.heading))
-        f_nam.write('%s %15i  %s\n' % (self.lst.name[0], self.lst.unit_number[0],
-                                       self.lst.file_name[0]))
+        f_nam.write(
+            '%s %15i  %s\n' % (self.lst.name[0], self.lst.unit_number[0],
+                               self.lst.file_name[0]))
         if self.ftlfilename is not None:
             if self.ftlfree:
-                f_nam.write('%s %16i  %s  FREE\n' % ('FTL', 39, self.ftlfilename))
+                f_nam.write(
+                    '%s %16i  %s  FREE\n' % ('FTL', 39, self.ftlfilename))
             else:
                 f_nam.write('%s %16i  %s\n' % ('FTL', 39, self.ftlfilename))
         f_nam.write('%s' % self.get_name_file_entries())
@@ -454,8 +470,8 @@ class Mt3dms(BaseModel):
             sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
                              format(modelname, 50 * '-'))
         mt = Mt3dms(modelname=modelname, namefile_ext=modelname_extension,
-                     version=version, exe_name=exe_name,
-                     verbose=verbose, model_ws=model_ws)
+                    version=version, exe_name=exe_name,
+                    verbose=verbose, model_ws=model_ws)
 
         files_succesfully_loaded = []
         files_not_loaded = []
@@ -625,7 +641,6 @@ class Mt3dms(BaseModel):
         r = r.view(np.recarray)
         return r
 
-
     @staticmethod
     def load_obs(fname):
         """
@@ -651,8 +666,10 @@ class Mt3dms(BaseModel):
         with open(fname, 'r') as f:
             line = f.readline()
             if line.strip() != firstline:
-                msg = 'First line in file must be \n{}\nFound {}'.format(firstline, line.strip())
-                msg += '\n{} does not appear to be a valid MT3D OBS file'.format(fname)
+                msg = 'First line in file must be \n{}\nFound {}'.format(
+                    firstline, line.strip())
+                msg += '\n{} does not appear to be a valid MT3D OBS file'.format(
+                    fname)
                 raise Exception(msg)
 
             # Read obs names (when break, line will have first data line)
@@ -669,7 +686,7 @@ class Mt3dms(BaseModel):
                     j = int(ll.pop(0))
                     obsnam = '({}, {}, {})'.format(k, i, j)
                     if obsnam in obs:
-                        obsnam += str(len(obs) + 1) # make obs name unique
+                        obsnam += str(len(obs) + 1)  # make obs name unique
                     obs.append(obsnam)
 
             icount = 0
