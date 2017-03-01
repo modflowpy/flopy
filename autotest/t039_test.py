@@ -68,8 +68,8 @@ def read_zonebudget_file(fname):
 
 def test_compare2zonebudget(rtol=1e-2):
     """
-    Compares output from zonbud.exe to the budget calculated by zonbud utility
-    using the multilayer transient freyberg model.
+    t039 Compare output from zonbud.exe to the budget calculated by zonbud
+    utility using the multilayer transient freyberg model.
     """
     zonebudget_recarray = read_zonebudget_file(os.path.join(loadpth,
                                                             'zonebudget_mlt.csv'))
@@ -118,7 +118,7 @@ def test_compare2zonebudget(rtol=1e-2):
 
 def test_zonbud_get_record_names():
     """
-    Test zonbud get_record_names method
+    t039 Test zonbud get_record_names method
     """
     cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
@@ -130,7 +130,7 @@ def test_zonbud_get_record_names():
 
 def test_zonbud_aliases():
     """
-    Test zonbud aliases
+    t039 Test zonbud aliases
     """
     cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
@@ -144,7 +144,7 @@ def test_zonbud_aliases():
 
 def test_zonbud_to_csv():
     """
-    Test zonbud export to csv file method
+    t039 Test zonbud export to csv file method
     """
     cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
@@ -158,7 +158,7 @@ def test_zonbud_to_csv():
 
 def test_zonbud_math():
     """
-    Test zonbud math methods
+    t039 Test zonbud math methods
     """
     cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
@@ -170,7 +170,7 @@ def test_zonbud_math():
 
 def test_zonbud_copy():
     """
-    Test zonbud copy
+    t039 Test zonbud copy
     """
     cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
     zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
@@ -182,7 +182,7 @@ def test_zonbud_copy():
 
 def test_zonbud_readwrite_zbarray():
     """
-    Test zonbud read write
+    t039 Test zonbud read write
     """
     x = np.random.randint(100, 200, size=(5, 150, 200))
     write_zbarray(os.path.join(outpth, 'randint'), x)
