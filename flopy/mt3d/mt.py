@@ -252,8 +252,10 @@ class Mt3dms(BaseModel):
                 # an apostrophe.
                 # If code lands here, then ftlfilename exists, open and read
                 # first 4 characters
-                f = open(os.path.join(self.model_ws, ftlfilename))
-                c = f.read(4).decode()
+                f = open(os.path.join(self.model_ws, ftlfilename), 'rb')
+                c = f.read(4) #.decode()
+                if isinstance(c, bytes):
+                    c = c.decode()
 
                 # if first non-blank char is an apostrophe, then formatted,
                 # otherwise binary
@@ -375,19 +377,23 @@ class Mt3dms(BaseModel):
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
-        f_nam.write('%s\n' % (self.heading))
-        f_nam.write(
-            '%s %15i  %s\n' % (self.lst.name[0], self.lst.unit_number[0],
-                               self.lst.file_name[0]))
+        f_nam.write('{}\n'.format(self.heading))
+        f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
+                                                self.lst.unit_number[0],
+                                                self.lst.file_name[0]))
         if self.ftlfilename is not None:
+            ftlfmt = ''
             if self.ftlfree:
-                f_nam.write(
-                    '%s %16i  %s  FREE\n' % ('FTL', 39, self.ftlfilename))
-            else:
-                f_nam.write('%s %16i  %s\n' % ('FTL', 39, self.ftlfilename))
-        f_nam.write('%s' % self.get_name_file_entries())
+                ftlfmt = 'FREE'
+            f_nam.write('{:14s} {:5d}  {} {}\n'.format('FTL', 39,
+                                                       self.ftlfilename,
+                                                       ftlfmt))
+        # write file entries in name file
+        f_nam.write('{}'.format(self.get_name_file_entries()))
+
+        # write the external files
         for u, f in zip(self.external_units, self.external_fnames):
-            f_nam.write('DATA  {0:3d}  '.format(u) + f + '\n')
+            f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
         # write the output files
         for u, f, b in zip(self.output_units, self.output_fnames,
