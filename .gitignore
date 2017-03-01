@@ -73,4 +73,3 @@ autotest/*.dat
 autotest/temp
 
 *.chk
-MT3D-USGS_Flopy_test.py
