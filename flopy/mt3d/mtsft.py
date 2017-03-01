@@ -202,7 +202,7 @@ class Mt3dSft(Package):
         fname = [filenames[0]]
 
         #  Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, 'SFT', unit_number)
+        Package.__init__(self, model, extension, 'SFT', unitnumber)
 
         # Set dimensions
         nrow = model.nrow
