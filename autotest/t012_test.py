@@ -315,7 +315,7 @@ def test_mfnwt_CrnkNic():
     return
 
 def test_mfnwt_LKT():
-    pth = os.path.join(pthNWT, 'LKT')
+    pth = os.path.join(pthNWT, 'lkt')
     namefile = 'lkt_mf.nam'
     mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
                                     version='mfnwt', verbose=True,
