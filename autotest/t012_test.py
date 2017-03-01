@@ -6,15 +6,20 @@ import flopy
 pthtest = os.path.join('..', 'examples', 'data', 'mt3d_test')
 pth2005 = os.path.join(pthtest, 'mf2005mt3d')
 pth2000 = os.path.join(pthtest, 'mf2kmt3d')
+pthNWT = os.path.join(pthtest, 'mfnwt_mt3dusgs')
 newpth = os.path.join('.', 'temp', 't012')
 
 mf2k_exe = 'mf2000'
 mf2005_exe = 'mf2005'
+mfnwt_exe = 'mfnwt'
 mt3d_exe = 'mt3dms'
+mt3d_usgs_exe = 'mt3d-usgs'
 
 ismf2k = flopy.which(mf2k_exe)
 ismf2005 = flopy.which(mf2005_exe)
+ismfnwt = flopy.which(mfnwt_exe)
 ismt3d = flopy.which(mt3d_exe)
+ismt3dusgs = flopy.which(mt3d_usgs_exe)
 
 def test_mf2005_p07():
     pth = os.path.join(pth2005, 'P07')
@@ -216,7 +221,7 @@ def test_mf2000_tob():
                                     exe_name=mf2k_exe)
     mf.model_ws = newpth
     mf.lmt6.output_file_header = 'extended'
-    mf.lmt6.output_file_format = 'unformatted'
+    mf.lmt6.output_file_format = 'formatted'
     mf.write_input()
     if ismf2k is not None:
         success, buff = mf.run_model(silent=True)
@@ -262,6 +267,57 @@ def test_mf2000_zeroth():
         os.remove(os.path.join(newpth, ftlfile))
     return
 
+def test_mfnwt_CrnkNic():
+    pth = os.path.join(pthNWT, 'sft_crnkNic')
+    namefile = 'CrnkNic.nam'
+    mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
+                                    version='mfnwt', verbose=True,
+                                    exe_name=mfnwt_exe)
+    mf.model_ws = newpth
+    mf.write_input()
+    if ismfnwt is not None:
+        success, buff = mf.run_model(silent=True)
+        assert success, '{} did not run'.format(mf.name)
+
+    namefile = 'CrnkNic.mtnam'
+    mt = flopy.mt3d.mt.Mt3dms.load(namefile, model_ws=pth, verbose=True,
+                                   version='mt3d-usgs', exe_name=mt3d_usgs_exe)
+    mt.model_ws = newpth
+    ftlfile = 'CrnkNic.ftl'
+    mt.ftlfilename = ftlfile
+    mt.write_input()
+    if ismt3dusgs is not None and ismfnwt is not None:
+        success, buff = mt.run_model(silent=False,
+                                     normal_msg='program completed.')
+        assert success, '{} did not run'.format(mt.name)
+        os.remove(os.path.join(newpth, ftlfile))
+    return
+
+def test_mfnwt_LKT():
+    pth = os.path.join(pthNWT, 'LKT')
+    namefile = 'lkt_mf.nam'
+    mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
+                                    version='mfnwt', verbose=True,
+                                    exe_name=mfnwt_exe)
+    mf.model_ws = newpth
+    mf.write_input()
+    if ismfnwt is not None:
+        success, buff = mf.run_model(silent=True)
+        assert success, '{} did not run'.format(mf.name)
+
+    namefile = 'lkt_mt.nam'
+    mt = flopy.mt3d.mt.Mt3dms.load(namefile, model_ws=pth, verbose=True,
+                                   version='mt3d-usgs', exe_name=mt3d_usgs_exe)
+    mt.model_ws = newpth
+    ftlfile = 'lkt.ftl'
+    mt.ftlfilename = ftlfile
+    mt.write_input()
+    if ismt3dusgs is not None and ismfnwt is not None:
+        success, buff = mt.run_model(silent=False,
+                                     normal_msg='program completed.')
+        assert success, '{} did not run'.format(mt.name)
+        os.remove(os.path.join(newpth, ftlfile))
+    return
 
 
 if __name__ == '__main__':
@@ -274,3 +330,5 @@ if __name__ == '__main__':
     test_mf2000_SState()
     test_mf2000_tob()
     test_mf2000_zeroth()
+#    test_mfnwt_CrnkNic()
+#    test_mfnwt_LKT()

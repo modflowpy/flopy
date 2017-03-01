@@ -1,6 +1,19 @@
 FloPy Changes
 -----------------------------------------------
 
+### Version 3.x.x (Let Chris/Joe decide, does support for MT3D-USGS merit 3.3.0?)
+* Modified MT3D-related packages to also support MT3D-USGS
+  * BTN will support the use of keywords (e.g., 'MODFLOWStyleArrays', etc.) on the first line
+  * DSP will support the use of keyword NOCROSS 
+  * Keyword FREE now added to MT3D name file when the flow-transport link (FTL) file is formatted.  Previously defaulted to unformatted only.
+* Added 3 new packages:
+  * SFT: Streamflow Transport, companion transport package for use with the SFR2 package in MODFLOW
+  * LKT: Lake Transport, companion transport package for use with the LAK3 package in MODFLOW
+  * UZT: Unsaturated-zone Transport, companion transport package for use with the UZF1 package in MODFLOW
+* Modified LMT
+  * load() functionality will now support optional PACKAGE_FLOWS line (last line of LMT input)
+  * write_file() will will now insert PACKAGE_FLOWS line based on user input
+
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.
 * Additions to SpatialReference class:
