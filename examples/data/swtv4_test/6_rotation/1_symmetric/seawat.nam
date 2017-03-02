@@ -1,6 +1,6 @@
 #MODFLOW-2000 PACKAGES
-GLOBAL 6 rotate.glo
-LIST 7 rotate.lst
+GLOBAL 1006 rotate.glo
+LIST 1007 rotate.lst
 BAS6  1 rotate.bas
 DIS  29 rotate.dis
 LPF 11 rotate.lpf

@@ -62,17 +62,20 @@ FloPy Supported Packages
 | MODPATH Basic (MPBAS)                    | Supported            | Not supported        | Not supported        |
 | MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
 
-### MT3DMS
+### MT3DMS, MT3D-USGS
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Advection (ADV)                          | Supported            | Supported            | Not supported        |
 | Basic Transport (BTN)                    | Supported            | Supported            | Not supported        |
 | Dispersion (DSP)                         | Supported            | Supported            | Not supported        |
 | Generalized Conjugate Gradient (GCG)     | Supported            | Supported            | Not supported        |
+| Lake (LKT)                               | Supported            | Supported            | Not supported        |
 | PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
+| Streamflow (SFT)                         | Supported            | Supported            | Not supported        |
 | Reaction (RCT)                           | Supported            | Supported            | Not supported        |
 | Sink and Source Mixing (SSM)             | Supported            | Supported            | Not supported        |
 | Transport Observation (TOB)              | Supported            | Not supported        | Not supported        |
+| Unsaturated-zone (UZT)                   | Supported            | Supported            | Not supported        |
 
 ### SEAWAT
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
