@@ -316,8 +316,8 @@ class ModflowHob(Package):
                 irefsp += 1
             line += '{:10d}'.format(irefsp)
             if obs.nobs == 1:
-                toffset = obs.obs_data[0]['toffset']
-                hobs = obs.obs_data[0]['hobs']
+                toffset = obs.time_series_data[0]['toffset']
+                hobs = obs.time_series_data[0]['hobs']
             else:
                 toffset = 0.
                 hobs = 0.
@@ -459,7 +459,7 @@ class ModflowHob(Package):
             # read datasets 5 & 6. Index loop variable
             if irefsp0 > 0:
                 itt = 1
-                irefsp -= 1
+                irefsp0 -= 1
                 totim = model.dis.get_totim_from_kper_toffset(irefsp0,
                                                               toffset * tomulth)
                 names = [obsnam]
