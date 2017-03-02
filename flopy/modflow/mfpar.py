@@ -222,8 +222,14 @@ class ModflowPar(object):
                     line = f.readline()
                     t = line.strip().split()
                     lay = np.int(t[0])
-                    mltarr = t[1]
-                    zonarr = t[2]
+                    s = t[1]
+                    if len(s) > 10:
+                        s = s[0:10]
+                    mltarr = s
+                    s = t[2]
+                    if len(s) > 10:
+                        s = s[0:10]
+                    zonarr = s
                     iarr = []
                     for iv in t[3:]:
                         try:
