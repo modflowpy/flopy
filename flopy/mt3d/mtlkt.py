@@ -4,7 +4,9 @@ import sys
 import numpy as np
 
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d, MfList
+from ..utils import Util2d, read1d, MfList
+
+
 class Mt3dLkt(Package):
     """
     MT3D-USGS LaKe Transport package class
@@ -86,13 +88,45 @@ class Mt3dLkt(Package):
     """
 
     unitnumber = 45
-    def __init__(self, model, nlkinit=0, mxlkbc=0, icbclk=0, ietlak=0, 
+
+    def __init__(self, model, nlkinit=0, mxlkbc=0, icbclk=None, ietlak=0,
                  coldlak=0.0, lk_stress_period_data=None, dtype=None,
-                 extension='lkt', unitnumber=None, **kwargs):
-        #unit number
+                 extension='lkt', unitnumber=None, filenames=None, **kwargs):
+
+        # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'LKT', self.unitnumber)
+            unitnumber = Mt3dLkt.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+            if abs(ioutobs) > 0:
+                filenames[1] = model.name
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                for idx in range(len(filenames), 2):
+                    filenames.append(None)
+
+        if icbclk is not None:
+            fname = filenames[1]
+            model.add_output_file(icbclk, fname=fname,
+                                  package=Mt3dLkt.ftype())
+        else:
+            icbclk = 0
+
+        # Fill namefile items
+        name = [Mt3dLkt.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # Set dimensions
         nrow = model.nrow
@@ -144,7 +178,8 @@ class Mt3dLkt(Package):
 
         # Item 1
         f_lkt.write('{0:10d}{1:10d}{2:10}{3:10}          '
-              .format(self.nlkinit, self.mxlkbc, self.icbclk, self.ietlak) +
+                    .format(self.nlkinit, self.mxlkbc, self.icbclk,
+                            self.ietlak) +
                     '# NLKINIT, MXLKBC, ICBCLK, IETLAK\n')
 
         # Item 2
@@ -161,7 +196,8 @@ class Mt3dLkt(Package):
             # (Evap, precip, specified runoff into the lake, specified
             # withdrawl directly from the lake
             if self.lk_stress_period_data is not None:
-                self.lk_stress_period_data.write_transient(f_lkt, single_per=kper)
+                self.lk_stress_period_data.write_transient(f_lkt,
+                                                           single_per=kper)
             else:
                 f_lkt.write('{}\n'.format(0))
 
@@ -237,7 +273,8 @@ class Mt3dLkt(Package):
         line = f.readline()
         if line[0] == '#':
             if model.verbose:
-                print('   LKT package currently does not support comment lines...')
+                print(
+                    '   LKT package currently does not support comment lines...')
                 sys.exit()
 
         if model.verbose:
@@ -255,9 +292,11 @@ class Mt3dLkt(Package):
             print('   ICBCLK {}'.format(icbclk))
             print('   IETLAK {}'.format(ietlak))
             if ietlak == 0:
-                print('   Mass does not exit the model via simulated lake evaporation   ')
+                print(
+                    '   Mass does not exit the model via simulated lake evaporation   ')
             else:
-                print('   Mass exits the lake via simulated lake evaporation   ')
+                print(
+                    '   Mass exits the lake via simulated lake evaporation   ')
 
         # Item 2 (COLDLAK - Initial concentration in this instance)
         if model.verbose:
@@ -270,7 +309,7 @@ class Mt3dLkt(Package):
         else:
             # Read header line
             line = f.readline()
-            
+
             # Next, read the values
             coldlak = np.empty((nlkinit), dtype=np.float)
             coldlak = read1d(f, coldlak)
@@ -295,18 +334,20 @@ class Mt3dLkt(Package):
             vals = line.strip().split()
             ntmp = int(vals[0])
             if model.verbose:
-                print("   {0:5d}".format(ntmp) + " lkt boundary conditions specified ")
+                print("   {0:5d}".format(
+                    ntmp) + " lkt boundary conditions specified ")
                 if (iper == 0) and (ntmp < 0):
                     print('   ntmp < 0 not allowed for first stress period   ')
                 if (iper > 0) and (ntmp < 0):
-                    print('   use lkt boundary conditions specified in last stress period   ')
-            
+                    print(
+                        '   use lkt boundary conditions specified in last stress period   ')
+
             # Item 4: Read ntmp boundary conditions
             if ntmp > 0:
                 current_lk = np.empty((ntmp), dtype=dtype)
                 for ilkbnd in range(ntmp):
                     line = f.readline()
-                    m_arr = line.strip().split()   # These items are free format
+                    m_arr = line.strip().split()  # These items are free format
                     t = []
                     for ivar in range(2):
                         t.append(m_arr[ivar])
@@ -327,10 +368,22 @@ class Mt3dLkt(Package):
         if len(lk_stress_period_data) == 0:
             lk_stress_period_data = None
 
+        unitnumber = None
+        filenames = [None, None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dLkt.ftype())
+            if icbclk > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=icbclk)
+                model.add_pop_key_list(icbclk)
+
         # Construct and return LKT package
         lkt = Mt3dLkt(model, nlkinit=nlkinit, mxlkbc=mxlkbc, icbclk=icbclk,
                       ietlak=ietlak, coldlak=coldlak,
-                      lk_stress_period_data=lk_stress_period_data)
+                      lk_stress_period_data=lk_stress_period_data,
+                      unitnumber=unitnumber, filenames=filenames)
         return lkt
 
     @staticmethod
@@ -339,10 +392,19 @@ class Mt3dLkt(Package):
         Construct a dtype for the recarray containing the list of boundary 
         conditions interacting with the lake (i.e., pumps, specified runoff...)
         """
-        type_list = [("ILKBC", np.int), ("ILKBCTYPE", np.int), ("CBCLK", np.float32)]
+        type_list = [("ILKBC", np.int), ("ILKBCTYPE", np.int),
+                     ("CBCLK", np.float32)]
         if ncomp > 1:
-            for comp in range(1,ncomp+1):
+            for comp in range(1, ncomp + 1):
                 comp_name = "clkt({0:02d})".format(comp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
+
+    @staticmethod
+    def ftype():
+        return 'LKT'
+
+    @staticmethod
+    def defaultunit():
+        return 45

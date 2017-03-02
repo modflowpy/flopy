@@ -1,10 +1,11 @@
 __author__ = 'emorway'
 
-import sys
 import numpy as np
 
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d, MfList, Transient2d
+from ..utils import Util2d, Util3d, Transient2d
+
+
 class Mt3dUzt(Package):
     """
     MT3D-USGS Unsaturated-Zone Transport package class
@@ -133,13 +134,45 @@ class Mt3dUzt(Package):
     """
 
     unitnumber = 47
-    def __init__(self, model, mxuzcon=0, icbcuz=0, iet=0, iuzfbnd=None,
+
+    def __init__(self, model, mxuzcon=0, icbcuz=None, iet=0, iuzfbnd=None,
                  wc=0., sdh=0., cuzinf=None, cuzet=None, cgwet=None,
-                 extension='uzt', unitnumber=None, **kwargs):
-        # unit number
+                 extension='uzt', unitnumber=None, filenames=None, **kwargs):
+
+        # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'UZT', self.unitnumber)
+            unitnumber = Mt3dUzt.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+            if abs(ioutobs) > 0:
+                filenames[1] = model.name
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                for idx in range(len(filenames), 2):
+                    filenames.append(None)
+
+        if icbcuz is not None:
+            fname = filenames[1]
+            model.add_output_file(icbcuz, fname=fname,
+                                  package=Mt3dUzt.ftype())
+        else:
+            icbcuz = 0
+
+        # Fill namefile items
+        name = [Mt3dUzt.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # Set dimensions
         nrow = model.nrow
@@ -153,11 +186,13 @@ class Mt3dUzt(Package):
         self.mxuzcon = mxuzcon
         self.icbcuz = icbcuz
         self.iet = iet
+
         if iuzfbnd is not None:
             self.iuzfbnd = Util2d(self.parent, (nrow, ncol), np.int,
                                   iuzfbnd, name='iuzfbnd',
                                   locat=self.unit_number[0])
-        else:  # the else statement should instead set iuzfbnd based on UZF input file.
+        # set iuzfbnd based on UZF input file
+        else:
             arr = np.zeros((nlay, nrow, ncol), dtype=np.int)
             self.iuzfbnd = Util3d(self.parent, (nlay, nrow, ncol), np.int,
                                   arr, name='iuzfbnd',
@@ -176,7 +211,7 @@ class Mt3dUzt(Package):
                               name='cuzinf1', locat=self.unit_number[0])
             self.cuzinf.append(t2d)
             if ncomp > 1:
-                for icomp in range(2, ncomp+1):
+                for icomp in range(2, ncomp + 1):
                     val = 0.0
                     name = 'cuzinf' + str(icomp)
                     if name in list(kwargs.keys()):
@@ -195,7 +230,7 @@ class Mt3dUzt(Package):
                               name='cuzet1', locat=self.unit_number[0])
             self.cuzet.append(t2d)
             if ncomp > 1:
-                for icomp in range(2, ncomp+1):
+                for icomp in range(2, ncomp + 1):
                     val = 0.0
                     name = 'cuzet' + str(icomp)
                     if name in list(kwargs.keys()):
@@ -214,7 +249,7 @@ class Mt3dUzt(Package):
                               name='cgwet1', locat=self.unit_number[0])
             self.cgwet.append(t2d)
             if ncomp > 1:
-                for icomp in range(2, ncomp+1):
+                for icomp in range(2, ncomp + 1):
                     val = 0.0
                     name = 'cgwet' + str(icomp)
                     if name in list(kwargs.keys()):
@@ -277,7 +312,7 @@ class Mt3dUzt(Package):
                     if incuzinf == 1:
                         break
                 f_uzt.write('{0:10d}          # INCUZINF - SP {1:5d}\n'
-                            .format(incuzinf, kper+1))
+                            .format(incuzinf, kper + 1))
                 if incuzinf == 1:
                     for t2d in self.cuzinf:
                         u2d = t2d[kper]
@@ -295,7 +330,7 @@ class Mt3dUzt(Package):
                         if incuzet == 1:
                             break
                     f_uzt.write('{0:10d}          # INCUZET - SP {1:5d}\n'
-                                .format(incuzet, kper+1))
+                                .format(incuzet, kper + 1))
                     if incuzet == 1:
                         for t2d in self.cuzet:
                             u2d = t2d[kper]
@@ -312,7 +347,7 @@ class Mt3dUzt(Package):
                         if incgwet == 1:
                             break
                     f_uzt.write('{:10d}          # INCGWET - SP {1:5d}\n'
-                                .format(incgwet, kper+1))
+                                .format(incgwet, kper + 1))
                     if incgwet == 1:
                         for t2d in self.cgwet:
                             u2d = t2d[kper]
@@ -422,38 +457,40 @@ class Mt3dUzt(Package):
         # At least one species being simulated, so set up a place holder
         t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cuzinf',
                           locat=0)
-        cuzinf = {0 : t2d}
+        cuzinf = {0: t2d}
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
                 name = 'cuzinf' + str(icomp)
                 t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
                                   name=name, locat=0)
-                kwargs[name] = {0 : t2d}
+                kwargs[name] = {0: t2d}
 
         # Repeat cuzinf initialization procedure for cuzet only if iet != 0
         if iet != 0:
             cuzet = None
-            t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cuzet',
+            t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
+                              name='cuzet',
                               locat=0)
-            cuzet = {0 : t2d}
+            cuzet = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = 'cuzet' + str(icomp)
                     t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
                                       name=name, locat=0)
-                    kwargs[name] = {0 : t2d}
+                    kwargs[name] = {0: t2d}
 
             # Repeat cuzinf initialization procedures for cgwet
             cgwet = None
-            t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0, name='cgwet',
+            t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
+                              name='cgwet',
                               locat=0)
-            cgwet = {0 : t2d}
+            cgwet = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = 'cgwet' + str(icomp)
                     t2d = Transient2d(model, (nrow, ncol), np.float32, 0.0,
                                       name=name, locat=0)
-                    kwargs[name] = {0 : t2d}
+                    kwargs[name] = {0: t2d}
         elif iet == 0:
             cuzet = None
             cgwet = None
@@ -503,7 +540,7 @@ class Mt3dUzt(Package):
                 if model.verbose:
                     print('   Reusing CUZINF array from kper ' \
                           '{0:5d}'.format(iper) + ' in kper ' \
-                          '{0:5d}'.format(iper + 1))
+                                                  '{0:5d}'.format(iper + 1))
 
             if iet != 0:
                 # Item 8 (INCUZET)
@@ -516,7 +553,8 @@ class Mt3dUzt(Package):
                     if model.verbose:
                         print('   Reading CUZET array for kper ' \
                               '{0:5d}'.format(iper + 1))
-                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'cuzet',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                    'cuzet',
                                     ext_unit_dict)
                     cuzet[iper] = t
 
@@ -544,7 +582,8 @@ class Mt3dUzt(Package):
                     if model.verbose:
                         print('   Reusing CUZET array from kper ' \
                               '{0:5d}'.format(iper) + ' in kper ' \
-                              '{0:5d}'.format(iper + 1))
+                                                      '{0:5d}'.format(
+                            iper + 1))
 
                 # Item 10 (INCGWET)
                 line = f.readline()
@@ -556,7 +595,8 @@ class Mt3dUzt(Package):
                     if incuzet >= 0:
                         print('   Reading CGWET array for kper ' \
                               '{0:5d}'.format(iper + 1))
-                    t = Util2d.load(f, model, (nrow,ncol), np.float32, 'cgwet',
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                    'cgwet',
                                     ext_unit_dict)
                     cgwet[iper] = t
 
@@ -585,10 +625,33 @@ class Mt3dUzt(Package):
                     if model.verbose:
                         print('   Reusing CGWET array from kper ' \
                               '{0:5d}'.format(iper) + ' in kper ' \
-                              '{0:5d}'.format(iper + 1))
+                                                      '{0:5d}'.format(
+                            iper + 1))
+
+        unitnumber = None
+        filenames = [None, None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dUzt.ftype())
+            if icbcuz > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict,
+                                            unit=icbcuz)
+                model.add_pop_key_list(icbcuz)
 
         # Construct and return uzt package
         uzt = Mt3dUzt(model, mxuzcon=mxuzcon, icbcuz=icbcuz, iet=iet,
                       iuzfbnd=iuzfbnd, wc=wc, sdh=sdh, cuzinf=cuzinf,
-                      cuzet=cuzet, cgwet=cgwet, **kwargs)
+                      cuzet=cuzet, cgwet=cgwet, unitnumber=unitnumber,
+                      filenames=filenames, **kwargs)
         return uzt
+
+
+    @staticmethod
+    def ftype():
+        return 'UZT'
+
+    @staticmethod
+    def defaultunit():
+        return 47

@@ -13,7 +13,7 @@ mf2k_exe = 'mf2000'
 mf2005_exe = 'mf2005'
 mfnwt_exe = 'mfnwt'
 mt3d_exe = 'mt3dms'
-mt3d_usgs_exe = 'mt3d-usgs'
+mt3d_usgs_exe = 'mt3dusgs'
 
 ismf2k = flopy.which(mf2k_exe)
 ismf2005 = flopy.which(mf2005_exe)
@@ -314,6 +314,7 @@ def test_mfnwt_CrnkNic():
         os.remove(os.path.join(cpth, ftlfile))
     return
 
+
 def test_mfnwt_LKT():
     pth = os.path.join(pthNWT, 'lkt')
     namefile = 'lkt_mf.nam'
@@ -344,15 +345,46 @@ def test_mfnwt_LKT():
     return
 
 
+def test_mfnwt_keat_uzf():
+    pth = os.path.join(pthNWT, 'keat_uzf')
+    namefile = 'Keat_UZF_mf.nam'
+    mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
+                                    version='mfnwt', verbose=True,
+                                    exe_name=mfnwt_exe)
+
+    cpth = os.path.join(newpth, 'KEAT_UZF')
+    mf.model_ws = cpth
+
+    mf.write_input()
+    if ismfnwt is not None:
+        success, buff = mf.run_model(silent=True)
+        assert success, '{} did not run'.format(mf.name)
+
+    namefile = 'Keat_UZF_mt.nam'
+    mt = flopy.mt3d.mt.Mt3dms.load(namefile, model_ws=pth, verbose=True,
+                                   version='mt3d-usgs', exe_name=mt3d_usgs_exe)
+    mt.model_ws = cpth
+    ftlfile = 'Keat_UZF.ftl'
+    mt.ftlfilename = ftlfile
+    mt.write_input()
+    if ismt3dusgs is not None and ismfnwt is not None:
+        success, buff = mt.run_model(silent=False,
+                                     normal_msg='program completed.')
+        assert success, '{} did not run'.format(mt.name)
+        os.remove(os.path.join(cpth, ftlfile))
+    return
+
+
 if __name__ == '__main__':
-#    test_mf2000_mnw()
-#    test_mf2005_p07()
-#    test_mf2000_p07()
-#    test_mf2000_HSSTest()
-#    test_mf2000_MultiDiffusion()
-#    test_mf2000_reinject()
-#    test_mf2000_SState()
-#    test_mf2000_tob()
-#    test_mf2000_zeroth()
-    test_mfnwt_CrnkNic()
-    test_mfnwt_LKT()
+    #    test_mf2000_mnw()
+    #    test_mf2005_p07()
+    #    test_mf2000_p07()
+    #    test_mf2000_HSSTest()
+    #    test_mf2000_MultiDiffusion()
+    #    test_mf2000_reinject()
+    #    test_mf2000_SState()
+    #    test_mf2000_tob()
+    #    test_mf2000_zeroth()
+    #test_mfnwt_CrnkNic()
+    #test_mfnwt_LKT()
+    test_mfnwt_keat_uzf()

@@ -213,15 +213,17 @@ class ModflowLmt(Package):
         # determine specified unit number
         unitnumber = None
         filenames = [None]
-        extension = 'lmt6'
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,
                                         filetype=ModflowLmt.ftype())
 
-        lmt = ModflowLmt(model, output_file_name, output_file_unit,
-                         output_file_header, output_file_format,
-                         extension, package_flows, unitnumber=unitnumber,
+        lmt = ModflowLmt(model, output_file_name=output_file_name,
+                         output_file_unit=output_file_unit,
+                         output_file_header=output_file_header,
+                         output_file_format=output_file_format,
+                         package_flows=package_flows,
+                         unitnumber=unitnumber,
                          filenames=filenames)
         return lmt
 

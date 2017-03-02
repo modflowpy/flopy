@@ -139,10 +139,9 @@ class ModflowGage(Package):
 
             # add gage output files to model
             for n in range(numgage):
-                iu = gage_data['unit'][n]
+                iu = abs(gage_data['unit'][n])
                 gage_data['unit'][n] = iu
                 fname = files[n]
-                #model.add_output(fname, abs(iu), package=ModflowGage.ftype())
                 model.add_output_file(iu, fname=fname, binflag=False,
                                       package=ModflowGage.ftype())
 
