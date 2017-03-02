@@ -234,10 +234,11 @@ class Seawat(BaseModel):
         f_nam.write('{}\n'.format(self.heading))
 
         # Write global file entry
-        if self.glo.unit_number[0] > 0:
-            f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
-                                                    self.glo.unit_number[0],
-                                                    self.glo.file_name[0]))
+        if self.glo is not None:
+            if self.glo.unit_number[0] > 0:
+                f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
+                                                        self.glo.unit_number[0],
+                                                        self.glo.file_name[0]))
         # Write list file entry
         f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
                                                 self.lst.unit_number[0],
