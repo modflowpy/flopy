@@ -2234,6 +2234,36 @@ class Util2d(object):
             return self.__value
 
     @staticmethod
+    def load_block(shape, file_in, dtype):
+        """
+        load a (possibly wrapped format) array from a mt3d block
+        (self.__value) and casts to the proper type (self.dtype)
+        made static to support the load functionality
+        this routine now supports fixed format arrays where the numbers
+        may touch.
+        """
+        nrow, ncol = shape
+        data = np.zeros(shape, dtype=dtype) + np.NaN
+        if not hasattr(file_in, 'read'):
+            file_in = open(file_in, 'r')
+        line = file_in.readline()
+        raw = line.strip('\n').split()
+        nblock = int(raw[0])
+        for n in range(nblock):
+            line = file_in.readline()
+            raw = line.strip('\n').split()
+            i1, i2, j1, j2, v = int(raw[0])-1, int(raw[1])-1, \
+                                int(raw[2])-1, int(raw[3])-1, \
+                                dtype(raw[0])
+            for j in range(j1, j2+1):
+                for i in range(i1, i2+1):
+                    data[j, i] = v
+        if np.isnan(np.sum(data)):
+            raise Exception("Util2d.load_block() error: np.NaN in data array")
+        return data
+
+
+    @staticmethod
     def load_txt(shape, file_in, dtype, fmtin):
         """
         load a (possibly wrapped format) array from a file
@@ -2560,6 +2590,13 @@ class Util2d(object):
             # track this unit number so we can remove it from the external
             # file list later
             model.pop_key_list.append(cr_dict['nunit'])
+        elif cr_dict['type'] == 'block':
+            data = Util2d.load_block(shape, f_handle, dtype)
+            u2d = Util2d(model, shape, dtype, data, name=name,
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
+                         cnstnt=cr_dict['cnstnt'], locat=None,
+                         array_free_format=array_free_format)
+
         return u2d
 
     @staticmethod
@@ -2657,8 +2694,8 @@ class Util2d(object):
                     freefmt = 'internal'
                     nunit = current_unit
                 elif locat == 101:
-                    raise NotImplementedError(
-                        'MT3D block format not supported...')
+                    freefmt = 'block'
+                    nunit = current_unit
                 elif locat == 102:
                     raise NotImplementedError(
                         'MT3D zonal format not supported...')

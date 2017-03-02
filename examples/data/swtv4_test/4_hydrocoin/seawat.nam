@@ -1,6 +1,6 @@
 #GLO Process
-GLOBAL 6 hydrocoin.glo
-LIST 7 hydrocoin.lst
+GLOBAL 1006 hydrocoin.glo
+LIST 1007 hydrocoin.lst
 #
 #VDF Process
 VDF 36 hydrocoin.vdf

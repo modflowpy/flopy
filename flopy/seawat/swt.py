@@ -204,9 +204,9 @@ class Seawat(BaseModel):
         # Overrides BaseModel's setter for name property
         BaseModel._set_name(self, value)
 
-        for i in range(len(self.lst.extension)):
-            self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
-        return
+        #for i in range(len(self.lst.extension)):
+        #    self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
+        #return
 
     def change_model_ws(self, new_pth=None, reset_external=False):
         #if hasattr(self,"_mf"):
@@ -233,6 +233,12 @@ class Seawat(BaseModel):
         f_nam = open(fn_path, 'w')
         f_nam.write('{}\n'.format(self.heading))
 
+        # Write global file entry
+        if self.glo is not None:
+            if self.glo.unit_number[0] > 0:
+                f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
+                                                        self.glo.unit_number[0],
+                                                        self.glo.file_name[0]))
         # Write list file entry
         f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
                                                 self.lst.unit_number[0],
@@ -368,6 +374,9 @@ class Seawat(BaseModel):
         mt = Mt3dms.load(f, version='mt3dms', exe_name=None, verbose=verbose,
                          model_ws=model_ws, forgive=True)
 
+        # set listing and global files using mf objects
+        ms.lst = mf.lst
+        ms.glo = mf.glo
 
         for p in mf.packagelist:
             p.parent = ms
@@ -382,6 +391,8 @@ class Seawat(BaseModel):
             mt.external_fnames = []
             ms._mt = mt
         ms._mf = mf
+
+
 
         # return model object
         return ms

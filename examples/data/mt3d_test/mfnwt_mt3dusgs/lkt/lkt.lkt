@@ -1,0 +1,4 @@
+         1       100     81    0    NLAKES,MXBCLK,ICBCLK,IETLK
+        18      1.00(10e12.4)                    1                   #Initial concentration for lake comp #1
+   100.00E00                                                         #Initial concentration specified as 100.0
+         0                                                           #NTMP

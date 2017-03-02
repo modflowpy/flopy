@@ -257,7 +257,7 @@ class ModflowLak(Package):
 
         # dataset 1b
         f.write(write_fixed_var([self.nlakes, self.ipakcb],
-                                free=self.parent.array_free_format))
+                                free=self.parent.free_format_input))
         # dataset 2
         steady = np.any(self.parent.dis.steady.array)
         t = [self.theta]
@@ -266,7 +266,7 @@ class ModflowLak(Package):
             t.append(self.sscncr)
         if self.theta < 0.:
             t.append(self.surfdep)
-        f.write(write_fixed_var(t, free=self.parent.array_free_format))
+        f.write(write_fixed_var(t, free=self.parent.free_format_input))
 
         # dataset 3
         steady = self.parent.dis.steady[0]
@@ -282,7 +282,7 @@ class ModflowLak(Package):
                 ipos.append(5)
                 t.append(self.iunit_tab[n])
             f.write(write_fixed_var(t, ipos=ipos,
-                                    free=self.parent.array_free_format))
+                                    free=self.parent.free_format_input))
 
         ds8_keys = list(self.sill_data.keys())
         ds9_keys = list(self.flux_data.keys())
@@ -297,7 +297,7 @@ class ModflowLak(Package):
 
             t = [itmp, itmp2, 1]
             comment = 'Stress period {}'.format(kper + 1)
-            f.write(write_fixed_var(t, free=self.parent.array_free_format,
+            f.write(write_fixed_var(t, free=self.parent.free_format_input,
                                     comment=comment))
 
             if itmp > 0:
@@ -310,17 +310,17 @@ class ModflowLak(Package):
                     nslms = len(ds8)
 
                 f.write(write_fixed_var([nslms],
-                                        free=self.parent.array_free_format,
+                                        free=self.parent.free_format_input,
                                         comment='Data set 7'))
                 if nslms > 0:
                     for n in range(nslms):
                         d1, d2 = ds8[n]
                         s = write_fixed_var(d1,
-                                            free=self.parent.array_free_format,
+                                            free=self.parent.free_format_input,
                                             comment='Data set 8a')
                         f.write(s)
                         s = write_fixed_var(d2,
-                                            free=self.parent.array_free_format,
+                                            free=self.parent.free_format_input,
                                             comment='Data set 8b')
                         f.write(s)
 
@@ -336,7 +336,7 @@ class ModflowLak(Package):
                     else:
                         t = ds9[n][0:4]
                     s = write_fixed_var(t,
-                                        free=self.parent.array_free_format,
+                                        free=self.parent.free_format_input,
                                         comment='Data set 9a')
                     f.write(s)
 
