@@ -279,10 +279,14 @@ class ModflowEvt(Package):
                     for ipar in range(inevtr):
                         line = f.readline()
                         t = line.strip().split()
-                        pname = t[0].lower()
+                        c = t[0].lower()
+                        if len(c) > 10:
+                            c = c[0:10]
+                        pname = c
                         try:
                             c = t[1].lower()
-                            if c in pak_parms.bc_parms:
+                            instance_dict = pak_parms.bc_parms[pname][1]
+                            if c in instance_dict:
                                 iname = c
                             else:
                                 iname = 'static'
