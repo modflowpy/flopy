@@ -344,8 +344,14 @@ class BaseModel(object):
             if abs(unit) in self.output_units:
                 add_cbc = False
                 idx = self.output_units.index(abs(unit))
-                if package is not None:
-                    self.output_packages[idx].append(package)
+                # determine if binflag has changed
+                if binflag is not self.output_binflag[idx]:
+                    add_cbc = True
+                if add_cbc:
+                    self.remove_output(unit=abs(unit))
+                else:
+                    if package is not None:
+                        self.output_packages[idx].append(package)
 
         if add_cbc:
             if fname is None:
@@ -661,9 +667,8 @@ class BaseModel(object):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = s + \
-                    ('{:14s} {:5d}  '.format(p.name[i], p.unit_number[i]) +
-                     '{:s} {:s}\n'.format(p.file_name[i], p.extra[i]))
+                s += '{:14s} {:5d}  '.format(p.name[i], p.unit_number[i]) + \
+                     '{:s} {:s}\n'.format(p.file_name[i], p.extra[i])
         return s
 
     def get_package(self, name):

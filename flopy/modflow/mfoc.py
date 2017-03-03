@@ -142,7 +142,11 @@ class ModflowOc(Package):
 
         """
         if unitnumber is None:
-            unitnumber = ModflowOc.defaultunit()
+            unitnumber = [ModflowOc.defaultunit(), 0, 0, 0, 0]
+        elif isinstance(unitnumber, list):
+            if len(unitnumber) < 5:
+                for idx in range(len(unitnumber), 6):
+                    unitnumber.append(0)
 
         # set filenames
         if filenames is None:
@@ -259,7 +263,7 @@ class ModflowOc(Package):
         name = [ModflowOc.ftype()]
         extra = ['']
         extension = [extension[0]]
-        unitnumber = [unitnumber[0]]
+        unitnumber = unitnumber[0]
 
         # set package name
         fname = [filenames[0]]
