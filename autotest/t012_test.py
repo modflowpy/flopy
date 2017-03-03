@@ -10,10 +10,10 @@ pthNWT = os.path.join(pthtest, 'mfnwt_mt3dusgs')
 newpth = os.path.join('.', 'temp', 't012')
 
 mf2k_exe = 'mf2000'
-mf2005_exe = 'mf2005.exe'
-mfnwt_exe = 'mfnwt.exe'
-mt3d_exe = 'mt3dms.exe'
-mt3d_usgs_exe = 'mt3d-usgs.exe'
+mf2005_exe = 'mf2005'
+mfnwt_exe = 'mfnwt'
+mt3d_exe = 'mt3dms'
+mt3d_usgs_exe = 'mt3d-usgs'
 
 ismf2k = flopy.which(mf2k_exe)
 ismf2005 = flopy.which(mf2005_exe)
