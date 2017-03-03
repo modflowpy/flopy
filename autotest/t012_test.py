@@ -296,7 +296,7 @@ def test_mfnwt_CrnkNic():
 
     mf.write_input()
     if ismfnwt is not None:
-        success, buff = mf.run_model(silent=True)
+        success, buff = mf.run_model(silent=False)
         assert success, '{} did not run'.format(mf.name)
 
     namefile = 'CrnkNic.mtnam'
@@ -306,6 +306,7 @@ def test_mfnwt_CrnkNic():
     mt.model_ws = cpth
     ftlfile = 'CrnkNic.ftl'
     mt.ftlfilename = ftlfile
+    mt.ftlfree = True
     mt.write_input()
     if ismt3dusgs is not None and ismfnwt is not None:
         success, buff = mt.run_model(silent=False,
@@ -327,7 +328,7 @@ def test_mfnwt_LKT():
 
     mf.write_input()
     if ismfnwt is not None:
-        success, buff = mf.run_model(silent=True)
+        success, buff = mf.run_model(silent=False)
         assert success, '{} did not run'.format(mf.name)
 
     namefile = 'lkt_mt.nam'
@@ -336,6 +337,7 @@ def test_mfnwt_LKT():
     mt.model_ws = cpth
     ftlfile = 'lkt.ftl'
     mt.ftlfilename = ftlfile
+    mt.ftlfree = True
     mt.write_input()
     if ismt3dusgs is not None and ismfnwt is not None:
         success, buff = mt.run_model(silent=False,
@@ -366,6 +368,7 @@ def test_mfnwt_keat_uzf():
     mt.model_ws = cpth
     ftlfile = 'Keat_UZF.ftl'
     mt.ftlfilename = ftlfile
+    mt.ftlfree = True
     mt.write_input()
     if ismt3dusgs is not None and ismfnwt is not None:
         success, buff = mt.run_model(silent=False,
@@ -376,15 +379,15 @@ def test_mfnwt_keat_uzf():
 
 
 if __name__ == '__main__':
-    #    test_mf2000_mnw()
-    #    test_mf2005_p07()
-    #    test_mf2000_p07()
-    #    test_mf2000_HSSTest()
-    #    test_mf2000_MultiDiffusion()
-    #    test_mf2000_reinject()
-    #    test_mf2000_SState()
-    #    test_mf2000_tob()
-    #    test_mf2000_zeroth()
+    #test_mf2000_mnw()
+    #test_mf2005_p07()
+    #test_mf2000_p07()
+    #test_mf2000_HSSTest()
+    #test_mf2000_MultiDiffusion()
+    #test_mf2000_reinject()
+    #test_mf2000_SState()
+    #test_mf2000_tob()
+    #test_mf2000_zeroth()
     #test_mfnwt_CrnkNic()
-    #test_mfnwt_LKT()
+    test_mfnwt_LKT()
     test_mfnwt_keat_uzf()

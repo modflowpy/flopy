@@ -100,7 +100,7 @@ class Mt3dLkt(Package):
         # set filenames
         if filenames is None:
             filenames = [None, None]
-            if abs(ioutobs) > 0:
+            if abs(icbclk) > 0:
                 filenames[1] = model.name
         elif isinstance(filenames, str):
             filenames = [filenames, None, None]
