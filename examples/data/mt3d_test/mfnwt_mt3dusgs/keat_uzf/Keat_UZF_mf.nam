@@ -9,5 +9,4 @@ NWT              19 Keat_UZF.nwt
 DATA(BINARY)     50 Keat_UZF.cbb
 DATA(BINARY)     51 Keat_UZF.hds
 DATA(BINARY)     52 Keat_UZF.ddn
-data(binary)     70 Keat_UZF_init.hds
 LMT6             33 Keat_UZF.lmt

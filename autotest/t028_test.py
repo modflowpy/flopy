@@ -39,8 +39,7 @@ def test_seawat_array_format():
         m = flopy.seawat.Seawat.load(namfile, model_ws=pth,
                                      verbose=verbose)
         m.change_model_ws(testpth, reset_external=True)
-        # m.mf.change_model_ws(testpth,reset_external=True)
-        # m.mt.change_model_ws(testpth,reset_external=True)
+
         m.bcf6.hy[0].fmtin = '(BINARY)'
         m.btn.prsity[0].fmtin = '(BINARY)'
         m.write_input()

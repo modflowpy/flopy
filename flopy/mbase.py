@@ -637,6 +637,7 @@ class BaseModel(object):
         fake_package.write_file = lambda: None
         fake_package.extra = ['']
         fake_package.name = [ptype]
+        fake_package.extension = [filename.split('.')[-1]]
         fake_package.unit_number = [self.next_ext_unit()]
         if copy_to_model_ws:
             base_filename = os.path.split(filename)[-1]

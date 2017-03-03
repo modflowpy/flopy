@@ -4,7 +4,9 @@ import sys
 import numpy as np
 
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d, MfList
+from ..utils import Util2d, MfList
+
+
 class Mt3dSft(Package):
     """
     MT3D-USGS StreamFlow Transport package class
@@ -162,14 +164,14 @@ class Mt3dSft(Package):
     """
 
     unitnumber = 46
+
     def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=None,
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
-                 nobssf=0, obs_sf=None, sf_stress_period_data = None,
+                 nobssf=0, obs_sf=None, sf_stress_period_data=None,
                  unitnumber=None, filenames=None, dtype=None,
-                 extension='sft',**kwargs):
+                 extension='sft', **kwargs):
 
-        #unit number
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = Mt3dSft.defaultunit()
@@ -201,8 +203,9 @@ class Mt3dSft(Package):
         # set package name
         fname = [filenames[0]]
 
-        #  Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, 'SFT', unitnumber)
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # Set dimensions
         nrow = model.nrow
@@ -217,12 +220,11 @@ class Mt3dSft(Package):
         self.icbcsf = icbcsf
         self.ioutobs = ioutobs
 
-
         # add sft observation output file
         if ioutobs is not None:
             if abs(ioutobs) > 0:
                 ext = 'sftobs'
-                #if ioutobs < 0:  # no support for this yet in MT3D-USGS
+                # if ioutobs < 0:  # no support for this yet in MT3D-USGS
                 #    binflag = True
                 #    ext = 'bin'
                 fname = filenames[2]
@@ -285,7 +287,7 @@ class Mt3dSft(Package):
         type_list = [("isegbc", np.int), ("irchbc", np.int), \
                      ("isfbctyp", np.float32)]
         if ncomp > 1:
-            for comp in range(1,ncomp+1):
+            for comp in range(1, ncomp + 1):
                 comp_name = "cbcsf{0:d}".format(comp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
@@ -317,7 +319,10 @@ class Mt3dSft(Package):
 
         # Item 1
         f_sft.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}'.format(self.nsfinit,
-                    self.mxsfbc, self.icbcsf, self.ioutobs, self.ietsfr) +
+                                                                 self.mxsfbc,
+                                                                 self.icbcsf,
+                                                                 self.ioutobs,
+                                                                 self.ietsfr) +
                     '                              # nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
 
         # Item 2
@@ -339,8 +344,9 @@ class Mt3dSft(Package):
         # Item 6
         if self.nobssf != 0:
             for iobs in range(self.nobssf):
-                f_sft.write('{0:10d}                          # location of obs as given by position in list of irch\n'
-                            .format(self.obs_sf[iobs]))
+                f_sft.write(
+                    '{0:10d}                          # location of obs as given by position in list of irch\n'
+                    .format(self.obs_sf[iobs]))
 
         # Items 7, 8
         # Loop through each stress period and assign source & sink concentrations to stream features
@@ -541,7 +547,7 @@ class Mt3dSft(Package):
                       'read DISPSF')
 
         dispsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'dispsf',
-                                 ext_unit_dict, array_format=model.array_format)
+                             ext_unit_dict, array_format=model.array_format)
 
         # Item 5 NOBSSF
         if model.verbose:
@@ -556,8 +562,8 @@ class Mt3dSft(Package):
         obs_sf = []
         if nobssf > 0:
             if model.verbose:
-                print('   loading {} observation locations given by ISOBS, '\
-                          'IROBS...'.format(nobssf))
+                print('   loading {} observation locations given by ISOBS, ' \
+                      'IROBS...'.format(nobssf))
             for i in range(nobssf):
                 line = f.readline()
                 m_arr = line.strip().split()
@@ -565,7 +571,7 @@ class Mt3dSft(Package):
             obs_sf = np.array(obs_sf)
             if model.verbose:
                 print('   Surface water concentration observation locations:')
-                print('   {}',format(obs_sf))
+                print('   {}', format(obs_sf))
         else:
             if model.verbose:
                 print('   No observation points specified.')
@@ -584,7 +590,7 @@ class Mt3dSft(Package):
             # Item 8 ISEGBC, IRCHBC, ISFBCTYP, CBCSF
             if model.verbose:
                 print('   loading {} instances of ISEGBC, IRCHBC, ' \
-                        'ISFBCTYP, CBCSF...'.format(ntmp))
+                      'ISFBCTYP, CBCSF...'.format(ntmp))
             current_sf = 0
             if ntmp > 0:
                 current_sf = np.empty((ntmp), dtype=dtype)
@@ -598,7 +604,8 @@ class Mt3dSft(Package):
                     if cbcsf > 0:
                         for ivar in range(cbcsf):
                             t.append(m_arr[ivar + 3])
-                    current_sf[ibnd] = tuple(map(float, t[:len(current_sf.dtype.names)]))
+                    current_sf[ibnd] = tuple(
+                        map(float, t[:len(current_sf.dtype.names)]))
                 # Convert ISEG IRCH indices to zero-based
                 current_sf['isegbc'] -= 1
                 current_sf['irchbc'] -= 1
@@ -610,7 +617,8 @@ class Mt3dSft(Package):
                 pass
 
         unitnumber = None
-        filenames = [None, None] #1 item for SFT input file, 1 item for SFTOBS file
+        # 1 item for SFT input file, 1 item for SFTOBS file
+        filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,
@@ -618,7 +626,7 @@ class Mt3dSft(Package):
             if abs(ioutobs) > 0:
                 iu, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=abs(ioutobs))
-                model.add_pop_key_list(ioutobs)
+                model.add_pop_key_list(abs(ioutobs))
 
         # Construct and return SFT package
         sft = Mt3dSft(model, nsfinit=nsfinit, mxsfbc=mxsfbc, icbcsf=icbcsf,
@@ -627,14 +635,12 @@ class Mt3dSft(Package):
                       crntsf=crntsf, iprtxmd=iprtxmd, coldsf=coldsf,
                       dispsf=dispsf, nobssf=nobssf, obs_sf=obs_sf,
                       sf_stress_period_data=sf_stress_period_data,
-                      unitnumber = unitnumber, filenames=filenames)
+                      unitnumber=unitnumber, filenames=filenames)
         return sft
-
 
     @staticmethod
     def ftype():
         return 'SFT'
-
 
     @staticmethod
     def defaultunit():
