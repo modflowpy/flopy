@@ -347,7 +347,7 @@ class Mt3dSsm(Package):
         for p in self.__SsmPackages:
             if p.needTFstr:
                 f_ssm.write(p.TFstr)
-        f_ssm.write(' F F F F\n')
+        f_ssm.write(' F F F F F F\n')
         f_ssm.write('{:10d}\n'.format(self.mxss))
 
         # Loop through each stress period and write ssm information
