@@ -175,6 +175,8 @@ class Mt3dSft(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = Mt3dSft.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dSft.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -189,9 +191,10 @@ class Mt3dSft(Package):
                     filenames.append(None)
 
         if ioutobs is not None:
+            ext = 'sftobs'
             fname = filenames[1]
-            model.add_output_file(abs(ioutobs), fname=fname,
-                                  package=Mt3dSft.ftype())
+            model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
+                                  binflag=False, package=Mt3dSft.ftype())
         else:
             ioutobs = 0
 
@@ -219,19 +222,6 @@ class Mt3dSft(Package):
         self.mxsfbc = mxsfbc
         self.icbcsf = icbcsf
         self.ioutobs = ioutobs
-
-        # add sft observation output file
-        if ioutobs is not None:
-            if abs(ioutobs) > 0:
-                ext = 'sftobs'
-                # if ioutobs < 0:  # no support for this yet in MT3D-USGS
-                #    binflag = True
-                #    ext = 'bin'
-                fname = filenames[2]
-                model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
-                                      binflag=False, package=Mt3dSft.ftype())
-        else:
-            ioutobs = 0
 
         self.ietsfr = ietsfr
         self.isfsolv = isfsolv
@@ -284,11 +274,11 @@ class Mt3dSft(Package):
         Construct a dtype for the recarray containing the list of surface
         water boundary conditions.
         """
-        type_list = [("isegbc", np.int), ("irchbc", np.int), \
-                     ("isfbctyp", np.float32)]
+        type_list = [("node", np.int), ("isfbctyp", np.int), \
+                     ("cbcsf0", np.float32)]
         if ncomp > 1:
-            for comp in range(1, ncomp + 1):
-                comp_name = "cbcsf{0:d}".format(comp)
+            for icomp in range(1, ncomp + 1):
+                comp_name = "cbcsf{0:d}".format(icomp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
@@ -323,13 +313,13 @@ class Mt3dSft(Package):
                                                                  self.icbcsf,
                                                                  self.ioutobs,
                                                                  self.ietsfr) +
-                    '                              # nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
+                    30*' ' + '# nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
 
         # Item 2
         f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.7f}{4:10d}{5:10.5f}{6:10d}'
                     .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
                             self.mxitersf, self.crntsf, self.iprtxmd) +
-                    ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' \
+                    ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' + \
                     'iprtxmd\n')
 
         # Item 3
@@ -343,10 +333,10 @@ class Mt3dSft(Package):
 
         # Item 6
         if self.nobssf != 0:
-            for iobs in range(self.nobssf):
-                f_sft.write(
-                    '{0:10d}                          # location of obs as given by position in list of irch\n'
-                    .format(self.obs_sf[iobs]))
+            for iobs in self.obs_sf:
+                line = '{0:10d}'.format(iobs) + 26*' ' + \
+                       '# location of obs as given by position in irch list\n'
+                f_sft.write(line)
 
         # Items 7, 8
         # Loop through each stress period and assign source & sink concentrations to stream features
@@ -567,7 +557,7 @@ class Mt3dSft(Package):
             for i in range(nobssf):
                 line = f.readline()
                 m_arr = line.strip().split()
-                obs_sf.append([int(m_arr[0])])
+                obs_sf.append(int(m_arr[0]))
             obs_sf = np.array(obs_sf)
             if model.verbose:
                 print('   Surface water concentration observation locations:')
@@ -606,9 +596,8 @@ class Mt3dSft(Package):
                             t.append(m_arr[ivar + 3])
                     current_sf[ibnd] = tuple(
                         map(float, t[:len(current_sf.dtype.names)]))
-                # Convert ISEG IRCH indices to zero-based
-                current_sf['isegbc'] -= 1
-                current_sf['irchbc'] -= 1
+                # Convert node IRCH indices to zero-based
+                current_sf['node'] -= 1
                 current_sf = current_sf.view(np.recarray)
                 sf_stress_period_data[iper] = current_sf
             else:
@@ -644,4 +633,8 @@ class Mt3dSft(Package):
 
     @staticmethod
     def defaultunit():
+        return 19
+
+    @staticmethod
+    def reservedunit():
         return 19

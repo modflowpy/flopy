@@ -157,6 +157,8 @@ class Mt3dSsm(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dSsm.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dSsm.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -347,7 +349,9 @@ class Mt3dSsm(Package):
         for p in self.__SsmPackages:
             if p.needTFstr:
                 f_ssm.write(p.TFstr)
-        f_ssm.write(' F F F F F F\n')
+
+        f_ssm.write(' F F F F F F F F F F\n')
+
         f_ssm.write('{:10d}\n'.format(self.mxss))
 
         # Loop through each stress period and write ssm information
@@ -471,10 +475,22 @@ class Mt3dSsm(Package):
         fevt = line[6:8]
         friv = line[8:10]
         fghb = line[10:12]
-        fnew1 = line[12:14]
-        fnew2 = line[14:16]
-        fnew3 = line[16:18]
-        fnew4 = line[18:20]
+        if len(line) >= 14:
+            fnew1 = line[12:14]
+        else:
+            fnew1 = 'F'
+        if len(line) >= 16:
+            fnew2 = line[14:16]
+        else:
+            fnew2 = 'F'
+        if len(line) >= 18:
+            fnew3 = line[16:18]
+        else:
+            fnew3 = 'F'
+        if len(line) >= 20:
+            fnew4 = line[18:20]
+        else:
+            fnew4 = 'F'
         if model.verbose:
             print('   FWEL {}'.format(fwel))
             print('   FDRN {}'.format(fdrn))
@@ -647,3 +663,7 @@ class Mt3dSsm(Package):
     @staticmethod
     def defaultunit():
         return 34
+
+    @staticmethod
+    def reservedunit():
+        return 4

@@ -218,6 +218,8 @@ class Mt3dBtn(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dBtn.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dBtn.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -989,3 +991,7 @@ class Mt3dBtn(Package):
     @staticmethod
     def defaultunit():
         return 31
+
+    @staticmethod
+    def reservedunit():
+        return 1

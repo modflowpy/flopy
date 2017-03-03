@@ -76,6 +76,8 @@ class Mt3dGcg(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dGcg.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dGcg.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -217,3 +219,7 @@ class Mt3dGcg(Package):
     @staticmethod
     def defaultunit():
         return 35
+
+    @staticmethod
+    def reservedunit():
+        return 9

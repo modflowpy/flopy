@@ -167,6 +167,8 @@ class Mt3dRct(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dRct.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dRct.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -602,4 +604,8 @@ class Mt3dRct(Package):
     @staticmethod
     def defaultunit():
         return 36
+
+    @staticmethod
+    def reservedunit():
+        return 8
 

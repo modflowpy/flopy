@@ -187,7 +187,7 @@ def parsenamefile(namfilename, packages, verbose=True):
                 if key == 0:
                     ftype = tmp[0].lower()
                     if ftype in packages:
-                        key = packages[ftype].unitnumber
+                        key = packages[ftype].reservedunit()
                     else:
                         key = tmp[0]
                 ext_unit_dict[key] = NamData(tmp[0].upper(), fname, filehandle,

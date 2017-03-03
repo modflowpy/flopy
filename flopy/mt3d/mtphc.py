@@ -12,6 +12,8 @@ class Mt3dPhc(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dPhc.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dPhc.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -99,4 +101,8 @@ class Mt3dPhc(Package):
 
     @staticmethod
     def defaultunit():
+        return 38
+
+    @staticmethod
+    def reservedunit():
         return 38

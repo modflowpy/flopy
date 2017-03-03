@@ -96,6 +96,8 @@ class Mt3dLkt(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = Mt3dLkt.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dLkt.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -111,8 +113,8 @@ class Mt3dLkt(Package):
 
         if icbclk is not None:
             fname = filenames[1]
-            model.add_output_file(icbclk, fname=fname,
-                                  package=Mt3dLkt.ftype())
+            model.add_output_file(icbclk, fname=fname, extension='lkcobs.out',
+                                  binflag=False, package=Mt3dLkt.ftype())
         else:
             icbclk = 0
 
@@ -356,8 +358,8 @@ class Mt3dLkt(Package):
                         for ilkvar in range(cbclk):
                             t.append(m_arr[ilkvar + 3])
                     current_lk[ilkbnd] = tuple(t[:len(current_lk.dtype.names)])
-                # Convert ILKBC index to zero-based
-                current_lk['ILKBC'] -= 1
+                # Convert ILKBC (node) index to zero-based
+                current_lk['node'] -= 1
                 current_lk = current_lk.view(np.recarray)
                 lk_stress_period_data[iper] = current_lk
             else:
@@ -392,11 +394,11 @@ class Mt3dLkt(Package):
         Construct a dtype for the recarray containing the list of boundary 
         conditions interacting with the lake (i.e., pumps, specified runoff...)
         """
-        type_list = [("ILKBC", np.int), ("ILKBCTYPE", np.int),
-                     ("CBCLK", np.float32)]
+        type_list = [("node", np.int), ("ilkbctyp", np.int), \
+                     ("cbclk0", np.float32)]
         if ncomp > 1:
-            for comp in range(1, ncomp + 1):
-                comp_name = "clkt({0:02d})".format(comp)
+            for icomp in range(1, ncomp + 1):
+                comp_name = "cbclk({0:02d})".format(icomp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
@@ -408,3 +410,7 @@ class Mt3dLkt(Package):
     @staticmethod
     def defaultunit():
         return 45
+
+    @staticmethod
+    def reservedunit():
+        return 18

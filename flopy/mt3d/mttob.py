@@ -11,6 +11,8 @@ class Mt3dTob(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dTob.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dTob.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -101,3 +103,7 @@ class Mt3dTob(Package):
     @staticmethod
     def defaultunit():
         return 37
+
+    @staticmethod
+    def reservedunit():
+        return 12

@@ -5,7 +5,7 @@ import numpy as np
 
 from ..pakbase import Package
 from flopy.utils import Util2d, Util3d, read1d, MfList
-class Mt3dSft(Package):
+class Mt3dCts(Package):
     """
     MT3D-USGS Contaminant Treatment System package class
 
@@ -142,7 +142,7 @@ class Mt3dSft(Package):
 
     """
 
-    unitnumber = 48
+    unitnumber = 5
     def __init__(self,):
 
         raise NotImplementedError()
@@ -313,4 +313,16 @@ class Mt3dSft(Package):
         # 
         # dtype = np.dtype(type_list)
         # dtype = dtype
+
+    @staticmethod
+    def ftype():
+        return 'CTS'
+
+    @staticmethod
+    def defaultunit():
+        return 5
+
+    @staticmethod
+    def reservedunit():
+        return 5
 

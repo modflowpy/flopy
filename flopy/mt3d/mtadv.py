@@ -167,6 +167,8 @@ class Mt3dAdv(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dAdv.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dAdv.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -388,3 +390,7 @@ class Mt3dAdv(Package):
     @staticmethod
     def defaultunit():
         return 32
+
+    @staticmethod
+    def reservedunit():
+        return 2

@@ -102,6 +102,8 @@ class Mt3dDsp(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dDsp.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dDsp.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -348,3 +350,7 @@ class Mt3dDsp(Package):
     @staticmethod
     def defaultunit():
         return 33
+
+    @staticmethod
+    def reservedunit():
+        return 3

@@ -142,6 +142,8 @@ class Mt3dUzt(Package):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = Mt3dUzt.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dUzt.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -655,3 +657,7 @@ class Mt3dUzt(Package):
     @staticmethod
     def defaultunit():
         return 47
+
+    @staticmethod
+    def reservedunit():
+        return 7
