@@ -18,7 +18,7 @@ class Header(object):
         floattype = 'f4'
         if precision == 'double':
             floattype = 'f8'
-        self.header_types = ['head', 'ucn']
+        self.header_types = ['head', 'drawdown', 'ucn']
         if filetype is None:
             self.header_type = None
         else:
@@ -27,6 +27,13 @@ class Header(object):
             self.header_type = filetype.lower()
         if self.header_type in self.header_types:
             if self.header_type == 'head':
+                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
+                                       ('pertim', floattype),
+                                       ('totim', floattype),
+                                       ('text', 'a16'),
+                                       ('ncol', 'i4'), ('nrow', 'i4'),
+                                       ('ilay', 'i4')])
+            elif self.header_type == 'drawdown':
                 self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
                                        ('pertim', floattype),
                                        ('totim', floattype),
