@@ -13,7 +13,7 @@ mf2k_exe = 'mf2000'
 mf2005_exe = 'mf2005'
 mfnwt_exe = 'mfnwt'
 mt3d_exe = 'mt3dms'
-mt3d_usgs_exe = 'mt3d-usgs'
+mt3d_usgs_exe = 'mt3dusgs'
 
 ismf2k = flopy.which(mf2k_exe)
 ismf2005 = flopy.which(mf2005_exe)
