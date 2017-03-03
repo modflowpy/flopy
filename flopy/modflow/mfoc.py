@@ -263,7 +263,7 @@ class ModflowOc(Package):
         name = [ModflowOc.ftype()]
         extra = ['']
         extension = [extension[0]]
-        unitnumber = [unitnumber[0]]
+        unitnumber = unitnumber[0]
 
         # set package name
         fname = [filenames[0]]
