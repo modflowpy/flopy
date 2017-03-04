@@ -173,8 +173,8 @@ class Mt3dms(BaseModel):
     namefile_ext : string, optional
         Extension for the namefile (the default is 'nam')
     modflowmodel : flopy.modflow.mf.Modflow
-        This is a flopy Modflow model object for the upon which this Mt3dms
-        model is based. (the default is None)
+        This is a flopy Modflow model object upon which this Mt3dms model
+        is based. (the default is None)
     version : string, optional
         Version of MT3DMS to use (the default is 'mt3dms').
     exe_name : string, optional
@@ -455,7 +455,7 @@ class Mt3dms(BaseModel):
             (default is None, which means that all will be loaded)
 
         modflowmodel : flopy.modflow.mf.Modflow
-            This is a flopy Modflow model object for the upon which this Mt3dms
+            This is a flopy Modflow model object upon which this Mt3dms
             model is based. (the default is None)
 
         Returns
