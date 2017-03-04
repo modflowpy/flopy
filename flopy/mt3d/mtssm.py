@@ -192,13 +192,13 @@ class Mt3dSsm(Package):
         nlay = model.nlay
         ncomp = model.ncomp
 
+        # Create a list of SsmPackage (class defined above)
         self.__SsmPackages = []
         if mf is not None:
             for i, label in enumerate(SsmLabels):
-                self.__SsmPackages.append(SsmPackage(label,
-                                                     mf.get_package(label),
-                                                     (
-                                                     i < 6)))  # First 6 need T/F flag in file line 1
+                mfpack = mf.get_package(label)
+                ssmpack = SsmPackage(label, mfpack, (i < 6))
+                self.__SsmPackages.append(ssmpack)  # First 6 need T/F flag in file line 1
 
         if dtype is not None:
             self.dtype = dtype
@@ -444,7 +444,8 @@ class Mt3dSsm(Package):
             filename = f
             f = open(filename, 'r')
 
-        # Set dimensions if necessary
+        # Set modflow model and dimensions if necessary
+        mf = model.mf
         if nlay is None:
             nlay = model.nlay
         if nrow is None:
@@ -502,6 +503,16 @@ class Mt3dSsm(Package):
             print('   FNEW2 {}'.format(fnew2))
             print('   FNEW3 {}'.format(fnew3))
             print('   FNEW4 {}'.format(fnew4))
+
+        # Override the logical settings at top of ssm file using the
+        # modflowmodel, if it is attached to parent
+        if mf is not None:
+            rchpack = mf.get_package('RCH')
+            if rchpack is not None:
+                frch = 't'
+            evtpack = mf.get_package('EVT')
+            if evtpack is not None:
+                fevt = 't'
 
         # Item D2: MXSS, ISSGOUT
         mxss = None

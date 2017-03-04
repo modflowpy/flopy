@@ -2658,14 +2658,23 @@ class Util2d(object):
         else:
             locat = np.int(line[0:10].strip())
             if isfloat:
-                cnstnt = np.float(
-                    line[10:20].strip().lower().replace('d', 'e'))
+                if len(line) >= 20:
+                    cnstnt = np.float(
+                        line[10:20].strip().lower().replace('d', 'e'))
+                else:
+                    cnstnt = 0.0
             else:
-                cnstnt = np.int(line[10:20].strip())
+                if len(line) >= 20:
+                    cnstnt = np.int(line[10:20].strip())
+                else:
+                    cnstnt = 0
                 #if cnstnt == 0:
                 #    cnstnt = 1
             if locat != 0:
-                fmtin = line[20:40].strip()
+                if len(line) >= 40:
+                    fmtin = line[20:40].strip()
+                else:
+                    fmtin = ''
                 try:
                     iprn = np.int(line[40:50].strip())
                 except:

@@ -172,6 +172,9 @@ class Mt3dms(BaseModel):
         that are created with write_model. (the default is 'mt3dtest')
     namefile_ext : string, optional
         Extension for the namefile (the default is 'nam')
+    modflowmodel : flopy.modflow.mf.Modflow
+        This is a flopy Modflow model object for the upon which this Mt3dms
+        model is based. (the default is None)
     version : string, optional
         Version of MT3DMS to use (the default is 'mt3dms').
     exe_name : string, optional
@@ -422,7 +425,7 @@ class Mt3dms(BaseModel):
 
     @staticmethod
     def load(f, version='mt3dms', exe_name='mt3dms.exe', verbose=False,
-             model_ws='.', load_only=None, forgive=False):
+             model_ws='.', load_only=None, forgive=False, modflowmodel=None):
         """
         Load an existing model.
 
@@ -450,6 +453,10 @@ class Mt3dms(BaseModel):
         load_only : list of strings
             Filetype(s) to load (e.g. ['btn', 'adv'])
             (default is None, which means that all will be loaded)
+
+        modflowmodel : flopy.modflow.mf.Modflow
+            This is a flopy Modflow model object for the upon which this Mt3dms
+            model is based. (the default is None)
 
         Returns
         -------
@@ -485,7 +492,8 @@ class Mt3dms(BaseModel):
                              format(modelname, 50 * '-'))
         mt = Mt3dms(modelname=modelname, namefile_ext=modelname_extension,
                     version=version, exe_name=exe_name,
-                    verbose=verbose, model_ws=model_ws)
+                    verbose=verbose, model_ws=model_ws,
+                    modflowmodel=modflowmodel)
 
         files_succesfully_loaded = []
         files_not_loaded = []

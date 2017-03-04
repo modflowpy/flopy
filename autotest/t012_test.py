@@ -333,7 +333,8 @@ def test_mfnwt_LKT():
 
     namefile = 'lkt_mt.nam'
     mt = flopy.mt3d.mt.Mt3dms.load(namefile, model_ws=pth, verbose=True,
-                                   version='mt3d-usgs', exe_name=mt3d_usgs_exe)
+                                   version='mt3d-usgs', exe_name=mt3d_usgs_exe,
+                                   modflowmodel=mf)
     mt.model_ws = cpth
     ftlfile = 'lkt.ftl'
     mt.ftlfilename = ftlfile
@@ -389,5 +390,5 @@ if __name__ == '__main__':
     #test_mf2000_tob()
     #test_mf2000_zeroth()
     #test_mfnwt_CrnkNic()
-    #test_mfnwt_LKT()
-    test_mfnwt_keat_uzf()
+    test_mfnwt_LKT()
+    #test_mfnwt_keat_uzf()
