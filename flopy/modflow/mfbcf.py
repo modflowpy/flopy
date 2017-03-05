@@ -61,6 +61,17 @@ class ModflowBcf(Package):
         Filename extension (default is 'bcf')
     unitnumber : int
         File unit number (default is 15).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output names will be created using
+        the model name and .cbc extension (for example, modflowtest.cbc),
+        if ipakcbc is a number greater than zero. If a single string is passed
+        the package will be set to the string and cbc output names will be
+        created using the model name and .cbc extension, if ipakcbc is a
+        number greater than zero. To define the names for all bcf files
+        (input and output) the length of the list of strings should be 2.
+        Default is None.
 
     Methods
     -------
@@ -83,7 +94,7 @@ class ModflowBcf(Package):
     def __init__(self, model, ipakcb=None, intercellt=0, laycon=3, trpy=1.0,
                  hdry=-1E+30, iwdflg=0, wetfct=0.1, iwetit=1, ihdwet=0,
                  tran=1.0, hy=1.0, vcont=1.0, sf1=1e-5, sf2=0.15, wetdry=-0.01,
-                 extension='bcf', unitnumber=15, filenames=None):
+                 extension='bcf', unitnumber=None, filenames=None):
 
         if unitnumber is None:
             unitnumber = ModflowBcf.defaultunit()

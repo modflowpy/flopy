@@ -47,13 +47,13 @@ class ModflowGage(Package):
     filenames : str or list of str
         Filenames to use for the package and the output files. If
         filenames=None the package name will be created using the model name
-        and gage package extensions and gage output names will be
-        created using the model name and the gage number (for example,
-        modflowtest.gage1.go). If a single string is passed the package will
-        be set to the string and gage output names will be created using the
-        model name and the gage number. To define the names for all gage files
-        (input and output) the length of the list of strings should be
-        numgage + 1. Default is None.
+        and package extension and gage output names will be created using the
+        model name and the gage number (for example, modflowtest.gage1.go).
+        If a single string is passed the package will be set to the string
+        and gage output names will be created using the model name and the
+        gage number. To define the names for all gage files (input and output)
+        the length of the list of strings should be numgage + 1.
+        Default is None.
 
     Methods
     -------
