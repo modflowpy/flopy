@@ -165,7 +165,12 @@ class ModflowNwt(Package):
     extension : list string
         Filename extension (default is 'nwt')
     unitnumber : int
-        File unit number (default is 32).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -197,7 +202,7 @@ class ModflowNwt(Package):
                  msdr=15, \
                  iacl=2, norder=1, level=5, north=7, iredsys=0, rrctols=0.0, \
                  idroptol=1, epsrn=1.e-4, hclosexmd=1e-4, mxiterxmd=50, \
-                 extension='nwt', unitnumber=None):
+                 extension='nwt', unitnumber=None, filenames=None):
 
         if model.version != 'mfnwt':
             err = 'Error: model version must be mfnwt to use NWT package'
@@ -207,9 +212,23 @@ class ModflowNwt(Package):
         if unitnumber is None:
             unitnumber = ModflowNwt.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowNwt.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowNwt.ftype(),
-                         unitnumber)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -432,12 +451,15 @@ class ModflowNwt(Package):
         f.close()
 
         # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowNwt.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowNwt.ftype())
         kwargs['unitnumber'] = unitnumber
+        kwargs['filenames'] = filenames
 
         # create and return an instance of the nwt class
         return ModflowNwt(model, **kwargs)

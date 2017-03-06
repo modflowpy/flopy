@@ -13,12 +13,10 @@ from .mfriv import ModflowRiv
 from .mfstr import ModflowStr
 from .mfwel import ModflowWel
 from .mfpval import ModflowPval
-from .mfoc88 import ModflowOc88
 from .mfoc import ModflowOc
 from .mfsip import ModflowSip
 from .mfsor import ModflowSor
 from .mfswr1 import ModflowSwr1
-from .mfswi import ModflowSwi
 from .mfswi2 import ModflowSwi2
 from .mfpcg import ModflowPcg
 from .mfpcgn import ModflowPcgn

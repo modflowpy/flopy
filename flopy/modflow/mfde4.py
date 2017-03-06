@@ -276,7 +276,6 @@ class ModflowDe4(Package):
             hclose = float(line[30:40].strip())
             iprd4 = int(line[40:50].strip())
 
-
         # set package unit number
         unitnumber = None
         filenames = [None]

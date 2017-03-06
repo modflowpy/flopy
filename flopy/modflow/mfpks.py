@@ -45,6 +45,11 @@ class ModflowPks(Package):
         Filename extension (default is 'pks')
     unitnumber : int
         File unit number (default is 27).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -75,7 +80,7 @@ class ModflowPks(Package):
                  iprpks=0, mutpks=3,
                  mpi=False, partopt=0, novlapimpsol=1, stenimpsol=2, verbose=0,
                  partdata=None,
-                 extension='pks', unitnumber=None):
+                 extension='pks', unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -84,10 +89,23 @@ class ModflowPks(Package):
         if unitnumber is None:
             unitnumber = ModflowPks.defaultunit()
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowPks.ftype(),
-                         unitnumber)
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
 
+        # Fill namefile items
+        name = [ModflowPks.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
         # check if a valid model version has been specified
         if model.version == 'mf2k' or model.version == 'mfnwt':
             err = 'Error: cannot use {} package with model version {}'.format(
@@ -223,14 +241,15 @@ class ModflowPks(Package):
         # close the open file
         f.close()
 
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowPks.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowPks.ftype())
 
-        pks = ModflowPks(model, unitnumber=unitnumber)
+        pks = ModflowPks(model, unitnumber=unitnumber, filenames=filenames)
         return pks
 
 
