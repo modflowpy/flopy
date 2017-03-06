@@ -42,10 +42,17 @@ class ModflowRch(Package):
         Filename extension (default is 'rch')
     unitnumber : int
         File unit number (default is None).
-    filenames : string or list of strings
-        File name of the package (with extension) or a list with the filename
-        of the package and the cell-by-cell budget file for ipakcb. Default
-        is None.
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output name will be created using
+        the model name and .cbc extension (for example, modflowtest.cbc),
+        if ipakcbc is a number greater than zero. If a single string is passed
+        the package will be set to the string and cbc output names will be
+        created using the model name and .cbc extension, if ipakcbc is a
+        number greater than zero. To define the names for all package files
+        (input and output) the length of the list of strings should be 2.
+        Default is None.
 
     Attributes
     ----------
@@ -108,12 +115,18 @@ class ModflowRch(Package):
         else:
             ipakcb = 0
 
+
+        # Fill namefile items
+        name = [ModflowRch.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
         # set package name
         fname = [filenames[0]]
 
-        # Call parent init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowRch.ftype(),
-                         unitnumber, filenames=fname)
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.heading = '# {} package for '.format(self.name[0]) + \

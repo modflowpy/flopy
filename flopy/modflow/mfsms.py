@@ -208,7 +208,12 @@ class ModflowSms(Package):
     extension : str, optional
         File extension (default is 'sms'.
     unitnumber : int, optional
-        FORTRAN unit number for this package (default is 32).
+        FORTRAN unit number for this package (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -238,16 +243,29 @@ class ModflowSms(Package):
                  iacl=2, norder=0, level=7, north=2, iredsys=0,
                  rrctol=0., idroptol=0, epsrn=1.e-3,
                  clin='bcgs', ipc=3, iscl=0, iord=0, rclosepcgu=.1,
-                 relaxpcgu=1.0, extension='sms', unitnumber=32,
-                 options=None):
+                 relaxpcgu=1.0, extension='sms', options=None,
+                 unitnumber=None, filenames=None):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSms.defaultunit()
 
-        # Call ancestor's init to set self.parent, extension, name and unit
-        # number
-        Package.__init__(self, model, extension, ModflowSms.ftype(),
-                         unitnumber)
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowSms.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -504,12 +522,13 @@ class ModflowSms(Package):
                 print('   RELAXPCGU {}'.format(relaxpcgu))
 
 
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSms.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSms.ftype())
 
         sms = ModflowSms(model, hclose=hclose, hiclose=hiclose, mxiter=mxiter,
                          iter1=iter1, iprsms=iprsms, nonlinmeth=nonlinmeth,
@@ -520,7 +539,8 @@ class ModflowSms(Package):
                          iredsys=iredsys, rrctol=rrctol, idroptol=idroptol,
                          epsrn=epsrn, clin=clin, ipc=ipc, iscl=iscl,
                          iord=iord, rclosepcgu=rclosepcgu,
-                         relaxpcgu=relaxpcgu, unitnumber=unitnumber)
+                         relaxpcgu=relaxpcgu, unitnumber=unitnumber,
+                         filenames=filenames)
         return sms
 
     @staticmethod
