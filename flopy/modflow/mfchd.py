@@ -63,7 +63,12 @@ class ModflowChd(Package):
     extension : string
         Filename extension (default is 'chd')
     unitnumber : int
-        File unit number (default is 24).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -105,12 +110,9 @@ class ModflowChd(Package):
 
         # set filenames
         if filenames is None:
-            filenames = [None, None]
+            filenames = [None]
         elif isinstance(filenames, str):
-            filenames = [filenames, None]
-        elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
+            filenames = [filenames]
 
         # Fill namefile items
         name = [ModflowChd.ftype()]
@@ -123,7 +125,6 @@ class ModflowChd(Package):
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
-
 
         self.url = 'chd.htm'
         self.heading = '# {} package for '.format(self.name[0]) + \

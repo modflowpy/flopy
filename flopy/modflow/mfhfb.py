@@ -65,7 +65,12 @@ class ModflowHfb(Package):
     extension : string
         Filename extension (default is 'hfb').
     unitnumber : int
-        File unit number (default is 17).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
 
     Attributes
@@ -95,16 +100,30 @@ class ModflowHfb(Package):
 
     def __init__(self, model, nphfb=0, mxfb=0, nhfbnp=0,
                  hfb_data=None, nacthfb=0, no_print=False,
-                 options=None, extension='hfb', unitnumber=None):
-
+                 options=None, extension='hfb', unitnumber=None,
+                 filenames=None):
 
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowHfb.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowHfb.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowHfb.ftype(),
-                         unitnumber)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
@@ -337,18 +356,18 @@ class ModflowHfb(Package):
                 else:
                     bnd_output = stack_arrays((bnd_output, par_current),
                                               asrecarray=True, usemask=False)
-
-
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowHfb.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowHfb.ftype())
 
         hfb = ModflowHfb(model, nphfb=0, mxfb=0, nhfbnp=len(bnd_output),
                          hfb_data=bnd_output,
-                         nacthfb=0, options=options, unitnumber=unitnumber)
+                         nacthfb=0, options=options, unitnumber=unitnumber,
+                         filenames=filenames)
         return hfb
 
 

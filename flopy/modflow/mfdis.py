@@ -70,7 +70,12 @@ class ModflowDis(Package):
     extension : string
         Filename extension (default is 'dis')
     unitnumber : int
-        File unit number (default is 11).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
     xul : float
         x coordinate of upper left corner of the grid, default is None
     yul : float
@@ -111,17 +116,32 @@ class ModflowDis(Package):
     def __init__(self, model, nlay=1, nrow=2, ncol=2, nper=1, delr=1.0,
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
-                 unitnumber=None, xul=None, yul=None, rotation=0.0,
+                 unitnumber=None, filenames=None,
+                 xul=None, yul=None, rotation=0.0,
                  proj4_str=None, start_datetime=None):
 
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowDis.defaultunit()
 
-        # Call ancestor's init to set self.parent, extension, name and unit
-        # number
-        Package.__init__(self, model, extension, ModflowDis.ftype(),
-                         unitnumber)
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowDis.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         self.url = 'dis.htm'
         self.nrow = nrow
         self.ncol = ncol
@@ -861,19 +881,20 @@ class ModflowDis(Package):
             tsmult.append(a3)
             steady.append(a4)
 
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowDis.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowDis.ftype())
 
         # create dis object instance
         dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
                          top, botm, perlen, nstp, tsmult, steady, itmuni,
                          lenuni, xul=xul, yul=yul, rotation=rotation,
                          proj4_str=proj4_str, start_datetime=start_datetime,
-                         unitnumber=unitnumber)
+                         unitnumber=unitnumber, filenames=filenames)
         if check:
             dis.check(f='{}.chk'.format(dis.name[0]),
                       verbose=dis.parent.verbose, level=0)

@@ -92,9 +92,19 @@ class ModflowOc(Package):
     compact : boolean
         Save results in compact budget form. (default is True).
     extension : list of strings
-        (default is ['oc','hds','ddn','cbc', None]).
+        (default is ['oc', 'hds', 'ddn', 'cbc', 'ibo']).
     unitnumber : list of ints
         (default is [14, 51, 52, 53, 0]).
+    filenames : str or list of str
+        Filenames to use for the package and the head, drawdown, budget (not
+        used), and ibound output files. If filenames=None the package name
+        will be created using the model name and package extension and the
+        output file names will be created using the model name and extensions.
+        If a single string is passed the package will be set to the string and
+        output names will be created using the model name and head, drawdown,
+        budget, and ibound extensions. To define the names for all package
+        files (input and output) the length of the list of strings should be 5.
+        Default is None.
 
     Attributes
     ----------

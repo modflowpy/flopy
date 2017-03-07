@@ -167,7 +167,19 @@ class ModflowStr(Package):
     extension : string
         Filename extension (default is 'str')
     unitnumber : int
-        File unit number (default is 118).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output and sfr output name will be
+        created using the model name and .cbc the .sfr.bin/.sfr.out extensions
+        (for example, modflowtest.cbc, and modflowtest.sfr.bin), if ipakcbc and
+        istcb2 are numbers greater than zero. If a single string is passed
+        the package will be set to the string and cbc and sf routput names
+        will be created using the model name and .cbc and .sfr.bin/.sfr.out
+        extensions, if ipakcbc and istcb2 are numbers greater than zero. To
+        define the names for all package files (input and output) the length
+        of the list of strings should be 3. Default is None.
 
     Methods
     -------
@@ -229,12 +241,24 @@ class ModflowStr(Package):
         else:
             ipakcb = 0
 
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowStr.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
         # set package name
         fname = [filenames[0]]
 
-        # Call parent init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowStr.ftype(),
-                         unitnumber, filenames=fname)
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \

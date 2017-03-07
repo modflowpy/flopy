@@ -83,7 +83,12 @@ class ModflowDe4(Package):
     extension : string
         Filename extension (default is 'de4')
     unitnumber : int
-        File unit number (default is 28).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
 
     Attributes
@@ -109,7 +114,7 @@ class ModflowDe4(Package):
 
     def __init__(self, model, itmx=50, mxup=0, mxlow=0, mxbw=0,
                  ifreq=3, mutd4=0, accl=1., hclose=1e-5, iprd4=1,
-                 extension='de4', unitnumber=None):
+                 extension='de4', unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -119,8 +124,23 @@ class ModflowDe4(Package):
         if unitnumber is None:
             unitnumber = ModflowDe4.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowDe4.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowDe4.ftype(), unitnumber)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
@@ -256,17 +276,18 @@ class ModflowDe4(Package):
             hclose = float(line[30:40].strip())
             iprd4 = int(line[40:50].strip())
 
-
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype ==ModflowDe4.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowDe4.ftype())
 
         de4 = ModflowDe4(model, itmx=itmx, mxup=mxup, mxlow=mxlow, mxbw=mxbw,
                          ifreq=ifreq, mutd4=mutd4, accl=accl, hclose=hclose,
-                         iprd4=iprd4, unitnumber=unitnumber)
+                         iprd4=iprd4, unitnumber=unitnumber,
+                         filenames=filenames)
         return de4
 
 

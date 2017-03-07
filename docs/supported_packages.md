@@ -40,7 +40,6 @@ FloPy Supported Packages
 | Strongly Implicit Procedure (SIP)              | Supported            | Not supported        | Not supported        |
 | Slice-successive Overrelaxation (SOR)          | Supported            | Not supported        | Not supported        |
 | Stream (STR)                                   | Supported            | Supported            | Not supported        |
-| Seawater Intrusion (SWI)                       | Supported            | Not supported        | Not supported        |
 | Seawater Intrusion (SWI2)                      | Supported            | Supported            | Not supported        |
 | Surface-Water Routing (SWR)                    | Not supported        | Not supported        | Not supported        |
 | Subsidence (SUB)                               | Supported            | Supported            | Not supported        |

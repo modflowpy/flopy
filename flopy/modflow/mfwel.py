@@ -66,10 +66,21 @@ class ModflowWel(Package):
         If None the default well datatype will be applied (default is None).
     extension : string
         Filename extension (default is 'wel')
-    unitnumber : int
-        File unit number (default is 20).
     options : list of strings
-        Package options (default is None).        
+        Package options (default is None).
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output name will be created using
+        the model name and .cbc extension (for example, modflowtest.cbc),
+        if ipakcbc is a number greater than zero. If a single string is passed
+        the package will be set to the string and cbc output names will be
+        created using the model name and .cbc extension, if ipakcbc is a
+        number greater than zero. To define the names for all package files
+        (input and output) the length of the list of strings should be 2.
+        Default is None.
 
     Attributes
     ----------
@@ -99,8 +110,8 @@ class ModflowWel(Package):
     """
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
-                 extension='wel', unitnumber=None,
-                 options=None, filenames=None):
+                 extension='wel', options=None,
+                 unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -126,12 +137,17 @@ class ModflowWel(Package):
         else:
             ipakcb = 0
 
+        # Fill namefile items
+        name = [ModflowWel.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
         # set package name
         fname = [filenames[0]]
 
-        # Call parent init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowWel.ftype(),
-                         unitnumber, filenames=fname)
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \

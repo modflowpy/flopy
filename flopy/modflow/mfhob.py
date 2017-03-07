@@ -171,10 +171,20 @@ class ModflowHob(Package):
         and hobname is not provided the model basename with a '.hob.out'
         extension will be used. Default is None.
     extension : string
-        Filename extension (default is ['hob'])
+        Filename extension (default is hob)
     unitnumber : int
-        File unit number (default is [39])
-
+        File unit number (default is None)
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the hob output name will be created using
+        the model name and .hob.out extension (for example,
+        modflowtest.hob.out), if iuhobsv is a number greater than zero.
+        If a single string is passed the package will be set to the string
+        and hob output name will be created using the model name and .hob.out
+        extension, if iuhobsv is a number greater than zero. To define the
+        names for all package files (input and output) the length of the list
+        of strings should be 2. Default is None.
 
     Attributes
     ----------
@@ -204,7 +214,7 @@ class ModflowHob(Package):
 
     def __init__(self, model, iuhobsv=None, hobdry=0, tomulth=1.0,
                  obs_data=None, hobname=None,
-                 extension=['hob'], unitnumber=None):
+                 extension='hob', unitnumber=None, filenames=None):
         """
         Package constructor
         """
@@ -212,24 +222,39 @@ class ModflowHob(Package):
         if unitnumber is None:
             unitnumber = ModflowHob.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
+        # set filenames[1] to hobname if filenames[1] is not None
+        if filenames[1] is None:
+            if hobname is not None:
+                filenames[1] = hobname
+
         if iuhobsv is not None:
-            if iuhobsv > 0:
-                if hobname is None:
-                    hobname = model.name + '.hob.out'
-                model.add_output(hobname, iuhobsv,
-                                 package=ModflowHob.ftype())
-            else:
-                iuhobsv = 0
+            fname = filenames[1]
+            model.add_output_file(iuhobsv, fname=fname,
+                                  extension='hob.out', binflag=False,
+                                  package=ModflowHob.ftype())
+        else:
+            iuhobsv = 0
 
         # Fill namefile items
         name = [ModflowHob.ftype()]
         units = [unitnumber]
         extra = ['']
 
-        # Call ancestor's init to set self.parent, extension, name and unit
-        # number
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra)
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.url = 'hob.htm'
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -499,22 +524,22 @@ class ModflowHob(Package):
         # close the file
         f.close()
 
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
-        hobname = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowHob.ftype():
-                    unitnumber = key
-                if key == iuhobsv:
-                    hobname = os.path.basename(value.filename)
-                    model.add_pop_key_list(iuhobsv)
-
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowHob.ftype())
+            if iuhobsv > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=iuhobsv)
+                model.add_pop_key_list(iuhobsv)
 
         # create hob object instance
         hob = ModflowHob(model, iuhobsv=iuhobsv, hobdry=hobdry,
                          tomulth=tomulth, obs_data=obs_data,
-                         unitnumber=unitnumber, hobname=hobname)
+                         unitnumber=unitnumber, filenames=filenames)
 
         return hob
 
