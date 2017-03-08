@@ -179,7 +179,22 @@ class ModflowUzf1(Package):
     extension : string
         Filename extension (default is 'uzf')
     unitnumber : int
-        File unit number (default is 19).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output, uzf output, and uzf
+        observation names will be created using the model name and .cbc,
+        uzfcb2.bin, and  .uzf#.out extensions (for example, modflowtest.cbc,
+        and modflowtest.uzfcd2.bin), if ipakcbc, iuzfcb2, and len(uzgag) are
+        numbers greater than zero. For uzf observations the file extension is
+        created using the uzf observation file unit number (for example, for
+        uzf observations written to unit 123 the file extension would be
+        .uzf123.out). If a single string is passed the package name will be
+        set to the string and other uzf output files will be set to the model
+        name with the appropriate output file extensions. To define the names
+        for all package files (input and output) the length of the list of
+        strings should be 3 + len(uzgag). Default is None.
 
     Attributes
     ----------
@@ -252,9 +267,10 @@ class ModflowUzf1(Package):
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
+                extension = 'uzf{}.out'.format(iu)
                 model.add_output_file(iu, fname=fname,
                                       binflag=False,
-                                      extension='uzf{}'.format(iu),
+                                      extension=extension,
                                       package=ModflowUzf1.ftype())
                 ipos += 1
 

@@ -158,12 +158,11 @@ class ModflowSfr2(Package):
         and package extension and the cbc output and sfr output name will be
         created using the model name and .cbc the .sfr.bin/.sfr.out extensions
         (for example, modflowtest.cbc, and modflowtest.sfr.bin), if ipakcbc and
-        istcb2 are numbers greater than zero. If a single string is passed
-        the package will be set to the string and cbc and sf routput names
-        will be created using the model name and .cbc and .sfr.bin/.sfr.out
-        extensions, if ipakcbc and istcb2 are numbers greater than zero. To
-        define the names for all package files (input and output) the length
-        of the list of strings should be 3. Default is None.
+        istcb2 are numbers greater than zero. If a single string is passed the
+        package name will be set to the string and other uzf output files will
+        be set to the model name with the appropriate output file extensions.
+        To define the names for all package files (input and output) the
+        length of the list of strings should be 3. Default is None.
 
     Attributes
     ----------
