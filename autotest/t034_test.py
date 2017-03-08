@@ -115,10 +115,12 @@ def test_create():
                                     exe_name='mf2005',
                                     verbose=True,
                                     model_ws=os.path.split(gpth)[0])
-    # verify that all of the arrays in the created UZF package are the same as those in the loaded example
-    attrs = dir(uzf)
+
+    # verify that all of the arrays in the created UZF package are the same
+    # as those in the loaded example
+    attrs = [attr for attr in dir(uzf)
+             if not callable(getattr(uzf, attr)) and not attr.startswith("__")]
     for attr in attrs:
-        print(attr)
         a1 = uzf.__getattribute__(attr)
         if isinstance(a1, Util2d):
             a2 = m2.uzf.__getattribute__(attr)

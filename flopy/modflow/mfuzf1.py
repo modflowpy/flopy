@@ -226,8 +226,7 @@ class ModflowUzf1(Package):
                  thtr=0.15, thti=0.20,
                  specifythtr=0, specifythti=0, nosurfleak=0,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
-                 uzgag=None,
-                 uzfbud_ext=[], extension='uzf', unitnumber=None,
+                 uzgag=None, extension='uzf', unitnumber=None,
                  filenames=None):
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -313,25 +312,6 @@ class ModflowUzf1(Package):
         self.ietflg = ietflg
         self.ipakcb = ipakcb
         self.iuzfcb2 = iuzfcb2
-        # class_nam = ['UZF']
-        # if (not isinstance(unitnumber, list)):
-        #     unitnumber = [unitnumber]
-        # if (not isinstance(extension, list)):
-        #     extension = [extension]
-        # if ipakcb > 0 and iuzfcb2 < 1:
-        #     unitnumber.append(ipakcb)
-        #     extension.append(extension[0] + 'bt1')
-        #     class_nam += ['DATA(BINARY)']
-        # elif ipakcb < 1 and iuzfcb2 > 0:
-        #     unitnumber.append(iuzfcb2)
-        #     extension.append(extension[0] + 'bt2')
-        #     class_nam += ['DATA(BINARY)']
-        # elif ipakcb > 0 and iuzfcb2 > 0:
-        #     unitnumber.append(ipakcb)
-        #     extension.append(extension[0] + 'bt1')
-        #     unitnumber.append(iuzfcb2)
-        #     extension.append(extension[0] + 'bt2')
-        #     class_nam += ['DATA(BINARY)', 'DATA(BINARY)']
         if iuzfopt > 0:
             self.ntrail2 = ntrail2
             self.nsets = nsets
@@ -384,17 +364,6 @@ class ModflowUzf1(Package):
                 self.uzgag = []
             else:
                 self.uzgag = uzgag
-                # i = 0
-                # for iftunit, l in uzgag.items():
-                #     unitnumber.append(abs(iftunit))
-                #     if uzfbud_ext == []:
-                #         extension.append(extension[0] + 'b' + str(i))
-                #     else:
-                #         extension.append(uzfbud_ext[i])
-                #     i += 1
-                # Package.__init__(self, model, extension,
-                #                  class_nam + nuzgag * ['DATA'],
-                #                  unit_number=unitnumber)
 
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
