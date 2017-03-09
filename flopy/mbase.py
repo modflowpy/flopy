@@ -339,7 +339,7 @@ class BaseModel(object):
                 idx = self.external_units.index(abs(unit))
                 fname = os.path.basename(self.external_fnames[idx])
                 binflag = self.external_binflag[idx]
-                self.remove_external(unit=unit)
+                self.remove_external(unit=abs(unit))
             # determine if the unit exists in the output data
             if abs(unit) in self.output_units:
                 add_cbc = False
@@ -596,23 +596,27 @@ class BaseModel(object):
             unit number of external array
 
         """
+        plist = []
         if fname is not None:
             for i, e in enumerate(self.external_fnames):
                 if fname in e:
-                    self.external_fnames.pop(i)
-                    self.external_units.pop(i)
-                    self.external_binflag.pop(i)
-                    self.external_output.pop(i)
+                    plist.append(i)
         elif unit is not None:
             for i, u in enumerate(self.external_units):
                 if u == unit:
-                    self.external_fnames.pop(i)
-                    self.external_units.pop(i)
-                    self.external_binflag.pop(i)
-                    self.external_output.pop(i)
+                    plist.append(i)
         else:
             raise Exception(
                 ' either fname or unit must be passed to remove_external()')
+        # remove external file
+        j = 0
+        for i in plist:
+            ipos = i - j
+            self.external_fnames.pop(ipos)
+            self.external_units.pop(ipos)
+            self.external_binflag.pop(ipos)
+            self.external_output.pop(ipos)
+            j += 1
         return
 
     def add_existing_package(self, filename, ptype=None,
