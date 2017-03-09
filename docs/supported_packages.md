@@ -18,7 +18,7 @@ FloPy Supported Packages
 | Geometric Multi-Grid (GMG)                     | Supported            | Supported            | Not supported        |
 | Horizontal Flow Barrier (HFB)                  | Supported            | Supported            | Not supported        |
 | Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
-| Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
+| Flow and Head Boundary (FHB)                   | Supported            | Supported            | Not supported        |
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
 | Lake (LAK)                                     | Supported            | Supported            | Not supported        |
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
@@ -31,7 +31,7 @@ FloPy Supported Packages
 | Newton (NWT)                                   | Supported            | Supported            | Not supported        |
 | Output Control (OC)                            | Supported            | Supported            | Not supported        |
 | Periodic Boundary Condition (PBC)              | Supported            | Not supported        | Not supported        |
-| Preconditioned Conjugate <br />Gradient (PCG)              | Supported            | Supported            | Not supported        |
+| Preconditioned Conjugate  Gradient (PCG)       | Supported            | Supported            | Not supported        |
 | Preconditioned Conjugate Gradient Nonlinear (PCGN)   | Supported            | Supported        | Not supported        |
 | Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
 | Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
