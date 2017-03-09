@@ -47,7 +47,12 @@ class Mt3dGcg(Package):
     extension : string
         Filename extension (default is 'gcg')
     unitnumber : int
-        File unit number (default is 35).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------

@@ -68,7 +68,12 @@ class Mt3dDsp(Package):
     extension : string
         Filename extension (default is 'dsp')
     unitnumber : int
-        File unit number (default is 33).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
     kwargs : dictionary
         If a multi-species simulation, then dmcoef values can be specified for
         other species as dmcoef2, dmcoef3, etc.  For example:
@@ -95,8 +100,7 @@ class Mt3dDsp(Package):
     >>> dsp = flopy.mt3d.Mt3dDsp(m)
 
     """
-    unitnumber = 33
-    def __init__(self, model, al=0.01, trpt=0.1, trpv=0.01, dmcoef=1e-9, 
+    def __init__(self, model, al=0.01, trpt=0.1, trpv=0.01, dmcoef=1e-9,
                  extension='dsp', multiDiff=False, unitnumber=None,
                  filenames=None, **kwargs):
 

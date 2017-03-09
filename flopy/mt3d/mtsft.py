@@ -131,6 +131,22 @@ class Mt3dSft(Package):
     cbcsf : float
         Is the specified concentration associated with the current boundary
         condition entry.  Repeat CBCSF for each simulated species (NCOMP).
+    extension : string
+        Filename extension (default is 'sft')
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the sfr output name will be created using
+        the model name and lake concentration observation extension
+        (for example, modflowtest.cbc and modflowtest.sftcobs.out), if ioutobs
+        is a number greater than zero. If a single string is passed the
+        package will be set to the string and lake concentration observation
+        output name will be created using the model name and .sftcobs.out
+        extension, if ioutobs is a number greater than zero. To define the
+        names for all package files (input and output) the length of the list
+        of strings should be 2. Default is None.
 
     Attributes
     ----------
@@ -163,8 +179,6 @@ class Mt3dSft(Package):
 
     """
 
-    unitnumber = 46
-
     def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=None,
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
@@ -191,7 +205,7 @@ class Mt3dSft(Package):
                     filenames.append(None)
 
         if ioutobs is not None:
-            ext = 'sftobs'
+            ext = 'sftcobs.out'
             fname = filenames[1]
             model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
                                   binflag=False, package=Mt3dSft.ftype())
@@ -233,21 +247,13 @@ class Mt3dSft(Package):
         self.iprtxmd = iprtxmd
 
         # Set 1D array values
-        if isinstance(coldsf, (list, np.ndarray)):
-            locat = 19
-        else:
-            locat = self.unit_number[0]
-
         self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
-                             name='coldsf', locat=locat)
-
-        if isinstance(dispsf, (list, np.ndarray)):
-            locat = 19
-        else:
-            locat = self.unit_number[0]
+                             name='coldsf', locat=self.unit_number[0],
+                             array_free_format=True)
 
         self.dispsf = Util2d(model, (nsfinit,), np.float32, dispsf,
-                             name='dispsf', locat=locat)
+                             name='dispsf', locat=self.unit_number[0],
+                             array_free_format=True)
 
         # Set streamflow observation locations
         self.nobssf = nobssf
@@ -305,55 +311,55 @@ class Mt3dSft(Package):
         """
 
         # Open file for writing
-        f_sft = open(self.fn_path, 'w')
+        f = open(self.fn_path, 'w')
 
         # Item 1
-        f_sft.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}'.format(self.nsfinit,
-                                                                 self.mxsfbc,
-                                                                 self.icbcsf,
-                                                                 self.ioutobs,
-                                                                 self.ietsfr) +
-                    30*' ' + '# nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
+        f.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}'.format(self.nsfinit,
+                                                             self.mxsfbc,
+                                                             self.icbcsf,
+                                                             self.ioutobs,
+                                                             self.ietsfr) +
+                30 * ' ' + '# nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
 
         # Item 2
-        f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.7f}{4:10d}{5:10.5f}{6:10d}'
-                    .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
-                            self.mxitersf, self.crntsf, self.iprtxmd) +
-                    ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' + \
-                    'iprtxmd\n')
+        f.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.7f}{4:10d}{5:10.5f}{6:10d}'
+                .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
+                        self.mxitersf, self.crntsf, self.iprtxmd) +
+                ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' + \
+                'iprtxmd\n')
 
         # Item 3
-        f_sft.write(self.coldsf.get_file_entry())
+        f.write(self.coldsf.get_file_entry())
 
         # Item 4
-        f_sft.write(self.dispsf.get_file_entry())
+        f.write(self.dispsf.get_file_entry())
 
         # Item 5
-        f_sft.write('{0:10d}                 # nobssf\n'.format(self.nobssf))
+        f.write('{0:10d}                 # nobssf\n'.format(self.nobssf))
 
         # Item 6
         if self.nobssf != 0:
             for iobs in self.obs_sf:
-                line = '{0:10d}'.format(iobs) + 26*' ' + \
+                line = '{0:10d}'.format(iobs) + 26 * ' ' + \
                        '# location of obs as given by position in irch list\n'
-                f_sft.write(line)
+                f.write(line)
 
         # Items 7, 8
         # Loop through each stress period and assign source & sink concentrations to stream features
         nper = self.parent.nper
         for kper in range(nper):
-            if f_sft.closed == True:
-                f_sft = open(f_sft.name, 'a')
+            if f.closed == True:
+                f = open(f.name, 'a')
 
             # List of concentrations associated with various boundaries
             # interacting with the stream network.
             if self.sf_stress_period_data is not None:
-                self.sf_stress_period_data.write_transient(f_sft,
+                self.sf_stress_period_data.write_transient(f,
                                                            single_per=kper)
             else:
-                f_sft.write('{0:10d}       # ntmp - SP {1:5d}'.format(0, kper))
+                f.write('{0:10d}       # ntmp - SP {1:5d}'.format(0, kper))
 
-        f_sft.close()
+        f.close()
         return
 
     @staticmethod
@@ -561,7 +567,10 @@ class Mt3dSft(Package):
             obs_sf = np.array(obs_sf)
             if model.verbose:
                 print('   Surface water concentration observation locations:')
-                print('   {}', format(obs_sf))
+                text = ''
+                for o in obs_sf:
+                    text += '{} '.format(o)
+                print('   {}\n'.format(text))
         else:
             if model.verbose:
                 print('   No observation points specified.')
@@ -572,7 +581,8 @@ class Mt3dSft(Package):
 
             # Item 7 NTMP (Transient data)
             if model.verbose:
-                print('   loading NTMP...')
+                print('   loading NTMP...stress period {} of {}'.format(iper+1,
+                                                                        nper))
             line = f.readline()
             m_arr = line.strip().split()
             ntmp = int(m_arr[0])
@@ -580,10 +590,12 @@ class Mt3dSft(Package):
             # Item 8 ISEGBC, IRCHBC, ISFBCTYP, CBCSF
             if model.verbose:
                 print('   loading {} instances of ISEGBC, IRCHBC, ' \
-                      'ISFBCTYP, CBCSF...'.format(ntmp))
+                      'ISFBCTYP, CBCSF...stress period {} of {}'.format(ntmp,
+                                                                        iper + 1,
+                                                                        nper))
             current_sf = 0
             if ntmp > 0:
-                current_sf = np.empty((ntmp), dtype=dtype)
+                current_sf = np.empty(ntmp, dtype=dtype)
                 for ibnd in range(ntmp):
                     line = f.readline()
                     m_arr = line.strip().split()
@@ -605,8 +617,8 @@ class Mt3dSft(Package):
                     print('   No transient boundary conditions specified')
                 pass
 
-        unitnumber = None
         # 1 item for SFT input file, 1 item for SFTOBS file
+        unitnumber = None
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \

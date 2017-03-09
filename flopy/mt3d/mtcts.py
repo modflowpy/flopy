@@ -142,7 +142,6 @@ class Mt3dCts(Package):
 
     """
 
-    unitnumber = 5
     def __init__(self,):
 
         raise NotImplementedError()

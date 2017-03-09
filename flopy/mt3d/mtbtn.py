@@ -179,6 +179,13 @@ class Mt3dBtn(Package):
         A list of names for every species in the simulation.
     extension : string
         Filename extension (default is 'btn')
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -200,7 +207,6 @@ class Mt3dBtn(Package):
     >>> btn = flopy.mt3dms.Mt3dBtn(mt)
 
     """
-    unitnumber = 31
     def __init__(self, model, MFStyleArr=False, DRYCell=False,
                  Legacy99Stor=False, FTLPrint=False, NoWetDryPrint=False,
                  OmitDryBud=False, AltWTSorb=False, nlay=None, nrow=None,

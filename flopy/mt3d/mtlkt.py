@@ -64,6 +64,22 @@ class Mt3dLkt(Package):
                is simulated directly from the surface of the lake, users can use
                this boundary condition to specify a non-zero concentration 
                (default is zero) associated with the evaporation losses.
+    extension : string
+        Filename extension (default is 'lkt')
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the lake output name will be created using
+        the model name and lake concentration observation extension
+        (for example, modflowtest.cbc and modflowtest.lkcobs.out), if icbclk
+        is a number greater than zero. If a single string is passed the
+        package will be set to the string and lake concentration observation
+        output name will be created using the model name and .lkcobs.out
+        extension, if icbclk is a number greater than zero. To define the
+        names for all package files (input and output) the length of the list
+        of strings should be 2. Default is None.
 
     Attributes
     ----------
@@ -86,8 +102,6 @@ class Mt3dLkt(Package):
     >>> lkt = flopy.mt3d.Mt3dLkt(mt)
 
     """
-
-    unitnumber = 45
 
     def __init__(self, model, nlkinit=0, mxlkbc=0, icbclk=None, ietlak=0,
                  coldlak=0.0, lk_stress_period_data=None, dtype=None,
@@ -113,7 +127,8 @@ class Mt3dLkt(Package):
 
         if icbclk is not None:
             fname = filenames[1]
-            model.add_output_file(icbclk, fname=fname, extension='lkcobs.out',
+            extension = 'lkcobs.out'
+            model.add_output_file(icbclk, fname=fname, extension=extension,
                                   binflag=False, package=Mt3dLkt.ftype())
         else:
             icbclk = 0
