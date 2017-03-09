@@ -108,6 +108,22 @@ class Mt3dUzt(Package):
         Is the concentration of ET fluxes originating from the saturated zone. 
         As a default, this array is set equal to 0 and only overridden if the 
         user specifies INCUZET > 1.  An array for each species will be read.
+    extension : string
+        Filename extension (default is 'uzt')
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the uzf output name will be created using
+        the model name and uzf concentration observation extension
+        (for example, modflowtest.cbc and modflowtest.uzcobs.out), if icbcuz
+        is a number greater than zero. If a single string is passed the
+        package will be set to the string and uzf concentration observation
+        output name will be created using the model name and .uzcobs.out
+        extension, if icbcuz is a number greater than zero. To define the
+        names for all package files (input and output) the length of the list
+        of strings should be 2. Default is None.
 
     Attributes
     ----------
@@ -127,13 +143,12 @@ class Mt3dUzt(Package):
 
     >>> import flopy
     >>> import os
-    >>> mt = flopy.mt3d.Mt3dms.load('Keat_UZF_mt.nam', exe_name = 'mt3d-usgs_1.0.00.exe',
-                            model_ws = r'C:\temp\Keating_UZF', load_only='btn')
+    >>> mt = flopy.mt3d.Mt3dms.load('Keat_UZF_mt.nam',
+    ... exe_name = 'mt3d-usgs_1.0.00.exe',
+    ... model_ws = r'C:\temp\Keating_UZF', load_only='btn')
     >>> uzt = flopy.mt3d.Mt3dUzt('Keat_UZF.uzt', mt)
 
     """
-
-    unitnumber = 47
 
     def __init__(self, model, mxuzcon=0, icbcuz=None, iet=0, iuzfbnd=None,
                  wc=0., sdh=0., cuzinf=None, cuzet=None, cgwet=None,
@@ -159,8 +174,9 @@ class Mt3dUzt(Package):
 
         if icbcuz is not None:
             fname = filenames[1]
-            model.add_output_file(icbcuz, fname=fname,
-                                  package=Mt3dUzt.ftype())
+            extension = 'uzcobs.out'
+            model.add_output_file(icbcuz, fname=fname, extension=extension,
+                                  binflag=False, package=Mt3dUzt.ftype())
         else:
             icbcuz = 0
 

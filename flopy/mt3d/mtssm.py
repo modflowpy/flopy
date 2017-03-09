@@ -122,7 +122,12 @@ class Mt3dSsm(Package):
     extension : string
         Filename extension (default is 'ssm')
     unitnumber : int
-        File unit number (default is 34).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -148,7 +153,6 @@ class Mt3dSsm(Package):
     >>> ssm = flopy.mt3d.Mt3dSsm(m, stress_period_data=ssm_data)
 
     """
-    unitnumber = 34
 
     def __init__(self, model, crch=None, cevt=None, mxss=None,
                  stress_period_data=None, dtype=None,
@@ -198,7 +202,8 @@ class Mt3dSsm(Package):
             for i, label in enumerate(SsmLabels):
                 mfpack = mf.get_package(label)
                 ssmpack = SsmPackage(label, mfpack, (i < 6))
-                self.__SsmPackages.append(ssmpack)  # First 6 need T/F flag in file line 1
+                self.__SsmPackages.append(
+                    ssmpack)  # First 6 need T/F flag in file line 1
 
         if dtype is not None:
             self.dtype = dtype

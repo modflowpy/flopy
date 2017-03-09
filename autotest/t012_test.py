@@ -291,7 +291,7 @@ def test_mfnwt_CrnkNic():
                                     version='mfnwt', verbose=True,
                                     exe_name=mfnwt_exe)
 
-    cpth = os.path.join(newpth, 'sft_crnkNic')
+    cpth = os.path.join(newpth, 'SFT_CRNKNIC')
     mf.model_ws = cpth
 
     mf.write_input()
@@ -326,7 +326,10 @@ def test_mfnwt_LKT():
     cpth = os.path.join(newpth, 'LKT')
     mf.model_ws = cpth
 
+    # write modflow-nwt files
     mf.write_input()
+
+    success = False
     if ismfnwt is not None:
         success, buff = mf.run_model(silent=False)
         assert success, '{} did not run'.format(mf.name)
@@ -339,8 +342,11 @@ def test_mfnwt_LKT():
     ftlfile = 'lkt.ftl'
     mt.ftlfilename = ftlfile
     mt.ftlfree = True
+
+    # write mt3d files
     mt.write_input()
-    if ismt3dusgs is not None and ismfnwt is not None:
+
+    if ismt3dusgs is not None and ismfnwt is not None and success:
         success, buff = mt.run_model(silent=False,
                                      normal_msg='program completed.')
         assert success, '{} did not run'.format(mt.name)

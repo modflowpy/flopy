@@ -20,12 +20,15 @@ class ModflowSwr1(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
-
     extension : string
         Filename extension (default is 'swr')
-
     unitnumber : int
-        File unit number (default is 36).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
 
     Attributes
@@ -52,7 +55,8 @@ class ModflowSwr1(Package):
 
     """
 
-    def __init__(self, model, extension='swr', unitnumber=None):
+    def __init__(self, model, extension='swr', unitnumber=None,
+                 filenames=None):
         """
         Package constructor.
 
@@ -61,9 +65,23 @@ class ModflowSwr1(Package):
         if unitnumber is None:
             unitnumber = ModflowSwr1.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowSwr1.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowSwr1.ftype(),
-                         unitnumber)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # check if a valid model version has been specified
         if model.version == 'mf2k' or model.version == 'mfusg':
@@ -88,9 +106,9 @@ class ModflowSwr1(Package):
 
         """
         print('SWR1 write method not implemented yet')
-        # f_swr = open(self.fn_path, 'w')
-        # f_swr.write('{0}\n'.format(self.heading))
-        # f_swr.close()
+        # f = open(self.fn_path, 'w')
+        # f.write('{0}\n'.format(self.heading))
+        # f.close()
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
@@ -137,20 +155,21 @@ class ModflowSwr1(Package):
             filename = f
             f = open(filename, 'r')
 
-        print('   Warning: load method not completed. default swr1 object created.')
+        print('Warning: load method not completed. default swr1 object created.')
 
         # close open file
         f.close()
 
         # determine specified unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSwr1.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSwr1.ftype())
 
         # create swr1 object instance
-        swr1 = ModflowSwr1(model, unitnumber=unitnumber)
+        swr1 = ModflowSwr1(model, unitnumber=unitnumber, filenames=filenames)
 
         # return swr object
         return swr1

@@ -69,8 +69,6 @@ class ModflowLgr(BaseModel):
         Print additional information to the screen (default is False).
     load : boolean, optional
          (default is True).
-    silent : integer
-        (default is 0)
 
     Attributes
     ----------
@@ -246,7 +244,7 @@ class ModflowLgr(BaseModel):
 
     def write_name_file(self):
         """
-        Write the model name file.
+        Write the modflow-lgr control file.
         """
         fn_path = os.path.join(self.model_ws, self.namefile)
         f = open(fn_path, 'w')
@@ -263,7 +261,7 @@ class ModflowLgr(BaseModel):
 
         # dataset 3
         pth = self._get_path(self._model_ws, self.parent._model_ws,
-                            fpth=self.parent.namefile)
+                             fpth=self.parent.namefile)
         line = self._padline(pth, comment='data set 3 - parent namefile')
         f.write(line)
 
@@ -281,65 +279,67 @@ class ModflowLgr(BaseModel):
                                                       self.children_data)):
             # dataset 6
             pth = self._get_path(self._model_ws, child._model_ws,
-                                fpth=child.namefile)
-            comment = 'data set 6 - child {} namefile'.format(idx+1)
+                                 fpth=child.namefile)
+            comment = 'data set 6 - child {} namefile'.format(idx + 1)
             line = self._padline(pth, comment=comment)
             f.write(line)
 
             # dataset 7
-            comment = 'data set 7 - child {} gridstatus'.format(idx+1)
+            comment = 'data set 7 - child {} gridstatus'.format(idx + 1)
             line = self._padline('CHILDONLY',
-                                comment=comment)
+                                 comment=comment)
             f.write(line)
 
             # dataset 8
             line = '{} {} {} {}'.format(child_data.ishflg, child_data.ibflg,
                                         child_data.iucbhsv, child_data.iucbfsv)
-            comment = 'data set 8 - child {} '.format(idx+1) + \
+            comment = 'data set 8 - child {} '.format(idx + 1) + \
                       'ishflg, ibflg, iucbhsv, iucbfsv'
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 9
             line = '{} {}'.format(child_data.mxlgriter, child_data.ioutlgr)
-            comment = 'data set 9 - child {} '.format(idx+1) + \
+            comment = 'data set 9 - child {} '.format(idx + 1) + \
                       'mxlgriter, ioutlgr'
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 10
             line = '{} {}'.format(child_data.relaxh, child_data.relaxf)
-            comment = 'data set 10 - child {} '.format(idx+1) + \
+            comment = 'data set 10 - child {} '.format(idx + 1) + \
                       'relaxh, relaxf'
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 11
             line = '{} {}'.format(child_data.hcloselgr, child_data.fcloselgr)
-            comment = 'data set 11 - child {} '.format(idx+1) + \
+            comment = 'data set 11 - child {} '.format(idx + 1) + \
                       'hcloselgr, fcloselgr'
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 12
-            line = '{} {} {}'.format(child_data.nplbeg+1, child_data.nprbeg+1,
-                                     child_data.npcbeg+1)
-            comment = 'data set 12 - child {} '.format(idx+1) + \
+            line = '{} {} {}'.format(child_data.nplbeg + 1,
+                                     child_data.nprbeg + 1,
+                                     child_data.npcbeg + 1)
+            comment = 'data set 12 - child {} '.format(idx + 1) + \
                       'nplbeg, nprbeg, npcbeg'
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 13
-            line = '{} {} {}'.format(child_data.nplend+1, child_data.nprend+1,
-                                     child_data.npcend+1)
-            comment = 'data set 13 - child {} '.format(idx+1) + \
+            line = '{} {} {}'.format(child_data.nplend + 1,
+                                     child_data.nprend + 1,
+                                     child_data.npcend + 1)
+            comment = 'data set 13 - child {} '.format(idx + 1) + \
                       'nplend, nprend, npcend'
             line = self._padline(line, comment=comment)
             f.write(line)
 
             # dataset 14
             line = '{}'.format(child_data.ncpp)
-            comment = 'data set 14 - child {} '.format(idx+1) + \
+            comment = 'data set 14 - child {} '.format(idx + 1) + \
                       'ncpp'
             line = self._padline(line, comment=comment)
             f.write(line)
@@ -348,16 +348,13 @@ class ModflowLgr(BaseModel):
             line = ''
             for ndx in child_data.ncppl:
                 line += '{} '.format(ndx)
-            comment = 'data set 15 - child {} '.format(idx+1) + \
+            comment = 'data set 15 - child {} '.format(idx + 1) + \
                       'ncppl'
             line = self._padline(line, comment=comment)
             f.write(line)
 
-
         # close the lgr control file
         f.close()
-
-
 
     def change_model_ws(self, new_pth=None, reset_external=False):
 

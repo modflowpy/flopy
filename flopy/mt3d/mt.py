@@ -629,6 +629,7 @@ class Mt3dms(BaseModel):
                     mt.external_units.append(key)
                     mt.external_binflag.append("binary"
                                                in item.filetype.lower())
+                    mt.external_output.append(False)
 
         # pop binary output keys and any external file units that are now
         # internal
