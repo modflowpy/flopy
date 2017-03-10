@@ -323,6 +323,8 @@ def test_mfnwt_LKT():
                                     version='mfnwt', verbose=True,
                                     exe_name=mfnwt_exe)
 
+    assert not mf.load_fail, 'MODFLOW model did not load'
+
     cpth = os.path.join(newpth, 'LKT')
     mf.model_ws = cpth
 
