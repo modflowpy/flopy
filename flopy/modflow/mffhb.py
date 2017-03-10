@@ -1,10 +1,10 @@
 """
-mfghb module.  Contains the ModflowEvt class. Note that the user can access
-the ModflowEvt class as `flopy.modflow.ModflowEvt`.
+mffhb module.  Contains the ModflowFhb class. Note that the user can access
+the ModflowFhb class as `flopy.modflow.ModflowFhb`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?evt.htm>`_.
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?fhb.htm>`_.
 
 """
 import os
@@ -257,15 +257,15 @@ class ModflowFhb(Package):
 
         Returns
         -------
-        evt : ModflowEvt object
-            ModflowEvt object.
+        fhb : ModflowFhb object
+            ModflowFhb object.
 
         Examples
         --------
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> evt = flopy.modflow.ModflowFhb.load('test.fhb', m)
+        >>> fhb = flopy.modflow.ModflowFhb.load('test.fhb', m)
 
         """
         if model.verbose:
@@ -521,7 +521,7 @@ class ModflowFhb(Package):
                          cnstm5=cnstm5, ds5=ds5, cnstm7=cnstm7, ds7=ds7,
                          unitnumber=unitnumber, filenames=filenames)
 
-        # return evt object
+        # return fhb object
         return fhb
 
     @staticmethod
