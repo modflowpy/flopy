@@ -3,6 +3,7 @@ from .mfbas import ModflowBas
 from .mfbcf import ModflowBcf
 from .mflpf import ModflowLpf
 from .mfchd import ModflowChd
+from .mffhb import ModflowFhb
 from .mfdis import ModflowDis
 from .mfdrn import ModflowDrn
 from .mfevt import ModflowEvt

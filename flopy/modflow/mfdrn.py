@@ -25,7 +25,7 @@ class ModflowDrn(Package):
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 0).
+        (default is None).
     stress_period_data : list of boundaries, recarrays, or dictionary of
         boundaries.
         Each drain cell is defined through definition of

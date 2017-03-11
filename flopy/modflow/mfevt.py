@@ -111,12 +111,17 @@ class ModflowEvt(Package):
         else:
             ipakcb = 0
 
+        # Fill namefile items
+        name = [ModflowEvt.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowEvt.ftype(),
-                         unitnumber, filenames=fname)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.heading = '# {} package for '.format(self.name[0]) + \
