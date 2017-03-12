@@ -828,9 +828,29 @@ class Gridgen(object):
         angldegx = np.where(fldr == -2, 270, angldegx)
         gridprops['angldegx'] = angldegx
 
+        # vertices -- not optimized for redundant vertices yet
+        nvert = nodes * 4
+        vertices = np.empty((nvert, 2), dtype=np.float)
+        ipos = 0
+        for n in range(nodes):
+            vs = self.get_vertices(n)
+            for x, y in vs[:-1]:  # do not include last vertex
+                vertices[ipos, 0] = x
+                vertices[ipos, 1] = y
+                ipos += 1
+        gridprops['nvert'] = nvert
+        gridprops['vertices'] = vertices
+
+        cellxy = np.empty((nodes, 2), dtype=np.float)
+        for n in range(nodes):
+            x, y = self.get_center(n)
+            cellxy[n, 0] = x
+            cellxy[n, 1] = y
+        gridprops['cellxy'] = cellxy
+
         return gridprops
 
-    def to_disu8(self, fname):
+    def to_disu8(self, fname, writevertices=True):
 
         gridprops = self.get_gridprops()
         f = open(fname, 'w')
@@ -843,6 +863,8 @@ class Gridgen(object):
         f.write('BEGIN DIMENSIONS\n')
         f.write('  NODES {}\n'.format(gridprops['nodes']) )
         f.write('  NJA {}\n'.format(gridprops['nja']) )
+        if writevertices:
+            f.write('  NVERT {}\n'.format(gridprops['nvert']))
         f.write('END DIMENSIONS\n\n')
 
         # disdata
@@ -867,13 +889,29 @@ class Gridgen(object):
             f.write('\n')
         f.write('END CONNECTIONDATA\n\n')
 
-        # vertices
-        f.write('BEGIN VERTICES\n')
-        f.write('END VERTICES\n\n')
+        if writevertices:
+            # vertices -- not optimized for redundant vertices yet
+            f.write('BEGIN VERTICES\n')
+            vertices = gridprops['vertices']
+            for i, row in enumerate(vertices):
+                x = row[0]
+                y = row[1]
+                s = '  {} {} {}\n'.format(i + 1, x, y)
+                f.write(s)
+            f.write('END VERTICES\n\n')
 
-        # celldata
-        f.write('BEGIN CELLDATA\n')
-        f.write('END CELLDATA\n\n')
+            # celldata -- not optimized for redundant vertices yet
+            f.write('BEGIN CELL2D\n')
+            cellxy = gridprops['cellxy']
+            iv = 1
+            for n, row in enumerate(cellxy):
+                xc = row[0]
+                yc = row[1]
+                s = '  {} {} {} {} {} {} {} {}\n'.format(n + 1, xc, yc, 4, iv,
+                                                         iv+1, iv+2, iv+3)
+                f.write(s)
+                iv += 4
+            f.write('END CELL2D\n\n')
 
         f.close()
         return
