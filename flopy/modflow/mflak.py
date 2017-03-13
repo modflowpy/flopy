@@ -14,6 +14,7 @@ from ..pakbase import Package
 from ..utils.util_array import Transient3d
 from ..utils import Util3d, read_fixed_var, write_fixed_var
 
+
 class ModflowLak(Package):
     """
     MODFLOW Lake Package Class.
@@ -65,7 +66,7 @@ class ModflowLak(Package):
 
     def __init__(self, model, nlakes=1, ipakcb=None, theta=-1.,
                  nssitr=0, sscncr=0.0, surfdep=0., stages=1., stage_range=None,
-                 tab_files=None, lakarr=None, bdlknc=None,
+                 tab_files=None, tab_units=None, lakarr=None, bdlknc=None,
                  sill_data=None, flux_data=None,
                  extension='lak', unitnumber=None, filenames=None,
                  options=None, **kwargs):
@@ -78,13 +79,21 @@ class ModflowLak(Package):
             unitnumber = ModflowLak.defaultunit()
 
         # set filenames
+        tabdata = False
+        nlen = 2
+        if options is not None:
+            for option in options:
+                if 'TABLEINPUT' in option.upper():
+                    tabdata = True
+                    nlen += nlakes
+                    break
         if filenames is None:
-            filenames = [None, None]
+            filenames = [None for x in range(nlen)]
         elif isinstance(filenames, str):
-            filenames = [filenames, None]
+            filenames = [filenames] + [None for x in range(nlen - 1)]
         elif isinstance(filenames, list):
-            if len(filenames) < 2:
-                filenames.append(None)
+            if len(filenames) < nlen:
+                filenames = filenames + [None for x in range(2, nlen)]
 
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
@@ -93,6 +102,33 @@ class ModflowLak(Package):
                                   package=ModflowLak.ftype())
         else:
             ipakcb = 0
+
+        # table input files
+        if tabdata:
+            if tab_files is None:
+                tab_files = filenames[2:]
+
+        # add tab_files as external files
+        if tabdata:
+            # make sure the number of tabfiles is equal to the number of lakes
+            if len(tab_files) < nlakes:
+                msg = 'a tabfile must be specified for each lake' + \
+                      '{} tabfiles specified '.format(len(tab_files)) + \
+                      'instead of {} tabfiles'.format(nlakes)
+            # make sure tab_files are not None
+            for idx, fname in enumerate(tab_files):
+                if fname is None:
+                    msg = 'a filename must be specified for the ' + \
+                          'tabfile for lake {}'.format(idx + 1)
+                    raise ValueError(msg)
+            # set unit for tab files if not passed to __init__
+            if tab_units is None:
+                tab_units = []
+                for idx in range(len(tab_files)):
+                    tab_units.append(model.next_ext_unit())
+            # add tabfiles as external files
+            for iu, fname in zip(tab_units, tab_files):
+                model.add_external(fname, iu)
 
         # Fill namefile items
         name = [ModflowLak.ftype()]
@@ -148,32 +184,9 @@ class ModflowLak(Package):
                 raise Exception(err)
         self.stage_range = stage_range
 
-        self.tabdata = False
-        iunit_tab = None
-        for option in self.options:
-            if 'TABLEINPUT' in option.upper():
-                if tab_files is None:
-                    err = "tab_files must be specified " + \
-                          "if 'TABLEIPUT' option specified"
-                    raise Exception(err)
-                elif isinstance(tab_files, np.ndarray):
-                    tab_files = tab_files.aslist()
-                elif isinstance(tab_files, str):
-                    tab_files = [tab_files]
-                if len(tab_files) != self.nlakes:
-                    err = "an external filename for tabular lake data" + \
-                          "must be specified for each " + \
-                          "lake ({}) ".format(self.nlakes) + \
-                          "only {} were provided".format(len(tab_files))
-                    raise Exception(err)
-                self.tabdata = True
-                iunit_tab = []
-                for tab_file in tab_files:
-                    nextunit = self.parent.next_ext_unit()
-                    iunit_tab.append(nextunit)
-                    self.parent.add_external(tab_file, nextunit)
-
-        self.iunit_tab = iunit_tab
+        # tabfile data
+        self.tabdata = tabdata
+        self.iunit_tab = tab_units
 
         if lakarr is None and bdlknc is None:
             err = 'lakarr and bdlknc must be specified'
@@ -227,11 +240,11 @@ class ModflowLak(Package):
                     for k in range(self.nlakes):
                         td = value[k]
                         if len(td) < nlen:
-                            err = 'flux_data entry for stress period'.format(key+1) + \
+                            err = 'flux_data entry for stress period'.format(
+                                key + 1) + \
                                   'has {} entries but '.format(nlen) + \
                                   'should have {} entries'.format(len(td))
                             raise Exception(err)
-
 
         self.flux_data = flux_data
         self.sill_data = sill_data
@@ -321,13 +334,13 @@ class ModflowLak(Package):
                     ds8 = self.sill_data[kper]
                     nslms = len(ds8)
 
-                f.write(write_fixed_var([nslms],
+                f.write(write_fixed_var([nslms], length=5,
                                         free=self.parent.free_format_input,
                                         comment='Data set 7'))
                 if nslms > 0:
                     for n in range(nslms):
                         d1, d2 = ds8[n]
-                        s = write_fixed_var(d1,
+                        s = write_fixed_var(d1, length=5,
                                             free=self.parent.free_format_input,
                                             comment='Data set 8a')
                         f.write(s)
@@ -352,10 +365,8 @@ class ModflowLak(Package):
                                         comment='Data set 9a')
                     f.write(s)
 
-
         # close the lak file
         f.close()
-
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
@@ -417,7 +428,7 @@ class ModflowLak(Package):
             options.append('TABLEINPUT')
             tabdata = True
             line = f.readline()
-        
+
         # read dataset 1b
         if model.verbose:
             print("   reading lak dataset 1b")
@@ -425,10 +436,7 @@ class ModflowLak(Package):
         nlakes = int(t[0])
         ipakcb = 0
         try:
-            ipakcb1 = int(t[1])
-            if ipakcb1 != 0:
-                ipakcb = 53
-                model.add_pop_key_list(ipakcb1)
+            ipakcb = int(t[1])
         except:
             pass
 
@@ -453,7 +461,6 @@ class ModflowLak(Package):
         if theta < 0.:
             surfdep = float(t[3])
 
-
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
@@ -462,9 +469,9 @@ class ModflowLak(Package):
         stages = []
         stage_range = []
         if tabdata:
-            tab_files = []
+            tab_units = []
         else:
-            tab_files = None
+            tab_units = None
         for lake in range(nlakes):
             line = f.readline().rstrip()
             if model.array_free_format:
@@ -474,17 +481,11 @@ class ModflowLak(Package):
             stages.append(t[0])
             ipos = 1
             if model.dis.steady[0]:
-                stage_range.append((float(t[ipos]), float(t[ipos+1])))
+                stage_range.append((float(t[ipos]), float(t[ipos + 1])))
                 ipos += 2
             if tabdata:
                 iu = int(t[ipos])
-                for key, value in ext_unit_dict.items():
-                    if key == iu:
-                        model.add_pop_key_list(iu)
-                        relpth = os.path.relpath(value.filename,
-                                                 model.model_ws)
-                        tab_files.append(relpth)
-                        break
+                tab_units.append(iu)
 
         lake_loc = {}
         lake_lknc = {}
@@ -493,7 +494,7 @@ class ModflowLak(Package):
         for iper in range(nper):
             if model.verbose:
                 print("   reading lak dataset 4 - " +
-                      "for stress period {}".format(iper+1))
+                      "for stress period {}".format(iper + 1))
             line = f.readline().rstrip()
             if model.array_free_format:
                 t = line.split()
@@ -504,13 +505,13 @@ class ModflowLak(Package):
             if itmp > 0:
                 if model.verbose:
                     print("   reading lak dataset 5 - " +
-                          "for stress period {}".format(iper+1))
+                          "for stress period {}".format(iper + 1))
                 name = 'LKARR_StressPeriod_{}'.format(iper)
                 lakarr = Util3d.load(f, model, (nlay, nrow, ncol), np.int,
                                      name, ext_unit_dict)
                 if model.verbose:
                     print("   reading lak dataset 6 - " +
-                          "for stress period {}".format(iper+1))
+                          "for stress period {}".format(iper + 1))
                 name = 'BDLKNC_StressPeriod_{}'.format(iper)
                 bdlknc = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
                                      name, ext_unit_dict)
@@ -518,10 +519,9 @@ class ModflowLak(Package):
                 lake_loc[iper] = lakarr
                 lake_lknc[iper] = bdlknc
 
-
                 if model.verbose:
                     print("   reading lak dataset 7 - " +
-                          "for stress period {}".format(iper+1))
+                          "for stress period {}".format(iper + 1))
                 line = f.readline().rstrip()
                 t = line.split()
                 nslms = int(t[0])
@@ -529,32 +529,32 @@ class ModflowLak(Package):
                 if nslms > 0:
                     if model.verbose:
                         print("   reading lak dataset 8 - " +
-                              "for stress period {}".format(iper+1))
+                              "for stress period {}".format(iper + 1))
                     for i in range(nslms):
                         line = f.readline().rstrip()
                         if model.array_free_format:
                             t = line.split()
                         else:
                             ic = int(line[0:5])
-                            t = read_fixed_var(line, ncol=ic+1, length=5)
+                            t = read_fixed_var(line, ncol=ic + 1, length=5)
                         ic = int(t[0])
                         ds8a = [ic]
-                        for j in range(1, ic+1):
+                        for j in range(1, ic + 1):
                             ds8a.append(int(t[j]))
                         line = f.readline().rstrip()
                         if model.array_free_format:
                             t = line.split()
                         else:
-                            t = read_fixed_var(line, ncol=ic-1)
+                            t = read_fixed_var(line, ncol=ic - 1)
                         silvt = []
-                        for j in range(ic-1):
+                        for j in range(ic - 1):
                             silvt.append(float(t[j]))
                         ds8.append((ds8a, silvt))
                     sill_data[iper] = ds8
             if itmp1 >= 0:
                 if model.verbose:
                     print("   reading lak dataset 9 - " +
-                          "for stress period {}".format(iper+1))
+                          "for stress period {}".format(iper + 1))
                 ds9 = {}
                 for n in range(nlakes):
                     line = f.readline().rstrip()
@@ -580,7 +580,6 @@ class ModflowLak(Package):
                     ds9[n] = tds
                 flux_data[iper] = ds9
 
-
         # convert lake data to Transient3d objects
         lake_loc = Transient3d(model, (nlay, nrow, ncol), np.int,
                                lake_loc, name='lakarr_')
@@ -588,34 +587,40 @@ class ModflowLak(Package):
                                 lake_lknc, name='bdlknc_')
 
         # determine specified unit number
+        n = 2
+        if tab_units is not None:
+            n += nlakes
         unitnumber = None
-        filenames = [None, None]
+        filenames = [None for x in range(n)]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowLak.ftype():
-                    unitnumber = key
-                    filenames[0] = os.path.basename(value.filename)
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowLak.ftype())
+            if ipakcb > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+                model.add_pop_key_list(ipakcb)
 
-                if ipakcb > 0:
-                    if key == ipakcb:
-                        filenames[1] = os.path.basename(value.filename)
-                        model.add_pop_key_list(key)
-
+            ipos = 2
+            if tab_units is not None:
+                for i in range(len(tab_units)):
+                    iu, filenames[ipos] = \
+                        model.get_ext_dict_attr(ext_unit_dict,
+                                                unit=tab_units[i])
+                    ipos += 1
 
         lakpak = ModflowLak(model, options=options, nlakes=nlakes,
                             ipakcb=ipakcb, theta=theta, nssitr=nssitr,
                             surfdep=surfdep, sscncr=sscncr, stages=stages,
-                            stage_range=stage_range, tab_files=tab_files,
+                            stage_range=stage_range, tab_units=tab_units,
                             lakarr=lake_loc, bdlknc=lake_lknc,
                             sill_data=sill_data, flux_data=flux_data,
                             unitnumber=unitnumber, filenames=filenames)
         return lakpak
 
-
     @staticmethod
     def ftype():
         return 'LAK'
-
 
     @staticmethod
     def defaultunit():
