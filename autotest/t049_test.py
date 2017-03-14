@@ -69,8 +69,6 @@ def test_modpath():
         assert success, 'forward modpath model run ' + \
                         'did not terminate successfully'
 
-    mp.run_model()
-
     mpnam = 'freybergmpp'
     mpp = flopy.modpath.Modpath(mpnam, exe_name=mpth_exe,
                                 modflowmodel=m, model_ws=lpth)
