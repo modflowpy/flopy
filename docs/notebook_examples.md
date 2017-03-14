@@ -55,6 +55,8 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of SWR1 Process Output Processing and Plotting is given in the [flopy3_LoadSWRBinaryData](../examples/Notebooks/flopy3_LoadSWRBinaryData.ipynb) Notebook.
 
++ An overview of working with shapefiles and MODFLOW-based data is given in the [flopy3_shapefile_features](../examples/Notebooks/flopy3_shapefile_features.ipynb) Notebook.
+
 #### Export examples
 
 + An overview of the FloPy [netCDF and shapefile export capabilities](../examples/Notebooks/flopy3_export.ipynb).
