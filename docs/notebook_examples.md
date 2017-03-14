@@ -35,9 +35,13 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + [Example 4](../examples/Notebooks/flopy3_swi2package_ex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
 
-#### Model checking examples
+#### Model analysis and error checking examples
 
-+ An overview of the FloPy  [model input data `check()` method capabilities](../examples/Notebooks/flopy3_ModelCheckerExample.ipynb)
++ An overview of the FloPy [model input data `check()` method capabilities](../examples/Notebooks/flopy3_ModelCheckerExample.ipynb)
+
++ An overview of the FloPy [zone budget `ZoneBudget()` method capabilities](../examples/Notebooks/flopy3_ZoneBudget_example) Notebook. The `ZoneBudget()` method is a python implementation of USGS ZONEBUDGET executable for MODFLOW (Harbaugh, 1990).
+
++ An overview of the Flopy [`get_transmissivities()` method for computing open interval transmissivities (for weighted averages of heads or fluxes)](../examples/Notebooks/flopy3_get_transmissivities_example.ipynb) Notebook.
 
 #### Plotting examples
 
