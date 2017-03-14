@@ -29,6 +29,8 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of the options for creating a Source/Sink Mixing (SSM) Package for MT3DMS and SEAWAT is given in the [flopy3ssm](../examples/Notebooks/flopy3_multi-component_SSM.ipynb) Notebook.
 
++ The ['Crank-Nicolson' example distributed with MT3D-USGS](../examples/Notebooks/flopy3_MT3D-USGS_example.ipynb), a simple MT3D-USGS model that uses the SFT Package.
+
 + The [Henry Problem](../examples/Notebooks/flopy3_SEAWAT_henry_problem.ipynb), a simple saltwater intrusion model developed with Flopy and run using SEAWAT.
 
 #### SWI2 examples
