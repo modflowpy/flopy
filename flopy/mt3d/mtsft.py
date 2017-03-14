@@ -249,11 +249,11 @@ class Mt3dSft(Package):
         # Set 1D array values
         self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
                              name='coldsf', locat=self.unit_number[0],
-                             array_free_format=True)
+                             array_free_format=model.free_format)
 
         self.dispsf = Util2d(model, (nsfinit,), np.float32, dispsf,
                              name='dispsf', locat=self.unit_number[0],
-                             array_free_format=True)
+                             array_free_format=model.free_format)
 
         # Set streamflow observation locations
         self.nobssf = nobssf

@@ -570,8 +570,16 @@ class BaseModel(object):
         """
         if fname in self.external_fnames:
             print("BaseModel.add_external() warning: " +
-                  "replacing existing filename {0}".format(fname))
+                  "replacing existing filename {}".format(fname))
             idx = self.external_fnames.index(fname)
+            self.external_fnames.pop(idx)
+            self.external_units.pop(idx)
+            self.external_binflag.pop(idx)
+            self.external_output.pop(idx)
+        if unit in self.external_units:
+            print("BaseModel.add_external() warning: " +
+                  "replacing existing unit {}".format(unit))
+            idx = self.external_units.index(unit)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
             self.external_binflag.pop(idx)

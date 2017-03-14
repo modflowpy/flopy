@@ -537,7 +537,7 @@ class ModflowFhb(Package):
                 sys.stdout.write('loading fhb dataset 5b\n')
             dtype = ModflowFhb.get_default_dtype(nbdtim=nbdtim, head=False,
                                                  structured=model.structured)
-            ds5 = ModflowFhb.get_empty(ncells=nhed, nbdtim=nbdtim, head=False,
+            ds5 = ModflowFhb.get_empty(ncells=nflw, nbdtim=nbdtim, head=False,
                                        structured=model.structured)
             for n in range(nflw):
                 line = f.readline()

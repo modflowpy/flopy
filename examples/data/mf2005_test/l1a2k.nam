@@ -7,7 +7,7 @@ SIP  13 l1a2k.sip
 OC   17 l1a2k.oc
 LAK  16 l1a2k.lak
 DIS  14 l1a2k.dis
-#FHB  21 l1a2k.fhb
-CHD  21 l1a2k.chd
+FHB  21 l1a2k.fhb
+#CHD  21 l1a2k.chd
 GAGE 33 l1a2k.gag
 DATA 37 l1a2k.got

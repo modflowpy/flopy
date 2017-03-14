@@ -395,7 +395,7 @@ class ModflowRch(Package):
             if ipakcb > 0:
                 iu, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
-            model.add_pop_key_list(ipakcb)
+                model.add_pop_key_list(ipakcb)
 
         # create recharge package instance
         rch = ModflowRch(model, nrchop=nrchop, ipakcb=ipakcb,
