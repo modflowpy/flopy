@@ -172,6 +172,9 @@ class Mt3dms(BaseModel):
         that are created with write_model. (the default is 'mt3dtest')
     namefile_ext : string, optional
         Extension for the namefile (the default is 'nam')
+    modflowmodel : flopy.modflow.mf.Modflow
+        This is a flopy Modflow model object upon which this Mt3dms model
+        is based. (the default is None)
     version : string, optional
         Version of MT3DMS to use (the default is 'mt3dms').
     exe_name : string, optional
@@ -214,7 +217,8 @@ class Mt3dms(BaseModel):
     def __init__(self, modelname='mt3dtest', namefile_ext='nam',
                  modflowmodel=None, ftlfilename=None, ftlfree=False,
                  version='mt3dms', exe_name='mt3dms.exe',
-                 structured=True, listunit=2, model_ws='.', external_path=None,
+                 structured=True, listunit=None, ftlunit=None,
+                 model_ws='.', external_path=None,
                  verbose=False, load=True, silent=0):
 
         # Call constructor for parent object
@@ -224,12 +228,19 @@ class Mt3dms(BaseModel):
         # Set attributes
         self.version_types = {'mt3dms': 'MT3DMS', 'mt3d-usgs': 'MT3D-USGS'}
 
-        self.set_version(version)
+        self.set_version(version.lower())
+
+        if listunit is None:
+            listunit = 16
+
+        if ftlunit is None:
+            ftlunit = 10
 
         self.lst = Mt3dList(self, listunit=listunit)
         self.mf = modflowmodel
         self.ftlfilename = ftlfilename
         self.ftlfree = ftlfree
+        self.ftlunit = ftlunit
 
         # Check whether specified ftlfile exists in model directory; if not,
         # warn user
@@ -253,7 +264,7 @@ class Mt3dms(BaseModel):
                 # If code lands here, then ftlfilename exists, open and read
                 # first 4 characters
                 f = open(os.path.join(self.model_ws, ftlfilename), 'rb')
-                c = f.read(4) #.decode()
+                c = f.read(4)
                 if isinstance(c, bytes):
                     c = c.decode()
 
@@ -385,7 +396,7 @@ class Mt3dms(BaseModel):
             ftlfmt = ''
             if self.ftlfree:
                 ftlfmt = 'FREE'
-            f_nam.write('{:14s} {:5d}  {} {}\n'.format('FTL', 39,
+            f_nam.write('{:14s} {:5d}  {} {}\n'.format('FTL', self.ftlunit,
                                                        self.ftlfilename,
                                                        ftlfmt))
         # write file entries in name file
@@ -414,7 +425,7 @@ class Mt3dms(BaseModel):
 
     @staticmethod
     def load(f, version='mt3dms', exe_name='mt3dms.exe', verbose=False,
-             model_ws='.', load_only=None, forgive=False):
+             model_ws='.', load_only=None, forgive=False, modflowmodel=None):
         """
         Load an existing model.
 
@@ -442,6 +453,10 @@ class Mt3dms(BaseModel):
         load_only : list of strings
             Filetype(s) to load (e.g. ['btn', 'adv'])
             (default is None, which means that all will be loaded)
+
+        modflowmodel : flopy.modflow.mf.Modflow
+            This is a flopy Modflow model object upon which this Mt3dms
+            model is based. (the default is None)
 
         Returns
         -------
@@ -477,7 +492,8 @@ class Mt3dms(BaseModel):
                              format(modelname, 50 * '-'))
         mt = Mt3dms(modelname=modelname, namefile_ext=modelname_extension,
                     version=version, exe_name=exe_name,
-                    verbose=verbose, model_ws=model_ws)
+                    verbose=verbose, model_ws=model_ws,
+                    modflowmodel=modflowmodel)
 
         files_succesfully_loaded = []
         files_not_loaded = []
@@ -500,6 +516,30 @@ class Mt3dms(BaseModel):
         if mt.verbose:
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.
                   format(50 * '-', ext_unit_dict, 50 * '-'))
+
+        # reset unit number for list file
+        unitnumber = None
+        for key, value in ext_unit_dict.items():
+            if value.filetype == 'LIST':
+                unitnumber = key
+                filepth = os.path.basename(value.filename)
+        if unitnumber == 'LIST':
+            unitnumber = 16
+        if unitnumber is not None:
+            mt.lst.unit_number = [unitnumber]
+            mt.lst.file_name = [filepth]
+
+        # set ftl information
+        unitnumber = None
+        for key, value in ext_unit_dict.items():
+            if value.filetype == 'FTL':
+                unitnumber = key
+                filepth = os.path.basename(value.filename)
+        if unitnumber == 'FTL':
+            unitnumber = 10
+        if unitnumber is not None:
+            mt.ftlunit = unitnumber
+            mt.ftlfilename = filepth
 
         # load btn
         btn = None
@@ -589,6 +629,7 @@ class Mt3dms(BaseModel):
                     mt.external_units.append(key)
                     mt.external_binflag.append("binary"
                                                in item.filetype.lower())
+                    mt.external_output.append(False)
 
         # pop binary output keys and any external file units that are now
         # internal

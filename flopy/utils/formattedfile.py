@@ -285,9 +285,9 @@ class FormattedHeadFile(FormattedLayerFile):
     Parameters
     ----------
     filename : string
-        Name of the concentration file
+        Name of the formatted head file
     text : string
-        Name of the text string in the ucn file.  Default is 'head'
+        Name of the text string in the formatted head file.  Default is 'head'
     precision : string
         'single' or 'double'.  Default is 'single'.
     verbose : bool

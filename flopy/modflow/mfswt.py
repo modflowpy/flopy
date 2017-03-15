@@ -176,6 +176,21 @@ class ModflowSwt(Package):
         elevation printing and saving. If ids17 is None and iswtoc>0 then all available
         subsidence output will be printed and saved to the binary subsidence output file
         (unit=1054). (default is None).
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output name and other swt output
+        files will be created using the model name and .cbc and swt output
+        extensions (for example, modflowtest.cbc), if ipakcbc and other
+        swt output files (dataset 16) are numbers greater than zero.
+        If a single string is passed the package name will be set to the
+        string and other swt output files will be set to the model name with
+        the appropriate output file extensions. To define the names for all
+        package files (input and output) the length of the list of strings
+        should be 15.
+        Default is None.
 
     Attributes
     ----------

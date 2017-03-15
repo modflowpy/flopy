@@ -23,7 +23,7 @@ if v is None:
     run = False
 
 
-def test_obs_load_and_write():
+def test_gage_load_and_write():
     """
     test043 load and write of MODFLOW-2005 GAGE example problem
     """
@@ -79,4 +79,4 @@ def test_obs_load_and_write():
 
 
 if __name__ == '__main__':
-    test_obs_load_and_write()
+    test_gage_load_and_write()

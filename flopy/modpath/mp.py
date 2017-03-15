@@ -56,14 +56,41 @@ class Modpath(BaseModel):
         self.mpbas_file = '{}.mpbas'.format(modelname)
         if self.__mf is not None:
             # ensure that user-specified files are used
-            head_file = self.__mf.oc.file_name[1] if head_file is None else head_file
-            budget_file = self.__mf.oc.file_name[3] if budget_file is None else budget_file
-            dis_file = self.__mf.dis.file_name[0] if dis_file is None else dis_file
+            iu = self.__mf.oc.iuhead
+            head_file = self.__mf.get_output(unit=iu)
+            p = self.__mf.get_package('LPF')
+            if p is None:
+                p = self.__mf.get_package('BCF6')
+            if p is None:
+                p = self.__mf.get_package('UPW')
+            if p is None:
+                msg = 'LPF, BCF6, or UPW packages must be included in the ' + \
+                      'passed MODFLOW model'
+                raise Exception(msg)
+            iu = p.ipakcb
+            budget_file = self.__mf.get_output(unit=iu)
+            dis_file = self.__mf.dis.file_name[0] \
+                if dis_file is None else dis_file
             dis_unit = self.__mf.dis.unit_number[0]
         self.head_file = head_file
         self.budget_file = budget_file
         self.dis_file = dis_file
         self.dis_unit = dis_unit
+        # make sure the valid files are available
+        if self.head_file is None:
+            msg = 'the head file in the MODFLOW model or passed ' + \
+                  'to __init__ cannot be None'
+            raise ValueError(msg)
+        if self.budget_file is None:
+            msg = 'the budget file in the MODFLOW model or passed ' + \
+                  'to __init__ cannot be None'
+            raise ValueError(msg)
+        if self.dis_file is None:
+            msg = 'the dis file in the MODFLOW model or passed ' + \
+                  'to __init__ cannot be None'
+            raise ValueError(msg)
+
+        # set the rest of the attributes
         self.__sim = None
         self.array_free_format = False
         self.array_format = 'modflow'
@@ -130,7 +157,7 @@ class Modpath(BaseModel):
                      packages='WEL', start_time=0, default_ifaces=None,
                      ParticleColumnCount=4, ParticleRowCount=4,
                      MinRow=0, MinColumn=0, MaxRow=None, MaxColumn=None,
-    ):
+                     ):
         """
         Create a MODPATH simulation file using available MODFLOW boundary
         package data.
@@ -178,7 +205,7 @@ class Modpath(BaseModel):
         ref_time = 0
         ref_time_per_stp = (0, 0, 1.)
         if isinstance(start_time, tuple):
-            ReferenceTimeOption = 2 # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
+            ReferenceTimeOption = 2  # 1: specify value for ref. time, 2: specify kper, kstp, rel. time pos
             ref_time_per_stp = start_time
         else:
             ref_time = start_time
@@ -212,7 +239,8 @@ class Modpath(BaseModel):
         for package in packages:
             if package.upper() == 'WEL':
                 if 'WEL' not in pak_list:
-                    raise Exception('Error: no well package in the passed model')
+                    raise Exception(
+                        'Error: no well package in the passed model')
                 for kper in range(nper):
                     mflist = self.__mf.wel.stress_period_data[kper]
                     idx = [mflist['k'], mflist['i'], mflist['j']]
@@ -232,7 +260,8 @@ class Modpath(BaseModel):
                                                     CHeadOption])
                             group_region.append([k, i, j, k, i, j])
                             if default_ifaces is None:
-                                ifaces.append(side_faces + [top_face, botm_face])
+                                ifaces.append(
+                                    side_faces + [top_face, botm_face])
                                 face_ct.append(6)
                             else:
                                 ifaces.append(default_ifaces)
@@ -241,7 +270,8 @@ class Modpath(BaseModel):
             # this is kind of a band aid pending refactoring of mpsim class
             elif 'MNW' in package.upper():
                 if 'MNW2' not in pak_list:
-                    raise Exception('Error: no MNW2 package in the passed model')
+                    raise Exception(
+                        'Error: no MNW2 package in the passed model')
                 node_data = self.__mf.mnw2.get_allnode_data()
                 node_data.sort(order=['wellid', 'k'])
                 wellids = np.unique(node_data.wellid)
@@ -257,10 +287,10 @@ class Modpath(BaseModel):
                         face_ct.append(len(default_ifaces))
                     group_name.append('{}{}'.format(wellid, node_number))
                     group_placement.append([Grid, GridCellRegionOption,
-                                        PlacementOption,
-                                        ReleaseStartTime,
-                                        ReleaseOption,
-                                        CHeadOption])
+                                            PlacementOption,
+                                            ReleaseStartTime,
+                                            ReleaseOption,
+                                            CHeadOption])
 
                 for wellid in wellids:
                     nd = node_data[node_data.wellid == wellid]
@@ -273,14 +303,14 @@ class Modpath(BaseModel):
                                     wellid, 0, k, i, j)
                         for n in range(len(nd))[1:]:
                             k, i, j = nd.k[n], nd.i[n], nd.j[n]
-                            if n == len(nd) -1:
+                            if n == len(nd) - 1:
                                 append_node(side_faces + [botm_face],
                                             wellid, n, k, i, j)
                             else:
                                 append_node(side_faces,
                                             wellid, n, k, i, j)
             elif package.upper() == 'RCH':
-                #for j in range(nrow):
+                # for j in range(nrow):
                 #    for i in range(ncol):
                 #        group_name.append('rch')
                 group_name.append('rch')
@@ -288,7 +318,7 @@ class Modpath(BaseModel):
                                         PlacementOption,
                                         ReleaseStartTime,
                                         ReleaseOption, CHeadOption])
-                group_region.append([0, 0, 0, 0, nrow-1, ncol-1])
+                group_region.append([0, 0, 0, 0, nrow - 1, ncol - 1])
                 if default_ifaces is None:
                     face_ct.append(1)
                     ifaces.append([[6, 1, 1]])

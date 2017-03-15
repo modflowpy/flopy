@@ -72,7 +72,17 @@ class ModflowHyd(Package):
     extension : list string
         Filename extension (default is ['hyd', 'hyd.bin'])
     unitnumber : int
-        File unit number (default is 36).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the hydmod output name will be created using
+        the model name and .hyd.bin extension (for example,
+        modflowtest.hyd.bin). If a single string is passed the package will be
+        set to the string and hydmod output name will be created using the
+        model name and .hyd.bin extension. To define the names for all package
+        files (input and output) the length of the list of strings should be 2.
+        Default is None.
 
     Attributes
     ----------
@@ -95,9 +105,10 @@ class ModflowHyd(Package):
 
     """
 
-    def __init__(self, model, nhyd=1, ihydun=1, hydnoh=-999.,
+    def __init__(self, model, nhyd=1, ihydun=None, hydnoh=-999.,
                  obsdata=[['BAS', 'HD', 'I', 1, 0., 0., 'HOBS1']],
-                 extension=['hyd', 'hyd.bin'], unitnumber=None):
+                 extension=['hyd', 'hyd.bin'], unitnumber=None,
+                 filenames=None):
         """
         Package constructor.
 
@@ -107,18 +118,35 @@ class ModflowHyd(Package):
         if unitnumber is None:
             unitnumber = ModflowHyd.defaultunit()
 
-        if ihydun > 0:
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
+        # set ihydun to a default unit number if it isn't specified
+        if ihydun is None:
             ihydun = 536
-        else:
-            ihydun = 536
-        name = [ModflowHyd.ftype(), 'DATA(BINARY)']
-        units = [unitnumber, ihydun]
-        extra = ['', 'REPLACE']
+
+        # update external file information with hydmod output
+        fname = filenames[1]
+        model.add_output_file(ihydun, fname=fname, extension='hyd.bin',
+                              package=ModflowHyd.ftype())
+
+        # Fill namefile items
+        name = [ModflowHyd.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units,
-                         extra=extra)
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -297,16 +325,22 @@ class ModflowHyd(Package):
         # close the file
         f.close()
 
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowHyd.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowHyd.ftype())
+            if ihydun > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ihydun)
+                model.add_pop_key_list(ihydun)
 
         # create hyd instance
         hyd = ModflowHyd(model, nhyd=nhyd, ihydun=ihydun, hydnoh=hydnoh,
-                         obsdata=obs, unitnumber=unitnumber)
+                         obsdata=obs, unitnumber=unitnumber,
+                         filenames=filenames)
 
         # return hyd instance
         return hyd

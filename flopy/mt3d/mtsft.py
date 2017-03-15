@@ -4,7 +4,9 @@ import sys
 import numpy as np
 
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d, MfList
+from ..utils import Util2d, MfList
+
+
 class Mt3dSft(Package):
     """
     MT3D-USGS StreamFlow Transport package class
@@ -129,6 +131,22 @@ class Mt3dSft(Package):
     cbcsf : float
         Is the specified concentration associated with the current boundary
         condition entry.  Repeat CBCSF for each simulated species (NCOMP).
+    extension : string
+        Filename extension (default is 'sft')
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the sfr output name will be created using
+        the model name and lake concentration observation extension
+        (for example, modflowtest.cbc and modflowtest.sftcobs.out), if ioutobs
+        is a number greater than zero. If a single string is passed the
+        package will be set to the string and lake concentration observation
+        output name will be created using the model name and .sftcobs.out
+        extension, if ioutobs is a number greater than zero. To define the
+        names for all package files (input and output) the length of the list
+        of strings should be 2. Default is None.
 
     Attributes
     ----------
@@ -161,18 +179,18 @@ class Mt3dSft(Package):
 
     """
 
-    unitnumber = 46
     def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=None,
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
-                 nobssf=0, obs_sf=None, sf_stress_period_data = None,
+                 nobssf=0, obs_sf=None, sf_stress_period_data=None,
                  unitnumber=None, filenames=None, dtype=None,
-                 extension='sft',**kwargs):
+                 extension='sft', **kwargs):
 
-        #unit number
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = Mt3dSft.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dSft.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -187,9 +205,10 @@ class Mt3dSft(Package):
                     filenames.append(None)
 
         if ioutobs is not None:
+            ext = 'sftcobs.out'
             fname = filenames[1]
-            model.add_output_file(abs(ioutobs), fname=fname,
-                                  package=Mt3dSft.ftype())
+            model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
+                                  binflag=False, package=Mt3dSft.ftype())
         else:
             ioutobs = 0
 
@@ -201,8 +220,9 @@ class Mt3dSft(Package):
         # set package name
         fname = [filenames[0]]
 
-        #  Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, 'SFT', unitnumber)
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # Set dimensions
         nrow = model.nrow
@@ -217,20 +237,6 @@ class Mt3dSft(Package):
         self.icbcsf = icbcsf
         self.ioutobs = ioutobs
 
-
-        # add sft observation output file
-        if ioutobs is not None:
-            if abs(ioutobs) > 0:
-                ext = 'sftobs'
-                #if ioutobs < 0:  # no support for this yet in MT3D-USGS
-                #    binflag = True
-                #    ext = 'bin'
-                fname = filenames[2]
-                model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
-                                      binflag=False, package=Mt3dSft.ftype())
-        else:
-            ioutobs = 0
-
         self.ietsfr = ietsfr
         self.isfsolv = isfsolv
         self.wimp = wimp
@@ -241,21 +247,13 @@ class Mt3dSft(Package):
         self.iprtxmd = iprtxmd
 
         # Set 1D array values
-        if isinstance(coldsf, (list, np.ndarray)):
-            locat = 19
-        else:
-            locat = self.unit_number[0]
-
         self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
-                             name='coldsf', locat=locat)
-
-        if isinstance(dispsf, (list, np.ndarray)):
-            locat = 19
-        else:
-            locat = self.unit_number[0]
+                             name='coldsf', locat=self.unit_number[0],
+                             array_free_format=model.free_format)
 
         self.dispsf = Util2d(model, (nsfinit,), np.float32, dispsf,
-                             name='dispsf', locat=locat)
+                             name='dispsf', locat=self.unit_number[0],
+                             array_free_format=model.free_format)
 
         # Set streamflow observation locations
         self.nobssf = nobssf
@@ -282,11 +280,11 @@ class Mt3dSft(Package):
         Construct a dtype for the recarray containing the list of surface
         water boundary conditions.
         """
-        type_list = [("isegbc", np.int), ("irchbc", np.int), \
-                     ("isfbctyp", np.float32)]
+        type_list = [("node", np.int), ("isfbctyp", np.int), \
+                     ("cbcsf0", np.float32)]
         if ncomp > 1:
-            for comp in range(1,ncomp+1):
-                comp_name = "cbcsf{0:d}".format(comp)
+            for icomp in range(1, ncomp + 1):
+                comp_name = "cbcsf{0:d}".format(icomp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
         return dtype
@@ -313,51 +311,55 @@ class Mt3dSft(Package):
         """
 
         # Open file for writing
-        f_sft = open(self.fn_path, 'w')
+        f = open(self.fn_path, 'w')
 
         # Item 1
-        f_sft.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}'.format(self.nsfinit,
-                    self.mxsfbc, self.icbcsf, self.ioutobs, self.ietsfr) +
-                    '                              # nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
+        f.write('{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}'.format(self.nsfinit,
+                                                             self.mxsfbc,
+                                                             self.icbcsf,
+                                                             self.ioutobs,
+                                                             self.ietsfr) +
+                30 * ' ' + '# nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr\n')
 
         # Item 2
-        f_sft.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.7f}{4:10d}{5:10.5f}{6:10d}'
-                    .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
-                            self.mxitersf, self.crntsf, self.iprtxmd) +
-                    ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' \
-                    'iprtxmd\n')
+        f.write('{0:10d}{1:10.5f}{2:10.5f}{3:10.7f}{4:10d}{5:10.5f}{6:10d}'
+                .format(self.isfsolv, self.wimp, self.wups, self.cclosesf,
+                        self.mxitersf, self.crntsf, self.iprtxmd) +
+                ' # isfsolv, wimp, wups, cclosesf, mxitersf, crntsf, ' + \
+                'iprtxmd\n')
 
         # Item 3
-        f_sft.write(self.coldsf.get_file_entry())
+        f.write(self.coldsf.get_file_entry())
 
         # Item 4
-        f_sft.write(self.dispsf.get_file_entry())
+        f.write(self.dispsf.get_file_entry())
 
         # Item 5
-        f_sft.write('{0:10d}                 # nobssf\n'.format(self.nobssf))
+        f.write('{0:10d}                 # nobssf\n'.format(self.nobssf))
 
         # Item 6
         if self.nobssf != 0:
-            for iobs in range(self.nobssf):
-                f_sft.write('{0:10d}                          # location of obs as given by position in list of irch\n'
-                            .format(self.obs_sf[iobs]))
+            for iobs in self.obs_sf:
+                line = '{0:10d}'.format(iobs) + 26 * ' ' + \
+                       '# location of obs as given by position in irch list\n'
+                f.write(line)
 
         # Items 7, 8
         # Loop through each stress period and assign source & sink concentrations to stream features
         nper = self.parent.nper
         for kper in range(nper):
-            if f_sft.closed == True:
-                f_sft = open(f_sft.name, 'a')
+            if f.closed == True:
+                f = open(f.name, 'a')
 
             # List of concentrations associated with various boundaries
             # interacting with the stream network.
             if self.sf_stress_period_data is not None:
-                self.sf_stress_period_data.write_transient(f_sft,
+                self.sf_stress_period_data.write_transient(f,
                                                            single_per=kper)
             else:
-                f_sft.write('{0:10d}       # ntmp - SP {1:5d}'.format(0, kper))
+                f.write('{0:10d}       # ntmp - SP {1:5d}'.format(0, kper))
 
-        f_sft.close()
+        f.close()
         return
 
     @staticmethod
@@ -541,7 +543,7 @@ class Mt3dSft(Package):
                       'read DISPSF')
 
         dispsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'dispsf',
-                                 ext_unit_dict, array_format=model.array_format)
+                             ext_unit_dict, array_format=model.array_format)
 
         # Item 5 NOBSSF
         if model.verbose:
@@ -556,16 +558,19 @@ class Mt3dSft(Package):
         obs_sf = []
         if nobssf > 0:
             if model.verbose:
-                print('   loading {} observation locations given by ISOBS, '\
-                          'IROBS...'.format(nobssf))
+                print('   loading {} observation locations given by ISOBS, ' \
+                      'IROBS...'.format(nobssf))
             for i in range(nobssf):
                 line = f.readline()
                 m_arr = line.strip().split()
-                obs_sf.append([int(m_arr[0])])
+                obs_sf.append(int(m_arr[0]))
             obs_sf = np.array(obs_sf)
             if model.verbose:
                 print('   Surface water concentration observation locations:')
-                print('   {}',format(obs_sf))
+                text = ''
+                for o in obs_sf:
+                    text += '{} '.format(o)
+                print('   {}\n'.format(text))
         else:
             if model.verbose:
                 print('   No observation points specified.')
@@ -576,7 +581,8 @@ class Mt3dSft(Package):
 
             # Item 7 NTMP (Transient data)
             if model.verbose:
-                print('   loading NTMP...')
+                print('   loading NTMP...stress period {} of {}'.format(iper+1,
+                                                                        nper))
             line = f.readline()
             m_arr = line.strip().split()
             ntmp = int(m_arr[0])
@@ -584,10 +590,12 @@ class Mt3dSft(Package):
             # Item 8 ISEGBC, IRCHBC, ISFBCTYP, CBCSF
             if model.verbose:
                 print('   loading {} instances of ISEGBC, IRCHBC, ' \
-                        'ISFBCTYP, CBCSF...'.format(ntmp))
+                      'ISFBCTYP, CBCSF...stress period {} of {}'.format(ntmp,
+                                                                        iper + 1,
+                                                                        nper))
             current_sf = 0
             if ntmp > 0:
-                current_sf = np.empty((ntmp), dtype=dtype)
+                current_sf = np.empty(ntmp, dtype=dtype)
                 for ibnd in range(ntmp):
                     line = f.readline()
                     m_arr = line.strip().split()
@@ -598,10 +606,10 @@ class Mt3dSft(Package):
                     if cbcsf > 0:
                         for ivar in range(cbcsf):
                             t.append(m_arr[ivar + 3])
-                    current_sf[ibnd] = tuple(map(float, t[:len(current_sf.dtype.names)]))
-                # Convert ISEG IRCH indices to zero-based
-                current_sf['isegbc'] -= 1
-                current_sf['irchbc'] -= 1
+                    current_sf[ibnd] = tuple(
+                        map(float, t[:len(current_sf.dtype.names)]))
+                # Convert node IRCH indices to zero-based
+                current_sf['node'] -= 1
                 current_sf = current_sf.view(np.recarray)
                 sf_stress_period_data[iper] = current_sf
             else:
@@ -609,8 +617,9 @@ class Mt3dSft(Package):
                     print('   No transient boundary conditions specified')
                 pass
 
+        # 1 item for SFT input file, 1 item for SFTOBS file
         unitnumber = None
-        filenames = [None, None] #1 item for SFT input file, 1 item for SFTOBS file
+        filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,
@@ -618,7 +627,7 @@ class Mt3dSft(Package):
             if abs(ioutobs) > 0:
                 iu, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=abs(ioutobs))
-                model.add_pop_key_list(ioutobs)
+                model.add_pop_key_list(abs(ioutobs))
 
         # Construct and return SFT package
         sft = Mt3dSft(model, nsfinit=nsfinit, mxsfbc=mxsfbc, icbcsf=icbcsf,
@@ -627,15 +636,17 @@ class Mt3dSft(Package):
                       crntsf=crntsf, iprtxmd=iprtxmd, coldsf=coldsf,
                       dispsf=dispsf, nobssf=nobssf, obs_sf=obs_sf,
                       sf_stress_period_data=sf_stress_period_data,
-                      unitnumber = unitnumber, filenames=filenames)
+                      unitnumber=unitnumber, filenames=filenames)
         return sft
-
 
     @staticmethod
     def ftype():
         return 'SFT'
 
-
     @staticmethod
     def defaultunit():
+        return 19
+
+    @staticmethod
+    def reservedunit():
         return 19

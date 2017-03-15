@@ -28,7 +28,12 @@ class ModflowMnwi(Package):
     extension : string
         Filename extension (default is 'mnwi')
     unitnumber : int
-        File unit number (default is 58).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the output names will be created using
+        the model name and output extensions. Default is None.
 
     Attributes
     ----------

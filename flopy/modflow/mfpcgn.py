@@ -141,7 +141,16 @@ class ModflowPcgn(Package):
     extension : list string
         Filename extension (default is 'pcgn')
     unitnumber : int
-        File unit number (default is 27).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the pcgn output names will be created using
+        the model name and .pcgni, .pcgnt, and .pcgno extensions. If a single
+        string is passed the package will be set to the string and pcgn output
+        names will be created using the model name and pcgn output extensions.
+        To define the names for all package files (input and output) the length
+        of the list of strings should be 4. Default is None.
 
     Attributes
     ----------

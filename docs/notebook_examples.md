@@ -19,6 +19,8 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of FloPy3 capabilities to create a MNW2 file and evaluate data contained in the file is given in the [flopy3_mnw2package_example](../examples/Notebooks/flopy3_mnw2package_example.ipynb) Notebook.
 
++ An overview of FloPy3 capabilities to create MODPATH models and plot MODPATH results is given in the [flopy3_Modpath_example](../examples/Notebooks/flopy3_Modpath_example.ipynb) Notebook.
+
 + The [lake example](../examples/Notebooks/flopy3_lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
 
 + A variant of the [water-table example](../examples/Notebooks/flopy3_WatertableRecharge_example.ipynb), a very simple example of one-dimensional groundwater flow in an unconfined aquifer with recharge, from the MODFLOW-NWT documentation (http://pubs.usgs.gov/tm/tm6a37/). This IPython Notebook build files for MODFLOW-NWT.
@@ -26,6 +28,8 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 + The [Zaidel discontinuous water-table example](../examples/Notebooks/flopy3_Zaidel_example.ipynb), which simulates a discontinuous water table over a stairway impervious base, from http://onlinelibrary.wiley.com/doi/10.1111/gwat.12019/abstract. This IPython Notebook build files for MODFLOW-USG. (http://pubs.usgs.gov/tm/06/a45/). 
 
 + An overview of the options for creating a Source/Sink Mixing (SSM) Package for MT3DMS and SEAWAT is given in the [flopy3ssm](../examples/Notebooks/flopy3_multi-component_SSM.ipynb) Notebook.
+
++ The ['Crank-Nicolson' example distributed with MT3D-USGS](../examples/Notebooks/flopy3_MT3D-USGS_example.ipynb), a simple MT3D-USGS model that uses the SFT Package.
 
 + The [Henry Problem](../examples/Notebooks/flopy3_SEAWAT_henry_problem.ipynb), a simple saltwater intrusion model developed with Flopy and run using SEAWAT.
 
@@ -35,9 +39,13 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + [Example 4](../examples/Notebooks/flopy3_swi2package_ex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
 
-#### Model checking examples
+#### Model analysis and error checking examples
 
-+ An overview of the FloPy  [model input data `check()` method capabilities](../examples/Notebooks/flopy3_ModelCheckerExample.ipynb)
++ An overview of the FloPy [model input data `check()` method capabilities](../examples/Notebooks/flopy3_ModelCheckerExample.ipynb)
+
++ An overview of the FloPy [zone budget `ZoneBudget()` method capabilities](../examples/Notebooks/flopy3_ZoneBudget_example) Notebook. The `ZoneBudget()` method is a python implementation of USGS ZONEBUDGET executable for MODFLOW (Harbaugh, 1990).
+
++ An overview of the Flopy [`get_transmissivities()` method for computing open interval transmissivities (for weighted averages of heads or fluxes)](../examples/Notebooks/flopy3_get_transmissivities_example.ipynb) Notebook.
 
 #### Plotting examples
 
@@ -46,6 +54,8 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 + An overview of the FloPy  [model input and output data `plot()` method capabilities](../examples/Notebooks/flopy3_PlotArrayExample.ipynb)
 
 + An overview of SWR1 Process Output Processing and Plotting is given in the [flopy3_LoadSWRBinaryData](../examples/Notebooks/flopy3_LoadSWRBinaryData.ipynb) Notebook.
+
++ An overview of working with shapefiles and MODFLOW-based data is given in the [flopy3_shapefile_features](../examples/Notebooks/flopy3_shapefile_features.ipynb) Notebook.
 
 #### Export examples
 

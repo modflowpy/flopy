@@ -149,9 +149,20 @@ class ModflowSfr2(Package):
         for specified time steps during this stress period will be printed. If IPTFLG > 0, then the results during
         this stress period will not be printed.
     extension : string
-        Filename extension (default is 'mnw2')
+        Filename extension (default is 'sfr')
     unit_number : int
-        File unit number (default is 34).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output and sfr output name will be
+        created using the model name and .cbc the .sfr.bin/.sfr.out extensions
+        (for example, modflowtest.cbc, and modflowtest.sfr.bin), if ipakcbc and
+        istcb2 are numbers greater than zero. If a single string is passed the
+        package name will be set to the string and other uzf output files will
+        be set to the model name with the appropriate output file extensions.
+        To define the names for all package files (input and output) the
+        length of the list of strings should be 3. Default is None.
 
     Attributes
     ----------
