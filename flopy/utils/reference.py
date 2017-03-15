@@ -1067,7 +1067,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         """
         return self.yc
 
-    def plot_array(self, a):
+    def plot_array(self, a, ax=None):
         """
         Create a QuadMesh plot of the specified array using patches
 
@@ -1081,7 +1081,10 @@ class SpatialReferenceUnstructured(SpatialReference):
 
         """
         from ..plot import plotutil
-        patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a)
+        if ax is None:
+            ax = plt.gca()
+        patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a,
+                                              ax=ax)
         return patch_collection
 
     def get_grid_line_collection(self, **kwargs):
