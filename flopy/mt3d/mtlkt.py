@@ -160,10 +160,12 @@ class Mt3dLkt(Package):
         # Set initial lake concentrations
         if coldlak is not None:
             self.coldlak = Util2d(self.parent, (nlkinit,), np.float32, coldlak,
-                                  name='coldlak', locat=self.unit_number[0])
+                                  name='coldlak', locat=self.unit_number[0],
+                                  array_free_format=model.free_format)
         else:
             self.coldlak = Util2d(self.parent, (nlkinit,), np.float32, 0.0,
-                                  name='coldlak', locat=self.unit_number[0])
+                                  name='coldlak', locat=self.unit_number[0],
+                                  array_free_format=model.free_format)
 
         # Set transient data
         if dtype is not None:
