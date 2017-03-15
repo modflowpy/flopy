@@ -30,12 +30,11 @@ class ModflowSwi2(Package):
     istrat : int
         flag indicating the density distribution. (default is 1).
     iswizt : int
-        unit number for zeta output. (default is 55).
+        unit number for zeta output. (default is None).
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 0).
-        unit number for SWI2 Package budget output. (default is 56).
+        (default is None).
     iswiobs : int
         flag and unit number SWI2 observation output. (default is 0).
     options : list of strings
@@ -260,12 +259,12 @@ class ModflowSwi2(Package):
 
         if nobs > 0:
             binflag = False
-            ext = 'out'
+            ext = 'zobs.out'
             fname = filenames[3]
             if iswiobs is not None:
                 if iswiobs < 0:
                     binflag = True
-                    ext = 'bin'
+                    ext = 'zobs.bin'
             else:
                 iswiobs = 1053
             # update external file information with swi2 observation output,

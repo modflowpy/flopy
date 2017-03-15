@@ -265,14 +265,14 @@ class ModflowSfr2(Package):
         # Fill namefile items
         name = [ModflowSfr2.ftype()]
         units = [unit_number]
-        extension = [extension]
+        extra = ['']
 
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name, and unit number
-        Package.__init__(self, model, extension, name=name,
-                         unit_number=units, filenames=fname)
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.url = 'sfr2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
