@@ -897,11 +897,14 @@ class ModflowSfr2(Package):
 
         # renumber segments in other datasets
         def renumber_channel_data(d):
-            d2 = {}
-            for k, v in d.items():
-                d2[k] = {}
-                for s, vv in v.items():
-                    d2[k][r[s]] = vv
+            if d is not None:
+                d2 = {}
+                for k, v in d.items():
+                    d2[k] = {}
+                    for s, vv in v.items():
+                        d2[k][r[s]] = vv
+            else:
+                d2 = None
             return d2
 
         self.channel_geometry_data = renumber_channel_data(self.channel_geometry_data)
