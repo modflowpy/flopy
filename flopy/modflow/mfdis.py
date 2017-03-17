@@ -241,6 +241,18 @@ class ModflowDis(Package):
                     dt *= m
         return np.array(totim, dtype=np.float)
 
+    def get_final_totim(self):
+        """
+        Get the totim at the end of the simulation
+
+        Returns
+        -------
+        totim: float
+            maximum simulation totim
+
+        """
+        return self.get_totim()[-1]
+
     def get_kstp_kper_toffset(self, t=0.):
         """
         Get the stress period, time step, and time offset from passed time.
