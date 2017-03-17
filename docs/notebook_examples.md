@@ -45,7 +45,10 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of the FloPy [zone budget `ZoneBudget()` method capabilities](../examples/Notebooks/flopy3_ZoneBudget_example) Notebook. The `ZoneBudget()` method is a python implementation of USGS ZONEBUDGET executable for MODFLOW (Harbaugh, 1990).
 
-+ An overview of the Flopy [`get_transmissivities()` method for computing open interval transmissivities (for weighted averages of heads or fluxes)](../examples/Notebooks/flopy3_get_transmissivities_example.ipynb) Notebook.
++ An overview of the Flopy [`get_transmissivities()` method for computing open interval transmissivities (for weighted averages of heads or fluxes)](../examples/Notebooks/flopy3_get_transmissivities_example.ipynb) Notebook. This method can be used to:
+	* compute vertically-averaged head target values representative of observation wells of varying open intervals (including variability in saturated thickness due to the position of the water table). This may be especially important for reducing error in observations used for parameter estimation, in areas with appreciable vertical head gradients (due to aquitards, pumping, discharge to surface water, etc.)
+	* apportion boundary fluxes (e.g. from an analytic element model) among model layers based on transmissivity.
+	* any other analysis where a distribution of transmissivity is needed for a specified vertical interval of the model.
 
 #### Plotting examples
 
@@ -55,7 +58,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of SWR1 Process Output Processing and Plotting is given in the [flopy3_LoadSWRBinaryData](../examples/Notebooks/flopy3_LoadSWRBinaryData.ipynb) Notebook.
 
-+ An overview of working with shapefiles and MODFLOW-based data is given in the [flopy3_shapefile_features](../examples/Notebooks/flopy3_shapefile_features.ipynb) Notebook.
++ The [flopy3_shapefile_features](../examples/Notebooks/flopy3_shapefile_features.ipynb) Notebook illustrates some functionality in flopy for exchanging MODFLOW-related information with shapefiles, including convenience functions for working with shapefile data in numpy recarrays, some simple container objects for storing geographic information, and a demonstration of automatic writing of projection (.prj) files using EPSG codes.
 
 #### Export examples
 

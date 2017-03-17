@@ -1143,7 +1143,8 @@ class epsgRef:
             newfile.close()
 
     def reset(self, verbose=True):
-        os.remove(self.location)
+        if os.path.exists(self.location):
+            os.remove(self.location)
         self._remove_pyc()
         self.make()
         if verbose:
