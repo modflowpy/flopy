@@ -13,6 +13,9 @@ FloPy Changes
 * Added MODFLOW support for:
     * FHB Package - no support for flow or head auxiliary variables (datasets 2, 3, 6, and 8)
     * HOB Package
+* New utilities:
+	* `flopy.utils.get_transmissivities()` Computes transmissivity in each model layer at specified locations and open intervals. A saturated thickness is determined for each row, column or x, y location supplied, based on the well open interval (sctop, scbot), if supplied, otherwise the layer tops and bottoms
+    and the water table are used.
 * Added MODFLOW-LGR support - no support for model name files in different directories than the directory with the lgr control file.
 * Additions to MODPATH:
 	* shapefile export of MODPATH Pathline and Endpoint data
