@@ -895,6 +895,19 @@ class ModflowSfr2(Package):
         # renumber segments in reach_data
         self.reach_data['iseg'] = [r[s] for s in self.reach_data.iseg]
 
+        # renumber segments in other datasets
+        def renumber_channel_data(d):
+            d2 = {}
+            for k, v in d.items():
+                d2[k] = {}
+                for s, vv in v.items():
+                    d2[k][r[s]] = vv
+            return d2
+
+        self.channel_geometry_data = renumber_channel_data(self.channel_geometry_data)
+        self.channel_flow_data = renumber_channel_data(self.channel_flow_data)
+
+
     def _get_headwaters(self, per=0):
         """List all segments that are not outsegs (that do not have any segments upstream).
 
