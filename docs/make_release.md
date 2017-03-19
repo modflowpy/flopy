@@ -13,7 +13,8 @@ Instructions for making a FloPy release
 ## Finalizing the release
 
 1.  Merge the `develop` branch into the `master` branch.
-2.  Update travis build status in `master` branch `README.md` from:
+2.  Rename version number at top of `README.md` from FloPy Version 3.2.X-dev to FloPy Version 3.2.X.
+3.  Update travis build status in `master` branch `README.md` from:
 
     ```
     [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
@@ -24,10 +25,10 @@ Instructions for making a FloPy release
     ```
     [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=master)](https://travis-ci.org/modflowpy/flopy)
     ```
-3.  Update version number in `flopy/version.py`. Use GitHub website to determine what the next build number is for `__build__`
-4.  Commit the modified `README.md` in the `master` branch.
-5.  Tag the commit with the `__version__` number using SourceTree (don't forget to commit the tag).
-6.  Update the flopy `version` number and `"github_tag"` in [https://github.com/ioos/conda-recipes/blob/master/flopy/meta.yaml](https://github.com/ioos/conda-recipes/blob/master/flopy/meta.yaml)
+4.  Update version number in `flopy/version.py`. Use GitHub website to determine what the next build number is for `__build__`
+5.  Commit the modified `README.md` in the `master` branch.
+6.  Tag the commit with the `__version__` number using SourceTree (don't forget to commit the tag).
+7.  Update the flopy `version` number and `"github_tag"` in [https://github.com/ioos/conda-recipes/blob/master/flopy/meta.yaml](https://github.com/ioos/conda-recipes/blob/master/flopy/meta.yaml)
 
 ## Update PyPi
 
