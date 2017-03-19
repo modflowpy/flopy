@@ -1,6 +1,9 @@
 FloPy Changes
 -----------------------------------------------
 
+### Version 3.2.7 pre-release
+* Added version changes...
+
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.
 * Additions to SpatialReference class:

@@ -2,7 +2,7 @@
 
 major = 3
 minor = 2
-micro = 6
+micro = 7
 commit = 2066
 
 __version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)
