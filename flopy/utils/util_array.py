@@ -13,7 +13,7 @@ import shutil
 import copy
 import numbers
 import numpy as np
-from flopy.utils.binaryfile import BinaryHeader
+from ..utils.binaryfile import BinaryHeader
 
 
 class ArrayFormat(object):
@@ -508,6 +508,7 @@ class Util3d(object):
                                           fmtin=u2d.format.fortran,
                                           locat=locat,
                                           cnstnt=u2d.cnstnt,
+                                          ext_filename=u2d.filename,
                                           array_free_format=array_free_format)
 
             return
@@ -734,10 +735,27 @@ class Util3d(object):
 
     @property
     def array(self):
-        a = np.empty((self.shape), dtype=self.dtype)
-        # for i,u2d in self.uds:
-        for i, u2d in enumerate(self.util_2ds):
-            a[i] = u2d.array
+        '''
+        Return a numpy array of the 3D shape.  If an unstructured model, then
+        return an array of size nodes.
+
+        '''
+        nlay, nrow, ncol = self.shape
+        if nrow is not None:
+            # typical 3D case
+            a = np.empty((self.shape), dtype=self.dtype)
+            # for i,u2d in self.uds:
+            for i, u2d in enumerate(self.util_2ds):
+                a[i] = u2d.array
+        else:
+            # unstructured case
+            nodes = ncol.sum()
+            a = np.empty((nodes), dtype=self.dtype)
+            istart = 0
+            for i, u2d in enumerate(self.util_2ds):
+                istop = istart + ncol[i]
+                a[istart:istop] = u2d.array
+                istart = istop
         return a
 
     def build_2d_instances(self):
@@ -772,7 +790,11 @@ class Util3d(object):
                     if self.model.external_path is not None:
                         ext_filename = self.ext_filename_base[i] + str(i + 1) + \
                                        '.ref'
-                    u2d = Util2d(self.model, self.shape[1:], self.dtype, item,
+                    shp = self.shape[1:]
+                    if shp[0] is None:
+                        # allow for unstructured so that ncol changes by layer
+                        shp = (1, self.shape[2][i])
+                    u2d = Util2d(self.model, shp, self.dtype, item,
                                  fmtin=self.fmtin, name=name,
                                  ext_filename=ext_filename,
                                  locat=self.locat,
@@ -816,7 +838,13 @@ class Util3d(object):
         u2ds = []
         for k in range(nlay):
             u2d_name = name + '_Layer_{0}'.format(k)
-            u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, u2d_name,
+            if nrow is None:
+                nr = 1
+                nc = ncol[k]
+            else:
+                nr = nrow
+                nc = ncol
+            u2d = Util2d.load(f_handle, model, (nr, nc), dtype, u2d_name,
                               ext_unit_dict=ext_unit_dict,
                               array_format=array_format)
             u2ds.append(u2d)
@@ -911,7 +939,7 @@ class Transient3d(object):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None,
-                 bin=False,array_free_format=None):
+                 bin=False, array_free_format=None):
 
         if isinstance(value, Transient3d):
             for attr in value.__dict__.items():
@@ -926,7 +954,7 @@ class Transient3d(object):
         self.shape = shape
         self.dtype = dtype
         self.__value = value
-        self.name = name
+        self.name_base = name
         self.fmtin = fmtin
         self.cnstst = cnstnt
         self.iprn = iprn
@@ -1052,19 +1080,12 @@ class Transient3d(object):
         """
         parse an argument into a Util3d instance
         """
-        #name = self.name + '_StressPeriod_{}'.format(kper+1)
-        #name = arg.name_base
-        u3d = []
-        for k in range(self.shape[0]):
-            if isinstance(arg, float) or isinstance(arg, int):
-                a = arg
-            else:
-                a = arg[k]
-            name = '{}{}'.format(arg.name_base[k], k+1).replace(' ', '_')
-            u3d.append(Util2d(self.model, (self.shape[1], self.shape[2]),
-                              self.dtype, a, fmtin=self.fmtin, name=name,
-                              locat=self.locat,
-                              array_free_format=self.array_free_format))
+        name = '{}_period{}'.format(self.name_base, kper + 1)
+        u3d = Util3d(self.model, self.shape, self.dtype, arg,
+                     fmtin=self.fmtin, name=name,
+#                     ext_filename=ext_filename,
+                     locat=self.locat,
+                     array_free_format=self.array_free_format)
         return u3d
 
 
@@ -1149,6 +1170,7 @@ class Transient2d(object):
                                                   fmtin=u2d.format.fortran,
                                                   locat=locat,
                                                   cnstnt=u2d.cnstnt,
+                                                  ext_filename=u2d.filename,
                                                   array_free_format=array_free_format)
 
             self.model = model
@@ -1158,6 +1180,10 @@ class Transient2d(object):
         assert len(shape) == 2, "Transient2d error: shape arg must be " + \
                                 "length two (nrow, ncol), not " + \
                                 str(shape)
+        if shape[0] is None:
+            # allow for unstructured so that ncol changes by layer
+            shape = (1, shape[1][0])
+
         self.shape = shape
         self.dtype = dtype
         self.__value = value
@@ -1220,7 +1246,7 @@ class Transient2d(object):
         kper_dict = Transient2d.masked4d_array_to_kper_dict(m4d)
         return cls(model=model, shape=(model.nrow, model.ncol),
                    value=kper_dict,
-                   dtype=m4d.dtype, name=name)
+                   dtype=m4d.dtype.type, name=name)
 
     def __setattr__(self, key, value):
         if hasattr(self, "transient_2ds") and key == "cnstnt":
@@ -1652,10 +1678,13 @@ class Util2d(object):
         if self.vtype == str:
             fmtin = "(FREE)"
         self.__value_built = None
-        if isinstance(dtype, np.float) or isinstance(dtype, np.float32):
-            self.cnstnt = float(cnstnt)
-        else:
-            self.cnstnt = int(cnstnt)
+        #if isinstance(dtype, np.float) or isinstance(dtype, np.float32):
+        #if dtype in [float,np.float,np.float32]:
+        #    self.cnstnt = float(cnstnt)
+        #else:
+        #    self.cnstnt = int(cnstnt)
+        self.cnstnt = dtype(cnstnt)
+
         self.iprn = iprn
         self._format = ArrayFormat(self, fortran=fmtin,
                                    array_free_format=array_free_format)
@@ -1837,6 +1866,15 @@ class Util2d(object):
             raise NotImplementedError(
                 "Util2d.__mul__() not implemented for non-scalars")
 
+    def __eq__(self, other):
+        if not isinstance(other, Util2d):
+            return False
+        if not np.array_equal(other.array, self.array):
+            return False
+        if other.cnstnt != self.cnstnt:
+            return False
+        return True
+
     def __getitem__(self, k):
         if isinstance(k, int):
             if len(self.shape) == 1:
@@ -1890,6 +1928,9 @@ class Util2d(object):
 
     def sum(self):
         return self.array.sum()
+
+    def unique(self):
+        return np.unique(self.array)
 
     @property
     def format(self):
@@ -2193,6 +2234,36 @@ class Util2d(object):
             return self.__value
 
     @staticmethod
+    def load_block(shape, file_in, dtype):
+        """
+        load a (possibly wrapped format) array from a mt3d block
+        (self.__value) and casts to the proper type (self.dtype)
+        made static to support the load functionality
+        this routine now supports fixed format arrays where the numbers
+        may touch.
+        """
+        nrow, ncol = shape
+        data = np.zeros(shape, dtype=dtype) + np.NaN
+        if not hasattr(file_in, 'read'):
+            file_in = open(file_in, 'r')
+        line = file_in.readline()
+        raw = line.strip('\n').split()
+        nblock = int(raw[0])
+        for n in range(nblock):
+            line = file_in.readline()
+            raw = line.strip('\n').split()
+            i1, i2, j1, j2, v = int(raw[0])-1, int(raw[1])-1, \
+                                int(raw[2])-1, int(raw[3])-1, \
+                                dtype(raw[0])
+            for j in range(j1, j2+1):
+                for i in range(i1, i2+1):
+                    data[j, i] = v
+        if np.isnan(np.sum(data)):
+            raise Exception("Util2d.load_block() error: np.NaN in data array")
+        return data
+
+
+    @staticmethod
     def load_txt(shape, file_in, dtype, fmtin):
         """
         load a (possibly wrapped format) array from a file
@@ -2435,7 +2506,9 @@ class Util2d(object):
         if you are using fixed format record types,make sure 
         ext_unit_dict has been initialized from the NAM file
         """
-
+        if shape == (0, 0):
+            raise IndexError('No information on model grid dimensions. '
+                             'Need nrow, ncol to load a Util2d array.')
         curr_unit = None
         if ext_unit_dict is not None:
             # determine the current file's unit number
@@ -2517,6 +2590,13 @@ class Util2d(object):
             # track this unit number so we can remove it from the external
             # file list later
             model.pop_key_list.append(cr_dict['nunit'])
+        elif cr_dict['type'] == 'block':
+            data = Util2d.load_block(shape, f_handle, dtype)
+            u2d = Util2d(model, shape, dtype, data, name=name,
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
+                         cnstnt=cr_dict['cnstnt'], locat=None,
+                         array_free_format=array_free_format)
+
         return u2d
 
     @staticmethod
@@ -2528,28 +2608,28 @@ class Util2d(object):
         current_unit (optional) indicates the unit number of the file being parsed
         """
         free_fmt = ['open/close', 'internal', 'external', 'constant']
-        raw = line.lower().strip().split()
+        raw = line.strip().split()
         freefmt, cnstnt, fmtin, iprn, nunit = None, None, None, -1, None
         fname = None
         isfloat = False
         if dtype == np.float or dtype == np.float32:
             isfloat = True
             # if free format keywords
-        if str(raw[0]) in str(free_fmt):
-            freefmt = raw[0]
-            if raw[0] == 'constant':
+        if str(raw[0].lower()) in str(free_fmt):
+            freefmt = raw[0].lower()
+            if raw[0].lower() == 'constant':
                 if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
-            if raw[0] == 'internal':
+            if raw[0].lower() == 'internal':
                 if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
                 fmtin = raw[2].strip()
                 iprn = int(raw[3])
-            elif raw[0] == 'external':
+            elif raw[0].lower() == 'external':
                 if ext_unit_dict is not None:
                     try:
                         # td = ext_unit_dict[int(raw[1])]
@@ -2566,7 +2646,7 @@ class Util2d(object):
                     cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
-            elif raw[0] == 'open/close':
+            elif raw[0].lower() == 'open/close':
                 fname = raw[1].strip()
                 if isfloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
@@ -2578,14 +2658,23 @@ class Util2d(object):
         else:
             locat = np.int(line[0:10].strip())
             if isfloat:
-                cnstnt = np.float(
-                    line[10:20].strip().lower().replace('d', 'e'))
+                if len(line) >= 20:
+                    cnstnt = np.float(
+                        line[10:20].strip().lower().replace('d', 'e'))
+                else:
+                    cnstnt = 0.0
             else:
-                cnstnt = np.int(line[10:20].strip())
+                if len(line) >= 20:
+                    cnstnt = np.int(line[10:20].strip())
+                else:
+                    cnstnt = 0
                 #if cnstnt == 0:
                 #    cnstnt = 1
             if locat != 0:
-                fmtin = line[20:40].strip()
+                if len(line) >= 40:
+                    fmtin = line[20:40].strip()
+                else:
+                    fmtin = ''
                 try:
                     iprn = np.int(line[40:50].strip())
                 except:
@@ -2614,8 +2703,8 @@ class Util2d(object):
                     freefmt = 'internal'
                     nunit = current_unit
                 elif locat == 101:
-                    raise NotImplementedError(
-                        'MT3D block format not supported...')
+                    freefmt = 'block'
+                    nunit = current_unit
                 elif locat == 102:
                     raise NotImplementedError(
                         'MT3D zonal format not supported...')

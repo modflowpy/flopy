@@ -1,6 +1,57 @@
 FloPy Changes
 -----------------------------------------------
 
+### Version 3.2.6
+* Added functionality to read binary grd file for unstructured grids.
+* Additions to SpatialReference class:
+	* xll, yll input option
+	* transform method to convert model coordinates to real-world coordinates
+	* epsg and length_multiplier arguments
+* Export:
+	* Added writing of prj files to shapefile export; prj information can be passed through spatial reference class, or given as an EPSG code or existing prj file path
+	* Added NetCDF export to MNW2
+* Added MODFLOW support for:
+    * FHB Package - no support for flow or head auxiliary variables (datasets 2, 3, 6, and 8)
+    * HOB Package
+* New utilities:
+	* `flopy.utils.get_transmissivities()` Computes transmissivity in each model layer at specified locations and open intervals. A saturated thickness is determined for each row, column or x, y location supplied, based on the well open interval (sctop, scbot), if supplied, otherwise the layer tops and bottoms
+    and the water table are used.
+* Added MODFLOW-LGR support - no support for model name files in different directories than the directory with the lgr control file.
+* Additions to MODPATH:
+	* shapefile export of MODPATH Pathline and Endpoint data
+	* Modpath.create_mpsim() supports MNW2
+	* creation of MODPATH StartingLocations files
+	* Easy subsetting of endpoint and pathline results to destination cells of interest  
+* New ZoneBudget class provides ZONEBUDGET functionality:
+    * reads a CellBudgetFile and accumulates flows by zone
+    * pass `kstpkper` or `totim` keyword arguments to retrieve a subset of available times in the CellBudgetFile
+    * includes a method to write the budget recarrays to a .csv file
+    * ZoneBudget objects support numerical operators to facilitate conversion of units
+    * utilities are included which read/write ZONEBUDGET-style zone files to and from numpy arrays
+    * pass a dictionary of {zone: "alias"} to rename fields to more descriptive names (e.g. {1: 'New York', 2: 'Delmarva'}
+* Added new precision='auto' option to flopy.utils.binaryfile for HeadFile and UcnFile readers.  This will automatically try and determine the float precision for head files created by single and double precision versions of MODFLOW.  'auto' is now the default.  Not implemented yet for cell by cell flow file.
+* Modified MT3D-related packages to also support MT3D-USGS
+  * BTN will support the use of keywords (e.g., 'MODFLOWStyleArrays', etc.) on the first line
+  * DSP will support the use of keyword NOCROSS
+  * Keyword FREE now added to MT3D name file when the flow-transport link (FTL) file is formatted.  Previously defaulted to unformatted only.
+* Added 3 new packages:
+  * SFT: Streamflow Transport, companion transport package for use with the SFR2 package in MODFLOW
+  * LKT: Lake Transport, companion transport package for use with the LAK3 package in MODFLOW
+  * UZT: Unsaturated-zone Transport, companion transport package for use with the UZF1 package in MODFLOW
+* Modified LMT
+  * load() functionality will now support optional PACKAGE_FLOWS line (last line of LMT input)
+  * write_file() will will now insert PACKAGE_FLOWS line based on user input
+
+* Bug fixes:
+  1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
+  2. Fixed bug in check routine when THICKSTRT is specified as an option in the LPF and UPW packages.
+  3. Fixed bug in BinaryHeader.set_values method that prevented setting of entries based on passed kwargs.
+  4. Fixed bugs in reading and writing SEAWAT Viscosity package.
+  5. The DENSE and VISC arrays are now Transient3d objects, so they may change by stress period.
+  6. MNW2: fixed bug with k, i, j node input option and issues with loading at model level
+  7. Fixed bug in ModflowDis.get_cell_volumes().
+
+
 ### Version 3.2.5
 * Added support for LAK and GAGE packages - full load and write functionality supported.
 * Added support for MNW2 package. Load and write of .mnw2 package files supported. Support for .mnwi, or the results files (.qsu, .byn) not yet implemented.

@@ -94,6 +94,83 @@ class MfList(object):
         from flopy import export
         return export.utils.mflist_helper(f, self, **kwargs)
 
+    def append(self,other):
+        """ append the recarrays from one MfList to another
+        Parameters
+        ----------
+            other: variable: an item that can be cast in to an MfList
+                that corresponds with self
+        Returns
+        -------
+            dict of {kper:recarray}
+        """
+        if not isinstance(other,MfList):
+            other = MfList(self.package,data=other,dtype=self.dtype,
+                           model=self.model,
+                           list_free_format=self.list_free_format)
+        assert isinstance(other,MfList),"MfList.append(): other arg must be "+\
+                                        "MfList or dict, not {0}".format(type(other))
+
+        other_kpers = list(other.data.keys())
+        other_kpers.sort()
+
+        self_kpers = list(self.data.keys())
+        self_kpers.sort()
+
+        new_dict = {}
+        for kper in range(self.model.nper):
+            other_data = other[kper].copy()
+            self_data = self[kper].copy()
+
+            other_len = other_data.shape[0]
+            self_len = self_data.shape[0]
+
+
+
+            if (other_len == 0 and self_len == 0) or\
+               (kper not in self_kpers and kper not in other_kpers):
+                continue
+
+
+            elif self_len == 0:
+                new_dict[kper] = other_data
+            elif other_len == 0:
+                new_dict[kper] = self_data
+            else:
+                new_len = other_data.shape[0] + self_data.shape[0]
+                new_data = np.recarray(new_len,dtype=self.dtype)
+                new_data[:self_len] = self_data
+                new_data[self_len:self_len+other_len] = other_data
+                new_dict[kper] = new_data
+
+
+        return new_dict
+
+    def drop(self, fields):
+        """drop fields from an MfList
+
+        Parameters
+        ----------
+        fields : list or set of field names to drop
+
+        Returns
+        -------
+        dropped : MfList without the dropped fields
+        """
+        if not isinstance(fields, list):
+            fields = [fields]
+        names = [n for n in self.dtype.names if n not in fields]
+        dtype = np.dtype([(k, d) for k, d in self.dtype.descr if k not in fields])
+        spd = {}
+        for k, v in self.data.items():
+            # because np 1.9 doesn't support indexing by list of columns
+            newarr = np.array([self.data[k][n] for n in names]).transpose()
+            newarr = np.array(list(map(tuple, newarr)), dtype=dtype).view(np.recarray)
+            for n in dtype.names:
+                newarr[n] = self.data[k][n]
+            spd[k] = newarr
+        return MfList(self.package, spd, dtype=dtype)
+
     @property
     def data(self):
         return self.__data
@@ -324,7 +401,10 @@ class MfList(object):
                 "MfList error: _getitem__() passed invalid kper index:"
                 + str(kper))
         if kper not in list(self.data.keys()):
-            return self.get_empty()
+            if kper == 0:
+                return self.get_empty()
+            else:
+                return self.data[self.__find_last_kper(kper)]
         if (self.vtype[kper] == int):
             if (self.data[kper] == 0):
                 return self.get_empty()
@@ -668,7 +748,7 @@ class MfList(object):
                                       names=names, filenames=filenames,
                                       mflay=mflay, **kwargs)
         else:
-            arr_dict = self.to_array(kper)
+            arr_dict = self.to_array(kper, mask=True)
 
             try:
                 arr = arr_dict[key]
@@ -773,8 +853,9 @@ class MfList(object):
             raise NotImplementedError()
         arrays = {}
         for name in self.dtype.names[i0:]:
-            arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
-            arrays[name] = arr.copy()
+            if not self.dtype.fields[name][0] == object:
+                arr = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol))
+                arrays[name] = arr.copy()
 
         # if this kper is not found
         if kper not in self.data.keys():
@@ -814,7 +895,9 @@ class MfList(object):
                 idx = cnt > 0.
                 arr[idx] /= cnt[idx]
             if mask:
-                arr[cnt == 0] = np.NaN
+                arr = np.ma.masked_where(cnt == 0., arr)
+                arr[cnt == 0.] = np.NaN
+
             arrays[name] = arr.copy()
         # elif mask:
         #     for name, arr in arrays.items():

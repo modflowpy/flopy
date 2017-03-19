@@ -204,13 +204,9 @@ class Seawat(BaseModel):
         # Overrides BaseModel's setter for name property
         BaseModel._set_name(self, value)
 
-        if self.version == 'mf2k':
-            for i in range(len(self.glo.extension)):
-                self.glo.file_name[i] = self.name + '.' + self.glo.extension[i]
-
-        for i in range(len(self.lst.extension)):
-            self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
-        return
+        #for i in range(len(self.lst.extension)):
+        #    self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
+        #return
 
     def change_model_ws(self, new_pth=None, reset_external=False):
         #if hasattr(self,"_mf"):
@@ -235,41 +231,83 @@ class Seawat(BaseModel):
         # open and write header
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
-        f_nam.write('%s\n' % (self.heading))
+        f_nam.write('{}\n'.format(self.heading))
 
+        # Write global file entry
+        if self.glo is not None:
+            if self.glo.unit_number[0] > 0:
+                f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
+                                                        self.glo.unit_number[0],
+                                                        self.glo.file_name[0]))
         # Write list file entry
-        f_nam.write('%s\t%3i\t%s\n' % (self.lst.name[0],
-                                       self.lst.unit_number[0],
-                                       self.lst.file_name[0]))
+        f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
+                                                self.lst.unit_number[0],
+                                                self.lst.file_name[0]))
 
         # Write SEAWAT entries and close
-        f_nam.write('%s' % self.get_name_file_entries())
+        f_nam.write('{}'.format(self.get_name_file_entries()))
 
         if self._mf is not None:
+            # write the external files
             for b, u, f in zip(self._mf.external_binflag,
                                self._mf.external_units, \
                                self._mf.external_fnames):
                 tag = "DATA"
                 if b:
                     tag = "DATA(BINARY)"
-                f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+                f_nam.write('{0:14s} {1:5d}  {2}\n'.format(tag, u, f))
+
+            # write the output files
+            for u, f, b in zip(self._mf.output_units, self._mf.output_fnames,
+                               self._mf.output_binflag):
+                if u == 0:
+                    continue
+                if b:
+                    f_nam.write(
+                        'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
+                else:
+                    f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
         if self._mt is not None:
+            # write the external files
             for b, u, f in zip(self._mt.external_binflag,
                                self._mt.external_units, \
                                self._mt.external_fnames):
                 tag = "DATA"
                 if b:
                     tag = "DATA(BINARY)"
-                f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+                f_nam.write('{0:14s} {1:5d}  {2}\n'.format(tag, u, f))
 
+            # write the output files
+            for u, f, b in zip(self._mt.output_units, self._mt.output_fnames,
+                               self._mt.output_binflag):
+                if u == 0:
+                    continue
+                if b:
+                    f_nam.write(
+                        'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
+                else:
+                    f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
+
+        # write the external files
         for b, u, f in zip(self.external_binflag, self.external_units, \
                            self.external_fnames):
             tag = "DATA"
             if b:
                 tag = "DATA(BINARY)"
-            f_nam.write('{0}  {1:3d}  {2}\n'.format(tag,u,f))
+            f_nam.write('{0:14s} {1:5d}  {2}\n'.format(tag, u, f))
 
+
+        # write the output files
+        for u, f, b in zip(self.output_units, self.output_fnames,
+                           self.output_binflag):
+            if u == 0:
+                continue
+            if b:
+                f_nam.write(
+                    'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
+            else:
+                f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
         f_nam.close()
         return
@@ -323,6 +361,7 @@ class Seawat(BaseModel):
         else:
             modelname = f
 
+        # create instance of a seawat model and load modflow and mt3dms models
         ms = Seawat(modelname=modelname, namefile_ext='nam',
                     modflowmodel=None, mt3dmodel=None,
                     version=version, exe_name=exe_name, model_ws=model_ws,
@@ -335,6 +374,9 @@ class Seawat(BaseModel):
         mt = Mt3dms.load(f, version='mt3dms', exe_name=None, verbose=verbose,
                          model_ws=model_ws, forgive=True)
 
+        # set listing and global files using mf objects
+        ms.lst = mf.lst
+        ms.glo = mf.glo
 
         for p in mf.packagelist:
             p.parent = ms
@@ -349,6 +391,7 @@ class Seawat(BaseModel):
             mt.external_fnames = []
             ms._mt = mt
         ms._mf = mf
+
 
 
         # return model object

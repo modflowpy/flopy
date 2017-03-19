@@ -1,5 +1,5 @@
 import flopy
-import os.path
+import os
 
 def test_loadfreyberg():
     cwd = os.getcwd()
@@ -8,7 +8,7 @@ def test_loadfreyberg():
     assert(os.path.isdir(pth))
     os.chdir(pth)
     namefile = 'freyberg.nam'
-    ml = flopy.modflow.Modflow.load(namefile)
+    ml = flopy.modflow.Modflow.load(namefile, verbose=True)
     os.chdir(cwd)
     assert isinstance(ml, flopy.modflow.Modflow)
     assert ml.load_fail is False
@@ -40,6 +40,6 @@ def test_loadtwrip():
 
 
 if __name__ == '__main__':
-    #test_loadfreyberg()
-    test_loadoahu()
+    test_loadfreyberg()
+    #test_loadoahu()
     #test_loadtwrip()

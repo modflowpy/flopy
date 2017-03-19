@@ -1,7 +1,10 @@
 import copy
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.colors
+except:
+    plt = None
 from . import plotutil
 from .plotutil import bc_color_dict
 
@@ -39,6 +42,11 @@ class ModelCrossSection(object):
     """
     def __init__(self, ax=None, model=None, dis=None, line=None,
                  xul=None, yul=None, rotation=0., extent=None):
+        if plt is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to use ModelCrossSection method'
+            raise Exception(s)
+
         self.model = model
         if dis is None:
             if model is None:
@@ -135,15 +143,28 @@ class ModelCrossSection(object):
             d.append(v[2])
         self.d = np.array(d)
 
+        self.ncb = 0
+        self.laycbd = self.dis.laycbd.array
+        for l in self.laycbd:
+            if l > 0:
+                self.ncb += 1
+        self.active = np.ones((self.dis.nlay + self.ncb), dtype=np.int)
+        kon = 0
+        for k in range(self.dis.nlay):
+            if self.laycbd[k] > 0:
+                kon += 1
+                self.active[kon] = 0
+            kon += 1
+        #print(self.active)
         top = self.dis.top.array
         botm = self.dis.botm.array
         elev = [top.copy()]
-        for k in range(self.dis.nlay):
+        for k in range(self.dis.nlay + self.ncb):
             elev.append(botm[k, :, :])
         
         self.elev = np.array(elev)
         self.layer0 = 0
-        self.layer1 = self.dis.nlay + 1
+        self.layer1 = self.dis.nlay + self.ncb + 1
         
         zpts = []
         for k in range(self.layer0, self.layer1):
@@ -228,6 +249,12 @@ class ModelCrossSection(object):
             vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
                                                    self.sr.yedge,
                                                    a[k, :, :]))
+            if self.laycbd[k] > 0:
+                ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
+                ta[:, :] = -1e9
+                vpts.append(plotutil.cell_value_points(self.xpts,
+                                                       self.sr.xedge,
+                                                       self.sr.yedge, ta))
         vpts = np.array(vpts)
         if masked_values is not None:
             for mval in masked_values:
@@ -241,7 +268,9 @@ class ModelCrossSection(object):
         if masked_values is not None:
             for mval in masked_values:
                 vpts = np.ma.masked_equal(vpts, mval)
-        
+        if self.ncb > 0:
+            vpts = np.ma.masked_equal(vpts, -1e9)
+
         pc = self.get_grid_patch_collection(zpts, vpts, **kwargs)
         if pc != None:
             ax.add_collection(pc)
@@ -328,9 +357,17 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
+            #print('k', k, self.laycbd[k])
             vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
                                                    self.sr.yedge,
                                                    plotarray[k, :, :]))
+            if self.laycbd[k] > 0:
+                ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
+                ta[:, :] = self.dis.botm.array[k, :, :]
+                vpts.append(plotutil.cell_value_points(self.xpts,
+                                                       self.sr.xedge,
+                                                       self.sr.yedge, ta))
+
         vpts = np.ma.array(vpts, mask=False)
 
         if isinstance(head, np.ndarray):
@@ -341,10 +378,15 @@ class ModelCrossSection(object):
         if masked_values is not None:
             for mval in masked_values:
                 vpts = np.ma.masked_equal(vpts, mval)
+        if self.ncb > 0:
+            vpts = np.ma.masked_equal(vpts, -1e9)
         idxm = np.ma.getmask(vpts)
 
         plot = []
-        for k in range(self.dis.nlay):
+        #print(zpts.shape)
+        for k in range(self.dis.nlay + self.ncb):
+            if self.active[k] == 0:
+                continue
             idxmk = idxm[k, :]
             v = vpts[k, :]
             y1 = zpts[k, :]
@@ -363,13 +405,13 @@ class ModelCrossSection(object):
             # mask cells
             y1[idxmk] = np.nan
             y2[idxmk] = np.nan
-            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[0],
-                                        **kwargs))
+            plot.append(ax.fill_between(self.d, y1=y1, y2=y2,
+                                        color=colors[0], **kwargs))
             y1 = y2
             y2 = self.zpts[k+1, :]
             y2[idxmk] = np.nan
-            plot.append(ax.fill_between(self.d, y1=y1, y2=y2, color=colors[1],
-                                        **kwargs))
+            plot.append(ax.fill_between(self.d, y1=y1, y2=y2,
+                                        color=colors[1], **kwargs))
         return plot
 
     def contour_array(self, a, masked_values=None, head=None, **kwargs):

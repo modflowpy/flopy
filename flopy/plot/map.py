@@ -1,10 +1,13 @@
 import copy
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.colors
+except:
+    plt = None
 from . import plotutil
 from .plotutil import bc_color_dict
-
+from ..utils import SpatialReference
 
 class ModelMap(object):
     """
@@ -48,7 +51,13 @@ class ModelMap(object):
     """
 
     def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
-                 extent=None, xul=None, yul=None, rotation=None):
+                 extent=None, xul=None, yul=None, xll=None, yll=None,
+                 rotation=0., length_multiplier=1.):
+        if plt is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to use ModelMap method'
+            raise Exception(s)
+
         self.model = model
         self.layer = layer
         self.dis = dis
@@ -61,15 +70,15 @@ class ModelMap(object):
         elif model is not None:
             # print("warning: the model arg to model map is deprecated")
             self.sr = copy.deepcopy(model.sr)
+        else:
+            self.sr = SpatialReference(xll, yll, xul, yul, rotation,
+                                       length_multiplier)
 
         # model map override spatial reference settings
-        if xul is not None:
-            self.sr.xul = xul
-        if yul is not None:
-            self.sr.yul = yul
-        if rotation is not None:
-            self.sr.rotation = rotation
-
+        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
+            rotation != 0 or length_multiplier != 1.:
+            self.sr.set_spatialreference(xul, yul, xll, yll, rotation,
+                                         length_multiplier)
         if ax is None:
             try:
                 self.ax = plt.gca()
@@ -82,10 +91,6 @@ class ModelMap(object):
             self._extent = extent
         else:
             self._extent = None
-
-        # why is this non-default color scale used??
-        #  This should be passed as a kwarg by the user to the indivudual plotting method.
-        # self.cmap = plotutil.viridis
 
         return
 
@@ -112,13 +117,16 @@ class ModelMap(object):
         Returns
         -------
         quadmesh : matplotlib.collections.QuadMesh
+
         """
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
         elif a.ndim == 2:
             plotarray = a
+        elif a.ndim == 1:
+            plotarray = a
         else:
-            raise Exception('Array must be of dimension 2 or 3')
+            raise Exception('Array must be of dimension 1, 2 or 3')
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
@@ -126,8 +134,29 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
-                                 **kwargs)
+
+        # quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
+        #                          **kwargs)
+        quadmesh = self.sr.plot_array(plotarray, ax=ax)
+
+        # set max and min
+        if 'vmin' in kwargs:
+            vmin = kwargs.pop('vmin')
+        else:
+            vmin = None
+        if 'vmax' in kwargs:
+            vmax = kwargs.pop('vmax')
+        else:
+            vmax = None
+        quadmesh.set_clim(vmin=vmin, vmax=vmax)
+
+        # send rest of kwargs to quadmesh
+        quadmesh.set(**kwargs)
+
+        # add collection to axis
+        ax.add_collection(quadmesh)
+
+        # set limits
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
         return quadmesh
@@ -155,8 +184,10 @@ class ModelMap(object):
             plotarray = a[self.layer, :, :]
         elif a.ndim == 2:
             plotarray = a
+        elif a.ndim == 1:
+            plotarray = a
         else:
-            raise Exception('Array must be of dimension 2 or 3')
+            raise Exception('Array must be of dimension 1, 2 or 3')
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
@@ -168,8 +199,9 @@ class ModelMap(object):
             if 'cmap' in kwargs.keys():
                 cmap = kwargs.pop('cmap')
             cmap = None
-        contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
-                                 plotarray, **kwargs)
+        # contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
+        #                         plotarray, **kwargs)
+        contour_set = self.sr.contour_array(ax, plotarray, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
 
@@ -177,13 +209,14 @@ class ModelMap(object):
 
     def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
         """
-        Make a plot of inactive cells.  If not specified, then pull ibound from the
-        self.ml
+        Make a plot of inactive cells.  If not specified, then pull ibound
+        from the self.ml
 
         Parameters
         ----------
         ibound : numpy.ndarray
             ibound array to plot.  (Default is ibound in 'BAS6' package.)
+
         color_noflow : string
             (Default is 'black')
 
@@ -273,7 +306,7 @@ class ModelMap(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        lc = self.get_grid_line_collection(**kwargs)
+        lc = self.sr.get_grid_line_collection(**kwargs)
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -397,15 +430,74 @@ class ModelMap(object):
             should be of len(ncells) with a list of vertex number for each cell
 
         kwargs : dictionary
-            Keyword arguments passed to plotutil.plot_shapefile()
+            Keyword arguments passed to plotutil.plot_cvfd()
 
         """
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
-        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, **kwargs)
+        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, self.layer,
+                                              **kwargs)
         return patch_collection
+
+    def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
+        """
+        Contour an array.  If the array is three-dimensional, then the method
+        will contour the layer tied to this class (self.layer).
+
+        Parameters
+        ----------
+        vertc : np.ndarray
+            Array with of size (nc, 2) with centroid location of cvfd
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        contour_set : matplotlib.pyplot.contour
+
+        """
+        if 'ncpl' in kwargs:
+            nlay = self.layer + 1
+            ncpl = kwargs.pop('ncpl')
+            if isinstance(ncpl, int):
+                i = int(ncpl)
+                ncpl = np.ones((nlay), dtype=np.int) * i
+            elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
+                ncpl = np.array(ncpl)
+            i0 = 0
+            i1 = 0
+            for k in range(nlay):
+                i0 = i1
+                i1 = i0 + ncpl[k]
+            # retain vertc in selected layer
+            vertc = vertc[i0:i1, :]
+        else:
+            i0 = 0
+            i1 = vertc.shape[0]
+
+        plotarray = a[i0:i1]
+
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        if 'colors' in kwargs.keys():
+            if 'cmap' in kwargs.keys():
+                cmap = kwargs.pop('cmap')
+            cmap = None
+        contour_set = ax.tricontour(vertc[:, 0], vertc[:, 1],
+                                    plotarray, **kwargs)
+
+        return contour_set
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
                        jstep=1, normalize=False, **kwargs):
@@ -453,8 +545,8 @@ class ModelMap(object):
             if self.model is not None:
                 dis = self.model.dis
             else:
-                print(
-                    "ModelMap.plot_quiver() error: self.dis is None and dis arg is None ")
+                print('ModelMap.plot_quiver() error: self.dis is None and dis '
+                      'arg is None.')
                 return
         ib = self.model.bas6.ibound.array
         delr = dis.delr.array
@@ -549,7 +641,7 @@ class ModelMap(object):
         """
         from matplotlib.collections import LineCollection
         # make sure pathlines is a list
-        if isinstance(pl, np.ndarray):
+        if not isinstance(pl, list):
             pl = [pl]
 
         if 'layer' in kwargs:
@@ -762,12 +854,3 @@ class ModelMap(object):
             cb.set_label(colorbar_label)
         return sp
 
-    def get_grid_line_collection(self, **kwargs):
-        """
-        Get a LineCollection of the grid
-
-        """
-        from matplotlib.collections import LineCollection
-
-        lc = LineCollection(self.sr.get_grid_lines(), **kwargs)
-        return lc

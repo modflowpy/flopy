@@ -1,0 +1,10 @@
+# PCGN solver data
+       100        50       1.0    1.0E-6
+#  ITER_MO,  ITER_MI,    RLOSE,   HCLOSE  
+       .99         1         0         0
+#    RELAX,    IFILL,  UNIT_PC,  UNIT_TS
+         0       1.0        .5      0.05       0.0
+#    ADAMP,     DAMP,  DAMP_LB,   RATE_D, CHGLIMIT
+         0      0.01         2      0.01         0
+#    ACNVG,  CNVG_LB,    MCNVG,   RATE_C,   IPUNIT  
+ 

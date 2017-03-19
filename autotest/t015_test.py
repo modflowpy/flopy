@@ -1,12 +1,14 @@
 __author__ = 'aleaf'
 
-#import sys
-#sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
-import matplotlib
-matplotlib.use('agg')
+try:
+    import matplotlib
+    if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
+        matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
+except:
+    matplotlib = None
+
 import flopy
-import pytest
 
 print(os.getcwd())
 
@@ -18,10 +20,13 @@ else:
 str_items = {0: {'mfnam': 'str.nam',
                  'sfrfile': 'str.str'}}
 
-def test_str_plot():
 
-    m = flopy.modflow.Modflow.load(str_items[0]['mfnam'], model_ws=path, verbose=True)
-    assert isinstance(m.str.plot()[0], matplotlib.axes.Axes)
+def test_str_plot():
+    m = flopy.modflow.Modflow.load(str_items[0]['mfnam'], model_ws=path,
+                                   verbose=True)
+    if matplotlib is not None:
+        assert isinstance(m.str.plot()[0], matplotlib.axes.Axes)
+
 
 if __name__ == '__main__':
     test_str_plot()

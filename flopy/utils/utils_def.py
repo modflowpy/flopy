@@ -50,8 +50,10 @@ class FlopyBinaryData(object):
     def read_real(self):
         return self._read_values(self.real, 1)[0]
 
-    def read_record(self, count):
-        return self._read_values(self.dtype, count)
+    def read_record(self, count, dtype=None):
+        if dtype is None:
+            dtype = self.dtype
+        return self._read_values(dtype, count)
 
     def _read_values(self, dtype, count):
         return np.fromfile(self.file, dtype, count)

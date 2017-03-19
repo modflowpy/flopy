@@ -7,9 +7,9 @@ the ModflowPar class as `flopy.modflow.ModflowPar`.
 
 import sys
 import numpy as np
-from flopy.modflow.mfzon import ModflowZon
-from flopy.modflow.mfpval import ModflowPval
-from flopy.modflow.mfmlt import ModflowMlt
+from .mfzon import ModflowZon
+from .mfpval import ModflowPval
+from .mfmlt import ModflowMlt
 
 class ModflowPar(object):
     """
@@ -222,8 +222,14 @@ class ModflowPar(object):
                     line = f.readline()
                     t = line.strip().split()
                     lay = np.int(t[0])
-                    mltarr = t[1]
-                    zonarr = t[2]
+                    s = t[1]
+                    if len(s) > 10:
+                        s = s[0:10]
+                    mltarr = s
+                    s = t[2]
+                    if len(s) > 10:
+                        s = s[0:10]
+                    zonarr = s
                     iarr = []
                     for iv in t[3:]:
                         try:
@@ -235,7 +241,8 @@ class ModflowPar(object):
 
                     clusters.append([lay, mltarr, zonarr, iarr])
                 # add parnam to parm_dict
-                parm_dict[parnam] = {'partyp':partyp, 'parval':parval, 'nclu':nclu, 'clusters':clusters}
+                parm_dict[parnam] = {'partyp':partyp, 'parval':parval,
+                                     'nclu':nclu, 'clusters':clusters}
 
         return par_types, parm_dict
 

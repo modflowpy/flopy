@@ -1,0 +1,35 @@
+PARAMETER 1 2                             Item 1: PARAMETER LINE: NPWEL, MXPWEL
+         2         0                      Item 2: MXACTW, IWELCB
+WELLS_TR  Q -1.1 2                        Item 3: PARNAM, PARTYP, B, NLST
+         1         9        10       1.0       7.0   Item 4: Layer Row Column Qfact abc
+         2         9        10       1.0       8.0
+         0         0                      Item 5: ITMP, NP for Stress Period 1
+         0         1                      Item 5: ITMP, NP for Stress Period 2
+WELLS_TR                                  Item 7: Pname
+         0         1                      Item 5: ITMP, NP    Note that parameter must be specified
+WELLS_TR                                  Item 7: Pname       each stress period, even though there
+         0         1                      Item 5: ITMP, NP    is no change.
+WELLS_TR                                  Item 7: Pname
+         0         1                      Item 5: ITMP, NP for Stress Period 5
+WELLS_TR                                  Item 7: Pname
+
+
+
+
+
+
+
+PARAMETER 1 2                             PARAMETER LINE: NPWEL, MXPWEL
+         2         0                      MXACTW, IWELCB
+WELLS_TR  Q -1.1 2                        PARNAM, PARTYP, B, NLST
+         1         9        10       1.0
+         2         9        10       1.0
+         0         0                      ITMP, NP for Stress Period 1
+         0         1                      ITMP, NP for Stress Period 2
+WELLS_TR
+         0         1                      ITMP, NP    Note that parameter must be specified
+WELLS_TR                                              each stress period, even though there
+         0         1                      ITMP, NP    is no change.
+WELLS_TR
+         0         1                      ITMP, NP for Stress Period 5
+WELLS_TR

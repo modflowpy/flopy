@@ -143,6 +143,10 @@ def parsenamefile(namfilename, packages, verbose=True):
             # be sure the second value is an integer
             if testint(tmp[1]):
 
+                # remove quotes in file path
+                tmp[2] = tmp[2].replace('"', '')
+                tmp[2] = tmp[2].replace("'", "")
+
                 # need make filenames with paths system agnostic
                 if '/' in tmp[2]:
                     raw = tmp[2].split('/')
@@ -183,7 +187,7 @@ def parsenamefile(namfilename, packages, verbose=True):
                 if key == 0:
                     ftype = tmp[0].lower()
                     if ftype in packages:
-                        key = packages[ftype].unitnumber
+                        key = packages[ftype].reservedunit()
                     else:
                         key = tmp[0]
                 ext_unit_dict[key] = NamData(tmp[0].upper(), fname, filehandle,

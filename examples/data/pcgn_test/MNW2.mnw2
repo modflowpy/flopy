@@ -1,0 +1,14 @@
+ 1  -90  2                   ; 1.  MNWMAX,IMNWCB,MNWPRNT
+Well-A  -1                   ; 2a. WELLID,NNODES
+SKIN  0  1  0  0             ; 2b. LOSSTYPE,PUMPLOC,QLIMIT,PPFLAG,PUMPCAP
+ 0.1333  1.79471628  12.5    ; 2c. Rw,Rskin,Kskin
+-5. -65. 30 41               ; 2d. ztop,zbotm,row,col
+-7.5  -1 0.10 0.15             ; 2f. hlim, QCUT, Qfrcmn, Qfrcmx
+1                            ; 3.  ITMP (SP1; one well)
+Well-A 0.0                   ; 4.  WELLID, Qdes(0.0 for initial steady-state SP)
+1                            ; 3.  ITMP (SP2; one well)
+Well-A -10000.0              ; 4.  WELLID, Qdes
+1                            ; 3.  ITMP (SP3; one well)
+Well-A -10000.0              ; 4.  WELLID, Qdes
+
+

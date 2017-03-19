@@ -1,6 +1,7 @@
+import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util3d
+from ..utils import Util3d, Transient3d
 
 
 class SeawatVsc(Package):
@@ -63,12 +64,14 @@ class SeawatVsc(Package):
         The size of the AMUCOEFF array in item 3e is 2 (MUNCOEFF = 2).
         If NSMUEOS and MUTEMPOPT are both set to zero, all fluid viscosities
         are set to VISCREF.
-    mtmuspec : int
+    mtmuspec : int, or list of ints (of size nsmueos) if nsmueos > 1
         is the MT3DMS species number corresponding to the adjacent DMUDC and
         CMUREF.
-    dmudc : float
+    dmudc : float, or list of floats (of size nsmueos) if nsmueos > 1
         is the slope of the linear equation that relates fluid viscosity to
         solute concentration.
+    cmuref : float, or list of floats (of size nsmueos) if nsmueos > 1
+        is the reference concentration.
     mtmuspectemp : int
         is the MT3DMS species number that corresponds to temperature. This
         value must be between 1 and NCOMP and should not be listed in
@@ -125,32 +128,62 @@ class SeawatVsc(Package):
                  viscref=8.904e-4, nsmueos=0, mutempopt=2, mtmuspec=1,
                  dmudc=1.923e-06, cmuref=0., mtmutempspec=1,
                  amucoeff=None, invisc=-1, visc=-1, extension='vsc',
-                 unitnumber=None, **kwargs):
+                 unitnumber=None, filenames=None, **kwargs):
 
         if len(list(kwargs.keys())) > 0:
             raise Exception("VSC error: unrecognized kwargs: " +
                             ' '.join(list(kwargs.keys())))
 
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'VSC', unitnumber)
+            unitnumber = SeawatVsc.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [SeawatVsc.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+
         self.mt3dmuflg = mt3dmuflg
         self.viscmin = viscmin
         self.viscmax = viscmax
         self.viscref = viscref
         self.nsmueos = nsmueos
         self.mutempopt = mutempopt
+        if not isinstance(mtmuspec, list):
+            mtmuspec = [mtmuspec]
         self.mtmuspec = mtmuspec
+        if not isinstance(dmudc, list):
+            dmudc = [dmudc]
         self.dmudc = dmudc
+        if not isinstance(cmuref, list):
+            cmuref = [cmuref]
         self.cmuref = cmuref
         self.mtmutempspec = mtmutempspec
         if amucoeff is None:
             amucoeff = [0.001, 1, 0.015512, -20., -1.572]
         self.amucoeff = amucoeff
         self.invisc = invisc
-        self.visc = Util3d(model, (nlay, nrow, ncol), np.float32, visc,
-                            name='visc')
+        if self.mt3dmuflg == 0:
+            self.visc = Transient3d(model, (nlay, nrow, ncol), np.float32,
+                                    visc, name='visc_',
+                                    locat=self.unit_number[0])
+        else:
+            # visc not needed for most cases so setting to None
+            self.visc = None
         self.parent.add_package(self)
         return
 
@@ -166,51 +199,56 @@ class SeawatVsc(Package):
         f_vsc = open(self.fn_path, 'w')
 
         # item 1
-        f_vsc.write('%10i\n' % self.mt3dmuflg)
+        f_vsc.write('{}\n'.format(self.mt3dmuflg))
 
         # item 2
-        if isinstance(self.viscmin, int) and self.viscmin is 0:
-            f_vsc.write('%10i' % self.viscmin)
-        else:
-            f_vsc.write('%10.3E' % self.viscmin)
-
-        if isinstance(self.viscmax, int) and self.viscmax is 0:
-            f_vsc.write('%10i\n' % self.viscmax)
-        else:
-            f_vsc.write('%10.3E\n' % self.viscmax)
+        f_vsc.write('{} {}\n'.format(self.viscmin, self.viscmax))
 
         # item 3
         if self.mt3dmuflg >= 0:
-            f_vsc.write('%10.3E%10.2E%10.2E\n' % (self.viscref, self.dmudc,
-                                                  self.cmuref))
+            f_vsc.write('{} {} {}\n'.format(self.viscref, self.dmudc,
+                                            self.cmuref))
+
+        # item 3a-d
         if self.mt3dmuflg == -1:
-            f_vsc.write('%10.3E\n' % self.viscref)
-            f_vsc.write('%10i%10i\n' % (self.nsmueos, self.mutempopt))
+            f_vsc.write('{}\n'.format(self.viscref))
+            f_vsc.write('{} {}\n'.format(self.nsmueos, self.mutempopt))
+            # if self.nsmueos == 1:
+            #     f_vsc.write('{} {} {}\n'.format(self.mtmuspec, self.dmudc,
+            #                                   self.cmuref))
+            # else:
+            #     for iwr in range(self.nsmueos):
+            #         f_vsc.write('{} {} {}\n'.format(self.mtmuspec[iwr],
+            #                                         self.dmudc[iwr],
+            #                                         self.cmuref[iwr]))
+            if self.nsmueos > 0:
+                for iwr in range(self.nsmueos):
+                    f_vsc.write('{} {} {}\n'.format(self.mtmuspec[iwr],
+                                                    self.dmudc[iwr],
+                                                    self.cmuref[iwr]))
 
-            for iwr in range(self.nsmueos):
-                f_vsc.write('%10i%10.2E%10.2E\n' % ([self.mtmuspec][iwr],
-                                                    [self.dmudc][iwr],
-                                                    [self.cmuref][iwr]))
+            # item 3d
+            if self.mutempopt > 0:
+                s = '{} '.format(self.mtmutempspec)
+                for a in tuple(self.amucoeff):
+                    s += '{} '.format(a)
+                f_vsc.write(s + '\n')
 
-        if self.mutempopt > 0:
-            f_vsc.write('%10i' % self.mtmutempspec)
-
-            if self.mutempopt == 1:
-                string = ' %9.3E %9f %9f %9f\n'
-            elif self.mutempopt == 2:
-                string = '%10.3E%10f%10f %9f %9f\n'
-            elif self.mutempopt == 3:
-                string = '%10f %9f\n'
-
-            f_vsc.write(string % tuple(self.amucoeff))
-
-        # item 4
+        # items 4 and 5, transient visc array
         if self.mt3dmuflg == 0:
-            f_vsc.write('%10i\n' % self.invisc)
 
-        # item 5
-        if self.mt3dmuflg == 0 and self.invisc > 0:
-            f_vsc.write(self.visc.get_file_entry())
+            nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+            for kper in range(nper):
+
+                itmp, file_entry_visc = self.visc.get_kper_entry(kper)
+
+                # item 4 (and possibly 5)
+                if itmp > 0:
+                    f_vsc.write('{}\n'.format(self.invisc))
+                    f_vsc.write(file_entry_visc)
+
+                else:
+                    f_vsc.write('{}\n'.format(itmp))
 
         f_vsc.close()
         return
@@ -361,39 +399,72 @@ class SeawatVsc(Package):
             if mutempopt > 0:
                 if model.verbose:
                     print('    loading MTMUTEMPSPEC AMUCOEFF...')
-                    line = f.readline()
-                    t = line.strip().split()
-                    mtmutempspec = int(t[0])
-                    amucoeff = []
-                    for i in range(muncoeff):
-                        amucoeff = float(t[i + 1])
+                line = f.readline()
+                t = line.strip().split()
+                mtmutempspec = int(t[0])
+                amucoeff = []
+                for i in range(muncoeff):
+                    amucoeff.append(float(t[i + 1]))
                 if model.verbose:
                     print('   MTMUTEMSPEC {}'.format(mtmutempspec))
                     print('   AMUCOEFF {}'.format(amucoeff))
 
-        # Items 6 and 7 -- INDVISC VISC
+        # Items 4 and 5 -- INVISC VISC
         invisc = None
         visc = None
         if mt3dmuflg == 0:
-            if model.verbose:
-                print('   loading INVISC...')
-            line = f.readline()
-            t = line.strip().split()
-            invisc = int(t[0])
 
-            if invisc > 0:
-                visc = [0] * nlay
-                for k in range(nlay):
-                    if model.verbose:
-                        print('   loading VISC layer {0:3d}...'.format(k + 1))
-                    t = util_2d.load(f, model, (nrow, ncol), np.float32,
-                                     'visc', ext_unit_dict)
-                    visc[k] = t
+            # Create visc as a Transient3D record
+            visc = {}
+
+            for iper in range(nper):
+
+                if model.verbose:
+                    print('   loading INVISC '
+                          'for stress period {}...'.format(iper + 1))
+                line = f.readline()
+                t = line.strip().split()
+                invisc = int(t[0])
+
+                if invisc > 0:
+                    name = 'VISC_StressPeriod_{}'.format(iper)
+                    t = Util3d.load(f, model, (nlay, nrow, ncol),
+                                    np.float32, name, ext_unit_dict)
+                    if invisc == 2:
+                        t = t.array
+                        t = viscref + dmudc * (t - cmuref)
+                        t = Util3d(model, (nlay, nrow, ncol), np.float32, t,
+                                   name, ext_unit_dict=ext_unit_dict)
+                    visc[iper] = t
+
+            visc = Transient3d(model, (nlay, nrow, ncol), np.float32,
+                               visc, name='visc_')
+
+            # Set invisc = 1 because all concentrations converted to density
+            invisc = 1
+
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=SeawatVsc.ftype())
 
         # Construct and return vsc package
         vsc = SeawatVsc(model, mt3dmuflg=mt3dmuflg, viscmin=viscmin,
                         viscmax=viscmax, viscref=viscref, nsmueos=nsmueos,
-                        mutempopt=mutempopt, mtmuspec=mtmutempspec,
+                        mutempopt=mutempopt, mtmuspec=mtmuspec,
                         dmudc=dmudc, cmuref=cmuref, mtmutempspec=mtmutempspec,
-                        amucoeff=amucoeff, invisc=invisc, visc=visc)
+                        amucoeff=amucoeff, invisc=invisc, visc=visc,
+                        unitnumber=unitnumber, filenames=filenames)
         return vsc
+
+
+    @staticmethod
+    def ftype():
+        return 'VSC'
+
+    @staticmethod
+    def defaultunit():
+        return 38

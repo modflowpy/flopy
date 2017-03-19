@@ -1,6 +1,6 @@
 #GLO PROCESS OUTPUT FILES
-GLOBAL 6 henry.glo
-LIST 7 henry.lst
+GLOBAL 1006 henry.glo
+LIST 1007 henry.lst
 #
 #VDF PROCESS INPUT AND OUTPUT FILES
 VDF 29 henry.vdf

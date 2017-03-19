@@ -18,3 +18,4 @@ RIV           8 secp.riv
 WEL           9 secp.wel
 CHD          13 secp.chd
 GMG          14 secp.gmg
+DATA        114 secp.gmg.out

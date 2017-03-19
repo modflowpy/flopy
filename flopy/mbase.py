@@ -9,9 +9,10 @@ from __future__ import print_function
 import sys
 import os
 import subprocess as sp
-import time
+import shutil
 import threading
-if sys.version_info > (3,0):
+
+if sys.version_info > (3, 0):
     import queue as Queue
 else:
     import Queue
@@ -19,6 +20,7 @@ from datetime import datetime
 import copy
 import numpy as np
 from flopy import utils
+from .version import __version__
 
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
@@ -45,6 +47,27 @@ def which(program):
             if is_exe(exe_file):
                 return exe_file
     return None
+
+class FileData(object):
+    def __init__(self, fname, unit, binflag=False, output=False, package=None):
+        self.fname = fname
+        self.unit = unit
+        self.binflag = binflag
+        self.output = output
+        self.package = package
+
+class FileData(object):
+    def __init__(self):
+        self.file_data = []
+
+    def add_file(self, fname, unit, binflag=False, output=False, package=None):
+        ipop = []
+        for idx, file_data in enumerate(self.file_data):
+            if file_data.fname == fname or file_data.unit == unit:
+                ipop.append(idx)
+        
+        self.file_data.append(FileData(fname, unit, binflag=binflag,
+                                       output=output, package=package))
 
 
 class BaseModel(object):
@@ -117,6 +140,12 @@ class BaseModel(object):
         self.external_output = []
         self.package_units = []
 
+        # output files
+        self.output_fnames = []
+        self.output_units = []
+        self.output_binflag = []
+        self.output_packages = []
+
         return
 
     # we don't need these - no need for controlled access to array_free_format
@@ -175,10 +204,16 @@ class BaseModel(object):
         p : Package object
 
         """
-        for u in p.unit_number:
-            if u in self.package_units or u in self.external_units:
-                print("WARNING: unit {0} of package {1} already in use".format(
-                    u, p.name))
+        for idx, u in enumerate(p.unit_number):
+            if u != 0:
+                if u in self.package_units or u in self.external_units:
+                    try:
+                        pn = p.name[idx]
+                    except:
+                        pn = p.name
+                    msg = "WARNING: unit {} ".format(u) + \
+                          "of package {} already in use".format(pn)
+                    print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
@@ -192,7 +227,6 @@ class BaseModel(object):
         if self.verbose:
             print('adding Package: ', p.name[0])
         self.packagelist.append(p)
-
 
     def remove_package(self, pname):
         """
@@ -208,7 +242,15 @@ class BaseModel(object):
             if pname in pp.name:
                 if self.verbose:
                     print('removing Package: ', pp.name)
-                self.packagelist.pop(i)
+
+                # Remove the package object from the model's packagelist
+                p = self.packagelist.pop(i)
+
+                # Remove the package unit number from the list of package
+                # units stored with the model
+                for iu in p.unit_number:
+                    if iu in self.package_units:
+                        self.package_units.remove(iu)
                 return
         raise StopIteration(
             'Package name ' + pname + ' not found in Package list')
@@ -249,6 +291,267 @@ class BaseModel(object):
 
         return self.get_package(item)
 
+    def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
+                          pop_key=True):
+        iu = None
+        fname = None
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if key == unit:
+                    iu = key
+                    fname = os.path.basename(value.filename)
+                    break
+                elif value.filetype == filetype:
+                    iu = key
+                    fname = os.path.basename(value.filename)
+                    if pop_key:
+                        self.add_pop_key_list(iu)
+                    break
+        return iu, fname
+
+    def add_output_file(self, unit, fname=None, extension='cbc',
+                        binflag=True, package=None):
+        """
+        Add an ascii or binary output file file for a package
+
+        Parameters
+        ----------
+        unit : int
+            unit number of external array
+        fname : str
+            filename of external array. (default is None)
+        extension : str
+            extension to use for the cell-by-cell file. Only used if fname
+            is None. (default is cbc)
+        binflag : bool
+            boolean flag indicating if the output file is a binary file.
+            Default is True
+        package : str
+            string that defines the package the output file is attached to.
+            Default is None
+
+        """
+        add_cbc = False
+        if unit > 0:
+            add_cbc = True
+            # determine if the file is in external_units
+            if abs(unit) in self.external_units:
+                idx = self.external_units.index(abs(unit))
+                fname = os.path.basename(self.external_fnames[idx])
+                binflag = self.external_binflag[idx]
+                self.remove_external(unit=abs(unit))
+            # determine if the unit exists in the output data
+            if abs(unit) in self.output_units:
+                add_cbc = False
+                idx = self.output_units.index(abs(unit))
+                # determine if binflag has changed
+                if binflag is not self.output_binflag[idx]:
+                    add_cbc = True
+                if add_cbc:
+                    self.remove_output(unit=abs(unit))
+                else:
+                    if package is not None:
+                        self.output_packages[idx].append(package)
+
+        if add_cbc:
+            if fname is None:
+                fname = self.name + '.' + extension
+                # check if this file name exists for a different unit number
+                if fname in self.output_fnames:
+                    idx = self.output_fnames.index(fname)
+                    iut = self.output_units[idx]
+                    if iut != unit:
+                        # include unit number in fname if package has
+                        # not been passed
+                        if package is None:
+                            fname = self.name + '.{}.'.format(unit) \
+                                    + extension
+                        # include package name in fname
+                        else:
+                            fname = self.name + '.{}.'.format(package) \
+                                    + extension
+            else:
+                fname = os.path.basename(fname)
+            self.add_output(fname, unit, binflag=binflag, package=package)
+        return
+
+
+    def add_output(self, fname, unit, binflag=False, package=None):
+        """
+        Assign an external array so that it will be listed as a DATA or
+        DATA(BINARY) entry in the name file.  This will allow an outside
+        file package to refer to it.
+
+        Parameters
+        ----------
+        fname : str
+            filename of external array
+        unit : int
+            unit number of external array
+        binflag : boolean
+            binary or not. (default is False)
+
+        """
+        if fname in self.output_fnames:
+            print("BaseModel.add_output() warning: " +
+                  "replacing existing filename {0}".format(fname))
+            idx = self.output_fnames.index(fname)
+            self.output_fnames.pop(idx)
+            self.output_units.pop(idx)
+            self.output_binflag.pop(idx)
+            self.output_packages.pop(idx)
+
+        self.output_fnames.append(fname)
+        self.output_units.append(unit)
+        self.output_binflag.append(binflag)
+        if package is not None:
+            self.output_packages.append([package])
+        else:
+            self.output_packages.append([])
+        return
+    
+    
+    def remove_output(self, fname=None, unit=None):
+        """
+        Remove an output file from the model by specifying either the
+        file name or the unit number.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    self.output_fnames.pop(i)
+                    self.output_units.pop(i)
+                    self.output_binflag.pop(i)
+                    self.output_packages.pop(i)
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    self.output_fnames.pop(i)
+                    self.output_units.pop(i)
+                    self.output_binflag.pop(i)
+                    self.output_packages.pop(i)
+        else:
+            raise Exception(
+                ' either fname or unit must be passed to remove_output()')
+        return
+
+    def get_output(self, fname=None, unit=None):
+        """
+        Get an output file from the model by specifying either the
+        file name or the unit number.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    return self.output_units[i]
+            return None
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    return self.output_fnames[i]
+            return None
+        else:
+            raise Exception(
+                ' either fname or unit must be passed to get_output()')
+        return
+
+    def set_output_attribute(self, fname=None, unit=None, attr=None):
+        """
+        Set a variable in an output file from the model by specifying either
+        the file name or the unit number and a dictionary with attributes
+        to change.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        idx = None
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    idx = i
+                    break
+            return None
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    idx = i
+                    break
+        else:
+            raise Exception(
+                ' either fname or unit must be passed ' +
+                ' to set_output_attribute()')
+        if attr is not None:
+            if idx is not None:
+                for key, value in attr.items:
+                    if key == 'binflag':
+                        self.output_binflag[idx] = value
+                    elif key == 'fname':
+                        self.output_fnames[idx] = value
+                    elif key == 'unit':
+                        self.output_units[idx] = value
+        return
+
+    def get_output_attribute(self, fname=None, unit=None, attr=None):
+        """
+        Get a attribute for an output file from the model by specifying either
+        the file name or the unit number.
+
+        Parameters
+        ----------
+        fname : str
+            filename of output array
+        unit : int
+            unit number of output array
+
+        """
+        idx = None
+        if fname is not None:
+            for i, e in enumerate(self.output_fnames):
+                if fname in e:
+                    idx = i
+                    break
+            return None
+        elif unit is not None:
+            for i, u in enumerate(self.output_units):
+                if u == unit:
+                    idx = i
+                    break
+        else:
+            raise Exception(
+                ' either fname or unit must be passed ' +
+                ' to set_output_attribute()')
+        v = None
+        if attr is not None:
+            if idx is not None:
+                if attr == 'binflag':
+                    v = self.output_binflag[idx]
+                elif attr == 'fname':
+                    v = self.output_fnames[idx]
+                elif attr == 'unit':
+                    v = self.output_units[idx]
+        return v
+
     def add_external(self, fname, unit, binflag=False, output=False):
         """
         Assign an external array so that it will be listed as a DATA or
@@ -267,8 +570,16 @@ class BaseModel(object):
         """
         if fname in self.external_fnames:
             print("BaseModel.add_external() warning: " +
-                  "replacing existing filename {0}".format(fname))
+                  "replacing existing filename {}".format(fname))
             idx = self.external_fnames.index(fname)
+            self.external_fnames.pop(idx)
+            self.external_units.pop(idx)
+            self.external_binflag.pop(idx)
+            self.external_output.pop(idx)
+        if unit in self.external_units:
+            print("BaseModel.add_external() warning: " +
+                  "replacing existing unit {}".format(unit))
+            idx = self.external_units.index(unit)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
             self.external_binflag.pop(idx)
@@ -293,24 +604,67 @@ class BaseModel(object):
             unit number of external array
 
         """
+        plist = []
         if fname is not None:
             for i, e in enumerate(self.external_fnames):
                 if fname in e:
-                    self.external_fnames.pop(i)
-                    self.external_units.pop(i)
-                    self.external_binflag.pop(i)
-                    self.external_output.pop(i)
+                    plist.append(i)
         elif unit is not None:
             for i, u in enumerate(self.external_units):
                 if u == unit:
-                    self.external_fnames.pop(i)
-                    self.external_units.pop(i)
-                    self.external_binflag.pop(i)
-                    self.external_output.pop(i)
+                    plist.append(i)
         else:
             raise Exception(
                 ' either fname or unit must be passed to remove_external()')
+        # remove external file
+        j = 0
+        for i in plist:
+            ipos = i - j
+            self.external_fnames.pop(ipos)
+            self.external_units.pop(ipos)
+            self.external_binflag.pop(ipos)
+            self.external_output.pop(ipos)
+            j += 1
         return
+
+    def add_existing_package(self, filename, ptype=None,
+                             copy_to_model_ws=True):
+        """ add an existing package to a model instance.
+        Parameters
+        ----------
+        filename : str
+            the name of the file to add as a package
+        ptype : optional
+            the model package type (e.g. "lpf", "wel", etc).  If None,
+            then the file extension of the filename arg is used
+        copy_to_model_ws : bool
+            flag to copy the package file into the model_ws directory.
+        """
+        if ptype is None:
+            ptype = filename.split('.')[-1]
+        ptype = str(ptype).upper()
+
+        # for pak in self.packagelist:
+        #     if ptype in pak.name:
+        #         print("BaseModel.add_existing_package() warning: " +\
+        #               "replacing existing package {0}".format(ptype))
+        class Obj(object):
+            pass
+
+        fake_package = Obj()
+        fake_package.write_file = lambda: None
+        fake_package.extra = ['']
+        fake_package.name = [ptype]
+        fake_package.extension = [filename.split('.')[-1]]
+        fake_package.unit_number = [self.next_ext_unit()]
+        if copy_to_model_ws:
+            base_filename = os.path.split(filename)[-1]
+            fake_package.file_name = [base_filename]
+            shutil.copy2(filename, os.path.join(self.model_ws, base_filename))
+        else:
+            fake_package.file_name = [filename]
+        fake_package.allowDuplicates = True
+        self.add_package(fake_package)
 
     def get_name_file_entries(self):
         """
@@ -325,11 +679,8 @@ class BaseModel(object):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = s + ('{0:12s} {1:3d} {2:s} {3:s}\n'.format(p.name[i],
-                                                               p.unit_number[
-                                                                   i],
-                                                               p.file_name[i],
-                                                               p.extra[i]))
+                s += '{:14s} {:5d}  '.format(p.name[i], p.unit_number[i]) + \
+                     '{:s} {:s}\n'.format(p.file_name[i], p.extra[i])
         return s
 
     def get_package(self, name):
@@ -384,9 +735,11 @@ class BaseModel(object):
             raise Exception(err)
 
         # set namefile heading
-        self.heading = \
-            '# Name file for {}, generated by Flopy.'.format(
-                self.version_types[self.version])
+        heading = '# Name file for ' + \
+                  '{}, '.format(self.version_types[self.version]) + \
+                  'generated by Flopy version {}.'.format(__version__)
+        self.heading = heading
+
 
         return None
 
@@ -416,16 +769,15 @@ class BaseModel(object):
                     '\ncreating model workspace...\n   {}\n'.format(new_pth))
                 os.makedirs(new_pth)
             except:
-                # print '\n%s not valid, workspace-folder was changed to %s\n' % (new_pth, os.getcwd())
-                print(
-                    '\n{0:s} not valid, workspace-folder was changed to {1:s}\n'.format(
-                        new_pth, os.getcwd()))
+                line = '\n{} not valid, workspace-folder '.format(new_pth) + \
+                       'was changed to {}\n'.format(os.getcwd())
+                print(line)
                 new_pth = os.getcwd()
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
-        sys.stdout.write(
-            '\nchanging model workspace...\n   {}\n'.format(new_pth))
+        line = '\nchanging model workspace...\n   {}\n'.format(new_pth)
+        sys.stdout.write(line)
         # reset the paths for each package
         for pp in (self.packagelist):
             pp.fn_path = os.path.join(self.model_ws, pp.file_name[0])
@@ -444,15 +796,25 @@ class BaseModel(object):
 
     def _reset_external(self, pth, old_pth):
         new_ext_fnames = []
-        for ext_file, output in zip(self.external_fnames, self.external_output):
-            #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+        for ext_file, output in zip(self.external_fnames,
+                                    self.external_output):
+            # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
             # this is a wicked mess
             if output:
-                #new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
+                # new_ext_file = os.path.join(pth, os.path.split(ext_file)[-1])
                 new_ext_file = ext_file
             else:
-                fpth = os.path.abspath(os.path.join(old_pth, ext_file))
-                new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
+                #fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                #new_ext_file = os.path.relpath(fpth, os.path.abspath(pth))
+                fdir = os.path.dirname(ext_file)
+                if fdir == '':
+                    fpth = os.path.abspath(os.path.join(old_pth, ext_file))
+                else:
+                    fpth = ext_file
+                ao = os.path.abspath(os.path.dirname(fpth))
+                ep = os.path.abspath(pth)
+                relp = os.path.relpath(ao, ep)
+                new_ext_file = os.path.join(relp, os.path.basename(ext_file))
             new_ext_fnames.append(new_ext_file)
         self.external_fnames = new_ext_fnames
 
@@ -480,7 +842,7 @@ class BaseModel(object):
     def __setattr__(self, key, value):
 
         if key == "free_format_input":
-            #if self.bas6 is not None:
+            # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
             super(BaseModel, self).__setattr__(key, value)
 
@@ -860,7 +1222,7 @@ class BaseModel(object):
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
               normal_msg='normal termination',
-              async=False):
+              async=False, cargs=None):
     """
     This function will run the model using subprocess.Popen.  It
     communicates with the model's stdout asynchronously and reports
@@ -890,6 +1252,9 @@ def run_model(exe_name, namefile, model_ws='./',
         asynchonously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
         really fast
+    cargs : str or list of strings
+        additional command line arguments to pass to the executable.
+        Default is None
     Returns
     -------
     (success, buff)
@@ -899,6 +1264,13 @@ def run_model(exe_name, namefile, model_ws='./',
     """
     success = False
     buff = []
+
+    # convert normal_msg to lower case for comparison
+    if isinstance(normal_msg, str):
+        normal_msg = [normal_msg.lower()]
+    elif isinstance(normal_msg, list):
+        for idx, s in enumerate(normal_msg):
+            normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
     exe = which(exe_name)
@@ -922,22 +1294,35 @@ def run_model(exe_name, namefile, model_ws='./',
         raise Exception(s)
 
     # simple little function for the thread to target
-    def q_output(output,q):
-            for line in iter(output.readline,b''):
-                q.put(line)
-            #time.sleep(1)
-            #output.close()
+    def q_output(output, q):
+        for line in iter(output.readline, b''):
+            q.put(line)
+            # time.sleep(1)
+            # output.close()
 
-    proc = sp.Popen([exe_name, namefile],
-                    stdout=sp.PIPE, cwd=model_ws)
+    # create a list of arguments to pass to Popen
+    argv = [exe_name, namefile]
+
+    # add additional arguments to Popen arguments
+    if cargs is not None:
+        if isinstance(cargs, str):
+            cargs = [cargs]
+        for t in cargs:
+            argv.append(t)
+
+    # run the model with Popen
+    proc = sp.Popen(argv,
+                    stdout=sp.PIPE, stderr=sp.STDOUT, cwd=model_ws)
 
     if not async:
         while True:
             line = proc.stdout.readline()
             c = line.decode('utf-8')
             if c != '':
-                if normal_msg in c.lower():
-                    success = True
+                for msg in normal_msg:
+                    if msg in c.lower():
+                        success = True
+                        break
                 c = c.rstrip('\r\n')
                 if not silent:
                     print('{}'.format(c))
@@ -947,14 +1332,13 @@ def run_model(exe_name, namefile, model_ws='./',
                 break
         return success, buff
 
-
-    #some tricks for the async stdout reading
+    # some tricks for the async stdout reading
     q = Queue.Queue()
-    thread = threading.Thread(target=q_output,args=(proc.stdout,q))
+    thread = threading.Thread(target=q_output, args=(proc.stdout, q))
     thread.daemon = True
     thread.start()
 
-    failed_words = ["fail","error"]
+    failed_words = ["fail", "error"]
     last = datetime.now()
     lastsec = 0.
     while True:
@@ -970,7 +1354,7 @@ def run_model(exe_name, namefile, model_ws='./',
                 now = datetime.now()
                 dt = now - last
                 tsecs = dt.total_seconds() - lastsec
-                line = "(elapsed:{0})-->{1}".format(tsecs,line)
+                line = "(elapsed:{0})-->{1}".format(tsecs, line)
                 lastsec = tsecs + lastsec
                 buff.append(line)
                 if not silent:

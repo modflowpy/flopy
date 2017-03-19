@@ -1,5 +1,5 @@
-GLOBAL 6 henry.glo
-LIST 7 henry.lst
+GLOBAL 1006 henry.glo
+LIST 1007 henry.lst
 BAS6  1 henry.bas
 DIS  16 henry.dis
 BCF6 11 henry.bcf

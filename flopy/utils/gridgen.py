@@ -5,7 +5,8 @@ import subprocess
 
 # flopy imports
 from ..modflow.mfdisu import ModflowDisU
-from util_array import read1d, Util2d
+from .util_array import read1d, Util2d
+from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 
 try:
@@ -85,8 +86,8 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.e30):
     idx = np.isnan(a)
     a[idx] = np.float(nodata)
     # write
-    with open(fname, 'w') as f:
-        f.write(header)
+    with open(fname, 'wb') as f:
+        f.write(header.encode('ascii'))
         np.savetxt(f, a, fmt='%15.6e')
     return
 
@@ -118,6 +119,7 @@ class Gridgen(object):
                  surface_interpolation='replicate'):
         self.nodes = 0
         self.nja = 0
+        self.nodelay = np.zeros((dis.nlay), dtype=np.int)
         self._vertdict = {}
         self.dis = dis
         self.model_ws = model_ws
@@ -342,6 +344,16 @@ class Gridgen(object):
         # Create a dictionary that relates nodenumber to vertices
         self._mkvertdict()
 
+        # read and save nodelay array to self
+        fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
+        f = open(fname, 'r')
+        self.nodelay = read1d(f, self.nodelay)
+        f.close()
+
+        # Create a recarray of the grid polygon shapefile
+        shapename = os.path.join(self.model_ws, 'qtgrid')
+        self.qtra = shp2recarray(shapename)
+
         return
 
     def get_vertices(self, nodenumber):
@@ -474,8 +486,7 @@ class Gridgen(object):
             The plot axis.  If not provided it, plt.gca() will be used.
             If there is not a current axis then a new one will be created.
         layer : int
-            Not working!  This should show only this layer, but there is no
-            way to do this yet with plot_shapefile.
+            Layer number to plot
         cmap : string
             Name of colormap to use for polygon shading (default is 'Dark2')
         edgecolor : string
@@ -497,14 +508,18 @@ class Gridgen(object):
 
         """
         import matplotlib.pyplot as plt
-        from flopy.plot import plot_shapefile, shapefile_extents
+        from ..plot import plot_shapefile, shapefile_extents
+
         if ax is None:
             ax = plt.gca()
         shapename = os.path.join(self.model_ws, 'qtgrid')
         xmin, xmax, ymin, ymax = shapefile_extents(shapename)
+
+        idx = np.where(self.qtra.layer == layer)[0]
+
         pc = plot_shapefile(shapename, ax=ax, edgecolor=edgecolor,
                             facecolor=facecolor, cmap=cmap, a=a,
-                            masked_values=masked_values, **kwargs)
+                            masked_values=masked_values, idx=idx, **kwargs)
         plt.xlim(xmin, xmax)
         plt.ylim(ymin, ymax)
         return pc
@@ -516,7 +531,7 @@ class Gridgen(object):
         Returns
         -------
         node_ra : ndarray
-            Recarray representation of the node file
+            Recarray representation of the node file with zero-based indexing
 
         """
 
@@ -528,6 +543,8 @@ class Gridgen(object):
                        ('dx', np.float), ('dy', np.float), ('dz', np.float),
                        ])
         node_ra = np.genfromtxt(fname, dtype=dt, skip_header=1)
+        node_ra['layer'] -= 1
+        node_ra['node'] -= 1
         return node_ra
 
     def get_disu(self, model, nper=1, perlen=1, nstp=1, tsmult=1, steady=True,
@@ -628,10 +645,11 @@ class Gridgen(object):
         f.close()
 
         # ivc
-        ivc = np.empty((njag), dtype=np.int)
+        fldr = np.empty((njag), dtype=np.int)
         fname = os.path.join(self.model_ws, 'qtg.fldr.dat')
         f = open(fname, 'r')
-        ivc = read1d(f, ivc)
+        fldr = read1d(f, fldr)
+        ivc = np.where(abs(fldr) == 3, 1, 0)
         f.close()
 
         cl1 = None
@@ -661,6 +679,242 @@ class Gridgen(object):
 
         # return dis object instance
         return disu
+
+    def get_gridprops(self):
+        gridprops = {}
+
+        # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
+        fname = os.path.join(self.model_ws, 'qtg.nod')
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.strip().split()
+        nodes = int(ll.pop(0))
+        f.close()
+        nlay = self.dis.nlay
+        gridprops['nodes'] = nodes
+        gridprops['nlay'] = nlay
+
+
+        # nodelay
+        nodelay = np.empty((nlay), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
+        f = open(fname, 'r')
+        nodelay = read1d(f, nodelay)
+        f.close()
+        gridprops['nodelay'] = nodelay
+
+        # top
+        top = np.empty((nodes), dtype=np.float32)
+        istart = 0
+        for k in range(nlay):
+            istop = istart + nodelay[k]
+            fname = os.path.join(self.model_ws,
+                                 'quadtreegrid.top{}.dat'.format(k + 1))
+            f = open(fname, 'r')
+            tpk = np.empty((nodelay[k]), dtype=np.float32)
+            tpk = read1d(f, tpk)
+            f.close()
+            top[istart:istop] = tpk
+            istart = istop
+        gridprops['top'] = top
+
+        # bot
+        bot = np.empty((nodes), dtype=np.float32)
+        istart = 0
+        for k in range(nlay):
+            istop = istart + nodelay[k]
+            fname = os.path.join(self.model_ws,
+                                 'quadtreegrid.bot{}.dat'.format(k + 1))
+            f = open(fname, 'r')
+            btk = np.empty((nodelay[k]), dtype=np.float32)
+            btk = read1d(f, btk)
+            f.close()
+            bot[istart:istop] = btk
+            istart = istop
+        gridprops['bot'] = bot
+
+        # area
+        fname = os.path.join(self.model_ws, 'qtg.area.dat')
+        f = open(fname, 'r')
+        area = np.empty((nodes), dtype=np.float32)
+        area = read1d(f, area)
+        f.close()
+        gridprops['area'] = area
+
+        # iac
+        iac = np.empty((nodes), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.iac.dat')
+        f = open(fname, 'r')
+        iac = read1d(f, iac)
+        f.close()
+        gridprops['iac'] = iac
+
+        # Calculate njag and save as nja to self
+        njag = iac.sum()
+        gridprops['nja'] = njag
+
+        # ja
+        ja = np.empty((njag), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.ja.dat')
+        f = open(fname, 'r')
+        ja = read1d(f, ja)
+        f.close()
+        gridprops['ja'] = ja
+
+        # fldr
+        fldr = np.empty((njag), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.fldr.dat')
+        f = open(fname, 'r')
+        fldr = read1d(f, fldr)
+        f.close()
+        gridprops['fldr'] = fldr
+
+        # ivc
+        ivc = np.zeros(fldr.shape, dtype=np.int)
+        idx = (abs(fldr) == 3)
+        ivc[idx] = 1
+        gridprops['ivc'] = ivc
+
+        cl1 = None
+        cl2 = None
+        # cl12
+        cl12 = np.empty((njag), dtype=np.float32)
+        fname = os.path.join(self.model_ws, 'qtg.c1.dat')
+        f = open(fname, 'r')
+        cl12 = read1d(f, cl12)
+        f.close()
+        gridprops['cl12'] = cl12
+
+        # fahl
+        fahl = np.empty((njag), dtype=np.float32)
+        fname = os.path.join(self.model_ws, 'qtg.fahl.dat')
+        f = open(fname, 'r')
+        fahl = read1d(f, fahl)
+        f.close()
+        gridprops['fahl'] = fahl
+
+        # ihc
+        ihc = np.empty(fldr.shape, dtype=np.int)
+        ihc = np.where(abs(fldr) == 0, 0, ihc)
+        ihc = np.where(abs(fldr) == 1, 1, ihc)
+        ihc = np.where(abs(fldr) == 2, 1, ihc)
+        ihc = np.where(abs(fldr) == 3, 0, ihc)
+        gridprops['ihc'] = ihc
+
+        #hwva
+        hwva = fahl.copy()
+        ipos = 0
+        for n in range(nodes):
+            for j in range(iac[n]):
+                if j == 0:
+                    pass
+                elif ihc[ipos] == 0:
+                    pass
+                else:
+                    m = ja[ipos] - 1
+                    dzn = top[n] - bot[n]
+                    dzm = top[m] - bot[m]
+                    dzavg = 0.5 * (dzn + dzm)
+                    hwva[ipos] = hwva[ipos] / dzavg
+                ipos += 1
+        gridprops['hwva'] = hwva
+
+        # angldegx
+        angldegx = np.zeros(fldr.shape, dtype=np.float)
+        angldegx = np.where(fldr == 0, 1.e30, angldegx)
+        angldegx = np.where(abs(fldr) == 3, 1.e30, angldegx)
+        angldegx = np.where(fldr == 2, 90, angldegx)
+        angldegx = np.where(fldr == -1, 180, angldegx)
+        angldegx = np.where(fldr == -2, 270, angldegx)
+        gridprops['angldegx'] = angldegx
+
+        # vertices -- not optimized for redundant vertices yet
+        nvert = nodes * 4
+        vertices = np.empty((nvert, 2), dtype=np.float)
+        ipos = 0
+        for n in range(nodes):
+            vs = self.get_vertices(n)
+            for x, y in vs[:-1]:  # do not include last vertex
+                vertices[ipos, 0] = x
+                vertices[ipos, 1] = y
+                ipos += 1
+        gridprops['nvert'] = nvert
+        gridprops['vertices'] = vertices
+
+        cellxy = np.empty((nodes, 2), dtype=np.float)
+        for n in range(nodes):
+            x, y = self.get_center(n)
+            cellxy[n, 0] = x
+            cellxy[n, 1] = y
+        gridprops['cellxy'] = cellxy
+
+        return gridprops
+
+    def to_disu8(self, fname, writevertices=True):
+
+        gridprops = self.get_gridprops()
+        f = open(fname, 'w')
+
+        # opts
+        f.write('BEGIN OPTIONS\n')
+        f.write('END OPTIONS\n\n')
+
+        # dims
+        f.write('BEGIN DIMENSIONS\n')
+        f.write('  NODES {}\n'.format(gridprops['nodes']) )
+        f.write('  NJA {}\n'.format(gridprops['nja']) )
+        if writevertices:
+            f.write('  NVERT {}\n'.format(gridprops['nvert']))
+        f.write('END DIMENSIONS\n\n')
+
+        # disdata
+        f.write('BEGIN DISDATA\n')
+        for prop in ['top', 'bot', 'area']:
+            f.write('  {}\n'.format(prop.upper()))
+            f.write('    INTERNAL 1 (FREE)\n')
+            a = gridprops[prop]
+            for aval in a:
+                f.write('{} '.format(aval))
+            f.write('\n')
+        f.write('END DISDATA\n\n')
+
+        # condata
+        f.write('BEGIN CONNECTIONDATA\n')
+        for prop in ['iac', 'ja', 'ihc', 'cl12', 'hwva', 'angldegx']:
+            f.write('  {}\n'.format(prop.upper()))
+            f.write('    INTERNAL 1 (FREE)\n')
+            a = gridprops[prop]
+            for aval in a:
+                f.write('{} '.format(aval))
+            f.write('\n')
+        f.write('END CONNECTIONDATA\n\n')
+
+        if writevertices:
+            # vertices -- not optimized for redundant vertices yet
+            f.write('BEGIN VERTICES\n')
+            vertices = gridprops['vertices']
+            for i, row in enumerate(vertices):
+                x = row[0]
+                y = row[1]
+                s = '  {} {} {}\n'.format(i + 1, x, y)
+                f.write(s)
+            f.write('END VERTICES\n\n')
+
+            # celldata -- not optimized for redundant vertices yet
+            f.write('BEGIN CELL2D\n')
+            cellxy = gridprops['cellxy']
+            iv = 1
+            for n, row in enumerate(cellxy):
+                xc = row[0]
+                yc = row[1]
+                s = '  {} {} {} {} {} {} {} {}\n'.format(n + 1, xc, yc, 4, iv,
+                                                         iv+1, iv+2, iv+3)
+                f.write(s)
+                iv += 4
+            f.write('END CELL2D\n\n')
+
+        f.close()
+        return
 
     def intersect(self, features, featuretype, layer):
         """
@@ -757,7 +1011,7 @@ class Gridgen(object):
 
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(-sr.rotation)
+        s += '  ROTATION_ANGLE = {}\n'.format(sr.rotation)
         s += '  X_OFFSET = {}\n'.format(xllrot)
         s += '  Y_OFFSET = {}\n'.format(yllrot)
         s += '  NLAY = {}\n'.format(self.dis.nlay)

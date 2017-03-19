@@ -6,9 +6,10 @@ These are the examples that are distributed with MODFLOW-2005.
 import os
 import flopy
 
-# import matplotlib
-
-# matplotlib.use('Agg')
+tpth = os.path.join('temp', 't008')
+# make the directory if it does not exist
+if not os.path.isdir(tpth):
+    os.makedirs(tpth)
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
@@ -62,47 +63,47 @@ def test_nwt_model_load():
 
 
 def load_nwt(nwtfile):
-    ml = flopy.modflow.Modflow(model_ws="temp")
-    fn = os.path.join('temp', '{}.nwt'.format(ml.name))
+    ml = flopy.modflow.Modflow(model_ws=tpth)
+    fn = os.path.join(tpth, '{}.nwt'.format(ml.name))
     if os.path.isfile(fn):
         os.remove(fn)
     if 'fmt.' in nwtfile.lower():
-        #ml.set_free_format(value=False)
+        # ml.set_free_format(value=False)
         ml.array_free_format = False
     else:
-        #ml.set_free_format(value=True)
+        # ml.set_free_format(value=True)
         ml.array_free_format = True
     nwt = flopy.modflow.ModflowNwt.load(nwtfile, ml)
     assert isinstance(nwt,
                       flopy.modflow.ModflowNwt), '{} load unsuccessful'.format(
-            os.path.basename(nwtfile))
+        os.path.basename(nwtfile))
     nwt.write_file()
     assert os.path.isfile(fn), '{} write unsuccessful'.format(
-            os.path.basename(nwtfile))
+        os.path.basename(nwtfile))
     nwt2 = flopy.modflow.ModflowNwt.load(fn, ml)
     lst = [a for a in dir(nwt) if
            not a.startswith('__') and not callable(getattr(nwt, a))]
     for l in lst:
         assert nwt2[l] == nwt[l], '{} data '.format(l) + \
                                   'instantiated from {} load '.format(
-                                          os.path.basename(nwtfile)) + \
+                                      os.path.basename(nwtfile)) + \
                                   ' is not the same as written to {}'.format(
-                                          os.path.basename(fn))
+                                      os.path.basename(fn))
 
 
 def load_nwt_model(nfile):
     f = os.path.basename(nfile)
     model_ws = os.path.dirname(nfile)
     ml = flopy.modflow.Modflow.load(f, model_ws=model_ws)
-    assert isinstance(ml,
-                      flopy.modflow.Modflow), 'Error: flopy model instance was not created'
+    assert isinstance(ml, flopy.modflow.Modflow), \
+        'Error: flopy model instance was not created'
 
     # change the model work space and rewrite the files
-    ml.change_model_ws('temp')
+    ml.change_model_ws(tpth)
     ml.write_input()
 
     # reload the model that was just written
-    ml2 = flopy.modflow.Modflow.load(f, model_ws='temp')
+    ml2 = flopy.modflow.Modflow.load(f, model_ws=tpth)
 
     # check that the data are the same
     for pn in ml.get_package_list():
@@ -113,9 +114,9 @@ def load_nwt_model(nfile):
         for l in lst:
             assert p[l] == p2[l], '{}.{} data '.format(pn, l) + \
                                   'instantiated from {} load '.format(
-                                          model_ws) + \
+                                      model_ws) + \
                                   ' is not the same as written to {}'.format(
-                                          'temp')
+                                      'temp')
 
 
 if __name__ == '__main__':
@@ -126,4 +127,3 @@ if __name__ == '__main__':
     for namfile in namfiles:
         load_model(namfile)
         load_only_bas6_model(namfile)
-

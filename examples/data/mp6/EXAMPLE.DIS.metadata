@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModflowMetadata>
+  <GridGeoReference>
+    <OriginX>0</OriginX>
+    <OriginY>0</OriginY>
+    <Angle>0</Angle>
+    <ProjectionString />
+  </GridGeoReference>
+  <BasemapFile />
+</ModflowMetadata>

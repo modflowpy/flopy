@@ -8,9 +8,9 @@ MODFLOW Guide
 
 """
 import sys
-import copy
+
 import numpy as np
-# from numpy import ones, zeros, empty
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
 
@@ -29,15 +29,12 @@ class ModflowSwi2(Package):
         minus one. (default is 1).
     istrat : int
         flag indicating the density distribution. (default is 1).
-    nobs : int
-        number of observation locations. (default is 0).
     iswizt : int
-        unit number for zeta output. (default is 55).
+        unit number for zeta output. (default is None).
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 0).
-        unit number for SWI2 Package budget output. (default is 56).
+        (default is None).
     iswiobs : int
         flag and unit number SWI2 observation output. (default is 0).
     options : list of strings
@@ -147,14 +144,21 @@ class ModflowSwi2(Package):
         names for nobs observations.
     obslrc : list of lists
         zero-based [layer, row, column] lists for nobs observations.
-    naux : int
-        number of auxiliary variables
-    extension : list string
-        Filename extension (default is ['swi2', 'zta', 'swb'])
-    unitnumber : int
-        File unit number (default is 29).
+    extension : string
+        Filename extension (default is 'swi2')
     npln : int
         Deprecated - use nsrf instead.
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the zeta, cbc, obs output files.
+        If filenames=None the package name will be created using the model name
+        and package extension and the output file names will be created using
+        the model name and output extensions. If a single string is passed the
+        package will be set to the string and output names will be created
+        using the model name and zeta, cbc, and observation extensions. To
+        define the names for all package files (input and output) the length
+        of the list of strings should be 4. Default is None.
 
     Attributes
     ----------
@@ -180,35 +184,112 @@ class ModflowSwi2(Package):
 
     """
 
-    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=55, ipakcb=53,
-                 iswiobs=0, options=None, nsolver=1, iprsol=0, mutsol=3,
+    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=None,
+                 ipakcb=None, iswiobs=0, options=None,
+                 nsolver=1, iprsol=0, mutsol=3,
                  solver2params={'mxiter': 100, 'iter1': 20, 'npcond': 1,
                                 'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
                                 'nbpol': 2, 'damp': 1.0, 'dampt': 1.0},
                  toeslope=0.05, tipslope=0.05, alpha=None, beta=0.1, nadptmx=1,
-                 nadptmn=1, adptfct=1.0,
-                 nu=0.025, zeta=[0.0], ssz=0.25, isource=0,
-                 obsnam=[], obslrc=[],
-                 extension=['swi2', 'zta'], unit_number=29,
-                 npln=None):
+                 nadptmn=1, adptfct=1.0, nu=0.025, zeta=[0.0], ssz=0.25,
+                 isource=0, obsnam=None, obslrc=None, npln=None,
+                 extension='swi2', unitnumber=None, filenames=None):
         """
         Package constructor.
 
         """
-        name = ['SWI2', 'DATA(BINARY)']
-        units = [unit_number, iswizt]
-        extra = ['', 'REPLACE']
-        if nobs > 0:
-            extension.append('zobs')
-            name.append('DATA')
-            units.append(iswiobs)
-            extra.append('REPLACE')
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSwi2.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 4:
+                for idx in range(len(filenames), 4):
+                    filenames.append(None)
+
+        # update external file information with zeta output, if necessary
+        if iswizt is not None:
+            fname = filenames[1]
+            model.add_output_file(iswizt, fname=fname, extension='zta',
+                                  package=ModflowSwi2.ftype())
+        else:
+            iswizt = 0
+
+        # update external file information with swi2 cell-by-cell output,
+        # if necessary
+        if ipakcb is not None:
+            fname = filenames[2]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowSwi2.ftype())
+        else:
+            ipakcb = 0
+
+        # Process observations
+        if nobs != 0:
+            print('ModflowSwi2: specification of nobs is deprecated.')
+        nobs = 0
+        if obslrc is not None:
+            if isinstance(obslrc, list) or isinstance(obslrc, tuple):
+                obslrc = np.array(obslrc, dtype=np.int)
+            if isinstance(obslrc, np.ndarray):
+                if obslrc.ndim == 1 and obslrc.size == 3:
+                    obslrc = obslrc.reshape((1, 3))
+            else:
+                errmsg = 'ModflowSwi2: obslrc must be a tuple or ' + \
+                         'list of tuples.'
+                raise Exception(errmsg)
+            nobs = obslrc.shape[0]
+
+            if obsnam is None:
+                obsnam = []
+                for n in range(nobs):
+                    obsnam.append('Obs{:03}'.format(n + 1))
+            else:
+                if not isinstance(obsnam, list):
+                    obsnam = [obsnam]
+                if len(obsnam) != nobs:
+                    errmsg = 'ModflowSwi2: obsnam must be a list with a ' + \
+                             'length of {} not {}.'.format(nobs, len(obsnam))
+                    raise Exception(errmsg)
+
+        if nobs > 0:
+            binflag = False
+            ext = 'zobs.out'
+            fname = filenames[3]
+            if iswiobs is not None:
+                if iswiobs < 0:
+                    binflag = True
+                    ext = 'zobs.bin'
+            else:
+                iswiobs = 1053
+            # update external file information with swi2 observation output,
+            # if necessary
+            model.add_output_file(iswiobs, fname=fname, binflag=binflag,
+                                  extension=ext, package=ModflowSwi2.ftype())
+        else:
+            iswiobs = 0
+
+        # Fill namefile items
+        name = [ModflowSwi2.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra)
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        self.heading = '# Salt Water Intrusion (SWI2) package file for MODFLOW-2005, generated by Flopy.'
+        self.heading = '# {} package for '.format(self.name[0]) + \
+                       ' {}, '.format(model.version_types[model.version]) + \
+                       'generated by Flopy.'
 
         # options
         self.fsssopt, self.adaptive = False, False
@@ -231,10 +312,7 @@ class ModflowSwi2(Package):
 
         self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, istrat, nobs, \
                                                                        iswizt, iswiobs
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
 
         #
         self.nsolver, self.iprsol, self.mutsol = nsolver, iprsol, mutsol
@@ -245,9 +323,11 @@ class ModflowSwi2(Package):
         self.nadptmx, self.nadptmn, self.adptfct = nadptmx, nadptmn, adptfct
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu,
+                             name='nu')
         else:
-            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu, name='nu')
+            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu,
+                             name='nu')
         self.zeta = []
         for i in range(self.nsrf):
             self.zeta.append(Util3d(model, (nlay, nrow, ncol), np.float32,
@@ -258,11 +338,6 @@ class ModflowSwi2(Package):
                               name='isource')
         #
         self.obsnam = obsnam
-        if isinstance(obslrc, list):
-            obslrc = np.array(obslrc, dtype=np.int)
-        print(obslrc.ndim, obslrc.size, obslrc.shape)
-        if obslrc.ndim == 1 and obslrc.size == 3:
-            obslrc = obslrc.reshape((1, 3))
         self.obslrc = obslrc
         if nobs != 0:
             self.nobs = self.obslrc.shape[0]
@@ -287,7 +362,8 @@ class ModflowSwi2(Package):
         # Open file for writing
         f = open(self.fn_path, 'w')
         # First line: heading
-        f.write('{}\n'.format(self.heading))  # Writing heading not allowed in SWI???
+        f.write('{}\n'.format(
+            self.heading))  # Writing heading not allowed in SWI???
         # write dataset 1
         f.write('# Dataset 1\n')
         f.write(
@@ -351,7 +427,7 @@ class ModflowSwi2(Package):
                 # f.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
                 f.write('{} '.format(self.obsnam[i]))
                 for v in self.obslrc[i, :]:
-                    f.write('{:10d}'.format(v+1))
+                    f.write('{:10d}'.format(v + 1))
                 f.write('\n')
 
         # close swi2 file
@@ -412,16 +488,16 @@ class ModflowSwi2(Package):
         nobs = int(t[2])
         if int(t[3]) > 0:
             model.add_pop_key_list(int(t[3]))
-            iswizt = 55
+            iswizt = int(t[3])
         if int(t[4]) > 0:
             model.add_pop_key_list(int(t[4]))
-            ipakcb = 56
+            ipakcb = int(t[4])
         else:
             ipakcb = 0
         iswiobs = 0
         if int(t[5]) > 0:
             model.add_pop_key_list(int(t[5]))
-            iswiobs = 1051
+            iswiobs = int(t[5])
         options = []
         adaptive = False
         for idx in range(6, len(t)):
@@ -576,6 +652,24 @@ class ModflowSwi2(Package):
                 obslrc.append([kk, ii, jj])
                 nobs = len(obsname)
 
+
+        # determine specified unit number
+        unitnumber = None
+        filenames = [None, None, None, None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSwi2.ftype())
+            if iswizt > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=iswizt)
+            if ipakcb > 0:
+                iu, filenames[2] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+            if abs(iswiobs) > 0:
+                iu, filenames[3] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(iswiobs))
+
         # create swi2 instance
         swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs,
                            iswizt=iswizt, ipakcb=ipakcb,
@@ -586,7 +680,16 @@ class ModflowSwi2(Package):
                            beta=beta,
                            nadptmx=nadptmx, nadptmn=nadptmn, adptfct=adptfct,
                            nu=nu, zeta=zeta, ssz=ssz, isource=isource,
-                           obsnam=obsname, obslrc=obslrc)
+                           obsnam=obsname, obslrc=obslrc,
+                           unitnumber=unitnumber, filenames=filenames)
 
         # return swi2 instance
         return swi2
+
+    @staticmethod
+    def ftype():
+        return 'SWI2'
+
+    @staticmethod
+    def defaultunit():
+        return 29
