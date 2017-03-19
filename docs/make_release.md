@@ -1,6 +1,15 @@
 Instructions for making a FloPy release
 -----------------------------------------------
 
+## Build USGS release notes
+
+1.  Update information in `.\docs\USGS_release.md`
+2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
+
+    ```
+    pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
+    ```
+
 ## Finalizing the release
 
 1.  Merge the `develop` branch into the `master` branch.
@@ -42,15 +51,6 @@ Instructions for making a FloPy release
     ```  
     Paste pandoc results in PyPi text for release. 
 6.  Modify the link to the travis status in the PyPi text for the release (see version 3.2.3 for an example).
-
-## Build USGS release notes
-
-1.  Update information in `.\docs\USGS_release.md`
-2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
-
-    ```
-    pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
-    ```
 
 ## Sync master and develop branches
 
