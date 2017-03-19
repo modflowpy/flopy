@@ -42,9 +42,9 @@ class Header(object):
                                        ('ilay', 'i4')])
             elif self.header_type == 'ucn':
                 self.dtype = np.dtype(
-                        [('ntrans', 'i4'), ('kstp', 'i4'), ('kper', 'i4'),
-                         ('totim', floattype), ('text', 'a16'),
-                         ('ncol', 'i4'), ('nrow', 'i4'), ('ilay', 'i4')])
+                    [('ntrans', 'i4'), ('kstp', 'i4'), ('kper', 'i4'),
+                     ('totim', floattype), ('text', 'a16'),
+                     ('ncol', 'i4'), ('nrow', 'i4'), ('ilay', 'i4')])
             self.header = np.ones(1, self.dtype)
         else:
             self.dtype = None
@@ -183,7 +183,8 @@ class LayerFile(object):
             for k in range(plotarray.shape[0]):
                 name = attrib_name + '{0:03d}'.format(k)
                 attrib_dict[name] = plotarray[k]
-        from flopy.export.shapefile_utils import write_grid_shapefile
+
+        from ..export.shapefile_utils import write_grid_shapefile
         write_grid_shapefile(filename, self.sr, attrib_dict)
 
     def plot(self, axes=None, kstpkper=None, totim=None, mflay=None,
@@ -401,8 +402,8 @@ class LayerFile(object):
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
             idx = np.where(
-                    (self.recordarray['kstp'] == kstp1) &
-                    (self.recordarray['kper'] == kper1))
+                (self.recordarray['kstp'] == kstp1) &
+                (self.recordarray['kper'] == kper1))
             if idx[0].shape[0] == 0:
                 raise Exception("get_data() error: kstpkper not found:{0}".
                                 format(kstpkper))
@@ -477,7 +478,7 @@ class LayerFile(object):
         for k, i, j in kijlist:
             fail = False
             errmsg = 'Invalid cell index. Cell ' + str(
-                    (k, i, j)) + ' not within model grid: ' + \
+                (k, i, j)) + ' not within model grid: ' + \
                      str((self.nlay, self.nrow, self.ncol))
             if k < 0 or k > self.nlay - 1:
                 fail = True

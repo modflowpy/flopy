@@ -13,7 +13,7 @@ import shutil
 import copy
 import numbers
 import numpy as np
-from flopy.utils.binaryfile import BinaryHeader
+from ..utils.binaryfile import BinaryHeader
 
 
 class ArrayFormat(object):

@@ -9,10 +9,8 @@ MODFLOW Guide
 """
 
 import sys
-
 import numpy as np
-from flopy.utils.flopy_io import _pop_item, line_parse
-
+from ..utils.flopy_io import _pop_item, line_parse
 from ..pakbase import Package
 from ..utils import Util2d
 

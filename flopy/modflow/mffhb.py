@@ -7,12 +7,9 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?fhb.htm>`_.
 
 """
-import os
 import sys
 
 import numpy as np
-from flopy.modflow.mfparbc import ModflowParBc as mfparbc
-from flopy.utils.util_array import Transient2d, Util2d
 
 from ..pakbase import Package
 

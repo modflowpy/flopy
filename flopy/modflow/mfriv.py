@@ -10,9 +10,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from flopy.utils.util_list import MfList
-from flopy.utils import check
-
+from ..utils import MfList, check
 
 class ModflowRiv(Package):
     """

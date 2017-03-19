@@ -4,10 +4,10 @@ import sys
 import warnings
 
 import numpy as np
-from flopy.modflow.mfdis import get_layer
-from flopy.utils import check
-from flopy.utils.flopy_io import line_parse, pop_item
-from flopy.utils.util_list import MfList
+from .mfdis import get_layer
+from ..utils import check
+from ..utils.flopy_io import line_parse, pop_item
+from ..utils import MfList
 
 from ..pakbase import Package
 
