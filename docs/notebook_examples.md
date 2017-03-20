@@ -19,6 +19,10 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of FloPy3 capabilities to create a MNW2 file and evaluate data contained in the file is given in the [flopy3_mnw2package_example](../examples/Notebooks/flopy3_mnw2package_example.ipynb) Notebook.
 
++ An overview of FloPy3 capabilities to create a UZF file and evaluate data contained in the file and UZF output files is given in the [flopy3_uzf_example](../examples/Notebooks/flopy3_uzf_example) Notebook.
+
++ An overview of FloPy3 capabilities for exporting two-dimensional array data as a binary file is given in the [flopy3_save_binary_data_file](../examples/Notebooks/flopy3_save_binary_data_file.ipynb) Notebook.
+
 + An overview of FloPy3 capabilities to create MODPATH models and plot MODPATH results is given in the [flopy3_Modpath_example](../examples/Notebooks/flopy3_Modpath_example.ipynb) Notebook.
 
 + The [lake example](../examples/Notebooks/flopy3_lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 

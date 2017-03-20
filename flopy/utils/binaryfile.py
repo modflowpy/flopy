@@ -11,7 +11,7 @@ from __future__ import print_function
 import numpy as np
 import warnings
 from collections import OrderedDict
-from flopy.utils.datafile import Header, LayerFile
+from ..utils.datafile import Header, LayerFile
 
 
 class BinaryHeader(Header):

@@ -531,7 +531,7 @@ def mflist_helper(f, mfl, **kwargs):
                         array_dict[aname] = array[k]
             shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
         else:
-            from flopy.export.shapefile_utils import recarray2shp
+            from ..export.shapefile_utils import recarray2shp
             recarray2shp()
 
 

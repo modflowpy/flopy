@@ -1,15 +1,12 @@
 __author__ = 'aleaf'
 
-import os
 import sys
-
-sys.path.insert(0, '..')
 import textwrap
 import os
 import numpy as np
 from numpy.lib import recfunctions
 from ..pakbase import Package
-from flopy.utils.util_list import MfList
+from ..utils import MfList
 from ..utils.flopy_io import line_parse
 
 

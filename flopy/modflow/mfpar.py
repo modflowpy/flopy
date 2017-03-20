@@ -7,9 +7,9 @@ the ModflowPar class as `flopy.modflow.ModflowPar`.
 
 import sys
 import numpy as np
-from flopy.modflow.mfzon import ModflowZon
-from flopy.modflow.mfpval import ModflowPval
-from flopy.modflow.mfmlt import ModflowMlt
+from .mfzon import ModflowZon
+from .mfpval import ModflowPval
+from .mfmlt import ModflowMlt
 
 class ModflowPar(object):
     """

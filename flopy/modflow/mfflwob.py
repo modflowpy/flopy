@@ -1,5 +1,5 @@
 import numpy as np
-from flopy.pakbase import Package
+from ..pakbase import Package
 
 
 class ModflowFlwob(Package):

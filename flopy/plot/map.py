@@ -7,7 +7,7 @@ except:
     plt = None
 from . import plotutil
 from .plotutil import bc_color_dict
-from flopy.utils.reference import SpatialReference
+from ..utils import SpatialReference
 
 class ModelMap(object):
     """

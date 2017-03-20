@@ -1,8 +1,7 @@
-import os
 import sys
 import collections
 import numpy as np
-from flopy.pakbase import Package
+from ..pakbase import Package
 
 
 # Create HeadObservation instance from a time series array
