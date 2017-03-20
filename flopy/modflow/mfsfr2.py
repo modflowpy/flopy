@@ -885,15 +885,16 @@ class ModflowSfr2(Package):
 
         # renumber segments in all stress period data
         for per in self.segment_data.keys():
-            self.segment_data[per]['nseg'] = [r[s] for s in nseg]
-            self.segment_data[per]['outseg'] = [r[s] for s in outseg]
+            self.segment_data[per]['nseg'] = [r.get(s, s) for s in self.segment_data[per].nseg]
+            self.segment_data[per]['outseg'] = [r.get(s, s) for s in self.segment_data[per].outseg]
             self.segment_data[per].sort(order='nseg')
             inds = (outseg > 0) & (nseg > outseg)
             assert not np.any(inds)
             assert len(self.segment_data[per]['nseg']) == self.segment_data[per]['nseg'].max()
 
         # renumber segments in reach_data
-        self.reach_data['iseg'] = [r[s] for s in self.reach_data.iseg]
+        self.reach_data['iseg'] = [r.get(s, s) for s in self.reach_data.iseg]
+        self.reach_data.sort(order=['iseg', 'ireach'])
 
         # renumber segments in other datasets
         def renumber_channel_data(d):
@@ -1403,18 +1404,18 @@ class check:
             print(headertxt.strip())
         for per, segment_data in self.segment_data.items():
 
-            decreases = segment_data.outseg[segment_data.outseg < segment_data.nseg]
-            decreases = decreases[decreases > 0]
+            inds = (segment_data.outseg < segment_data.nseg) & (segment_data.outseg != 0)
 
-        if len(decreases) >= 1:
-            txt += '{} instances of segment numbers decreasing in the downstream direction.\n'.format(len(decreases))
-            txt += 'MODFLOW will run but convergence may be appreciably slowed.\n'
-            if self.level == 1:
-                txt += 'at segments:'
-                t = ''
-                for s in decreases:
-                    t += ' {}'.format(s)
-                txt += '\n'.join(textwrap.wrap(t, width=10))
+            if len(txt) == 0 and np.any(inds):
+                decreases = segment_data[['nseg', 'outseg']][inds]
+                txt += 'Found segment numbers decreasing in the downstream direction.\n'.format(len(decreases))
+                txt += 'MODFLOW will run but convergence may be slowed:\n'
+                if self.level == 1:
+                    txt += 'per nseg outseg\n'
+                    t = ''
+                    for ns, os in decreases:
+                        t += '{} {} {}\n'.format(per, ns, os)
+                    txt += t#'\n'.join(textwrap.wrap(t, width=10))
         if len(t) == 0:
                 passed = True
         self._txt_footer(headertxt, txt, 'segment numbering order', passed)
