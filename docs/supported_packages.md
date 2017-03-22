@@ -13,12 +13,11 @@ FloPy Supported Packages
 | Drain Return (DRT)                             | Not supported        | Not supported        | Not supported        |
 | Evapotranspiration (EVT)                       | Supported            | Supported            | Not supported        |
 | Evapotranspiration Segments (ETS)              | Not supported        | Not supported        | Not supported        |
-| Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
+| Flow and Head Boundary (FHB)                   | Supported            | Supported            | Not supported        |
 | General Head Boundary (GHB)                    | Supported            | Supported            | Not supported        |
 | Geometric Multi-Grid (GMG)                     | Supported            | Supported            | Not supported        |
 | Horizontal Flow Barrier (HFB)                  | Supported            | Supported            | Not supported        |
 | Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
-| Flow and Head Boundary (FHB)                   | Supported            | Supported            | Not supported        |
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
 | Lake (LAK)                                     | Supported            | Supported            | Not supported        |
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
