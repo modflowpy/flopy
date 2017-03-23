@@ -115,7 +115,7 @@ def test_cellbudgetfile_readrecord():
     idx = v.get_indices()
     assert idx is None, 'get_indices() without record did not return None'
 
-    records = v._unique_record_names()
+    records = v.get_unique_record_names()
     for record in records:
         indices = v.get_indices(text=record.decode().strip())
         for idx, kk in enumerate(kstpkper):
@@ -159,7 +159,7 @@ def test_cellbudgetfile_readrecord_waux():
     idx = v.get_indices()
     assert idx is None, 'get_indices() without record did not return None'
 
-    records = v._unique_record_names()
+    records = v.get_unique_record_names()
     for record in records:
         indices = v.get_indices(text=record.decode().strip())
         for idx, kk in enumerate(kstpkper):

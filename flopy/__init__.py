@@ -33,4 +33,5 @@ from . import modflowlgr
 from . import utils
 from . import plot
 from . import export
+from . import pest
 from .mbase import run_model, which, is_exe

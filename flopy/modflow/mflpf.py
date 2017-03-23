@@ -8,11 +8,10 @@ MODFLOW Guide
 
 """
 
-import os
 import sys
 
 import numpy as np
-from flopy.modflow.mfpar import ModflowPar as mfpar
+from .mfpar import ModflowPar as mfpar
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
@@ -37,16 +36,21 @@ class ModflowLpf(Package):
         calculations, it is useful as an indicator when looking at the
         resulting heads that are output from the model. HDRY is thus similar
         to HNOFLO in the Basic Package, which is the value assigned to cells
-        that are no-flow cells at the start of a model simulation. (default
-        is -1.e30).
+        that are no-flow cells at the start of a model simulation. 
+        (default is -1.e30).
     laytyp : int or array of ints (nlay)
-        Layer type (default is 0).
+        Layer type, contains a flag for each layer that specifies the layer type.
+        0 confined
+        >0 convertible
+        <0 convertible unless the THICKSTRT option is in effect.
+        (default is 0).
     layavg : int or array of ints (nlay)
-        Layer average (default is 0).
+        Layer average 
         0 is harmonic mean
         1 is logarithmic mean
         2 is arithmetic mean of saturated thickness and logarithmic mean of
         of hydraulic conductivity
+        (default is 0).
     chani : float or array of floats (nlay)
         contains a value for each layer that is a flag or the horizontal
         anisotropy. If CHANI is less than or equal to 0, then variable HANI
@@ -57,12 +61,19 @@ class ModflowLpf(Package):
         value of CHANI for each layer. The horizontal anisotropy is the ratio
         of the hydraulic conductivity along columns (the Y direction) to the
         hydraulic conductivity along rows (the X direction).
+        (default is 1).
     layvka : float or array of floats (nlay)
         a flag for each layer that indicates whether variable VKA is vertical
         hydraulic conductivity or the ratio of horizontal to vertical
         hydraulic conductivity.
+        0: VKA is vertical hydraulic conductivity
+        not 0: VKA is the ratio of horizontal to vertical hydraulic conductivity
+        (default is 0).
     laywet : float or array of floats (nlay)
         contains a flag for each layer that indicates if wetting is active.
+        0 wetting is inactive
+        not 0 wetting is active
+        (default is 0).
     wetfct : float
         is a factor that is included in the calculation of the head that is
         initially established at a cell when it is converted from dry to wet.
@@ -75,11 +86,13 @@ class ModflowLpf(Package):
         (default is 1).
     ihdwet : int
         is a flag that determines which equation is used to define the
-        initial head at cells that become wet. (default is 0)
+        initial head at cells that become wet. 
+        (default is 0)
     hk : float or array of floats (nlay, nrow, ncol)
         is the hydraulic conductivity along rows. HK is multiplied by
         horizontal anisotropy (see CHANI and HANI) to obtain hydraulic
-        conductivity along columns. (default is 1.0).
+        conductivity along columns. 
+        (default is 1.0).
     hani : float or array of floats (nlay, nrow, ncol)
         is the ratio of hydraulic conductivity along columns to hydraulic
         conductivity along rows, where HK of item 10 specifies the hydraulic
@@ -95,7 +108,8 @@ class ModflowLpf(Package):
         When STORAGECOEFFICIENT is used, Ss is confined storage coefficient.
         (default is 1.e-5).
     sy : float or array of floats (nlay, nrow, ncol)
-        is specific yield. (default is 0.15).
+        is specific yield. 
+        (default is 0.15).
     vkcb : float or array of floats (nlay, nrow, ncol)
         is the vertical hydraulic conductivity of a Quasi-three-dimensional
         confining bed below a layer. (default is 0.0).
@@ -105,7 +119,8 @@ class ModflowLpf(Package):
         (default is -0.01).
     storagecoefficient : boolean
         indicates that variable Ss and SS parameters are read as storage
-        coefficient rather than specific storage. (default is False).
+        coefficient rather than specific storage. 
+        (default is False).
     constantcv : boolean
          indicates that vertical conductance for an unconfined cell is
          computed from the cell thickness rather than the saturated thickness.
@@ -127,7 +142,18 @@ class ModflowLpf(Package):
     extension : string
         Filename extension (default is 'lpf')
     unitnumber : int
-        File unit number (default is 15).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output name will be created using
+        the model name and .cbc extension (for example, modflowtest.cbc),
+        if ipakcbc is a number greater than zero. If a single string is passed
+        the package will be set to the string and cbc output name will be
+        created using the model name and .cbc extension, if ipakcbc is a
+        number greater than zero. To define the names for all package files
+        (input and output) the length of the list of strings should be 2.
+        Default is None.
 
 
     Attributes

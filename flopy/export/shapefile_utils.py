@@ -346,7 +346,7 @@ def shp2recarray(shpname):
     except Exception as e:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
-    from flopy.utils.geometry import shape
+    from ..utils.geometry import shape
 
     sfobj = sf.Reader(shpname)
     dtype = [(f[0], get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]

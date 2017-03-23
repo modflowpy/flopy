@@ -1,8 +1,7 @@
-import os
 import sys
 import collections
 import numpy as np
-from flopy.pakbase import Package
+from ..pakbase import Package
 
 
 # Create HeadObservation instance from a time series array
@@ -26,10 +25,6 @@ class HeadObservation(object):
         zero-based row index for the observation. Default is 0.
     column : int
         zero-based column index of the observation. Default is 0.
-    irefsp : int
-        Stress period to which the observation time is referenced. The reference
-        point is the beginning of the specified stress period. If the value of
-        irefsp is negative, there are observations at |irefsp| times.
     roff : float
         Fractional offset from center of cell in Y direction (between rows).
         Default is 0.
@@ -49,6 +44,8 @@ class HeadObservation(object):
         two-dimensional list or numpy array containing the simulation time of
         the observation and the observed head [[totim, hob]]. Default is
         [[0., 0.]]
+    names : list
+        list of specified observation names. Default is None.
 
     Returns
     -------
@@ -68,7 +65,7 @@ class HeadObservation(object):
     """
 
     def __init__(self, model, tomulth=1., obsname='HOBS',
-                 layer=0, row=0, column=0, irefsp=0,
+                 layer=0, row=0, column=0,
                  roff=0., coff=0., itt=1, mlay={0: 1.},
                  time_series_data=[[0., 0.]], names=None):
 
@@ -76,7 +73,6 @@ class HeadObservation(object):
         self.layer = layer
         self.row = row
         self.column = column
-        self.irefsp = irefsp
         self.roff = roff
         self.coff = coff
         self.itt = itt
@@ -104,9 +100,29 @@ class HeadObservation(object):
         # two-dimensional numpy array
         if len(time_series_data.shape) == 1:
             time_series_data = np.reshape(time_series_data, (1, 2))
-        shape = time_series_data.shape
+
+        # make sure the time data are ordered
+        for idx in range(1, time_series_data.shape[0]):
+            t0 = time_series_data[idx-1, 0]
+            t1 = time_series_data[idx, 0]
+            if t1 <= t0:
+                msg = 'time values in timeseries data ' + \
+                      'must be in increasing order'
+                raise ValueError(msg)
+
+        # exclude observations that exceed the maximum simulation time
+        iend = time_series_data.shape[0]
+        tmax = model.dis.get_final_totim()
+        for idx, (t, v) in enumerate(time_series_data):
+            dt = tmax - t
+            if dt < 0.:
+                iend = idx
+                break
+        if iend < time_series_data.shape[0]:
+            time_series_data = time_series_data[0:iend]
 
         # set the number of observations in this time series
+        shape = time_series_data.shape
         self.nobs = shape[0]
 
         # construct names if not passed
@@ -117,6 +133,20 @@ class HeadObservation(object):
                 names = []
                 for idx in range(self.nobs):
                     names.append('{}.{}'.format(obsname, idx + 1))
+        # make sure the length of names is greater than or equal to nobs
+        else:
+            if isinstance(names, str):
+                names = [names]
+            elif not isinstance(names, list):
+                msg = 'HeadObservation names must be a ' + \
+                      'string or a list of strings'
+                raise ValueError(msg)
+            if len(names) < self.nobs:
+                msg = 'a name must be specified for every valid ' + \
+                      'observation - {} '.format(len(names)) + \
+                      'names were passed but at least ' + \
+                      '{} names are required.'.format(self.nobs)
+                raise ValueError(msg)
 
         # create time_series_data
         self.time_series_data = HeadObservation.get_empty(ncells=shape[0])
@@ -128,6 +158,11 @@ class HeadObservation(object):
             self.time_series_data[idx]['toffset'] = toffset / tomulth
             self.time_series_data[idx]['hobs'] = time_series_data[idx, 1]
             self.time_series_data[idx]['obsname'] = names[idx]
+
+        if self.nobs > 1:
+            self.irefsp = -self.nobs
+        else:
+            self.irefsp = self.time_series_data[0]['irefsp']
 
     @staticmethod
     def get_empty(ncells=0):
@@ -171,10 +206,20 @@ class ModflowHob(Package):
         and hobname is not provided the model basename with a '.hob.out'
         extension will be used. Default is None.
     extension : string
-        Filename extension (default is ['hob'])
+        Filename extension (default is hob)
     unitnumber : int
-        File unit number (default is [39])
-
+        File unit number (default is None)
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the hob output name will be created using
+        the model name and .hob.out extension (for example,
+        modflowtest.hob.out), if iuhobsv is a number greater than zero.
+        If a single string is passed the package will be set to the string
+        and hob output name will be created using the model name and .hob.out
+        extension, if iuhobsv is a number greater than zero. To define the
+        names for all package files (input and output) the length of the list
+        of strings should be 2. Default is None.
 
     Attributes
     ----------
@@ -204,7 +249,7 @@ class ModflowHob(Package):
 
     def __init__(self, model, iuhobsv=None, hobdry=0, tomulth=1.0,
                  obs_data=None, hobname=None,
-                 extension=['hob'], unitnumber=None):
+                 extension='hob', unitnumber=None, filenames=None):
         """
         Package constructor
         """
@@ -212,24 +257,39 @@ class ModflowHob(Package):
         if unitnumber is None:
             unitnumber = ModflowHob.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
+        # set filenames[1] to hobname if filenames[1] is not None
+        if filenames[1] is None:
+            if hobname is not None:
+                filenames[1] = hobname
+
         if iuhobsv is not None:
-            if iuhobsv > 0:
-                if hobname is None:
-                    hobname = model.name + '.hob.out'
-                model.add_output(hobname, iuhobsv,
-                                 package=ModflowHob.ftype())
-            else:
-                iuhobsv = 0
+            fname = filenames[1]
+            model.add_output_file(iuhobsv, fname=fname,
+                                  extension='hob.out', binflag=False,
+                                  package=ModflowHob.ftype())
+        else:
+            iuhobsv = 0
 
         # Fill namefile items
         name = [ModflowHob.ftype()]
         units = [unitnumber]
         extra = ['']
 
-        # Call ancestor's init to set self.parent, extension, name and unit
-        # number
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra)
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.url = 'hob.htm'
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -308,23 +368,23 @@ class ModflowHob(Package):
             layer = obs.layer
             if layer >= 0:
                 layer += 1
-            line += '{:10d}'.format(layer)
-            line += '{:10d}'.format(obs.row + 1)
-            line += '{:10d}'.format(obs.column + 1)
+            line += '{:10d} '.format(layer)
+            line += '{:10d} '.format(obs.row + 1)
+            line += '{:10d} '.format(obs.column + 1)
             irefsp = obs.irefsp
             if irefsp >= 0:
                 irefsp += 1
-            line += '{:10d}'.format(irefsp)
+            line += '{:10d} '.format(irefsp)
             if obs.nobs == 1:
-                toffset = obs.obs_data[0]['toffset']
-                hobs = obs.obs_data[0]['hobs']
+                toffset = obs.time_series_data[0]['toffset']
+                hobs = obs.time_series_data[0]['hobs']
             else:
                 toffset = 0.
                 hobs = 0.
-            line += '{:10.2f}'.format(toffset)
-            line += '{:10.4f}'.format(obs.roff)
-            line += '{:10.4f}'.format(obs.coff)
-            line += '{:10.4f}'.format(hobs)
+            line += '{:20} '.format(toffset)
+            line += '{:10.4f} '.format(obs.roff)
+            line += '{:10.4f} '.format(obs.coff)
+            line += '{:10.4f} '.format(hobs)
             line += '  # DATASET 3 - Observation {}'.format(idx + 1)
             f.write('{}\n'.format(line))
 
@@ -339,7 +399,7 @@ class ModflowHob(Package):
             # dataset 5
             if irefsp < 0:
                 line = '{:10d}'.format(obs.itt)
-                line += 85 * ' '
+                line += 103 * ' '
                 line += '  # DATASET 5 - Observation {}'.format(idx + 1)
                 f.write('{}\n'.format(line))
 
@@ -350,10 +410,10 @@ class ModflowHob(Package):
                     if isinstance(obsname, bytes):
                         obsname = obsname.decode('utf-8')
                     line = '{:12s}   '.format(obsname)
-                    line += '{:10d}'.format(t['irefsp'] + 1)
-                    line += '{:10.4f}'.format(t['toffset'])
-                    line += '{:10.4f}'.format(t['hobs'])
-                    line += 50 * ' '
+                    line += '{:10d} '.format(t['irefsp'] + 1)
+                    line += '{:20} '.format(t['toffset'])
+                    line += '{:10.4f} '.format(t['hobs'])
+                    line += 55 * ' '
                     line += '  # DATASET 6 - ' + \
                             'Observation {}.{}'.format(idx + 1, jdx + 1)
                     f.write('{}\n'.format(line))
@@ -459,7 +519,7 @@ class ModflowHob(Package):
             # read datasets 5 & 6. Index loop variable
             if irefsp0 > 0:
                 itt = 1
-                irefsp -= 1
+                irefsp0 -= 1
                 totim = model.dis.get_totim_from_kper_toffset(irefsp0,
                                                               toffset * tomulth)
                 names = [obsnam]
@@ -487,7 +547,6 @@ class ModflowHob(Package):
 
             obs_data.append(HeadObservation(model, tomulth=tomulth,
                                             layer=layer, row=row, column=col,
-                                            irefsp=irefsp0,
                                             roff=roff, coff=coff,
                                             obsname=obsnam,
                                             mlay=mlay, itt=itt,
@@ -499,22 +558,22 @@ class ModflowHob(Package):
         # close the file
         f.close()
 
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
-        hobname = None
+        filenames = [None, None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowHob.ftype():
-                    unitnumber = key
-                if key == iuhobsv:
-                    hobname = os.path.basename(value.filename)
-                    model.add_pop_key_list(iuhobsv)
-
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowHob.ftype())
+            if iuhobsv > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=iuhobsv)
+                model.add_pop_key_list(iuhobsv)
 
         # create hob object instance
         hob = ModflowHob(model, iuhobsv=iuhobsv, hobdry=hobdry,
                          tomulth=tomulth, obs_data=obs_data,
-                         unitnumber=unitnumber, hobname=hobname)
+                         unitnumber=unitnumber, filenames=filenames)
 
         return hob
 

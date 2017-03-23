@@ -1,13 +1,16 @@
 import os
 import numpy as np
 import flopy
-import flopy.pest.templatewriter as tplwriter
-import flopy.pest.params as params
+
+# import flopy.pest.templatewriter
+# import flopy.pest.templatewriter as flopy.pest.templatewriter
+# import flopy.pest.flopy.pest.params as flopy.pest.params
 
 mpth = os.path.join('temp', 't018')
 # make the directory if it does not exist
 if not os.path.isdir(mpth):
     os.makedirs(mpth)
+
 
 def test_tpl_constant():
     # Define the model dimensions
@@ -34,12 +37,13 @@ def test_tpl_constant():
     startvalue = 10.
     lbound = 0.001
     ubound = 1000.
-    transform='log'
+    transform = 'log'
 
-    p = params.Params(mfpackage, partype, parname, startvalue,
-                      lbound, ubound, span)
+    p = flopy.pest.Params(mfpackage, partype, parname,
+                          startvalue,
+                          lbound, ubound, span)
 
-    tw = tplwriter.TemplateWriter(m, [p])
+    tw = flopy.pest.templatewriter.TemplateWriter(m, [p])
     tw.write_template()
 
     tplfile = os.path.join(mpth, 'tpl1.lpf.tpl')
@@ -69,11 +73,12 @@ def test_tpl_layered():
     startvalue = 10.
     lbound = 0.001
     ubound = 1000.
-    transform='log'
+    transform = 'log'
 
-    p = params.Params(mfpackage, partype, parname, startvalue,
-                      lbound, ubound, span)
-    tw = tplwriter.TemplateWriter(m, [p])
+    p = flopy.pest.Params(mfpackage, partype, parname,
+                          startvalue,
+                          lbound, ubound, span)
+    tw = flopy.pest.templatewriter.TemplateWriter(m, [p])
     tw.write_template()
 
     tplfile = os.path.join(mpth, 'tpl2.lpf.tpl')
@@ -105,22 +110,24 @@ def test_tpl_zoned():
     lbound = 5
     ubound = 500
     transform = 'log'
-    plisthk = params.zonearray2params(mfpackage, 'hk', parzones, lbound,
-                                      ubound, parvals, transform, zonearray)
+    plisthk = flopy.pest.zonearray2params(mfpackage, 'hk', parzones, lbound,
+                                          ubound, parvals, transform,
+                                          zonearray)
 
     # Create a list of parameters for VKA
     parzones = [1, 2]
     parvals = [0.001, 0.0005]
     zonearray = np.ones((nlay, nrow, ncol), dtype=int)
     zonearray[1] = 2
-    plistvk = params.zonearray2params(mfpackage, 'vka', parzones, lbound,
-                                      ubound, parvals, transform, zonearray)
+    plistvk = flopy.pest.zonearray2params(mfpackage, 'vka', parzones, lbound,
+                                          ubound, parvals, transform,
+                                          zonearray)
 
     # Combine the HK and VKA parameters together
     plist = plisthk + plistvk
 
     # Write the template file
-    tw = tplwriter.TemplateWriter(m, plist)
+    tw = flopy.pest.templatewriter.TemplateWriter(m, plist)
     tw.write_template()
 
     tplfile = os.path.join(mpth, 'tpl3.lpf.tpl')
@@ -133,4 +140,3 @@ if __name__ == '__main__':
     test_tpl_constant()
     test_tpl_layered()
     test_tpl_zoned()
-

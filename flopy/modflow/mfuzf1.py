@@ -9,10 +9,8 @@ MODFLOW Guide
 """
 
 import sys
-
 import numpy as np
-from flopy.utils.flopy_io import _pop_item, line_parse
-
+from ..utils.flopy_io import _pop_item, line_parse
 from ..pakbase import Package
 from ..utils import Util2d
 
@@ -130,7 +128,8 @@ class ModflowUzf1(Package):
         simulations. (default is 0.20)
     row_col_iftunit_iuzopt : list
         used to specify where information will be printed for each time step.
-        IUZOPT specifies what that information will be. (default is [])
+        row and col are zero-based. IUZOPT specifies what that information
+        will be. (default is [])
         IUZOPT is
 
         1   Prints time, ground-water head, and thickness of unsaturated zone,
@@ -179,7 +178,22 @@ class ModflowUzf1(Package):
     extension : string
         Filename extension (default is 'uzf')
     unitnumber : int
-        File unit number (default is 19).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output, uzf output, and uzf
+        observation names will be created using the model name and .cbc,
+        uzfcb2.bin, and  .uzf#.out extensions (for example, modflowtest.cbc,
+        and modflowtest.uzfcd2.bin), if ipakcbc, iuzfcb2, and len(uzgag) are
+        numbers greater than zero. For uzf observations the file extension is
+        created using the uzf observation file unit number (for example, for
+        uzf observations written to unit 123 the file extension would be
+        .uzf123.out). If a single string is passed the package name will be
+        set to the string and other uzf output files will be set to the model
+        name with the appropriate output file extensions. To define the names
+        for all package files (input and output) the length of the list of
+        strings should be 3 + len(uzgag). Default is None.
 
     Attributes
     ----------
@@ -211,8 +225,7 @@ class ModflowUzf1(Package):
                  thtr=0.15, thti=0.20,
                  specifythtr=0, specifythti=0, nosurfleak=0,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
-                 uzgag=None,
-                 uzfbud_ext=[], extension='uzf', unitnumber=None,
+                 uzgag=None, extension='uzf', unitnumber=None,
                  filenames=None):
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -252,9 +265,10 @@ class ModflowUzf1(Package):
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
+                uzgagext = 'uzf{}.out'.format(iu)
                 model.add_output_file(iu, fname=fname,
                                       binflag=False,
-                                      extension='uzf{}'.format(iu),
+                                      extension=uzgagext,
                                       package=ModflowUzf1.ftype())
                 ipos += 1
 
@@ -297,25 +311,6 @@ class ModflowUzf1(Package):
         self.ietflg = ietflg
         self.ipakcb = ipakcb
         self.iuzfcb2 = iuzfcb2
-        # class_nam = ['UZF']
-        # if (not isinstance(unitnumber, list)):
-        #     unitnumber = [unitnumber]
-        # if (not isinstance(extension, list)):
-        #     extension = [extension]
-        # if ipakcb > 0 and iuzfcb2 < 1:
-        #     unitnumber.append(ipakcb)
-        #     extension.append(extension[0] + 'bt1')
-        #     class_nam += ['DATA(BINARY)']
-        # elif ipakcb < 1 and iuzfcb2 > 0:
-        #     unitnumber.append(iuzfcb2)
-        #     extension.append(extension[0] + 'bt2')
-        #     class_nam += ['DATA(BINARY)']
-        # elif ipakcb > 0 and iuzfcb2 > 0:
-        #     unitnumber.append(ipakcb)
-        #     extension.append(extension[0] + 'bt1')
-        #     unitnumber.append(iuzfcb2)
-        #     extension.append(extension[0] + 'bt2')
-        #     class_nam += ['DATA(BINARY)', 'DATA(BINARY)']
         if iuzfopt > 0:
             self.ntrail2 = ntrail2
             self.nsets = nsets
@@ -368,17 +363,6 @@ class ModflowUzf1(Package):
                 self.uzgag = []
             else:
                 self.uzgag = uzgag
-                # i = 0
-                # for iftunit, l in uzgag.items():
-                #     unitnumber.append(abs(iftunit))
-                #     if uzfbud_ext == []:
-                #         extension.append(extension[0] + 'b' + str(i))
-                #     else:
-                #         extension.append(uzfbud_ext[i])
-                #     i += 1
-                # Package.__init__(self, model, extension,
-                #                  class_nam + nuzgag * ['DATA'],
-                #                  unit_number=unitnumber)
 
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
@@ -503,12 +487,17 @@ class ModflowUzf1(Package):
         if self.nuzgag > 0:
             for iftunit, values in self.uzgag.items():
                 if iftunit > 0:
+                    values[0] += 1
+                    values[1] += 1
                     comment = ' #IUZROW IUZCOL IFTUNIT IUZOPT'
-                    f_uzf.write(
-                        '%10i%10i%10i%10i%s\n' % (tuple(values + [comment])))
+                    for v in values:
+                        f_uzf.write('{:10d}'.format(v))
+                    f_uzf.write('{}\n'.format(comment))
                 else:
                     comment = ' #IFTUNIT'
-                    f_uzf.write('%10i%s\n' % (tuple(values + [comment])))
+                    for v in values:
+                        f_uzf.write('{:10d}'.format(v))
+                    f_uzf.write('{}\n'.format(comment))
         for n in range(nper):
             comment = ' #NUZF1 for stress period ' + str(n + 1)
             if n < len(self.finf):
@@ -758,8 +747,8 @@ def _parse8(line):
     iuzopt = 0
     line = line_parse(line)
     if len(line) > 1:
-        iuzrow = _pop_item(line, int)
-        iuzcol = _pop_item(line, int)
+        iuzrow = _pop_item(line, int) - 1
+        iuzcol = _pop_item(line, int) - 1
         iftunit = _pop_item(line, int)
         iuzopt = _pop_item(line, int)
     else:

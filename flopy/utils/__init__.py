@@ -29,7 +29,7 @@ from .modpathfile import PathlineFile, EndpointFile
 from .swroutputfile import SwrStage, SwrBudget, SwrFlow, SwrExchange, \
     SwrStructure
 from .observationfile import HydmodObs, SwrObs
-from .reference import SpatialReference  # , TemporalReference
+from .reference import SpatialReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget
 from .check import check, get_neighbors

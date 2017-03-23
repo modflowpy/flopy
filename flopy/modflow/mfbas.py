@@ -45,7 +45,12 @@ class ModflowBas(Package):
     extension : str, optional
         File extension (default is 'bas').
     unitnumber : int, optional
-        FORTRAN unit number for this package (default is 13).
+        FORTRAN unit number for this package (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a single
+        string is passed the package name will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -84,7 +89,7 @@ class ModflowBas(Package):
 
     def __init__(self, model, ibound=1, strt=1.0, ifrefm=True, ixsec=False,
                  ichflg=False, stoper=None, hnoflo=-999.99, extension='bas',
-                 unitnumber=None):
+                 unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -93,9 +98,24 @@ class ModflowBas(Package):
         if unitnumber is None:
             unitnumber = ModflowBas.defaultunit()
 
-        # Call ancestor's init to set self.parent, extension, name and unit
-        # number
-        Package.__init__(self, model, extension, ModflowBas.ftype(), unitnumber)
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowBas.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         self.url = 'bas6.htm'
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
@@ -110,9 +130,11 @@ class ModflowBas(Package):
         self.ixsec = ixsec
         self.ichflg = ichflg
         self.stoper = stoper
+
         #self.ifrefm = ifrefm
         #model.array_free_format = ifrefm
         model.free_format_input = ifrefm
+
         self.hnoflo = hnoflo
         self.parent.add_package(self)
         return
@@ -299,16 +321,18 @@ class ModflowBas(Package):
         f.close()
 
         # set package unit number
-        unitnumber = ModflowBas.defaultunit()
-        for key, value in ext_unit_dict.items():
-            if value.filetype == ModflowBas.ftype():
-                unitnumber = key
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowBas.ftype())
 
         #create bas object and return
         bas = ModflowBas(model, ibound=ibound, strt=strt,
                          ixsec=ixsec, ifrefm=ifrefm, ichflg=ichflg,
                          stoper=stoper, hnoflo=hnoflo,
-                         unitnumber=unitnumber)
+                         unitnumber=unitnumber, filenames=filenames)
         if check:
             bas.check(f='{}.chk'.format(bas.name[0]), verbose=bas.parent.verbose, level=0)
         return bas

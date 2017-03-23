@@ -30,12 +30,11 @@ class ModflowSwi2(Package):
     istrat : int
         flag indicating the density distribution. (default is 1).
     iswizt : int
-        unit number for zeta output. (default is 55).
+        unit number for zeta output. (default is None).
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 0).
-        unit number for SWI2 Package budget output. (default is 56).
+        (default is None).
     iswiobs : int
         flag and unit number SWI2 observation output. (default is 0).
     options : list of strings
@@ -145,14 +144,21 @@ class ModflowSwi2(Package):
         names for nobs observations.
     obslrc : list of lists
         zero-based [layer, row, column] lists for nobs observations.
-    naux : int
-        number of auxiliary variables
-    extension : list string
-        Filename extension (default is ['swi2', 'zta', 'swb'])
-    unitnumber : int
-        File unit number (default is 29).
+    extension : string
+        Filename extension (default is 'swi2')
     npln : int
         Deprecated - use nsrf instead.
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the zeta, cbc, obs output files.
+        If filenames=None the package name will be created using the model name
+        and package extension and the output file names will be created using
+        the model name and output extensions. If a single string is passed the
+        package will be set to the string and output names will be created
+        using the model name and zeta, cbc, and observation extensions. To
+        define the names for all package files (input and output) the length
+        of the list of strings should be 4. Default is None.
 
     Attributes
     ----------
@@ -185,11 +191,9 @@ class ModflowSwi2(Package):
                                 'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
                                 'nbpol': 2, 'damp': 1.0, 'dampt': 1.0},
                  toeslope=0.05, tipslope=0.05, alpha=None, beta=0.1, nadptmx=1,
-                 nadptmn=1, adptfct=1.0,
-                 nu=0.025, zeta=[0.0], ssz=0.25, isource=0,
-                 obsnam=None, obslrc=None,
-                 extension=['swi2', 'zta'], unitnumber=None,
-                 npln=None, filenames=None):
+                 nadptmn=1, adptfct=1.0, nu=0.025, zeta=[0.0], ssz=0.25,
+                 isource=0, obsnam=None, obslrc=None, npln=None,
+                 extension='swi2', unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -255,12 +259,12 @@ class ModflowSwi2(Package):
 
         if nobs > 0:
             binflag = False
-            ext = 'out'
+            ext = 'zobs.out'
             fname = filenames[3]
             if iswiobs is not None:
                 if iswiobs < 0:
                     binflag = True
-                    ext = 'bin'
+                    ext = 'zobs.bin'
             else:
                 iswiobs = 1053
             # update external file information with swi2 observation output,

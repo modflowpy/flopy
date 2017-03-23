@@ -135,7 +135,12 @@ class Mt3dAdv(Package):
     extension : string
         Filename extension (default is 'adv')
     unitnumber : int
-        File unit number (default is 32).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -157,7 +162,6 @@ class Mt3dAdv(Package):
     >>> adv = flopy.mt3d.Mt3dAdv(m)
 
     """
-    unitnumber = 32
     def __init__(self, model, mixelm=3, percel=0.75, mxpart=800000, nadvfd=1,
                  itrack=3, wd=0.5,
                  dceps=1e-5, nplane=2, npl=10, nph=40, npmin=5, npmax=80,
@@ -167,6 +171,8 @@ class Mt3dAdv(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dAdv.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dAdv.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -388,3 +394,7 @@ class Mt3dAdv(Package):
     @staticmethod
     def defaultunit():
         return 32
+
+    @staticmethod
+    def reservedunit():
+        return 2

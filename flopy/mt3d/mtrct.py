@@ -133,6 +133,15 @@ class Mt3dRct(Package):
         n. If rc2n is not passed as a **kwarg and ireact > 0 then rc2 for
         species n is set to 0. See description of rc2 for a more complete
         description of rc2n.
+    extension : string
+        Filename extension (default is 'rct')
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
 
     Attributes
@@ -154,7 +163,6 @@ class Mt3dRct(Package):
     >>> mt = flopy.mt3dms.Mt3dms()
     >>> rct = flopy.mt3dms.Mt3dRct(mt)
     """
-    unitnumber = 36
 
     def __init__(self, model, isothm=0, ireact=0, igetsc=1, rhob=None,
                  prsity2=None, srconc=None, sp1=None, sp2=None, rc1=None,
@@ -167,6 +175,8 @@ class Mt3dRct(Package):
 
         if unitnumber is None:
             unitnumber = Mt3dRct.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dRct.reservedunit()
 
         # set filenames
         if filenames is None:
@@ -471,7 +481,8 @@ class Mt3dRct(Package):
             print('   loading PRSITY2...')
         if isothm in [5, 6]:
             prsity2 = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                               'prsity2', ext_unit_dict, array_format="mt3d")
+                                  'prsity2', ext_unit_dict,
+                                  array_format="mt3d")
             if model.verbose:
                 print('   PRSITY2 {}'.format(prsity2))
 
@@ -594,7 +605,6 @@ class Mt3dRct(Package):
                       filenames=filenames)
         return rct
 
-
     @staticmethod
     def ftype():
         return 'RCT'
@@ -603,3 +613,6 @@ class Mt3dRct(Package):
     def defaultunit():
         return 36
 
+    @staticmethod
+    def reservedunit():
+        return 8

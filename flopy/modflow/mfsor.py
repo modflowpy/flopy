@@ -38,7 +38,12 @@ class ModflowSor(Package):
     extension : string
         Filename extension (default is 'sor')
     unitnumber : int
-        File unit number (default is 26).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -62,7 +67,7 @@ class ModflowSor(Package):
     """
 
     def __init__(self, model, mxiter=200, accl=1, hclose=1e-5, iprsor=0,
-                 extension='sor', unitnumber=None):
+                 extension='sor', unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -71,9 +76,23 @@ class ModflowSor(Package):
         if unitnumber is None:
             unitnumber = ModflowSor.defaultunit()
 
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [ModflowSor.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension, ModflowSor.ftype(),
-                         unitnumber)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         # check if a valid model version has been specified
         if model.version != 'mf2k':
@@ -154,15 +173,16 @@ class ModflowSor(Package):
         # close the open file
         f.close()
 
-        # determine specified unit number
+        # set package unit number
         unitnumber = None
+        filenames = [None]
         if ext_unit_dict is not None:
-            for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSor.ftype():
-                    unitnumber = key
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSor.ftype())
 
         # create sor object
-        sor = ModflowSor(model, unitnumber=unitnumber)
+        sor = ModflowSor(model, unitnumber=unitnumber, filenames=filenames)
 
         # return sor object
         return sor

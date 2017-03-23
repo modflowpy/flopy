@@ -164,6 +164,7 @@ class Modflow(BaseModel):
             "lpf": flopy.modflow.ModflowLpf,
             "hfb6": flopy.modflow.ModflowHfb,
             "chd": flopy.modflow.ModflowChd,
+            "fhb": flopy.modflow.ModflowFhb,
             "wel": flopy.modflow.ModflowWel,
             "mnw2": flopy.modflow.ModflowMnw2,
             "mnwi": flopy.modflow.ModflowMnwi,
@@ -690,11 +691,13 @@ class Modflow(BaseModel):
                                      .format(item.filetype,
                                              os.path.basename(item.filename)))
                 if key not in ml.pop_key_list:
-                    ml.external_fnames.append(item.filename)
-                    ml.external_units.append(key)
-                    ml.external_binflag.append("binary"
-                                               in item.filetype.lower())
-                    ml.external_output.append(False)
+                    # do not add unit number (key) if it already exists
+                    if key not in ml.external_units:
+                        ml.external_fnames.append(item.filename)
+                        ml.external_units.append(key)
+                        ml.external_binflag.append("binary"
+                                                   in item.filetype.lower())
+                        ml.external_output.append(False)
 
         # pop binary output keys and any external file units that are now
         # internal

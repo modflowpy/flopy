@@ -1,10 +1,10 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import flopy.modflow as mf
-import flopy.utils as fu
 
-workspace = os.path.join('data')
+import flopy
+
+workspace = os.path.join('lake')
 # make sure workspace directory exists
 if not os.path.exists(workspace):
     os.makedirs(workspace)
@@ -33,7 +33,7 @@ Kh = 1.0
 # whatever you want). The modelname will be the name given to all MODFLOW files (input and output).
 # The exe_name should be the full path to your MODFLOW executable. The version is either 'mf2k'
 # for MODFLOW2000 or 'mf2005'for MODFLOW2005.
-ml = mf.Modflow(modelname=name, exe_name='mf2005', version='mf2005')
+ml = flopy.modflow.Modflow(modelname=name, exe_name='mf2005', version='mf2005')
 
 # Define the discretization of the model. All layers are given equal thickness. The `bot` array
 # is build from the `Hlay` values to indicate top and bottom of each layer, and `delrow` and
@@ -41,7 +41,8 @@ ml = mf.Modflow(modelname=name, exe_name='mf2005', version='mf2005')
 # the Discretization file is built.
 bot = np.linspace(-H / Nlay, -H, Nlay)
 delrow = delcol = L / (N - 1)
-dis = mf.ModflowDis(ml, nlay=Nlay, nrow=N, ncol=N, delr=delrow, delc=delcol, top=0.0, botm=bot, laycbd=0)
+dis = flopy.modflow.ModflowDis(ml, nlay=Nlay, nrow=N, ncol=N, delr=delrow,
+                               delc=delcol, top=0.0, botm=bot, laycbd=0)
 
 # Next we specify the boundary conditions and starting heads with the Basic package. The `ibound`
 # array will be `1` in all cells in all layers, except for along the boundary and in the cell at
@@ -66,22 +67,22 @@ hfile = '{}_strt.ref'.format(name)
 np.savetxt(hfile, start)
 hfiles = []
 for kdx in range(Nlay):
-    file = '{}_ib{:02d}.ref'.format(name, kdx+1)
+    file = '{}_ib{:02d}.ref'.format(name, kdx + 1)
     files.append(file)
     hfiles.append(hfile)
     np.savetxt(file, ibound[kdx, :, :], fmt='%5d')
 
-bas = mf.ModflowBas(ml, ibound=files, strt=hfiles)
+bas = flopy.modflow.ModflowBas(ml, ibound=files, strt=hfiles)
 
 # The aquifer properties (really only the hydraulic conductivity) are defined with the
 # LPF package.
-lpf = mf.ModflowLpf(ml, hk=Kh)
+lpf = flopy.modflow.ModflowLpf(ml, hk=Kh)
 
 # Finally, we need to specify the solver we want to use (PCG with default values), and the
 # output control (using the default values). Then we are ready to write all MODFLOW input
 # files and run MODFLOW.
-pcg = mf.ModflowPcg(ml)
-oc = mf.ModflowOc(ml)
+pcg = flopy.modflow.ModflowPcg(ml)
+oc = flopy.modflow.ModflowOc(ml)
 ml.write_input()
 ml.run_model()
 
@@ -93,7 +94,7 @@ os.chdir(cwdpth)
 # specifying, in this case, the step number and period number for which we want to retrieve data.
 # A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions
 # are used to make contours of the layers or a cross-section.
-hds = fu.HeadFile(os.path.join(workspace, name + '.hds'))
+hds = flopy.utils.HeadFile(os.path.join(workspace, name + '.hds'))
 h = hds.get_data(kstpkper=(0, 0))
 x = y = np.linspace(0, L, N)
 c = plt.contour(x, y, h[0], np.arange(90, 100.1, 0.2))

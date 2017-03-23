@@ -4,10 +4,10 @@ import sys
 import warnings
 
 import numpy as np
-from flopy.modflow.mfdis import get_layer
-from flopy.utils import check
-from flopy.utils.flopy_io import line_parse, pop_item
-from flopy.utils.util_list import MfList
+from .mfdis import get_layer
+from ..utils import check
+from ..utils.flopy_io import line_parse, pop_item
+from ..utils import MfList
 
 from ..pakbase import Package
 
@@ -727,11 +727,18 @@ class ModflowMnw2(Package):
     extension : string
         Filename extension (default is 'mnw2')
     unitnumber : int
-        File unit number (default is 34).
-    filenames : string or list of strings
-        File name of the package (with extension) or a list with the filename
-        of the package and the cell-by-cell budget file for ipakcb. Default
-        is None.
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output name will be created using
+        the model name and .cbc extension (for example, modflowtest.cbc),
+        if ipakcbc is a number greater than zero. If a single string is passed
+        the package will be set to the string and cbc output names will be
+        created using the model name and .cbc extension, if ipakcbc is a
+        number greater than zero. To define the names for all package files
+        (input and output) the length of the list of strings should be 2.
+        Default is None.
     gwt : boolean
         Flag indicating whether GW transport process is active
 
@@ -785,12 +792,17 @@ class ModflowMnw2(Package):
         else:
             ipakcb = 0
 
+        # Fill namefile items
+        name = [ModflowMnw2.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name, and unit number
-        Package.__init__(self, model, extension, ModflowMnw2.ftype(),
-                         unitnumber, filenames=fname)
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         self.url = 'mnw2.htm'
         self.nper = self.parent.nrow_ncol_nlay_nper[-1]
