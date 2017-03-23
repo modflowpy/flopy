@@ -450,6 +450,21 @@ class ModflowDis(Package):
             v.append(node)
         return v
 
+    def get_layer(self, i, j, elev):
+        """Return the layer for an elevation at an i, j location.
+
+            Parameters
+            ----------
+            i : row index (zero-based)
+            j : column index
+            elev : elevation (in same units as model)
+
+            Returns
+            -------
+            k : zero-based layer index
+            """
+        return get_layer(self, i, j, elev)
+
     def read_from_cnf(self, cnf_file_name, n_per_line=0):
         """
         Read discretization information from an MT3D configuration file.
