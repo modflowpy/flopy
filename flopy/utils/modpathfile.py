@@ -8,7 +8,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
-from flopy.utils.flopy_io import loadtxt
+from ..utils.flopy_io import loadtxt
 
 class PathlineFile():
     """
@@ -271,9 +271,9 @@ class PathlineFile():
             the proj4 string or epgs code associated with sr will be used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
         """
-        from flopy.utils.reference import SpatialReference
-        from flopy.utils.geometry import LineString
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..utils.reference import SpatialReference
+        from ..utils.geometry import LineString
+        from ..export.shapefile_utils import recarray2shp
 
         pth = pathline_data
         if pth is None:
@@ -590,9 +590,9 @@ class EndpointFile():
             the proj4 string or epgs code associated with sr will be used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
         """
-        from flopy.utils.reference import SpatialReference
-        from flopy.utils.geometry import Point
-        from flopy.export.shapefile_utils import recarray2shp
+        from ..utils.reference import SpatialReference
+        from ..utils.geometry import Point
+        from ..export.shapefile_utils import recarray2shp
 
         epd = endpoint_data.copy()
         if epd is None:

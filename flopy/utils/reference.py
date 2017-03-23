@@ -100,7 +100,7 @@ class SpatialReference(object):
     xll, yll = None, None
     rotation = 0.
     length_multiplier = 1.
-    origin_loc = 'ul' # or ll
+    origin_loc = 'ul'  # or ll
 
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
@@ -113,8 +113,8 @@ class SpatialReference(object):
                        'length to the number of rows/columns.')
                 raise TypeError(msg)
 
-        self.delc = np.atleast_1d(np.array(delc)) #* length_multiplier
-        self.delr = np.atleast_1d(np.array(delr)) #* length_multiplier
+        self.delc = np.atleast_1d(np.array(delc))  # * length_multiplier
+        self.delr = np.atleast_1d(np.array(delr))  # * length_multiplier
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
@@ -142,7 +142,7 @@ class SpatialReference(object):
     @property
     def proj4_str(self):
         if "epsg" in self._proj4_str.lower() and \
-           "init" not in self._proj4_str.lower():
+                        "init" not in self._proj4_str.lower():
             proj4_str = "+init=" + self._proj4_str
         else:
             proj4_str = self._proj4_str
@@ -171,11 +171,11 @@ class SpatialReference(object):
                 if "units=m" in proj_str:
                     units = "meters"
                 elif "units=ft" in proj_str or \
-                   "to_meters:0.3048" in proj_str:
+                                "to_meters:0.3048" in proj_str:
                     units = "feet"
             except:
                 pass
-                
+
         if units is None:
             print("warning: assuming SpatialReference units are meters")
             units = 'meters'
@@ -192,7 +192,7 @@ class SpatialReference(object):
     def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
         header = []
-        with open(namefile,'r') as f:
+        with open(namefile, 'r') as f:
             for line in f:
                 if not line.startswith('#'):
                     break
@@ -248,25 +248,25 @@ class SpatialReference(object):
     def __setattr__(self, key, value):
         reset = True
         if key == "delr":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("delr", np.atleast_1d(np.array(value)))
         elif key == "delc":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("delc", np.atleast_1d(np.array(value)))
         elif key == "xul":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("xul", float(value))
         elif key == "yul":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("yul", float(value))
         elif key == "xll":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("xll", float(value))
         elif key == "yll":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("yll", float(value))
         elif key == "length_multiplier":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("length_multiplier", float(value))
             self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
                             yll=self.yll)
@@ -276,23 +276,23 @@ class SpatialReference(object):
                        'previously treated as positive clockwise. It '
                        'now is positive counterclockwise.')
                 warnings.warn(msg)
-            super(SpatialReference,self).\
-                __setattr__("rotation",float(value))
+            super(SpatialReference, self). \
+                __setattr__("rotation", float(value))
             self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
                             yll=self.yll)
         elif key == "lenuni":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("lenuni", int(value))
         elif key == "units":
             value = value.lower()
             assert value in self.supported_units
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("_units", value)
         elif key == "proj4_str":
-            super(SpatialReference, self).\
+            super(SpatialReference, self). \
                 __setattr__("_proj4_str", value)
         else:
-            super(SpatialReference,self).__setattr__(key, value)
+            super(SpatialReference, self).__setattr__(key, value)
             reset = False
         if reset:
             self._reset()
@@ -380,7 +380,7 @@ class SpatialReference(object):
 
     @property
     def attribute_dict(self):
-        return {"xul": self.xul, "yul":self.yul, "rotation": self.rotation,
+        return {"xul": self.xul, "yul": self.yul, "rotation": self.rotation,
                 "proj4_str": self.proj4_str}
 
     def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None,
@@ -420,8 +420,8 @@ class SpatialReference(object):
         return
 
     def __repr__(self):
-        s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ".\
-            format(self.xul,self.yul,self.rotation)
+        s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ". \
+            format(self.xul, self.yul, self.rotation)
         s += "proj4_str:{0}; ".format(self.proj4_str)
         s += "units:{0}; ".format(self.units)
         s += "lenuni:{0}; ".format(self.lenuni)
@@ -495,14 +495,14 @@ class SpatialReference(object):
 
     def _set_xycentergrid(self):
         self._xcentergrid, self._ycentergrid = np.meshgrid(self.xcenter,
-                                                          self.ycenter)
-        self._xcentergrid, self._ycentergrid = self.transform(self._xcentergrid,
-                                                              self._ycentergrid)
+                                                           self.ycenter)
+        self._xcentergrid, self._ycentergrid = self.transform(
+            self._xcentergrid,
+            self._ycentergrid)
 
     def _set_xygrid(self):
         self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
         self._xgrid, self._ygrid = self.transform(self._xgrid, self._ygrid)
-
 
     @staticmethod
     def rotate(x, y, theta, xorigin=0., yorigin=0.):
@@ -512,8 +512,8 @@ class SpatialReference(object):
         degrees.
 
         """
-        #jwhite changed on Oct 11 2016 - rotation is now positive CCW
-        #theta = -theta * np.pi / 180.
+        # jwhite changed on Oct 11 2016 - rotation is now positive CCW
+        # theta = -theta * np.pi / 180.
         theta = theta * np.pi / 180.
 
         xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
@@ -589,7 +589,7 @@ class SpatialReference(object):
             x1r, y1r = self.transform(x1, y1)
             lines.append([(x0r, y0r), (x1r, y1r)])
 
-        #horizontal lines
+        # horizontal lines
         for i in range(self.nrow + 1):
             x0 = xmin
             x1 = xmax
@@ -627,7 +627,7 @@ class SpatialReference(object):
         """
         Ly = np.add.reduce(self.delc)
         y = Ly - (np.add.accumulate(self.delc) - 0.5 *
-                   self.delc)
+                  self.delc)
         return y
 
     def get_xedge_array(self):
@@ -649,15 +649,17 @@ class SpatialReference(object):
         """
         length_y = np.add.reduce(self.delc)
         yedge = np.concatenate(([length_y], length_y -
-                np.add.accumulate(self.delc)))
+                                np.add.accumulate(self.delc)))
         return yedge
 
     def write_gridSpec(self, filename):
         """ write a PEST-style grid specification file
         """
-        f = open(filename,'w')
-        f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
-        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))
+        f = open(filename, 'w')
+        f.write(
+            "{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
+        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul,
+                                                         self.rotation))
 
         for r in self.delr:
             f.write("{0:15.6E} ".format(r))
@@ -669,7 +671,7 @@ class SpatialReference(object):
 
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""
-        from flopy.export.shapefile_utils import write_grid_shapefile2
+        from ..export.shapefile_utils import write_grid_shapefile2
         if epsg is None and prj is None:
             epsg = self.epsg
         write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
@@ -679,9 +681,9 @@ class SpatialReference(object):
         pts = []
         xgrid, ygrid = self.xgrid, self.ygrid
         pts.append([xgrid[i, j], ygrid[i, j]])
-        pts.append([xgrid[i+1, j], ygrid[i+1, j]])
-        pts.append([xgrid[i+1, j+1], ygrid[i+1, j+1]])
-        pts.append([xgrid[i, j+1], ygrid[i, j+1]])
+        pts.append([xgrid[i + 1, j], ygrid[i + 1, j]])
+        pts.append([xgrid[i + 1, j + 1], ygrid[i + 1, j + 1]])
+        pts.append([xgrid[i, j + 1], ygrid[i, j + 1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
         return pts
 
@@ -775,7 +777,7 @@ class SpatialReference(object):
         jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
         jj, ii = jj.ravel(), ii.ravel()
         vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
-        self._vertices = [v.tolist() for v in vrts] # conversion to lists
+        self._vertices = [v.tolist() for v in vrts]  # conversion to lists
 
         """
         code above is 3x faster
@@ -887,6 +889,7 @@ class SpatialReferenceUnstructured(SpatialReference):
     -----
 
     """
+
     def __init__(self, xc, yc, verts, iverts, ncpl, layered=True, lenuni=1,
                  proj4_str="EPSG:4326", epsg=None, units=None,
                  length_multiplier=1.):
@@ -1003,7 +1006,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         xc = np.empty((ncells), dtype=np.float)
         yc = np.empty((ncells), dtype=np.float)
 
-        #read the vertices
+        # read the vertices
         f.readline()
         for ivert in range(nverts):
             line = f.readline()
@@ -1012,7 +1015,7 @@ class SpatialReferenceUnstructured(SpatialReference):
             verts[ivert, 0] = x
             verts[ivert, 1] = y
 
-        #read the cell information and create iverts, xc, and yc
+        # read the cell information and create iverts, xc, and yc
         iverts = []
         for icell in range(ncells):
             line = f.readline()
@@ -1025,9 +1028,9 @@ class SpatialReferenceUnstructured(SpatialReference):
             iverts.append(ivlist)
             xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, :])
 
-        #close file and return spatial reference
+        # close file and return spatial reference
         f.close()
-        return cls(xc, yc, verts, iverts, np.array(nlay*[len(iverts)]))
+        return cls(xc, yc, verts, iverts, np.array(nlay * [len(iverts)]))
 
     def __setattr__(self, key, value):
         super(SpatialReference, self).__setattr__(key, value)
@@ -1067,7 +1070,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         """
         return self.yc
 
-    def plot_array(self, a):
+    def plot_array(self, a, ax=None):
         """
         Create a QuadMesh plot of the specified array using patches
 
@@ -1081,7 +1084,10 @@ class SpatialReferenceUnstructured(SpatialReference):
 
         """
         from ..plot import plotutil
-        patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a)
+        if ax is None:
+            ax = plt.gca()
+        patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a,
+                                              ax=ax)
         return patch_collection
 
     def get_grid_line_collection(self, **kwargs):
@@ -1123,12 +1129,13 @@ class epsgRef:
     The database is located in the site packages folder in epsgref.py, which
     contains a dictionary, prj, of projection file text keyed by epsg value.
     """
+
     def __init__(self):
         sp = [f for f in sys.path if f.endswith('site-packages')][0]
         self.location = os.path.join(sp, 'epsgref.py')
 
     def _remove_pyc(self):
-        try: # get rid of pyc file
+        try:  # get rid of pyc file
             os.remove(self.location + 'c')
         except:
             pass
@@ -1140,7 +1147,8 @@ class epsgRef:
             newfile.close()
 
     def reset(self, verbose=True):
-        os.remove(self.location)
+        if os.path.exists(self.location):
+            os.remove(self.location)
         self._remove_pyc()
         self.make()
         if verbose:
@@ -1234,7 +1242,8 @@ def get_spatialreference(epsg, text='esriwkt'):
     except:
         e = sys.exc_info()
         print(e)
-        print('Need an internet connection to look up epsg on spatialreference.org.')
+        print(
+            'Need an internet connection to look up epsg on spatialreference.org.')
         return
     text = text.replace("\n", "")
     return text

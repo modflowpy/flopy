@@ -10,7 +10,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from flopy.utils.util_list import MfList
+from ..utils import MfList
 
 
 class ModflowGhb(Package):

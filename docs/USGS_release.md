@@ -15,7 +15,7 @@ header-includes:
     - \fancyhf{}
     - \fancyhead[LE,LO,RE,RO]{}
     - \fancyhead[CE,CO]{Flopy Release Notes}
-    - \fancyfoot[LE,RO]{FloPy version 3.2.5}
+    - \fancyfoot[LE,RO]{FloPy version 3.2.7}
     - \fancyfoot[CO,CE]{\thepage\ of \pageref{LastPage}}
     - \fancyfoot[RE,LO]{XX/XX/20XX}
 geometry: margin=0.75in
@@ -50,12 +50,12 @@ FloPy requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The
 
 **Installation:**
 
-To install FloPy version 3.2.5 from the USGS flopy website:
+To install FloPy version 3.2.7 from the USGS flopy website:
 
-    pip install http://water.usgs.gov/ogw/flopy/flopy-3.2.5.zip
+    pip install http://water.usgs.gov/ogw/flopy/flopy-3.2.7.zip
     
-To update FloPy version 3.2.5 from the USGS flopy website:
+To update FloPy version 3.2.7 from the USGS flopy website:
 
-    pip install http://water.usgs.gov/ogw/flopy/flopy-3.2.5.zip --upgrade
+    pip install http://water.usgs.gov/ogw/flopy/flopy-3.2.7.zip --upgrade
 
 

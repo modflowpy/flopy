@@ -7,7 +7,7 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
-from flopy.utils.datafile import Header,LayerFile
+from ..utils.datafile import Header, LayerFile
 
 
 def is_int(s):
@@ -60,12 +60,18 @@ class FormattedHeader(Header):
         arrheader = header_text.split()
 
         # Verify header exists and is in the expected format
-        if len(arrheader) >= 5 and arrheader[4].upper() != self.text_ident.upper():
-            raise Exception('Expected header not found.  Make sure the file being processed includes headers ' +
-                         '(LABEL output control option): ' + header_text)
-        if len(arrheader) != 9 or not is_int(arrheader[0]) or not is_int(arrheader[1]) or not is_float(arrheader[2]) \
-           or not is_float(arrheader[3]) or not is_int(arrheader[5]) or not is_int(arrheader[6]) or not is_int(arrheader[7]):
-            raise Exception('Unexpected format for FHDTextHeader: ' + header_text)
+        if len(arrheader) >= 5 and arrheader[
+            4].upper() != self.text_ident.upper():
+            raise Exception(
+                'Expected header not found.  Make sure the file being processed includes headers ' +
+                '(LABEL output control option): ' + header_text)
+        if len(arrheader) != 9 or not is_int(arrheader[0]) or not is_int(
+                arrheader[1]) or not is_float(arrheader[2]) \
+                or not is_float(arrheader[3]) or not is_int(
+            arrheader[5]) or not is_int(arrheader[6]) or not is_int(
+            arrheader[7]):
+            raise Exception(
+                'Unexpected format for FHDTextHeader: ' + header_text)
 
         headerinfo = np.empty([8], dtype=self.dtype)
         headerinfo['kstp'] = int(arrheader[0])
@@ -88,8 +94,10 @@ class FormattedLayerFile(LayerFile):
     classes are formed.  This class should not be instantiated directly
 
     """
+
     def __init__(self, filename, precision, verbose, kwargs):
-        super(FormattedLayerFile, self).__init__(filename, precision, verbose, kwargs)
+        super(FormattedLayerFile, self).__init__(filename, precision, verbose,
+                                                 kwargs)
         return
 
     def _build_index(self):
@@ -97,10 +105,10 @@ class FormattedLayerFile(LayerFile):
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        self.kstpkper # array of time step/stress periods with data available
-        self.recordarray # array of data headers
-        self.iposarray # array of seek positions for each record
-        self.nlay # Number of model layers
+        self.kstpkper  # array of time step/stress periods with data available
+        self.recordarray  # array of data headers
+        self.iposarray  # array of seek positions for each record
+        self.nlay  # Number of model layers
 
         # Get total file size
         self.file.seek(0, 2)
@@ -115,7 +123,7 @@ class FormattedLayerFile(LayerFile):
         self.ncol = header_info['ncol']
 
         ipos = self.file.tell()
-        self._store_record(header_info,ipos)
+        self._store_record(header_info, ipos)
 
         # Process enough data to calculate seek distance between headers
         self._col_data_size = self._get_data_size(header_info)
@@ -127,7 +135,7 @@ class FormattedLayerFile(LayerFile):
             self.file.seek(ipos + self._data_size)
             header_info = self.header.read_header(self.file)[0]
             ipos = self.file.tell()
-            self._store_record(header_info,ipos)
+            self._store_record(header_info, ipos)
 
         # self.recordarray contains a recordarray of all the headers.
         self.recordarray = np.array(self.recordarray, self.header.get_dtype())
@@ -141,7 +149,7 @@ class FormattedLayerFile(LayerFile):
 
         """
         self.recordarray.append(header)
-        self.iposarray.append(ipos)   # store the position right after header2
+        self.iposarray.append(ipos)  # store the position right after header2
         totim = header['totim']
         if totim > 0 and totim not in self.times:
             self.times.append(totim)
@@ -154,8 +162,9 @@ class FormattedLayerFile(LayerFile):
         Return a text header object containing header formatting information
 
         """
-        raise Exception('Abstract method _get_text_header called in FormattedLayerFile. ' +
-                        'This method needs to be overridden.')
+        raise Exception(
+            'Abstract method _get_text_header called in FormattedLayerFile. ' +
+            'This method needs to be overridden.')
 
     def _read_data(self):
         """
@@ -165,23 +174,25 @@ class FormattedLayerFile(LayerFile):
 
         current_row = 0
         current_col = 0
-        result = np.empty((self.nrow, self.ncol),self.realtype)
+        result = np.empty((self.nrow, self.ncol), self.realtype)
         # Loop until all data retreived or eof
-        while (current_row < self.nrow or current_col < self.ncol) and self.file.tell() != self.totalbytes:
+        while (
+                current_row < self.nrow or current_col < self.ncol) and self.file.tell() != self.totalbytes:
             line = self.file.readline()
 
             # Read data into 2-D array
             arrline = line.split()
             for val in arrline:
                 if not is_float(val):
-                    raise Exception('Invalid data encountered while reading data file.' +
-                                    ' Unable to convert data to float.')
+                    raise Exception(
+                        'Invalid data encountered while reading data file.' +
+                        ' Unable to convert data to float.')
                 result[current_row, current_col] = float(val)
                 current_col += 1
                 if current_col >= self.ncol:
                     current_row += 1
                     if current_row < self.nrow:
-                       current_col = 0
+                        current_col = 0
 
         if current_row < self.nrow - 1 or current_col < self.ncol - 1:
             raise Exception('Unexpected end of file while reading data.')
@@ -196,13 +207,15 @@ class FormattedLayerFile(LayerFile):
         current_col = 0
         result = None
         # Loop until data retreived or eof
-        while (current_col < self.ncol - 1 or self.file.tell() == self.totalbytes) and current_col <= i:
+        while (
+                current_col < self.ncol - 1 or self.file.tell() == self.totalbytes) and current_col <= i:
             line = self.file.readline()
             arrline = line.split()
             for val in arrline:
                 if not is_float(val):
-                    raise Exception('Invalid data encountered while reading data file.' +
-                                    ' Unable to convert data to float.')
+                    raise Exception(
+                        'Invalid data encountered while reading data file.' +
+                        ' Unable to convert data to float.')
                 result = float(val)
                 current_col = current_col + 1
                 if current_col > i:
@@ -254,7 +267,8 @@ class FormattedLayerFile(LayerFile):
             recordlist = []
             ioffset_col = (i * self._col_data_size)
             for irec, header in enumerate(self.recordarray):
-                ilay = header['ilay'] - 1 # change ilay from header to zero-based
+                ilay = header[
+                           'ilay'] - 1  # change ilay from header to zero-based
                 if ilay != k:
                     continue
                 ipos = self.iposarray[irec]
@@ -329,10 +343,12 @@ class FormattedHeadFile(FormattedLayerFile):
 
 
     """
+
     def __init__(self, filename, text='head', precision='single',
                  verbose=False, **kwargs):
         self.text = text
-        super(FormattedHeadFile, self).__init__(filename, precision, verbose, kwargs)
+        super(FormattedHeadFile, self).__init__(filename, precision, verbose,
+                                                kwargs)
         return
 
     def _get_text_header(self):
@@ -356,7 +372,9 @@ class FormattedHeadFile(FormattedLayerFile):
             data_count += len(arr_column_data)
 
         if data_count != header['ncol']:
-            raise Exception('Unexpected data formatting in head file.  Expected %d columns, but found %d.' % header['ncol'], data_count)
+            raise Exception(
+                'Unexpected data formatting in head file.  Expected %d columns, but found %d.' %
+                header['ncol'], data_count)
 
         # Calculate seek distance based on data size
         stop_pos = self.file.tell()

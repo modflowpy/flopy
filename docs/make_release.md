@@ -1,10 +1,27 @@
 Instructions for making a FloPy release
 -----------------------------------------------
 
+## Update the release version number
+
+1.  Update information in `.\docs\USGS_release.md`
+2.  Rename version number at top of `README.md` from FloPy Version 3.2.X-dev to FloPy Version 3.2.X.
+3.  Update version number in `flopy/version.py`. Use GitHub website to determine what the next build number is for `__build__`
+
+## Build USGS release notes
+
+1.  Update information in `.\docs\USGS_release.md`
+2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
+
+    ```
+    pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
+    ```
+
 ## Finalizing the release
 
-1.  Merge the `develop` branch into the `master` branch.
-2.  Update travis build status in `master` branch `README.md` from:
+1.  Commit the changes to the `develop` branch and push to the GitHub site.
+2.  Change to the `master` branch in SourceTree.
+3.  Merge the `develop` branch into the `master` branch.
+4.  Update travis build status in `master` branch `README.md` from:
 
     ```
     [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
@@ -15,10 +32,10 @@ Instructions for making a FloPy release
     ```
     [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=master)](https://travis-ci.org/modflowpy/flopy)
     ```
-3.  Update version number in `flopy/version.py`. Use GitHub website to determine what the next build number is for `__build__`
-4.  Commit the modified `README.md` in the `master` branch.
-5.  Tag the commit with the `__version__` number using SourceTree (don't forget to commit the tag).
-6.  Update the flopy `version` number and `"github_tag"` in [https://github.com/ioos/conda-recipes/blob/master/flopy/meta.yaml](https://github.com/ioos/conda-recipes/blob/master/flopy/meta.yaml)
+5.  Commit the modified `README.md` file in the `master` branch.
+6.  Tag the commit with the `__version__` number using SourceTree (don't forget to commit the tag).
+7.  Push the commit and tag to the GitHub website.
+8.  Make release on [GitHub website](https://github.com/modflowpy/flopy/releases). Add version changes for [current release](https://github.com/modflowpy/flopy/blob/develop/docs/version_changes.md) from to release text. Publish release.
 
 ## Update PyPi
 
@@ -43,14 +60,27 @@ Instructions for making a FloPy release
     Paste pandoc results in PyPi text for release. 
 6.  Modify the link to the travis status in the PyPi text for the release (see version 3.2.3 for an example).
 
-## Build USGS release notes
+## Update flopy-feedstock for conda install
 
-1.  Update information in `.\docs\USGS_release.md`
-2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
+1.  Download the `*.tar.gz` file for the current release from the [GitHub website](https://github.com/modflowpy/flopy/releases).
+2.  Rerender [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock) using:
 
     ```
-    pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
+    conda smithy rerender
+
     ```
+
+2.  Calculate the sha256 checksum for the `*.tar.gz` using:
+  
+    ```
+    openssl sha256 flopy-X.X.X.tar.gz 
+    ```
+
+    from a terminal.
+
+3.  Update the version number in `{% set version = "3.2.6" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
+4.  Commit changes and push to [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock).
+5.  Make pull request to [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock)
 
 ## Sync master and develop branches
 

@@ -2,9 +2,8 @@ __author__ = 'emorway'
 
 import sys
 import numpy as np
-
 from ..pakbase import Package
-from flopy.utils import Util2d, Util3d, read1d, MfList
+from ..utils import Util2d, Util3d, read1d, MfList
 class Mt3dCts(Package):
     """
     MT3D-USGS Contaminant Treatment System package class

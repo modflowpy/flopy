@@ -9,10 +9,8 @@ MODFLOW Guide
 """
 
 import sys
-
 import numpy as np
-from flopy.utils.flopy_io import _pop_item, line_parse
-
+from ..utils.flopy_io import _pop_item, line_parse
 from ..pakbase import Package
 from ..utils import Util2d
 
@@ -130,7 +128,8 @@ class ModflowUzf1(Package):
         simulations. (default is 0.20)
     row_col_iftunit_iuzopt : list
         used to specify where information will be printed for each time step.
-        IUZOPT specifies what that information will be. (default is [])
+        row and col are zero-based. IUZOPT specifies what that information
+        will be. (default is [])
         IUZOPT is
 
         1   Prints time, ground-water head, and thickness of unsaturated zone,
@@ -266,10 +265,10 @@ class ModflowUzf1(Package):
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
-                extension = 'uzf{}.out'.format(iu)
+                uzgagext = 'uzf{}.out'.format(iu)
                 model.add_output_file(iu, fname=fname,
                                       binflag=False,
-                                      extension=extension,
+                                      extension=uzgagext,
                                       package=ModflowUzf1.ftype())
                 ipos += 1
 
@@ -488,12 +487,17 @@ class ModflowUzf1(Package):
         if self.nuzgag > 0:
             for iftunit, values in self.uzgag.items():
                 if iftunit > 0:
+                    values[0] += 1
+                    values[1] += 1
                     comment = ' #IUZROW IUZCOL IFTUNIT IUZOPT'
-                    f_uzf.write(
-                        '%10i%10i%10i%10i%s\n' % (tuple(values + [comment])))
+                    for v in values:
+                        f_uzf.write('{:10d}'.format(v))
+                    f_uzf.write('{}\n'.format(comment))
                 else:
                     comment = ' #IFTUNIT'
-                    f_uzf.write('%10i%s\n' % (tuple(values + [comment])))
+                    for v in values:
+                        f_uzf.write('{:10d}'.format(v))
+                    f_uzf.write('{}\n'.format(comment))
         for n in range(nper):
             comment = ' #NUZF1 for stress period ' + str(n + 1)
             if n < len(self.finf):
@@ -743,8 +747,8 @@ def _parse8(line):
     iuzopt = 0
     line = line_parse(line)
     if len(line) > 1:
-        iuzrow = _pop_item(line, int)
-        iuzcol = _pop_item(line, int)
+        iuzrow = _pop_item(line, int) - 1
+        iuzcol = _pop_item(line, int) - 1
         iftunit = _pop_item(line, int)
         iuzopt = _pop_item(line, int)
     else:

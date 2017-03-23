@@ -9,10 +9,8 @@ MODFLOW Guide
 """
 
 import sys
-
 import numpy as np
-from flopy.utils.util_list import MfList
-
+from ..utils import MfList
 from ..pakbase import Package
 
 

@@ -185,9 +185,13 @@ class ModflowOc(Package):
                     save_types = [save_types]
             else:
                 save_types = ['save head', 'print budget']
+            if 'save_start' in kwargs:
+                save_start = int(kwargs.pop('save_start'))
+            else:
+                save_start = 1
             stress_period_data = {}
             for kper in range(dis.nper):
-                icnt = save_every
+                icnt = save_start
                 for kstp in range(dis.nstp[kper]):
                     if icnt == save_every:
                         stress_period_data[(kper, kstp)] = save_types

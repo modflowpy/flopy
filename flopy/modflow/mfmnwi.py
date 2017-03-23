@@ -1,6 +1,6 @@
 import sys
 
-from flopy.utils.flopy_io import line_parse, pop_item
+from ..utils.flopy_io import line_parse, pop_item
 
 from ..pakbase import Package
 from ..utils import check

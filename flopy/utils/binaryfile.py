@@ -11,7 +11,7 @@ from __future__ import print_function
 import numpy as np
 import warnings
 from collections import OrderedDict
-from flopy.utils.datafile import Header, LayerFile
+from ..utils.datafile import Header, LayerFile
 
 
 class BinaryHeader(Header):
@@ -529,6 +529,7 @@ class CellBudgetFile(object):
         self.recordarray = []
         self.iposarray = []
         self.textlist = []
+        self.imethlist = []
         self.paknamlist = []
         self.nrecords = 0
         h1dt = [('kstp', 'i4'), ('kper', 'i4'), ('text', 'a16'),
@@ -640,6 +641,7 @@ class CellBudgetFile(object):
                 self.kstpkper.append(kstpkper)
             if header['text'] not in self.textlist:
                 self.textlist.append(header['text'])
+                self.imethlist.append(header['imeth'])
             if header['paknam'] not in self.paknamlist:
                 self.paknamlist.append(header['paknam'])
             ipos = self.file.tell()
@@ -778,7 +780,7 @@ class CellBudgetFile(object):
                 ttext = text.decode()
             else:
                 ttext = text
-            for t in self._unique_record_names():
+            for t in self.textlist:
                 if ttext.upper() in t.decode():
                     text16 = t
                     break
@@ -823,10 +825,12 @@ class CellBudgetFile(object):
         """
         Print a list of unique record names
         """
-        for rec in self._unique_record_names():
+        print('RECORD           IMETH')
+        print(22*'-')
+        for rec, imeth in zip(self.textlist, self.imethlist):
             if isinstance(rec, bytes):
                 rec = rec.decode()
-            print(rec)
+            print('{:16} {:5d}'.format(rec.strip(), imeth))
         return
 
     def list_unique_packages(self):
@@ -840,18 +844,6 @@ class CellBudgetFile(object):
         return
 
     def get_unique_record_names(self):
-        """
-        Get a list of unique record names in the file
-
-        Returns
-        ----------
-        out : list of strings
-            List of unique text names in the binary file.
-
-        """
-        return self.textlist
-
-    def _unique_record_names(self):
         """
         Get a list of unique record names in the file
 
