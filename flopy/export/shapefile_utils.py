@@ -107,7 +107,7 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
 
     sf = import_shapefile()
-    verts = sr.vertices
+    verts = sr.vertices.copy()
 
     w = sf.Writer(5) # polygon
     w.autoBalance = 1

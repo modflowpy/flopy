@@ -34,6 +34,14 @@ class SfrFile():
     names = ["layer", "row", "column", "segment", "reach", "Qin",
              "Qaquifer", "Qout", "Qovr", "Qprecip", "Qet",
              "stage", "depth", "width", "Cond", "gradient"]
+
+    # non-float dtypes (default is float)
+    dtypes = {"layer": int,
+              "row": int,
+              "column": int,
+              "segment": int,
+              "reach": int}
+
     def __init__(self, filename, geometries=None, verbose=False):
         """
         Class constructor.
@@ -67,7 +75,7 @@ class SfrFile():
                 if 'STEP' in line:
                     line = line.strip().split()
                     kper, kstp = int(line[3]) - 1, int(line[5]) - 1
-                    kstpkper.append((kper, kstp))
+                    kstpkper.append((kstp, kper))
         return kstpkper
 
     @staticmethod
@@ -84,21 +92,31 @@ class SfrFile():
 
         df = self.pd.read_csv(self.filename, delim_whitespace=True,
                          header=None, names=self.names,
-                         error_bad_lines=False, comment='S',
+                         error_bad_lines=False,
                          skiprows=self.sr)
+        # drop text between stress periods; convert to numeric
+        df['layer'] = self.pd.to_numeric(df.layer, errors='coerce')
+        df.dropna(axis=0, inplace=True)
+        # convert to proper dtypes
+        for c in df.columns:
+            df[c] = df[c].astype(self.dtypes.get(c, float))
 
         # add time, reachID, and reach geometry (if it exists)
         self.nstrm = self.get_nstrm(df)
-        time = []
-        times = []
-        geoms = []
-        reachID = []
-        for ts in self.times:
-            time += [ts[1]] * np.abs(self.nstrm)
-            times.append(ts[1])
-            reachID += list(range(self.nstrm))
-        df['time'] = time
-        df['reachID'] = reachID
+        per = []
+        timestep = []
+        dftimes = []
+        times = self.get_times()
+        newper = df.segment.diff().values < 0
+        kstpkper = times.pop(0)
+        for np in newper:
+            if np:
+                kstpkper = times.pop(0)
+            dftimes.append(kstpkper)
+        df['kstpkper'] = dftimes
+        df['k'] = df['layer'] - 1
+        df['i'] = df['row'] - 1
+        df['j'] = df['column'] -1
 
         if self.geoms is not None:
             geoms = self.geoms * self.nstrm
