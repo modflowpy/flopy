@@ -76,10 +76,10 @@ class HeadObservation(object):
         if irefsp is not None:
             self.irefsp = irefsp
         else:
-            if time_series_data.shape[0] == 1:
+            if len(time_series_data) == 1:
                 self.irefsp = 1
             else:
-                self.irefsp = -1 * time_series_data.shape[0]
+                self.irefsp = -1 * len(time_series_data)
         self.roff = roff
         self.coff = coff
         self.itt = itt

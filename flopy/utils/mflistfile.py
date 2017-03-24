@@ -377,7 +377,7 @@ class ListBudget(object):
             v[i]['name'] = name
         return v
 
-    def get_dataframes(self, start_datetime='1-1-1970'):
+    def get_dataframes(self, start_datetime='1-1-1970',diff=False):
         """
         Get pandas dataframes with the incremental and cumulative water budget
         items in the list file.
@@ -420,8 +420,30 @@ class ListBudget(object):
         df_flux = pd.DataFrame(self.inc, index=totim).loc[:, self.entries]
         df_vol = pd.DataFrame(self.cum, index=totim).loc[:, self.entries]
 
-        return df_flux, df_vol
+        if not diff:
+            return df_flux, df_vol
 
+        else:
+            in_names = [col for col in df_flux.columns if col.endswith("_IN")]
+            out_names = [col for col in df_flux.columns if col.endswith("_OUT")]
+            #print(in_names,out_names)
+            #print(df_flux.columns)
+            base_names = [name.replace("_IN",'') for name in in_names]
+            for name in base_names:
+                in_name = name + "_IN"
+                out_name = name + "_OUT"
+                df_flux.loc[:,name.lower()] = df_flux.loc[:,in_name] - df_flux.loc[:,out_name]
+                df_flux.pop(in_name)
+                df_flux.pop(out_name)
+                df_vol.loc[:,name.lower()] = df_vol.loc[:,in_name] - df_vol.loc[:,out_name]
+                df_vol.pop(in_name)
+                df_vol.pop(out_name)
+            cols = list(df_flux.columns)
+            cols.sort()
+            cols = [col.lower() for col in cols]
+            df_flux.columns = cols
+            df_vol.columns = cols
+            return df_flux, df_vol
     def _build_index(self, maxentries):
         self.idx_map = self._get_index(maxentries)
         return
@@ -619,7 +641,7 @@ class ListBudget(object):
                             ' to float in ts,sp',
                             ts, sp)
                     return self.null_entries
-                if tag.upper() in entry:
+                if entry.endswith(tag.upper()):
                     if ' - ' in entry.upper():
                         key = entry.replace(' ', '')
                     else:
