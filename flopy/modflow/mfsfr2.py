@@ -680,6 +680,7 @@ class ModflowSfr2(Package):
         >>> m.sfr2.check()
         """
         chk = check(self, verbose=verbose, level=level)
+        chk.for_nans()
         chk.numbering()
         chk.routing()
         chk.overlapping_conductance()
@@ -1368,6 +1369,28 @@ class check:
         if self.verbose:
             print(txt + '\n')
         self.txt += headertxt + txt + '\n'
+
+    def for_nans(self):
+        """Check for nans in reach or segment data"""
+        headertxt = 'Checking for nan values...\n'
+        txt = ''
+        passed = False
+        isnan = np.any(np.isnan(np.array(self.reach_data.tolist())), axis=1)
+        nanreaches = self.reach_data[isnan]
+        if np.any(isnan):
+            txt += 'Found {} reachs with nans:\n'.format(len(nanreaches))
+            if self.level == 1:
+                txt += _print_rec_array(nanreaches, delimiter=' ')
+        for per, sd in self.segment_data.items():
+            isnan = np.any(np.isnan(np.array(sd.tolist())), axis=1)
+            nansd = sd[isnan]
+            if np.any(isnan):
+                txt += 'Per {}: found {} segments with nans:\n'.format(per, len(nanreaches))
+                if self.level == 1:
+                    txt += _print_rec_array(nansd, delimiter=' ')
+        if len(txt) == 0:
+            passed = True
+        self._txt_footer(headertxt, txt, 'nan values', passed)
 
     def run_all(self):
         return self.sfr.check()
