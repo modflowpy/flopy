@@ -694,6 +694,15 @@ class ModflowSfr2(Package):
             # f.close()
         return chk
 
+    def assign_layers(self):
+        """Assigns the appropriate layer for each SFR reach,
+        based on cell bottoms at location of reach."""
+        streambotms = self.reach_data.strtop - self.reach_data.strthick
+        layers = self.parent.dis.get_layer(self.reach_data.i,
+                                           self.reach_data.j,
+                                           streambotms)
+        self.reach_data['k'] = layers
+
     def get_outlets(self, level=0, verbose=True):
         """Traces all routing connections from each headwater to the outlet.
         """

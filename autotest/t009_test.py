@@ -14,6 +14,7 @@ except:
     matplotlib = None
 
 import flopy
+fm = flopy.modflow
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
@@ -240,6 +241,31 @@ def test_transient_example():
     assert m2.sfr.istcb2 == -49
     assert m2.get_output_attribute(unit=abs(m2.sfr.istcb2), attr='binflag')
 
+def test_assign_layers():
+    m = fm.Modflow()
+    m.dis = fm.ModflowDis(nrow=1, ncol=6, nlay=7,
+                            botm=np.array([[   50.,    49.,    42.,    27.,     6.,   -33.],
+                                      [ -196.,  -246.,  -297.,  -351.,  -405.,  -462.],
+                                      [ -817.,  -881.,  -951., -1032., -1141., -1278.],
+                                      [-1305., -1387., -1466., -1546., -1629., -1720.],
+                                      [-2882., -2965., -3032., -3121., -3226., -3341.],
+                                      [-3273., -3368., -3451., -3528., -3598., -3670.],
+                                      [-3962., -4080., -4188., -4292., -4392., -4496.]]),
+                          model=m)
+    reach_data = fm.ModflowSfr2.get_empty_reach_data(5)
+    seg_data = {0: fm.ModflowSfr2.get_empty_segment_data(1)}
+    seg_data[0]['outseg'] = 0
+    reach_data['k'] = 0
+    reach_data['i'] = 0
+    reach_data['j'] = np.arange(5)
+    reach_data['strtop'] = np.array([20, -250, 0., -3000., -4500.])
+    reach_data['strthick'] = 1.
+    sfr = fm.ModflowSfr2(reach_data=reach_data,
+                         segment_data=seg_data,
+                         model=m)
+    sfr.assign_layers()
+    assert np.array_equal(sfr.reach_data.k, np.array([1, 2, 1, 4, 6]))
+
 
 def test_sfr_plot():
     #m = flopy.modflow.Modflow.load('test1ss.nam', model_ws=path, verbose=False)
@@ -250,8 +276,9 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    test_sfr()
+    #test_sfr()
     #test_sfr_renumbering()
     #test_example()
     #test_transient_example()
     #test_sfr_plot()
+    test_assign_layers()
