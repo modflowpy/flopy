@@ -267,6 +267,11 @@ def test_assign_layers():
     sfr.assign_layers()
     assert np.array_equal(sfr.reach_data.k, np.array([1, 2, 1, 4, 6]))
 
+    l = m.dis.get_layer(0, 0, 0.)
+    assert l == 1
+    l = m.dis.get_layer(0, [0, 1], 0.)
+    assert np.array_equal(l, np.array([1, 1]))
+
     
 def test_SfrFile():
     sfrout = SfrFile('../examples/data/sfr_examples/sfroutput2.txt')
@@ -301,3 +306,4 @@ if __name__ == '__main__':
     #test_sfr_plot()
     #test_assign_layers()
     #test_SfrFile()
+    pass

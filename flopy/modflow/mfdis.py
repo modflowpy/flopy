@@ -975,7 +975,7 @@ def get_layer(dis, i, j, elev):
     layers = np.sum(((botms - elev) > 0), axis=0)
     # force elevations below model bottom into bottom layer
     layers[layers > dis.nlay - 1] = dis.nlay - 1
-    layers = np.squeeze(layers)
+    layers = np.atleast_1d(np.squeeze(layers))
     if len(layers) == 1:
         layers = layers[0]
     return layers
