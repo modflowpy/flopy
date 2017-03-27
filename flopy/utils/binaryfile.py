@@ -608,10 +608,13 @@ class CellBudgetFile(object):
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
         self.nlay = np.abs(header["nlay"])
+        text = header['text']
+        if isinstance(text, bytes):
+            text = text.decode()
         if self.nrow > 10000 or self.ncol > 10000:
-            s = 'Possible error. ncol ({}) or nrow ({}) > 10000 '.format(
-                self.ncol,
-                self.nrow)
+            s = 'Possible error. text="{}" - '.format(text.strip()) + \
+                'ncol ({}) '.format(self.ncol) + \
+                'or nrow ({}) > 10000 '.format(self.nrow)
             warnings.warn(s)
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
@@ -721,19 +724,6 @@ class CellBudgetFile(object):
                 print('naux: ', naux)
                 print('nlist: ', nlist)
                 print('')
-            nbytes = nlist * (np.int32(1).nbytes + self.realtype(1).nbytes +
-                              naux * self.realtype(1).nbytes)
-        elif imeth == 7:
-            # read rest of list data
-            nauxp1 = binaryread(self.file, np.int32)[0]
-            naux = nauxp1 - 1
-            for i in range(naux):
-                temp = binaryread(self.file, str, charlen=16)
-            nlist = binaryread(self.file, np.int32)[0]
-            if self.verbose:
-                print('naux: ', naux)
-                print('nlist: ', nlist)
-                print('')
             nbytes = nlist * (
                 np.int32(1).nbytes * 2 + self.realtype(1).nbytes +
                 naux * self.realtype(1).nbytes)
@@ -755,9 +745,6 @@ class CellBudgetFile(object):
             # convert to dtype with pakname
             header2 = header2.astype(self.header2_dtype)
             if int(header2['imeth']) == 6:
-                header2['modelnam'] = binaryread(self.file, str, charlen=16)
-                header2['paknam'] = binaryread(self.file, str, charlen=16)
-            if int(header2['imeth']) == 7:
                 header2['modelnam'] = binaryread(self.file, str, charlen=16)
                 header2['paknam'] = binaryread(self.file, str, charlen=16)
                 header2['modelnam2'] = binaryread(self.file, str, charlen=16)
@@ -1187,32 +1174,6 @@ class CellBudgetFile(object):
 
         # imeth 6
         elif imeth == 6:
-            # read rest of list data
-            nauxp1 = binaryread(self.file, np.int32)[0]
-            naux = nauxp1 - 1
-            l = [('node', np.int32), ('q', self.realtype)]
-            for i in range(naux):
-                auxname = binaryread(self.file, str, charlen=16)
-                if not isinstance(auxname, str):
-                    auxname = auxname.decode()
-                l.append((auxname, self.realtype))
-            dtype = np.dtype(l)
-            nlist = binaryread(self.file, np.int32)[0]
-            data = binaryread(self.file, dtype, shape=(nlist,))
-            if self.verbose:
-                if full3D:
-                    s += 'full 3D arrays not supported for ' + \
-                         'imeth = {}'.format(imeth)
-                else:
-                    s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
-                print(s)
-            if full3D:
-                raise ValueError(s)
-            else:
-                return data.view(np.recarray)
-
-        # imeth 7
-        elif imeth == 7:
             # read rest of list data
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1

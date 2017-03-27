@@ -65,7 +65,7 @@ class HeadObservation(object):
     """
 
     def __init__(self, model, tomulth=1., obsname='HOBS',
-                 layer=0, row=0, column=0,
+                 layer=0, row=0, column=0, irefsp=None,
                  roff=0., coff=0., itt=1, mlay={0: 1.},
                  time_series_data=[[0., 0.]], names=None):
 
@@ -73,6 +73,13 @@ class HeadObservation(object):
         self.layer = layer
         self.row = row
         self.column = column
+        if irefsp is not None:
+            self.irefsp = irefsp
+        else:
+            if len(time_series_data) == 1:
+                self.irefsp = 1
+            else:
+                self.irefsp = -1 * len(time_series_data)
         self.roff = roff
         self.coff = coff
         self.itt = itt

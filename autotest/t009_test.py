@@ -1,7 +1,7 @@
 __author__ = 'aleaf'
 
 import sys
-# sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
+sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import glob
 import shutil
@@ -15,6 +15,7 @@ except:
 
 import flopy
 fm = flopy.modflow
+from flopy.utils.sfroutputfile import SfrFile
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
@@ -266,6 +267,23 @@ def test_assign_layers():
     sfr.assign_layers()
     assert np.array_equal(sfr.reach_data.k, np.array([1, 2, 1, 4, 6]))
 
+    
+def test_SfrFile():
+    sfrout = SfrFile('../examples/data/sfr_examples/sfroutput2.txt')
+    # will be str if pandas is not installed
+    if isinstance(sfrout, SfrFile):
+        df = sfrout.get_dataframe()
+        assert df.layer.values[0] == 1
+        assert df.column.values[0] == 169
+        assert df.Cond.values[0] == 74510.0
+        assert df.col18.values[3] == 1.288E+03
+
+    sfrout = SfrFile('../examples/data/sfr_examples/test1tr.flw')
+    if isinstance(sfrout, SfrFile):
+        df = sfrout.get_dataframe()
+        assert df.col16.values[-1] == 5.502E-02
+        assert df.shape == (1080, 20)
+
 
 def test_sfr_plot():
     #m = flopy.modflow.Modflow.load('test1ss.nam', model_ws=path, verbose=False)
@@ -281,4 +299,5 @@ if __name__ == '__main__':
     #test_example()
     #test_transient_example()
     #test_sfr_plot()
-    test_assign_layers()
+    #test_assign_layers()
+    #test_SfrFile()

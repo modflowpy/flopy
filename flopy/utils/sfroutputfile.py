@@ -31,9 +31,7 @@ class SfrFile():
 
     """
 
-    names = ["layer", "row", "column", "segment", "reach", "Qin",
-             "Qaquifer", "Qout", "Qovr", "Qprecip", "Qet",
-             "stage", "depth", "width", "Cond", "gradient"]
+
 
     # non-float dtypes (default is float)
     dtypes = {"layer": int,
@@ -54,18 +52,24 @@ class SfrFile():
 
         # get the number of rows to skip at top
         self.filename = filename
-        self.sr = self.get_skiprows()
+        self.sr, self.ncol = self.get_skiprows_ncols()
+        self.names = names = ["layer", "row", "column", "segment", "reach",
+                              "Qin", "Qaquifer", "Qout", "Qovr",
+                              "Qprecip", "Qet",
+                              "stage", "depth", "width", "Cond"]
+        self._set_names() # ensure correct number of column names
         self.times = self.get_times()
         self.geoms = None # not implemented yet
         self.df = None
 
-    def get_skiprows(self):
+    def get_skiprows_ncols(self):
         """Get the number of rows to skip at the top."""
         with open(self.filename) as input:
             for i, line in enumerate(input):
                 line = line.strip().split()
                 if len(line) > 0 and line[0].isdigit():
-                    return i
+                    ncols = len(line)
+                    return i, ncols
 
     def get_times(self):
         """Parse the stress period/timestep headers."""
@@ -77,6 +81,14 @@ class SfrFile():
                     kper, kstp = int(line[3]) - 1, int(line[5]) - 1
                     kstpkper.append((kstp, kper))
         return kstpkper
+
+    def _set_names(self):
+        """Pad column names so that correct number is used 
+        (otherwise Pandas read_csv may drop columns)"""
+        if len(self.names) < self.ncol:
+            n = len(self.names)
+            for i in range(n, self.ncol):
+                self.names.append('col{}'.format(i+1))
 
     @staticmethod
     def get_nstrm(df):

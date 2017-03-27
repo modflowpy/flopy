@@ -102,7 +102,8 @@ def test_obs_create_and_write():
 
     # load the modflow model
     mf = flopy.modflow.Modflow.load('tc1-true.nam', verbose=True,
-                                    model_ws=opth, exe_name=exe_name)
+                                    model_ws=opth, exe_name=exe_name,
+                                    forgive=False)
     # remove the existing hob package
     iuhob = mf.hob.unit_number[0]
     mf.remove_package('HOB')

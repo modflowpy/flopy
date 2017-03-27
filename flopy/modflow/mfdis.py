@@ -596,7 +596,14 @@ class ModflowDis(Package):
         thickness : util3d array of floats (nlay, nrow, ncol)
 
         """
-        return self.__thickness
+        #return self.__thickness
+        thk = []
+        thk.append(self.top - self.botm[0])
+        for k in range(1, self.nlay + sum(self.laycbd)):
+            thk.append(self.botm[k - 1] - self.botm[k])
+        return Util3d(self.parent, (self.nlay + sum(self.laycbd),
+                      self.nrow, self.ncol), np.float32,
+                      thk, name='thickness')
 
     def write_file(self, check=True):
         """
