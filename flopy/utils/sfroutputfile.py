@@ -49,6 +49,7 @@ class SfrFile():
             self.pd = pd
         except:
             print('This method requires pandas')
+            self.pd = None
             return
 
         # get the number of rows to skip at top
