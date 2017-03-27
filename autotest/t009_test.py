@@ -275,8 +275,8 @@ def test_assign_layers():
     
 def test_SfrFile():
     sfrout = SfrFile('../examples/data/sfr_examples/sfroutput2.txt')
-    # will be str if pandas is not installed
-    if isinstance(sfrout, SfrFile):
+    # will be None if pandas is not installed
+    if sfrout is not None:
         df = sfrout.get_dataframe()
         assert df.layer.values[0] == 1
         assert df.column.values[0] == 169
@@ -284,7 +284,7 @@ def test_SfrFile():
         assert df.col18.values[3] == 1.288E+03
 
     sfrout = SfrFile('../examples/data/sfr_examples/test1tr.flw')
-    if isinstance(sfrout, SfrFile):
+    if sfrout is not None:
         df = sfrout.get_dataframe()
         assert df.col16.values[-1] == 5.502E-02
         assert df.shape == (1080, 20)
