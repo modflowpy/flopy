@@ -945,21 +945,37 @@ class ModflowDis(Package):
 
 
 def get_layer(dis, i, j, elev):
-    """Return the layer for an elevation at an i, j location.
+    """Return the layers for elevations at i, j locations.
 
     Parameters
     ----------
     dis : flopy.modflow.ModflowDis object
-    i : row index (zero-based)
-    j : column index
-    elev : elevation (in same units as model)
+    i : scaler or sequence
+        row index (zero-based)
+    j : scaler or sequence
+        column index
+    elev : scaler or sequence
+        elevation (in same units as model)
 
     Returns
     -------
-    k : zero-based layer index
+    k : np.ndarray (1-D) or scalar
+        zero-based layer index
     """
-    elevs = dis.botm.array[:, i, j].tolist()
-    for k, botm in enumerate(elevs):
-        if botm < elev:
-            return k
-    return len(elevs) - 1
+    def to_array(arg):
+        if not isinstance(arg, np.ndarray):
+            return np.array([arg])
+        else:
+            return arg
+
+    i = to_array(i)
+    j = to_array(j)
+    elev = to_array(elev)
+    botms = dis.botm.array[:, i, j].tolist()
+    layers = np.sum(((botms - elev) > 0), axis=0)
+    # force elevations below model bottom into bottom layer
+    layers[layers > dis.nlay - 1] = dis.nlay - 1
+    layers = np.atleast_1d(np.squeeze(layers))
+    if len(layers) == 1:
+        layers = layers[0]
+    return layers

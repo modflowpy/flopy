@@ -169,8 +169,9 @@ def test_checks():
 
 
 if __name__ == '__main__':
-    test_line_parse()
-    test_load()
-    test_make_package()
+    #test_line_parse()
+    #test_load()
+    #test_make_package()
     test_export()
-    test_checks()
+    #test_checks()
+    pass
