@@ -5,7 +5,7 @@ import flopy
 # Model domain and grid definition
 Lx = 1000.
 Ly = 1000.
-ztop = 0.
+ztop = 10.
 zbot = -50.
 nlay = 1
 nrow = 10
