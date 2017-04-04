@@ -158,10 +158,11 @@ class ModflowFlwob(Package):
         self.irefsp[:] = irefsp
         self.toffset[:] = toffset
         self.flwobs[:] = flwobs
-        self.layer[:, :] = layer
-        self.row[:, :] = row
-        self.column[:, :] = column
-        self.factor[:, :] = factor
+        for i in range(self.nqfb):
+            self.layer[i, :len(layer[i])] = layer[i]
+            self.row[i, :len(row[i])] = row[i]
+            self.column[i, :len(column[i])] = column[i]
+            self.factor[i, :len(factor[i])] = factor[i]
 
         # putting in some more checks here
 
