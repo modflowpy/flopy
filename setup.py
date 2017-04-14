@@ -35,6 +35,10 @@ setup(name=__name__,
       install_requires=['numpy>=1.7'],
       packages=['flopy', 'flopy.modflow', 'flopy.modflowlgr', 'flopy.modpath',
                 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot',
-                'flopy.pest', 'flopy.export'],
+                'flopy.pest', 'flopy.export', 'cli'],
+      entry_points={
+          'console_scripts':
+              ['shp2mf=cli.shp2mf:main']
+      },
       # use this version ID if .svn data cannot be found
       version=__version__)
