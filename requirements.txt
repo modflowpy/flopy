@@ -1,2 +1,4 @@
 numpy>=1.9
 matplotlib>=1.4
+geopandas
+mando
