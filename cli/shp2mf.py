@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Collection of functions for the manipulation of time series."""
+"""Collection of functions to take shapefile data into MODFLOW inputs"""
 
 from __future__ import print_function
 from __future__ import division
