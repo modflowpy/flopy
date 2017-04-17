@@ -9,13 +9,6 @@ from .util_array import read1d, Util2d
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 
-try:
-    import shapefile
-except:
-    raise Exception('Error importing shapefile: ' +
-                    'try pip install pyshp')
-
-
 # todo
 # creation of line and polygon shapefiles from features (holes!)
 # program layer functionality for plot method
@@ -41,6 +34,13 @@ def features_to_shapefile(features, featuretype, filename):
     None
 
     """
+    
+    try:
+        import shapefile
+    except:
+        raise Exception('Error importing shapefile: ' +
+                        'try pip install pyshp')
+    
     if featuretype.lower() not in ['point', 'line', 'polygon']:
         raise Exception('Unrecognized feature type: {}'.format(featuretype))
 
