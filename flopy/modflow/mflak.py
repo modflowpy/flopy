@@ -474,7 +474,7 @@ class ModflowLak(Package):
             f.write(write_fixed_var(t, ipos=ipos,
                                     free=self.parent.free_format_input))
 
-        ds8_keys = list(self.sill_data.keys())
+        ds8_keys = list(self.sill_data.keys()) if self.sill_data is not None else []
         ds9_keys = list(self.flux_data.keys())
         nper = self.parent.dis.steady.shape[0]
         for kper in range(nper):
