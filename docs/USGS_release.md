@@ -6,7 +6,7 @@ author:
     - Christian D. Langevin
     - Joseph D. Hughes
     - Jeremy T. White
-    - Jeffery Starn
+    - Jeffrey Starn
     - Michael N. Fienen
 header-includes:
     - \usepackage{fancyhdr}

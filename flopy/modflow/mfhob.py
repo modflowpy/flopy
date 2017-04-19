@@ -25,6 +25,8 @@ class HeadObservation(object):
         zero-based row index for the observation. Default is 0.
     column : int
         zero-based column index of the observation. Default is 0.
+    irefsp : int
+        the stress period to which the observation time is referenced.
     roff : float
         Fractional offset from center of cell in Y direction (between rows).
         Default is 0.
@@ -398,7 +400,7 @@ class ModflowHob(Package):
             # dataset 4
             if len(obs.mlay.keys()) > 1:
                 line = ''
-                for key, value in obs.items():
+                for key, value in iter(obs.mlay.items()):
                     line += '{:5d}{:10.4f}'.format(key + 1, value)
                 line += '  # DATASET 4 - Observation {}'.format(idx + 1)
                 f.write('{}\n'.format(line))

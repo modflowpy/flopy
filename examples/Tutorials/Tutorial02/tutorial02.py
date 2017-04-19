@@ -5,7 +5,7 @@ import flopy
 # Model domain and grid definition
 Lx = 1000.
 Ly = 1000.
-ztop = 0.
+ztop = 10.
 zbot = -50.
 nlay = 1
 nrow = 10
@@ -39,7 +39,8 @@ dis = flopy.modflow.ModflowDis(mf, nlay, nrow, ncol, delr=delr, delc=delc,
                                nper=nper, perlen=perlen, nstp=nstp,
                                steady=steady)
 bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=strt)
-lpf = flopy.modflow.ModflowLpf(mf, hk=hk, vka=vka, sy=sy, ss=ss, laytyp=laytyp)
+lpf = flopy.modflow.ModflowLpf(mf, hk=hk, vka=vka, sy=sy, ss=ss, laytyp=laytyp,
+                               ipakcb=53)
 pcg = flopy.modflow.ModflowPcg(mf)
 
 # Make list for stress period 1

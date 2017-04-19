@@ -23,15 +23,15 @@ class ModflowFlwob(Package):
         consistent with other model input. tomultfb can be dimensionless or can
         be used to convert the units of toffset to the time unit used in the
         simulation.
-    nqobfb : int of length nqfb
+    nqobfb : int list of length nqfb
         The number of times at which flows are observed for the group of cells
-    nqclfb : int of length nqfb
+    nqclfb : int list of length nqfb
         Is a flag, and the absolute value of nqclfb is the number of cells in
         the group.  If nqclfb is less than zero, factor = 1.0 for all cells in
         the group.
     obsnam : string list of length nqtfb
         Observation name
-    irefsp : int of length ngtfb
+    irefsp : int of length nqtfb
         Stress period to which the observation time is referenced. The reference
         point is the beginning of the specified stress period.
     toffset : float list of length nqtfb
@@ -158,10 +158,11 @@ class ModflowFlwob(Package):
         self.irefsp[:] = irefsp
         self.toffset[:] = toffset
         self.flwobs[:] = flwobs
-        self.layer[:, :] = layer
-        self.row[:, :] = row
-        self.column[:, :] = column
-        self.factor[:, :] = factor
+        for i in range(self.nqfb):
+            self.layer[i, :len(layer[i])] = layer[i]
+            self.row[i, :len(row[i])] = row[i]
+            self.column[i, :len(column[i])] = column[i]
+            self.factor[i, :len(factor[i])] = factor[i]
 
         # putting in some more checks here
 
