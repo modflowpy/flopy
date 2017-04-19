@@ -24,6 +24,171 @@ class ModflowLak(Package):
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
+    nlakes : int
+        NLAKES Number of separate lakes.
+        Sublakes of multiple-lake systems are considered separate lakes for input purposes. 
+        The variable NLAKES is used, with certain internal assumptions and approximations, 
+        to dimension arrays for the simulation.
+    ipakcb : int
+        (ILKCB in MODFLOW documentation) 
+        Whether or not to write cell-by-cell flows (yes if ILKCB> 0, no otherwise). 
+        If ILKCB< 0 and "Save Budget" is specified in the Output Control or ICBCFL is not equal to 0, 
+        the cell-by-cell flows will be printed in the standard output file.
+        ICBCFL is specified in the input to the Output Control Option of MODFLOW.
+    theta : float
+        Explicit (THETA = 0.0), semi-implicit (0.0 < THETA < 1.0), or implicit (THETA = 1.0) 
+        solution for lake stages.
+        SURFDEPTH is read only if THETA is assigned a negative value 
+        (the negative value of THETA is then changed to a positive value internally by the code).
+        *	A new method of solving for lake stage uses only the time-weighting factor THETA 
+        (Merritt and Konikow, 2000, p. 52) for transient simulations. THETA is automatically set 
+        to a value of 1.0 for all steady-state stress periods. For transient stress periods, 
+        Explicit (THETA = 0.0), semi-implicit (0.0 < THETA < 1.0), or implicit (THETA = 1.0) 
+        solutions can be used to calculate lake stages. The option to specify negative values 
+        for THETA is supported to allow specification of additional variables (NSSITER, SSCNCR, SURFDEP) 
+        for simulations that only include transient stress periods. If THETA is specified as a negative value, 
+        then it is converted to a positive value for calculations of lake stage.
+        *	In MODFLOW-2000 and later, ISS is not part of the input.  Instead NSSITR or SSCNCR 
+        should be included if one or more stress periods is a steady state stress period as 
+        defined in Ss/tr in the Discretization file.
+        *	SSCNCR and NSSITR can be read for a transient only simulation by placing a 
+        negative sign immeditately in front of THETA. A negative THETA sets a flag which assumes 
+        input values for NSSITR and SSCNCR will follow THETA in the format as described by Merritt 
+        and Konikow (p. 52). A negative THETA is automatically reset to a positive value after 
+        values of NSSITR and SSCNCR are read.
+    nssitr : int
+        Maximum number of iterations for Newton’s method of solution for equilibrium lake stages 
+        in each MODFLOW iteration for steady-state aquifer head solution. Only read if ISS 
+        (option flag input to DIS Package of MODFLOW indicating steady-state solution) 
+        is not zero or if THETA is specified as a negative value.
+        *	NSSITR and SSCNCR may be omitted for transient solutions (ISS = 0).
+        *	In MODFLOW-2000 and later, ISS is not part of the input.  
+            Instead NSSITR or SSCNCR should be included if one or more stress periods is a 
+            steady state stress period as defined in Ss/tr in the Discretization file.
+        *	SSCNCR and NSSITR can be read for a transient only simulation by placing a negative sign 
+            immeditately in front of THETA. A negative THETA sets a flag which assumes input values 
+            for NSSITR and SSCNCR will follow THETA in the format as described by Merritt and Konikow 
+            (p. 52). A negative THETA is automatically reset to a positive value after values 
+            of NSSITR and SSCNCR are read.
+        *	If NSSITR = 0, a value of 100 will be used instead.
+    sscncr : float
+        Convergence criterion for equilibrium lake stage solution by Newton’s method. 
+        Only read if ISS is not zero or if THETA is specified as a negative value.
+        see notes above for nssitr.
+    surfdepth : float
+        The height of small topological variations (undulations) in lake-bottom elevations 
+        that can affect groundwater discharge to lakes.
+        SURFDEPTH decreases the lakebed conductance for vertical flow across a horizontal lakebed 
+        caused both by a groundwater head that is between the lakebed and the 
+        lakebed plus SURFDEPTH and a lake stage that is also between the lakebed and the 
+        lakebed plus SURFDEPTH. This method provides a smooth transition from a condition 
+        of no groundwater discharge to a lake, when groundwater head is below the lakebed, 
+        to a condition of increasing groundwater discharge to a lake as groundwater head 
+        becomes greater than the elevation of the dry lakebed. The method also allows 
+        for the transition of seepage from a lake to groundwater when the lake stage decreases 
+        to the lakebed elevation. Values of SURFDEPTH ranging from 0.01 to 0.5 have been used 
+        successfully in test simulations. SURFDEP is read only if THETA is specified 
+        as a negative value.
+    stages : float or list of floats
+        The initial stage of each lake at the beginning of the run.
+    stage_range : list of tuples (ssmn, ssmx) of length nlakes
+        Where ssmn and ssmx are the minimum and maximum stages allowed for each lake 
+        in steady-state solution.
+        *	SSMN and SSMX are not needed for a transient run and must be omitted 
+            when the solution is transient.
+        *	When the first stress period is a steady-state stress period, 
+            SSMN is defined in record 3.  
+        For subsequent steady-state stress periods, SSMN is defined in record 9a.
+    lakarr : array of integers (nlay, nrow, ncol)
+        LKARR A value is read in for every grid cell.
+        If LKARR(I,J,K) = 0, the grid cell is not a lake volume cell.
+        If LKARR(I,J,K) > 0, its value is the identification number of the 
+        lake occupying the grid cell. LKARR(I,J,K) must not exceed the value NLAKES. 
+        If it does, or if LKARR(I,J,K) < 0, LKARR(I,J,K) is set to zero.
+        Lake cells cannot be overlain by non-lake cells in a higher layer.
+        Lake cells must be inactive cells (IBOUND = 0) and should not be 
+        convertible to active cells (WETDRY = 0).
+        The Lake package can be used when all or some of the model layers 
+        containing the lake are confined.  The authors recommend using the 
+        Layer-Property Flow Package (LPF) for this case, although the 
+        BCF and HUF Packages will work too.  However, when using the BCF6 package 
+        to define aquifer properties, lake/aquifer conductances in the lateral direction 
+        are based solely on the lakebed leakance (and not on the lateral transmissivity 
+        of the aquifer layer).  As before, when the BCF6 package is used, 
+        vertical lake/aquifer conductances are based on lakebed conductance and 
+        on the vertical hydraulic conductivity of the aquifer layer underlying 
+        the lake when the wet/dry option is implemented, and only on the lakebed leakance when 
+        the wet/dry option is not implemented.
+    bdlknc : array of floats (nlay, nrow, ncol)
+        BDLKNC A value is read in for every grid cell. The value is the lakebed leakance 
+        that will be assigned to lake/aquifer interfaces that occur in the 
+        corresponding grid cell.
+        If the wet-dry option flag (IWDFLG) is not active (cells cannot rewet if they become dry), 
+        then the BDLKNC values are assumed to represent the combined leakances of the 
+        lakebed material and the aquifer material between the lake and the centers of the 
+        underlying grid cells, i. e., the vertical conductance values (CV) will not be used 
+        in the computation of conductances across lake/aquifer boundary faces in the 
+        vertical direction.
+        IBOUND and WETDRY should be set to zero for every cell for which LKARR is not equal to zero. 
+        IBOUND is defined in the input to the Basic Package of MODFLOW). 
+        WETDRY is defined in the input to the BCF or other flow package of MODFLOW 
+        if the IWDFLG option is active.
+        When used with the HUF package, the Lake Package has been modified to compute effective 
+        lake-aquifer conductance solely on the basis of the user-specified value of lakebed leakance; 
+        aquifer hydraulic conductivities are not used in this calculation.  
+        An appropriate informational message is now printed after the lakebed conductances 
+        are written to the main output file.
+    sill_data : dict 
+        (dataset 8 in documentation)
+        Dict of lists keyed by stress period. Each list has a tuple of dataset 8a, 8b
+        for every multi-lake system, where dataset 8a is another tuple of
+        IC : int
+            The number of sublakes
+        ISUB : list of ints
+            The identification numbers of the sublakes in the sublake system 
+            being described in this record. The center lake number is listed first.
+        And dataset 8b contains 
+        SILLVT : sequnce of floats
+            A sequence of sill elevations for each sublakes that determines whether 
+            the center lake is connected with a given sublake. Values are entered 
+            for each sublake in the order the sublakes are listed in the previous record.
+    flux_data : dict 
+        (dataset 9 in documentation)
+        Dict of lists keyed by stress period. The list for each stress period is a list
+        of lists, with each list containing the variables PRCPLK EVAPLK RNF WTHDRW [SSMN] [SSMX]
+        from the documentation.
+        PRCPLK : float
+            The rate of precipitation per unit area at the surface of a lake (L/T).
+        EVAPLK : float
+            The rate of evaporation per unit area from the surface of a lake (L/T).
+        RNF : float
+            Overland runoff from an adjacent watershed entering the lake. 
+            If RNF > 0, it is specified directly as a volumetric rate, or flux (L3 /T). 
+            If RNF < 0, its absolute value is used as a dimensionless multiplier applied 
+            to the product of the lake precipitation rate per unit area (PRCPLK) and the 
+            surface area of the lake at its full stage (occupying all layer 1 lake cells).
+            When RNF is entered as a dimensionless multiplier (RNF < 0), 
+            it is considered to be the product of two proportionality factors. 
+            The first is the ratio of the area of the basin contributing runoff to the 
+            surface area of the lake when it is at full stage. The second is the fraction 
+            of the current rainfall rate that becomes runoff to the lake. This procedure 
+            provides a means for the automated computation of runoff rate from a watershed 
+            to a lake as a function of varying rainfall rate. For example, if the basin area 
+            is 10 times greater than the surface area of the lake, and 20 percent of the 
+            precipitation on the basin becomes overland runoff directly into the lake, 
+            then set RNF = -2.0.
+        WTHDRW : float
+            The volumetric rate, or flux (L3 /T), of water removal from a lake by means 
+            other than rainfall, evaporation, surface outflow, or groundwater seepage. 
+            A negative value indicates augmentation. Normally, this would be used to specify 
+            the rate of artificial withdrawal from a lake for human water use, or if negative, 
+            artificial augmentation of a lake volume for esthetic or recreational purposes.
+        SSMN : float
+            Minimum stage allowed for each lake in steady-state solution.
+            See notes on ssmn and ssmx above.
+        SSMX : float
+            SSMX Maximum stage allowed for each lake in steady-state solution.
+        
     options : list of strings
         Package options. (default is None).
     extension : string
