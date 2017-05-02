@@ -179,15 +179,24 @@ class ModflowWel(Package):
         # (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, check=True):
         """
         Write the package file.
+        
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default True)
 
         Returns
         -------
         None
 
         """
+        if check:  # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]),
+                       verbose=self.parent.verbose, level=1)
+
         f_wel = open(self.fn_path, 'w')
         f_wel.write('%s\n' % self.heading)
         line = (
