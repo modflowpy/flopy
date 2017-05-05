@@ -377,13 +377,13 @@ class ModflowOc(Package):
                                 ddnref = item.lower()
                             else:
                                 lines += '{}\n'.format(item)
-                if len(lines) > 0:
-                    f_oc.write(
-                        'period {} step {} {}\n'.format(kper + 1, kstp + 1,
-                                                        ddnref))
-                    f_oc.write(lines)
-                    f_oc.write('\n')
-                    ddnref = ''
+                    if len(lines) > 0:
+                        f_oc.write(
+                            'period {} step {} {}\n'.format(kper + 1, kstp + 1,
+                                                            ddnref))
+                        f_oc.write(lines)
+                        f_oc.write('\n')
+                        ddnref = ''
 
         # close oc file
         f_oc.close()
