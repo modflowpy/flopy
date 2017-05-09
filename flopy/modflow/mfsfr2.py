@@ -1002,8 +1002,9 @@ class ModflowSfr2(Package):
                                                            self.isuzn,
                                                            self.nsfrsets))
         if self.nstrm < 0:
-            f_sfr.write('{:.0f} {:.0f} {:.0f} {:.0f} '.format(self.isfropt,
-                                                              self.nstrail,
+            f_sfr.write('{:.0f} '.format(self.isfropt))
+            if self.isfropt > 1:
+                f_sfr.write('{:.0f} {:.0f} {:.0f} '.format(self.nstrail,
                                                               self.isuzn,
                                                               self.nsfrsets))
         if self.nstrm < 0 or self.transroute:
@@ -1998,9 +1999,10 @@ def _parse_1c(line, reachinput, transroute):
             nsfrsets = int(line.pop(0))
     if nstrm < 0:
         isfropt = int(line.pop(0))
-        nstrail = int(line.pop(0))
-        isuzn = int(line.pop(0))
-        nsfrsets = int(line.pop(0))
+        if isfropt > 1:
+            nstrail = int(line.pop(0))
+            isuzn = int(line.pop(0))
+            nsfrsets = int(line.pop(0))
 
     irtflg, numtim, weight, flwtol = na, na, na, na
     if nstrm < 0 or transroute:
