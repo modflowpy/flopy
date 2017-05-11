@@ -939,3 +939,4 @@ class NetCdf(object):
             return model.sip.hclose, -999
         elif model.gmg is not None:
             return model.gmg.hclose, model.gmg.rclose
+

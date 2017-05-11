@@ -1229,22 +1229,10 @@ def get_spatialreference(epsg, text='esriwkt'):
     url : str
 
     """
+    from flopy.utils.flopy_io import get_url_text
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
-    try:
-        # For Python 3.0 and later
-        from urllib.request import urlopen
-    except ImportError:
-        # Fall back to Python 2's urllib2
-        from urllib2 import urlopen
-    try:
-        urlobj = urlopen(url)
-        text = urlobj.read().decode()
-    except:
-        e = sys.exc_info()
-        print(e)
-        print(
-            'Need an internet connection to look up epsg on spatialreference.org.')
-        return
+    text = get_url_text(url,
+                        error_msg='Need an internet connection to look up epsg on spatialreference.org.')
     text = text.replace("\n", "")
     return text
 
