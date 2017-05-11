@@ -1,4 +1,6 @@
 from __future__ import print_function
+import json
+import os
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList, \
     HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
@@ -29,29 +31,9 @@ NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}",
 NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4",
                      np.int32: "i4"}
 
-NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
-                 "vka": "vertical hydraulic conductivity",
-                 "sy": "specific yield",
-                 "ss": "specific storage",
-                 "rech": " recharge",
-                 "strt": "starting heads",
-                 "wel_flux": "well flux",
-                 "top": "model top",
-                 "botm": "layer bottom",
-                 "thickness": "layer thickness",
-                 "ghb_cond": "GHB boundary conductance",
-                 "ghb_bhead": "GHB boundary head",
-                 "riv_cond": "river bed conductance",
-                 "riv_stage": "river stage",
-                 "riv_rbot": "river bottom elevation",
-                 "drn_elev": "drain elevation",
-                 "drn_cond": "drain conductance",
-                 "hani": "horizontal anisotropy",
-                 "prsity": "porosity",
-                 "sconc1": "starting concentration",
-                 "ibound": "flow model active array",
-                 "icbund": "transport model active array"
-                 }
+path = os.path.split(netcdf.__file__)[0]
+with open(path + '/longnames.json') as f:
+    NC_LONG_NAMES = json.load(f)
 
 
 def get_var_array_dict(m):
@@ -923,3 +905,4 @@ def util2d_helper(f, u2d, **kwargs):
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
+
