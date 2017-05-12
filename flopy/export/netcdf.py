@@ -942,18 +942,21 @@ class NetCdf(object):
         # get set of public attributes
         attr = {n for n in dir(md) if '_' not in n[0]}
         # skip some convenience attributes
-        skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage'}
+        skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage',
+                'get_sciencebase_xml_metadata',
+                'get_sciencebase_metadata'}
         attr = attr.difference(skip)
         for k in attr:
             v = md.__getattribute__(k)
-            # convert everything to strings
-            if not isinstance(v, str):
-                if isinstance(v, list):
-                    v = '\n'.join(v)
-                else:
-                    v = str(v)
-            self.global_attributes[k] = v
-            self.nc.setncattr(k, v)
+            if v is not None:
+                # convert everything to strings
+                if not isinstance(v, str):
+                    if isinstance(v, list):
+                        v = '\n'.join(v)
+                    else:
+                        v = str(v)
+                self.global_attributes[k] = v
+                self.nc.setncattr(k, v)
 
     @staticmethod
     def get_solver_H_R_tols(model):
