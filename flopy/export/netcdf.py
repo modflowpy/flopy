@@ -6,6 +6,7 @@ import copy
 import numpy as np
 from datetime import datetime
 import time
+from .metadata import acdd
 
 # globals
 FILLVALUE = -99999.9
@@ -928,6 +929,31 @@ class NetCdf(object):
         self.log("setting global attributes")
         self.nc.setncatts(attr_dict)
         self.log("setting global attributes")
+
+    def add_sciencebase_metadata(self, id):
+        """Add metadata from ScienceBase using the
+        flopy.export.metadata.acdd class.
+        
+        Returns
+        -------
+        metadata : flopy.export.metadata.acdd object
+        """
+        md = acdd(id, model=self.model)
+        # get set of public attributes
+        attr = {n for n in dir(md) if '_' not in n[0]}
+        # skip some convenience attributes
+        skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage'}
+        attr = attr.difference(skip)
+        for k in attr:
+            v = md.__getattribute__(k)
+            # convert everything to strings
+            if not isinstance(v, str):
+                if isinstance(v, list):
+                    v = '\n'.join(v)
+                else:
+                    v = str(v)
+            self.global_attributes[k] = v
+            self.nc.setncattr(k, v)
 
     @staticmethod
     def get_solver_H_R_tols(model):
