@@ -697,6 +697,7 @@ class ModflowSub(Package):
                     if unit > 0:
                         iu, filenames[ipos] = \
                             model.get_ext_dict_attr(ext_unit_dict, unit=unit)
+                        model.add_pop_key_list(unit)
                     ipos += 1
 
         # create sub instance
