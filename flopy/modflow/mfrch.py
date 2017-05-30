@@ -14,6 +14,7 @@ import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d, check
 from ..modflow.mfparbc import  ModflowParBc as mfparbc
+from ..utils.flopy_io import line_parse
 
 class ModflowRch(Package):
     """
@@ -326,7 +327,7 @@ class ModflowRch(Package):
                     print('   Parameters detected. Number of parameters = ', npar)
             line = f.readline()
         # dataset 2
-        t = line.strip().split()
+        t = line_parse(line)
         nrchop = int(t[0])
         ipakcb = int(t[1])
 
@@ -346,7 +347,7 @@ class ModflowRch(Package):
         current_irch = []
         for iper in range(nper):
             line = f.readline()
-            t = line.strip().split()
+            t = line_parse(line)
             inrech = int(t[0])
             if nrchop == 2:
                 inirch = int(t[1])

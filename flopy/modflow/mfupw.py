@@ -13,6 +13,7 @@ import numpy as np
 from .mfpar import ModflowPar as mfpar
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
+from ..utils.flopy_io import line_parse
 
 
 class ModflowUpw(Package):
@@ -338,7 +339,7 @@ class ModflowUpw(Package):
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
             print('   loading ipakcb, HDRY, NPUPW, IPHDRY...')
-        t = line.strip().split()
+        t = line_parse(line)
         ipakcb, hdry, npupw, iphdry = int(t[0]), \
                                       float(t[1]), \
                                       int(t[2]), \

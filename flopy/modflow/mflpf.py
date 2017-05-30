@@ -15,6 +15,7 @@ from .mfpar import ModflowPar as mfpar
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
+from ..utils.flopy_io import line_parse
 
 
 class ModflowLpf(Package):
@@ -397,7 +398,7 @@ class ModflowLpf(Package):
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
             print('   loading IBCFCB, HDRY, NPLPF...')
-        t = line.strip().split()
+        t = line_parse(line)
         ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         #if ipakcb != 0:
         #    model.add_pop_key_list(ipakcb)

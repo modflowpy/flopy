@@ -326,8 +326,10 @@ class Package(object):
                     chk._add_to_summary(type='Warning',
                                         desc='\r    STORAGECOEFFICIENT option is activated, \
                                               storage values are read storage coefficients')
-                    sarrays['ss'] /= self.parent.dis.thickness.array
-                    sarrays['sy'] /= self.parent.dis.thickness.array
+                    tshape = (self.parent.nlay, self.parent.nrow,
+                              self.parent.ncol)
+                    sarrays['ss'].shape != tshape
+                    sarrays['sy'].shape != tshape
 
                 chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
                            'zero or negative specific storage values', 'Error')
