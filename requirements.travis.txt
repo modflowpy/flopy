@@ -1,5 +1,5 @@
 matplotlib
-cython>=0.19
+Cython>=0.19
 netcdf4!=1.2.5
 pyproj>=1.9
 pyshp!=1.2.11

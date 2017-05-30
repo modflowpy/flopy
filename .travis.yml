@@ -8,7 +8,6 @@ addons:
       - libhdf5-serial-dev
       - netcdf-bin
       - libnetcdf-dev
-      - cython3
 
 env:
   global:
