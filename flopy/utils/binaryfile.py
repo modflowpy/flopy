@@ -244,7 +244,7 @@ class BinaryLayerFile(LayerFile):
         self.ncol = header['ncol']
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
-        if abs(self.nrow * self.ncol) > 10000000:
+        if self.nrow > 1 and self.nrow * self.ncol > 10000000:
             s = 'Possible error. ncol ({}) * nrow ({}) > 10,000,000 '
             s = s.format(self.ncol, self.nrow)
             warnings.warn(s)
