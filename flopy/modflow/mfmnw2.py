@@ -1274,7 +1274,7 @@ class ModflowMnw2(Package):
         f_mnw.write('\n')
 
     def write_file(self, filename=None, float_format=' {:15.7E}',
-                   use_tables=True):
+                   use_tables=True, check=True):
         """
         Write the package file.
 
@@ -1283,6 +1283,9 @@ class ModflowMnw2(Package):
         None
 
         """
+        if check:  # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]),
+                       verbose=self.parent.verbose, level=1)
 
         if use_tables:
             # update mnw objects from node and stress_period_data tables
