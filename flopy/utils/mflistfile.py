@@ -272,23 +272,34 @@ class ListBudget(object):
         >>> mf_list = MfListBudget("my_model.list")
         >>> budget = mf_list.get_model_runtime(units='hours')
         """
+        if not self._isvalid:
+            return None
+
+        # reopen the file
+        if sys.version_info[0] == 2:
+            self.f = open(self.file_name, 'r')
+        elif sys.version_info[0] == 3:
+            self.f = open(self.file_name, 'r', encoding='ascii', errors='replace')
         units = units.lower()
-        if not units == 'seconds' or units == 'minutes' or units == 'hours':
-            raise('"units" input variable must be "minutes", "hours", or "seconds"')
+        if not units == 'seconds' and not units == 'minutes' and not units == 'hours':
+            raise('"units" input variable must be "minutes", "hours", or "seconds": {0} was specified'.format(units))
         try:
-            seekpoint = self._seek_to_string('Elapsed run time')
+            seekpoint = self._seek_to_string('Elapsed run time:')
         except:
             print('Elapsed run time not included in list file. Returning NaN')
             return np.nan
 
-        line = self.f.seek(seekpoint).readline()
+        self.f.seek(seekpoint)
+        line = self.f.readline()
+
+        self.f.close()
         # yank out the floating point values from the Elapsed run time string
         times = list(map(float, re.findall(r'[+-]?[0-9.]+', line)))
         # pad an array with zeros and times with [days, hours, minutes, seconds]
-        times = np.array([0 for i in range(4-len(times)) + times])
+        times = np.array([0 for i in range(4-len(times))] + times)
         # convert all to seconds
         time2sec = np.array([24 * 60 * 60, 24 * 60, 60, 1])
-        times_sec = times * time2sec
+        times_sec = np.sum(times * time2sec)
         # return in the requested units
         if units == 'seconds':
             return times_sec
