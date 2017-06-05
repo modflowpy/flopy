@@ -33,7 +33,7 @@ strt[:, :, -1] = 0.
 bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=strt)
 
 # Add LPF package to the MODFLOW model
-lpf = flopy.modflow.ModflowLpf(mf, hk=10., vka=10.)
+lpf = flopy.modflow.ModflowLpf(mf, hk=10., vka=10., ipakcb=53)
 
 # Add OC package to the MODFLOW model
 spd = {(0, 0): ['print head', 'print budget', 'save head', 'save budget']}

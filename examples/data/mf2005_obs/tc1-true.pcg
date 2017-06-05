@@ -1,0 +1,2 @@
+ 1  50  1                           Item 1:  MXITER ITER1 NPCOND
+.00001  .00001  1.  2  0  2  1.0    Item 2:  HCLOSE RCLOSE RELAX NBPOL IPRPCG MUTPCG DAMP

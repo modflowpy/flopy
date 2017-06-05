@@ -1,0 +1,14 @@
+LIST           1   lkt.lst
+BAS6           7   lkt.ba6
+BCF6          10   lkt.bc6
+EVT           11   lkt.evt
+RCH           12   lkt.rch
+SIP           13   lkt.sip
+OC            17   lkt.oc
+LAK           16   lkt.lak
+DIS           14   lkt.dis
+FHB           21   lkt.fhb
+GAGE          33   lkt.gag
+DATA          37   lkt.got
+LMT6          19   lkt.lmt
+DATA(BINARY)  31   lkt.hds

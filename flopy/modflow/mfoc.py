@@ -7,9 +7,11 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?oc.htm>`_.
 
 """
-
+import os
 import sys
+
 from ..pakbase import Package
+
 
 class ModflowOc(Package):
     """
@@ -90,9 +92,19 @@ class ModflowOc(Package):
     compact : boolean
         Save results in compact budget form. (default is True).
     extension : list of strings
-        (default is ['oc','hds','ddn','cbc']).
+        (default is ['oc', 'hds', 'ddn', 'cbc', 'ibo']).
     unitnumber : list of ints
-        (default is [14, 51, 52, 53]).
+        (default is [14, 51, 52, 53, 0]).
+    filenames : str or list of str
+        Filenames to use for the package and the head, drawdown, budget (not
+        used), and ibound output files. If filenames=None the package name
+        will be created using the model name and package extension and the
+        output file names will be created using the model name and extensions.
+        If a single string is passed the package will be set to the string and
+        output names will be created using the model name and head, drawdown,
+        budget, and ibound extensions. To define the names for all package
+        files (input and output) the length of the list of strings should be 5.
+        Default is None.
 
     Attributes
     ----------
@@ -124,20 +136,43 @@ class ModflowOc(Package):
     ...   (0, 749): ['print head', 'ddreference'],
     ...   (0, 750): [],
     ...   (0, 999): ['print head']}
-    >>> oc = flopy.modflow.ModflowOc3(m, stress_period_data=spd, cboufm='(20i5)')
+    >>> oc = flopy.modflow.ModflowOc(m, stress_period_data=spd, cboufm='(20i5)')
 
     """
-    def __init__(self, model,\
-                 ihedfm=0, iddnfm=0, chedfm=None, cddnfm=None,\
-                 cboufm=None, compact=True,\
-                 stress_period_data={(0, 0): ['save head']},\
-                 extension=['oc', 'hds', 'ddn', 'cbc'],\
-                 unitnumber=[14, 51, 52, 53], **kwargs):
+
+    def __init__(self, model, \
+                 ihedfm=0, iddnfm=0, chedfm=None, cddnfm=None,
+                 cboufm=None, compact=True,
+                 stress_period_data={(0, 0): ['save head']},
+                 extension=['oc', 'hds', 'ddn', 'cbc', 'ibo'],
+                 unitnumber=None, filenames=None, **kwargs):
 
         """
         Package constructor.
 
         """
+        if unitnumber is None:
+            unitnumber = [ModflowOc.defaultunit(), 0, 0, 0, 0]
+        elif isinstance(unitnumber, list):
+            if len(unitnumber) < 5:
+                for idx in range(len(unitnumber), 6):
+                    unitnumber.append(0)
+
+        # set filenames
+        if filenames is None:
+            filenames = [None, None, None, None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None, None, None, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 5:
+                for idx in range(len(filenames), 5):
+                    filenames.append(None)
+
+        # support structured and unstructured dis
+        dis = model.get_package('DIS')
+        if dis is None:
+            dis = model.get_package('DISU')
+
         # process kwargs
         if 'save_every' in kwargs:
             save_every = int(kwargs.pop('save_every'))
@@ -150,10 +185,14 @@ class ModflowOc(Package):
                     save_types = [save_types]
             else:
                 save_types = ['save head', 'print budget']
+            if 'save_start' in kwargs:
+                save_start = int(kwargs.pop('save_start'))
+            else:
+                save_start = 1
             stress_period_data = {}
-            for kper in range(model.dis.nper):
-                icnt = save_every
-                for kstp in range(model.dis.nstp[kper]):
+            for kper in range(dis.nper):
+                icnt = save_start
+                for kstp in range(dis.nstp[kper]):
                     if icnt == save_every:
                         stress_period_data[(kper, kstp)] = save_types
                         icnt = 0
@@ -161,43 +200,96 @@ class ModflowOc(Package):
                         stress_period_data[(kper, kstp)] = []
                     icnt += 1
 
-        # Call ancestor's init to set self.parent,
-        # extension, name and unit number
-        hds_fmt = 'DATA(BINARY)'
-        ddn_fmt = 'DATA(BINARY)'
-        if chedfm is not None:
-            hds_fmt = 'DATA'
-        if cddnfm is not None:
-            ddn_fmt = 'DATA'
+        # set output unit numbers based on oc settings
+        self.savehead, self.saveddn, self.savebud, self.saveibnd = False, \
+                                                                   False, \
+                                                                   False, \
+                                                                   False
+        for key, value in stress_period_data.items():
+            tlist = list(value)
+            for t in tlist:
+                if 'save head' in t.lower():
+                    self.savehead = True
+                    if unitnumber[1] == 0:
+                        unitnumber[1] = 51
+                if 'save drawdown' in t.lower():
+                    self.saveddn = True
+                    if unitnumber[2] == 0:
+                        unitnumber[2] = 52
+                if 'save budget' in t.lower():
+                    self.savebud = True
+                    if unitnumber[3] == 0 and filenames is None:
+                        unitnumber[3] = 53
+                if 'save ibound' in t.lower():
+                    self.saveibnd = True
+                    if unitnumber[4] == 0:
+                        unitnumber[4] = 54
 
-        ibouun = 0
-        ibndsav = False
-        for key in list(stress_period_data.keys()):
-            t = stress_period_data[key]
-            if len(t) > 0:
-                for option in t:
-                    if 'ibound' in option.lower():
-                        ibndsav = True
-                        break
+        # do not create head, ddn, or cbc output files if output is not
+        # specified in the oc stress_period_data
+        if not self.savehead:
+            unitnumber[1] = 0
+        if not self.saveddn:
+            unitnumber[2] = 0
+        if not self.savebud:
+            unitnumber[3] = 0
+        if not self.saveibnd:
+            unitnumber[4] = 0
 
-        name = ['OC', hds_fmt, ddn_fmt, 'DATA(BINARY)']
-        extra = ['', 'REPLACE', 'REPLACE', 'REPLACE']
-        if ibndsav == True:
-            if cboufm == None:
-                name.append('DATA(BINARY)')
-            else:
-                name.append('DATA')
-            extension.append('ibo')
-            unitnumber.append(114)
-            ibouun = unitnumber[-1]
-            extra.append('REPLACE')
+        self.iuhead = unitnumber[1]
+        self.iuddn = unitnumber[2]
+        self.iubud = unitnumber[3]
+        self.iuibnd = unitnumber[4]
 
-        Package.__init__(self, model, extension=extension, name=name, unit_number=unitnumber,
-                         extra=extra)  # Call ancestor's init to set self.parent, extension, name and unit number
+        # add output files
+        # head file
+        if self.savehead:
+            iu = unitnumber[1]
+            binflag = True
+            if chedfm is not None:
+                binflag = False
+            fname = filenames[1]
+            model.add_output_file(iu, fname=fname, extension=extension[1],
+                                  binflag=binflag)
+        # drawdown file
+        if self.saveddn:
+            iu = unitnumber[2]
+            binflag = True
+            if cddnfm is not None:
+                binflag = False
+            fname = filenames[2]
+            model.add_output_file(iu, fname=fname, extension=extension[2],
+                                  binflag=binflag)
+        # budget file
+        # Nothing is needed for the budget file
 
+        # ibound file
+        ibouun = unitnumber[4]
+        if self.saveibnd:
+            iu = unitnumber[4]
+            binflag = True
+            if cboufm is not None:
+                binflag = False
+            fname = filenames[4]
+            model.add_output_file(iu, fname=fname, extension=extension[4],
+                                  binflag=binflag)
 
-        self.heading = '# Output control package file'+\
-                       ' for MODFLOW, generated by Flopy.'
+        name = [ModflowOc.ftype()]
+        extra = ['']
+        extension = [extension[0]]
+        unitnumber = unitnumber[0]
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=unitnumber,
+                         extra=extra, filenames=fname)
+
+        self.heading = '# {} package for '.format(self.name[0]) + \
+                       ' {}, '.format(model.version_types[model.version]) + \
+                       'generated by Flopy.'
 
         self.url = 'oc.htm'
         self.ihedfm = ihedfm
@@ -207,7 +299,7 @@ class ModflowOc(Package):
 
         self.ibouun = ibouun
         self.cboufm = cboufm
-        
+
         self.compact = compact
 
         self.stress_period_data = stress_period_data
@@ -227,48 +319,50 @@ class ModflowOc(Package):
         f_oc.write('{}\n'.format(self.heading))
 
         # write options
-
-        f_oc.write('HEAD PRINT FORMAT {0:3.0f}\n'\
-                   .format(self.ihedfm))            
+        line = 'HEAD PRINT FORMAT {0:3.0f}\n'.format(self.ihedfm)
+        f_oc.write(line)
         if self.chedfm is not None:
-            f_oc.write('HEAD SAVE FORMAT {0:20s} LABEL\n'\
-                       .format(self.chedfm))            
-        f_oc.write('HEAD SAVE UNIT {0:5.0f}\n'\
-                   .format(self.unit_number[1]))            
-            
-        f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'\
-                   .format(self.iddnfm))
-        if self.cddnfm is not None:
-            f_oc.write('DRAWDOWN SAVE FORMAT {0:20s} LABEL\n'\
-                       .format(self.cddnfm))
-        f_oc.write('DRAWDOWN SAVE UNIT {0:5.0f}\n'\
-                   .format(self.unit_number[2]))
+            line = 'HEAD SAVE FORMAT {0:20s} LABEL\n'.format(self.chedfm)
+            f_oc.write(line)
+        if self.savehead:
+            line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.iuhead)
+            f_oc.write(line)
 
-        if self.ibouun > 0:
+        f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'.format(self.iddnfm))
+        if self.cddnfm is not None:
+            line = 'DRAWDOWN SAVE FORMAT {0:20s} LABEL\n'.format(self.cddnfm)
+            f_oc.write(line)
+        if self.saveddn:
+            line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.iuddn)
+            f_oc.write(line)
+
+        if self.saveibnd:
             if self.cboufm is not None:
-                f_oc.write('IBOUND SAVE FORMAT {0:20s} LABEL\n'\
-                            .format(self.cboufm))
-            f_oc.write('IBOUND SAVE UNIT {0:5.0f}\n'\
-                       .format(self.unit_number[4]))
+                line = 'IBOUND SAVE FORMAT {0:20s} LABEL\n'.format(self.cboufm)
+                f_oc.write(line)
+            line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.iuibnd)
+            f_oc.write(line)
 
         if self.compact:
             f_oc.write('COMPACT BUDGET AUX\n')
-        
+
         # add a line separator between header and stress
         #  period data
         f_oc.write('\n')
 
-
-        #write the transient sequence described by the data dict
+        # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.parent.get_nrow_ncol_nlay_nper()
-        nstp = self.parent.get_package('DIS').nstp
+        dis = self.parent.get_package('DIS')
+        if dis is None:
+            dis = self.parent.get_package('DISU')
+        nstp = dis.nstp
 
         keys = list(self.stress_period_data.keys())
         keys.sort()
 
         data = []
-        lines = ''
         ddnref = ''
+        lines = ''
         for kper in range(nper):
             for kstp in range(nstp[kper]):
                 kperkstp = (kper, kstp)
@@ -282,12 +376,15 @@ class ModflowOc(Package):
                             if 'DDREFERENCE' in item.upper():
                                 ddnref = item.lower()
                             else:
-                                lines += '{}\n'.format(item)
+                                lines += '  {}\n'.format(item)
                 if len(lines) > 0:
-                    f_oc.write('period {} step {} {}\n'.format(kper+1, kstp+1, ddnref))
+                    f_oc.write(
+                        'period {} step {} {}\n'.format(kper + 1, kstp + 1,
+                                                        ddnref))
                     f_oc.write(lines)
                     f_oc.write('\n')
                     ddnref = ''
+                    lines = ''
 
         # close oc file
         f_oc.close()
@@ -331,8 +428,7 @@ class ModflowOc(Package):
 
         """
 
-
-        #initialize
+        # initialize
         ihedun = 0
         iddnun = 0
         fhead = None
@@ -340,7 +436,7 @@ class ModflowOc(Package):
 
         numericformat = False
 
-        #open file
+        # open file
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
@@ -381,18 +477,18 @@ class ModflowOc(Package):
                 if len(lnlst) < 1:
                     continue
 
-                #dataset 1 values
+                # dataset 1 values
                 elif ('HEAD' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'UNIT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'UNIT' in lnlst[2].upper()
                       ):
                     ihedun = int(lnlst[3])
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'UNIT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'UNIT' in lnlst[2].upper()
                       ):
                     iddnun = int(lnlst[3])
-                #dataset 2
+                # dataset 2
                 elif 'PERIOD' in lnlst[0].upper():
                     break
         #
@@ -411,7 +507,6 @@ class ModflowOc(Package):
 
         # return
         return ihedun, fhead, iddnun, fddn
-
 
     @staticmethod
     def load(f, model, nper=None, nstp=None, nlay=None, ext_unit_dict=None):
@@ -457,18 +552,20 @@ class ModflowOc(Package):
         >>> oc = flopy.modflow.ModflowOc.load('test.oc', m)
 
         """
-        
+
         if model.verbose:
             sys.stdout.write('loading oc package file...\n')
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
-        
+
         if nstp is None:
-            nstp = model.get_package('DIS').nstp.array
+            dis = model.get_package('DIS')
+            if dis is None:
+                dis = model.get_package('DISU')
+            nstp = dis.nstp
 
-
-        #initialize
+        # initialize
         ihedfm = 0
         iddnfm = 0
         ihedun = 0
@@ -480,13 +577,13 @@ class ModflowOc(Package):
         cboufm = None
         words = []
         wordrec = []
-        
+
         numericformat = False
         ihedfm, iddnfm = 0, 0
 
         stress_period_data = {}
 
-        #open file
+        # open file
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
@@ -513,9 +610,8 @@ class ModflowOc(Package):
                 break
             # set pointer to current position in the OC file
             ipos = f.tell()
-                 
-        
-        #process each line
+
+        # process each line
         lines = []
         if numericformat == True:
             for iperoc in range(nper):
@@ -562,24 +658,24 @@ class ModflowOc(Package):
                             hdpr, ddpr = int(lnlst[0]), int(lnlst[1])
                             hdsv, ddsv = int(lnlst[2]), int(lnlst[3])
                             if hdpr != 0:
-                                headprint += ' {}'.format(k+1)
+                                headprint += ' {}'.format(k + 1)
                             if ddpr != 0:
-                                ddnprint += ' {}'.format(k+1)
+                                ddnprint += ' {}'.format(k + 1)
                             if hdsv != 0:
-                                headsave += ' {}'.format(k+1)
+                                headsave += ' {}'.format(k + 1)
                             if ddsv != 0:
-                                ddnsave += ' {}'.format(k+1)
+                                ddnsave += ' {}'.format(k + 1)
                         if len(headprint) > 0:
-                            lines.append('PRINT HEAD'+headprint)
+                            lines.append('PRINT HEAD' + headprint)
                         if len(ddnprint) > 0:
-                            lines.append('PRINT DRAWDOWN'+ddnprint)
+                            lines.append('PRINT DRAWDOWN' + ddnprint)
                         if len(headsave) > 0:
-                            lines.append('SAVE HEAD'+headsave)
+                            lines.append('SAVE HEAD' + headsave)
                         if len(ddnsave) > 0:
-                            lines.append('SAVE DRAWDOWN'+ddnsave)
+                            lines.append('SAVE DRAWDOWN' + ddnsave)
                     stress_period_data[(iperoc, itsoc)] = list(lines)
         else:
-            iperoc, itsoc = 0, 0 
+            iperoc, itsoc = 0, 0
             while True:
                 line = f.readline()
                 if len(line) < 1:
@@ -587,77 +683,77 @@ class ModflowOc(Package):
                 lnlst = line.strip().split()
                 if line[0] == '#':
                     continue
-                
+
                 # added by JJS 12/12/14 to avoid error when there is a blank line in the OC file
                 if lnlst == []:
                     continue
                 # end add
-    
-                #dataset 1 values
+
+                # dataset 1 values
                 elif ('HEAD' in lnlst[0].upper() and
-                      'PRINT' in lnlst[1].upper() and
-                      'FORMAT' in lnlst[2].upper()
+                              'PRINT' in lnlst[1].upper() and
+                              'FORMAT' in lnlst[2].upper()
                       ):
                     ihedfm = int(lnlst[3])
                 elif ('HEAD' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'FORMAT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'FORMAT' in lnlst[2].upper()
                       ):
                     chedfm = lnlst[3]
                 elif ('HEAD' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'UNIT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'UNIT' in lnlst[2].upper()
                       ):
                     ihedun = int(lnlst[3])
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                      'PRINT' in lnlst[1].upper() and
-                      'FORMAT' in lnlst[2].upper()
+                              'PRINT' in lnlst[1].upper() and
+                              'FORMAT' in lnlst[2].upper()
                       ):
                     iddnfm = int(lnlst[3])
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'FORMAT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'FORMAT' in lnlst[2].upper()
                       ):
                     cddnfm = lnlst[3]
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'UNIT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'UNIT' in lnlst[2].upper()
                       ):
                     iddnun = int(lnlst[3])
                 elif ('IBOUND' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'FORMAT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'FORMAT' in lnlst[2].upper()
                       ):
                     cboufm = lnlst[3]
                 elif ('IBOUND' in lnlst[0].upper() and
-                      'SAVE' in lnlst[1].upper() and
-                      'UNIT' in lnlst[2].upper()
+                              'SAVE' in lnlst[1].upper() and
+                              'UNIT' in lnlst[2].upper()
                       ):
                     ibouun = int(lnlst[3])
                 elif 'COMPACT' in lnlst[0].upper():
                     compact = True
-    
-                #dataset 2
+
+                # dataset 2
                 elif 'PERIOD' in lnlst[0].upper():
                     if len(lines) > 0:
                         if iperoc > 0:
                             # create period step tuple
-                            kperkstp = (iperoc-1, itsoc-1)
+                            kperkstp = (iperoc - 1, itsoc - 1)
                             # save data
                             stress_period_data[kperkstp] = lines
                         # reset lines
                         lines = []
                     # turn off oc if required
                     if iperoc > 0:
-                        if itsoc==nstp[iperoc-1]:
+                        if itsoc == nstp[iperoc - 1]:
                             iperoc1 = iperoc + 1
                             itsoc1 = 1
                         else:
                             iperoc1 = iperoc
                             itsoc1 = itsoc + 1
                     else:
-                        iperoc1, itsoc1 = iperoc, itsoc 
-                    # update iperoc and itsoc
+                        iperoc1, itsoc1 = iperoc, itsoc
+                        # update iperoc and itsoc
                     iperoc = int(lnlst[1])
                     itsoc = int(lnlst[3])
                     # do not used data that exceeds nper
@@ -671,22 +767,24 @@ class ModflowOc(Package):
                         if itsoc != itsoc1:
                             iempty = True
                     if iempty == True:
-                        kperkstp = (iperoc1-1, itsoc1-1)
+                        kperkstp = (iperoc1 - 1, itsoc1 - 1)
                         stress_period_data[kperkstp] = []
-                #dataset 3
+                # dataset 3
                 elif 'PRINT' in lnlst[0].upper():
-                    lines.append('{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
-                elif 'SAVE' in lnlst[0].upper() :
-                    lines.append('{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
+                    lines.append(
+                        '{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
+                elif 'SAVE' in lnlst[0].upper():
+                    lines.append(
+                        '{} {}'.format(lnlst[0].lower(), lnlst[1].lower()))
                 else:
                     print('Error encountered in OC import.')
                     print('Creating default OC package.')
                     return ModflowOc(model)
-    
-            #store the last record in word
+
+            # store the last record in word
             if len(lines) > 0:
                 # create period step tuple
-                kperkstp = (iperoc-1, itsoc-1)
+                kperkstp = (iperoc - 1, itsoc - 1)
                 # save data
                 stress_period_data[kperkstp] = lines
                 # add a empty list if necessary
@@ -697,27 +795,59 @@ class ModflowOc(Package):
                     if itsoc != itsoc1:
                         iempty = True
                 if iempty == True:
-                    kperkstp = (iperoc1-1, itsoc1-1)
+                    kperkstp = (iperoc1 - 1, itsoc1 - 1)
                     stress_period_data[kperkstp] = []
-                    
+
         # reset unit numbers
-        unitnumber=[14, 51, 52, 53]
+        unitnumber = [14, 0, 0, 0, 0]
+        if ext_unit_dict is not None:
+            for key, value in ext_unit_dict.items():
+                if value.filetype == ModflowOc.ftype():
+                    unitnumber[0] = key
+                    fname = os.path.basename(value.filename)
+
+        # initialize filenames list
+        filenames = [fname, None, None, None, None]
+
+        # fill remainder of filenames list
+        if ihedun > 0:
+            unitnumber[1] = ihedun
+            try:
+                filenames[1] = os.path.basename(ext_unit_dict[ihedun].filename)
+            except:
+                pass
+        if iddnun > 0:
+            unitnumber[2] = iddnun
+            try:
+                filenames[2] = os.path.basename(ext_unit_dict[iddnun].filename)
+            except:
+                pass
+        if ibouun > 0:
+            unitnumber[4] = ibouun
+            try:
+                filenames[4] = os.path.basename(ext_unit_dict[ibouun].filename)
+            except:
+                pass
+            if cboufm is None:
+                cboufm = True
+
+        # add unit numbers to pop_key_list
         for u in unitnumber:
             model.add_pop_key_list(u)
-        if ihedun > 0:
-            model.add_pop_key_list(ihedun)
-        if iddnun > 0:
-            model.add_pop_key_list(iddnun)
-        if ibouun > 0:
-            model.add_pop_key_list(ibouun)
-            if cboufm == None:
-                cboufm = True
-                
 
         # create instance of oc class
         oc = ModflowOc(model, ihedfm=ihedfm, iddnfm=iddnfm,
-                 chedfm=chedfm, cddnfm=cddnfm, cboufm=cboufm,
-                 compact=compact,
-                 stress_period_data=stress_period_data)
+                       chedfm=chedfm, cddnfm=cddnfm, cboufm=cboufm,
+                       compact=compact,
+                       stress_period_data=stress_period_data,
+                       unitnumber=unitnumber, filenames=filenames)
 
         return oc
+
+    @staticmethod
+    def ftype():
+        return 'OC'
+
+    @staticmethod
+    def defaultunit():
+        return [14, 0, 0, 0, 0]

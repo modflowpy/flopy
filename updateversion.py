@@ -24,10 +24,12 @@ def update_version(utag=False, major=False, minor=False):
         vminor = int(vminor)
         vfeature = int(vfeature) + 1
 
-    version_type = ('{}'.format(vmajor), '{}'.format(vminor), '{}'.format(vfeature))
+    version_type = (
+    '{}'.format(vmajor), '{}'.format(vminor), '{}'.format(vfeature))
     version = '.'.join(version_type)
 
-    b = subprocess.Popen(("git", "describe", "--match", "build"), stdout=subprocess.PIPE).communicate()[0]
+    b = subprocess.Popen(("git", "describe", "--match", "build"),
+                         stdout=subprocess.PIPE).communicate()[0]
     build = int(b.decode().strip().split('-')[1]) + 1
 
     print('Updating version:')
@@ -35,8 +37,10 @@ def update_version(utag=False, major=False, minor=False):
 
     # write new version file
     f = open(os.path.normpath('flopy/version.py'), 'w')
-    f.write('#flopy version file automatically created using...{0}\n'.format(os.path.basename(__file__)))
-    f.write('#            created on......{0}\n'.format(datetime.datetime.now().strftime("%B %d, %Y %H:%M:%S")))
+    f.write('#flopy version file automatically ' +
+            'created using...{0}\n'.format(os.path.basename(__file__)))
+    f.write('#            created on......' +
+            '{0}\n'.format(datetime.datetime.now().strftime("%B %d, %Y %H:%M:%S")))
     f.write("__version__='{0}'\n".format(version))
     f.write("__build__='{0}.{1}'\n".format(version, build))
     f.close()

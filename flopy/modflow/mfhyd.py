@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 import sys
+
 import numpy as np
 
 from ..pakbase import Package
@@ -36,19 +37,26 @@ class ModflowHyd(Package):
         arr (2 characater string), intyp (1 character string) klay (int),
         xl (float), yl (float), hydlbl (14 character string) for each observation.
 
-        pckg is a 3-character flag to indicate which package is to be addressed by
-        hydmod for the hydrograph of each observation point. arr is a text code
-        indicating which model data value is to be accessed for the hydrograph of
-        each observation point. intyp is a 1-character value to indicate how the
-        data from the specified feature are to be accessed; The two options are
-        'I' for interpolated value or 'C' for cell value (intyp must be 'C' for
-        STR and SFR Package hydrographs. klay is the layer sequence number of the
-        array to be addressed by HYDMOD. xl is the coordinate of the hydrograph
-        point in model units of length measured parallel to model rows, with the
-        origin at the lower left corner of the model grid. yl s the coordinate of
-        the hydrograph point in model units of length measured parallel to model
-        columns, with the origin at the lower left corner of the model grid.
-        hydlbl is used to form a label for the hydrograph.
+        pckg : str
+            is a 3-character flag to indicate which package is to be addressed by
+            hydmod for the hydrograph of each observation point.
+        arr : str
+            is a text code indicating which model data value is to be accessed for the hydrograph of
+            each observation point.
+        intyp : str
+            is a 1-character value to indicate how the data from the specified feature
+            are to be accessed; The two options are 'I' for interpolated value or 'C'
+            for cell value (intyp must be 'C' for STR and SFR Package hydrographs.
+        klay : int
+            is the layer sequence number (one-based) of the array to be addressed by HYDMOD.
+        xl : float
+            is the coordinate of the hydrograph point in model units of length measured
+            parallel to model rows, with the origin at the lower left corner of the model grid.
+        yl : float
+            is the coordinate of the hydrograph point in model units of length measured parallel to model
+            columns, with the origin at the lower left corner of the model grid.
+        hydlbl : str
+            is used to form a label for the hydrograph.
 
 
         The simplest form is a list of lists. For example, if nhyd=3 this
@@ -64,7 +72,17 @@ class ModflowHyd(Package):
     extension : list string
         Filename extension (default is ['hyd', 'hyd.bin'])
     unitnumber : int
-        File unit number (default is 36).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the hydmod output name will be created using
+        the model name and .hyd.bin extension (for example,
+        modflowtest.hyd.bin). If a single string is passed the package will be
+        set to the string and hydmod output name will be created using the
+        model name and .hyd.bin extension. To define the names for all package
+        files (input and output) the length of the list of strings should be 2.
+        Default is None.
 
     Attributes
     ----------
@@ -87,26 +105,53 @@ class ModflowHyd(Package):
 
     """
 
-    def __init__(self, model, nhyd=1, ihydun=1, hydnoh=-999.,
+    def __init__(self, model, nhyd=1, ihydun=None, hydnoh=-999.,
                  obsdata=[['BAS', 'HD', 'I', 1, 0., 0., 'HOBS1']],
-                 extension=['hyd', 'hyd.bin'], unit_number=36):
+                 extension=['hyd', 'hyd.bin'], unitnumber=None,
+                 filenames=None):
         """
         Package constructor.
 
         """
-        if ihydun > 0:
-            ihydun = 536
-        else:
-            ihydun = 536
-        name = ['HYD', 'DATA(BINARY)']
-        units = [unit_number, ihydun]
-        extra = ['', 'REPLACE']
 
-        Package.__init__(self, model, extension=extension, name=name, unit_number=units,
-                         extra=extra)  # Call ancestor's init to set self.parent, extension, name and unit number
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowHyd.defaultunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
+        # set ihydun to a default unit number if it isn't specified
+        if ihydun is None:
+            ihydun = 536
+
+        # update external file information with hydmod output
+        fname = filenames[1]
+        model.add_output_file(ihydun, fname=fname, extension='hyd.bin',
+                              package=ModflowHyd.ftype())
+
+        # Fill namefile items
+        name = [ModflowHyd.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        self.heading = '# HYDMOD (HYD) package file for {}, generated by Flopy.'.format(model.version)
+        self.heading = '# {} package for '.format(self.name[0]) + \
+                       ' {}, '.format(model.version_types[model.version]) + \
+                       'generated by Flopy.'
         self.url = 'hyd.htm'
 
         self.nhyd = nhyd
@@ -114,11 +159,12 @@ class ModflowHyd(Package):
         self.hydnoh = hydnoh
 
         dtype = ModflowHyd.get_default_dtype()
+        obs = ModflowHyd.get_empty(nhyd)
         if isinstance(obsdata, list):
             if len(obsdata) != nhyd:
                 raise RuntimeError(
-                    'ModflowHyd: nhyd ({}) does not equal length of obsdata ({}).'.format(nhyd, len(obsdata)))
-            obs = ModflowHyd.get_empty(nhyd)
+                    'ModflowHyd: nhyd ({}) does not equal length of obsdata ({}).'.format(
+                        nhyd, len(obsdata)))
             for idx in range(nhyd):
                 obs['pckg'][idx] = obsdata[idx][0]
                 obs['arr'][idx] = obsdata[idx][1]
@@ -129,6 +175,28 @@ class ModflowHyd(Package):
                 obs['hydlbl'][idx] = obsdata[idx][6]
             obsdata = obs
         elif isinstance(obsdata, np.ndarray):
+            if obsdata.dtype == np.object:
+                if obsdata.shape[1] != len(dtype):
+                    raise IndexError('Incorrect number of fields for obsdata')
+                obsdata = obsdata.transpose()
+                obs['pckg'] = obsdata[0]
+                obs['arr'] = obsdata[1]
+                obs['intyp'] = obsdata[2]
+                obs['klay'] = obsdata[3]
+                obs['xl'] = obsdata[4]
+                obs['yl'] = obsdata[5]
+                obs['hydlbl'] = obsdata[6]
+            else:
+                inds = ['pckg', 'arr', 'intyp', 'klay', 'xl', 'yl', 'hydlbl']
+                for idx in inds:
+                    obs['pckg'] = obsdata['pckg']
+                    obs['arr'] = obsdata['arr']
+                    obs['intyp'] = obsdata['intyp']
+                    obs['klay'] = obsdata['klay']
+                    obs['xl'] = obsdata['xl']
+                    obs['yl'] = obsdata['yl']
+                    obs['hydlbl'] = obsdata['hydlbl']
+            obsdata = obs
             obsdata = obsdata.view(dtype=dtype)
         self.obsdata = obsdata
 
@@ -149,7 +217,8 @@ class ModflowHyd(Package):
         f = open(self.fn_path, 'w')
 
         # write dataset 1
-        f.write('{} {} {} {}\n'.format(self.nhyd, self.ihydun, self.hydnoh, self.heading))
+        f.write('{} {} {} {}\n'.format(self.nhyd, self.ihydun, self.hydnoh,
+                                       self.heading))
 
         # write dataset 2
         for idx in range(self.nhyd):
@@ -256,8 +325,30 @@ class ModflowHyd(Package):
         # close the file
         f.close()
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None, None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowHyd.ftype())
+            if ihydun > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ihydun)
+                model.add_pop_key_list(ihydun)
+
         # create hyd instance
-        hyd = ModflowHyd(model, nhyd=nhyd, ihydun=ihydun, hydnoh=hydnoh, obsdata=obs)
+        hyd = ModflowHyd(model, nhyd=nhyd, ihydun=ihydun, hydnoh=hydnoh,
+                         obsdata=obs, unitnumber=unitnumber,
+                         filenames=filenames)
 
         # return hyd instance
         return hyd
+
+    @staticmethod
+    def ftype():
+        return 'HYD'
+
+    @staticmethod
+    def defaultunit():
+        return 36

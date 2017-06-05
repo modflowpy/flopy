@@ -1,6 +1,6 @@
 # GLOBAL PROCESS OUTPUT FILES
-GLOBAL 6 saltlake.glo
-LIST 7 saltlake.lst
+GLOBAL 1006 saltlake.glo
+LIST 1007 saltlake.lst
 #
 # VDF PROCESS INPUT AND OUTPUT FILES
 VDF 20 saltlake.vdf

@@ -1,7 +1,10 @@
 import copy
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.colors
+except:
+    plt = None
 from . import plotutil
 from .plotutil import bc_color_dict
 
@@ -39,6 +42,11 @@ class ModelCrossSection(object):
     """
     def __init__(self, ax=None, model=None, dis=None, line=None,
                  xul=None, yul=None, rotation=0., extent=None):
+        if plt is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to use ModelCrossSection method'
+            raise Exception(s)
+
         self.model = model
         if dis is None:
             if model is None:

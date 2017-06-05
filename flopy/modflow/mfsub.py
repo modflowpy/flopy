@@ -8,7 +8,9 @@ MODFLOW Guide
 
 """
 import sys
+
 import numpy as np
+
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
 
@@ -154,6 +156,20 @@ class ModflowSub(Package):
         controls volumetric budget for delay interbeds printing. If ids16 is None and isuboc>0
         then all available subsidence output will be printed and saved to the binary
         subsidence output file (unit=1051). (default is None).
+    unitnumber : int
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the cbc output name and other sub output
+        files will be created using the model name and .cbc and swt output
+        extensions (for example, modflowtest.cbc), if ipakcbc and other
+        sub output files (dataset 15) are numbers greater than zero.
+        If a single string is passed the package name will be set to the
+        string and other sub output files will be set to the model name with
+        the appropriate output file extensions. To define the names for all
+        package files (input and output) the length of the list of strings
+        should be 9. Default is None.
 
     Attributes
     ----------
@@ -179,54 +195,89 @@ class ModflowSub(Package):
 
     """
 
-    def __init__(self, model, ipakcb=0, isuboc=0, idsave=0, idrest=0,
+    def __init__(self, model, ipakcb=None, isuboc=0, idsave=None, idrest=None,
                  nndb=1, ndb=1, nmz=1, nn=20, ac1=0., ac2=0.2, itmin=5,
                  ln=0, ldn=0, rnb=1,
-                 hc=100000., sfe=1.e-4, sfv=1.e-3, com=0., dp=[1.e-6, 6.e-6, 6.e-4],
+                 hc=100000., sfe=1.e-4, sfv=1.e-3, com=0.,
+                 dp=[1.e-6, 6.e-6, 6.e-4],
                  dstart=1., dhc=100000., dcom=0., dz=1., nz=1,
                  ids15=None, ids16=None,
-                 extension='sub', unit_number=32):
+                 extension='sub', unitnumber=None,
+                 filenames=None):
         """
         Package constructor.
 
         """
-        extensions = [extension]
-        name = ['SUB']
-        units = [unit_number]
-        extra = ['']
+        # set default unit number of one is not specified
+        if unitnumber is None:
+            unitnumber = ModflowSub.defaultunit()
 
-        item15_extensions = ["subsidence.hds","total_comp.hds","inter_comp.hds","vert_disp.hds","nodelay_precon.hds","delay_precon.hds"]
+        # set filenames
+        if filenames is None:
+            filenames = [None for x in range(9)]
+        elif isinstance(filenames, str):
+            filenames = [filenames] + [None for x in range(8)]
+        elif isinstance(filenames, list):
+            if len(filenames) < 9:
+                n = 9 - len(filenames) + 1
+                filenames = filenames + [None for x in range(n)]
+
+        # update external file information with cbc output, if necessary
+        if ipakcb is not None:
+            fname = filenames[1]
+            model.add_output_file(ipakcb, fname=fname,
+                                  package=ModflowSub.ftype())
+        else:
+            ipakcb = 0
+
+        if idsave is not None:
+            fname = filenames[2]
+            model.add_output_file(idsave, fname=fname, extension='rst',
+                                  package=ModflowSub.ftype())
+        else:
+            ipakcb = 0
+
+        if idrest is None:
+            idrest = 0
+
+        item15_extensions = ["subsidence.hds", "total_comp.hds",
+                             "inter_comp.hds", "vert_disp.hds",
+                             "nodelay_precon.hds", "delay_precon.hds"]
         item15_units = [2052 + i for i in range(len(item15_extensions))]
 
-
         if isuboc > 0:
-            extensions.append('subbud')
-            name.append('DATA(BINARY)')
-            units.append(2051)
-            extra.append('REPLACE')
-            for e,u in zip(item15_extensions,item15_units):
-                extensions.append(e)
-                name.append('DATA(BINARY)')
-                units.append(u)
-                extra.append('REPLACE')
+            idx = 0
+            for k in range(1, 12, 2):
+                ext = item15_extensions[idx]
+                if ids15 is None:
+                    iu = item15_units[idx]
+                else:
+                    iu = ids15[k]
+                fname = filenames[idx+3]
+                model.add_output_file(iu, fname=fname, extension=ext,
+                                      package=ModflowSub.ftype())
+                idx += 1
 
-        if idsave > 0:
-            extensions.append('rst')
-            name.append('DATA(BINARY)')
-            units.append(2052)
-            extra.append('REPLACE')
+        extensions = [extension]
+        name = [ModflowSub.ftype()]
+        units = [unitnumber]
+        extra = ['']
 
-        Package.__init__(self, model, extension=extensions, name=name, unit_number=units,
-                         extra=extra)  # Call ancestor's init to set self.parent, extension, name and unit number
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extensions, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        self.heading = '# Subsidence (SUB) package file for {}, generated by Flopy.'.format(model.version)
+
+        self.heading = '# {} package for '.format(self.name[0]) + \
+                       ' {}, '.format(model.version_types[model.version]) + \
+                       'generated by Flopy.'
         self.url = 'sub.htm'
 
-        if ipakcb != 0:
-            self.ipakcb = 53
-        else:
-            self.ipakcb = 0  # 0: no cell by cell terms are written
+        self.ipakcb = ipakcb
         self.isuboc = isuboc
         self.idsave = idsave
         self.idrest = idrest
@@ -244,14 +295,18 @@ class ModflowSub(Package):
         self.sfv = None
         if nndb > 0:
             self.ln = Util2d(model, (nndb,), np.int, ln, name='ln')
-            self.hc = Util3d(model, (nndb, nrow, ncol), np.float32, hc, name='hc',
+            self.hc = Util3d(model, (nndb, nrow, ncol), np.float32, hc,
+                             name='hc',
+                             locat=self.unit_number[0])
+            self.sfe = Util3d(model, (nndb, nrow, ncol), np.float32, sfe,
+                              name='sfe',
                               locat=self.unit_number[0])
-            self.sfe = Util3d(model, (nndb, nrow, ncol), np.float32, sfe, name='sfe',
-                               locat=self.unit_number[0])
-            self.sfv = Util3d(model, (nndb, nrow, ncol), np.float32, sfv, name='sfv',
-                               locat=self.unit_number[0])
-            self.com = Util3d(model, (nndb, nrow, ncol), np.float32, com, name='com',
-                               locat=self.unit_number[0])
+            self.sfv = Util3d(model, (nndb, nrow, ncol), np.float32, sfv,
+                              name='sfv',
+                              locat=self.unit_number[0])
+            self.com = Util3d(model, (nndb, nrow, ncol), np.float32, com,
+                              name='com',
+                              locat=self.unit_number[0])
         # delay bed data
         self.ldn = None
         self.rnb = None
@@ -261,18 +316,23 @@ class ModflowSub(Package):
         self.nz = None
         if ndb > 0:
             self.ldn = Util2d(model, (ndb,), np.int, ldn, name='ldn')
-            self.rnb = Util3d(model, (ndb, nrow, ncol), np.float32, rnb, name='rnb',
-                               locat=self.unit_number[0])
-            self.dstart = Util3d(model, (ndb, nrow, ncol), np.float32, dstart, name='dstart',
-                                  locat=self.unit_number[0])
-            self.dhc = Util3d(model, (ndb, nrow, ncol), np.float32, dhc, name='dhc',
-                               locat=self.unit_number[0])
-            self.dcom = Util3d(model, (ndb, nrow, ncol), np.float32, dcom, name='dcom',
-                                locat=self.unit_number[0])
-            self.dz = Util3d(model, (ndb, nrow, ncol), np.float32, dz, name='dz',
+            self.rnb = Util3d(model, (ndb, nrow, ncol), np.float32, rnb,
+                              name='rnb',
                               locat=self.unit_number[0])
+            self.dstart = Util3d(model, (ndb, nrow, ncol), np.float32, dstart,
+                                 name='dstart',
+                                 locat=self.unit_number[0])
+            self.dhc = Util3d(model, (ndb, nrow, ncol), np.float32, dhc,
+                              name='dhc',
+                              locat=self.unit_number[0])
+            self.dcom = Util3d(model, (ndb, nrow, ncol), np.float32, dcom,
+                               name='dcom',
+                               locat=self.unit_number[0])
+            self.dz = Util3d(model, (ndb, nrow, ncol), np.float32, dz,
+                             name='dz',
+                             locat=self.unit_number[0])
             self.nz = Util3d(model, (ndb, nrow, ncol), np.int, nz, name='nz',
-                              locat=self.unit_number[0])
+                             locat=self.unit_number[0])
         # material zone data
         if isinstance(dp, list):
             dp = np.array(dp)
@@ -282,15 +342,16 @@ class ModflowSub(Package):
         if isuboc > 0:
             if ids15 is None:
                 ids15 = np.zeros(12, dtype=np.int)
+                iu = 0
+                for i in range(1, 12, 2):
+                    ids15[i] = item15_units[iu]
+                    iu += 1
+                self.ids15 = ids15
             else:
                 if isinstance(ids15, list):
                     ids15 = np.array(ids15)
-            # make sure the correct unit is specified
-            iu = 0
-            for i in range(1, 12, 2):
-                ids15[i] = item15_units[iu]
-                iu += 1
-            self.ids15 = ids15
+                self.ids15 = ids15
+
             if ids16 is None:
                 self.isuboc = 1
                 # save and print everything
@@ -306,12 +367,10 @@ class ModflowSub(Package):
                 ids16 = np.reshape(ids16, (1, ids16.shape[0]))
             self.ids16 = ids16
 
-
-
         # add package to model
         self.parent.add_package(self)
 
-    def write_file(self,check=False):
+    def write_file(self, check=False):
         """
         Write the package file.
 
@@ -328,11 +387,13 @@ class ModflowSub(Package):
         # First line: heading
         f.write('{}\n'.format(self.heading))
         # write dataset 1
-        f.write('{} {} {} {} {} {} '.format(self.ipakcb, self.isuboc, self.nndb,
-                                           self.ndb, self.nmz, self.nn))
+        f.write(
+            '{} {} {} {} {} {} '.format(self.ipakcb, self.isuboc, self.nndb,
+                                        self.ndb, self.nmz, self.nn))
 
         f.write('{} {} {} {} {}\n'.format(self.ac1, self.ac2,
-                                          self.itmin, self.idsave, self.idrest))
+                                          self.itmin, self.idsave,
+                                          self.idrest))
         t = self.ln.array
         for tt in t:
             f.write('{} '.format(tt + 1))
@@ -359,8 +420,10 @@ class ModflowSub(Package):
         # write dataset 9
         if self.ndb > 0:
             for k in range(self.nmz):
-                f.write('{:15.6g} {:15.6g} {:15.6g}    #material zone {} data\n'.format(self.dp[k, 0], self.dp[k, 1],
-                                                                                        self.dp[k, 2], k + 1))
+                f.write(
+                    '{:15.6g} {:15.6g} {:15.6g}    #material zone {} data\n'.format(
+                        self.dp[k, 0], self.dp[k, 1],
+                        self.dp[k, 2], k + 1))
         # write dataset 10 to 14
         if self.ndb > 0:
             for k in range(self.ndb):
@@ -438,17 +501,18 @@ class ModflowSub(Package):
         if model.verbose:
             sys.stdout.write('  loading sub dataset 1\n')
         t = line.strip().split()
-        ipakcb, isuboc, nndb, ndb, nmz, nn = int(t[0]), int(t[1]), int(t[2]), int(t[3]), int(t[4]), int(t[5])
+        ipakcb, isuboc, nndb, ndb, nmz, nn = int(t[0]), int(t[1]), int(t[2]), \
+                                             int(t[3]), int(t[4]), int(t[5])
         ac1, ac2 = float(t[6]), float(t[7])
         itmin, idsave, idrest = int(t[8]), int(t[9]), int(t[10])
 
-        if ipakcb > 0:
-            ipakcb = 53
-        if idsave > 0:
-            idsave = 2052
-        if idrest > 0:
-            ext_unit_dict[2053] = ext_unit_dict.pop(idrest)
-            idrest = 2053
+        # if ipakcb > 0:
+        #     ipakcb = 53
+        # if idsave > 0:
+        #     idsave = 2052
+        # if idrest > 0:
+        #     ext_unit_dict[2053] = ext_unit_dict.pop(idrest)
+        #     idrest = 2053
 
         ln = None
         if nndb > 0:
@@ -468,8 +532,9 @@ class ModflowSub(Package):
                 sys.stdout.write('  loading sub dataset 4\n')
             rnb = [0] * ndb
             for k in range(ndb):
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'rnb delay bed {}'.format(k + 1),
-                                 ext_unit_dict)
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'rnb delay bed {}'.format(k + 1),
+                                ext_unit_dict)
                 rnb[k] = t
         hc = None
         sfe = None
@@ -484,27 +549,35 @@ class ModflowSub(Package):
                 kk = ln[k] + 1
                 # hc
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 5 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'hc layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 5 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'hc layer {}'.format(kk),
+                                ext_unit_dict)
                 hc[k] = t
                 # sfe
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 6 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sfe layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 6 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'sfe layer {}'.format(kk),
+                                ext_unit_dict)
                 sfe[k] = t
                 # sfv
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 7 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'sfv layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 7 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'sfv layer {}'.format(kk),
+                                ext_unit_dict)
                 sfv[k] = t
                 # com
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 8 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'com layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 8 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'com layer {}'.format(kk),
+                                ext_unit_dict)
                 com[k] = t
 
         # dp
@@ -513,7 +586,9 @@ class ModflowSub(Package):
             dp = np.zeros((nmz, 3), dtype=np.float32)
             for k in range(nmz):
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 9 for material zone {}\n'.format(k + 1))
+                    sys.stdout.write(
+                        '  loading sub dataset 9 for material zone {}\n'.format(
+                            k + 1))
                 line = f.readline()
                 t = line.strip().split()
                 dp[k, :] = float(t[0]), float(t[1]), float(t[2])
@@ -533,33 +608,43 @@ class ModflowSub(Package):
                 kk = ldn[k] + 1
                 # dstart
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 10 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'dstart layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 10 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'dstart layer {}'.format(kk),
+                                ext_unit_dict)
                 dstart[k] = t
                 # dhc
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 11 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'dhc layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 11 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'dhc layer {}'.format(kk),
+                                ext_unit_dict)
                 dhc[k] = t
                 # dcom
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 12 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'dcom layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 12 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'dcom layer {}'.format(kk),
+                                ext_unit_dict)
                 dcom[k] = t
                 # dz
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 13 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'dz layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 13 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.float32,
+                                'dz layer {}'.format(kk),
+                                ext_unit_dict)
                 dz[k] = t
                 # nz
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 14 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.int, 'nz layer {}'.format(kk),
-                                 ext_unit_dict)
+                    sys.stdout.write(
+                        '  loading sub dataset 14 for layer {}\n'.format(kk))
+                t = Util2d.load(f, model, (nrow, ncol), np.int,
+                                'nz layer {}'.format(kk),
+                                ext_unit_dict)
                 nz[k] = t
 
         ids15 = None
@@ -567,19 +652,22 @@ class ModflowSub(Package):
         if isuboc > 0:
             # dataset 15
             if model.verbose:
-                sys.stdout.write('  loading sub dataset 15 for layer {}\n'.format(kk))
+                sys.stdout.write(
+                    '  loading sub dataset 15 for layer {}\n'.format(kk))
             ids15 = np.empty(12, dtype=np.int)
             ids15 = read1d(f, ids15)
-            iu = 1
-            for k in range(1, 12, 2):
-                model.add_pop_key_list(ids15[k])
-                ids15[k] = 2051 + iu  # all subsidence data sent to unit 2051
-                iu += 1
+            #iu = 1
+            #for k in range(1, 12, 2):
+            #    model.add_pop_key_list(ids15[k])
+            #    ids15[k] = 2051 + iu  # all subsidence data sent to unit 2051
+            #    iu += 1
             # dataset 16
             ids16 = [0] * isuboc
             for k in range(isuboc):
                 if model.verbose:
-                    sys.stdout.write('  loading sub dataset 16 for isuboc {}\n'.format(k + 1))
+                    sys.stdout.write(
+                        '  loading sub dataset 16 for isuboc {}\n'.format(
+                            k + 1))
                 t = np.empty(17, dtype=np.int)
                 t = read1d(f, t)
                 t[0:4] -= 1
@@ -588,12 +676,48 @@ class ModflowSub(Package):
         # close file
         f.close()
 
+        # determine specified unit number
+        unitnumber = None
+        filenames = [None for x in range(9)]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ModflowSub.ftype())
+            if ipakcb > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+
+            if idsave > 0:
+                iu, filenames[2] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=idsave)
+
+            if isuboc > 0:
+                ipos = 3
+                for k in range(1, 12, 2):
+                    unit = ids15[k]
+                    if unit > 0:
+                        iu, filenames[ipos] = \
+                            model.get_ext_dict_attr(ext_unit_dict, unit=unit)
+                        model.add_pop_key_list(unit)
+                    ipos += 1
+
         # create sub instance
-        sub = ModflowSub(model, ipakcb=ipakcb, isuboc=isuboc, idsave=idsave, idrest=idrest,
-                         nndb=nndb, ndb=ndb, nmz=nmz, nn=nn, ac1=ac1, ac2=ac2, itmin=itmin,
+        sub = ModflowSub(model, ipakcb=ipakcb, isuboc=isuboc, idsave=idsave,
+                         idrest=idrest,
+                         nndb=nndb, ndb=ndb, nmz=nmz, nn=nn, ac1=ac1, ac2=ac2,
+                         itmin=itmin,
                          ln=ln, ldn=ldn, rnb=rnb,
                          hc=hc, sfe=sfe, sfv=sfv, com=com, dp=dp,
                          dstart=dstart, dhc=dhc, dcom=dcom, dz=dz, nz=nz,
-                         ids15=ids15, ids16=ids16)
+                         ids15=ids15, ids16=ids16, unitnumber=unitnumber,
+                         filenames=filenames)
         # return sub instance
         return sub
+
+    @staticmethod
+    def ftype():
+        return 'SUB'
+
+    @staticmethod
+    def defaultunit():
+        return 32

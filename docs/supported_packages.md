@@ -13,12 +13,11 @@ FloPy Supported Packages
 | Drain Return (DRT)                             | Not supported        | Not supported        | Not supported        |
 | Evapotranspiration (EVT)                       | Supported            | Supported            | Not supported        |
 | Evapotranspiration Segments (ETS)              | Not supported        | Not supported        | Not supported        |
-| Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
+| Flow and Head Boundary (FHB)                   | Supported            | Supported            | Not supported        |
 | General Head Boundary (GHB)                    | Supported            | Supported            | Not supported        |
 | Geometric Multi-Grid (GMG)                     | Supported            | Supported            | Not supported        |
 | Horizontal Flow Barrier (HFB)                  | Supported            | Supported            | Not supported        |
 | Hydrogeologic-Unit Flow (HUF)                  | Not supported        | Not supported        | Not supported        |
-| Flow and Head Boundary (FHB)                   | Not supported        | Not supported        | Not supported        |
 | Interbed-Storage (IBS)                         | Not supported        | Not supported        | Not supported        |
 | Lake (LAK)                                     | Supported            | Supported            | Not supported        |
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
@@ -27,12 +26,12 @@ FloPy Supported Packages
 | Multipler (MULT)                               | Not supported        | Supported            | Not supported        |
 | Multi-Node Well 1 (MNW1)                       | Limited support      | Not supported        | Not supported        |
 | Multi-Node Well 2 (MNW2)                       | Supported            | Supported            | Not supported        |
-| Multi-Node Well Information (MNWI)             | Supported            | Supported        | Not supported        |
+| Multi-Node Well Information (MNWI)             | Supported            | Supported            | Not supported        |
 | Newton (NWT)                                   | Supported            | Supported            | Not supported        |
 | Output Control (OC)                            | Supported            | Supported            | Not supported        |
 | Periodic Boundary Condition (PBC)              | Supported            | Not supported        | Not supported        |
-| Preconditioned Conjugate <br />Gradient (PCG)              | Supported            | Supported            | Not supported        |
-| Preconditioned Conjugate Gradient Nonlinear (PCGN)   | Supported            | Not supported        | Not supported        |
+| Preconditioned Conjugate  Gradient (PCG)       | Supported            | Supported            | Not supported        |
+| Preconditioned Conjugate Gradient Nonlinear (PCGN)   | Supported            | Supported        | Not supported        |
 | Parameter Value (PVAL)                         | Not supported        | Supported            | Not supported        |
 | Recharge (RCH)                                 | Supported            | Supported            | Not supported        |
 | River (RIV)                                    | Supported            | Supported            | Not supported        |
@@ -40,7 +39,6 @@ FloPy Supported Packages
 | Strongly Implicit Procedure (SIP)              | Supported            | Not supported        | Not supported        |
 | Slice-successive Overrelaxation (SOR)          | Supported            | Not supported        | Not supported        |
 | Stream (STR)                                   | Supported            | Supported            | Not supported        |
-| Seawater Intrusion (SWI)                       | Supported            | Not supported        | Not supported        |
 | Seawater Intrusion (SWI2)                      | Supported            | Supported            | Not supported        |
 | Surface-Water Routing (SWR)                    | Not supported        | Not supported        | Not supported        |
 | Subsidence (SUB)                               | Supported            | Supported            | Not supported        |
@@ -62,17 +60,20 @@ FloPy Supported Packages
 | MODPATH Basic (MPBAS)                    | Supported            | Not supported        | Not supported        |
 | MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
 
-### MT3DMS
+### MT3DMS, MT3D-USGS
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | Advection (ADV)                          | Supported            | Supported            | Not supported        |
 | Basic Transport (BTN)                    | Supported            | Supported            | Not supported        |
 | Dispersion (DSP)                         | Supported            | Supported            | Not supported        |
 | Generalized Conjugate Gradient (GCG)     | Supported            | Supported            | Not supported        |
+| Lake (LKT)                               | Supported            | Supported            | Not supported        |
 | PHT3D-PHREEQC Interface (PHC)            | Supported            | Not supported        | Not supported        |
+| Streamflow (SFT)                         | Supported            | Supported            | Not supported        |
 | Reaction (RCT)                           | Supported            | Supported            | Not supported        |
 | Sink and Source Mixing (SSM)             | Supported            | Supported            | Not supported        |
 | Transport Observation (TOB)              | Supported            | Not supported        | Not supported        |
+| Unsaturated-zone (UZT)                   | Supported            | Supported            | Not supported        |
 
 ### SEAWAT
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
@@ -87,7 +88,7 @@ FloPy Supported Packages
 | HYDMOD (HYD)                                   | Supported            | Supported            | Not supported        |
 | Gage (GAGE)                                    | Supported            | Supported            | Not supported        |
 | General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
-| Head Observation (HOB)                         | Not supported        | Not supported        | Not supported        |
+| Head Observation (HOB)                         | Supported            | Supported            | Not supported        |
 | River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
 | Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
 | Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |

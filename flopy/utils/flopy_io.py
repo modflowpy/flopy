@@ -228,7 +228,7 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
     wel = ModflowWel(model,stress_period_data=sp_data)
     return wel
 
-def loadtxt(file, delimiter=None, dtype=None, skiprows=0, use_pandas=True, **kwargs):
+def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True, **kwargs):
     """Use pandas if it is available to load a text file
     (significantly faster than n.loadtxt or genfromtxt;
     see http://stackoverflow.com/questions/18259393/numpy-loading-csv-too-slow-compared-to-matlab)

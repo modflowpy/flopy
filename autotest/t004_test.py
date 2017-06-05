@@ -4,7 +4,7 @@ import numpy as np
 import flopy
 from flopy.utils.util_array import Util2d, Util3d, Transient2d, Transient3d
 
-out_dir = "temp"
+out_dir = os.path.join("temp", "t004")
 if os.path.exists(out_dir):
     shutil.rmtree(out_dir)
 os.mkdir(out_dir)
@@ -28,7 +28,6 @@ def test_transient2d():
     t2d2 = Transient2d.from_4d(ml, "rch", {"rech": m4d})
     m4d2 = t2d2.array
     assert np.array_equal(m4d, m4d2)
-
 
 
 def test_transient3d():
@@ -87,7 +86,8 @@ def test_util2d():
     assert np.array_equal(lpf.hk[1].array, a1)
 
     # test external filenames - ascii and binary with model_ws and external_path
-    ml = flopy.modflow.Modflow(model_ws="temp", external_path="ref")
+    ml = flopy.modflow.Modflow(model_ws=out_dir,
+                               external_path=os.path.join(out_dir, "ref"))
     u2d = Util2d(ml, (10, 10), np.float32, 10., "test")
     fname_ascii = os.path.join(out_dir, 'test_a.dat')
     fname_bin = os.path.join(out_dir, 'test_b.dat')
@@ -510,7 +510,7 @@ def test_new_get_file_entry():
 
 
 def test_append_mflist():
-    ml = flopy.modflow.Modflow(model_ws="temp")
+    ml = flopy.modflow.Modflow(model_ws=out_dir)
     dis = flopy.modflow.ModflowDis(ml, 10, 10, 10, 10)
     sp_data1 = {3: [1, 1, 1, 1.0], 5: [1, 2, 4, 4.0]}
     sp_data2 = {0: [1, 1, 3, 3.0], 8: [9, 2, 4, 4.0]}
@@ -524,7 +524,7 @@ def test_append_mflist():
 
 
 def test_mflist():
-    ml = flopy.modflow.Modflow(model_ws="temp")
+    ml = flopy.modflow.Modflow(model_ws=out_dir)
     dis = flopy.modflow.ModflowDis(ml, 10, 10, 10, 10)
     sp_data = {0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],
                1: [1, 2, 4, 4.0]}
@@ -561,7 +561,7 @@ def test_mflist():
 def test_how():
     import numpy as np
     import flopy
-    ml = flopy.modflow.Modflow(model_ws="temp")
+    ml = flopy.modflow.Modflow(model_ws=out_dir)
     ml.array_free_format = False
     dis = flopy.modflow.ModflowDis(ml, nlay=2, nrow=10, ncol=10)
 
@@ -577,7 +577,7 @@ def test_how():
 def test_util3d_reset():
     import numpy as np
     import flopy
-    ml = flopy.modflow.Modflow(model_ws="temp")
+    ml = flopy.modflow.Modflow(model_ws=out_dir)
     ml.array_free_format = False
     dis = flopy.modflow.ModflowDis(ml, nlay=2, nrow=10, ncol=10)
     bas = flopy.modflow.ModflowBas(ml, strt=999)
@@ -598,7 +598,7 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path()
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
-    #test_transient2d()
+    # test_transient2d()
     test_transient3d()
     # test_util2d()
     # test_util3d()

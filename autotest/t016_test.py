@@ -17,7 +17,7 @@ def test_usg_disu_load():
     assert isinstance(disu, flopy.modflow.ModflowDisU)
 
     # Change where model files are written
-    model_ws = 'temp'
+    model_ws = os.path.join('temp', 't016')
     m.model_ws = model_ws
 
     # Write the disu file
@@ -52,7 +52,7 @@ def test_usg_sms_load():
     assert isinstance(sms, flopy.modflow.ModflowSms)
 
     # Change where model files are written
-    model_ws = 'temp'
+    model_ws = os.path.join('temp', 't016')
     m.model_ws = model_ws
 
     # Write the sms file

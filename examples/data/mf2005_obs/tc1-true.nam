@@ -1,0 +1,28 @@
+# NAME file for test case tc1-true
+#
+# NOTE: Forward slashes (/) in pathnames may need to be converted
+#       to back slashes (\) in some computing environments
+#
+# Output files
+list            12  tc1-true.lst
+#
+# Obs-Sen-Pes process input files
+hob             22  tc1-true.hob
+rvob            23  tc1-true.orv
+#
+# Global input files
+dis             31  tc1-true.dis
+zone            32  tc1-true.zon
+mult            33  tc1-true.mlt
+#
+# Flow process input files
+bas6            41  tc1-true.bas
+lpf             42  tc1-true.lpf
+wel             43  tc1-true.wel
+pcg             45  tc1-true.pcg
+oc              46  tc1-true.oc
+ghb             47  tc1-true.ghb
+riv             48  tc1-true.riv
+rch             49  tc1-true.rch
+data            51  tc1-true.hobs.out
+data            52  tc1-true.orv.out

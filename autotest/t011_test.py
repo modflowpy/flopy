@@ -6,7 +6,6 @@ Some basic tests for mflistfile.py module (not super rigorous)
 import os
 import flopy
 import numpy as np
-#import matplotlib.pyplot as plt
 
 
 def test_mflistfile():
@@ -30,9 +29,9 @@ def test_mflistfile():
     bud = mflist.get_data(totim=times[0])
     assert isinstance(bud, np.ndarray)
 
-    #plt.bar(bud['index'], bud['value'])
-    #plt.xticks(bud['index'], bud['name'], rotation=45, size=6)
-    #plt.show()
+    # plt.bar(bud['index'], bud['value'])
+    # plt.xticks(bud['index'], bud['name'], rotation=45, size=6)
+    # plt.show()
 
     inc = mflist.get_incremental()
     assert isinstance(inc, np.ndarray)
@@ -49,7 +48,12 @@ def test_mflistfile():
     assert isinstance(df_flx, pandas.DataFrame)
     assert isinstance(df_vol, pandas.DataFrame)
 
+    # test get runtime
+    runtime = mflist.get_model_runtime(units='hours')
+    assert isinstance(runtime, float)
+
     return
+
 
 if __name__ == '__main__':
     test_mflistfile()

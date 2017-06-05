@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.6-dev
+### Version 3.2.7-dev
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/flopy.png)](https://pypi.python.org/pypi/flopy)
@@ -22,8 +22,9 @@ Documentation
 
 FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
-FloPy is now citable!  Please see our new paper in Groundwater:
-* [Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N. (2016), Scripting MODFLOW Model Development Using Python and FloPy. Groundwater. doi:10.1111/gwat.12413](http://onlinelibrary.wiley.com/doi/10.1111/gwat.12413/full)
+FloPy is citable!  Please see our paper in Groundwater:
+
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N. (2016), Scripting MODFLOW Model Development Using Python and FloPy. Groundwater, 54: 733–739. doi:10.1111/gwat.12413](http://dx.doi.org/10.1111/gwat.12413)
 
 Examples
 -----------------------------------------------

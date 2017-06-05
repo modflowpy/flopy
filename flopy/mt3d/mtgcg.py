@@ -47,7 +47,12 @@ class Mt3dGcg(Package):
     extension : string
         Filename extension (default is 'gcg')
     unitnumber : int
-        File unit number (default is 35).
+        File unit number (default is None).
+    filenames : str or list of str
+        Filenames to use for the package. If filenames=None the package name
+        will be created using the model name and package extension. If a
+        single string is passed the package will be set to the string.
+        Default is None.
 
     Attributes
     ----------
@@ -72,10 +77,31 @@ class Mt3dGcg(Package):
     unitnumber = 35
     def __init__(self, model, mxiter=1, iter1=50, isolve=3, ncrs=0,
                  accl=1, cclose=1e-5, iprgcg=0, extension='gcg',
-                 unitnumber=None):
+                 unitnumber=None, filenames=None):
+
         if unitnumber is None:
-            unitnumber = self.unitnumber
-        Package.__init__(self, model, extension, 'GCG', unitnumber)
+            unitnumber = Mt3dGcg.defaultunit()
+        elif unitnumber == 0:
+            unitnumber = Mt3dGcg.reservedunit()
+
+        # set filenames
+        if filenames is None:
+            filenames = [None]
+        elif isinstance(filenames, str):
+            filenames = [filenames]
+
+        # Fill namefile items
+        name = [Mt3dGcg.ftype()]
+        units = [unitnumber]
+        extra = ['']
+
+        # set package name
+        fname = [filenames[0]]
+
+        # Call ancestor's init to set self.parent, extension, name and unit number
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=units, extra=extra, filenames=fname)
+
         self.mxiter = mxiter
         self.iter1 = iter1
         self.isolve = isolve
@@ -177,7 +203,28 @@ class Mt3dGcg(Package):
             print('   CCLOSE {}'.format(cclose))
             print('   IPRGCG {}'.format(iprgcg))
 
+        # set package unit number
+        unitnumber = None
+        filenames = [None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=Mt3dGcg.ftype())
+
         # Construct and return gcg package
         gcg = Mt3dGcg(model, mxiter=mxiter, iter1=iter1, isolve=isolve,
-                      ncrs=ncrs, accl=accl, cclose=cclose, iprgcg=iprgcg)
+                      ncrs=ncrs, accl=accl, cclose=cclose, iprgcg=iprgcg,
+                      unitnumber=unitnumber, filenames=filenames)
         return gcg
+
+    @staticmethod
+    def ftype():
+        return 'GCG'
+
+    @staticmethod
+    def defaultunit():
+        return 35
+
+    @staticmethod
+    def reservedunit():
+        return 9

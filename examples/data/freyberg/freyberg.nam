@@ -7,6 +7,6 @@ RIV 14 freyberg.riv
 RCH 18 freyberg.rch
 OC  22 freyberg.oc
 PCG 19 freyberg.pcg
-DATA(BINARY) 50 freyberg.cbb
+DATA(BINARY) 50 freyberg.cbc
 DATA(BINARY) 30 freyberg.hds
 DATA(BINARY) 31 freyberg.ddn

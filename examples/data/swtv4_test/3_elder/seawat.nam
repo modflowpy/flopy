@@ -1,6 +1,6 @@
 #GLO Process
-GLOBAL 6 elder.glo
-LIST 7 elder.lst
+GLOBAL 1006 elder.glo
+LIST 1007 elder.lst
 #
 #VDF Process
 VDF 36 elder.vdf

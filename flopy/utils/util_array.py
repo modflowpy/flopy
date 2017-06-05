@@ -13,7 +13,8 @@ import shutil
 import copy
 import numbers
 import numpy as np
-from flopy.utils.binaryfile import BinaryHeader
+from ..utils.binaryfile import BinaryHeader
+from ..utils.flopy_io import line_parse
 
 
 class ArrayFormat(object):
@@ -409,7 +410,7 @@ def read1d(f, a):
     values = []
     while True:
         line = f.readline()
-        t = line.strip().split()
+        t = line_parse(line)
         values = values + t
         if len(values) >= a.shape[0]:
             break
@@ -735,10 +736,27 @@ class Util3d(object):
 
     @property
     def array(self):
-        a = np.empty((self.shape), dtype=self.dtype)
-        # for i,u2d in self.uds:
-        for i, u2d in enumerate(self.util_2ds):
-            a[i] = u2d.array
+        '''
+        Return a numpy array of the 3D shape.  If an unstructured model, then
+        return an array of size nodes.
+
+        '''
+        nlay, nrow, ncol = self.shape
+        if nrow is not None:
+            # typical 3D case
+            a = np.empty((self.shape), dtype=self.dtype)
+            # for i,u2d in self.uds:
+            for i, u2d in enumerate(self.util_2ds):
+                a[i] = u2d.array
+        else:
+            # unstructured case
+            nodes = ncol.sum()
+            a = np.empty((nodes), dtype=self.dtype)
+            istart = 0
+            for i, u2d in enumerate(self.util_2ds):
+                istop = istart + ncol[i]
+                a[istart:istop] = u2d.array
+                istart = istop
         return a
 
     def build_2d_instances(self):
@@ -773,7 +791,11 @@ class Util3d(object):
                     if self.model.external_path is not None:
                         ext_filename = self.ext_filename_base[i] + str(i + 1) + \
                                        '.ref'
-                    u2d = Util2d(self.model, self.shape[1:], self.dtype, item,
+                    shp = self.shape[1:]
+                    if shp[0] is None:
+                        # allow for unstructured so that ncol changes by layer
+                        shp = (1, self.shape[2][i])
+                    u2d = Util2d(self.model, shp, self.dtype, item,
                                  fmtin=self.fmtin, name=name,
                                  ext_filename=ext_filename,
                                  locat=self.locat,
@@ -817,7 +839,13 @@ class Util3d(object):
         u2ds = []
         for k in range(nlay):
             u2d_name = name + '_Layer_{0}'.format(k)
-            u2d = Util2d.load(f_handle, model, (nrow, ncol), dtype, u2d_name,
+            if nrow is None:
+                nr = 1
+                nc = ncol[k]
+            else:
+                nr = nrow
+                nc = ncol
+            u2d = Util2d.load(f_handle, model, (nr, nc), dtype, u2d_name,
                               ext_unit_dict=ext_unit_dict,
                               array_format=array_format)
             u2ds.append(u2d)
@@ -1153,6 +1181,10 @@ class Transient2d(object):
         assert len(shape) == 2, "Transient2d error: shape arg must be " + \
                                 "length two (nrow, ncol), not " + \
                                 str(shape)
+        if shape[0] is None:
+            # allow for unstructured so that ncol changes by layer
+            shape = (1, shape[1][0])
+
         self.shape = shape
         self.dtype = dtype
         self.__value = value
@@ -2203,6 +2235,36 @@ class Util2d(object):
             return self.__value
 
     @staticmethod
+    def load_block(shape, file_in, dtype):
+        """
+        load a (possibly wrapped format) array from a mt3d block
+        (self.__value) and casts to the proper type (self.dtype)
+        made static to support the load functionality
+        this routine now supports fixed format arrays where the numbers
+        may touch.
+        """
+        nrow, ncol = shape
+        data = np.zeros(shape, dtype=dtype) + np.NaN
+        if not hasattr(file_in, 'read'):
+            file_in = open(file_in, 'r')
+        line = file_in.readline()
+        raw = line.strip('\n').split()
+        nblock = int(raw[0])
+        for n in range(nblock):
+            line = file_in.readline()
+            raw = line.strip('\n').split()
+            i1, i2, j1, j2, v = int(raw[0])-1, int(raw[1])-1, \
+                                int(raw[2])-1, int(raw[3])-1, \
+                                dtype(raw[0])
+            for j in range(j1, j2+1):
+                for i in range(i1, i2+1):
+                    data[j, i] = v
+        if np.isnan(np.sum(data)):
+            raise Exception("Util2d.load_block() error: np.NaN in data array")
+        return data
+
+
+    @staticmethod
     def load_txt(shape, file_in, dtype, fmtin):
         """
         load a (possibly wrapped format) array from a file
@@ -2229,7 +2291,27 @@ class Util2d(object):
                 if len(raw) == 1 and ',' in line:
                     raw = raw[0].split(',')
                 elif ',' in line:
-                    raw = line.replace(',','').strip('\n').split()
+                    raw = line.replace(',', '').strip('\n').split()
+                elif '*' in line:
+                    rawins = []
+                    rawremove = []
+                    for idx, t in enumerate(raw):
+                        if '*' in t:
+                            #print(t)
+                            rawremove.append(t)
+                            tt = t.split('*')
+                            tlist = []
+                            for jdx in range(int(tt[0])):
+                                tlist.append(tt[1])
+                            rawins.append((idx, list(tlist)))
+                    iadd = 1
+                    for t in rawins:
+                        ipos = t[0] + iadd
+                        for tt in t[1]:
+                            raw.insert(ipos, tt)
+                            ipos += 1
+                            iadd += 1
+                    raw = [e for e in raw if e not in rawremove]
             else:
                 # split line using number of values in the line
                 rawlist = []
@@ -2529,6 +2611,13 @@ class Util2d(object):
             # track this unit number so we can remove it from the external
             # file list later
             model.pop_key_list.append(cr_dict['nunit'])
+        elif cr_dict['type'] == 'block':
+            data = Util2d.load_block(shape, f_handle, dtype)
+            u2d = Util2d(model, shape, dtype, data, name=name,
+                         iprn=cr_dict['iprn'], fmtin="(FREE)",
+                         cnstnt=cr_dict['cnstnt'], locat=None,
+                         array_free_format=array_free_format)
+
         return u2d
 
     @staticmethod
@@ -2540,28 +2629,28 @@ class Util2d(object):
         current_unit (optional) indicates the unit number of the file being parsed
         """
         free_fmt = ['open/close', 'internal', 'external', 'constant']
-        raw = line.lower().strip().split()
+        raw = line.strip().split()
         freefmt, cnstnt, fmtin, iprn, nunit = None, None, None, -1, None
         fname = None
         isfloat = False
         if dtype == np.float or dtype == np.float32:
             isfloat = True
             # if free format keywords
-        if str(raw[0]) in str(free_fmt):
-            freefmt = raw[0]
-            if raw[0] == 'constant':
+        if str(raw[0].lower()) in str(free_fmt):
+            freefmt = raw[0].lower()
+            if raw[0].lower() == 'constant':
                 if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
-            if raw[0] == 'internal':
+            if raw[0].lower() == 'internal':
                 if isfloat:
                     cnstnt = np.float(raw[1].lower().replace('d', 'e'))
                 else:
                     cnstnt = np.int(raw[1].lower())
                 fmtin = raw[2].strip()
                 iprn = int(raw[3])
-            elif raw[0] == 'external':
+            elif raw[0].lower() == 'external':
                 if ext_unit_dict is not None:
                     try:
                         # td = ext_unit_dict[int(raw[1])]
@@ -2578,7 +2667,7 @@ class Util2d(object):
                     cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
                 iprn = int(raw[4])
-            elif raw[0] == 'open/close':
+            elif raw[0].lower() == 'open/close':
                 fname = raw[1].strip()
                 if isfloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
@@ -2590,14 +2679,23 @@ class Util2d(object):
         else:
             locat = np.int(line[0:10].strip())
             if isfloat:
-                cnstnt = np.float(
-                    line[10:20].strip().lower().replace('d', 'e'))
+                if len(line) >= 20:
+                    cnstnt = np.float(
+                        line[10:20].strip().lower().replace('d', 'e'))
+                else:
+                    cnstnt = 0.0
             else:
-                cnstnt = np.int(line[10:20].strip())
+                if len(line) >= 20:
+                    cnstnt = np.int(line[10:20].strip())
+                else:
+                    cnstnt = 0
                 #if cnstnt == 0:
                 #    cnstnt = 1
             if locat != 0:
-                fmtin = line[20:40].strip()
+                if len(line) >= 40:
+                    fmtin = line[20:40].strip()
+                else:
+                    fmtin = ''
                 try:
                     iprn = np.int(line[40:50].strip())
                 except:
@@ -2626,8 +2724,8 @@ class Util2d(object):
                     freefmt = 'internal'
                     nunit = current_unit
                 elif locat == 101:
-                    raise NotImplementedError(
-                        'MT3D block format not supported...')
+                    freefmt = 'block'
+                    nunit = current_unit
                 elif locat == 102:
                     raise NotImplementedError(
                         'MT3D zonal format not supported...')

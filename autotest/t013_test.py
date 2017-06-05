@@ -6,7 +6,7 @@ import os
 import flopy
 
 def test_mt3d_create_withmfmodel():
-    model_ws = os.path.join('.', 'temp')
+    model_ws = os.path.join('.', 'temp', 't013')
 
     # Create a MODFLOW model
     mf = flopy.modflow.Modflow(model_ws=model_ws)
@@ -38,7 +38,7 @@ def test_mt3d_create_withmfmodel():
     return
 
 def test_mt3d_create_woutmfmodel():
-    model_ws = os.path.join('.', 'temp')
+    model_ws = os.path.join('.', 'temp', 't013')
 
     # Create MT3D model
     mt = flopy.mt3d.Mt3dms(model_ws=model_ws)

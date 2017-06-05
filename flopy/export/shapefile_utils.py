@@ -103,10 +103,11 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             wr.record(*rec)
     wr.save(filename)
 
-def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9):
+def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
+                          epsg=None, prj=None):
 
     sf = import_shapefile()
-    verts = sr.vertices
+    verts = sr.vertices.copy()
 
     w = sf.Writer(5) # polygon
     w.autoBalance = 1
@@ -129,6 +130,9 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9):
         w.poly([verts[i]])
         w.record(*r)
     w.save(filename)
+    # write the projection file
+    # write the projection file
+    write_prj(filename, epsg, prj)
 
 
 def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None,
@@ -276,6 +280,7 @@ def shape_attr_name(name, length=6, keep_layer=False):
         n = n[:length]
     return n
 
+
 def enforce_10ch_limit(names):
     """Enforce 10 character limit for fieldnames.
     Add suffix for duplicate names starting at 0.
@@ -297,6 +302,7 @@ def enforce_10ch_limit(names):
             names[i] = n[:9] + str(suffix[n].pop(0))
     return names
 
+
 def get_pyshp_field_info(dtypename):
     """Get pyshp dtype information for a given numpy dtype."""
     fields = {'int': ('N', 20, 0),
@@ -313,6 +319,7 @@ def get_pyshp_field_info(dtypename):
     else:
         return fields['str']
 
+
 def get_pyshp_field_dtypes(code):
     """Returns a numpy dtype for a pyshp field type."""
     dtypes = {'N': np.int,
@@ -320,6 +327,7 @@ def get_pyshp_field_dtypes(code):
               'L': np.bool,
               'C': np.object}
     return dtypes.get(code, np.object)
+
 
 def shp2recarray(shpname):
     """Read a shapefile into a numpy recarray.
@@ -338,7 +346,7 @@ def shp2recarray(shpname):
     except Exception as e:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
-    from flopy.utils.geometry import shape
+    from ..utils.geometry import shape
 
     sfobj = sf.Reader(shpname)
     dtype = [(f[0], get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
@@ -351,6 +359,7 @@ def shp2recarray(shpname):
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
     return recarray
+
 
 def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
     """Write a numpy record array to a shapefile, using a corresponding

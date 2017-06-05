@@ -29,7 +29,9 @@ from . import modflow
 from . import mt3d
 from . import seawat
 from . import modpath
+from . import modflowlgr
 from . import utils
 from . import plot
 from . import export
-from .mbase import run_model, which
+from . import pest
+from .mbase import run_model, which, is_exe
