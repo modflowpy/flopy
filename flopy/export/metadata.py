@@ -41,7 +41,7 @@ class acdd:
 
         # recommended global attributes
         self.naming_authority = 'ScienceBase' # org. that provides the id
-        self.history = None # This is a character array with a line for each invocation of a program that has modified the dataset.
+        #self.history = None # This is a character array with a line for each invocation of a program that has modified the dataset.
         # Well-behaved generic netCDF applications should append a line containing:
         # date, time of day, user name, program name and command arguments.
         self.source = None # The method of production of the original data.
@@ -67,9 +67,9 @@ class acdd:
         self.geospatial_lat_max = self.bounds.get('maxY')
         self.geospatial_lon_min = self.bounds.get('minX')
         self.geospatial_lon_max = self.bounds.get('maxX')
-        self.geospatial_vertical_min = self.model.dis.top.array.min()
+        self.geospatial_vertical_min = self.model.dis.botm.array.min()
         self.geospatial_vertical_max = self.model.dis.top.array.max()
-        self.geospatial_vertical_positive = 'up' # assumed to always be positive for GW models
+        self.geospatial_vertical_positive = 'down' # assumed to always be negative for GW models
         self.time_coverage_start = self.time_coverage.get('start')
         self.time_coverage_end = self.time_coverage.get('end')
         self.time_coverage_duration = self.time_coverage.get('duration')
