@@ -685,7 +685,7 @@ class NetCdf(object):
 
         # write some attributes
         self.log("setting standard attributes")
-        self.nc.setncattr("Conventions", "CF-1.6")
+        self.nc.setncattr("Conventions", "CF-1.6, ACDD-1.3")
         self.nc.setncattr("date_created",
                           datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
         self.nc.setncattr("geospatial_vertical_positive", "up")
