@@ -473,8 +473,7 @@ class Modflow(BaseModel):
         namefile_path = os.path.join(ml.model_ws, f)
 
         # set the reference information
-        ref_attributes = SpatialReference. \
-            attribs_from_namfile_header(namefile_path)
+        ref_attributes = SpatialReference.load(namefile_path)
 
         # read name file
         try:

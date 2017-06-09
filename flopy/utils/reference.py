@@ -102,6 +102,11 @@ class SpatialReference(object):
     length_multiplier = 1.
     origin_loc = 'ul'  # or ll
 
+    defaults = {"xul": None, "yul": None, "rotation": 0.,
+                "proj4_str": "EPSG:4326", "start_datetime": "1/1/1970",
+                "units": None, "length_multiplier": 1.}
+
+
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None,
@@ -189,8 +194,28 @@ class SpatialReference(object):
         return xmin, ymin, xmax, ymax
 
     @staticmethod
+    def load(namefile=None, reffile='usgs.model.reference'):
+        """Attempts to load spatial reference information from
+        the following files (in order):
+        1) NAM file (header comment)
+        2) usgs.model.reference
+        3) SpatialReference.default dictionary
+        """
+        d = SpatialReference.attribs_from_namfile_header(namefile)
+        if d == SpatialReference.defaults:
+            reffile = os.path.join(os.path.split(namefile)[0], reffile)
+            d = SpatialReference.read_usgs_mode_reference_file(reffile)
+            if d is not None:
+                return d
+            else:
+                return SpatialReference.defaults
+
+    @staticmethod
     def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
+        d = SpatialReference.defaults.copy()
+        if namefile is None:
+            return None
         header = []
         with open(namefile, 'r') as f:
             for line in f:
@@ -198,28 +223,21 @@ class SpatialReference(object):
                     break
                 header.extend(line.strip().replace('#', '').split(';'))
 
-        xul, yul = None, None
-        rotation = 0.0
-        proj4_str = "EPSG:4326"
-        start_datetime = "1/1/1970"
-        units = None
-        length_multiplier = 1.
-
         for item in header:
             if "xul" in item.lower():
                 try:
-                    xul = float(item.split(':')[1])
+                    d['xul'] = float(item.split(':')[1])
                 except:
                     pass
             elif "yul" in item.lower():
                 try:
-                    yul = float(item.split(':')[1])
+                    d['yul'] = float(item.split(':')[1])
                 except:
                     pass
             elif "rotation" in item.lower():
                 try:
-                    rotation = float(item.split(':')[1])
-                    if rotation != 0.0:
+                    d['rotation'] = float(item.split(':')[1])
+                    if d['rotation'] != 0.0:
                         msg = ('rotation arg has recently changed. It was '
                                'previously treated as positive clockwise. It '
                                'now is positive counterclockwise.')
@@ -228,22 +246,60 @@ class SpatialReference(object):
                     pass
             elif "proj4_str" in item.lower():
                 try:
-                    proj4_str = ':'.join(item.split(':')[1:]).strip()
+                    d['proj4_str'] = ':'.join(item.split(':')[1:]).strip()
                 except:
                     pass
             elif "start" in item.lower():
                 try:
-                    start_datetime = item.split(':')[1].strip()
+                    d['start_datetime'] = item.split(':')[1].strip()
                 except:
                     pass
             elif "units" in item.lower():
-                units = item.split(':')[1].strip()
+                d['units'] = item.split(':')[1].strip()
             elif "length_multiplier" in item.lower():
-                length_multiplier = float(item.split(':')[1].strip())
+                d['length_multiplier'] = float(item.split(':')[1].strip())
 
-        return {"xul": xul, "yul": yul, "rotation": rotation,
-                "proj4_str": proj4_str, "start_datetime": start_datetime,
-                "units": units, "length_multiplier": length_multiplier}
+        return d
+
+    @staticmethod
+    def read_usgs_mode_reference_file(reffile='usgs.model.reference'):
+        # read spatial reference info from the usgs.model.reference file
+        # https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html
+        d = SpatialReference.defaults.copy()
+        d.pop('proj4_str') # discard default to avoid confusion with epsg code if entered
+        if os.path.exists(reffile):
+            with open(reffile) as input:
+                for line in input:
+                    if line.strip()[0] != '#':
+                        info = line.strip().split('#')[0].split()
+                        if len(info) > 1:
+                            d[info[0].lower()] = ' '.join(info[1:])
+            d['xul'] = float(d['xul'])
+            d['yul'] = float(d['yul'])
+            d['rotation'] = float(d['rotation'])
+            d['units'] = d.get('length_units', d['units'])
+            if 'start_date' in d.keys():
+                start_datetime = d.pop('start_date')
+                if 'start_time' in d.keys():
+                    start_datetime += ' {}'.format(d.pop('start_time'))
+                d['start_datetime'] = start_datetime
+            if 'epsg' in d.keys():
+                try:
+                    d['epsg'] = int(d['epsg'])
+                except Exception as e:
+                    raise Exception(
+                        "error reading epsg code from file:\n" + str(e))
+            # this prioritizes epsg over proj4 if both are given
+            # (otherwise 'proj4' entry will be dropped below)
+            elif 'proj4' in d.keys():
+                d['proj4_str'] = d['proj4']
+
+            # drop any other items that aren't used in sr class
+            d = {k:v for k, v in d.items() if k.lower() in SpatialReference.defaults.keys()
+                 or k.lower() in {'epsg'}}
+            return d
+        else:
+            return None
 
     def __setattr__(self, key, value):
         reset = True
@@ -1233,8 +1289,9 @@ def get_spatialreference(epsg, text='esriwkt'):
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
     text = get_url_text(url,
                         error_msg='Need an internet connection to look up epsg on spatialreference.org.')
-    text = text.replace("\n", "")
-    return text
+    if text is None: # epsg code not listed on spatialreference.org may still work with pyproj
+        return '+init=epsg:{}'.format(epsg)
+    return text.replace("\n", "")
 
 
 def getproj4(epsg):
