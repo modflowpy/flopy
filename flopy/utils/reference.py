@@ -1328,7 +1328,8 @@ def get_spatialreference(epsg, text='esriwkt'):
     from flopy.utils.flopy_io import get_url_text
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
     text = get_url_text(url,
-                        error_msg='No internet connection or epsg code not found on spatialreference.org.')
+                        error_msg='No internet connection or epsg code {} '
+                                  'not found on spatialreference.org.'.format(epsg))
     if text is None: # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
     return text.replace("\n", "")

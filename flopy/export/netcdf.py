@@ -113,6 +113,9 @@ class NetCdf(object):
         if not None, the constructor will initialize
         the file.  If None, the perlen array of ModflowDis
         will be used
+    z_positive : str ('up' or 'down')
+        Positive direction of vertical coordinates written to NetCDF file.
+        (default 'down')
     verbose : if True, stdout is verbose.  If str, then a log file
         is written to the verbose file
     forgive: what to do if a duplicate variable name is being created.  If
@@ -127,7 +130,8 @@ class NetCdf(object):
 
     """
 
-    def __init__(self, output_filename, model, time_values=None, verbose=None,
+    def __init__(self, output_filename, model, time_values=None, z_positive='up',
+                 verbose=None,
                  logger=None, forgive=False):
 
         assert output_filename.lower().endswith(".nc")
@@ -155,6 +159,7 @@ class NetCdf(object):
             self.model.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
         self.grid_units = LENUNI[self.model.sr.lenuni]
+        self.z_positive = z_positive
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
@@ -603,24 +608,13 @@ class NetCdf(object):
             raise Exception("error building grid crs:\n{0}".format(str(e)))
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
 
-        # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
-        self.zs = -1.0 * self.model.dis.zcentroids
+        vmin, vmax = self.model.dis.botm.array.min(), self.model.dis.top.array.max()
+        if self.z_positive == 'down':
+            self.zs = -1.0 * self.model.dis.zcentroids
+            vmin, vmax = -vmax, -vmin
+        else:
+            self.zs = self.model.dis.zcentroids
 
-        # if self.grid_units.lower().startswith('f'):  # and \
-        #     # not self.model.sr.units.startswith("f"):
-        #     self.log("converting feet to meters")
-        #     sr = copy.deepcopy(self.model.sr)
-        #     sr.delr /= 3.281
-        #     sr.delc /= 3.281
-        #     if self.model.sr.units.startswith('f'):
-        #         self.log("converting xul,yul from feet to meters")
-        #         sr.xul /= 3.281
-        #         sr.yul /= 3.281
-        #         self.log("converting xul,yul from feet to meters")
-        #     ys = sr.ycentergrid.copy()
-        #     xs = sr.xcentergrid.copy()
-        #     self.log("converting feet to meters")
-        # else:
         ys = self.model.sr.ycentergrid.copy()
         xs = self.model.sr.xcentergrid.copy()
 
@@ -643,6 +637,16 @@ class NetCdf(object):
         base_y = self.model.sr.ygrid[0, 0]
         self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
                                                  base_y)
+
+        # get transformed bounds and record to check against ScienceBase later
+        xmin, ymin, xmax, ymax = self.model.sr.bounds
+        bbox = np.array([[xmin, ymin],
+                         [xmin, ymax],
+                         [xmax, ymax],
+                         [xmax, ymin]])
+        x, y = transform(self.grid_crs, nc_crs, *bbox.transpose())
+        self.bounds = x.min(), y.min(), x.max(), y.max()
+        self.vbounds = vmin, vmax
         pass
 
     def initialize_file(self, time_values=None):
@@ -774,7 +778,7 @@ class NetCdf(object):
         self.log("creating layer var")
 
         # delc
-        attribs = {"units": "meters", "long_names": "row spacing",
+        attribs = {"units": "meters", "long_name": "row spacing",
                    "origin_x": self.model.sr.xul,
                    "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
@@ -788,7 +792,7 @@ class NetCdf(object):
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
         # delr
-        attribs = {"units": "meters", "long_names": "col spacing",
+        attribs = {"units": "meters", "long_name": "col spacing",
                    "origin_x": self.model.sr.xul,
                    "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
@@ -930,7 +934,7 @@ class NetCdf(object):
         self.nc.setncatts(attr_dict)
         self.log("setting global attributes")
 
-    def add_sciencebase_metadata(self, id):
+    def add_sciencebase_metadata(self, id, check=True):
         """Add metadata from ScienceBase using the
         flopy.export.metadata.acdd class.
         
@@ -939,24 +943,43 @@ class NetCdf(object):
         metadata : flopy.export.metadata.acdd object
         """
         md = acdd(id, model=self.model)
+        if check:
+            self._check_vs_sciencebase(md)
         # get set of public attributes
         attr = {n for n in dir(md) if '_' not in n[0]}
         # skip some convenience attributes
         skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage',
                 'get_sciencebase_xml_metadata',
                 'get_sciencebase_metadata'}
-        attr = attr.difference(skip)
-        for k in attr:
+        towrite = sorted(list(attr.difference(skip)))
+        for k in towrite:
             v = md.__getattribute__(k)
             if v is not None:
                 # convert everything to strings
                 if not isinstance(v, str):
                     if isinstance(v, list):
-                        v = '\n'.join(v)
+                        v = ','.join(v)
                     else:
                         v = str(v)
                 self.global_attributes[k] = v
                 self.nc.setncattr(k, v)
+        return md
+
+    def _check_vs_sciencebase(self, md):
+        """Check that model bounds read from flopy are consistent with those in ScienceBase."""
+        xmin, ymin, xmax, ymax = self.bounds
+        tol = 1e-5
+        assert md.geospatial_lon_min - xmin < tol
+        assert md.geospatial_lon_max - xmax < tol
+        assert md.geospatial_lat_min - ymin < tol
+        assert md.geospatial_lat_max - ymax < tol
+        assert md.geospatial_vertical_min - self.vbounds[0] < tol
+        assert md.geospatial_vertical_max - self.vbounds[1] < tol
+        pass
+
+
+
+
 
     @staticmethod
     def get_solver_H_R_tols(model):
