@@ -23,7 +23,7 @@ class SpatialReference(object):
         (An array of spacings along a column)
     lenuni : int
         the length units flag from the discretization package
-
+        (default 2)
     xul : float
         the x coordinate of the upper left corner of the grid
         Enter either xul and yul or xll and yll.
@@ -104,13 +104,18 @@ class SpatialReference(object):
 
     defaults = {"xul": None, "yul": None, "rotation": 0.,
                 "proj4_str": "EPSG:4326", "start_datetime": "1/1/1970",
-                "units": None, "length_multiplier": 1.}
+                "units": None, "lenuni": 2, "length_multiplier": None}
 
+    lenuni_values = {'undefined': 0,
+                     'feet': 1,
+                     'meters': 2,
+                     'centimeters': 3}
+    lenuni_text = {v:k for k, v in lenuni_values.items()}
 
-    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=1,
+    def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=2,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str="EPSG:4326", epsg=None, units=None,
-                 length_multiplier=1.):
+                 length_multiplier=None):
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
@@ -140,9 +145,9 @@ class SpatialReference(object):
 
         self.supported_units = ["feet", "meters"]
         self._units = units
+        self._length_multiplier = length_multiplier
         self._reset()
-        self.set_spatialreference(xul, yul, xll, yll, rotation,
-                                  length_multiplier)
+        self.set_spatialreference(xul, yul, xll, yll, rotation)
 
     @property
     def proj4_str(self):
@@ -182,10 +187,37 @@ class SpatialReference(object):
                 pass
 
         if units is None:
-            print("warning: assuming SpatialReference units are meters")
+            #print("warning: assuming SpatialReference units are meters")
             units = 'meters'
         assert units in self.supported_units
         return units
+
+    @property
+    def length_multiplier(self):
+        """Attempt to identify multiplier for converting from
+        model units to sr units, defaulting to 1."""
+        lm = None
+        if self._length_multiplier is not None:
+            lm = self._length_multiplier
+        else:
+            if self.model_length_units == 'feet':
+                if self.units == 'meters':
+                    lm = 0.3048
+            elif self.model_length_units == 'meters':
+                if self.units == 'feet':
+                    lm = 1/.3048
+            elif self.model_length_units == 'centimeters':
+                if self.units == 'meters':
+                    lm = 1/100.
+                elif self.units == 'feet':
+                    lm = 1/30.48
+            else:
+                lm = 1.
+        return lm
+
+    @property
+    def model_length_units(self):
+        return self.lenuni_text[self.lenuni]
 
     @property
     def bounds(self):
@@ -204,7 +236,7 @@ class SpatialReference(object):
         d = SpatialReference.attribs_from_namfile_header(namefile)
         if d == SpatialReference.defaults:
             reffile = os.path.join(os.path.split(namefile)[0], reffile)
-            d = SpatialReference.read_usgs_mode_reference_file(reffile)
+            d = SpatialReference.read_usgs_model_reference_file(reffile)
             if d is not None:
                 return d
             else:
@@ -254,15 +286,19 @@ class SpatialReference(object):
                     d['start_datetime'] = item.split(':')[1].strip()
                 except:
                     pass
+            # spatial reference length units
             elif "units" in item.lower():
                 d['units'] = item.split(':')[1].strip()
+            # model length units
+            elif "lenuni" in item.lower():
+                d['lenuni'] = int(item.split(':')[1].strip())
+            # multiplier for converting from model length units to sr length units
             elif "length_multiplier" in item.lower():
                 d['length_multiplier'] = float(item.split(':')[1].strip())
-
         return d
 
     @staticmethod
-    def read_usgs_mode_reference_file(reffile='usgs.model.reference'):
+    def read_usgs_model_reference_file(reffile='usgs.model.reference'):
         # read spatial reference info from the usgs.model.reference file
         # https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html
         d = SpatialReference.defaults.copy()
@@ -277,7 +313,12 @@ class SpatialReference(object):
             d['xul'] = float(d['xul'])
             d['yul'] = float(d['yul'])
             d['rotation'] = float(d['rotation'])
-            d['units'] = d.get('length_units', d['units'])
+
+            # convert the model.reference text to a lenuni value
+            # (these are the model length units)
+            if 'length_units' in d.keys():
+                d['lenuni'] = SpatialReference.lenuni_values[d['length_units']]
+
             if 'start_date' in d.keys():
                 start_datetime = d.pop('start_date')
                 if 'start_time' in d.keys():
@@ -440,7 +481,7 @@ class SpatialReference(object):
                 "proj4_str": self.proj4_str}
 
     def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None,
-                             rotation=0.0, length_multiplier=1.):
+                             rotation=0.0):
         """
             set spatial reference - can be called from model instance
 
@@ -471,7 +512,6 @@ class SpatialReference(object):
             self.origin_loc = 'ul'
 
         self.rotation = rotation
-        self.length_multiplier = length_multiplier
         self.set_origin(xul, yul, xll, yll)
         return
 
@@ -1288,7 +1328,7 @@ def get_spatialreference(epsg, text='esriwkt'):
     from flopy.utils.flopy_io import get_url_text
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
     text = get_url_text(url,
-                        error_msg='Need an internet connection to look up epsg on spatialreference.org.')
+                        error_msg='No internet connection or epsg code not found on spatialreference.org.')
     if text is None: # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
     return text.replace("\n", "")
