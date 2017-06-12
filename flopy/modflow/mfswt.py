@@ -710,6 +710,7 @@ class ModflowSwt(Package):
                         iu, filenames[ipos] = \
                             model.get_ext_dict_attr(ext_unit_dict,
                                                     unit=unit)
+                        model.add_pop_key_list(unit)
                     ipos += 1
 
         # create sub-wt instance

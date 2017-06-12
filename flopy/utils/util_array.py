@@ -14,6 +14,7 @@ import copy
 import numbers
 import numpy as np
 from ..utils.binaryfile import BinaryHeader
+from ..utils.flopy_io import line_parse
 
 
 class ArrayFormat(object):
@@ -409,7 +410,7 @@ def read1d(f, a):
     values = []
     while True:
         line = f.readline()
-        t = line.strip().split()
+        t = line_parse(line)
         values = values + t
         if len(values) >= a.shape[0]:
             break
@@ -2290,7 +2291,27 @@ class Util2d(object):
                 if len(raw) == 1 and ',' in line:
                     raw = raw[0].split(',')
                 elif ',' in line:
-                    raw = line.replace(',','').strip('\n').split()
+                    raw = line.replace(',', '').strip('\n').split()
+                elif '*' in line:
+                    rawins = []
+                    rawremove = []
+                    for idx, t in enumerate(raw):
+                        if '*' in t:
+                            #print(t)
+                            rawremove.append(t)
+                            tt = t.split('*')
+                            tlist = []
+                            for jdx in range(int(tt[0])):
+                                tlist.append(tt[1])
+                            rawins.append((idx, list(tlist)))
+                    iadd = 1
+                    for t in rawins:
+                        ipos = t[0] + iadd
+                        for tt in t[1]:
+                            raw.insert(ipos, tt)
+                            ipos += 1
+                            iadd += 1
+                    raw = [e for e in raw if e not in rawremove]
             else:
                 # split line using number of values in the line
                 rawlist = []

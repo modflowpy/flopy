@@ -1,4 +1,4 @@
 matplotlib
-netcdf4!=1.2.5
+netcdf4!=1.2.8
 pyproj>=1.9
-pyshp!=1.2.8
+pyshp!=1.2.11

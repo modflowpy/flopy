@@ -361,8 +361,8 @@ class ModflowOc(Package):
         keys.sort()
 
         data = []
-        lines = ''
         ddnref = ''
+        lines = ''
         for kper in range(nper):
             for kstp in range(nstp[kper]):
                 kperkstp = (kper, kstp)
@@ -376,7 +376,7 @@ class ModflowOc(Package):
                             if 'DDREFERENCE' in item.upper():
                                 ddnref = item.lower()
                             else:
-                                lines += '{}\n'.format(item)
+                                lines += '  {}\n'.format(item)
                 if len(lines) > 0:
                     f_oc.write(
                         'period {} step {} {}\n'.format(kper + 1, kstp + 1,
@@ -384,6 +384,7 @@ class ModflowOc(Package):
                     f_oc.write(lines)
                     f_oc.write('\n')
                     ddnref = ''
+                    lines = ''
 
         # close oc file
         f_oc.close()

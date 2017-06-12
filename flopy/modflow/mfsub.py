@@ -342,15 +342,16 @@ class ModflowSub(Package):
         if isuboc > 0:
             if ids15 is None:
                 ids15 = np.zeros(12, dtype=np.int)
+                iu = 0
+                for i in range(1, 12, 2):
+                    ids15[i] = item15_units[iu]
+                    iu += 1
+                self.ids15 = ids15
             else:
                 if isinstance(ids15, list):
                     ids15 = np.array(ids15)
-            # make sure the correct unit is specified
-            iu = 0
-            for i in range(1, 12, 2):
-                ids15[i] = item15_units[iu]
-                iu += 1
-            self.ids15 = ids15
+                self.ids15 = ids15
+
             if ids16 is None:
                 self.isuboc = 1
                 # save and print everything
@@ -697,6 +698,7 @@ class ModflowSub(Package):
                     if unit > 0:
                         iu, filenames[ipos] = \
                             model.get_ext_dict_attr(ext_unit_dict, unit=unit)
+                        model.add_pop_key_list(unit)
                     ipos += 1
 
         # create sub instance
