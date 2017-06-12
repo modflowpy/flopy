@@ -103,7 +103,7 @@ class SpatialReference(object):
     origin_loc = 'ul'  # or ll
 
     defaults = {"xul": None, "yul": None, "rotation": 0.,
-                "proj4_str": "EPSG:4326", "start_datetime": "1/1/1970",
+                "proj4_str": None,
                 "units": None, "lenuni": 2, "length_multiplier": None}
 
     lenuni_values = {'undefined': 0,
@@ -114,7 +114,7 @@ class SpatialReference(object):
 
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=2,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
-                 proj4_str="EPSG:4326", epsg=None, units=None,
+                 proj4_str=None, epsg=None, units=None,
                  length_multiplier=None):
 
         for delrc in [delr, delc]:
@@ -150,13 +150,14 @@ class SpatialReference(object):
 
     @property
     def proj4_str(self):
-        if "epsg" in self._proj4_str.lower():
+        if self._proj4_str is not None and \
+                        "epsg" in self._proj4_str.lower():
             if "init" not in self._proj4_str.lower():
                 proj4_str = "+init=" + self._proj4_str
             else:
                 proj4_str = self._proj4_str
             # set the epsg if proj4 specifies it
-            tmp = [i for i in self._proj4_str.split() if 'epsg' in i]
+            tmp = [i for i in self._proj4_str.split() if 'epsg' in i.lower()]
             self._epsg = int(tmp[0].split(':')[1])
         else:
             proj4_str = self._proj4_str
@@ -249,18 +250,19 @@ class SpatialReference(object):
     def load(namefile=None, reffile='usgs.model.reference'):
         """Attempts to load spatial reference information from
         the following files (in order):
-        1) NAM file (header comment)
-        2) usgs.model.reference
+        1) usgs.model.reference
+        2) NAM file (header comment)
         3) SpatialReference.default dictionary
         """
+        reffile = os.path.join(os.path.split(namefile)[0], reffile)
+        d = SpatialReference.read_usgs_model_reference_file(reffile)
+        if d is not None:
+            return d
         d = SpatialReference.attribs_from_namfile_header(namefile)
-        if d == SpatialReference.defaults:
-            reffile = os.path.join(os.path.split(namefile)[0], reffile)
-            d = SpatialReference.read_usgs_model_reference_file(reffile)
-            if d is not None:
-                return d
-            else:
-                return SpatialReference.defaults
+        if d is not None:
+            return d
+        else:
+            return SpatialReference.defaults
 
     @staticmethod
     def attribs_from_namfile_header(namefile):
