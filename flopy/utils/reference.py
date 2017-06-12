@@ -139,9 +139,8 @@ class SpatialReference(object):
         self.lenuni = lenuni
         self._proj4_str = proj4_str
 
-        self.epsg = epsg
-        if epsg is not None:
-            self._proj4_str = getproj4(epsg)
+        self._epsg = epsg
+
 
         self.supported_units = ["feet", "meters"]
         self._units = units
@@ -151,41 +150,58 @@ class SpatialReference(object):
 
     @property
     def proj4_str(self):
-        if "epsg" in self._proj4_str.lower() and \
-                        "init" not in self._proj4_str.lower():
-            proj4_str = "+init=" + self._proj4_str
+        if "epsg" in self._proj4_str.lower():
+            if "init" not in self._proj4_str.lower():
+                proj4_str = "+init=" + self._proj4_str
+            else:
+                proj4_str = self._proj4_str
+            # set the epsg if proj4 specifies it
+            tmp = [i for i in self._proj4_str.split() if 'epsg' in i]
+            self._epsg = int(tmp[0].split(':')[1])
         else:
             proj4_str = self._proj4_str
         return proj4_str
 
     @property
-    def units(self):
+    def epsg(self):
+        return self._epsg
+
+    def _parse_units_from_proj4(self):
         units = None
+        try:
+            # need this because preserve_units doesn't seem to be
+            # working for complex proj4 strings.  So if an
+            # epsg code was passed, we have no choice, but if a
+            # proj4 string was passed, we can just parse it
+            if "EPSG" in self.proj4_str.upper():
+                import pyproj
+
+                crs = pyproj.Proj(self.proj4_str,
+                                  preseve_units=True,
+                                  errcheck=True)
+                proj_str = crs.srs
+            else:
+                proj_str = self.proj4_str
+            # http://proj4.org/parameters.html#units
+            # from proj4 source code
+            # "us-ft", "0.304800609601219", "U.S. Surveyor's Foot",
+            # "ft", "0.3048", "International Foot",
+            if "units=m" in proj_str:
+                units = "meters"
+            elif "units=ft" in proj_str or \
+                            "units=us-ft" in proj_str or \
+                            "to_meters:0.3048" in proj_str:
+                units = "feet"
+            return units
+        except:
+            pass
+
+    @property
+    def units(self):
         if self._units is not None:
             units = self._units.lower()
         else:
-            try:
-                # need this because preserve_units doesn't seem to be
-                # working for complex proj4 strings.  So if an
-                # epsg code was passed, we have no choice, but if a
-                # proj4 string was passed, we can just parse it
-                if "EPSG" in self.proj4_str.upper():
-                    import pyproj
-
-                    crs = pyproj.Proj(self.proj4_str,
-                                      preseve_units=True,
-                                      errcheck=True)
-                    proj_str = crs.srs
-                else:
-                    proj_str = self.proj4_str
-                if "units=m" in proj_str:
-                    units = "meters"
-                elif "units=ft" in proj_str or \
-                                "to_meters:0.3048" in proj_str:
-                    units = "feet"
-            except:
-                pass
-
+            units = self._parse_units_from_proj4()
         if units is None:
             #print("warning: assuming SpatialReference units are meters")
             units = 'meters'
@@ -203,15 +219,19 @@ class SpatialReference(object):
             if self.model_length_units == 'feet':
                 if self.units == 'meters':
                     lm = 0.3048
+                elif self.units == 'feet':
+                    lm = 1.
             elif self.model_length_units == 'meters':
                 if self.units == 'feet':
                     lm = 1/.3048
+                elif self.units == 'meters':
+                    lm = 1.
             elif self.model_length_units == 'centimeters':
                 if self.units == 'meters':
                     lm = 1/100.
                 elif self.units == 'feet':
                     lm = 1/30.48
-            else:
+            else: # model units unspecified; default to 1
                 lm = 1.
         return lm
 
@@ -388,6 +408,16 @@ class SpatialReference(object):
         elif key == "proj4_str":
             super(SpatialReference, self). \
                 __setattr__("_proj4_str", value)
+            # reset the units and epsg
+            self._units = None
+            self._epsg = None
+
+        elif key == "epsg":
+            super(SpatialReference, self). \
+                __setattr__("_epsg", value)
+            # reset the units and proj4
+            self._units = None
+            self._proj4_str = getproj4(self._epsg)
         else:
             super(SpatialReference, self).__setattr__(key, value)
             reset = False
