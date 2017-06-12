@@ -301,50 +301,60 @@ def test_sr_scaling():
                                    delr=delr,
                                    delc=delc)
     ms3.sr = flopy.utils.SpatialReference(delr=ms3.dis.delr.array,
-                                          delc=ms2.dis.delc.array, lenuni=3,
-                                          length_multiplier=.3048,
+                                          delc=ms2.dis.delc.array, lenuni=2,
+                                          length_multiplier=2.,
                                           xll=xll, yll=yll, rotation=0)
     ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
+
+    # check that the origin(s) are maintained
     assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
                           [ms3.sr.xll, ms3.sr.yll])
 
     assert np.allclose(ms3.sr.get_vertices(nrow - 1, 0)[1],
                        ms2.sr.get_vertices(nrow - 1, 0)[1])
 
-    xur, yur = ms3.sr.get_vertices(0, ncol - 1)[3]
-    assert xur == xll + ms3.sr.length_multiplier * delr * ncol
-    assert yur == yll + ms3.sr.length_multiplier * delc * nrow
+    # check that the upper left corner is computed correctly
+    # in this case, length_multiplier overrides the given units
+    def check_size(sr):
+        xur, yur = sr.get_vertices(0, ncol - 1)[3]
+        assert xur == xll + sr.length_multiplier * delr * ncol
+        assert yur == yll + sr.length_multiplier * delc * nrow
+    check_size(ms3.sr)
 
     # run the same tests but with units specified instead of a length multiplier
     ms2 = flopy.modflow.Modflow()
     dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
                                    delr=delr, delc=delc,
-                                   lenui=1 # feet
+                                   lenuni=1 # feet; should have no effect on SR
+                                   # (model not supplied to SR)
                                    )
     ms2.sr = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                          delc=ms2.dis.delc.array, lenuni=3,
+                                          delc=ms2.dis.delc.array,
+                                          lenuni=2, # meters
+                                          epsg=26715,  # meters, listed on spatialreference.org
                                           xll=xll, yll=yll, rotation=0)
-    ms2.sr.epsg = 26715
-    ms2.dis.export(os.path.join(spth, 'dis2.shp'))
-    ms3 = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr,
-                                   delc=delc)
-    ms3.sr = flopy.utils.SpatialReference(delr=ms3.dis.delr.array,
-                                          delc=ms2.dis.delc.array, lenuni=3,
-                                          length_multiplier=.3048,
-                                          xll=xll, yll=yll, rotation=0)
-    ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
-    assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
-                          [ms3.sr.xll, ms3.sr.yll])
-
-    assert np.allclose(ms3.sr.get_vertices(nrow - 1, 0)[1],
-                       ms2.sr.get_vertices(nrow - 1, 0)[1])
-
-    xur, yur = ms3.sr.get_vertices(0, ncol - 1)[3]
-    assert xur == xll + ms3.sr.length_multiplier * delr * ncol
-    assert yur == yll + ms3.sr.length_multiplier * delc * nrow
-
+    assert ms2.sr.model_length_units == 'meters'
+    assert ms2.sr.length_multiplier == 1.
+    ms2.sr.lenuni = 1 # feet; test dynamic setting
+    assert ms2.sr.model_length_units == 'feet'
+    check_size(ms2.sr)
+    assert ms2.sr.length_multiplier == .3048
+    ms2.sr.lenuni = 3 # centimeters
+    assert ms2.sr.model_length_units == 'centimeters'
+    check_size(ms2.sr)
+    assert ms2.sr.length_multiplier == 0.01
+    ms2.sr.lenuni = 2 # meters
+    check_size(ms2.sr)
+    ms2.sr.units = 'meters'
+    ms2.sr.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
+    assert ms2.sr.proj4_str == '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
+    assert ms2.sr.units == 'feet'
+    assert ms2.sr.length_multiplier == 1/.3048
+    check_size(ms2.sr)
+    ms2.sr.epsg = 6610 # meters, not listed on spatialreference.org but understood by pyproj
+    assert ms2.sr.units == 'meters'
+    assert ms2.sr.proj4_str is not None
+    check_size(ms2.sr)
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
