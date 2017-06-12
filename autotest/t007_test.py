@@ -421,6 +421,28 @@ def test_namfile_readwrite():
     assert m2.sr.rotation == 30
     assert abs(m2.sr.length_multiplier - .3048) < 1e-10
 
+def test_read_usgs_model_reference():
+    nlay, nrow, ncol = 1, 30, 5
+    delr, delc = 250, 500
+    #xll, yll = 272300, 5086000
+    model_ws = os.path.join('temp', 't007')
+    shutil.copy('../examples/data/usgs.model.reference', model_ws)
+    fm = flopy.modflow
+    m = fm.Modflow(modelname='junk', model_ws=model_ws)
+    dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                        delc=delc)
+    m.write_input()
+
+    # test reading of SR information from usgs.model.reference
+    m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
+    from flopy.utils.reference import SpatialReference
+    d = SpatialReference.read_usgs_model_reference_file(os.path.join('temp', 't007', 'usgs.model.reference'))
+    assert m2.sr.xul == d['xul']
+    assert m2.sr.yul == d['yul']
+    assert m2.sr.rotation == d['rotation']
+    assert m2.sr.lenuni == d['lenuni']
+    assert m2.sr.epsg == d['epsg']
+
 
 def test_rotation():
     m = flopy.modflow.Modflow(rotation=20.)
@@ -617,7 +639,8 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    test_sr_scaling()
+    #test_sr_scaling()
+    test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()
