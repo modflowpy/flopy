@@ -140,6 +140,8 @@ class SpatialReference(object):
         self._proj4_str = proj4_str
 
         self._epsg = epsg
+        if epsg is not None:
+            self._proj4_str = getproj4(self._epsg)
 
 
         self.supported_units = ["feet", "meters"]
@@ -165,6 +167,11 @@ class SpatialReference(object):
 
     @property
     def epsg(self):
+        #don't reset the proj4 string here
+        #because proj4 attribute may already be populated
+        #(with more details than getproj4 would return)
+        #instead reset proj4 when epsg is set
+        #(on init or setattr)
         return self._epsg
 
     def _parse_units_from_proj4(self):
