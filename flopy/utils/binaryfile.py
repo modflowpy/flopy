@@ -1182,7 +1182,7 @@ class CellBudgetFile(object):
                 auxname = binaryread(self.file, str, charlen=16)
                 if not isinstance(auxname, str):
                     auxname = auxname.decode()
-                l.append((auxname, self.realtype))
+                l.append((auxname.strip(), self.realtype))
             dtype = np.dtype(l)
             nlist = binaryread(self.file, np.int32)[0]
             data = binaryread(self.file, dtype, shape=(nlist,))
