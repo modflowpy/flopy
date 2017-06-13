@@ -687,7 +687,8 @@ class NetCdf(object):
 
         # write some attributes
         self.log("setting standard attributes")
-        self.nc.setncattr("Conventions", "CF-1.6, ACDD-1.3")
+
+        self.nc.setncattr("Conventions", "CF-1.6, ACDD-1.3, flopy {}".format(flopy.__version__))
         self.nc.setncattr("date_created",
                           datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
         self.nc.setncattr("geospatial_vertical_positive", "up")
@@ -965,7 +966,7 @@ class NetCdf(object):
                         v = str(v)
                 self.global_attributes[k] = v
                 self.nc.setncattr(k, v)
-        #self.nc.write()
+        self.nc.write()
         return md
 
     def _check_vs_sciencebase(self, md):

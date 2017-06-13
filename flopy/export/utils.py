@@ -9,31 +9,15 @@ from ..pakbase import Package
 from . import NetCdf, netcdf
 from . import shapefile_utils
 
-NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}",
-                   "strt": "{0}",
-                   "wel_flux": "{0}^3/{1}", "top": "{0}", "model_top": "{0}",
-                   "botm": "{0}", "thickness": "{0}",
-                   "ghb_cond": "{0}/{1}^2", "ghb_bhead": "{0}",
-                   "transmissivity": "{0}^2/{1}",
-                   "vertical_conductance": "{0}/{1}^2",
-                   "primary_storage_coefficient": "1/{1}",
-                   "horizontal_hydraulic_conductivity": "{0}/{1}",
-                   "riv_cond": "1/{1}",
-                   "riv_stage": "{0}", "riv_rbot": "{0}", "head": "{0}",
-                   "drawdown": "{0}", "cell_by_cell_flow": "{0}^3/{1}",
-                   "sy": "{1}/{1}",
-                   "prsity": "{1}/{1}", "hani": "{0}/{0}", "al": "{0}/{0}",
-                   "drn_elev": "{0}",
-                   "drn_cond": "1/{1}", "dz": "{0}", "subsidence": "{0}",
-                   "chd_shead": "{0}", "chd_ehead": "{0}",
-                   "2D_cumulative_well_flux": "{0}^3/{1}",
-                   "3D_cumulative_well_flux": "{0}^3/{1}", "vka": "{0}/{1}"}
+
 NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4",
                      np.int32: "i4"}
 
 path = os.path.split(netcdf.__file__)[0]
 with open(path + '/longnames.json') as f:
     NC_LONG_NAMES = json.load(f)
+with open(path + '/unitsformat.json') as f:
+    NC_UNITS_FORMAT = json.load(f)
 
 
 def get_var_array_dict(m):
