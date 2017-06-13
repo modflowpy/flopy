@@ -3,10 +3,12 @@ import os
 import platform
 import socket
 import copy
+import json
 import numpy as np
 from datetime import datetime
 import time
 from .metadata import acdd
+import flopy
 
 # globals
 FILLVALUE = -99999.9
@@ -942,6 +944,7 @@ class NetCdf(object):
         -------
         metadata : flopy.export.metadata.acdd object
         """
+        longnames = self.get_longnames_from_docstrings()
         md = acdd(id, model=self.model)
         if check:
             self._check_vs_sciencebase(md)
@@ -963,6 +966,7 @@ class NetCdf(object):
                         v = str(v)
                 self.global_attributes[k] = v
                 self.nc.setncattr(k, v)
+        #self.nc.write()
         return md
 
     def _check_vs_sciencebase(self, md):
@@ -977,9 +981,79 @@ class NetCdf(object):
         assert md.geospatial_vertical_max - self.vbounds[1] < tol
         pass
 
+    def get_longnames_from_docstrings(self, outfile='longnames.json'):
+        """
+        This is experimental.
+        
+        Scrape Flopy module docstrings and return docstrings for parameters
+        included in the list of variables added to NetCdf object. Create
+        a dictionary of longnames keyed by the NetCdf variable names; make each
+        longname from the first sentence of the docstring for that parameter.
+        
+        One major limitation is that variables from mflists often aren't described
+        in the docstrings.
+        """
+        import inspect
+        path = ''
+        try:
+            from numpydoc.docscrape import NumpyDocString
+        except Exception as e:
+            raise Exception("NetCdf error importing numpydoc module:\n" + str(e))
 
+        def startstop(ds):
+            """Get just the Parameters section of the docstring."""
+            start, stop = 0, -1
+            for i, l in enumerate(ds):
+                if 'Parameters' in l and '----' in ds[i+1]:
+                    start = i + 2
+                if l.strip() in ['Attributes', 'Methods', 'Returns', 'Notes']:
+                    stop = i-1
+                    break
+                if i >= start and '----' in l:
+                    stop = i-2
+                    break
+            return start, stop
 
+        def get_entries(ds):
+            """Parse docstring entries into dictionary."""
+            stuff = {}
+            k = None
+            for line in ds:
+                if len(line) >= 5 and line[:4] == ' ' * 4 \
+                        and line[4] != ' ' and ':' in line:
+                    k = line.split(':')[0].strip()
+                    stuff[k] = ''
+                # lines with parameter descriptions
+                elif k is not None and len(line) > 10: # avoid orphans
+                    stuff[k] += line.strip() + ' '
+            return stuff
 
+        # get a list of the flopy classes
+        #packages = inspect.getmembers(flopy.modflow, inspect.isclass)
+        packages = [(pp.name[0], pp) for pp in self.model.packagelist]
+        # get a list of the NetCDF variables
+        attr = [v.split('_')[-1] for v in self.nc.variables]
+
+        # parse docstrings to get long names
+        longnames = {}
+        for cname, obj in packages:
+            # parse the docstring
+            ds = obj.__doc__.split('\n')
+            start, stop = startstop(ds)
+            txt = ds[start:stop]
+            if stop - start > 0:
+                params = get_entries(txt)
+                for k, v in params.items():
+                    if k in attr:
+                        longnames[k] = v.split('. ')[0]
+
+        # add in any variables that weren't found
+        for var in attr:
+            if var not in longnames.keys():
+                longnames[var] = ''
+        with open(outfile, 'w') as output:
+            json.dump(longnames, output, sort_keys=True, indent=2)
+        return longnames
 
     @staticmethod
     def get_solver_H_R_tols(model):
