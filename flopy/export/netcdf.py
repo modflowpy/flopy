@@ -944,7 +944,6 @@ class NetCdf(object):
         -------
         metadata : flopy.export.metadata.acdd object
         """
-        longnames = self.get_longnames_from_docstrings()
         md = acdd(id, model=self.model)
         if check:
             self._check_vs_sciencebase(md)
