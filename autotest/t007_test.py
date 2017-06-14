@@ -366,14 +366,14 @@ def test_dynamic_xll_yll():
                                    delr=delr,
                                    delc=delc)
     sr1 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xll=xll, yll=yll, rotation=30)
     xul, yul = sr1.xul, sr1.yul
     sr1.length_multiplier = 1.0 / 3.281
     assert sr1.xll == xll
     assert sr1.yll == yll
     sr2 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xul=xul, yul=yul, rotation=30)
     sr2.length_multiplier = 1.0 / 3.281
     assert sr2.xul == xul
@@ -381,24 +381,51 @@ def test_dynamic_xll_yll():
 
     # test resetting of attributes
     sr3 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xll=xll, yll=yll, rotation=30)
     # check that xul, yul and xll, yll are being recomputed
     sr3.xll += 10.
     sr3.yll += 21.
-    assert sr3.xul - (xul + 10.) < 1e-6
-    assert sr3.yul - (yul + 21.) < 1e-6
+    assert np.abs(sr3.xul - (xul + 10.)) < 1e-6
+    assert np.abs(sr3.yul - (yul + 21.)) < 1e-6
     sr4 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xul=xul, yul=yul, rotation=30)
+    assert sr4.origin_loc == 'ul'
     sr4.xul += 10.
     sr4.yul += 21.
-    assert sr4.xll - (xll + 10.) < 1e-6
-    assert sr4.yll - (yll + 21.) < 1e-6
+    assert np.abs(sr4.xll - (xll + 10.)) < 1e-6
+    assert np.abs(sr4.yll - (yll + 21.)) < 1e-6
     sr4.rotation = 0.
-    assert sr4.xll == sr4.xul
-    assert sr4.yll == sr4.yul - sr4.yedge[0]
-    assert True
+    assert np.abs(sr4.xul - (xul + 10.)) < 1e-6 # these shouldn't move because ul has priority
+    assert np.abs(sr4.yul - (yul + 21.)) < 1e-6
+    assert np.abs(sr4.xll - sr4.xul) < 1e-6
+    assert np.abs(sr4.yll - (sr4.yul - sr4.yedge[0])) < 1e-6
+    sr4.xll = 0.
+    sr4.yll = 10.
+    assert sr4.origin_loc == 'll'
+    assert sr4.xul == 0.
+    assert sr4.yul == sr4.yedge[0] + 10.
+    sr4.xul = xul
+    sr4.yul = yul
+    assert sr4.origin_loc == 'ul'
+    sr4.rotation = 30.
+    assert np.abs(sr4.xll - xll) < 1e-6
+    assert np.abs(sr4.yll - yll) < 1e-6
+
+    sr5 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
+                                       delc=ms2.dis.delc.array, lenuni=2,
+                                       xll=xll, yll=yll,
+                                       rotation=0, epsg=26915)
+    sr5.lenuni = 1
+    assert sr5.length_multiplier == .3048
+    assert sr5.yul == sr5.yll + sr5.yedge[0] * sr5.length_multiplier
+    sr5.lenuni = 2
+    assert sr5.length_multiplier == 1.
+    assert sr5.yul == sr5.yll + sr5.yedge[0]
+    sr5.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
+    assert sr5.units == 'feet'
+    assert sr5.length_multiplier == 1/.3048
 
 def test_namfile_readwrite():
     nlay, nrow, ncol = 1, 30, 5
@@ -639,9 +666,9 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    test_sr_scaling()
-    test_read_usgs_model_reference()
-    #test_dynamic_xll_yll()
+    #test_sr_scaling()
+    #test_read_usgs_model_reference()
+    test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()

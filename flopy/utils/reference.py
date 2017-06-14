@@ -136,7 +136,7 @@ class SpatialReference(object):
                 xll, yll = 0, 0
                 xul, yul = None, None
 
-        self.lenuni = lenuni
+        self._lenuni = lenuni
         self._proj4_str = proj4_str
 
         self._epsg = epsg
@@ -149,6 +149,49 @@ class SpatialReference(object):
         self._length_multiplier = length_multiplier
         self._reset()
         self.set_spatialreference(xul, yul, xll, yll, rotation)
+
+    @property
+    def xll(self):
+        if self.origin_loc == 'll':
+            xll = self._xll if self._xll is not None else 0.
+        elif self.origin_loc == 'ul':
+            # calculate coords for lower left corner
+            xll = self._xul - (np.sin(self.theta) * self.yedge[0] *
+                                   self.length_multiplier)
+        return xll
+
+    @property
+    def yll(self):
+        if self.origin_loc == 'll':
+            yll = self._yll if self._yll is not None else 0.
+        elif self.origin_loc == 'ul':
+            # calculate coords for lower left corner
+            yll = self._yul - (np.cos(self.theta) * self.yedge[0] *
+                        self.length_multiplier)
+        return yll
+
+    @property
+    def xul(self):
+        if self.origin_loc == 'll':
+            # calculate coords for upper left corner
+            xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
+                                self.length_multiplier)
+        if self.origin_loc == 'ul':
+            # calculate coords for lower left corner
+            xul = self._xul if self._xul is not None else 0.
+        return xul
+
+    @property
+    def yul(self):
+        if self.origin_loc == 'll':
+            # calculate coords for upper left corner
+            yul = self._yll + (np.cos(self.theta) * self.yedge[0] *
+                                self.length_multiplier)
+
+        if self.origin_loc == 'ul':
+            # calculate coords for lower left corner
+            yul = self._yul if self._yul is not None else 0.
+        return yul
 
     @property
     def proj4_str(self):
@@ -173,6 +216,10 @@ class SpatialReference(object):
         #instead reset proj4 when epsg is set
         #(on init or setattr)
         return self._epsg
+
+    @property
+    def lenuni(self):
+        return self._lenuni
 
     def _parse_units_from_proj4(self):
         units = None
@@ -387,21 +434,25 @@ class SpatialReference(object):
                 __setattr__("delc", np.atleast_1d(np.array(value)))
         elif key == "xul":
             super(SpatialReference, self). \
-                __setattr__("xul", float(value))
+                __setattr__("_xul", float(value))
+            self.origin_loc = 'ul'
         elif key == "yul":
             super(SpatialReference, self). \
-                __setattr__("yul", float(value))
+                __setattr__("_yul", float(value))
+            self.origin_loc = 'ul'
         elif key == "xll":
             super(SpatialReference, self). \
-                __setattr__("xll", float(value))
+                __setattr__("_xll", float(value))
+            self.origin_loc = 'll'
         elif key == "yll":
             super(SpatialReference, self). \
-                __setattr__("yll", float(value))
+                __setattr__("_yll", float(value))
+            self.origin_loc = 'll'
         elif key == "length_multiplier":
             super(SpatialReference, self). \
-                __setattr__("length_multiplier", float(value))
-            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-                            yll=self.yll)
+                __setattr__("_length_multiplier", float(value))
+            #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+            #                yll=self.yll)
         elif key == "rotation":
             if float(value) != 0.0:
                 msg = ('rotation arg has recently changed. It was '
@@ -410,11 +461,13 @@ class SpatialReference(object):
                 warnings.warn(msg)
             super(SpatialReference, self). \
                 __setattr__("rotation", float(value))
-            self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-                            yll=self.yll)
+            #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+            #                yll=self.yll)
         elif key == "lenuni":
             super(SpatialReference, self). \
-                __setattr__("lenuni", int(value))
+                __setattr__("_lenuni", int(value))
+            #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+            #                yll=self.yll)
         elif key == "units":
             value = value.lower()
             assert value in self.supported_units
@@ -424,7 +477,9 @@ class SpatialReference(object):
             super(SpatialReference, self). \
                 __setattr__("_proj4_str", value)
             # reset the units and epsg
-            self._units = None
+            units = self._parse_units_from_proj4()
+            if units is not None:
+                self._units = units
             self._epsg = None
 
         elif key == "epsg":
@@ -557,7 +612,11 @@ class SpatialReference(object):
             self.origin_loc = 'ul'
 
         self.rotation = rotation
-        self.set_origin(xul, yul, xll, yll)
+        self._xll = xll
+        self._yll = yll
+        self._xul = xul
+        self._yul = yul
+        #self.set_origin(xul, yul, xll, yll)
         return
 
     def __repr__(self):
@@ -572,9 +631,9 @@ class SpatialReference(object):
     def set_origin(self, xul=None, yul=None, xll=None, yll=None):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            self.xll = xll if xll is not None else 0.
+            self._xll = xll if xll is not None else 0.
             self.yll = yll if yll is not None else 0.
-            self.xul = self.xll + (np.sin(self.theta) * self.yedge[0] *
+            self.xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
                                    self.length_multiplier)
             self.yul = self.yll + (np.cos(self.theta) * self.yedge[0] *
                                    self.length_multiplier)
@@ -583,7 +642,7 @@ class SpatialReference(object):
             # calculate coords for lower left corner
             self.xul = xul if xul is not None else 0.
             self.yul = yul if yul is not None else 0.
-            self.xll = self.xul - (np.sin(self.theta) * self.yedge[0] *
+            self._xll = self.xul - (np.sin(self.theta) * self.yedge[0] *
                                    self.length_multiplier)
             self.yll = self.yul - (np.cos(self.theta) * self.yedge[0] *
                                    self.length_multiplier)
@@ -670,7 +729,7 @@ class SpatialReference(object):
         """
         x, y = x.copy(), y.copy()
         # reset origin in case attributes were modified
-        self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
+        #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
         x *= self.length_multiplier
         y *= self.length_multiplier
         x += self.xll
