@@ -20,6 +20,9 @@ PRECISION_STRS = ["f4", "f8", "i4"]
 STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "delr", "delc",
                  "time"]
 
+path = os.path.split(__file__)[0]
+with open(path + '/longnames.json') as f:
+    NC_LONG_NAMES = json.load(f)
 
 class Logger(object):
     """
@@ -691,7 +694,7 @@ class NetCdf(object):
         self.nc.setncattr("Conventions", "CF-1.6, ACDD-1.3, flopy {}".format(flopy.__version__))
         self.nc.setncattr("date_created",
                           datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
-        self.nc.setncattr("geospatial_vertical_positive", "up")
+        self.nc.setncattr("geospatial_vertical_positive", "{}".format(self.z_positive))
         min_vertical = np.min(self.zs)
         max_vertical = np.max(self.zs)
         self.nc.setncattr("geospatial_vertical_min", min_vertical)
@@ -734,7 +737,7 @@ class NetCdf(object):
 
         attribs = {"units": "{0} since {1}".format(self.time_units,
                                                    self.start_datetime),
-                   "standard_name": "time", "long_name": "time",
+                   "standard_name": "time", "long_name": NC_LONG_NAMES.get("time", "time"),
                    "calendar": "gregorian",
                    "_CoordinateAxisType": "Time"}
         time = self.create_variable("time", attribs, precision_str="f8",
@@ -747,7 +750,7 @@ class NetCdf(object):
         if self.grid_units.lower().startswith('f'):
             units = "feet"
         attribs = {"units": units, "standard_name": "elevation",
-                   "long_name": "elevation", "axis": "Z",
+                   "long_name": NC_LONG_NAMES.get("elevation", "elevation"), "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
                    "positive": "down"}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
@@ -756,7 +759,7 @@ class NetCdf(object):
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
-                   "long_name": "longitude", "axis": "X",
+                   "long_name": NC_LONG_NAMES.get("longitude", "longitude"), "axis": "X",
                    "_CoordinateAxisType": "Lon"}
         lon = self.create_variable("longitude", attribs, precision_str="f8",
                                    dimensions=("y", "x"))
@@ -766,7 +769,7 @@ class NetCdf(object):
         # Latitude
         self.log("creating latitude var")
         attribs = {"units": "degrees_north", "standard_name": "latitude",
-                   "long_name": "latitude", "axis": "Y",
+                   "long_name": NC_LONG_NAMES.get("latitude", "latitude"), "axis": "Y",
                    "_CoordinateAxisType": "Lat"}
         lat = self.create_variable("latitude", attribs, precision_str="f8",
                                    dimensions=("y", "x"))
@@ -774,14 +777,14 @@ class NetCdf(object):
 
         # layer
         self.log("creating layer var")
-        attribs = {"units": "", "standard_name": "layer", "long_name": "layer",
+        attribs = {"units": "", "standard_name": "layer", "long_name": NC_LONG_NAMES.get("layer", "layer"),
                    "positive": "down", "axis": "Z"}
         lay = self.create_variable("layer", attribs, dimensions=("layer",))
         lay[:] = np.arange(0, self.shape[0])
         self.log("creating layer var")
 
         # delc
-        attribs = {"units": "meters", "long_name": "row spacing",
+        attribs = {"units": "meters", "long_name": NC_LONG_NAMES.get("delc", "Model row spacing"),
                    "origin_x": self.model.sr.xul,
                    "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
@@ -795,7 +798,7 @@ class NetCdf(object):
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
         # delr
-        attribs = {"units": "meters", "long_name": "col spacing",
+        attribs = {"units": "meters", "long_name": NC_LONG_NAMES.get("delr", "Model column spacing"),
                    "origin_x": self.model.sr.xul,
                    "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
@@ -966,7 +969,7 @@ class NetCdf(object):
                         v = str(v)
                 self.global_attributes[k] = v
                 self.nc.setncattr(k, v)
-        self.nc.write()
+        self.write()
         return md
 
     def _check_vs_sciencebase(self, md):

@@ -328,8 +328,13 @@ class SpatialReference(object):
 
     @staticmethod
     def read_usgs_model_reference_file(reffile='usgs.model.reference'):
-        # read spatial reference info from the usgs.model.reference file
-        # https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html
+        """read spatial reference info from the usgs.model.reference file
+        https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
+
+        ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
+                  5: "years"}
+        itmuni_values = {v: k for k, v in ITMUNI.items()}
+
         d = SpatialReference.defaults.copy()
         d.pop('proj4_str') # discard default to avoid confusion with epsg code if entered
         if os.path.exists(reffile):
@@ -347,7 +352,8 @@ class SpatialReference(object):
             # (these are the model length units)
             if 'length_units' in d.keys():
                 d['lenuni'] = SpatialReference.lenuni_values[d['length_units']]
-
+            if 'time_units' in d.keys():
+                d['itmuni'] = itmuni_values[d['time_units']]
             if 'start_date' in d.keys():
                 start_datetime = d.pop('start_date')
                 if 'start_time' in d.keys():
@@ -366,7 +372,7 @@ class SpatialReference(object):
 
             # drop any other items that aren't used in sr class
             d = {k:v for k, v in d.items() if k.lower() in SpatialReference.defaults.keys()
-                 or k.lower() in {'epsg'}}
+                 or k.lower() in {'epsg', 'start_datetime', 'itmuni'}}
             return d
         else:
             return None

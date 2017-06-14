@@ -68,7 +68,7 @@ class acdd:
         self.geospatial_lon_max = self.bounds.get('maxX')
         self.geospatial_vertical_min = self.model.dis.botm.array.min()
         self.geospatial_vertical_max = self.model.dis.top.array.max()
-        self.geospatial_vertical_positive = 'down' # assumed to always be negative for GW models
+        self.geospatial_vertical_positive = 'up' # assumed to always be up for GW models
         self.time_coverage_start = self.time_coverage.get('start')
         self.time_coverage_end = self.time_coverage.get('end')
         self.time_coverage_duration = self.time_coverage.get('duration')

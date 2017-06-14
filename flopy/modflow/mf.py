@@ -581,6 +581,7 @@ class Modflow(BaseModel):
                                  .format(dis.name[0]))
             ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
+        itmuni = ref_attributes.pop("itmuni", 4)
         if ml.structured:
             sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
                                   **ref_attributes)
@@ -588,6 +589,7 @@ class Modflow(BaseModel):
             sr = None
         dis.sr = sr
         dis.start_datetime = start_datetime
+        dis.itmuni = itmuni
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.
