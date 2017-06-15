@@ -237,6 +237,13 @@ def test_sr():
     xt, yt = sr.transform(x, y)
     assert np.sum(yt - sr.ycentergrid[:, 0]) < 1e-3
 
+    # test inverse transform
+    x0, y0 = 9.99, 2.49
+    x1, y1 = sr.transform(x0, y0)
+    x2, y2 = sr.transform(x1, y1, inverse=True)
+    assert np.abs(x2-x0) < 1e-6
+    assert np.abs(y2-y0) < 1e6
+
     # test input using ul vs ll
     xll, yll = sr.xll, sr.yll
     sr2 = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
@@ -510,7 +517,7 @@ def test_map_rotation():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     # transformation assigned by arguments
-    xul, yul, rotation = 500000, 2934000, 45
+    xul, yul, rotation = 500000., 2934000., 45.
     modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
                                    rotation=rotation)
     lc = modelmap.plot_grid()
@@ -519,8 +526,10 @@ def test_map_rotation():
     def check_vertices():
         xllp, yllp = lc._paths[0].vertices[0]
         xulp, yulp = lc._paths[0].vertices[1]
-        assert (xllp, yllp) == (xll, yll)
-        assert (xulp, yulp) == (xul, yul)
+        assert np.abs(xllp - xll) < 1e-6
+        assert np.abs(yllp - yll) < 1e-6
+        assert np.abs(xulp - xul) < 1e-6
+        assert np.abs(yulp - yul) < 1e-6
 
     check_vertices()
 
@@ -570,7 +579,6 @@ def test_netcdf_classmethods():
     v2_set = set(new_f.nc.variables.keys())
     diff = v1_set.symmetric_difference(v2_set)
     assert len(diff) == 0, str(diff)
-
 
 # def test_netcdf_overloads():
 #     import os
@@ -665,10 +673,10 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    #test_sr()
+    test_sr()
     #test_mbase_sr()
     #test_rotation()
-    test_map_rotation()
+    #test_map_rotation()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()

@@ -726,20 +726,31 @@ class SpatialReference(object):
                                                          (y - yorigin)
         return xrot, yrot
 
-    def transform(self, x, y):
+    def transform(self, x, y, inverse=False):
         """
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
-        x, y = x.copy(), y.copy()
-        # reset origin in case attributes were modified
-        #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll, yll=self.yll)
-        x *= self.length_multiplier
-        y *= self.length_multiplier
-        x += self.xll
-        y += self.yll
-        x, y = SpatialReference.rotate(x, y, theta=self.rotation,
-                                       xorigin=self.xll, yorigin=self.yll)
+        if not np.isscalar(x):
+            x, y = x.copy(), y.copy()
+        if isinstance(x, list):
+            x = np.array(x)
+            y = np.array(y)
+
+        if not inverse:
+            x *= self.length_multiplier
+            y *= self.length_multiplier
+            x += self.xll
+            y += self.yll
+            x, y = SpatialReference.rotate(x, y, theta=self.rotation,
+                                           xorigin=self.xll, yorigin=self.yll)
+        else:
+            x, y = SpatialReference.rotate(x, y, -self.rotation,
+                                           self.xll, self.yll)
+            x -= self.xll
+            y -= self.yll
+            x /= self.length_multiplier
+            y /= self.length_multiplier
         return x, y
 
     def get_extent(self):
