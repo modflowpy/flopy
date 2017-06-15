@@ -585,12 +585,12 @@ class Modflow(BaseModel):
         if ml.structured:
             sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
                                   **ref_attributes)
+            dis.lenuni = sr.lenuni
         else:
             sr = None
         dis.sr = sr
         dis.start_datetime = start_datetime
         dis.itmuni = itmuni
-        dis.lenuni = sr.lenuni
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.

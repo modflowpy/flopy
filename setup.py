@@ -36,5 +36,6 @@ setup(name=__name__,
       packages=['flopy', 'flopy.modflow', 'flopy.modflowlgr', 'flopy.modpath',
                 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot',
                 'flopy.pest', 'flopy.export'],
+      include_package_data=True, # includes files listed in MANIFEST.in
       # use this version ID if .svn data cannot be found
       version=__version__)
