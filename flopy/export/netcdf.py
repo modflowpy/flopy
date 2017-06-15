@@ -163,6 +163,12 @@ class NetCdf(object):
         self.start_datetime = self._dt_str(dateutil.parser.parse(
             self.model.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
+        proj4_str = self.model.sr.proj4_str
+        if proj4_str is None:
+            proj4_str = '+init=epsg:4326'
+            self.log('Warning: model has no coordinate reference system specified. '
+                     'Using default proj4 string: {}'.format(proj4_str))
+        self.proj4_str = proj4_str
         self.grid_units = LENUNI[self.model.sr.lenuni]
         self.z_positive = z_positive
         assert self.grid_units in ["feet", "meters"], \
@@ -601,7 +607,8 @@ class NetCdf(object):
         except Exception as e:
             raise Exception("NetCdf error importing pyproj module:\n" + str(e))
 
-        proj4_str = self.model.sr.proj4_str
+        proj4_str = self.proj4_str
+
         if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
             proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
@@ -703,7 +710,7 @@ class NetCdf(object):
         self.nc.setncattr("featureType", "Grid")
         self.nc.setncattr("origin_x", self.model.sr.xul)
         self.nc.setncattr("origin_y", self.model.sr.yul)
-        self.nc.setncattr("origin_crs", self.model.sr.proj4_str)
+        self.nc.setncattr("origin_crs", self.proj4_str)
         self.nc.setncattr("grid_rotation_from_origin",
                           self.model.sr.rotation)
         for k, v in self.global_attributes.items():

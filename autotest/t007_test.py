@@ -276,7 +276,7 @@ def test_sr():
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.sr.units == ms.sr.units
     assert ms1.dis.lenuni == ms1.sr.lenuni
-    assert ms1.sr.lenuni != sr.lenuni
+    #assert ms1.sr.lenuni != sr.lenuni
     ms1.sr = sr
     assert ms1.sr == ms.sr
 
@@ -469,6 +469,9 @@ def test_read_usgs_model_reference():
     assert m2.sr.rotation == d['rotation']
     assert m2.sr.lenuni == d['lenuni']
     assert m2.sr.epsg == d['epsg']
+    # have to delete this, otherwise it will mess up other tests
+    if os.path.exists(os.path.join(tpth, 'usgs.model.reference')):
+        os.remove(os.path.join(tpth, 'usgs.model.reference'))
 
 
 def test_rotation():
@@ -665,10 +668,10 @@ if __name__ == '__main__':
     #test_sr()
     #test_mbase_sr()
     #test_rotation()
-    #test_map_rotation()
+    test_map_rotation()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
-    test_dynamic_xll_yll()
+    #test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()

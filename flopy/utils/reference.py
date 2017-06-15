@@ -354,7 +354,11 @@ class SpatialReference(object):
                     pass
             elif "proj4_str" in item.lower():
                 try:
-                    d['proj4_str'] = ':'.join(item.split(':')[1:]).strip()
+                    proj4_str = ':'.join(item.split(':')[1:]).strip()
+                    if proj4_str.lower() == 'none':
+                        proj4_str = None
+                    d['proj4_str'] = proj4_str
+
                 except:
                     pass
             elif "start" in item.lower():
@@ -612,10 +616,10 @@ class SpatialReference(object):
             self.origin_loc = 'ul'
 
         self.rotation = rotation
-        self._xll = xll
-        self._yll = yll
-        self._xul = xul
-        self._yul = yul
+        self._xll = xll if xll is not None else 0.
+        self._yll = yll if yll is not None else 0.
+        self._xul = xul if xul is not None else 0.
+        self._yul = yul if yul is not None else 0.
         #self.set_origin(xul, yul, xll, yll)
         return
 

@@ -590,6 +590,7 @@ class Modflow(BaseModel):
         dis.sr = sr
         dis.start_datetime = start_datetime
         dis.itmuni = itmuni
+        dis.lenuni = sr.lenuni
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.
