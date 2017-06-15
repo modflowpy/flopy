@@ -455,6 +455,13 @@ def test_namfile_readwrite():
     assert m2.sr.rotation == 30
     assert abs(m2.sr.length_multiplier - .3048) < 1e-10
 
+    model_ws = os.path.join("..", "examples", "data", "freyberg_multilayer_transient")
+    ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=model_ws, verbose=False,
+                                    check=False, exe_name="mfnwt")
+    assert ml.sr.xul == 619653
+    assert ml.sr.yul == 3353277
+    assert ml.sr.rotation == 15.
+
 def test_read_usgs_model_reference():
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
@@ -673,14 +680,14 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    test_sr()
+    #test_sr()
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
-    #test_namfile_readwrite()
+    test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()
     #for namfile in namfiles:
