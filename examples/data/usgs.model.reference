@@ -1,0 +1,10 @@
+xul 1157053.959        # upper left x-coordinate
+yul 405727.084         # upper left y-coordinate
+rotation -45.95796     # model grid rotation (degrees)
+length_units feet      # model length units (feet, meters, etc.)
+time_units days        # model time units (days, years, etc.)
+start_date 1/1/1900    # state date of the model
+start_time 00:00:00    # start time of the model
+model modflow-2000     # MODFLOW model type (MODFLOW-NWT, etc.)
+epsg 102733            # epsg code 
+# proj4 'proj4 string' # or proj4 string 

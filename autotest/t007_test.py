@@ -237,6 +237,13 @@ def test_sr():
     xt, yt = sr.transform(x, y)
     assert np.sum(yt - sr.ycentergrid[:, 0]) < 1e-3
 
+    # test inverse transform
+    x0, y0 = 9.99, 2.49
+    x1, y1 = sr.transform(x0, y0)
+    x2, y2 = sr.transform(x1, y1, inverse=True)
+    assert np.abs(x2-x0) < 1e-6
+    assert np.abs(y2-y0) < 1e6
+
     # test input using ul vs ll
     xll, yll = sr.xll, sr.yll
     sr2 = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
@@ -276,7 +283,7 @@ def test_sr():
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.sr.units == ms.sr.units
     assert ms1.dis.lenuni == ms1.sr.lenuni
-    assert ms1.sr.lenuni != sr.lenuni
+    #assert ms1.sr.lenuni != sr.lenuni
     ms1.sr = sr
     assert ms1.sr == ms.sr
 
@@ -285,6 +292,7 @@ def test_sr_scaling():
     nlay, nrow, ncol = 1, 10, 5
     delr, delc = 250, 500
     xll, yll = 286.80, 29.03
+
     # test scaling of length units
     ms2 = flopy.modflow.Modflow()
     dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
@@ -300,24 +308,60 @@ def test_sr_scaling():
                                    delr=delr,
                                    delc=delc)
     ms3.sr = flopy.utils.SpatialReference(delr=ms3.dis.delr.array,
-                                          delc=ms2.dis.delc.array, lenuni=3,
-                                          length_multiplier=.3048,
+                                          delc=ms2.dis.delc.array, lenuni=2,
+                                          length_multiplier=2.,
                                           xll=xll, yll=yll, rotation=0)
     ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
+
+    # check that the origin(s) are maintained
     assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
                           [ms3.sr.xll, ms3.sr.yll])
-    one = ms3.sr.get_vertices(nrow - 1, 0)[1]
-    two = ms2.sr.get_vertices(nrow - 1, 0)[1]
 
-    # assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
-    #                      ms2.sr.get_vertices(nrow - 1, 0)[1])
     assert np.allclose(ms3.sr.get_vertices(nrow - 1, 0)[1],
                        ms2.sr.get_vertices(nrow - 1, 0)[1])
 
-    xur, yur = ms3.sr.get_vertices(0, ncol - 1)[3]
-    assert xur == xll + ms3.sr.length_multiplier * delr * ncol
-    assert yur == yll + ms3.sr.length_multiplier * delc * nrow
+    # check that the upper left corner is computed correctly
+    # in this case, length_multiplier overrides the given units
+    def check_size(sr):
+        xur, yur = sr.get_vertices(0, ncol - 1)[3]
+        assert xur == xll + sr.length_multiplier * delr * ncol
+        assert yur == yll + sr.length_multiplier * delc * nrow
+    check_size(ms3.sr)
 
+    # run the same tests but with units specified instead of a length multiplier
+    ms2 = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
+                                   delr=delr, delc=delc,
+                                   lenuni=1 # feet; should have no effect on SR
+                                   # (model not supplied to SR)
+                                   )
+    ms2.sr = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
+                                          delc=ms2.dis.delc.array,
+                                          lenuni=2, # meters
+                                          epsg=26715,  # meters, listed on spatialreference.org
+                                          xll=xll, yll=yll, rotation=0)
+    assert ms2.sr.model_length_units == 'meters'
+    assert ms2.sr.length_multiplier == 1.
+    ms2.sr.lenuni = 1 # feet; test dynamic setting
+    assert ms2.sr.model_length_units == 'feet'
+    check_size(ms2.sr)
+    assert ms2.sr.length_multiplier == .3048
+    ms2.sr.lenuni = 3 # centimeters
+    assert ms2.sr.model_length_units == 'centimeters'
+    check_size(ms2.sr)
+    assert ms2.sr.length_multiplier == 0.01
+    ms2.sr.lenuni = 2 # meters
+    check_size(ms2.sr)
+    ms2.sr.units = 'meters'
+    ms2.sr.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
+    assert ms2.sr.proj4_str == '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
+    assert ms2.sr.units == 'feet'
+    assert ms2.sr.length_multiplier == 1/.3048
+    check_size(ms2.sr)
+    ms2.sr.epsg = 6610 # meters, not listed on spatialreference.org but understood by pyproj
+    assert ms2.sr.units == 'meters'
+    assert ms2.sr.proj4_str is not None
+    check_size(ms2.sr)
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
@@ -329,14 +373,14 @@ def test_dynamic_xll_yll():
                                    delr=delr,
                                    delc=delc)
     sr1 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xll=xll, yll=yll, rotation=30)
     xul, yul = sr1.xul, sr1.yul
     sr1.length_multiplier = 1.0 / 3.281
     assert sr1.xll == xll
     assert sr1.yll == yll
     sr2 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xul=xul, yul=yul, rotation=30)
     sr2.length_multiplier = 1.0 / 3.281
     assert sr2.xul == xul
@@ -344,24 +388,51 @@ def test_dynamic_xll_yll():
 
     # test resetting of attributes
     sr3 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xll=xll, yll=yll, rotation=30)
     # check that xul, yul and xll, yll are being recomputed
     sr3.xll += 10.
     sr3.yll += 21.
-    assert sr3.xul - (xul + 10.) < 1e-6
-    assert sr3.yul - (yul + 21.) < 1e-6
+    assert np.abs(sr3.xul - (xul + 10.)) < 1e-6
+    assert np.abs(sr3.yul - (yul + 21.)) < 1e-6
     sr4 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                       delc=ms2.dis.delc.array, lenuni=3,
+                                       delc=ms2.dis.delc.array, lenuni=2,
                                        xul=xul, yul=yul, rotation=30)
+    assert sr4.origin_loc == 'ul'
     sr4.xul += 10.
     sr4.yul += 21.
-    assert sr4.xll - (xll + 10.) < 1e-6
-    assert sr4.yll - (yll + 21.) < 1e-6
+    assert np.abs(sr4.xll - (xll + 10.)) < 1e-6
+    assert np.abs(sr4.yll - (yll + 21.)) < 1e-6
     sr4.rotation = 0.
-    assert sr4.xll == sr4.xul
-    assert sr4.yll == sr4.yul - sr4.yedge[0]
-    assert True
+    assert np.abs(sr4.xul - (xul + 10.)) < 1e-6 # these shouldn't move because ul has priority
+    assert np.abs(sr4.yul - (yul + 21.)) < 1e-6
+    assert np.abs(sr4.xll - sr4.xul) < 1e-6
+    assert np.abs(sr4.yll - (sr4.yul - sr4.yedge[0])) < 1e-6
+    sr4.xll = 0.
+    sr4.yll = 10.
+    assert sr4.origin_loc == 'll'
+    assert sr4.xul == 0.
+    assert sr4.yul == sr4.yedge[0] + 10.
+    sr4.xul = xul
+    sr4.yul = yul
+    assert sr4.origin_loc == 'ul'
+    sr4.rotation = 30.
+    assert np.abs(sr4.xll - xll) < 1e-6
+    assert np.abs(sr4.yll - yll) < 1e-6
+
+    sr5 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
+                                       delc=ms2.dis.delc.array, lenuni=2,
+                                       xll=xll, yll=yll,
+                                       rotation=0, epsg=26915)
+    sr5.lenuni = 1
+    assert sr5.length_multiplier == .3048
+    assert sr5.yul == sr5.yll + sr5.yedge[0] * sr5.length_multiplier
+    sr5.lenuni = 2
+    assert sr5.length_multiplier == 1.
+    assert sr5.yul == sr5.yll + sr5.yedge[0]
+    sr5.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
+    assert sr5.units == 'feet'
+    assert sr5.length_multiplier == 1/.3048
 
 def test_namfile_readwrite():
     nlay, nrow, ncol = 1, 30, 5
@@ -383,6 +454,38 @@ def test_namfile_readwrite():
     assert abs(m2.sr.yll - yll) < 1e-2
     assert m2.sr.rotation == 30
     assert abs(m2.sr.length_multiplier - .3048) < 1e-10
+
+    model_ws = os.path.join("..", "examples", "data", "freyberg_multilayer_transient")
+    ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=model_ws, verbose=False,
+                                    check=False, exe_name="mfnwt")
+    assert ml.sr.xul == 619653
+    assert ml.sr.yul == 3353277
+    assert ml.sr.rotation == 15.
+
+def test_read_usgs_model_reference():
+    nlay, nrow, ncol = 1, 30, 5
+    delr, delc = 250, 500
+    #xll, yll = 272300, 5086000
+    model_ws = os.path.join('temp', 't007')
+    shutil.copy('../examples/data/usgs.model.reference', model_ws)
+    fm = flopy.modflow
+    m = fm.Modflow(modelname='junk', model_ws=model_ws)
+    dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
+                        delc=delc)
+    m.write_input()
+
+    # test reading of SR information from usgs.model.reference
+    m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
+    from flopy.utils.reference import SpatialReference
+    d = SpatialReference.read_usgs_model_reference_file(os.path.join('temp', 't007', 'usgs.model.reference'))
+    assert m2.sr.xul == d['xul']
+    assert m2.sr.yul == d['yul']
+    assert m2.sr.rotation == d['rotation']
+    assert m2.sr.lenuni == d['lenuni']
+    assert m2.sr.epsg == d['epsg']
+    # have to delete this, otherwise it will mess up other tests
+    if os.path.exists(os.path.join(tpth, 'usgs.model.reference')):
+        os.remove(os.path.join(tpth, 'usgs.model.reference'))
 
 
 def test_rotation():
@@ -421,7 +524,7 @@ def test_map_rotation():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     # transformation assigned by arguments
-    xul, yul, rotation = 500000, 2934000, 45
+    xul, yul, rotation = 500000., 2934000., 45.
     modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
                                    rotation=rotation)
     lc = modelmap.plot_grid()
@@ -430,8 +533,10 @@ def test_map_rotation():
     def check_vertices():
         xllp, yllp = lc._paths[0].vertices[0]
         xulp, yulp = lc._paths[0].vertices[1]
-        assert (xllp, yllp) == (xll, yll)
-        assert (xulp, yulp) == (xul, yul)
+        assert np.abs(xllp - xll) < 1e-6
+        assert np.abs(yllp - yll) < 1e-6
+        assert np.abs(xulp - xul) < 1e-6
+        assert np.abs(yulp - yul) < 1e-6
 
     check_vertices()
 
@@ -481,7 +586,6 @@ def test_netcdf_classmethods():
     v2_set = set(new_f.nc.variables.keys())
     diff = v1_set.symmetric_difference(v2_set)
     assert len(diff) == 0, str(diff)
-
 
 # def test_netcdf_overloads():
 #     import os
@@ -576,13 +680,14 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    test_sr()
+    #test_sr()
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
     #test_sr_scaling()
+    #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
-    #test_namfile_readwrite()
+    test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()
     #for namfile in namfiles:
