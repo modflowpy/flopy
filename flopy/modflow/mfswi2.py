@@ -671,7 +671,7 @@ class ModflowSwi2(Package):
                     model.get_ext_dict_attr(ext_unit_dict, unit=abs(iswiobs))
 
         # create swi2 instance
-        swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat, nobs=nobs,
+        swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat,
                            iswizt=iswizt, ipakcb=ipakcb,
                            iswiobs=iswiobs, options=options,
                            nsolver=nsolver, iprsol=iprsol, mutsol=mutsol,
