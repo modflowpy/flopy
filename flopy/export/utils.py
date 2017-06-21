@@ -818,6 +818,10 @@ def util2d_helper(f, u2d, **kwargs):
                                              {name: u2d.array})
         return
 
+    elif isinstance(f, str) and f.lower().endswith(".asc"):
+        u2d.model.sr.export_array(f, u2d.array, **kwargs)
+        return
+
     elif isinstance(f, NetCdf) or isinstance(f, dict):
 
         # try to mask the array - assume layer 1 ibound is a good mask

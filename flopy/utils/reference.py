@@ -959,6 +959,36 @@ class SpatialReference(object):
         qm = ax.pcolormesh(self.xgrid, self.ygrid, a, **kwargs)
         return qm
 
+    def export_array(self, filename, a, nodata=-9999,
+                     **kwargs):
+        """Write a numpy array to Arc Ascii grid with the 
+        model reference.
+
+        Parameters
+        ----------
+        kwargs: keyword arguments to np.savetxt
+        """
+        if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
+                or self.delr[0] != self.delc[0]:
+            raise ValueError('This method requires a uniform grid.')
+        cellsize = self.delr[0] * self.length_multiplier
+        a = a.copy()
+        a[np.isnan(a)] = nodata
+
+        filename = '.'.join(filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
+        nrow, ncol = a.shape
+        txt = 'ncols  {:d}\n'.format(ncol)
+        txt += 'nrows  {:d}\n'.format(nrow)
+        txt += 'xllcorner  {:f}\n'.format(self.xll)
+        txt += 'yllcorner  {:f}\n'.format(self.yll)
+        txt += 'cellsize  {}\n'.format(cellsize)
+        txt += 'NODATA_value  {:.0f}\n'.format(nodata)
+        with open(filename, 'w') as output:
+            output.write(txt)
+        with open(filename, 'ab') as output:
+            np.savetxt(output, a, **kwargs)
+        print('wrote {}'.format(filename))
+
     def contour_array(self, ax, a, **kwargs):
         """
         Create a QuadMesh plot of the specified array using pcolormesh
