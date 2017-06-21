@@ -324,8 +324,8 @@ def test_sr_scaling():
     # in this case, length_multiplier overrides the given units
     def check_size(sr):
         xur, yur = sr.get_vertices(0, ncol - 1)[3]
-        assert xur == xll + sr.length_multiplier * delr * ncol
-        assert yur == yll + sr.length_multiplier * delc * nrow
+        assert np.abs(xur - (xll + sr.length_multiplier * delr * ncol)) < 1e-6
+        assert np.abs(yur - (yll + sr.length_multiplier * delc * nrow)) < 1e-6
     check_size(ms3.sr)
 
     # run the same tests but with units specified instead of a length multiplier
@@ -498,8 +498,8 @@ def test_rotation():
                                         delc=m.dis.delc.array,
                                         xul=xul, yul=yul, rotation=45.)
     xll, yll = m.sr.xll, m.sr.yll
-    assert m.dis.sr.xgrid[0, 0] == xul
-    assert m.dis.sr.ygrid[0, 0] == yul
+    assert np.abs(m.dis.sr.xgrid[0, 0] - xul) < 1e-6
+    assert np.abs(m.dis.sr.ygrid[0, 0] - yul) < 1e-6
     m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
                                         delc=m.dis.delc.array,
                                         xul=xul, yul=yul, rotation=-45.)
@@ -684,10 +684,10 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    #test_sr_scaling()
+    test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
-    test_namfile_readwrite()
+    #test_namfile_readwrite()
     # test_free_format_flag()
     # test_export_output()
     #for namfile in namfiles:

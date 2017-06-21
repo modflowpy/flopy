@@ -304,11 +304,12 @@ def enforce_10ch_limit(names):
 
 
 def get_pyshp_field_info(dtypename):
-    """Get pyshp dtype information for a given numpy dtype."""
+    """Get pyshp dtype information for a given numpy dtype.
+    """
     fields = {'int': ('N', 20, 0),
               '<i': ('N', 20, 0),
               'float': ('F', 20, 12),
-              '<f': ('F', 20, 0),
+              '<f': ('F', 20, 12),
               'bool': ('L', 1),
               'b1': ('L', 1),
               'str': ('C', 50),
