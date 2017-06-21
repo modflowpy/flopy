@@ -960,34 +960,57 @@ class SpatialReference(object):
         return qm
 
     def export_array(self, filename, a, nodata=-9999,
+                     fieldname='value',
                      **kwargs):
-        """Write a numpy array to Arc Ascii grid with the 
-        model reference.
+        """Write a numpy array to Arc Ascii grid 
+        or shapefile with the model reference.
 
         Parameters
         ----------
-        kwargs: keyword arguments to np.savetxt
+        filename : str
+            Path of output file
+        a : 2D numpy.ndarray
+            Array to export
+        nodata : scalar
+            Value to assign to np.nan entries (default -9999)
+        fieldname : str
+            Attribute field name for array values (shapefile export only).
+            (default 'values')
+            
+        kwargs: 
+            keyword arguments to np.savetxt (ascii) 
+            or flopy.export.shapefile_utils.write_grid_shapefile2
         """
-        if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
-                or self.delr[0] != self.delc[0]:
-            raise ValueError('This method requires a uniform grid.')
-        cellsize = self.delr[0] * self.length_multiplier
-        a = a.copy()
-        a[np.isnan(a)] = nodata
+        if filename.lower().endswith(".asc"):
+            if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
+                    or self.delr[0] != self.delc[0]:
+                raise ValueError('Arc method requires a uniform grid.')
+            cellsize = self.delr[0] * self.length_multiplier
+            a = a.copy()
+            a[np.isnan(a)] = nodata
 
-        filename = '.'.join(filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
-        nrow, ncol = a.shape
-        txt = 'ncols  {:d}\n'.format(ncol)
-        txt += 'nrows  {:d}\n'.format(nrow)
-        txt += 'xllcorner  {:f}\n'.format(self.xll)
-        txt += 'yllcorner  {:f}\n'.format(self.yll)
-        txt += 'cellsize  {}\n'.format(cellsize)
-        txt += 'NODATA_value  {:.0f}\n'.format(nodata)
-        with open(filename, 'w') as output:
-            output.write(txt)
-        with open(filename, 'ab') as output:
-            np.savetxt(output, a, **kwargs)
-        print('wrote {}'.format(filename))
+            filename = '.'.join(filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
+            nrow, ncol = a.shape
+            txt = 'ncols  {:d}\n'.format(ncol)
+            txt += 'nrows  {:d}\n'.format(nrow)
+            txt += 'xllcorner  {:f}\n'.format(self.xll)
+            txt += 'yllcorner  {:f}\n'.format(self.yll)
+            txt += 'cellsize  {}\n'.format(cellsize)
+            txt += 'NODATA_value  {:.0f}\n'.format(nodata)
+            with open(filename, 'w') as output:
+                output.write(txt)
+            with open(filename, 'ab') as output:
+                np.savetxt(output, a, **kwargs)
+            print('wrote {}'.format(filename))
+            
+        elif filename.lower().endswith(".shp"):
+            from ..export.shapefile_utils import write_grid_shapefile2
+            epsg = kwargs.get('epsg', None)
+            prj = kwargs.get('prj', None)
+            if epsg is None and prj is None:
+                epsg = self.epsg
+            write_grid_shapefile2(filename, self, array_dict={fieldname: a}, nan_val=nodata,
+                                  epsg=epsg, prj=prj)
 
     def contour_array(self, ax, a, **kwargs):
         """
