@@ -755,7 +755,7 @@ class ModflowSfr2(Package):
                 log.write(header)
                 a = np.array(l).transpose()
                 for line in a:
-                    header.write(','.join(map(str, line)) + '\n')
+                    log.write(','.join(map(str, line)) + '\n')
         self.reach_data['k'] = layers
 
     def get_outlets(self, level=0, verbose=True):

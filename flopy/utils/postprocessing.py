@@ -96,7 +96,7 @@ def get_transmissivities(heads, m,
     T = thick * hk
     return T
 
-def get_water_table(heads, nodata):
+def get_water_table(heads, nodata, per_idx=None):
     """Get a 2D array representing the water table
     elevation for each stress period in heads array.
     
@@ -106,7 +106,9 @@ def get_water_table(heads, nodata):
         Heads array.
     nodata : real
         HDRY value indicating dry cells.
-        
+    per_idx : int or sequence of ints
+        stress periods to return. If None,
+        returns all stress periods (default).
     Returns
     -------
     wt : 2 or 3-D np.ndarray of water table elevations
