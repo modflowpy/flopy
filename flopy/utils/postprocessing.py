@@ -95,3 +95,37 @@ def get_transmissivities(heads, m,
     # compute transmissivities
     T = thick * hk
     return T
+
+def get_water_table(heads, nodata):
+    """Get a 2D array representing the water table
+    elevation for each stress period in heads array.
+    
+    Parameters
+    ----------
+    heads : 3 or 4-D np.ndarray
+        Heads array.
+    nodata : real
+        HDRY value indicating dry cells.
+        
+    Returns
+    -------
+    wt : 2 or 3-D np.ndarray of water table elevations
+        for each stress period.
+    """
+    if len(heads.shape) == 3:
+        heads = np.reshape(heads, (1, *heads.shape))
+    assert len(heads.shape) == 4
+    nper, nlay, nrow, ncol = heads.shape
+    wt = []
+    for per in range(nper):
+        for i in range(nrow):
+            for j in range(ncol):
+                for k in range(nlay):
+                    if heads[k, i, j] != nodata:
+                        wt.append(hds[k, i, j])
+                        break
+                    elif k == nlay - 1:
+                        wt.append(nodata)
+        assert len(wt) == nrow * ncol
+        wt.append(np.reshape(wt, (nrow, ncol)))
+    return np.squeeze(wt)

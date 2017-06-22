@@ -727,7 +727,7 @@ class ModflowSfr2(Package):
         # check against model bottom
         logfile = 'sfr_botm_conflicts.txt'
         logtxt = ''
-        mbotms = self.parent.dis.botm.array[-1, :, :]
+        mbotms = self.parent.dis.botm.array[-1, i, j]
         below = streambotms <= mbotms
         l = []
         header = ''
@@ -741,8 +741,8 @@ class ModflowSfr2(Package):
                      streambotms[below]]
                 header += 'i,j,model_botm,streambed_botm'
             else:
-                botm = self.parent.dis.botm.copy()
-                botm[-1, i, j][below] = streambotms - pad
+                botm = self.parent.dis.botm.array.copy()
+                botm[-1, i, j][below] = streambotms[below] - pad
                 l.append(botm[-1, i, j][below])
                 header += ',new_model_botm'
                 self.parent.dis.botm = botm
@@ -751,7 +751,7 @@ class ModflowSfr2(Package):
                       'flopy.model.ModflowDis.write() to write new DIS file.')
             header += '\n'
 
-            with open(logfile) as log:
+            with open(logfile, 'w') as log:
                 log.write(header)
                 a = np.array(l).transpose()
                 for line in a:
