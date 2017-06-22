@@ -373,7 +373,30 @@ class ModflowSfr2(Package):
         # -input format checks:
         assert isfropt in [0, 1, 2, 3, 4, 5]
 
+        # derived attributes
+        self._paths = None
+
+
         self.parent.add_package(self)
+
+
+    def __setattr__(self, key, value):
+        if key == "segment_data":
+            super(ModflowSfr2, self). \
+                __setattr__("segment_data", value)
+            self._paths = None
+
+
+    @property
+    def graph(self):
+        return dict(zip(self.segment_data[0].nseg, self.segment_data[0].outseg))
+
+    @property
+    def paths(self):
+        if self._paths is not None:
+            graph = self.graph
+            self._paths = {seg: find_path(graph, seg) for seg in graph.keys()}
+        return self._paths
 
     @staticmethod
     def get_empty_reach_data(nreaches=0, aux_names=None, structured=True, default_value=-1.0E+10):
@@ -2195,3 +2218,24 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     else:
         pass
     return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc
+
+
+def find_path(graph, start, end=0, path=[]):
+    path = path + [start]
+    if start == end:
+        return path
+    if start not in graph:
+        return None
+    if not isinstance(graph[start], list):
+        graph[start] = [graph[start]]
+    for node in graph[start]:
+        if node not in path:
+            newpath = find_path(graph, node, end, path)
+            if newpath: return newpath
+    return None
+
+def get_outseg(seg, paths, valid_segs):
+    for s in paths[seg]:
+        if s in valid_segs:
+            return s
+    return 0
