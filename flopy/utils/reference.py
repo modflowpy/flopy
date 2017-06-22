@@ -968,7 +968,10 @@ class SpatialReference(object):
         Parameters
         ----------
         filename : str
-            Path of output file
+            Path of output file. Export format is determined by
+            file extention.
+            '.asc'  Arc Ascii grid
+            '.shp'  Shapefile
         a : 2D numpy.ndarray
             Array to export
         nodata : scalar
@@ -976,10 +979,15 @@ class SpatialReference(object):
         fieldname : str
             Attribute field name for array values (shapefile export only).
             (default 'values')
-            
         kwargs: 
             keyword arguments to np.savetxt (ascii) 
             or flopy.export.shapefile_utils.write_grid_shapefile2
+            
+        Notes
+        -----
+        Rotated grids will be unrotated prior to export to Arc Ascii format,
+        using scipy.ndimage.rotate. As a result, their pixels will no longer 
+        coincide exactly with the model grid.
         """
         if filename.lower().endswith(".asc"):
             if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
