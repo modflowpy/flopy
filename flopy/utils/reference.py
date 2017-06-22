@@ -984,17 +984,34 @@ class SpatialReference(object):
         if filename.lower().endswith(".asc"):
             if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
                     or self.delr[0] != self.delc[0]:
-                raise ValueError('Arc method requires a uniform grid.')
+                raise ValueError('Arc ascii arrays require a uniform grid.')
+
+            xll, yll = self.xll, self.yll
             cellsize = self.delr[0] * self.length_multiplier
             a = a.copy()
             a[np.isnan(a)] = nodata
+            if self.rotation != 0:
+                try:
+                    from scipy.ndimage import rotate
+                    a = rotate(a, self.rotation, cval=nodata)
+                    a[a < -1e3] = np.nan
+                    height_rot, width_rot = a.shape
+                    xmin, ymin, xmax, ymax = self.bounds
+                    dx = (xmax - xmin) / width_rot
+                    dy = (ymax - ymin) / height_rot
+                    cellsize = dx
+                    xll, yll = xmin, ymin
+                except ImportError:
+                    print('scipy package required to export rotated grid.')
+                    pass
 
             filename = '.'.join(filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
             nrow, ncol = a.shape
+            a[np.isnan(a)] = nodata
             txt = 'ncols  {:d}\n'.format(ncol)
             txt += 'nrows  {:d}\n'.format(nrow)
-            txt += 'xllcorner  {:f}\n'.format(self.xll)
-            txt += 'yllcorner  {:f}\n'.format(self.yll)
+            txt += 'xllcorner  {:f}\n'.format(xll)
+            txt += 'yllcorner  {:f}\n'.format(yll)
             txt += 'cellsize  {}\n'.format(cellsize)
             txt += 'NODATA_value  {:.0f}\n'.format(nodata)
             with open(filename, 'w') as output:
