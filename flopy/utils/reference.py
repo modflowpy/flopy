@@ -1002,7 +1002,7 @@ class SpatialReference(object):
             with open(filename, 'ab') as output:
                 np.savetxt(output, a, **kwargs)
             print('wrote {}'.format(filename))
-            
+
         elif filename.lower().endswith(".shp"):
             from ..export.shapefile_utils import write_grid_shapefile2
             epsg = kwargs.get('epsg', None)

@@ -696,13 +696,66 @@ class ModflowSfr2(Package):
             # f.close()
         return chk
 
-    def assign_layers(self):
+    def assign_layers(self, adjust_botms=False, pad=1.):
         """Assigns the appropriate layer for each SFR reach,
-        based on cell bottoms at location of reach."""
+        based on cell bottoms at location of reach.
+        
+        Parameters
+        ----------
+        adjust_botms : bool
+            Streambed bottom elevations below the model bottom
+            will cause an error in MODFLOW. If True, adjust
+            bottom elevations in lowest layer of the model
+            so they are at least pad distance below any co-located
+            streambed elevations.
+        pad : scalar
+            Minimum distance below streambed bottom to set
+            any conflicting model bottom elevations.
+            
+        Notes
+        -----
+        Streambed bottom = strtop - strthick
+        This routine updates the elevations in the botm array
+        of the flopy.model.ModflowDis instance. To produce a 
+        new DIS package file, model.write() or flopy.model.ModflowDis.write()
+        must be run.
+        """
         streambotms = self.reach_data.strtop - self.reach_data.strthick
-        layers = self.parent.dis.get_layer(self.reach_data.i,
-                                           self.reach_data.j,
-                                           streambotms)
+        i, j = self.reach_data.i, self.reach_data.j
+        layers = self.parent.dis.get_layer(i, j, streambotms)
+
+        # check against model bottom
+        logfile = 'sfr_botm_conflicts.txt'
+        logtxt = ''
+        mbotms = self.parent.dis.botm.array[-1, :, :]
+        below = streambotms <= mbotms
+        l = []
+        header = ''
+        if np.any(below):
+            print('Warning: SFR streambed elevations below model bottom. '
+                  'See sfr_botm_conflicts.txt')
+            if not adjust_botms:
+                l += [self.reach_data.i[below],
+                     self.reach_data.j[below],
+                     mbotms[below],
+                     streambotms[below]]
+                header += 'i,j,model_botm,streambed_botm'
+            else:
+                botm = self.parent.dis.botm.copy()
+                botm[-1, i, j][below] = streambotms - pad
+                l.append(botm[-1, i, j][below])
+                header += ',new_model_botm'
+                self.parent.dis.botm = botm
+                print('New bottom array assigned to Flopy DIS package '
+                      'instance.\nRun flopy.model.write() or '
+                      'flopy.model.ModflowDis.write() to write new DIS file.')
+            header += '\n'
+
+            with open(logfile) as log:
+                log.write(header)
+                a = np.array(l).transpose()
+                for line in a:
+                    header.write(','.join(map(str, line)) + '\n')
         self.reach_data['k'] = layers
 
     def get_outlets(self, level=0, verbose=True):
