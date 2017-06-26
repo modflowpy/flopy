@@ -306,7 +306,7 @@ class ZoneBudget(object):
         Get pandas dataframes.
         Parameters
         ----------
-        
+
         start_datetime : str
             Datetime string indicating the time at which the simulation starts.
         timeunit : str
@@ -529,10 +529,16 @@ class ZoneBudget(object):
                             totim=None):
         # Builds empty records based on the specified flow direction and
         # record name for the given list of zones.
-        if kstpkper is not None:
-            totim = self.cbc_times[self.cbc_kstpkper.index(kstpkper)]
-        elif totim is not None:
-            kstpkper = self.cbc_kstpkper[self.cbc_times.index(totim)]
+        if (kstpkper is not None):
+            if len(self.cbc_times) > 0:
+                totim = self.cbc_times[self.cbc_kstpkper.index(kstpkper)]
+            else:
+                totim = 0.
+        elif (totim is not None):
+            if len(self.cbc_times) > 0:
+                kstpkper = self.cbc_kstpkper[self.cbc_times.index(totim)]
+            else:
+                kstpkper = (0, 0)
 
         row = [totim, kstpkper[0], kstpkper[1], recname]
         row += [0. for _ in self._zonefieldnames]

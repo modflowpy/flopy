@@ -2,7 +2,14 @@ FloPy Changes
 -----------------------------------------------
 
 ### Version 3.2.7 pre-release
-* Added version changes...
+* Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.
+* Added support for FORTRAN free format array data using n*value where n is the number of times value is repeated.
+* Added support for comma separators in 1D data in LPF and UPF files
+* Added support for comma separators on non array data lines in DIS, BCF, LPF, UPW, HFB, and RCH Packages.
+* Bug fixes:
+    1. Fixed bug in OC when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
+    2. Fixed bug in SUB if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load)
+    3. Fixed bugs in SUB and SUBWT load to pop original unit number
 
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.

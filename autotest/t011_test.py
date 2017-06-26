@@ -48,6 +48,10 @@ def test_mflistfile():
     assert isinstance(df_flx, pandas.DataFrame)
     assert isinstance(df_vol, pandas.DataFrame)
 
+    # test get runtime
+    runtime = mflist.get_model_runtime(units='hours')
+    assert isinstance(runtime, float)
+
     return
 
 

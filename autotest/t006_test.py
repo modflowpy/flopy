@@ -89,11 +89,21 @@ def test_mflist_reference():
     shp = shapefile.Reader(test)
     assert shp.numRecords == nrow * ncol
 
+def test_cbc_ts():
+    fpth = os.path.join('..', 'examples', 'data', 'mf2005_test',
+                        'swiex1.gitzta')
+    zobj = flopy.utils.CellBudgetFile(fpth, precision='single')
+    ts = zobj.get_ts(text='ZETASRF  1', idx=(0, 0, 24))
+    errtxt = 'shape of zeta timeseries is {} not (4, 2)'.format(ts.shape)
+    assert ts.shape == (4, 2), errtxt
+
+
 
 if __name__ == '__main__':
     # test_mbase_sr()
     # test_sr()
     # test_dis_reference()
-    test_mflist_reference()
+    #test_mflist_reference()
+    test_cbc_ts()
     # test_formattedfile_reference()
     # test_binaryfile_reference()

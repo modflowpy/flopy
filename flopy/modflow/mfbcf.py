@@ -5,6 +5,7 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
+from ..utils.flopy_io import line_parse
 
 
 class ModflowBcf(Package):
@@ -277,7 +278,7 @@ class ModflowBcf(Package):
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
             print('   loading ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
-        t = line.strip().split()
+        t = line_parse(line)
         ipakcb, hdry, iwdflg, wetfct, iwetit, ihdwet = int(t[0]), \
                                                        float(t[1]), \
                                                        int(t[2]), \
