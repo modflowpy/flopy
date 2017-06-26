@@ -1477,6 +1477,8 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
     elif len(X.shape) < 2 or len(X.shape) > 3:
         raise Exception(
             'Shape of the input array is not recognized: {}'.format(X.shape))
+    if np.ma.is_masked(X):
+        X = np.ma.filled(X, 0)
 
     nlay, nrow, ncol = X.shape
 
