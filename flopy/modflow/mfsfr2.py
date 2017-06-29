@@ -291,8 +291,16 @@ class ModflowSfr2(Package):
 
         # Dataset 1c. ----------------------------------------------------------------------
         self._nstrm = np.sign(nstrm) * len(reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
-        if segment_data is not None and not isinstance(segment_data, dict):
-            segment_data = {0: segment_data}
+        if segment_data is not None:
+            # segment_data is a zero-d array
+            if not isinstance(segment_data, dict):
+                if len(segment_data.shape) == 0:
+                    segment_data = np.atleast_1d(segment_data)
+                nss = len(segment_data)
+                segment_data = {0: segment_data}
+            nss = len(segment_data[0])
+        else:
+            pass
         # use atleast_1d for length since segment_data might be a 0D array
         # this seems to be OK, because self.segment_data is produced by the constructor (never 0D)
         self.nsfrpar = nsfrpar
@@ -319,7 +327,7 @@ class ModflowSfr2(Package):
         self.flwtol = flwtol  # streamflow tolerance for convergence of the kinematic wave equation
 
         # Dataset 2. -----------------------------------------------------------------------
-        self.reach_data = self.get_empty_reach_data(np.abs(nstrm))
+        self.reach_data = self.get_empty_reach_data(np.abs(self._nstrm))
         if reach_data is not None:
             for n in reach_data.dtype.names:
                 self.reach_data[n] = reach_data[n]
@@ -408,7 +416,10 @@ class ModflowSfr2(Package):
 
     @property
     def graph(self):
-        return dict(zip(self.segment_data[0].nseg, self.segment_data[0].outseg))
+        graph = dict(zip(self.segment_data[0].nseg, self.segment_data[0].outseg))
+        outlets = set(graph.values()).difference(set(graph.keys())) #including lakes
+        graph.update({o:0 for o in outlets})
+        return graph
 
     @property
     def paths(self):
@@ -417,6 +428,7 @@ class ModflowSfr2(Package):
             return self._paths
         # check to see if routing in segment data was changed
         nseg = np.array(sorted(self._paths.keys()), dtype=int)
+        nseg = nseg[nseg > 0].copy()
         outseg = np.array([self._paths[k][1] for k in nseg])
         sd = self.segment_data[0]
         if not np.array_equal(nseg, sd.nseg) or not np.array_equal(outseg, sd.outseg):
@@ -828,6 +840,7 @@ class ModflowSfr2(Package):
                 continue
             segments = self.segment_data[per].nseg
             outsegs = self.segment_data[per].outseg
+            '''
             all_outsegs = np.vstack([segments, outsegs])
             max_outseg = all_outsegs[-1].max()
             knt = 1
@@ -880,17 +893,27 @@ class ModflowSfr2(Package):
                     if verbose:
                         print(txt)
                     break
-
             # the array of segment sequence is useful for other other operations,
             # such as plotting elevation profiles
             self.outsegs[per] = all_outsegs
-
+            '''
+            # use graph instead of above loop
+            nrow = len(self.segment_data[per].nseg)
+            ncol = np.max([len(v) if v is not None else 0 for v in self.paths.values()])
+            all_outsegs = np.zeros((nrow, ncol), dtype=int)
+            for i, (k, v) in enumerate(self.paths.items()):
+                if k > 0:
+                    all_outsegs[i, :len(v)] = v
+            all_outsegs.sort(axis=0)
+            self.outsegs[per] = all_outsegs
             # create a dictionary listing outlets associated with each segment
             # outlet is the last value in each row of outseg array that is != 0 or 999999
-            self.outlets[per] = {i + 1: r[(r != 0) & (r != 999999)][-1]
-            if len(r[(r != 0) & (r != 999999)]) > 0
-            else i + 1
-                                 for i, r in enumerate(all_outsegs.T)}
+            #self.outlets[per] = {i + 1: r[(r != 0) & (r != 999999)][-1]
+            #if len(r[(r != 0) & (r != 999999)]) > 0
+            #else i + 1
+            #                     for i, r in enumerate(all_outsegs.T)}
+            self.outlets[per] = {k: self.paths[k][-1] if k in self.paths
+                                 else k for k in self.segment_data[per].nseg}
         return txt
 
     def reset_reaches(self):
@@ -898,8 +921,8 @@ class ModflowSfr2(Package):
         reach_data = self.reach_data
         segment_data = self.segment_data[0]
         ireach = []
-        for i in np.arange(1, len(segment_data) + 1):
-            nreaches = np.sum(reach_data.iseg == i)
+        for iseg in segment_data.nseg:
+            nreaches = np.sum(reach_data.iseg == iseg)
             ireach += list(range(1, nreaches+1))
         self.reach_data['ireach'] = ireach
 
@@ -912,13 +935,19 @@ class ModflowSfr2(Package):
         reach_data = self.reach_data
         segment_data = self.segment_data[0]
         # this vectorized approach is more than an order of magnitude faster than a list comprehension
-        first_reaches = reach_data[reach_data.ireach == 1]
-        last_reaches = np.append((np.diff(reach_data.iseg) == 1), True)
+        is_first_reach = reach_data.ireach == 1
+        first_reaches = reach_data[is_first_reach]
+        # make a dictionary of reach 1 ID for each segment
+        first_reach_IDs = dict(zip(reach_data[is_first_reach].iseg,
+                                   reach_data[is_first_reach].reachID))
+        is_last_reach = np.append(is_first_reach[1:], True)
+        last_reaches = reach_data[is_last_reach]
+        # below doesn't work if there are gaps in numbering
+        #last_reaches = np.append((np.diff(reach_data.iseg) == 1), True)
         reach_data.outreach = np.append(reach_data.reachID[1:], 0)
         # for now, treat lakes (negative outseg number) the same as outlets
-        reach_data.outreach[last_reaches] = [first_reaches.reachID[s] if s > 0
-                                             else 0
-                                             for s in segment_data.outseg - 1]
+        reach_data.outreach[is_last_reach] = [first_reach_IDs.get(s-1, 0)
+                                             for s in segment_data.outseg]
         self.reach_data['outreach'] = reach_data.outreach
 
     def get_slopes(self):
@@ -1601,7 +1630,20 @@ class check:
         if self.verbose:
             print(headertxt.strip())
 
-        txt += self.sfr.get_outlets(level=self.level, verbose=False)  # will print twice if verbose=True
+        #txt += self.sfr.get_outlets(level=self.level, verbose=False)  # will print twice if verbose=True
+        # simpler check method using paths from routing graph
+        circular_segs = [k for k, v in self.sfr.paths.items() if v is None]
+        if len(circular_segs) > 0:
+            txt += '{0} instances where an outlet was not found after {1} consecutive segments!\n' \
+                .format(len(circular_segs), self.sfr.nss)
+            if self.level == 1:
+                txt += ' '.join(map(str, circular_segs)) + '\n'
+            else:
+                f = 'circular_routing.csv'
+                np.savetxt(f, circular_segs, fmt='%d', delimiter=',', header=txt)
+                txt += 'See {} for details.'.format(f)
+            if self.verbose:
+                print(txt)
         self._txt_footer(headertxt, txt, 'circular routing', warning=False)
 
     def overlapping_conductance(self, tol=1e-6):

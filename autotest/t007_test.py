@@ -684,7 +684,7 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    test_sr_scaling()
+    #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
@@ -692,5 +692,5 @@ if __name__ == '__main__':
     # test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
-    # export_netcdf(namfile)
+    export_netcdf('l2a_2k.nam')
     #    export_shapefile(namfile)
