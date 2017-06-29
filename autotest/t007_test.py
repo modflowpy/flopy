@@ -103,6 +103,16 @@ def export_shapefile(namfile):
                                                 fnc_name, s.numRecords)
     return
 
+def test_freyberg_export():
+    namfile = 'freyberg.nam'
+    model_ws = '../examples/data/freyberg_multilayer_transient/'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
+                                   load_only=['DIS', 'BAS6', 'NWT', 'OC',
+                                              'RCH',
+                                              'WEL',
+                                              'DRN',
+                                              'UPW'])
+    m.drn.stress_period_data.export(os.path.join(spth, namfile[:-4]+'.shp'), sparse=True)
 
 def test_export_output():
     import os
@@ -653,7 +663,6 @@ def test_shapefile():
         yield export_shapefile, namfile
     return
 
-
 def test_netcdf():
     for namfile in namfiles:
         yield export_netcdf, namfile
@@ -692,5 +701,5 @@ if __name__ == '__main__':
     # test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
-    export_netcdf('l2a_2k.nam')
-    #    export_shapefile(namfile)
+    # export_netcdf(namfile)
+    #test_freyberg_export()

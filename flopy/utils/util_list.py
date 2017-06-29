@@ -82,6 +82,7 @@ class MfList(object):
         self.__data = {}
         if data is not None:
             self.__cast_data(data)
+        self.__df = None
         self.list_free_format = list_free_format
         return
 
@@ -174,6 +175,12 @@ class MfList(object):
     @property
     def data(self):
         return self.__data
+
+    @property
+    def df(self):
+        if self.__df is None:
+            self.__df = self.get_dataframe()
+        return self.__df
 
     @property
     def vtype(self):
@@ -350,6 +357,65 @@ class MfList(object):
             raise Exception("MfList error: casting ndarray to recarray: " + \
                             str(e))
         self.__vtype[kper] = np.recarray
+
+    def get_dataframe(self, squeeze=True):
+        """Cast recarrays for stress periods into single
+        dataframe containing all stress periods. 
+        
+        Parameters
+        ----------
+        squeeze : bool
+            Reduce number of columns in dataframe to only include
+            stress periods where a variable changes.
+        
+        Returns
+        -------
+        df : dataframe
+            Dataframe of shape nrow = ncells, ncol = nvar x nper. If 
+            the squeeze option is choosen, nper is the number of 
+            stress periods where at least one cells is different, 
+            otherwise it is equal to the number of keys in MfList.data.
+        
+        Notes
+        -----
+        Requires pandas.
+        """
+        try:
+            import pandas as pd
+        except Exception as e:
+            print("this feature requires pandas")
+            return None
+
+        # make a dataframe of all data for all stress periods
+        dfs = []
+        for k, v in self.data.items():
+            df = pd.DataFrame(v)
+            df['per'] = k
+            df['id'] = df.index
+            dfs.append(df)
+        df = pd.concat(dfs)
+        df['node'] = df.i * self.model.ncol + df.j
+        kij = df[['id', 'node', 'k', 'i', 'j']].copy()
+        kij.index = kij.id
+        kij = kij.groupby(kij.index).mean()  # remove duplicates
+
+        # pivot the dataframe so that stress periods
+        # are represented across columns
+        # nrow == ncells, ncol = nvariables x nper
+        columns = list(set(df.columns).difference({'k', 'i', 'j', 'per', 'node', 'id'}))
+        dfs = [kij]
+        for c in columns:
+            pv = df[['per', c, 'id']].pivot(index='id', columns='per', values=c)
+
+            if squeeze:
+                diff = pv.diff(axis=1)
+                diff[0] = 1
+                diff = diff.astype(int)
+                changed = diff.sum(axis=0) > 0
+                pv = pv.loc[:, changed]
+            pv.columns = ['{}{}'.format(c, p) for p in pv.columns]
+            dfs.append(pv)
+        return pd.concat(dfs, axis=1)
 
     def add_record(self, kper, index, values):
         # Add a record to possible already set list for a given kper
