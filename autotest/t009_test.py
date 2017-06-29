@@ -169,6 +169,24 @@ def test_sfr_renumbering():
     assert 'continuity in segment and reach numbering' in chk.passed
     assert 'segment numbering order' in chk.passed
 
+    # test renumbering non-consecutive segment numbers
+    r['iseg'] *= 2
+    r['ireach'] = [1, 2, 3] * 9
+
+    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
+    d = np.core.records.fromarrays(d.transpose(),
+                                   dtype=[('nseg', int), ('outseg', int)])
+    d['nseg'] = np.arange(1, 10) * 2
+    d['outseg'] = np.array([4, 0, 6, 8, 3, 8, 1, 2, 8]) * 2
+    m = flopy.modflow.Modflow()
+    sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
+    chk = sfr.check()
+    assert 'segment numbering order' in chk.warnings
+    sfr.renumber_segments()
+    chk = sfr.check()
+    assert 'continuity in segment and reach numbering' in chk.passed
+    assert 'segment numbering order' in chk.passed
+
 
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',

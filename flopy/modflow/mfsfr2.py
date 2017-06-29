@@ -290,12 +290,11 @@ class ModflowSfr2(Package):
         self.maxval = np.max([tb['numval'] for tb in tabfiles_dict.values()]) if self.numtab > 0 else 0
 
         # Dataset 1c. ----------------------------------------------------------------------
-        self.nstrm = np.sign(nstrm) * len(reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
+        self._nstrm = np.sign(nstrm) * len(reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
         if segment_data is not None and not isinstance(segment_data, dict):
             segment_data = {0: segment_data}
         # use atleast_1d for length since segment_data might be a 0D array
         # this seems to be OK, because self.segment_data is produced by the constructor (never 0D)
-        self.nss = len(np.atleast_1d(segment_data[0]))# number of stream segments
         self.nsfrpar = nsfrpar
         self.nparseg = nparseg
         self.const = const  # conversion factor used in calculating stream depth for stream reach (icalc = 1 or 2)
@@ -320,7 +319,7 @@ class ModflowSfr2(Package):
         self.flwtol = flwtol  # streamflow tolerance for convergence of the kinematic wave equation
 
         # Dataset 2. -----------------------------------------------------------------------
-        self.reach_data = self.get_empty_reach_data(np.abs(self.nstrm))
+        self.reach_data = self.get_empty_reach_data(np.abs(nstrm))
         if reach_data is not None:
             for n in reach_data.dtype.names:
                 self.reach_data[n] = reach_data[n]
@@ -347,10 +346,10 @@ class ModflowSfr2(Package):
         # (depending on how SFR package was constructed)
         self.not_a_segment_values = [999999]
 
-        self.segment_data = {0: self.get_empty_segment_data(self.nss)}
+        self.segment_data = {0: self.get_empty_segment_data(nss)}
         if segment_data is not None:
             for i in segment_data.keys():
-                self.segment_data[i] = self.get_empty_segment_data(self.nss)
+                self.segment_data[i] = self.get_empty_segment_data(nss)
                 for n in segment_data[i].dtype.names:
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
@@ -360,12 +359,12 @@ class ModflowSfr2(Package):
             # first convert any not_a_segment_values to 0
             for v in self.not_a_segment_values:
                 self.segment_data[0].outseg[self.segment_data[0].outseg == v] = 0
-            self.get_outreaches()
+            self.set_outreaches()
         self.channel_geometry_data = channel_geometry_data
         self.channel_flow_data = channel_flow_data
 
         # Dataset 5 -----------------------------------------------------------------------
-        self.dataset_5 = dataset_5
+        self._dataset_5 = dataset_5
 
         # Attributes not included in SFR package input
         self.outsegs = {}  # dictionary of arrays; see Attributes section of documentation
@@ -381,11 +380,31 @@ class ModflowSfr2(Package):
 
 
     def __setattr__(self, key, value):
-        if key == "segment_data":
+        if key == "nstrm":
             super(ModflowSfr2, self). \
-                __setattr__("segment_data", value)
-            self._paths = None
+                __setattr__("_nstrm", value)
+        else: # return to default behavior of pakbase
+            super(ModflowSfr2, self).__setattr__(key, value)
 
+    @property
+    def nss(self):
+        # number of stream segments
+        return len(np.atleast_1d(self.segment_data[0]))
+
+    @property
+    def nstrm(self):
+        return np.sign(self._nstrm) * len(self.reach_data)
+
+    @property
+    def dataset_5(self):
+        """auto-update itmp so it is consistent with reach_data."""
+        nss = self.nss
+        ds5 = {}
+        for k, v in self._dataset_5.items():
+            itmp = np.sign(v[0]) * nss
+            ds5[k] = [itmp] + v[1:]
+        self._dataset_5 = ds5
+        return ds5
 
     @property
     def graph(self):
@@ -393,10 +412,21 @@ class ModflowSfr2(Package):
 
     @property
     def paths(self):
-        if self._paths is not None:
-            graph = self.graph
-            self._paths = {seg: find_path(graph, seg) for seg in graph.keys()}
+        if self._paths is None:
+            self._set_paths()
+            return self._paths
+        # check to see if routing in segment data was changed
+        nseg = np.array(sorted(self._paths.keys()), dtype=int)
+        outseg = np.array([self._paths[k][1] for k in nseg])
+        sd = self.segment_data[0]
+        if not np.array_equal(nseg, sd.nseg) or not np.array_equal(outseg, sd.outseg):
+            self._set_paths()
         return self._paths
+
+    def _set_paths(self):
+        graph = self.graph
+        self._paths = {seg: find_path(graph, seg) for seg in graph.keys()}
+
 
     @staticmethod
     def get_empty_reach_data(nreaches=0, aux_names=None, structured=True, default_value=-1.0E+10):
@@ -752,23 +782,31 @@ class ModflowSfr2(Package):
         logtxt = ''
         mbotms = self.parent.dis.botm.array[-1, i, j]
         below = streambotms <= mbotms
+        below_i = self.reach_data.i[below]
+        below_j = self.reach_data.j[below]
         l = []
         header = ''
         if np.any(below):
             print('Warning: SFR streambed elevations below model bottom. '
                   'See sfr_botm_conflicts.txt')
             if not adjust_botms:
-                l += [self.reach_data.i[below],
-                     self.reach_data.j[below],
+                l += [below_i,
+                     below_j,
                      mbotms[below],
                      streambotms[below]]
                 header += 'i,j,model_botm,streambed_botm'
             else:
+                print('Fixing elevation conflicts...')
                 botm = self.parent.dis.botm.array.copy()
-                botm[-1, i, j][below] = streambotms[below] - pad
-                l.append(botm[-1, i, j][below])
+                for ib, jb in zip(below_i, below_j):
+                    inds = (self.reach_data.i == ib) & (self.reach_data.j == jb)
+                    botm[-1, ib, jb] = streambotms[inds].min() - pad
+                botm[-1, below_i, below_j] = streambotms[below] - pad
+                l.append(botm[-1, below_i, below_j])
                 header += ',new_model_botm'
                 self.parent.dis.botm = botm
+                mbotms = self.parent.dis.botm.array[-1, i, j]
+                assert not np.any(streambotms <= mbotms)
                 print('New bottom array assigned to Flopy DIS package '
                       'instance.\nRun flopy.model.write() or '
                       'flopy.model.ModflowDis.write() to write new DIS file.')
@@ -855,11 +893,22 @@ class ModflowSfr2(Package):
                                  for i, r in enumerate(all_outsegs.T)}
         return txt
 
-    def get_outreaches(self):
+    def reset_reaches(self):
+        self.reach_data.sort(order=['iseg', 'ireach'])
+        reach_data = self.reach_data
+        segment_data = self.segment_data[0]
+        ireach = []
+        for i in np.arange(1, len(segment_data) + 1):
+            nreaches = np.sum(reach_data.iseg == i)
+            ireach += list(range(1, nreaches+1))
+        self.reach_data['ireach'] = ireach
+
+    def set_outreaches(self):
         """Determine the outreach for each SFR reach (requires a reachID column in reach_data).
         Uses the segment routing specified for the first stress period to route reaches between segments.
         """
         self.reach_data.sort(order=['iseg', 'ireach'])
+        self.reset_reaches() # ensure that each segment starts with reach 1
         reach_data = self.reach_data
         segment_data = self.segment_data[0]
         # this vectorized approach is more than an order of magnitude faster than a list comprehension
@@ -941,31 +990,48 @@ class ModflowSfr2(Package):
 
     def renumber_segments(self):
         """Renumber segments so that segment numbering is continuous and always increases
-        in the downstream direction. Experience suggests that this can substantially speed
-        convergence for some models using the NWT solver.
+        in the downstream direction. This may speed convergence of the NWT solver 
+        in some situations.
         """
+
+        self.segment_data[0].sort(order='nseg')
 
         # get renumbering info from per=0
         nseg = self.segment_data[0].nseg
         outseg = self.segment_data[0].outseg
 
+        # explicitly fix any gaps in the numbering
+        # (i.e. from removing segments)
+        nseg2 = np.arange(1, len(nseg) + 1)
+        # intermediate mapping that
+        r1 = dict(zip(nseg, nseg2))
+        r1[0] = 0
+        outseg2 = np.array([r1[s] for s in outseg])
+
+        # function re-assing upseg numbers consecutively at one level relative to outlet(s)
+        # counts down from the number of segments
         def reassign_upsegs(r, nexts, upsegs):
             nextupsegs = []
             for u in upsegs:
-                r[u] = nexts if u > 0 else u # handle lakes
+                r[u] = nexts if u > 0 else u  # handle lakes
                 nexts -= 1
-                nextupsegs += list(nseg[outseg == u])
+                nextupsegs += list(nseg2[outseg2 == u])
             return r, nexts, nextupsegs
 
         ns = len(nseg)
 
+        # start at outlets with nss;
+        # renumber upsegs consecutively at each level
+        # until all headwaters have been reached
         nexts = ns
-        r = {0: 0}
-        nextupsegs = nseg[outseg == 0]
+        r2 = {0: 0}
+        nextupsegs = nseg2[outseg2 == 0]
         for i in range(ns):
-            r, nexts, nextupsegs = reassign_upsegs(r, nexts, nextupsegs)
+            r2, nexts, nextupsegs = reassign_upsegs(r2, nexts, nextupsegs)
             if len(nextupsegs) == 0:
                 break
+        # map original segment numbers to new numbers
+        r = {k: r2.get(v, v) for k, v in r1.items()}
 
         # renumber segments in all stress period data
         for per in self.segment_data.keys():
@@ -979,6 +1045,8 @@ class ModflowSfr2(Package):
         # renumber segments in reach_data
         self.reach_data['iseg'] = [r.get(s, s) for s in self.reach_data.iseg]
         self.reach_data.sort(order=['iseg', 'ireach'])
+        self.reach_data['reachID'] = np.arange(1, len(self.reach_data) + 1)
+        self.set_outreaches()  # reset the outreaches to ensure continuity
 
         # renumber segments in other datasets
         def renumber_channel_data(d):
@@ -994,7 +1062,6 @@ class ModflowSfr2(Package):
 
         self.channel_geometry_data = renumber_channel_data(self.channel_geometry_data)
         self.channel_flow_data = renumber_channel_data(self.channel_flow_data)
-
 
     def _get_headwaters(self, per=0):
         """List all segments that are not outsegs (that do not have any segments upstream).
@@ -1676,7 +1743,7 @@ class check:
         if self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]:  # see SFR input instructions
             # first get an outreach for each reach
             if np.diff(self.sfr.reach_data.outreach).max() == 0:  # not sure if this is the best test
-                self.sfr.get_outreaches()
+                self.sfr.set_outreaches()
             reach_data = self.sfr.reach_data  # inconsistent with other checks that work with
             # reach_data attribute of check class. Want to have get_outreaches as a method of sfr class
             # (for other uses). Not sure if other check methods should also copy reach_data directly from
@@ -2234,8 +2301,3 @@ def find_path(graph, start, end=0, path=[]):
             if newpath: return newpath
     return None
 
-def get_outseg(seg, paths, valid_segs):
-    for s in paths[seg]:
-        if s in valid_segs:
-            return s
-    return 0
