@@ -1002,7 +1002,6 @@ class SpatialReference(object):
                 try:
                     from scipy.ndimage import rotate
                     a = rotate(a, self.rotation, cval=nodata)
-                    a[a < -1e3] = np.nan
                     height_rot, width_rot = a.shape
                     xmin, ymin, xmax, ymax = self.bounds
                     dx = (xmax - xmin) / width_rot
