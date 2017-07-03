@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.utils import HydmodObs, get_transmissivities
+from flopy.utils.postprocessing import get_transmissivities, get_water_table
 
 mf = flopy.modflow
 
@@ -45,5 +45,24 @@ def test_get_transmissivities():
                           [0.2, 2., 2., 2., 2., 2.],
                           [2., 2., 2., 1.2, 2., 2.]])).sum() < 1e-3
 
+def test_get_water_table():
+    nodata = -9999.
+    hds = np.ones ((3, 3, 3), dtype=float) * nodata
+    hds[-1, :, :] = 2.
+    hds[1, 1, 1] = 1.
+    wt = get_water_table(hds, nodata=nodata)
+    assert wt.shape == (3, 3)
+    assert wt[1, 1] == 1.
+    assert np.sum(wt) == 17.
+
+    hds = np.array([hds, hds])
+    wt = get_water_table(hds, nodata)
+    assert wt.shape == (2, 3, 3)
+    assert np.sum(wt[:, 1, 1]) == 2.
+    assert np.sum(wt) == 34.
+
+
+
 if __name__ == '__main__':
-    test_get_transmissivities()
+    #test_get_transmissivities()
+    test_get_water_table()
