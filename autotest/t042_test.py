@@ -56,7 +56,7 @@ def test_get_water_table():
     assert np.sum(wt) == 17.
 
     hds = np.array([hds, hds])
-    wt = get_water_table(hds, nodata)
+    wt = get_water_table(hds, nodata=nodata)
     assert wt.shape == (2, 3, 3)
     assert np.sum(wt[:, 1, 1]) == 2.
     assert np.sum(wt) == 34.
