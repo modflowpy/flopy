@@ -693,7 +693,7 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    test_sr_scaling()
+    #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
@@ -702,5 +702,5 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-    #test_freyberg_export()
+    test_freyberg_export()
     pass

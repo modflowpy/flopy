@@ -500,8 +500,8 @@ def mflist_helper(f, mfl, **kwargs):
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
-            if np.isscalar(kper):
-                kper = [kper]
+            #if np.isscalar(kper):
+            #    kper = [kper]
             sr = mfl.model.sr
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
@@ -510,12 +510,12 @@ def mflist_helper(f, mfl, **kwargs):
             elif df is not None:
                 verts = np.array(sr.get_vertices(df.i.values, df.j.values))
                 ra = df.to_records(index=False)
-                # write the projection file
-                if sr.epsg is None:
-                    epsg = kwargs.get('epsg', None)
-                else:
-                    epsg = sr.epsg
-                prj = kwargs.get('prj', None)
+            # write the projection file
+            if sr.epsg is None:
+                epsg = kwargs.get('epsg', None)
+            else:
+                epsg = sr.epsg
+            prj = kwargs.get('prj', None)
             verts = verts.transpose([2, 0, 1])
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(ra, geoms=polys, shpname=f, epsg=epsg, prj=prj)
