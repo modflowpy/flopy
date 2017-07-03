@@ -57,7 +57,7 @@ class ModflowLak(Package):
         and Konikow (p. 52). A negative THETA is automatically reset to a positive value after 
         values of NSSITR and SSCNCR are read.
     nssitr : int
-        Maximum number of iterations for Newton’s method of solution for equilibrium lake stages 
+        Maximum number of iterations for Newton's method of solution for equilibrium lake stages 
         in each MODFLOW iteration for steady-state aquifer head solution. Only read if ISS 
         (option flag input to DIS Package of MODFLOW indicating steady-state solution) 
         is not zero or if THETA is specified as a negative value.
@@ -72,7 +72,7 @@ class ModflowLak(Package):
             of NSSITR and SSCNCR are read.
         *	If NSSITR = 0, a value of 100 will be used instead.
     sscncr : float
-        Convergence criterion for equilibrium lake stage solution by Newton’s method. 
+        Convergence criterion for equilibrium lake stage solution by Newton's method. 
         Only read if ISS is not zero or if THETA is specified as a negative value.
         see notes above for nssitr.
     surfdepth : float
