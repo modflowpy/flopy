@@ -123,8 +123,8 @@ class SpatialReference(object):
                        'length to the number of rows/columns.')
                 raise TypeError(msg)
 
-        self.delc = np.atleast_1d(np.array(delc))  # * length_multiplier
-        self.delr = np.atleast_1d(np.array(delr))  # * length_multiplier
+        self.delc = np.atleast_1d(np.array(delc)).astype(np.float64)  # * length_multiplier
+        self.delr = np.atleast_1d(np.array(delr)).astype(np.float64)   # * length_multiplier
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
