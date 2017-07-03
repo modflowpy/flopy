@@ -65,8 +65,7 @@ def test_polygon_from_ij():
     fpth = os.path.join(mpth, 'test.shp')
     recarray2shp(recarray, geoms, fpth, prj=fpth2)
 
-
-def test_dtypes():
+    # test_dtypes
     fpth = os.path.join(mpth, 'test.shp')
     ra = shp2recarray(fpth)
     assert "int" in ra.dtype['k'].name
@@ -106,6 +105,5 @@ def test_epsgref():
 
 
 if __name__ == '__main__':
-    test_polygon_from_ij()
-    test_dtypes()
-    test_epsgref()
+    #test_polygon_from_ij()
+    #test_epsgref()
