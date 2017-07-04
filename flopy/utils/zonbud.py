@@ -227,7 +227,7 @@ class ZoneBudget(object):
         """
         return np.unique(self._budget['name'])
 
-    def get_budget(self, names=None, zones=None):
+    def get_budget(self, names=None, zones=None, net=False):
         """
         Get a list of zonebudget record arrays.
 
@@ -238,6 +238,8 @@ class ZoneBudget(object):
             A list of strings containing the names of the records desired.
         zones : list of ints or strings
             A list of integer zone numbers or zone names desired.
+        net : boolean
+            If True, returns net IN-OUT for each record.
 
         Returns
         -------
@@ -257,21 +259,33 @@ class ZoneBudget(object):
             zones = [zones]
         elif isinstance(zones, int):
             zones = [zones]
+        select_fields = ['totim', 'time_step', 'stress_period',
+                         'name'] + self._zonefieldnames
+        select_records = np.where(
+            (self._budget['name'] == self._budget['name']))
         if zones is not None:
             for idx, z in enumerate(zones):
                 if isinstance(z, int):
                     zones[idx] = 'ZONE_{}'.format(z)
             select_fields = ['totim', 'time_step', 'stress_period',
                              'name'] + zones
-        else:
-            select_fields = ['totim', 'time_step', 'stress_period',
-                             'name'] + self._zonefieldnames
         if names is not None:
+            names = self._clean_budget_names(names)
             select_records = np.in1d(self._budget['name'], names)
+        if net:
+            net_budget = self._compute_net_budget()
+            seen = []
+            net_names = []
+            for name in names:
+                iname = '_'.join(name.split('_')[:-1])
+                if iname not in seen:
+                    seen.append(iname)
+                else:
+                    net_names.append(iname)
+            select_records = np.in1d(net_budget['name'], net_names)
+            return net_budget[select_fields][select_records]
         else:
-            select_records = np.where(
-                (self._budget['name'] == self._budget['name']))
-        return self._budget[select_fields][select_records]
+            return self._budget[select_fields][select_records]
 
     def to_csv(self, fname):
         """
@@ -1390,6 +1404,38 @@ class ZoneBudget(object):
                                               flux)
 
         return recordarray
+
+    def _clean_budget_names(self, names):
+        newnames = []
+        for name in names:
+            if not name.endswith('_IN') and not name.endswith('_OUT'):
+                newname_in = name.upper() + '_IN'
+                newname_out = name.upper() + '_OUT'
+                if newname_in in self._budget['name']:
+                    newnames.append(newname_in)
+                if newname_out in self._budget['name']:
+                    newnames.append(newname_out)
+            else:
+                if name in self._budget['name']:
+                    newnames.append(name)
+        return newnames
+
+    def _compute_net_budget(self):
+        recnames = self.get_record_names()
+        innames = [n for n in recnames if n.endswith('_IN')]
+        outnames = [n for n in recnames if n.endswith('_OUT')]
+        select_fields = ['totim', 'time_step', 'stress_period',
+                         'name'] + self._zonefieldnames
+        select_records_in = np.in1d(self._budget['name'], innames)
+        select_records_out = np.in1d(self._budget['name'], outnames)
+        in_budget = self._budget[select_fields][select_records_in]
+        out_budget = self._budget[select_fields][select_records_out]
+        net_budget = in_budget.copy()
+        for f in [n for n in self._zonefieldnames if n in select_fields]:
+            net_budget[f] = np.array([r for r in in_budget[f]]) - np.array([r for r in out_budget[f]])
+        newnames = ['_'.join(n.split('_')[:-1]) for n in net_budget['name']]
+        net_budget['name'] = newnames
+        return net_budget
 
     def __mul__(self, other):
         newbud = self._budget.copy()
