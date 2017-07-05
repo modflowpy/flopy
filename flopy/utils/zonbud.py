@@ -273,6 +273,8 @@ class ZoneBudget(object):
             names = self._clean_budget_names(names)
             select_records = np.in1d(self._budget['name'], names)
         if net:
+            if names is None:
+                names = self._clean_budget_names(self.get_record_names())
             net_budget = self._compute_net_budget()
             seen = []
             net_names = []
@@ -315,7 +317,7 @@ class ZoneBudget(object):
         return
 
     def get_dataframes(self, start_datetime=None, timeunit='D',
-                       index_key='totim'):
+                       index_key='totim', names=None, zones=None, net=False):
         """
         Get pandas dataframes.
         Parameters
@@ -368,7 +370,7 @@ class ZoneBudget(object):
         assert timeunit in valid_timeunit, errmsg + ', '.join(
             valid_timeunit) + '.'
 
-        df = pd.DataFrame().from_records(self._budget)
+        df = pd.DataFrame().from_records(self.get_budget(names, zones, net))
         if start_datetime is not None:
             totim = totim_to_datetime(df.totim,
                                       start=pd.to_datetime(start_datetime),
