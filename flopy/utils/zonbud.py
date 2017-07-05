@@ -330,6 +330,12 @@ class ZoneBudget(object):
         index_key : str
             Indicates the fields to be used (in addition to "record") in the
             resulting DataFrame multi-index.
+        names : list of strings
+            A list of strings containing the names of the records desired.
+        zones : list of ints or strings
+            A list of integer zone numbers or zone names desired.
+        net : boolean
+            If True, returns net IN-OUT for each record.
 
         Returns
         -------
