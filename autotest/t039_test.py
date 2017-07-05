@@ -142,6 +142,17 @@ def test_zonbud_aliases():
     return
 
 
+def test_net_budget():
+    """
+    t039 Test net budget.
+    """
+    cbc_f = os.path.join(loadpth, 'freyberg_mlt', 'freyberg.gitcbc')
+    zon = read_zbarray(os.path.join(loadpth, 'zonef_mlt'))
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
+    zb.get_budget(net=True)
+    return
+
+
 def test_zonbud_to_csv():
     """
     t039 Test zonbud export to csv file method
@@ -196,6 +207,7 @@ if __name__ == '__main__':
     # test_comare2mflist_mlt()
     test_compare2zonebudget()
     test_zonbud_aliases()
+    test_net_budget()
     test_zonbud_to_csv()
     test_zonbud_math()
     test_zonbud_copy()
