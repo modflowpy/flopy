@@ -78,8 +78,9 @@ class ModelMap(object):
         # model map override spatial reference settings
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
             rotation != 0 or length_multiplier != 1.:
-            self.sr.set_spatialreference(xul, yul, xll, yll, rotation,
-                                         length_multiplier)
+            self.sr.length_multiplier = length_multiplier
+            self.sr.set_spatialreference(xul, yul, xll, yll, rotation)
+
         if ax is None:
             try:
                 self.ax = plt.gca()

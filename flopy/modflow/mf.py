@@ -473,8 +473,7 @@ class Modflow(BaseModel):
         namefile_path = os.path.join(ml.model_ws, f)
 
         # set the reference information
-        ref_attributes = SpatialReference. \
-            attribs_from_namfile_header(namefile_path)
+        ref_attributes = SpatialReference.load(namefile_path)
 
         # read name file
         try:
@@ -582,13 +581,16 @@ class Modflow(BaseModel):
                                  .format(dis.name[0]))
             ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
+        itmuni = ref_attributes.pop("itmuni", 4)
         if ml.structured:
             sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
-                                  lenuni=ml.dis.lenuni, **ref_attributes)
+                                  **ref_attributes)
+            dis.lenuni = sr.lenuni
         else:
             sr = None
         dis.sr = sr
         dis.start_datetime = start_datetime
+        dis.itmuni = itmuni
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.
