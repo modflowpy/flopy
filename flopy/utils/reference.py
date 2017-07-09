@@ -1158,7 +1158,7 @@ class SpatialReference(object):
                 iverts.append([iv1, iv2, iv3, iv4])
         return verts, iverts
 
-    def get_3d_vertex_connectivity(self, nlay, botm, ibound=None):
+    def get_3d_shared_vertex_connectivity(self, nlay, botm, ibound=None):
 
         # get the x and y points for the grid
         x = self.xgrid.flatten()
@@ -1201,6 +1201,73 @@ class SpatialReference(object):
                     iverts.append([iv4 + nrvncv, iv3 + nrvncv,
                                    iv1 + nrvncv, iv2 + nrvncv,
                                    iv4, iv3, iv1, iv2])
+
+        return verts, iverts
+
+    def get_3d_vertex_connectivity(self, nlay, botm, ibound=None):
+        if ibound is None:
+            ncells = nlay * self.nrow * self.ncol
+        else:
+            ncells = (ibound != 0).sum()
+        npoints = ncells * 8
+        verts = np.empty((npoints, 3), dtype=np.float)
+        iverts = []
+        ipoint = 0
+        for k in range(nlay):
+            for i in range(self.nrow):
+                for j in range(self.ncol):
+                    if ibound[k, i, j] == 0:
+                        continue
+
+                    ivert = []
+                    pts = self.get_vertices(i, j)
+                    pt0, pt1, pt2, pt3, pt0 = pts
+
+                    z = botm[k + 1, i, j]
+
+                    verts[ipoint, 0:2] = np.array(pt1)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt2)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt0)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt3)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    z = botm[k, i, j]
+
+                    verts[ipoint, 0:2] = np.array(pt1)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt2)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt0)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt3)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    iverts.append(ivert)
 
         return verts, iverts
 

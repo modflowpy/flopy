@@ -39,7 +39,7 @@ class Vtk(object):
 
         return
 
-    def write(self, ibound_filter=False):
+    def write(self, shared_vertex=False, ibound_filter=False):
         """write the vtk file"""
 
         indent_level = 0
@@ -48,12 +48,15 @@ class Vtk(object):
 
         # calculate number of active cells
         nlay, nrow, ncol = self.shape
-        npoints = (nrow + 1) * (ncol + 1) * (nlay + 1)
         ncells = nlay * nrow * ncol
         ibound = None
         if ibound_filter:
             ibound = self.model.bas6.ibound.array
             ncells = (ibound != 0).sum()
+        if shared_vertex:
+            npoints = (nrow + 1) * (ncol + 1) * (nlay + 1)
+        else:
+            npoints = ncells * 8
 
         # xml
         s = '<?xml version="1.0"?>'
@@ -74,9 +77,15 @@ class Vtk(object):
         s = '<DataArray type="Float64" NumberOfComponents="3">'
         indent_level = start_tag(f, s, indent_level)
         dis = self.model.dis
-        z = np.vstack([dis.top.array.reshape(1, dis.nrow, dis.ncol), dis.botm.array])
-        verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, z,
+        z = np.vstack([dis.top.array.reshape(1, dis.nrow, dis.ncol),
+                       dis.botm.array])
+        if shared_vertex:
+            verts, iverts = dis.sr.get_3d_shared_vertex_connectivity(dis.nlay,
+                                                            z, ibound=ibound)
+        else:
+            verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, z,
                                                           ibound=ibound)
+
         for row in verts:
             s = indent_level * '  ' + '{} {} {} \n'.format(*row)
             f.write(s)

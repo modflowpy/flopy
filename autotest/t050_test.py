@@ -23,7 +23,7 @@ def test_vtkoutput():
 
     fvtkout = os.path.join(cpth, 'test.vtu')
     vtkfile = Vtk(fvtkout, ml)
-    vtkfile.write(ibound_filter=True)
+    vtkfile.write(shared_vertex=False, ibound_filter=True)
 
 
 if __name__ == '__main__':
