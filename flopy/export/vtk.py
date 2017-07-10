@@ -37,6 +37,13 @@ class Vtk(object):
         self.model = model
         self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
 
+        self.arrays = {}
+
+        return
+
+    def add_array(self, name, a):
+        assert a.shape == self.shape
+        self.arrays[name] = a
         return
 
     def write(self, shared_vertex=False, ibound_filter=False):
@@ -67,7 +74,12 @@ class Vtk(object):
         indent_level = start_tag(f, '<UnstructuredGrid>', indent_level)
 
         # piece
-        s = '<Piece NumberOfPoints="{}" NumberOfCells="{}">'.format(npoints, ncells)
+        if self.verbose:
+            s = 'Number of point is {}\n ' \
+                'Number of cells is {}\n'.format(npoints, ncells)
+            print(s)
+        s = '<Piece NumberOfPoints="{}" ' \
+            'NumberOfCells="{}">'.format(npoints, ncells)
         indent_level = start_tag(f, s, indent_level)
 
         # points
@@ -134,6 +146,9 @@ class Vtk(object):
         indent_level = start_tag(f, s, indent_level)
 
         self._write_data_array(f, indent_level, 'top', z[0:-1], ibound)
+
+        for name, a in self.arrays.items():
+            self._write_data_array(f, indent_level, name, a, ibound)
 
         s = '</CellData>'
         indent_level = end_tag(f, s, indent_level)
