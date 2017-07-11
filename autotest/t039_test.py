@@ -92,10 +92,14 @@ def test_compare2zonebudget(rtol=1e-2):
             a2 = np.array([v for v in zbu_arr[zonenames][r2[0]][0]])
             allclose = np.allclose(a1, a2, rtol)
 
-            mxdiff = np.abs(a1-a2).max()
-            print(name,mxdiff)
-            s = 'Zonebudget arrays do not match at time {0} ({1}): {2}.'\
-                .format(time,name,mxdiff)
+            mxdiff = np.abs(a1 - a2).max()
+            idxloc = np.argmax(np.abs(a1 - a2))
+            txt = '{} - Max: {}  a1: {}  a2: {}'.format(name, mxdiff,
+                                                        a1[idxloc],
+                                                        a2[idxloc])
+            print(txt)
+            s = 'Zonebudget arrays do not match at time {0} ({1}): {2}.' \
+                .format(time, name, mxdiff)
             assert allclose, s
     return
 
