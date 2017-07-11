@@ -80,10 +80,17 @@ def test_compare2zonebudget(rtol=1e-2):
     zbutil_recarray = zb.get_budget()
 
     times = np.unique(zonebudget_recarray['totim'])
+    print(times)
+
     zonenames = [n for n in zonebudget_recarray.dtype.names if 'ZONE' in n]
+    zonenames = [n for n in zbutil_recarray.dtype.names if 'ZONE' in n]
 
     for time in times:
+        idx = zonebudget_recarray['totim'] == time
+        print(time, np.sum(idx), idx)
         zb_arr = zonebudget_recarray[zonebudget_recarray['totim'] == time]
+        idx = zbutil_recarray['totim'] == time
+        print(time, np.sum(idx), idx)
         zbu_arr = zbutil_recarray[zbutil_recarray['totim'] == time]
         for name in zb_arr['name']:
             r1 = np.where((zb_arr['name'] == name))
@@ -202,9 +209,9 @@ def test_zonbud_readwrite_zbarray():
 if __name__ == '__main__':
     # test_comare2mflist_mlt()
     test_compare2zonebudget()
-    test_zonbud_aliases()
-    test_zonbud_to_csv()
-    test_zonbud_math()
-    test_zonbud_copy()
-    test_zonbud_readwrite_zbarray()
-    test_zonbud_get_record_names()
+    #test_zonbud_aliases()
+    #test_zonbud_to_csv()
+    #test_zonbud_math()
+    #test_zonbud_copy()
+    #test_zonbud_readwrite_zbarray()
+    #test_zonbud_get_record_names()
