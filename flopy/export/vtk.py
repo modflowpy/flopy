@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import os
 import numpy as np
 
+
 def start_tag(f, tag, indent_level, indent_char='  '):
     s = indent_level * indent_char + tag
     indent_level += 1
@@ -29,7 +30,8 @@ class Vtk(object):
         self.verbose = verbose
 
         if os.path.exists(output_filename):
-            print("removing existing vtk file: " + output_filename)
+            if self.verbose:
+                print('removing existing vtk file: ' + output_filename)
             os.remove(output_filename)
         self.output_filename = output_filename
 
@@ -47,10 +49,14 @@ class Vtk(object):
         return
 
     def write(self, shared_vertex=False, ibound_filter=False):
-        """write the vtk file"""
+        """
+        Write the vtk file
+
+        """
 
         indent_level = 0
-        print("writing vtk file")
+        if self.verbose:
+            print('writing vtk file')
         f = open(self.output_filename, 'w')
 
         # calculate number of active cells
@@ -64,20 +70,21 @@ class Vtk(object):
             npoints = (nrow + 1) * (ncol + 1) * (nlay + 1)
         else:
             npoints = ncells * 8
+        if self.verbose:
+            s = 'Number of point is {}\n ' \
+                'Number of cells is {}\n'.format(npoints, ncells)
+            print(s)
 
         # xml
         s = '<?xml version="1.0"?>'
         f.write(s + '\n')
-        indent_level = start_tag(f, '<VTKFile type="UnstructuredGrid">', indent_level)
+        indent_level = start_tag(f, '<VTKFile type="UnstructuredGrid">',
+                                 indent_level)
 
         # unstructured grid
         indent_level = start_tag(f, '<UnstructuredGrid>', indent_level)
 
         # piece
-        if self.verbose:
-            s = 'Number of point is {}\n ' \
-                'Number of cells is {}\n'.format(npoints, ncells)
-            print(s)
         s = '<Piece NumberOfPoints="{}" ' \
             'NumberOfCells="{}">'.format(npoints, ncells)
         indent_level = start_tag(f, s, indent_level)
@@ -137,7 +144,6 @@ class Vtk(object):
         s = '</DataArray>'
         indent_level = end_tag(f, s, indent_level)
 
-
         s = '</Cells>'
         indent_level = end_tag(f, s, indent_level)
 
@@ -167,7 +173,7 @@ class Vtk(object):
 
     def _write_data_array(self, f, indent_level, name, a, ibound):
         """
-        Write a data array to the vtk file
+        Write a numpy array to the vtk file
 
         """
 
