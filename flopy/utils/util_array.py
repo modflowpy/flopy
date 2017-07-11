@@ -2255,10 +2255,10 @@ class Util2d(object):
             raw = line.strip('\n').split()
             i1, i2, j1, j2, v = int(raw[0])-1, int(raw[1])-1, \
                                 int(raw[2])-1, int(raw[3])-1, \
-                                dtype(raw[0])
+                                dtype(raw[4])
             for j in range(j1, j2+1):
                 for i in range(i1, i2+1):
-                    data[j, i] = v
+                    data[i, j] = v
         if np.isnan(np.sum(data)):
             raise Exception("Util2d.load_block() error: np.NaN in data array")
         return data

@@ -496,10 +496,11 @@ class ListBudget(object):
                 df_vol.pop(in_name)
                 df_vol.pop(out_name)
             cols = list(df_flux.columns)
-            cols.sort()
             cols = [col.lower() for col in cols]
             df_flux.columns = cols
             df_vol.columns = cols
+            df_flux.sort_index(axis=1,inplace=True)
+            df_vol.sort_index(axis=1,inplace=True)
             return df_flux, df_vol
     def _build_index(self, maxentries):
         self.idx_map = self._get_index(maxentries)

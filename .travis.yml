@@ -44,4 +44,5 @@ install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
+    - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - nosetests -v -w ./autotest

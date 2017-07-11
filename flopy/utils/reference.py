@@ -1123,6 +1123,154 @@ class SpatialReference(object):
 
         return b
 
+    def get_2d_vertex_connectivity(self):
+        """
+        Create the cell 2d vertices array and the iverts index array.  These
+        are the same form as the ones used to instantiate an unstructured
+        spatial reference.
+
+        Returns
+        -------
+
+        verts : ndarray
+            array of x and y coordinates for the grid vertices
+
+        iverts : list
+            a list with a list of vertex indices for each cell in clockwise
+            order starting with the upper left corner
+
+        """
+        x = self.xgrid.flatten()
+        y = self.ygrid.flatten()
+        nrowvert = self.nrow + 1
+        ncolvert = self.ncol + 1
+        npoints = nrowvert * ncolvert
+        verts = np.empty((npoints, 2), dtype=np.float)
+        verts[:, 0] = x
+        verts[:, 1] = y
+        iverts = []
+        for i in range(self.nrow):
+            for j in range(self.ncol):
+                iv1 = i * ncolvert + j  # upper left point number
+                iv2 = iv1 + 1
+                iv4 = (i + 1) * ncolvert + j
+                iv3 = iv4 + 1
+                iverts.append([iv1, iv2, iv3, iv4])
+        return verts, iverts
+
+    def get_3d_shared_vertex_connectivity(self, nlay, botm, ibound=None):
+
+        # get the x and y points for the grid
+        x = self.xgrid.flatten()
+        y = self.ygrid.flatten()
+
+        # set the size of the vertex grid
+        nrowvert = self.nrow + 1
+        ncolvert = self.ncol + 1
+        nlayvert = nlay + 1
+        nrvncv = nrowvert * ncolvert
+        npoints = nrvncv * nlayvert
+
+        # create and fill a 3d points array for the grid
+        verts = np.empty((npoints, 3), dtype=np.float)
+        verts[:, 0] = np.tile(x, nlayvert)
+        verts[:, 1] = np.tile(y, nlayvert)
+        istart = 0
+        istop = nrvncv
+        for k in range(nlay + 1):
+            verts[istart:istop, 2] = self.interpolate(botm[k],
+                                                      verts[istart:istop, :2],
+                                                      method='linear')
+            istart = istop
+            istop = istart + nrvncv
+
+        # create the list of points comprising each cell. points must be
+        # listed a specific way according to vtk requirements.
+        iverts = []
+        for k in range(nlay):
+            koffset = k * nrvncv
+            for i in range(self.nrow):
+                for j in range(self.ncol):
+                    if ibound is not None:
+                        if ibound[k, i, j] == 0:
+                            continue
+                    iv1 = i * ncolvert + j + koffset
+                    iv2 = iv1 + 1
+                    iv4 = (i + 1) * ncolvert + j + koffset
+                    iv3 = iv4 + 1
+                    iverts.append([iv4 + nrvncv, iv3 + nrvncv,
+                                   iv1 + nrvncv, iv2 + nrvncv,
+                                   iv4, iv3, iv1, iv2])
+
+        return verts, iverts
+
+    def get_3d_vertex_connectivity(self, nlay, botm, ibound=None):
+        if ibound is None:
+            ncells = nlay * self.nrow * self.ncol
+        else:
+            ncells = (ibound != 0).sum()
+        npoints = ncells * 8
+        verts = np.empty((npoints, 3), dtype=np.float)
+        iverts = []
+        ipoint = 0
+        for k in range(nlay):
+            for i in range(self.nrow):
+                for j in range(self.ncol):
+                    if ibound[k, i, j] == 0:
+                        continue
+
+                    ivert = []
+                    pts = self.get_vertices(i, j)
+                    pt0, pt1, pt2, pt3, pt0 = pts
+
+                    z = botm[k + 1, i, j]
+
+                    verts[ipoint, 0:2] = np.array(pt1)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt2)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt0)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt3)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    z = botm[k, i, j]
+
+                    verts[ipoint, 0:2] = np.array(pt1)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt2)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt0)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt3)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    iverts.append(ivert)
+
+        return verts, iverts
+
 
 class SpatialReferenceUnstructured(SpatialReference):
     """
