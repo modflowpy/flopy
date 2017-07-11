@@ -416,7 +416,8 @@ class ZoneBudget(object):
             chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True,
                                     kstpkper=kstpkper, totim=totim)[0]
             ich = np.zeros(self.cbc_shape, self.int_type)
-            ich[chd != 0] = 1
+            idxch = np.ma.where(chd != 0.)
+            ich[idxch] = 1
         if 'FLOW RIGHT FACE' in reclist:
             reclist.remove('FLOW RIGHT FACE')
             recordarray = self._accumulate_flow_frf(recordarray,
@@ -691,7 +692,8 @@ class ZoneBudget(object):
         """
         if self.ncol >= 2:
             data = \
-            self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)[0]
+                self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                  totim=totim)[0]
 
             # "FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
             # COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
@@ -949,7 +951,8 @@ class ZoneBudget(object):
         """
         if self.nrow >= 2:
             data = \
-            self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)[0]
+                self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                  totim=totim)[0]
 
             # "FLOW FRONT FACE"
             # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
@@ -1170,7 +1173,8 @@ class ZoneBudget(object):
         """
         if self.nlay >= 2:
             data = \
-            self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)[0]
+                self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                  totim=totim)[0]
 
             # "FLOW LOWER FACE"
             # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1

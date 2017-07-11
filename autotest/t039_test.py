@@ -86,15 +86,16 @@ def test_compare2zonebudget(rtol=1e-2):
 
     for time in times:
         idx = zonebudget_recarray['totim'] == time
-        print(time, '\nNumber of entries in array1:', np.sum(idx))
+        print('Time:', time)
         zb_arr = zonebudget_recarray[zonebudget_recarray['totim'] == time]
         idx = zbutil_recarray['totim'] == time
-        print('Number of entries in array2:', np.sum(idx))
         zbu_arr = zbutil_recarray[zbutil_recarray['totim'] == time]
         for name in zbu_arr['name']:
             r1 = np.where((zb_arr['name'] == name))
             r2 = np.where((zbu_arr['name'] == name))
             if r1[0].shape[0] < 1 or r2[0].shape[0] < 1:
+                continue
+            if r1[0].shape[0] != r2[0].shape[0]:
                 continue
             a1 = np.array([v for v in zb_arr[zonenames][r1[0]][0]])
             a2 = np.array([v for v in zbu_arr[zonenames][r2[0]][0]])
