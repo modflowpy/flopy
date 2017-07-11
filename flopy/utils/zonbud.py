@@ -1466,6 +1466,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) * other
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1474,6 +1476,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1482,6 +1486,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1490,6 +1496,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) + other
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1498,6 +1506,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) - other
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
