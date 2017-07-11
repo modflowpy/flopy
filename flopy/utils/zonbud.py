@@ -210,7 +210,7 @@ class ZoneBudget(object):
     def get_model_shape(self):
         return self.nlay, self.nrow, self.ncol
 
-    def get_record_names(self):
+    def get_record_names(self, stripped=False):
         """
         Get a list of water budget record names in the file.
 
@@ -225,7 +225,21 @@ class ZoneBudget(object):
         >>> recnames = zb.get_record_names()
 
         """
-        return np.unique(self._budget['name'])
+        if not stripped:
+            return np.unique(self._budget['name'])
+        else:
+            seen = []
+            for recname in self.get_record_names():
+                if recname in ['IN-OUT', 'TOTAL_IN', 'TOTAL_OUT']:
+                    continue
+                if recname.endswith('_IN'):
+                    recname = recname[:-3]
+                elif recname.endswith('_OUT'):
+                    recname = recname[:-4]
+                if recname not in seen:
+                    seen.append(recname)
+            seen.extend(['IN-OUT', 'TOTAL'])
+            return np.array(seen)
 
     def get_budget(self, names=None, zones=None, net=False):
         """
