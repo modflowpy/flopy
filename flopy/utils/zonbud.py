@@ -57,10 +57,12 @@ class ZoneBudget(object):
             raise Exception(
                 'Cannot load cell budget file: {}.'.format(cbc_file))
 
-        # Zones must be passed as an array
-        assert isinstance(z,
-                          np.ndarray), 'Please pass zones as type {}'.format(
-            np.ndarray)
+        if isinstance(z, list):
+            for zi in z:
+                assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
+            z = np.array(z)
+        elif isinstance(z, np.ndarray):
+            assert z.dtype in [int, np.int32, np.int64], 'Zones dtype must be integer'
 
         # Check for negative zone values
         for zi in np.unique(z):
