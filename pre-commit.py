@@ -59,21 +59,29 @@ def update_version():
     
         v1 = get_version_str(vmajor, vminor, vmicro, vbuild)
     
+        # get current build number
+        b = subprocess.Popen(("git", "describe", "--match", "build"),
+                             stdout=subprocess.PIPE).communicate()[0]
+        vcommit = int(b.decode().strip().split('-')[1]) + 2
+    
         print('Updating version:')
         print('  ', v0, '->', v1)
     
         # write new version file
         f = open(pth, 'w')
-        f.write('#{} version file automatically '.format(pak) +
+        f.write('# {} version file automatically '.format(pak) +
                 'created using...{0}\n'.format(os.path.basename(__file__)))
-        f.write('#            created on......' +
+        f.write('# created on...' +
                 '{0}\n'.format(datetime.datetime.now().strftime("%B %d, %Y %H:%M:%S")))
         f.write('\n')
         f.write('major = {}\n'.format(vmajor))
         f.write('minor = {}\n'.format(vminor))
         f.write('micro = {}\n'.format(vmicro))
-        f.write('build = {}\n\n'.format(vbuild))
-        f.write("__version__= '{:d}.{:d}.{:d}.{:d}'.format(major, minor, micro, build)")
+        f.write('build = {}\n'.format(vbuild))
+        f.write('commit = {}\n\n'.format(vcommit))
+        f.write("__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
+        f.write("__build__ = '{:d}.{:d}.{:d}.{:d}'.format(major, minor, micro, build)\n")
+        f.write("__git_commit__ = '{:d}'.format(commit)\n")
         f.close()
         print('Succesfully updated version.py')
     except:
