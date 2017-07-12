@@ -102,6 +102,7 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
                 rec.append(array[i, j])
             wr.record(*rec)
     wr.save(filename)
+    print('wrote {}'.format(filename))
 
 def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
@@ -130,6 +131,7 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
         w.poly([verts[i]])
         w.record(*r)
     w.save(filename)
+    print('wrote {}'.format(filename))
     # write the projection file
     # write the projection file
     write_prj(filename, epsg, prj)
@@ -213,7 +215,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                                 # aname = name + "{0:03d}{1:02d}".format(kper, k)
                                 name = shape_attr_name(name, length=4)
                                 aname = "{}{:03d}{:03d}".format(name, k + 1, kper + 1)
-                                array_dict[aname] = array[k]
+                                array_dict[aname] = array[k].astype(np.float32)
                 elif isinstance(a, list):
                     for v in a:
                         if isinstance(v, Util3d):
@@ -222,6 +224,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                                 name = shape_attr_name(u2d.name)
                                 name += '_{:03d}'.format(i + 1)
                                 array_dict[name] = u2d.array
+                                
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.sr, array_dict)
     # write the projection file
@@ -304,11 +307,12 @@ def enforce_10ch_limit(names):
 
 
 def get_pyshp_field_info(dtypename):
-    """Get pyshp dtype information for a given numpy dtype."""
+    """Get pyshp dtype information for a given numpy dtype.
+    """
     fields = {'int': ('N', 20, 0),
               '<i': ('N', 20, 0),
               'float': ('F', 20, 12),
-              '<f': ('F', 20, 0),
+              '<f': ('F', 20, 12),
               'bool': ('L', 1),
               'b1': ('L', 1),
               'str': ('C', 50),

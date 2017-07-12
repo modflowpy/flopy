@@ -62,7 +62,7 @@ class SfrFile():
         self._set_names() # ensure correct number of column names
         self.times = self.get_times()
         self.geoms = None # not implemented yet
-        self.df = None
+        self._df = None
 
     def get_skiprows_ncols(self):
         """Get the number of rows to skip at the top."""
@@ -91,6 +91,12 @@ class SfrFile():
             n = len(self.names)
             for i in range(n, self.ncol):
                 self.names.append('col{}'.format(i+1))
+
+    @property
+    def df(self):
+        if self._df is None:
+            self._df = self.get_dataframe()
+        return self._df
 
     @staticmethod
     def get_nstrm(df):
@@ -135,7 +141,7 @@ class SfrFile():
         if self.geoms is not None:
             geoms = self.geoms * self.nstrm
             df['geometry'] = geoms
-        self.df = df
+        self._df = df
         return df
 
     def _get_result(self, segment, reach):
