@@ -73,7 +73,7 @@ def update_version():
         f.write('minor = {}\n'.format(vminor))
         f.write('micro = {}\n'.format(vmicro))
         f.write('build = {}\n\n'.format(vbuild))
-        f.write("__version__= '{}'\n".format(v1))
+        f.write("__version__= '{:d}.{:d}.{:d}.{:d}'.format(major, minor, micro, build)")
         f.close()
         print('Succesfully updated version.py')
     except:
