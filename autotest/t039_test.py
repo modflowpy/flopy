@@ -85,10 +85,8 @@ def test_compare2zonebudget(rtol=1e-2):
     zonenames = [n for n in zonebudget_recarray.dtype.names if 'ZONE' in n]
 
     for time in times:
-        idx = zonebudget_recarray['totim'] == time
         print('Time:', time)
         zb_arr = zonebudget_recarray[zonebudget_recarray['totim'] == time]
-        idx = zbutil_recarray['totim'] == time
         zbu_arr = zbutil_recarray[zbutil_recarray['totim'] == time]
         for name in zbu_arr['name']:
             r1 = np.where((zb_arr['name'] == name))

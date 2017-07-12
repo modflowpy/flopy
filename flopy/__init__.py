@@ -22,7 +22,7 @@ contribute.
 
 __name__ = 'flopy'
 __author__ = 'Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy White, Jeff Starn, Mike Fienen, and Alain Frances'
-from .version import __version__, __build__
+from .version import __version__
 
 #imports
 from . import modflow
