@@ -1687,6 +1687,8 @@ def read_zbarray(fname):
             elif locat == 'INTERNAL':
                 # READ ZONES
                 rowvals = [int(v) for v in rowitems]
+                s = 'Too many values encountered on this line.'
+                assert len(rowvals) <= fmtin, s
                 vals.extend(rowvals)
 
             elif locat == 'EXTERNAL':
