@@ -1556,8 +1556,10 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
         The array of zones to be written.
     fname :  str
         The path and name of the file to be written.
-    width : int
+    fmtin : int
         The number of values to write to each line.
+    iprn : int
+        Padding space to add between each value.
 
     Returns
     -------
