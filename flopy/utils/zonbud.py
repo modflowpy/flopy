@@ -1646,6 +1646,7 @@ def read_zbarray(fname):
 
     # Initialize data counter
     totlen = 0
+    i = 0
 
     # First line contains array dimensions
     dimstring = lines.pop(0).strip().split()
@@ -1663,6 +1664,7 @@ def read_zbarray(fname):
     for line in lines:
         rowitems = line.strip().split()
 
+        # Skip blank lines
         if len(rowitems) == 0:
             continue
 
@@ -1714,12 +1716,9 @@ def read_zbarray(fname):
                 # place values for the previous layer into the zone array
                 vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
                 zones[lay, :, :] = vals[:, :]
-
-                if lay == nlay - 1:
-                    break
-                else:
-                    lay += 1
+                lay += 1
             totlen += len(rowitems)
+        i += 1
     s = 'The number of values read ({:,.0f})' \
         ' does not match the number expected' \
         ' ({:,.0f})'.format(totlen,
