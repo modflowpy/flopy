@@ -1625,6 +1625,110 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
 
 
 def read_zbarray(fname):
+    """
+    Reads an ascii array in a format readable by the zonebudget program executable.
+
+    Parameters
+    ----------
+    fname :  str
+        The path and name of the file to be written.
+
+    Returns
+    -------
+    zones : numpy ndarray
+        An integer array of the zones.
+    """
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+
+    # Initialize layer
+    lay = 0
+
+    # Initialize data counter
+    totlen = 0
+
+    # First line contains array dimensions
+    dimstring = lines.pop(0).strip().split()
+    nlay, nrow, ncol = [int(v) for v in dimstring]
+    zones = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+
+    # The number of values to read before placing
+    # them into the zone array
+    datalen = nrow * ncol
+
+    # List of valid values for LOCAT
+    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
+
+    # ITERATE OVER THE ROWS
+    for line in lines:
+        rowitems = line.strip().split()
+
+        if len(rowitems) == 0:
+            continue
+
+        # HEADER
+        if rowitems[0].upper() in locats:
+            vals = []
+            locat = rowitems[0].upper()
+
+            if locat == 'CONSTANT':
+                iconst = int(rowitems[1])
+            else:
+                fmt = rowitems[1].strip('()')
+                fmtin, iprn = [int(v) for v in fmt.split('I')]
+
+        # ZONE DATA
+        else:
+            if locat == 'CONSTANT':
+                vals = np.ones((nrow, ncol), dtype=np.int32) * iconst
+                lay += 1
+            elif locat == 'INTERNAL':
+                # READ ZONES
+                rowvals = [int(v) for v in rowitems]
+                vals.extend(rowvals)
+
+            elif locat == 'EXTERNAL':
+                # READ EXTERNAL FILE
+                fname = rowitems[0]
+                if not os.path.isfile(fname):
+                    errmsg = 'Could not find external file "{}"'.format(fname)
+                    raise Exception(errmsg)
+                with open(fname, 'r') as ext_f:
+                    ext_flines = ext_f.readlines()
+                for ext_frow in ext_flines:
+                    ext_frowitems = ext_frow.strip().split()
+                    rowvals = [int(v) for v in ext_frowitems]
+                    vals.extend(rowvals)
+                if len(vals) != datalen:
+                    errmsg = 'The number of values read from external ' \
+                             'file "{}" does not match the expected ' \
+                             'number.'.format(len(vals))
+                    raise Exception(errmsg)
+            else:
+                # Should not get here
+                raise Exception('Locat not recognized: {}'.format(locat))
+
+                # IGNORE COMPOSITE ZONES
+
+            if len(vals) == datalen:
+                # place values for the previous layer into the zone array
+                vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
+                zones[lay, :, :] = vals[:, :]
+
+                if lay == nlay - 1:
+                    break
+                else:
+                    lay += 1
+            totlen += len(rowitems)
+    s = 'The number of values read ({:,.0f})' \
+        ' does not match the number expected' \
+        ' ({:,.0f})'.format(totlen,
+                            nlay * nrow * ncol)
+    assert totlen == nlay * nrow * ncol, s
+    return zones
+
+
+def read_zbarray_old(fname):
     with open(fname, 'r') as f:
         lines = f.readlines()
 
