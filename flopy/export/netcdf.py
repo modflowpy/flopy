@@ -625,8 +625,7 @@ class NetCdf(object):
 
         vmin, vmax = self.model.dis.botm.array.min(), self.model.dis.top.array.max()
         if self.z_positive == 'down':
-            self.zs = -1.0 * self.model.dis.zcentroids
-            vmin, vmax = -vmax, -vmin
+            vmin, vmax = vmax, vmin
         else:
             self.zs = self.model.dis.zcentroids
 
@@ -711,11 +710,6 @@ class NetCdf(object):
         self.nc.setncattr("geospatial_vertical_max", max_vertical)
         self.nc.setncattr("geospatial_vertical_resolution", "variable")
         self.nc.setncattr("featureType", "Grid")
-        self.nc.setncattr("origin_x", self.model.sr.xul)
-        self.nc.setncattr("origin_y", self.model.sr.yul)
-        self.nc.setncattr("origin_crs", self.sr.proj4)
-        self.nc.setncattr("grid_rotation_from_origin",
-                          self.model.sr.rotation)
         for k, v in self.global_attributes.items():
             try:
                 self.nc.setncattr(k, v)
@@ -757,16 +751,14 @@ class NetCdf(object):
         time[:] = np.asarray(time_values)
 
         # Elevation
-        units = "meters"
-        if self.grid_units.lower().startswith('f'):
-            units = "feet"
-        attribs = {"units": units, "standard_name": "elevation",
+        sr = self.model.sr
+        attribs = {"units": sr.units, "standard_name": "elevation",
                    "long_name": NC_LONG_NAMES.get("elevation", "elevation"), "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
-                   "positive": "down"}
+                   "positive": self.z_positive}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
                                     dimensions=("layer", "y", "x"))
-        elev[:] = self.zs
+        elev[:] = self.zs * sr.length_multiplier # consistent w/ horizontal units
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
@@ -787,7 +779,6 @@ class NetCdf(object):
         lat[:] = self.ys
 
         # x
-        sr = self.model.sr
         self.log("creating x var")
         attribs = {"units": sr.units, "standard_name": "projection_x_coordinate",
                    "long_name": NC_LONG_NAMES.get("x", "x coordinate of projection"), "axis": "X"}
@@ -975,28 +966,29 @@ class NetCdf(object):
         metadata : flopy.export.metadata.acdd object
         """
         md = acdd(id, model=self.model)
-        if check:
-            self._check_vs_sciencebase(md)
-        # get set of public attributes
-        attr = {n for n in dir(md) if '_' not in n[0]}
-        # skip some convenience attributes
-        skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage',
-                'get_sciencebase_xml_metadata',
-                'get_sciencebase_metadata'}
-        towrite = sorted(list(attr.difference(skip)))
-        for k in towrite:
-            v = md.__getattribute__(k)
-            if v is not None:
-                # convert everything to strings
-                if not isinstance(v, str):
-                    if isinstance(v, list):
-                        v = ','.join(v)
-                    else:
-                        v = str(v)
-                self.global_attributes[k] = v
-                self.nc.setncattr(k, v)
-        self.write()
-        return md
+        if md.sb is not None:
+            if check:
+                self._check_vs_sciencebase(md)
+            # get set of public attributes
+            attr = {n for n in dir(md) if '_' not in n[0]}
+            # skip some convenience attributes
+            skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage',
+                    'get_sciencebase_xml_metadata',
+                    'get_sciencebase_metadata'}
+            towrite = sorted(list(attr.difference(skip)))
+            for k in towrite:
+                v = md.__getattribute__(k)
+                if v is not None:
+                    # convert everything to strings
+                    if not isinstance(v, str):
+                        if isinstance(v, list):
+                            v = ','.join(v)
+                        else:
+                            v = str(v)
+                    self.global_attributes[k] = v
+                    self.nc.setncattr(k, v)
+            self.write()
+            return md
 
     def _check_vs_sciencebase(self, md):
         """Check that model bounds read from flopy are consistent with those in ScienceBase."""

@@ -1,5 +1,8 @@
 from flopy.utils.flopy_io import get_url_text
-
+try:
+    import pandas as pd
+except:
+    pd = False
 class acdd:
     """Translate ScienceBase global metadata attributes to CF and ACDD
     global attributes.
@@ -22,6 +25,8 @@ class acdd:
         self.model = model
         self.sciencebase_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(sciencebase_id)
         self.sb = self.get_sciencebase_metadata(sciencebase_id)
+        if self.sb is None:
+            return
 
         # stuff Jeremy mentioned
         self.abstract = self.sb['summary']
@@ -133,8 +138,15 @@ class acdd:
         for t in ['start', 'end']:
             tc[t] = [d.get('dateString') for d in l
                            if t in d['type'].lower()][0]
-        if not self.model.dis.steady:
-            pass
+        if not self.model.dis.steady and pd:
+            # replace with times from model reference
+            tc['start'] = self.model.dis.start_datetime
+            strt = pd.Timestamp(self.model.dis.start_datetime)
+            mlen = self.model.dis.perlen.array.sum()
+            tunits = self.model.dis.itmuni_dict[self.model.dis.itmuni]
+            tc['duration'] = '{} {}'.format(mlen, tunits)
+            end = strt + pd.Timedelta(mlen, unit='d')
+            tc['end'] = str(end)
         return tc
 
     @property
@@ -184,8 +196,8 @@ class acdd:
         from flopy.utils.flopy_io import get_url_text
         text = get_url_text(url,
                             error_msg='Need an internet connection to get metadata from ScienceBase.')
-        d = json.loads(text)
-        return d
+        if text is not None:
+            return json.loads(text)
 
     def get_sciencebase_xml_metadata(self):
         """Gets xml from sciencebase.gov, using XML url obtained
