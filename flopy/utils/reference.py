@@ -114,7 +114,7 @@ class SpatialReference(object):
 
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=2,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
-                 proj4_str=None, epsg=None, units=None,
+                 proj4_str=None, epsg=None, prj=None, units=None,
                  length_multiplier=None):
 
         for delrc in [delr, delc]:
@@ -142,7 +142,8 @@ class SpatialReference(object):
         self._epsg = epsg
         if epsg is not None:
             self._proj4_str = getproj4(self._epsg)
-
+        self.prj = prj
+        self.crs = crs(prj=prj, epsg=epsg)
 
         self.supported_units = ["feet", "meters"]
         self._units = units
@@ -216,6 +217,18 @@ class SpatialReference(object):
         #instead reset proj4 when epsg is set
         #(on init or setattr)
         return self._epsg
+
+    @property
+    def wkt(self):
+        if self._wkt is None:
+            if self.prj is not None:
+                with open(self.prj) as src:
+                    wkt = src.read()
+            elif self.epsg is not None:
+                wkt = getprj(self.epsg)
+            return wkt
+        else:
+            return self._wkt
 
     @property
     def lenuni(self):
@@ -485,13 +498,19 @@ class SpatialReference(object):
             if units is not None:
                 self._units = units
             self._epsg = None
-
         elif key == "epsg":
             super(SpatialReference, self). \
                 __setattr__("_epsg", value)
             # reset the units and proj4
             self._units = None
             self._proj4_str = getproj4(self._epsg)
+            self.crs = crs(epsg=value)
+        elif key == "prj":
+            super(SpatialReference, self). \
+                __setattr__("prj", value)
+            # translation to proj4 strings in crs class not robust yet
+            # leave units and proj4 alone for now.
+            self.crs = crs(prj=value, epsg=self.epsg)
         else:
             super(SpatialReference, self).__setattr__(key, value)
             reset = False
@@ -1618,6 +1637,181 @@ class epsgRef:
             print('{}:\n{}\n'.format(k, v))
 
 
+class crs(object):
+    """Container to parse and store coordinate reference system parameters,
+    and translate between different formats."""
+    def __init__(self, prj=None, esri_wkt=None, epsg=None):
+
+        self.wktstr = None
+        if prj is not None:
+            with open(prj) as input:
+                self.wktstr = input.read()
+        elif esri_wkt is not None:
+            self.wktstr = esri_wkt
+        elif epsg is not None:
+            wktstr = getprj(epsg)
+            if wktstr is not None:
+                self.wktstr = wktstr
+        if self.wktstr is not None:
+            self.parse_wkt()
+
+    @property
+    def crs(self):
+        """Dict mapping crs attibutes to proj4 parameters"""
+        # projection
+        if 'mercator' in self.projcs.lower():
+            if 'transvers' in self.projcs.lower() or \
+                            'tm' in self.projcs.lower():
+                proj = 'tmerc'
+            else:
+                proj = 'merc'
+        elif 'utm' in self.projcs.lower() and \
+                        'zone' in self.projcs.lower():
+            proj = 'utm'
+        elif 'stateplane' in self.projcs.lower():
+            proj = 'lcc'
+        elif 'lambert' and 'conformal' and 'conic' in self.projcs.lower():
+            proj = 'lcc'
+        elif 'albers' in self.projcs.lower():
+            proj = 'aea'
+        else:
+            proj = None
+
+        # datum
+        if 'NAD' in self.datum.lower() or \
+            'north' in self.datum.lower() and \
+                'america' in self.datum.lower():
+            datum = 'nad'
+            if '83' in self.datum.lower():
+                datum += '83'
+            elif '27' in self.datum.lower():
+                datum += '27'
+        elif '84' in self.datum.lower():
+            datum = 'wgs84'
+
+        # ellipse
+        if '1866' in self.spheriod_name:
+            ellps = 'clrk66'
+        elif 'grs' in self.spheriod_name.lower():
+            ellps = 'grs80'
+        elif 'wgs' in self.spheriod_name.lower():
+            ellps = 'wgs84'
+
+        # prime meridian
+        pm = self.primem[0].lower()
+
+        return {'proj': proj,
+                   'datum': datum,
+                   'ellps': ellps,
+                   'a': self.semi_major_axis,
+                   'rf': self.inverse_flattening,
+                   'lat_0': self.latitude_of_origin,
+                   'lat_1': self.standard_parallel_1,
+                   'lat_2': self.standard_parallel_2,
+                   'lon_0': self.central_meridian,
+                   'k_0': self.scale_factor,
+                   'x_0': self.false_easting,
+                   'y_0': self.false_northing,
+                   'units': self.projcs_unit,
+                   'zone': self.utm_zone}
+
+    @property
+    def grid_mapping_attribs(self):
+        """Map parameters for CF Grid Mappings
+        http://cfconventions.org/cf-conventions/v1.6.0
+        /cf-conventions.html#appendix-grid-mappings"""
+        sp = [p for p in [self.standard_parallel_1,
+                          self.standard_parallel_1]
+              if p is not None]
+        sp = sp if len(sp) > 0 else None
+        proj = self.crs['proj']
+        names = {'aea': 'albers_conical_equal_area',
+                 'aeqd': 'azimuthal_equidistant',
+                 'laea': 'lambert_azimuthal_equal_area',
+                 'lcc': 'lambert_conformal_conic',
+                 'merc': 'mercator',
+                 'tmerc': 'transverse_mercator',
+                 'utm': 'transverse_mercator'}
+        attribs = {'grid_mapping_name': names[proj],
+                   'semi_major_axis': self.crs['a'],
+                   'inverse_flattening': self.crs['rf'],
+                   'standard_parallel': sp,
+                   'longitude_of_central_meridian': self.crs['lon_0'],
+                   'latitude_of_projection_origin': self.crs['lat_0'],
+                   'scale_factor_at_projection_origin': self.crs['k_0'],
+                   'false_easting': self.crs['x_0'],
+                   'false_northing': self.crs['y_0']}
+        return {k:v for k, v in attribs.items() if v is not None}
+
+    @property
+    def proj4(self):
+        """Not implemented yet"""
+        return None
+
+    def parse_wkt(self):
+
+        self.projcs = self._gettxt('PROJCS["', '"')
+        self.utm_zone = None
+        if 'utm' in self.projcs.lower():
+            self.utm_zone = self.projcs[-3:].lower().strip('n').strip('s')
+        self.geogcs = self._gettxt('GEOGCS["', '"')
+        self.datum = self._gettxt('DATUM["', '"')
+        tmp = self._getgcsparam('SPHEROID')
+        self.spheriod_name = tmp.pop(0)
+        self.semi_major_axis = tmp.pop(0)
+        self.inverse_flattening = tmp.pop(0)
+        self.primem = self._getgcsparam('PRIMEM')
+        self.gcs_unit = self._getgcsparam('UNIT')
+        self.projection = self._gettxt('PROJECTION["', '"')
+        self.latitude_of_origin = self._getvalue('latitude_of_origin')
+        self.central_meridian = self._getvalue('central_meridian')
+        self.standard_parallel_1 = self._getvalue('standard_parallel_1')
+        self.standard_parallel_2 = self._getvalue('standard_parallel_2')
+        self.scale_factor = self._getvalue('scale_factor')
+        self.false_easting = self._getvalue('false_easting')
+        self.false_northing = self._getvalue('false_northing')
+        self.projcs_unit = self._getprojcs_unit()
+
+    def _gettxt(self, s1, s2):
+        s = self.wktstr.lower()
+        strt = s.find(s1.lower())
+        if strt >= 0:  # -1 indicates not found
+            strt += len(s1)
+            end = s[strt:].find(s2.lower()) + strt
+            return self.wktstr[strt:end]
+
+    def _getvalue(self, k):
+        s = self.wktstr.lower()
+        strt = s.find(k.lower())
+        if strt >= 0:
+            strt += len(k)
+            end = s[strt:].find(']') + strt
+            try:
+                return float(self.wktstr[strt:end].split(',')[1])
+            except:
+                pass
+
+    def _getgcsparam(self, txt):
+        nvalues = 3 if txt.lower() == 'spheroid' else 2
+        tmp = self._gettxt('{}["'.format(txt), ']')
+        if tmp is not None:
+            tmp = tmp.replace('"', '').split(',')
+            name = tmp[0:1]
+            values = list(map(float, tmp[1:nvalues]))
+            return name + values
+        else:
+            return [None]*nvalues
+
+    def _getprojcs_unit(self):
+        if self.projcs is not None:
+            tmp = self.wktstr.lower().split('unit["')[-1]
+            uname, ufactor = tmp.strip().strip(']').split('",')[0:2]
+            ufactor = float(ufactor.split(']')[0].split()[0].split(',')[0])
+            return uname, ufactor
+        return None, None
+
+
+
 def getprj(epsg, addlocalreference=True, text='esriwkt'):
     """Gets projection file (.prj) text for given epsg code from spatialreference.org
     See: https://www.epsg-registry.org/
@@ -1636,18 +1830,17 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
         text for a projection (*.prj) file.
     """
     epsgfile = epsgRef()
-    prj = None
+    wktstr = None
     try:
         from epsgref import prj
-        prj = prj.get(epsg)
+        wktstr = prj.get(epsg)
     except:
         epsgfile.make()
-
-    if prj is None:
-        prj = get_spatialreference(epsg, text=text)
-    if addlocalreference:
-        epsgfile.add(epsg, prj)
-    return prj
+    if wktstr is None:
+        wktstr = get_spatialreference(epsg, text=text)
+    if addlocalreference and wktstr is not None:
+        epsgfile.add(epsg, wktstr)
+    return wktstr
 
 
 def get_spatialreference(epsg, text='esriwkt'):
@@ -1671,12 +1864,13 @@ def get_spatialreference(epsg, text='esriwkt'):
     """
     from flopy.utils.flopy_io import get_url_text
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
-    text = get_url_text(url,
+    result = get_url_text(url,
                         error_msg='No internet connection or epsg code {} '
                                   'not found on spatialreference.org.'.format(epsg))
-    if text is None: # epsg code not listed on spatialreference.org may still work with pyproj
+    if result is not None:
+        return result.replace("\n", "")
+    elif text == 'epsg': # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
-    return text.replace("\n", "")
 
 
 def getproj4(epsg):

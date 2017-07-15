@@ -1,6 +1,6 @@
 # Test export module
 import sys
-
+import glob
 sys.path.insert(0, '..')
 import copy
 import os
@@ -635,7 +635,31 @@ def test_netcdf_classmethods():
 #            fdiv2.nc.variables["model_top"][0,0]
 #
 #     assert f.nc.variables["ibound"][0,0,0] == 1
+def test_wkt_parse():
+    """Test parsing of Coordinate Reference System parameters
+    from well-known-text in .prj files."""
 
+    from flopy.utils.reference import crs
+
+    prjs = glob.glob('../examples/data/prj_test/*')
+
+    for prj in prjs:
+        with open(prj) as src:
+            wkttxt = src.read()
+            wkttxt = wkttxt.replace("'", '"')
+        if len(wkttxt) > 0 and 'projcs' in wkttxt.lower():
+            crsobj = crs(esri_wkt=wkttxt)
+            geocs_params = ['wktstr', 'geogcs', 'datum', 'spheriod_name',
+                            'semi_major_axis', 'inverse_flattening',
+                            'primem', 'gcs_unit']
+            for k in geocs_params:
+                assert crsobj.__dict__[k] is not None
+            projcs_params = [k for k in crsobj.__dict__
+                             if k not in geocs_params]
+            if crsobj.projcs is not None:
+                for k in projcs_params:
+                    if k in wkttxt.lower():
+                        assert crsobj.__dict__[k] is not None
 
 def test_shapefile_ibound():
     import os
@@ -694,7 +718,7 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    test_sr_scaling()
+    #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
@@ -704,4 +728,5 @@ if __name__ == '__main__':
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
     #test_freyberg_export()
+    test_wkt_parse()
     pass
