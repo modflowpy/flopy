@@ -49,7 +49,7 @@ coverage.xml
 *.log
 
 # shell stuff
-*.sh
+#*.sh
 
 # Sphinx documentation
 docs/_build/

@@ -5,7 +5,7 @@ Instructions for making a FloPy release
 
 1.  Update information in `.\docs\USGS_release.md`
 2.  Rename version number at top of `README.md` from FloPy Version 3.2.X-dev to FloPy Version 3.2.X.
-3.  Update version number in `flopy/version.py`. Use GitHub website to determine what the next build number is for `__build__`
+3.  Update version number in `flopy/version.py`. Update the `major`, `minor`, and/or `micro` variables as appropriate. The pre-commit hook will update the `build` variable to 0 since a `tag` has not been created for the release yet.
 
 ## Build USGS release notes
 

@@ -1,4 +1,4 @@
-matplotlib<2.0
+matplotlib
 netcdf4<1.2.8
 pyproj
 pyshp
