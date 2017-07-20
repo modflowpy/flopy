@@ -1,4 +1,6 @@
 from flopy.utils.flopy_io import get_url_text
+import numpy as np
+
 try:
     import pandas as pd
 except:
@@ -138,7 +140,7 @@ class acdd:
         for t in ['start', 'end']:
             tc[t] = [d.get('dateString') for d in l
                            if t in d['type'].lower()][0]
-        if not self.model.dis.steady and pd:
+        if not np.all(self.model.dis.steady) and pd:
             # replace with times from model reference
             tc['start'] = self.model.dis.start_datetime
             strt = pd.Timestamp(self.model.dis.start_datetime)

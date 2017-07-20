@@ -782,7 +782,7 @@ class NetCdf(object):
         self.log("creating x var")
         attribs = {"units": sr.units, "standard_name": "projection_x_coordinate",
                    "long_name": NC_LONG_NAMES.get("x", "x coordinate of projection"), "axis": "X"}
-        x = self.create_variable("x", attribs, precision_str="f8",
+        x = self.create_variable("x_proj", attribs, precision_str="f8",
                                    dimensions=("y", "x"))
         x[:] = sr.xcentergrid
 
@@ -790,11 +790,11 @@ class NetCdf(object):
         self.log("creating y var")
         attribs = {"units": sr.units, "standard_name": "projection_y_coordinate",
                    "long_name": NC_LONG_NAMES.get("y", "y coordinate of projection"), "axis": "Y"}
-        y = self.create_variable("y", attribs, precision_str="f8",
+        y = self.create_variable("y_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
         y[:] = sr.ycentergrid
 
-        # crs variable
+        # grid mapping variable
         self.log("creating grid mapping variable")
         attribs = self.sr.crs.grid_mapping_attribs
         gmv = self.create_variable(attribs['grid_mapping_name'], attribs, precision_str="f8")
