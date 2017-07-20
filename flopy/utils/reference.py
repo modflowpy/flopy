@@ -196,6 +196,7 @@ class SpatialReference(object):
 
     @property
     def proj4_str(self):
+        proj4_str = None
         if self._proj4_str is not None and \
                         "epsg" in self._proj4_str.lower():
             if "init" not in self._proj4_str.lower():
@@ -205,8 +206,8 @@ class SpatialReference(object):
             # set the epsg if proj4 specifies it
             tmp = [i for i in self._proj4_str.split() if 'epsg' in i.lower()]
             self._epsg = int(tmp[0].split(':')[1])
-        else:
-            proj4_str = self._proj4_str
+        elif self.epsg is not None:
+            proj4_str = '+init=epsg:{}'.format(self.epsg)
         return proj4_str
 
     @property
