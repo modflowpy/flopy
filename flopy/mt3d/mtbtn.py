@@ -277,12 +277,12 @@ class Mt3dBtn(Package):
         self.savucn = savucn
         self.nprs = nprs
         self.timprs = timprs
-        self.obs = obs
         if obs is not None:
             if isinstance(obs, list):
                 obs = np.array(obs)
             if obs.ndim != 2:
                 raise Exception('obs must be (or be convertible to) a 2d array')
+        self.obs = obs
         self.nprobs = nprobs
         self.chkmas = chkmas
         self.nprmas = nprmas
