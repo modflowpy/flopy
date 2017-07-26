@@ -309,6 +309,18 @@ class BaseModel(object):
                     break
         return iu, fname
 
+    def _output_msg(self, i, add=True):
+        if add:
+            txt1 = 'Adding'
+            txt2 = 'to'
+        else:
+            txt1 = 'Removing'
+            txt2 = 'from'
+        msg = '{} {} '.format(txt1, self.output_fnames[i]) + \
+              '(unit={}) '.format(self.output_units[i]) + \
+              '{} the output list.'.format(txt2)
+        print(msg)
+
     def add_output_file(self, unit, fname=None, extension='cbc',
                         binflag=True, package=None):
         """
@@ -396,6 +408,8 @@ class BaseModel(object):
             print("BaseModel.add_output() warning: " +
                   "replacing existing filename {0}".format(fname))
             idx = self.output_fnames.index(fname)
+            if self.verbose:
+                self._output_msg(i, add=False)
             self.output_fnames.pop(idx)
             self.output_units.pop(idx)
             self.output_binflag.pop(idx)
@@ -408,9 +422,13 @@ class BaseModel(object):
             self.output_packages.append([package])
         else:
             self.output_packages.append([])
+
+        if self.verbose:
+            self._output_msg(-1, add=True)
+
         return
-    
-    
+
+
     def remove_output(self, fname=None, unit=None):
         """
         Remove an output file from the model by specifying either the
@@ -427,6 +445,8 @@ class BaseModel(object):
         if fname is not None:
             for i, e in enumerate(self.output_fnames):
                 if fname in e:
+                    if self.verbose:
+                        self._output_msg(i, add=False)
                     self.output_fnames.pop(i)
                     self.output_units.pop(i)
                     self.output_binflag.pop(i)
@@ -434,6 +454,8 @@ class BaseModel(object):
         elif unit is not None:
             for i, u in enumerate(self.output_units):
                 if u == unit:
+                    if self.verbose:
+                        self._output_msg(i, add=False)
                     self.output_fnames.pop(i)
                     self.output_units.pop(i)
                     self.output_binflag.pop(i)

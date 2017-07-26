@@ -790,7 +790,7 @@ class ModflowSfr2(Package):
         layers = self.parent.dis.get_layer(i, j, streambotms)
 
         # check against model bottom
-        logfile = 'sfr_botm_conflicts.txt'
+        logfile = 'sfr_botm_conflicts.chk'
         logtxt = ''
         mbotms = self.parent.dis.botm.array[-1, i, j]
         below = streambotms <= mbotms
@@ -800,7 +800,7 @@ class ModflowSfr2(Package):
         header = ''
         if np.any(below):
             print('Warning: SFR streambed elevations below model bottom. '
-                  'See sfr_botm_conflicts.txt')
+                  'See sfr_botm_conflicts.chk')
             if not adjust_botms:
                 l += [below_i,
                      below_j,
