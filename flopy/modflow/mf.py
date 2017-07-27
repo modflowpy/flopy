@@ -584,9 +584,11 @@ class Modflow(BaseModel):
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
         itmuni = ref_attributes.pop("itmuni", 4)
         if ml.structured:
+            itmuni = dis.itmuni
+            ref_attributes['lenuni'] = dis.lenuni
             sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
                                   **ref_attributes)
-            dis.lenuni = sr.lenuni
+            #dis.lenuni = sr.lenuni
         else:
             sr = None
         dis.sr = sr
