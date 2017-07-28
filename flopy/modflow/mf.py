@@ -118,7 +118,8 @@ class Modflow(BaseModel):
         # -- check if unstructured is specified for something
         # other than mfusg is specified
         if not self.structured:
-            assert 'mfusg' in self.version, 'structured=False can only be specified for mfusg models'
+            assert 'mfusg' in self.version, \
+                'structured=False can only be specified for mfusg models'
 
         # external option stuff
         self.array_free_format = True
@@ -248,11 +249,11 @@ class Modflow(BaseModel):
     def nrow_ncol_nlay_nper(self):
         # structured dis
         dis = self.get_package('DIS')
-        if (dis):
+        if dis:
             return dis.nrow, dis.ncol, dis.nlay, dis.nper
         # unstructured dis
         dis = self.get_package('DISU')
-        if (dis):
+        if dis:
             return None, dis.nodelay.array[:], dis.nlay, dis.nper
         # no dis
         return 0, 0, 0, 0
@@ -583,9 +584,11 @@ class Modflow(BaseModel):
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
         itmuni = ref_attributes.pop("itmuni", 4)
         if ml.structured:
+            itmuni = dis.itmuni
+            ref_attributes['lenuni'] = dis.lenuni
             sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
                                   **ref_attributes)
-            dis.lenuni = sr.lenuni
+            #dis.lenuni = sr.lenuni
         else:
             sr = None
         dis.sr = sr

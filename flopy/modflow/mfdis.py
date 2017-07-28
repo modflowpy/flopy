@@ -929,9 +929,12 @@ class ModflowDis(Package):
                                         filetype=ModflowDis.ftype())
 
         # create dis object instance
-        dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
-                         top, botm, perlen, nstp, tsmult, steady, itmuni,
-                         lenuni, xul=xul, yul=yul, rotation=rotation,
+        dis = ModflowDis(model, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper,
+                         delr=delr, delc=delc, laycbd=laycbd,
+                         top=top, botm=botm,
+                         perlen=perlen, nstp=nstp, tsmult=tsmult,
+                         steady=steady, itmuni=itmuni, lenuni=lenuni,
+                         xul=xul, yul=yul, rotation=rotation,
                          proj4_str=proj4_str, start_datetime=start_datetime,
                          unitnumber=unitnumber, filenames=filenames)
         if check:

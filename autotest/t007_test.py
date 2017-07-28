@@ -481,8 +481,9 @@ def test_read_usgs_model_reference():
     shutil.copy('../examples/data/usgs.model.reference', model_ws)
     fm = flopy.modflow
     m = fm.Modflow(modelname='junk', model_ws=model_ws)
+    # feet and days
     dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
-                        delc=delc)
+                        delc=delc, lenuni=1, itmuni=4)
     m.write_input()
 
     # test reading of SR information from usgs.model.reference
