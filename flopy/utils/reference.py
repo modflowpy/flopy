@@ -1016,6 +1016,7 @@ class SpatialReference(object):
 
             xll, yll = self.xll, self.yll
             cellsize = self.delr[0] * self.length_multiplier
+            fmt = kwargs.get('fmt', '%.18e')
             a = a.copy()
             a[np.isnan(a)] = nodata
             if self.rotation != 0:
@@ -1040,7 +1041,8 @@ class SpatialReference(object):
             txt += 'xllcorner  {:f}\n'.format(xll)
             txt += 'yllcorner  {:f}\n'.format(yll)
             txt += 'cellsize  {}\n'.format(cellsize)
-            txt += 'NODATA_value  {:.0f}\n'.format(nodata)
+            # ensure that nodata fmt consistent w values
+            txt += 'NODATA_value  {}\n'.format(fmt) %(nodata)
             with open(filename, 'w') as output:
                 output.write(txt)
             with open(filename, 'ab') as output:
