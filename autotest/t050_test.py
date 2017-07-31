@@ -4,11 +4,10 @@ import numpy as np
 import flopy
 from flopy.export.vtk import Vtk
 
+# create output directory
 cpth = os.path.join('temp', 't050')
-# delete the directory if it exists
 if os.path.isdir(cpth):
     shutil.rmtree(cpth)
-# make the directory
 os.makedirs(cpth)
 
 
@@ -28,6 +27,7 @@ def test_vtkoutput():
     a = np.arange(nlay * nrow * ncol).reshape((nlay, nrow, ncol))
     vtkfile.add_array('testarray', a)
     vtkfile.write(shared_vertex=False, ibound_filter=True)
+    return
 
 
 if __name__ == '__main__':

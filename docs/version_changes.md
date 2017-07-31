@@ -8,6 +8,7 @@ FloPy Changes
 * Added support for comma separators in 1D data in LPF and UPF files
 * Added support for comma separators on non array data lines in DIS, BCF, LPF, UPW, HFB, and RCH Packages.
 * Added `reset_budgetunit()` method to OC package to faciltate saving cell-by-cell binary output to a single file for all packages that can save cell-by-cell output.
+* Added a `get_residual` method to the `CellBudgetFile` class.  
 * Bug fixes:
     1. Fixed bug in OC when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
     2. Fixed bug in SUB if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load).
