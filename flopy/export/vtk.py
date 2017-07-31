@@ -103,7 +103,7 @@ class Vtk(object):
                                                             z, ibound=ibound)
         else:
             verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, z,
-                                                          ibound=ibound)
+                                                              ibound=ibound)
 
         for row in verts:
             s = indent_level * '  ' + '{} {} {} \n'.format(*row)
@@ -170,6 +170,7 @@ class Vtk(object):
 
         # end file
         f.close()
+        return
 
     def _write_data_array(self, f, indent_level, name, a, ibound):
         """

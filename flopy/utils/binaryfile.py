@@ -1366,6 +1366,86 @@ class CellBudgetFile(object):
         """
         return self.recordarray.shape[0]
 
+    def get_residual(self, totim, scaled=False):
+        """
+        Return an array the size of the model grid containing the flow residual
+        calculated from the budget terms.  Residual will not be correct unless
+        all flow terms are written to the budget file.
+
+        Parameters
+        ----------
+        totim : float
+            Simulation time for which to calculate the residual.  This value
+            must be precise, so it is best to get it from the get_times
+            method.
+
+        scaled : bool
+            If True, then divide the residual by the total cell inflow
+
+        Returns
+        -------
+        residual : np.ndarray
+            The flow residual for the cell of shape (nlay, nrow, ncol)
+
+        """
+
+        nlay = self.nlay
+        nrow = self.nrow
+        ncol = self.ncol
+        residual = np.zeros((nlay, nrow, ncol), dtype=np.float)
+        if scaled:
+            inflow = np.zeros((nlay, nrow, ncol), dtype=np.float)
+        select_indices = np.where((self.recordarray['totim'] == totim))[0]
+
+        for i in select_indices:
+            text = self.recordarray[i]['text'].decode()
+            if self.verbose:
+                print('processing {}'.format(text))
+            flow = self.get_record(idx=i, full3D=True)
+            if ncol > 1 and 'RIGHT FACE' in text:
+                residual -= flow[:, :, :]
+                residual[:, :, 1:] += flow[:, :, :-1]
+                if scaled:
+                    idx = np.where(flow < 0.)
+                    inflow[idx] -= flow[idx]
+                    idx = np.where(flow > 0.)
+                    l, r, c = idx
+                    idx = (l, r, c + 1)
+                    inflow[idx] += flow[idx]
+            elif nrow > 1 and 'FRONT FACE' in text:
+                residual -= flow[:, :, :]
+                residual[:, 1:, :] += flow[:, :-1, :]
+                if scaled:
+                    idx = np.where(flow < 0.)
+                    inflow[idx] -= flow[idx]
+                    idx = np.where(flow > 0.)
+                    l, r, c = idx
+                    idx = (l, r + 1, c)
+                    inflow[idx] += flow[idx]
+            elif nlay > 1 and 'LOWER FACE' in text:
+                residual -= flow[:, :, :]
+                residual[1:, :, :] += flow[:-1, :, :]
+                if scaled:
+                    idx = np.where(flow < 0.)
+                    inflow[idx] -= flow[idx]
+                    idx = np.where(flow > 0.)
+                    l, r, c = idx
+                    idx = (l + 1, r, c)
+                    inflow[idx] += flow[idx]
+            else:
+                residual += flow
+                if scaled:
+                    idx = np.where(flow > 0.)
+                    inflow[idx] += flow[idx]
+
+        if scaled:
+            residual_scaled = np.zeros((nlay, nrow, ncol), dtype=np.float)
+            idx = (inflow > 0.)
+            residual_scaled[idx] = residual[idx] / inflow[idx]
+            return residual_scaled
+
+        return residual
+
     def close(self):
         """
         Close the file handle
