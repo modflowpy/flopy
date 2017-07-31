@@ -3,6 +3,7 @@ import sys
 import glob
 sys.path.insert(0, '..')
 import copy
+import glob
 import os
 import shutil
 import numpy as np
@@ -478,7 +479,8 @@ def test_read_usgs_model_reference():
     delr, delc = 250, 500
     #xll, yll = 272300, 5086000
     model_ws = os.path.join('temp', 't007')
-    shutil.copy('../examples/data/usgs.model.reference', model_ws)
+    mrf = os.path.join(model_ws, 'usgs.model.reference')
+    shutil.copy('../examples/data/usgs.model.reference', mrf)
     fm = flopy.modflow
     m = fm.Modflow(modelname='junk', model_ws=model_ws)
     # feet and days
@@ -489,15 +491,32 @@ def test_read_usgs_model_reference():
     # test reading of SR information from usgs.model.reference
     m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
     from flopy.utils.reference import SpatialReference
-    d = SpatialReference.read_usgs_model_reference_file(os.path.join('temp', 't007', 'usgs.model.reference'))
+    d = SpatialReference.read_usgs_model_reference_file(mrf)
     assert m2.sr.xul == d['xul']
     assert m2.sr.yul == d['yul']
     assert m2.sr.rotation == d['rotation']
     assert m2.sr.lenuni == d['lenuni']
     assert m2.sr.epsg == d['epsg']
+
+    # test reading non-default units from usgs.model.reference
+    shutil.copy(mrf, mrf+'_copy')
+    with open(mrf+'_copy') as src:
+        with open(mrf, 'w') as dst:
+            for line in src:
+                if 'time_unit' in line:
+                    line = line.replace('days', 'seconds')
+                elif 'length_units' in line:
+                    line = line.replace('feet', 'meters')
+                dst.write(line)
+    m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
+    assert m2.dis.itmuni == 1
+    assert m2.dis.lenuni == 2
     # have to delete this, otherwise it will mess up other tests
-    if os.path.exists(os.path.join(tpth, 'usgs.model.reference')):
-        os.remove(os.path.join(tpth, 'usgs.model.reference'))
+    to_del = glob.glob(mrf + '*')
+    for f in to_del:
+        if os.path.exists(f):
+            os.remove(os.path.join(f))
+    assert True
 
 
 def test_rotation():
@@ -719,15 +738,15 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    #test_sr_scaling()
+    test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()
-    # test_export_output()
+    #test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
     #test_freyberg_export()
-    test_wkt_parse()
+    #test_wkt_parse()
     pass

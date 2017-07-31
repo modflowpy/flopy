@@ -582,13 +582,19 @@ class Modflow(BaseModel):
                                  .format(dis.name[0]))
             ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
+        ref_source = ref_attributes.pop("source", "defaults")
         itmuni = ref_attributes.pop("itmuni", 4)
         if ml.structured:
-            itmuni = dis.itmuni
-            ref_attributes['lenuni'] = dis.lenuni
+            # get model units from usgs.model.reference, if provided
+            if ref_source == 'usgs.model.reference':
+                dis.lenuni = ref_attributes.get("lenuni",
+                                                SpatialReference.defaults['lenuni'])
+            # otherwise get them from the DIS file
+            else:
+                itmuni = dis.itmuni
+                ref_attributes['lenuni'] = dis.lenuni
             sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
                                   **ref_attributes)
-            #dis.lenuni = sr.lenuni
         else:
             sr = None
         dis.sr = sr

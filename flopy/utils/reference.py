@@ -104,7 +104,8 @@ class SpatialReference(object):
 
     defaults = {"xul": None, "yul": None, "rotation": 0.,
                 "proj4_str": None,
-                "units": None, "lenuni": 2, "length_multiplier": None}
+                "units": None, "lenuni": 2, "length_multiplier": None,
+                "source": 'defaults'}
 
     lenuni_values = {'undefined': 0,
                      'feet': 1,
@@ -197,15 +198,17 @@ class SpatialReference(object):
     @property
     def proj4_str(self):
         proj4_str = None
-        if self._proj4_str is not None and \
-                        "epsg" in self._proj4_str.lower():
-            if "init" not in self._proj4_str.lower():
-                proj4_str = "+init=" + self._proj4_str
+        if self._proj4_str is not None:
+            if "epsg" in self._proj4_str.lower():
+                if "init" not in self._proj4_str.lower():
+                    proj4_str = "+init=" + self._proj4_str
+                else:
+                    proj4_str = self._proj4_str
+                # set the epsg if proj4 specifies it
+                tmp = [i for i in self._proj4_str.split() if 'epsg' in i.lower()]
+                self._epsg = int(tmp[0].split(':')[1])
             else:
                 proj4_str = self._proj4_str
-            # set the epsg if proj4 specifies it
-            tmp = [i for i in self._proj4_str.split() if 'epsg' in i.lower()]
-            self._epsg = int(tmp[0].split(':')[1])
         elif self.epsg is not None:
             proj4_str = '+init=epsg:{}'.format(self.epsg)
         return proj4_str
@@ -336,6 +339,7 @@ class SpatialReference(object):
     def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
         d = SpatialReference.defaults.copy()
+        d['source'] = 'namfile'
         if namefile is None:
             return None
         header = []
@@ -401,6 +405,7 @@ class SpatialReference(object):
         itmuni_values = {v: k for k, v in ITMUNI.items()}
 
         d = SpatialReference.defaults.copy()
+        d['source'] = 'usgs.model.reference'
         d.pop('proj4_str') # discard default to avoid confusion with epsg code if entered
         if os.path.exists(reffile):
             with open(reffile) as input:
@@ -437,7 +442,7 @@ class SpatialReference(object):
 
             # drop any other items that aren't used in sr class
             d = {k:v for k, v in d.items() if k.lower() in SpatialReference.defaults.keys()
-                 or k.lower() in {'epsg', 'start_datetime', 'itmuni'}}
+                 or k.lower() in {'epsg', 'start_datetime', 'itmuni', 'source'}}
             return d
         else:
             return None
@@ -1723,28 +1728,29 @@ class crs(object):
         """Map parameters for CF Grid Mappings
         http://cfconventions.org/cf-conventions/v1.6.0
         /cf-conventions.html#appendix-grid-mappings"""
-        sp = [p for p in [self.standard_parallel_1,
-                          self.standard_parallel_1]
-              if p is not None]
-        sp = sp if len(sp) > 0 else None
-        proj = self.crs['proj']
-        names = {'aea': 'albers_conical_equal_area',
-                 'aeqd': 'azimuthal_equidistant',
-                 'laea': 'lambert_azimuthal_equal_area',
-                 'lcc': 'lambert_conformal_conic',
-                 'merc': 'mercator',
-                 'tmerc': 'transverse_mercator',
-                 'utm': 'transverse_mercator'}
-        attribs = {'grid_mapping_name': names[proj],
-                   'semi_major_axis': self.crs['a'],
-                   'inverse_flattening': self.crs['rf'],
-                   'standard_parallel': sp,
-                   'longitude_of_central_meridian': self.crs['lon_0'],
-                   'latitude_of_projection_origin': self.crs['lat_0'],
-                   'scale_factor_at_projection_origin': self.crs['k_0'],
-                   'false_easting': self.crs['x_0'],
-                   'false_northing': self.crs['y_0']}
-        return {k:v for k, v in attribs.items() if v is not None}
+        if self.wktstr is not None:
+            sp = [p for p in [self.standard_parallel_1,
+                              self.standard_parallel_2]
+                  if p is not None]
+            sp = sp if len(sp) > 0 else None
+            proj = self.crs['proj']
+            names = {'aea': 'albers_conical_equal_area',
+                     'aeqd': 'azimuthal_equidistant',
+                     'laea': 'lambert_azimuthal_equal_area',
+                     'lcc': 'lambert_conformal_conic',
+                     'merc': 'mercator',
+                     'tmerc': 'transverse_mercator',
+                     'utm': 'transverse_mercator'}
+            attribs = {'grid_mapping_name': names[proj],
+                       'semi_major_axis': self.crs['a'],
+                       'inverse_flattening': self.crs['rf'],
+                       'standard_parallel': sp,
+                       'longitude_of_central_meridian': self.crs['lon_0'],
+                       'latitude_of_projection_origin': self.crs['lat_0'],
+                       'scale_factor_at_projection_origin': self.crs['k_0'],
+                       'false_easting': self.crs['x_0'],
+                       'false_northing': self.crs['y_0']}
+            return {k:v for k, v in attribs.items() if v is not None}
 
     @property
     def proj4(self):

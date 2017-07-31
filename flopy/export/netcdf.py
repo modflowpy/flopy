@@ -795,9 +795,10 @@ class NetCdf(object):
         y[:] = sr.ycentergrid
 
         # grid mapping variable
-        self.log("creating grid mapping variable")
         attribs = self.sr.crs.grid_mapping_attribs
-        gmv = self.create_variable(attribs['grid_mapping_name'], attribs, precision_str="f8")
+        if attribs is not None:
+            self.log("creating grid mapping variable")
+            gmv = self.create_variable(attribs['grid_mapping_name'], attribs, precision_str="f8")
 
         # layer
         self.log("creating layer var")
