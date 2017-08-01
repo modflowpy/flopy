@@ -636,7 +636,7 @@ class CellBudgetFile(object):
             if totim == 0:
                 totim = self._totim_from_kstpkper(
                     (header["kstp"] - 1, header["kper"] - 1))
-                header["totim"] = -1
+                header["totim"] = totim
             if totim >= 0 and totim not in self.times:
                 self.times.append(totim)
             kstpkper = (header['kstp'], header['kper'])

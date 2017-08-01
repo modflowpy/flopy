@@ -71,7 +71,7 @@
   "strt": "Starting heads",
   "sy": "Specific yield",
   "thickness": "Layer thickness",
-  "time": "Time",
+  "time": "time",
   "vka": "Vertical hydraulic conductivity or vertical anisotropy",
   "vkcb": "Vertical hydraulic conductivity of quasi3d confining bed",
   "wel_flux": "Well package flux"
