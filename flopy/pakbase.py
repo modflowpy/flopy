@@ -732,6 +732,9 @@ class Package(object):
                 for ibnd in range(itmp):
                     line = f.readline()
                     if "open/close" in line.lower():
+                        binary = False
+                        if '(binary)' in line.lower():
+                            binary = True
                         # need to strip out existing path seps and
                         # replace current-system path seps
                         raw = line.strip().split()
@@ -748,8 +751,18 @@ class Package(object):
                             oc_filename), "Package.load() error: open/close filename " + \
                                           oc_filename + " not found"
                         try:
-                            current = np.genfromtxt(oc_filename,
-                                                    dtype=current.dtype)
+                            if binary:
+                                dtype2 = []
+                                for name in current.dtype.names:
+                                    dtype2.append((name, np.float32))
+                                dtype2 = np.dtype(dtype2)
+                                d = np.fromfile(oc_filename,
+                                                dtype=dtype2,
+                                                count=itmp)
+                                current = np.array(d, dtype=current.dtype)
+                            else:
+                                current = np.genfromtxt(oc_filename,
+                                                        dtype=current.dtype)
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(

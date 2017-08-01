@@ -24,6 +24,42 @@ if v is None:
     run = False
 
 
+def test_hob_simple():
+    """
+    test041 create and run a simple MODFLOW-2005 OBS example
+    """
+    pth = os.path.join(cpth, 'simple')
+    modelname = 'hob_simple'
+    nlay, nrow, ncol = 1, 11, 11
+    shape3d = (nlay, nrow, ncol)
+    shape2d = (nrow, ncol)
+    ib = np.ones(shape3d, dtype=np.int)
+    ib[0, 0, 0] = -1
+    m = flopy.modflow.Modflow(modelname=modelname, model_ws=pth,
+                              verbose=True, exe_name=exe_name, )
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=11, ncol=11, nper=2,
+                                   perlen=[1, 1])
+
+    bas = flopy.modflow.ModflowBas(m, ibound=ib, strt=10.)
+    lpf = flopy.modflow.ModflowLpf(m)
+    pcg = flopy.modflow.ModflowPcg(m)
+    obs = flopy.modflow.HeadObservation(m, layer=0, row=5, column=5,
+                                        time_series_data=[[1., 54.4],
+                                                          [2., 55.2]])
+    hob = flopy.modflow.ModflowHob(m, iuhobsv=51, hobdry=-9999.,
+                                   obs_data=[obs])
+
+    # Write the model input files
+    m.write_input()
+
+    # run the modflow-2005 model
+    if run:
+        success, buff = m.run_model(silent=False)
+        assert success, 'could not run simple MODFLOW-2005 model'
+
+    return
+
+
 def test_obs_load_and_write():
     """
     test041 load and write of MODFLOW-2005 OBS example problem
@@ -169,5 +205,6 @@ def test_obs_create_and_write():
 
 
 if __name__ == '__main__':
+    test_hob_simple()
     test_obs_create_and_write()
     test_obs_load_and_write()
