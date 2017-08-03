@@ -521,6 +521,31 @@ class MfList(object):
                             "from file " + str(e))
         return d
 
+    def get_filenames(self):
+        kpers = list(self.data.keys())
+        kpers.sort()
+        filenames = []
+        first = kpers[0]
+        for kper in list(range(0, max(self.model.nper, max(kpers) + 1))):
+            # Fill missing early kpers with 0
+            if (kper < first):
+                itmp = 0
+                kper_vtype = int
+            elif (kper in kpers):
+                kper_vtype = self.__vtype[kper]
+
+            if self.model.array_free_format and self.model.external_path is not None:
+
+                # py_filepath = ''
+                # py_filepath = os.path.join(py_filepath,
+                #                            self.model.external_path)
+                filename = self.package.name[0] + \
+                            "_{0:04d}.dat".format(kper)
+                # py_filepath = os.path.join(py_filepath, filename)
+                # filenames.append(py_filepath)
+                filenames.append(filename)
+        return filenames
+
     def write_transient(self, f, single_per=None):
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
