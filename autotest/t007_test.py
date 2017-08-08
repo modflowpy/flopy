@@ -509,8 +509,8 @@ def test_read_usgs_model_reference():
                     line = line.replace('feet', 'meters')
                 dst.write(line)
     m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
-    assert m2.dis.itmuni == 1
-    assert m2.dis.lenuni == 2
+    assert m2.tr.itmuni == 1
+    assert m2.sr.lenuni == 2
     # have to delete this, otherwise it will mess up other tests
     to_del = glob.glob(mrf + '*')
     for f in to_del:
@@ -738,8 +738,8 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_map_rotation()
-    test_sr_scaling()
-    #test_read_usgs_model_reference()
+    #test_sr_scaling()
+    test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()

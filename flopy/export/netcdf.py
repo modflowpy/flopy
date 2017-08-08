@@ -177,7 +177,7 @@ class NetCdf(object):
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
-        self.time_units = ITMUNI[self.model.dis.itmuni]
+        self.time_units = ITMUNI[self.model.tr.itmuni]
 
         # this gives us confidence that every NetCdf instance
         # has the same attributes

@@ -10,7 +10,7 @@ import inspect
 import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
-from ..utils import mfreadnam, SpatialReference
+from ..utils import mfreadnam, SpatialReference, TemporalReference
 from .mfpar import ModflowPar
 
 
@@ -582,13 +582,12 @@ class Modflow(BaseModel):
                                  .format(dis.name[0]))
             ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
-        ref_source = ref_attributes.pop("source", "defaults")
         itmuni = ref_attributes.pop("itmuni", 4)
+        ref_source = ref_attributes.pop("source", "defaults")
         if ml.structured:
             # get model units from usgs.model.reference, if provided
             if ref_source == 'usgs.model.reference':
-                dis.lenuni = ref_attributes.get("lenuni",
-                                                SpatialReference.defaults['lenuni'])
+                pass
             # otherwise get them from the DIS file
             else:
                 itmuni = dis.itmuni
@@ -597,9 +596,10 @@ class Modflow(BaseModel):
                                   **ref_attributes)
         else:
             sr = None
+
         dis.sr = sr
+        dis.tr = TemporalReference(itmuni=itmuni, start_datetime=start_datetime)
         dis.start_datetime = start_datetime
-        dis.itmuni = itmuni
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.

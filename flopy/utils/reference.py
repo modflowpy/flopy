@@ -104,7 +104,8 @@ class SpatialReference(object):
 
     defaults = {"xul": None, "yul": None, "rotation": 0.,
                 "proj4_str": None,
-                "units": None, "lenuni": 2, "length_multiplier": None,
+                "units": None, "lenuni": 2,
+                "length_multiplier": None,
                 "source": 'defaults'}
 
     lenuni_values = {'undefined': 0,
@@ -1589,6 +1590,31 @@ class SpatialReferenceUnstructured(SpatialReference):
         contour_set = ax.tricontour(self.xcenter, self.ycenter,
                                     a, **kwargs)
         return contour_set
+
+
+class TemporalReference(object):
+    """For now, just a container to hold start time and time units files
+    outside of DIS package."""
+
+    defaults = {'itmuni': 4,
+                'start_datetime': '01-01-1970'}
+
+    itmuni_values = {'undefined': 0,
+                     'seconds': 1,
+                     'minutes': 2,
+                     'hours': 3,
+                     'days': 4,
+                     'years': 5}
+
+    itmuni_text = {v: k for k, v in itmuni_values.items()}
+
+    def __init__(self, itmuni=4, start_datetime=None):
+        self.itmuni = itmuni
+        self.start_datetime = start_datetime
+
+    @property
+    def model_time_units(self):
+        return self.itmuni_text[self.itmuni]
 
 
 class epsgRef:

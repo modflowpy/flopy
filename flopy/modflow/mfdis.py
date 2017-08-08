@@ -201,6 +201,8 @@ class ModflowDis(Package):
                                              self.lenuni, xul=xul, yul=yul,
                                              rotation=rotation,
                                              proj4_str=proj4_str)
+        self.tr = reference.TemporalReference(itmuni=self.itmuni,
+                                              start_datetime=start_datetime)
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()

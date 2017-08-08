@@ -283,9 +283,14 @@ class BaseModel(object):
                 return self.dis.sr
             else:
                 return None
+        if item == 'tr':
+            if self.dis is not None:
+                return self.dis.tr
+            else:
+                return None
         if item == "start_datetime":
             if self.dis is not None:
-                return self.dis.start_datetime
+                return self.dis.tr.start_datetime
             else:
                 return None
 
@@ -879,9 +884,17 @@ class BaseModel(object):
             else:
                 raise Exception("cannot set SpatialReference -"
                                 "ModflowDis not found")
+        elif key == "tr":
+            assert isinstance(value, utils.TemporalReference)
+            if self.dis is not None:
+                self.dis.tr = value
+            else:
+                raise Exception("cannot set TemporalReference -"
+                                "ModflowDis not found")
         elif key == "start_datetime":
             if self.dis is not None:
                 self.dis.start_datetime = value
+                self.tr.start_datetime = value
             else:
                 raise Exception("cannot set start_datetime -"
                                 "ModflowDis not found")
