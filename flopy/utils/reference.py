@@ -1207,6 +1207,7 @@ class SpatialReference(object):
     def get_3d_vertex_connectivity(self, nlay, botm, ibound=None):
         if ibound is None:
             ncells = nlay * self.nrow * self.ncol
+            ibound = np.ones((nlay, self.nrow, self.ncol), dtype=np.int)
         else:
             ncells = (ibound != 0).sum()
         npoints = ncells * 8

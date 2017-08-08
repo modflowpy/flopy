@@ -64,6 +64,8 @@ class Vtk(object):
         ncells = nlay * nrow * ncol
         ibound = None
         if ibound_filter:
+            assert self.model.bas6, 'Cannot find basic (BAS6) package ' \
+                'and ibound_filter is set to True.'
             ibound = self.model.bas6.ibound.array
             ncells = (ibound != 0).sum()
         if shared_vertex:

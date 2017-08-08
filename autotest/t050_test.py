@@ -12,6 +12,7 @@ os.makedirs(cpth)
 
 
 def test_vtkoutput():
+    """Make vtk with ibound_filter"""
     nlay = 3
     nrow = 3
     ncol = 3
@@ -30,5 +31,22 @@ def test_vtkoutput():
     return
 
 
+def test_vtkoutput_noibound():
+    """Make vtk without ibound_filter"""
+    nlay = 3
+    nrow = 3
+    ncol = 3
+    ml = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0,
+                                   botm=[-1., -2., -3.])
+    fvtkout = os.path.join(cpth, 'test.vtu')
+    vtkfile = Vtk(fvtkout, ml)
+    a = np.arange(nlay * nrow * ncol).reshape((nlay, nrow, ncol))
+    vtkfile.add_array('testarray', a)
+    vtkfile.write(shared_vertex=False, ibound_filter=False)
+    return
+
+
 if __name__ == '__main__':
     test_vtkoutput()
+    test_vtkoutput_noibound()
