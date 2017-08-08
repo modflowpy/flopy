@@ -45,7 +45,7 @@ class ListBudget(object):
     def __init__(self, file_name, budgetkey=None, timeunit='days'):
 
         # Set up file reading
-        assert os.path.exists(file_name)
+        assert os.path.exists(file_name),"file_name {0} not found".format(file_name)
         self.file_name = file_name
         if sys.version_info[0] == 2:
             self.f = open(file_name, 'r')

@@ -517,7 +517,7 @@ class ModflowLpf(Package):
             # vka
             if model.verbose:
                 print('   loading vka layer {0:3d}...'.format(k + 1))
-            key = 'vka'
+            key = 'vk'
             if layvka[k] != 0:
                 key = 'vani'
             if 'vk' not in par_types and 'vani' not in par_types:
@@ -525,7 +525,7 @@ class ModflowLpf(Package):
                                 ext_unit_dict)
             else:
                 line = f.readline()
-                key = 'vka'
+                key = 'vk'
                 if 'vani' in par_types:
                     key = 'vani'
                 t = mfpar.parameter_fill(model, (nrow, ncol), key, parm_dict,

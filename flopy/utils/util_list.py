@@ -52,7 +52,7 @@ class MfList(object):
     """
 
     def __init__(self, package, data=None, dtype=None, model=None,
-                 list_free_format=None):
+                 list_free_format=None, binary=False):
 
         if isinstance(data, MfList):
             for attr in data.__dict__.items():
@@ -78,6 +78,7 @@ class MfList(object):
             self.__dtype = self.package.dtype
         else:
             self.__dtype = dtype
+        self.__binary = binary
         self.__vtype = {}
         self.__data = {}
         if data is not None:
@@ -521,6 +522,31 @@ class MfList(object):
                             "from file " + str(e))
         return d
 
+    def get_filenames(self):
+        kpers = list(self.data.keys())
+        kpers.sort()
+        filenames = []
+        first = kpers[0]
+        for kper in list(range(0, max(self.model.nper, max(kpers) + 1))):
+            # Fill missing early kpers with 0
+            if (kper < first):
+                itmp = 0
+                kper_vtype = int
+            elif (kper in kpers):
+                kper_vtype = self.__vtype[kper]
+
+            if self.model.array_free_format and self.model.external_path is not None:
+
+                # py_filepath = ''
+                # py_filepath = os.path.join(py_filepath,
+                #                            self.model.external_path)
+                filename = self.package.name[0] + \
+                            "_{0:04d}.dat".format(kper)
+                # py_filepath = os.path.join(py_filepath, filename)
+                # filenames.append(py_filepath)
+                filenames.append(filename)
+        return filenames
+
     def write_transient(self, f, single_per=None):
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
@@ -561,23 +587,35 @@ class MfList(object):
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
                     .format(itmp, 0, kper))
 
-            if self.model.array_free_format and self.model.external_path is not None:
+            isExternal = False
+            if self.model.array_free_format and \
+                            self.model.external_path is not None:
+                isExternal = True
+            if self.__binary:
+                isExternal = True
+            if isExternal:
                 if kper_vtype == np.recarray:
                     py_filepath = ''
                     if self.model.model_ws is not None:
                         py_filepath = self.model.model_ws
-                    py_filepath = os.path.join(py_filepath,
-                                               self.model.external_path)
-                    filename = self.package.name[0] + \
-                               "_{0:04d}.dat".format(kper)
+                    if self.model.external_path is not None:
+                        py_filepath = os.path.join(py_filepath,
+                                                   self.model.external_path)
+                    filename = self.package.name[0] + '_{0:04d}'.format(kper+1)
+                    if self.__binary:
+                        filename += '.bin'
+                    else:
+                        filename += '.dat'
                     py_filepath = os.path.join(py_filepath, filename)
-                    model_filepath = os.path.join(self.model.external_path,
-                                                  filename)
+                    model_filepath = filename
+                    if self.model.external_path is not None:
+                        model_filepath = os.path.join(self.model.external_path,
+                                                      filename)
                     self.__tofile(py_filepath, kper_data)
                     kper_vtype = str
                     kper_data = model_filepath
 
-            if (kper_vtype == np.recarray):
+            if kper_vtype == np.recarray:
                 name = f.name
                 f.close()
                 f = open(name, 'ab+')
@@ -586,8 +624,11 @@ class MfList(object):
                 f.close()
                 f = open(name, 'a')
                 # print(f)
-            elif (kper_vtype == str):
-                f.write("         open/close " + kper_data + '\n')
+            elif kper_vtype == str:
+                f.write('         open/close ' + kper_data)
+                if self.__binary:
+                    f.write(' (BINARY)')
+                f.write('\n')
 
     def __tofile(self, f, data):
         # Write the recarray (data) to the file (or file handle) f
@@ -599,9 +640,17 @@ class MfList(object):
         # --make copy of data for multiple calls
         d = np.recarray.copy(data)
         for idx in ['k', 'i', 'j', 'node']:
-            if (idx in lnames):
+            if idx in lnames:
                 d[idx] += 1
-        np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
+        if self.__binary:
+            dtype2 = []
+            for name in self.dtype.names:
+                dtype2.append((name, np.float32))
+            dtype2 = np.dtype(dtype2)
+            d = np.array(d, dtype=dtype2)
+            d.tofile(f)
+        else:
+            np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
 
     def check_kij(self):
         names = self.dtype.names
