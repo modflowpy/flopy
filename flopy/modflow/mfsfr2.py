@@ -273,8 +273,6 @@ class ModflowSfr2(Package):
                          unit_number=units, extra=extra, filenames=fname)
 
         self.url = 'sfr2.htm'
-        self.nper = self.parent.nrow_ncol_nlay_nper[-1]
-        self.nper = 1 if self.nper == 0 else self.nper  # otherwise iterations from 0, nper won't run
 
         # Dataset 0 -----------------------------------------------------------------------
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -372,6 +370,10 @@ class ModflowSfr2(Package):
         self.channel_flow_data = channel_flow_data
 
         # Dataset 5 -----------------------------------------------------------------------
+        if dataset_5 is None:
+            dataset_5 = {0: [nss, 0, 0]}
+            for i in range(1, self.nper):
+                dataset_5[i] = [-1, 0, 0]
         self._dataset_5 = dataset_5
 
         # Attributes not included in SFR package input
@@ -391,6 +393,9 @@ class ModflowSfr2(Package):
         if key == "nstrm":
             super(ModflowSfr2, self). \
                 __setattr__("_nstrm", value)
+        elif key == "dataset_5":
+            super(ModflowSfr2, self). \
+                __setattr__("_dataset_5", value)
         else: # return to default behavior of pakbase
             super(ModflowSfr2, self).__setattr__(key, value)
 
@@ -404,6 +409,12 @@ class ModflowSfr2(Package):
         return np.sign(self._nstrm) * len(self.reach_data)
 
     @property
+    def nper(self):
+        nper = self.parent.nrow_ncol_nlay_nper[-1]
+        nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
+        return nper
+
+    @property
     def dataset_5(self):
         """auto-update itmp so it is consistent with reach_data."""
         nss = self.nss
@@ -411,6 +422,13 @@ class ModflowSfr2(Package):
         for k, v in self._dataset_5.items():
             itmp = np.sign(v[0]) * nss
             ds5[k] = [itmp] + v[1:]
+        # fill out rest of dataset 5 with defaults if there are more periods
+        if len(self._dataset_5) < self.nper:
+            for per in range(len(self._dataset_5), self.nper):
+                ds5[per] = [-1, 0, 0]
+        elif len(self._dataset_5) > self.nper:
+            for per in range(self.nper, len(self._dataset_5)):
+                del ds5[per]
         self._dataset_5 = ds5
         return ds5
 

@@ -249,6 +249,21 @@ def test_example():
                                     channel_flow_data=channel_flow_data,
                                     dataset_5=dataset_5)
 
+    # test default construction of dataset_5
+    sfr2 = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const,
+                                    dleak=dleak, ipakcb=ipakcb, istcb2=istcb2,
+                                    reach_data=reach_data,
+                                    segment_data=segment_data,
+                                    channel_geometry_data=channel_geometry_data,
+                                    channel_flow_data=channel_flow_data)
+    assert len(sfr2.dataset_5) == 1
+    assert sfr2.dataset_5[0][0] == sfr2.nss
+    nper = 9
+    m.dis.nper = nper
+    assert len(sfr2.dataset_5) == nper
+    for i in range(1, nper):
+        assert sfr2.dataset_5[i][0] == -1
+
 def test_transient_example():
     path = os.path.join('temp', 't009')
     gpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'testsfr2.*')
@@ -322,9 +337,9 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    test_sfr()
+    #test_sfr()
     #test_sfr_renumbering()
-    #test_example()
+    test_example()
     #test_transient_example()
     #test_sfr_plot()
     #test_assign_layers()
