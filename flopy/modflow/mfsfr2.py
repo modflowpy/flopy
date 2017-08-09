@@ -1126,6 +1126,23 @@ class ModflowSfr2(Package):
 
 
     def plot_path(self, start_seg=None, end_seg=0, plot_segment_lines=True):
+        """Plot a profile of streambed elevation and model top 
+        along a path of segments.
+        
+        Parameters
+        ----------
+        start_seg : int
+            Number of first segment in path.
+        end_seg : int
+            Number of last segment in path (defaults to 0/outlet).
+        plot_segment_lines : bool
+            Controls plotting of segment end locations along profile.
+            (default True)
+            
+        Returns
+        -------
+        ax : matplotlib.axes._subplots.AxesSubplot object
+        """
 
         if not pd:
             print('This method requires pandas')
