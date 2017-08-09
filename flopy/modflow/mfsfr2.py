@@ -980,24 +980,18 @@ class ModflowSfr2(Package):
             outreach.append(nextrchid)
         self.reach_data['outreach'] = outreach
 
-    def get_slopes(self):
+    def get_slopes(self, default_slope=0.001):
         """Compute slopes by reach using values in strtop (streambed top) and rchlen (reach length)
         columns of reach_data. The slope for a reach n is computed as strtop(n+1) - strtop(n) / rchlen(n).
-        Slopes for outlet reaches are assumed to be equal to slope of previous reach. """
-        slopes = np.append(np.diff(self.reach_data.strtop), 0) / self.reach_data.rchlen
-        last_reaches = np.append((np.diff(self.reach_data.iseg) == 1), True)
-        last_reach_data = self.reach_data[last_reaches]
-        last_reaches_outreach_elevs = [self.reach_data.strtop[o - 1] if o != 0 else 0
-                                       for o in last_reach_data.outreach]
-        second_to_last_reaches = np.append(last_reaches[1:], False)
-        # compute slopes for last reaches
-        slopes[last_reaches] = [slopes[second_to_last_reaches][i]
-                                if last_reaches_outreach_elevs[i] == 0
-                                else
-                                (last_reaches_outreach_elevs[i] - last_reach_data.strtop[i])
-                                / last_reach_data.rchlen[i]
-                                for i in range(len(last_reach_data))]
-        self.reach_data['slope'] = slopes * -1  # convert from numpy to sfr package convention
+        Slopes for outlet reaches are set equal to a default value (default_slope). """
+        rd = self.reach_data
+        elev = dict(zip(rd.reachID, rd.strtop))
+        dist = dict(zip(rd.reachID, rd.rchlen))
+        dnelev = {rid: elev[rd.outreach[i]] if rd.outreach[i] != 0
+        else -9999 for i, rid in enumerate(rd.reachID)}
+        slopes = [(elev[i] - dnelev[i]) / dist[i] if dnelev[i] != -9999
+                  else default_slope for i in rd.reachID]
+        self.reach_data['slope'] = slopes
 
 
     def get_upsegs(self):

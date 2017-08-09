@@ -201,6 +201,23 @@ def test_sfr_renumbering():
                                     20, 21, 22,
                                     23, 24, 25,
                                     26, 27, 0]))
+    # test slope
+    sfr.reach_data['rchlen'] = [10] * 3 * 5 + [100] * 2 * 3 + [1] * 2 * 3
+    strtop = np.zeros(len(sfr.reach_data))
+    strtop[6] = 3.
+    strtop[21] = -2.
+    sfr.reach_data['strtop'] = strtop
+    default_slope = .0001
+    sfr.get_slopes(default_slope=default_slope)
+    sl1 = sfr.reach_data.slope[2]
+    def isequal(v1, v2):
+        return np.abs(v1-v2) < 1e-6
+    assert (sl1 + 0.3) < 1e-6
+    assert (sfr.reach_data.slope[6] + sl1) < 1e-6
+    assert isequal(sfr.reach_data.slope[14], 0.2)
+    assert isequal(sfr.reach_data.slope[20], sfr.reach_data.slope[17])
+    assert isequal(sfr.reach_data.slope[21], -2.)
+    assert isequal(sfr.reach_data.slope[-1], default_slope)
 
 
 def test_example():
