@@ -190,6 +190,18 @@ def test_sfr_renumbering():
     assert 'continuity in segment and reach numbering' in chk.passed
     assert 'segment numbering order' in chk.passed
 
+    # test computing of outreaches
+    assert np.array_equal(sfr.reach_data.outreach,
+                          np.array([2, 3, 7,
+                                    5, 6, 10,
+                                    8, 9, 16,
+                                    11, 12, 19,
+                                    14, 15, 22,
+                                    17, 18, 22,
+                                    20, 21, 22,
+                                    23, 24, 25,
+                                    26, 27, 0]))
+
 
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',
@@ -338,8 +350,8 @@ def test_sfr_plot():
 
 if __name__ == '__main__':
     #test_sfr()
-    #test_sfr_renumbering()
-    test_example()
+    test_sfr_renumbering()
+    #test_example()
     #test_transient_example()
     #test_sfr_plot()
     #test_assign_layers()

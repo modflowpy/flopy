@@ -962,23 +962,23 @@ class ModflowSfr2(Package):
         """
         self.reach_data.sort(order=['iseg', 'ireach'])
         self.reset_reaches() # ensure that each segment starts with reach 1
-        reach_data = self.reach_data
-        segment_data = self.segment_data[0]
-        # this vectorized approach is more than an order of magnitude faster than a list comprehension
-        is_first_reach = reach_data.ireach == 1
-        first_reaches = reach_data[is_first_reach]
-        # make a dictionary of reach 1 ID for each segment
-        first_reach_IDs = dict(zip(reach_data[is_first_reach].iseg,
-                                   reach_data[is_first_reach].reachID))
-        is_last_reach = np.append(is_first_reach[1:], True)
-        last_reaches = reach_data[is_last_reach]
-        # below doesn't work if there are gaps in numbering
-        #last_reaches = np.append((np.diff(reach_data.iseg) == 1), True)
-        reach_data.outreach = np.append(reach_data.reachID[1:], 0)
-        # for now, treat lakes (negative outseg number) the same as outlets
-        reach_data.outreach[is_last_reach] = [first_reach_IDs.get(s-1, 0)
-                                             for s in segment_data.outseg]
-        self.reach_data['outreach'] = reach_data.outreach
+        rd = self.reach_data
+        outseg = self.graph
+        reach1IDs = dict(zip(rd[rd.ireach == 1].iseg,
+                             rd[rd.ireach == 1].reachID))
+        outreach = []
+        for i in range(len(rd)):
+            # if at the end of reach data or current segment
+            if i + 1 == len(rd) or rd.ireach[i + 1] == 1:
+                nextseg = outseg[rd.iseg[i]]  # get next segment
+                if nextseg > 0:  # current reach is not an outlet
+                    nextrchid = reach1IDs[nextseg]  # get reach 1 of next segment
+                else:
+                    nextrchid = 0
+            else:  # otherwise, it's the next reachID
+                nextrchid = rd.reachID[i + 1]
+            outreach.append(nextrchid)
+        self.reach_data['outreach'] = outreach
 
     def get_slopes(self):
         """Compute slopes by reach using values in strtop (streambed top) and rchlen (reach length)
