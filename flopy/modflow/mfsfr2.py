@@ -8,7 +8,12 @@ from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
 from ..utils.flopy_io import line_parse
+import matplotlib.pyplot as plt
 
+try:
+    import pandas as pd
+except:
+    pd = False
 
 class ModflowSfr2(Package):
     """
@@ -205,7 +210,7 @@ class ModflowSfr2(Package):
     def __init__(self, model, nstrm=-2, nss=1, nsfrpar=0, nparseg=0,
                  const=128390.4, dleak=0.0001, ipakcb=None, istcb2=None,
                  isfropt=0,
-                 nstrail=10, isuzn=1, nsfrsets=30, irtflg=1, numtim=2,
+                 nstrail=10, isuzn=1, nsfrsets=30, irtflg=0, numtim=2,
                  weight=0.75, flwtol=0.0001,
                  reach_data=None,
                  segment_data=None,
@@ -452,6 +457,13 @@ class ModflowSfr2(Package):
         if not np.array_equal(nseg, sd.nseg) or not np.array_equal(outseg, sd.outseg):
             self._set_paths()
         return self._paths
+
+    @property
+    def df(self):
+        if pd:
+            return pd.DataFrame(self.reach_data)
+        else:
+            return None
 
     def _set_paths(self):
         graph = self.graph
@@ -987,6 +999,7 @@ class ModflowSfr2(Package):
                                 for i in range(len(last_reach_data))]
         self.reach_data['slope'] = slopes * -1  # convert from numpy to sfr package convention
 
+
     def get_upsegs(self):
         """From segment_data, returns nested dict of all upstream segments by segemnt,
         by stress period.
@@ -1034,6 +1047,7 @@ class ModflowSfr2(Package):
             # use a set to get unique upsegs
             all_upsegs[per] = {u: list(set(upsegs[u])) for u in outsegs}
         return all_upsegs
+
 
     def renumber_segments(self):
         """Renumber segments so that segment numbering is continuous and always increases
@@ -1109,6 +1123,59 @@ class ModflowSfr2(Package):
 
         self.channel_geometry_data = renumber_channel_data(self.channel_geometry_data)
         self.channel_flow_data = renumber_channel_data(self.channel_flow_data)
+
+
+    def plot_path(self, start_seg=None, end_seg=0, plot_segment_lines=True):
+
+        if not pd:
+            print('This method requires pandas')
+            return
+
+        df = self.df
+        m = self.parent
+        mfunits = m.sr.model_length_units
+
+        to_miles = {'feet': 1/5280., 'meters': 1/(.3048*5280.)}
+
+        # slice the path
+        path = np.array(self.paths[start_seg])
+        endidx = np.where(path == end_seg)[0]
+        endidx = endidx if len(endidx) > 0 else None
+        path = path[:np.squeeze(endidx)]
+        endseg = path
+
+        # get the values
+        groups = df.groupby('iseg')
+        tmp = pd.concat([groups.get_group(s) for s in path])
+        tops = m.dis.top.array[tmp.i, tmp.j]
+        dist = np.cumsum(tmp.rchlen.values) * to_miles.get(mfunits, 1.)
+
+        # segment starts
+        starts = dist[np.where(tmp.ireach.values == 1)[0]]
+
+        fig, ax = plt.subplots(figsize=(11, 8.5))
+        ax.plot(dist, tops, label='Model top')
+        ax.plot(dist, tmp.strtop, label='Streambed top')
+        ax.set_xlabel('Distance along path, in miles')
+        ax.set_ylabel('Elevation, in {}'.format(mfunits))
+        ymin, ymax = ax.get_ylim()
+        plt.autoscale(False)
+
+        if plot_segment_lines:
+            ax.vlines(x=starts, ymin=ymin, ymax=ymax, lw=.1, alpha=.1,
+                      label='Gray lines indicate\nsegment ends.')
+        ax.legend()
+
+        stride = np.floor(len(dist)/10)
+        inds = np.arange(0, len(dist), stride, dtype=int)
+        plot_segnumbers = tmp.iseg.values[inds]
+        xlocs = dist[inds]
+        pad = 0.04 * (ymax-ymin)
+        for x, sn in zip(xlocs, plot_segnumbers):
+            ax.text(x, ymin+pad, '{}'.format(sn), va='top')
+        ax.text(xlocs[0], ymin+pad*1.2, 'Segment numbers:', va='bottom', fontweight='bold')
+        ax.text(dist[-1], ymin+pad, '{}'.format(end_seg), ha='center', va='top')
+
 
     def _get_headwaters(self, per=0):
         """List all segments that are not outsegs (that do not have any segments upstream).
