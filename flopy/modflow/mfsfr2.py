@@ -1161,11 +1161,12 @@ class ModflowSfr2(Package):
         ymin, ymax = ax.get_ylim()
         plt.autoscale(False)
 
-        if plot_segment_lines:
+        if plot_segment_lines: # plot segment ends as vertical lines
             ax.vlines(x=starts, ymin=ymin, ymax=ymax, lw=.1, alpha=.1,
                       label='Gray lines indicate\nsegment ends.')
         ax.legend()
 
+        # plot selected segment numbers along path
         stride = np.floor(len(dist)/10)
         inds = np.arange(0, len(dist), stride, dtype=int)
         plot_segnumbers = tmp.iseg.values[inds]
@@ -1175,6 +1176,7 @@ class ModflowSfr2(Package):
             ax.text(x, ymin+pad, '{}'.format(sn), va='top')
         ax.text(xlocs[0], ymin+pad*1.2, 'Segment numbers:', va='bottom', fontweight='bold')
         ax.text(dist[-1], ymin+pad, '{}'.format(end_seg), ha='center', va='top')
+        return ax
 
 
     def _get_headwaters(self, per=0):
