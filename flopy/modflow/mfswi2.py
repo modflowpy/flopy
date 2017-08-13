@@ -344,7 +344,7 @@ class ModflowSwi2(Package):
         #
         self.parent.add_package(self)
 
-    def write_file(self, check=True):
+    def write_file(self, check=True,f=None):
         """
         Write the package file.
 
@@ -360,7 +360,8 @@ class ModflowSwi2(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f = open(self.fn_path, 'w')
+        if f is None:
+            f = open(self.fn_path, 'w')
         # First line: heading
         f.write('{}\n'.format(
             self.heading))  # Writing heading not allowed in SWI???

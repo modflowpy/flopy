@@ -517,14 +517,17 @@ class Modflow(BaseModel):
         for k, v in ext_unit_dict.items():
             if v.filetype == 'NWT' or v.filetype == 'UPW':
                 version = 'mfnwt'
+                break
             elif v.filetype == 'GLO':
                 version = 'mf2k'
+                break
             elif v.filetype == 'SMS':
                 version = 'mfusg'
+                break
             elif v.filetype == 'DISU':
                 version = 'mfusg'
                 ml.structured = False
-
+                break
         # update the modflow version
         ml.set_version(version)
 

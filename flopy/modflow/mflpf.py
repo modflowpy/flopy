@@ -272,7 +272,7 @@ class ModflowLpf(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self, check=True):
+    def write_file(self, check=True, f=None):
         """
         Write the package file.
 
@@ -297,7 +297,8 @@ class ModflowLpf(Package):
             dis = self.parent.get_package('DISU')
 
         # Open file for writing
-        f = open(self.fn_path, 'w')
+        if f is None:
+            f = open(self.fn_path, 'w')
 
         # Item 0: text
         f.write('{}\n'.format(self.heading))

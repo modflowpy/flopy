@@ -170,7 +170,7 @@ class ModflowBcf(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self):
+    def write_file(self,f=None):
         """
         Write the package file.
 
@@ -186,7 +186,10 @@ class ModflowBcf(Package):
             dis = self.parent.get_package('DISU')
 
         # Open file for writing
-        f_bcf = open(self.fn_path, 'w')
+        if f is not None:
+            f_bcf = f
+        else:
+            f_bcf = open(self.fn_path, 'w')
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
         f_bcf.write('{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n'.format(
             self.ipakcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit,

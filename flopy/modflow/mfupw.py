@@ -224,7 +224,7 @@ class ModflowUpw(Package):
                            name='vkcb', locat=self.unit_number[0])
         self.parent.add_package(self)
 
-    def write_file(self, check=True):
+    def write_file(self, check=True, f=None):
         """
         Write the package file.
 
@@ -242,7 +242,10 @@ class ModflowUpw(Package):
             self.check(f='{}.chk'.format(self.name[0]),
                        verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper  # Open file for writing
-        f_upw = open(self.fn_path, 'w')
+        if f is not None:
+            f_upw = f
+        else:
+            f_upw = open(self.fn_path, 'w')
         # Item 0: text
         f_upw.write('{}\n'.format(self.heading))
         # Item 1: IBCFCB, HDRY, NPLPF
