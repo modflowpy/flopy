@@ -547,6 +547,16 @@ class MfList(object):
                 filenames.append(filename)
         return filenames
 
+    def get_filename(self,kper):
+        ext = "dat"
+        if self.binary:
+            ext = 'bin'
+        return self.package.name[0] + '_{0:04d}.{1}'.format(kper,ext)
+
+    @property
+    def binary(self):
+        return bool(self.__binary)
+
     def write_transient(self, f, single_per=None):
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
@@ -601,11 +611,7 @@ class MfList(object):
                     if self.model.external_path is not None:
                         py_filepath = os.path.join(py_filepath,
                                                    self.model.external_path)
-                    filename = self.package.name[0] + '_{0:04d}'.format(kper+1)
-                    if self.__binary:
-                        filename += '.bin'
-                    else:
-                        filename += '.dat'
+                    filename = self.get_filename(kper)
                     py_filepath = os.path.join(py_filepath, filename)
                     model_filepath = filename
                     if self.model.external_path is not None:
