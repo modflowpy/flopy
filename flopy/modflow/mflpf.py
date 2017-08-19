@@ -327,7 +327,7 @@ class ModflowLpf(Package):
         transient = not dis.steady.all()
         for k in range(nlay):
             f.write(self.hk[k].get_file_entry())
-            if self.chani[k] < 1:
+            if self.chani[k] <= 0.:
                 f.write(self.hani[k].get_file_entry())
             f.write(self.vka[k].get_file_entry())
             if transient == True:
@@ -503,7 +503,7 @@ class ModflowLpf(Package):
             hk[k] = t
 
             # hani
-            if chani[k] < 1:
+            if chani[k] <= 0.:
                 if model.verbose:
                     print('   loading hani layer {0:3d}...'.format(k + 1))
                 if 'hani' not in par_types:

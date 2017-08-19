@@ -15,6 +15,7 @@ FloPy Changes
     2. Fixed bug in SUB if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load).
     3. Fixed bugs in SUB and SUBWT load to pop original unit number.
     4. Fixed bug in MT3D BTN obs.
+    5. Fixed bug in LPF regarding when HANI is read and written.
 
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.
