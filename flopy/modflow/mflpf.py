@@ -113,7 +113,9 @@ class ModflowLpf(Package):
         (default is 0.15).
     vkcb : float or array of floats (nlay, nrow, ncol)
         is the vertical hydraulic conductivity of a Quasi-three-dimensional
-        confining bed below a layer. (default is 0.0).
+        confining bed below a layer. (default is 0.0).  Note that if an array
+        is passed for vkcb it must be of size (nlay, nrow, ncol) even though
+        the information for the bottom layer is not needed.
     wetdry : float or array of floats (nlay, nrow, ncol)
         is a combination of the wetting threshold and a flag to indicate
         which neighboring cells can cause a cell to become wet.
