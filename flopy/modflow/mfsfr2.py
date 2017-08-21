@@ -338,7 +338,7 @@ class ModflowSfr2(Package):
         # assign node numbers if there are none (structured grid)
         if np.diff(self.reach_data.node).max() == 0 and 'DIS' in self.parent.get_package_list():
             # first make kij list
-            lrc = self.reach_data[['k', 'i', 'j']]
+            lrc = self.reach_data[['k', 'i', 'j']].copy()
             lrc = (lrc.view((int, len(lrc.dtype.names))) + 1).tolist()
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
@@ -1311,11 +1311,11 @@ class ModflowSfr2(Package):
     def _write_segment_data(self, i, j, f_sfr):
         cols = ['nseg', 'icalc', 'outseg', 'iupseg', 'iprior', 'nstrpts', 'flow', 'runoff',
                 'etsw', 'pptsw', 'roughch', 'roughbk', 'cdpth', 'fdpth', 'awdth', 'bwdth']
-        fmts = _fmt_string_list(self.segment_data[i][cols][j])
+        fmts = _fmt_string_list(self.segment_data[i][cols].copy()[j])
 
         nseg, icalc, outseg, iupseg, iprior, nstrpts, flow, runoff, etsw, \
         pptsw, roughch, roughbk, cdpth, fdpth, awdth, bwdth = \
-            [0 if v == self.default_value else v for v in self.segment_data[i][cols][j]]
+            [0 if v == self.default_value else v for v in self.segment_data[i][cols].copy()[j]]
 
         f_sfr.write(' '.join(fmts[0:4]).format(nseg, icalc, outseg, iupseg) + ' ')
 
@@ -1343,9 +1343,9 @@ class ModflowSfr2(Package):
     def _write_6bc(self, i, j, f_sfr, cols=[]):
 
         icalc = self.segment_data[i][j][1]
-        fmts = _fmt_string_list(self.segment_data[i][cols][j])
+        fmts = _fmt_string_list(self.segment_data[i][cols].copy()[j])
         hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc = \
-            [0 if v == self.default_value else v for v in self.segment_data[i][cols][j]]
+            [0 if v == self.default_value else v for v in self.segment_data[i][cols].copy()[j]]
 
         if self.isfropt in [0, 4, 5] and icalc <= 0:
             f_sfr.write(' '.join(fmts[0:5]).format(hcond, thickm, elevupdn, width, depth) + ' ')
@@ -1707,7 +1707,7 @@ class check:
             inds = (segment_data.outseg < segment_data.nseg) & (segment_data.outseg != 0)
 
             if len(txt) == 0 and np.any(inds):
-                decreases = segment_data[['nseg', 'outseg']][inds]
+                decreases = segment_data[['nseg', 'outseg']][inds].copy()
                 txt += 'Found segment numbers decreasing in the downstream direction.\n'.format(len(decreases))
                 txt += 'MODFLOW will run but convergence may be slowed:\n'
                 if self.level == 1:
@@ -1758,10 +1758,10 @@ class check:
         # make nodes based on unique row, col pairs
         if np.diff(reach_data.node).max() == 0:
             uniquerc = {}
-            for i, (r, c) in enumerate(reach_data[['i', 'j']]):
+            for i, (r, c) in enumerate(reach_data[['i', 'j']].copy()):
                 if (r, c) not in uniquerc:
                     uniquerc[(r, c)] = i + 1
-            reach_data['node'] = [uniquerc[(r, c)] for r, c in reach_data[['i', 'j']]]
+            reach_data['node'] = [uniquerc[(r, c)] for r, c in reach_data[['i', 'j']].copy()]
 
         K = reach_data.strhc1
         if K.max() == 0:
