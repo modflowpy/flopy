@@ -152,7 +152,7 @@ class ModflowEvt(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
-    def write_file(self):
+    def write_file(self,f=None):
         """
         Write the package file.
 
@@ -162,7 +162,10 @@ class ModflowEvt(Package):
 
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        f_evt = open(self.fn_path, 'w')
+        if f is not None:
+            f_evt = f
+        else:
+            f_evt = open(self.fn_path, 'w')
         f_evt.write('{0:s}\n'.format(self.heading))
         f_evt.write('{0:10d}{1:10d}\n'.format(self.nevtop, self.ipakcb))
         for n in range(nper):

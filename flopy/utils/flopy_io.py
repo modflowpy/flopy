@@ -1,6 +1,7 @@
 """
 Module for input/output utilities
 """
+import sys
 import numpy as np
 
 def _fmt_string(array, float_format='{}'):
@@ -268,3 +269,22 @@ def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True, **kwar
         return df.to_records(index=False)
     else:
         return np.loadtxt(file, dtype=dtype, skiprows=skiprows, **kwargs)
+
+def get_url_text(url, error_msg=None):
+    """Get text from a url, using either python 3 or 2."""
+    try:
+        # For Python 3.0 and later
+        from urllib.request import urlopen
+    except ImportError:
+        # Fall back to Python 2's urllib2
+        from urllib2 import urlopen
+    try:
+        urlobj = urlopen(url)
+        text = urlobj.read().decode()
+        return text
+    except:
+        e = sys.exc_info()
+        print(e)
+        if error_msg is not None:
+            print(error_msg)
+        return

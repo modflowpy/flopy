@@ -14,6 +14,7 @@ import copy
 import numbers
 import numpy as np
 from ..utils.binaryfile import BinaryHeader
+from ..utils.flopy_io import line_parse
 
 
 class ArrayFormat(object):
@@ -409,7 +410,7 @@ def read1d(f, a):
     values = []
     while True:
         line = f.readline()
-        t = line.strip().split()
+        t = line_parse(line)
         values = values + t
         if len(values) >= a.shape[0]:
             break
@@ -714,7 +715,7 @@ class Util3d(object):
                                      mflay=mflay, fignum=fignum, **kwargs)
 
     def __getitem__(self, k):
-        if isinstance(k, int):
+        if isinstance(k, int) or isinstance(k,np.int64):
             return self.util_2ds[k]
         elif len(k) == 3:
             return self.array[k[0], k[1], k[2]]
@@ -2038,15 +2039,22 @@ class Util2d(object):
 
     def get_internal_cr(self):
         if self.format.array_free_format:
-            cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
-                .format(self.cnstnt, self.format.fortran, self.iprn, self.name)
+            cr = 'INTERNAL {0:15} {1:>10s} {2:2.0f} #{3:<30s}\n' \
+                .format(self.cnstnt_str, self.format.fortran, self.iprn, self.name)
             return cr
         else:
             return self._get_fixed_cr(self.locat)
 
+    @property
+    def cnstnt_str(self):
+        if isinstance(self.cnstnt,str):
+            return self.cnstnt
+        else:
+            return "{0:15.6G}".format(self.cnstnt)
+
     def get_openclose_cr(self):
-        cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
-            self.model_file_path, self.cnstnt,
+        cr = 'OPEN/CLOSE  {0:>30s} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
+            self.model_file_path, self.cnstnt_str,
             self.format.fortran, self.iprn,
             self.name)
         return cr
@@ -2058,8 +2066,8 @@ class Util2d(object):
         self.model.add_external(self.model_file_path, locat,
                                 self.format.binary)
         if self.format.array_free_format:
-            cr = 'EXTERNAL  {0:>30d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
-                locat, self.cnstnt,
+            cr = 'EXTERNAL  {0:>30d} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
+                locat, self.cnstnt_str,
                 self.format.fortran, self.iprn,
                 self.name)
             return cr
@@ -2187,6 +2195,9 @@ class Util2d(object):
             model - with the effects of the control record multiplier applied.
 
         """
+        if isinstance(self.cnstnt,str):
+            print("WARNING: cnstnt is str for {0}".format(self.name))
+            return self._array.astype(self.dtype)
         if isinstance(self.cnstnt, int):
             cnstnt = self.cnstnt
         else:
@@ -2254,10 +2265,10 @@ class Util2d(object):
             raw = line.strip('\n').split()
             i1, i2, j1, j2, v = int(raw[0])-1, int(raw[1])-1, \
                                 int(raw[2])-1, int(raw[3])-1, \
-                                dtype(raw[0])
+                                dtype(raw[4])
             for j in range(j1, j2+1):
                 for i in range(i1, i2+1):
-                    data[j, i] = v
+                    data[i, j] = v
         if np.isnan(np.sum(data)):
             raise Exception("Util2d.load_block() error: np.NaN in data array")
         return data
@@ -2290,7 +2301,27 @@ class Util2d(object):
                 if len(raw) == 1 and ',' in line:
                     raw = raw[0].split(',')
                 elif ',' in line:
-                    raw = line.replace(',','').strip('\n').split()
+                    raw = line.replace(',', '').strip('\n').split()
+                elif '*' in line:
+                    rawins = []
+                    rawremove = []
+                    for idx, t in enumerate(raw):
+                        if '*' in t:
+                            #print(t)
+                            rawremove.append(t)
+                            tt = t.split('*')
+                            tlist = []
+                            for jdx in range(int(tt[0])):
+                                tlist.append(tt[1])
+                            rawins.append((idx, list(tlist)))
+                    iadd = 1
+                    for t in rawins:
+                        ipos = t[0] + iadd
+                        for tt in t[1]:
+                            raw.insert(ipos, tt)
+                            ipos += 1
+                            iadd += 1
+                    raw = [e for e in raw if e not in rawremove]
             else:
                 # split line using number of values in the line
                 rawlist = []

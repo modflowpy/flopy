@@ -10,6 +10,7 @@ MODFLOW Guide
 import sys
 
 from ..pakbase import Package
+from ..utils.flopy_io import line_parse
 
 
 class ModflowPcg(Package):
@@ -243,7 +244,8 @@ class ModflowPcg(Package):
         ihcofadd = 0
         dampt = 0.
         if ifrfm:
-            t = line.strip().split()
+            t = line_parse(line)
+            #t = line.strip().split()
             mxiter = int(t[0])
             iter1 = int(t[1])
             npcond = int(t[2])
@@ -253,7 +255,8 @@ class ModflowPcg(Package):
                 pass
             # dataset 2
             line = f.readline()
-            t = line.strip().split()
+            t = line_parse(line)
+            #t = line.strip().split()
             hclose = float(t[0])
             rclose = float(t[1])
             relax = float(t[2])

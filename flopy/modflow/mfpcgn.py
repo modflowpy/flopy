@@ -287,8 +287,8 @@ class ModflowPcgn(Package):
             # dataset 1
             line = '{} '.format(self.iter_mo)
             line += '{} '.format(self.iter_mi)
-            line += '{} '.format(close_r)
-            line += '{}\n'.format(close_h)
+            line += '{} '.format(self.close_r)
+            line += '{}\n'.format(self.close_h)
             f.write(line)
 
             # dataset 2

@@ -2,18 +2,6 @@ language: python
 
 sudo: false
 
-addons:
-  apt:
-    packages:
-      - libhdf5-serial-dev
-      - netcdf-bin
-      - libnetcdf-dev
-
-env:
-  global:
-    #- DEPENDS="cython>=0.19"
-    - NO_NET=1
-
 matrix:
   include:
     - python: 2.7
@@ -28,6 +16,24 @@ matrix:
     - python: "3.6-dev"
     - python: "nightly"
 
+cache:
+  pip: true
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.local
+
+addons:
+  apt:
+    packages:
+      - python-pip
+      - libhdf5-serial-dev
+      - netcdf-bin
+      - libnetcdf-dev
+
+env:
+  global:
+    - NO_NET=1
+
 # start Virtual X, so default matplotlib backend works
 before_install:
     - "export DISPLAY=:99.0"
@@ -35,13 +41,22 @@ before_install:
 
 # command to install dependencies
 install:
+    - if [[ $TRAVIS_PYTHON_VERSION < 3.3 ]];
+      then pip install -r requirements2-34.travis.txt;
+      fi
     - if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]];
       then pip install -r requirements33.travis.txt;
-      else pip install -r requirements.travis.txt;
+      fi
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.4 ]];
+      then pip install -r requirements2-34.travis.txt;
+      fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.4 ]];
+      then pip install -r requirements.travis.txt;
       fi
 
 
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
+    - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - nosetests -v -w ./autotest

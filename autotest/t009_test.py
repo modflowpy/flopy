@@ -136,9 +136,12 @@ def test_sfr():
     sfr.isfropt = 1
     sfr.reach_data = interpolate_to_reaches(sfr)
     sfr.get_slopes()
-    assert sfr.reach_data.slope[29] == (sfr.reach_data.strtop[29] -
-                                        sfr.reach_data.strtop[107]) \
-                                       / sfr.reach_data.rchlen[29]
+    reach_inds = 29
+    outreach = sfr.reach_data.outreach[reach_inds]
+    out_inds = np.where(sfr.reach_data.reachID == outreach)
+    assert sfr.reach_data.slope[reach_inds] == (sfr.reach_data.strtop[reach_inds] -
+                                        sfr.reach_data.strtop[out_inds]) \
+                                       / sfr.reach_data.rchlen[reach_inds]
     chk = sfr.check()
     assert sfr.reach_data.slope.min() < 0.0001 and 'minimum slope' in chk.warnings
     sfr.reach_data.slope[0] = 1.1
@@ -160,6 +163,24 @@ def test_sfr_renumbering():
                                    dtype=[('nseg', int), ('outseg', int)])
     d['nseg'] = range(1, 10)
     d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
+    m = flopy.modflow.Modflow()
+    sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
+    chk = sfr.check()
+    assert 'segment numbering order' in chk.warnings
+    sfr.renumber_segments()
+    chk = sfr.check()
+    assert 'continuity in segment and reach numbering' in chk.passed
+    assert 'segment numbering order' in chk.passed
+
+    # test renumbering non-consecutive segment numbers
+    r['iseg'] *= 2
+    r['ireach'] = [1, 2, 3] * 9
+
+    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
+    d = np.core.records.fromarrays(d.transpose(),
+                                   dtype=[('nseg', int), ('outseg', int)])
+    d['nseg'] = np.arange(1, 10) * 2
+    d['outseg'] = np.array([4, 0, 6, 8, 3, 8, 1, 2, 8]) * 2
     m = flopy.modflow.Modflow()
     sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
     chk = sfr.check()
@@ -218,6 +239,8 @@ def test_example():
 
     # test handling of a 0-D array (produced by genfromtxt sometimes)
     segment_data = np.array(segment_data[0])
+    reach_data = reach_data[reach_data['iseg'] == 1]
+    nss = 1
     sfr = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const,
                                     dleak=dleak, ipakcb=ipakcb, istcb2=istcb2,
                                     reach_data=reach_data,
@@ -299,7 +322,7 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    #test_sfr()
+    test_sfr()
     #test_sfr_renumbering()
     #test_example()
     #test_transient_example()

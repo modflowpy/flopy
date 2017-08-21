@@ -15,6 +15,7 @@ from .mfpar import ModflowPar as mfpar
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, read1d
+from ..utils.flopy_io import line_parse
 
 
 class ModflowLpf(Package):
@@ -112,7 +113,9 @@ class ModflowLpf(Package):
         (default is 0.15).
     vkcb : float or array of floats (nlay, nrow, ncol)
         is the vertical hydraulic conductivity of a Quasi-three-dimensional
-        confining bed below a layer. (default is 0.0).
+        confining bed below a layer. (default is 0.0).  Note that if an array
+        is passed for vkcb it must be of size (nlay, nrow, ncol) even though
+        the information for the bottom layer is not needed.
     wetdry : float or array of floats (nlay, nrow, ncol)
         is a combination of the wetting threshold and a flag to indicate
         which neighboring cells can cause a cell to become wet.
@@ -271,7 +274,7 @@ class ModflowLpf(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self, check=True):
+    def write_file(self, check=True, f=None):
         """
         Write the package file.
 
@@ -296,7 +299,8 @@ class ModflowLpf(Package):
             dis = self.parent.get_package('DISU')
 
         # Open file for writing
-        f = open(self.fn_path, 'w')
+        if f is None:
+            f = open(self.fn_path, 'w')
 
         # Item 0: text
         f.write('{}\n'.format(self.heading))
@@ -325,7 +329,7 @@ class ModflowLpf(Package):
         transient = not dis.steady.all()
         for k in range(nlay):
             f.write(self.hk[k].get_file_entry())
-            if self.chani[k] < 1:
+            if self.chani[k] <= 0.:
                 f.write(self.hani[k].get_file_entry())
             f.write(self.vka[k].get_file_entry())
             if transient == True:
@@ -397,7 +401,7 @@ class ModflowLpf(Package):
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
             print('   loading IBCFCB, HDRY, NPLPF...')
-        t = line.strip().split()
+        t = line_parse(line)
         ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
         #if ipakcb != 0:
         #    model.add_pop_key_list(ipakcb)
@@ -501,7 +505,7 @@ class ModflowLpf(Package):
             hk[k] = t
 
             # hani
-            if chani[k] < 1:
+            if chani[k] <= 0.:
                 if model.verbose:
                     print('   loading hani layer {0:3d}...'.format(k + 1))
                 if 'hani' not in par_types:
@@ -516,7 +520,7 @@ class ModflowLpf(Package):
             # vka
             if model.verbose:
                 print('   loading vka layer {0:3d}...'.format(k + 1))
-            key = 'vka'
+            key = 'vk'
             if layvka[k] != 0:
                 key = 'vani'
             if 'vk' not in par_types and 'vani' not in par_types:
@@ -524,7 +528,7 @@ class ModflowLpf(Package):
                                 ext_unit_dict)
             else:
                 line = f.readline()
-                key = 'vka'
+                key = 'vk'
                 if 'vani' in par_types:
                     key = 'vani'
                 t = mfpar.parameter_fill(model, (nrow, ncol), key, parm_dict,

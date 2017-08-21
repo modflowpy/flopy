@@ -111,24 +111,30 @@ class HeadObservation(object):
             time_series_data = np.reshape(time_series_data, (1, 2))
 
         # make sure the time data are ordered
-        for idx in range(1, time_series_data.shape[0]):
-            t0 = time_series_data[idx-1, 0]
-            t1 = time_series_data[idx, 0]
-            if t1 <= t0:
-                msg = 'time values in timeseries data ' + \
-                      'must be in increasing order'
-                raise ValueError(msg)
+        # for idx in range(1, time_series_data.shape[0]):
+        #     t0 = time_series_data[idx-1, 0]
+        #     t1 = time_series_data[idx, 0]
+        #     if t1 <= t0:
+        #         msg = 'time values in timeseries data ' + \
+        #               'must be in increasing order for obsname {0}'\
+        #                   .format(obsname)
+        #         raise ValueError(msg)
+        #
+        # # exclude observations that exceed the maximum simulation time
+        # iend = time_series_data.shape[0]
+        # tmax = model.dis.get_final_totim()
+        # for idx, (t, v) in enumerate(time_series_data):
+        #     dt = tmax - t
+        #     if dt < 0.:
+        #         iend = idx
+        #         break
+        # if iend < time_series_data.shape[0]:
+        #     time_series_data = time_series_data[0:iend]
 
-        # exclude observations that exceed the maximum simulation time
-        iend = time_series_data.shape[0]
+        #find indices of time series data that are valid
         tmax = model.dis.get_final_totim()
-        for idx, (t, v) in enumerate(time_series_data):
-            dt = tmax - t
-            if dt < 0.:
-                iend = idx
-                break
-        if iend < time_series_data.shape[0]:
-            time_series_data = time_series_data[0:iend]
+        keep_idx = time_series_data[:,0] < tmax
+        times_series_data = time_series_data[keep_idx,:]
 
         # set the number of observations in this time series
         shape = time_series_data.shape

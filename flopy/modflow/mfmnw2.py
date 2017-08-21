@@ -1124,6 +1124,8 @@ class ModflowMnw2(Package):
         nd = []
         for i in range(len(self.node_data)):
             r = self.node_data[i]
+            if r['wellid'] == '76264':
+                z=2
             if r['ztop'] - r['zbotm'] > 0:
                 startK = get_layer(self.parent.dis, r['i'], r['j'], r['ztop'])
                 endK = get_layer(self.parent.dis, r['i'], r['j'], r['zbotm'])
@@ -1133,15 +1135,15 @@ class ModflowMnw2(Package):
                     nd.append(r)
                 else:
                     for k in np.arange(startK, endK + 1):
-                        r = r.copy()
-                        r['k'] = k
+                        rk = r.copy()
+                        rk['k'] = k
                         if k > startK:
-                            r['ztop'] = self.parent.dis.botm[
-                                k - 1, r['i'], r['j']]
+                            rk['ztop'] = self.parent.dis.botm[
+                                k - 1, rk['i'], rk['j']]
                         if k < endK:
-                            r['zbotm'] = self.parent.dis.botm[
-                                k, r['i'], r['j']]
-                        nd.append(r)
+                            rk['zbotm'] = self.parent.dis.botm[
+                                k, rk['i'], rk['j']]
+                        nd.append(rk)
             else:
                 nd.append(r)
         return stack_arrays(nd, usemask=False).view(np.recarray)

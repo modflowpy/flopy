@@ -118,7 +118,8 @@ class Modflow(BaseModel):
         # -- check if unstructured is specified for something
         # other than mfusg is specified
         if not self.structured:
-            assert 'mfusg' in self.version, 'structured=False can only be specified for mfusg models'
+            assert 'mfusg' in self.version, \
+                'structured=False can only be specified for mfusg models'
 
         # external option stuff
         self.array_free_format = True
@@ -248,11 +249,11 @@ class Modflow(BaseModel):
     def nrow_ncol_nlay_nper(self):
         # structured dis
         dis = self.get_package('DIS')
-        if (dis):
+        if dis:
             return dis.nrow, dis.ncol, dis.nlay, dis.nper
         # unstructured dis
         dis = self.get_package('DISU')
-        if (dis):
+        if dis:
             return None, dis.nodelay.array[:], dis.nlay, dis.nper
         # no dis
         return 0, 0, 0, 0
@@ -473,8 +474,7 @@ class Modflow(BaseModel):
         namefile_path = os.path.join(ml.model_ws, f)
 
         # set the reference information
-        ref_attributes = SpatialReference. \
-            attribs_from_namfile_header(namefile_path)
+        ref_attributes = SpatialReference.load(namefile_path)
 
         # read name file
         try:
@@ -524,7 +524,6 @@ class Modflow(BaseModel):
             elif v.filetype == 'DISU':
                 version = 'mfusg'
                 ml.structured = False
-
         # update the modflow version
         ml.set_version(version)
 
@@ -582,13 +581,18 @@ class Modflow(BaseModel):
                                  .format(dis.name[0]))
             ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
+        itmuni = ref_attributes.pop("itmuni", 4)
         if ml.structured:
+            itmuni = dis.itmuni
+            ref_attributes['lenuni'] = dis.lenuni
             sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
-                                  lenuni=ml.dis.lenuni, **ref_attributes)
+                                  **ref_attributes)
+            #dis.lenuni = sr.lenuni
         else:
             sr = None
         dis.sr = sr
         dis.start_datetime = start_datetime
+        dis.itmuni = itmuni
 
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.

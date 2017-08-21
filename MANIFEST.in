@@ -1,0 +1,2 @@
+include flopy/export/longnames.json
+include flopy/export/unitsformat.json
