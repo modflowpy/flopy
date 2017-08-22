@@ -1086,7 +1086,7 @@ class SpatialReference(object):
         """populate vertices for the whole grid"""
         jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
         jj, ii = jj.ravel(), ii.ravel()
-        return self.get_vertices(ii, jj)
+        self._vertices = self.get_vertices(ii, jj)
         #vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
         #self._vertices = [v.tolist() for v in vrts]  # conversion to lists
 

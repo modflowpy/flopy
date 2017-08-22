@@ -592,6 +592,21 @@ def test_map_rotation():
     lc = modelmap.plot_grid()
     check_vertices()
 
+def test_get_vertices():
+    m = flopy.modflow.Modflow(rotation=20.)
+    nrow, ncol = 40, 20
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=nrow, ncol=ncol,
+                                   delr=250.,
+                                   delc=250., top=10, botm=0)
+    xul, yul = 500000, 2934000
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                        delc=m.dis.delc.array,
+                                        xul=xul, yul=yul, rotation=45.)
+    a1 = np.array(m.sr.vertices)
+    j = np.array(list(range(ncol)) * nrow)
+    i = np.array(sorted(list(range(nrow)) * ncol))
+    a2 = np.array(m.sr.get_vertices(i, j))
+    assert np.array_equal(a1, a2)
 
 def test_netcdf_classmethods():
     import os
@@ -739,10 +754,11 @@ if __name__ == '__main__':
     #test_rotation()
     #test_map_rotation()
     #test_sr_scaling()
-    test_read_usgs_model_reference()
+    #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()
+    test_get_vertices()
     #test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
