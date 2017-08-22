@@ -668,7 +668,6 @@ class ModflowSfr2(Package):
                 current_6d = {}  # these could also be implemented as structured arrays with a column for segment number
                 current_6e = {}
                 for j in range(itmp):
-
                     dataset_6a = _parse_6a(next(f), option)
                     current_aux[j] = dataset_6a[-1]
                     dataset_6a = dataset_6a[:-1]  # drop xyz
@@ -2123,10 +2122,10 @@ def _markitzero(recarray, inds):
 
 
 def _pop_item(line):
-    if len(line) > 0:
-        return line.pop(0)
-    return 0
-
+    try:
+        return float(line.pop(0))
+    except:
+        return 0.
 
 def _get_dataset(line, dataset):
     tmp = []
@@ -2335,30 +2334,29 @@ def _parse_6a(line, option):
     na = 0
     nvalues = sum([_isnumeric(s) for s in line])
     # line = _get_dataset(line, [0] * nvalues)
-
-    nseg = int(line.pop(0))
-    icalc = int(line.pop(0))
-    outseg = int(line.pop(0))
-    iupseg = int(line.pop(0))
+    nseg = int(_pop_item(line))
+    icalc = int(_pop_item(line))
+    outseg = int(_pop_item(line))
+    iupseg = int(_pop_item(line))
     iprior = na
     nstrpts = na
 
     if iupseg > 0:
-        iprior = int(line.pop(0))
+        iprior = int(_pop_item(line))
     if icalc == 4:
-        nstrpts = int(line.pop(0))
+        nstrpts = int(_pop_item(line))
 
-    flow = float(line.pop(0))
-    runoff = float(line.pop(0))
-    etsw = float(line.pop(0))
-    pptsw = float(line.pop(0))
+    flow = _pop_item(line)
+    runoff = _pop_item(line)
+    etsw = _pop_item(line)
+    pptsw = _pop_item(line)
     roughch = na
     roughbk = na
 
     if icalc in [1, 2]:
-        roughch = float(line.pop(0))
+        roughch = _pop_item(line)
     if icalc == 2:
-        roughbk = float(line.pop(0))
+        roughbk = _pop_item(line)
 
     cdpth, fdpth, awdth, bwdth = na, na, na, na
     if icalc == 3:
