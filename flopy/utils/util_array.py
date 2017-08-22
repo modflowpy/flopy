@@ -715,7 +715,7 @@ class Util3d(object):
                                      mflay=mflay, fignum=fignum, **kwargs)
 
     def __getitem__(self, k):
-        if isinstance(k, int):
+        if isinstance(k, int) or isinstance(k,np.int64):
             return self.util_2ds[k]
         elif len(k) == 3:
             return self.array[k[0], k[1], k[2]]
@@ -2039,15 +2039,22 @@ class Util2d(object):
 
     def get_internal_cr(self):
         if self.format.array_free_format:
-            cr = 'INTERNAL {0:15.6G} {1:>10s} {2:2.0f} #{3:<30s}\n' \
-                .format(self.cnstnt, self.format.fortran, self.iprn, self.name)
+            cr = 'INTERNAL {0:15} {1:>10s} {2:2.0f} #{3:<30s}\n' \
+                .format(self.cnstnt_str, self.format.fortran, self.iprn, self.name)
             return cr
         else:
             return self._get_fixed_cr(self.locat)
 
+    @property
+    def cnstnt_str(self):
+        if isinstance(self.cnstnt,str):
+            return self.cnstnt
+        else:
+            return "{0:15.6G}".format(self.cnstnt)
+
     def get_openclose_cr(self):
-        cr = 'OPEN/CLOSE  {0:>30s} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
-            self.model_file_path, self.cnstnt,
+        cr = 'OPEN/CLOSE  {0:>30s} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
+            self.model_file_path, self.cnstnt_str,
             self.format.fortran, self.iprn,
             self.name)
         return cr
@@ -2059,8 +2066,8 @@ class Util2d(object):
         self.model.add_external(self.model_file_path, locat,
                                 self.format.binary)
         if self.format.array_free_format:
-            cr = 'EXTERNAL  {0:>30d} {1:15.6G} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
-                locat, self.cnstnt,
+            cr = 'EXTERNAL  {0:>30d} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
+                locat, self.cnstnt_str,
                 self.format.fortran, self.iprn,
                 self.name)
             return cr
@@ -2188,6 +2195,9 @@ class Util2d(object):
             model - with the effects of the control record multiplier applied.
 
         """
+        if isinstance(self.cnstnt,str):
+            print("WARNING: cnstnt is str for {0}".format(self.name))
+            return self._array.astype(self.dtype)
         if isinstance(self.cnstnt, int):
             cnstnt = self.cnstnt
         else:

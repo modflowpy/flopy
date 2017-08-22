@@ -324,16 +324,23 @@ class LayerFile(object):
             raise Exception('Data not found...')
 
         # initialize head with nan and then fill it
-        data = np.empty((self.nlay, self.nrow, self.ncol),
-                        dtype=self.realtype)
+        idx = keyindices[0]
+        nrow = self.recordarray['nrow'][idx]
+        ncol = self.recordarray['ncol'][idx]
+        data = np.empty((self.nlay, nrow, ncol), dtype=self.realtype)
         data[:, :, :] = np.nan
         for idx in keyindices:
             ipos = self.iposarray[idx]
             ilay = self.recordarray['ilay'][idx]
             if self.verbose:
-                print('Byte position in file: {0}'.format(ipos))
+                msg = 'Byte position in file: {0} for '
+                'layer {}'.format(ipos, ilay)
+                print(msg)
             self.file.seek(ipos, 0)
-            data[ilay - 1, :, :] = self._read_data()
+            nrow = self.recordarray['nrow'][idx]
+            ncol = self.recordarray['ncol'][idx]
+            shp = (nrow, ncol)
+            data[ilay - 1] = self._read_data(shp)
         return data
 
     def get_times(self):
@@ -459,7 +466,7 @@ class LayerFile(object):
         rv[rv == nodata] = np.nan
         return rv
 
-    def _read_data(self):
+    def _read_data(self, shp):
         """
         Read data from file
 
@@ -472,6 +479,8 @@ class LayerFile(object):
             kijlist = idx
         elif isinstance(idx, tuple):
             kijlist = [idx]
+        else:
+            raise Exception('Could not build kijlist from ', idx)
 
         # Check to make sure that k, i, j are within range, otherwise
         # the seek approach won't work.  Can't use k = -1, for example.

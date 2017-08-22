@@ -234,7 +234,7 @@ class ModflowRch(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
-    def write_file(self, check=True):
+    def write_file(self, check=True,f=None):
         """
         Write the package file.
 
@@ -252,7 +252,10 @@ class ModflowRch(Package):
             self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f_rch = open(self.fn_path, 'w')
+        if f is not None:
+            f_rch = f
+        else:
+            f_rch = open(self.fn_path, 'w')
         f_rch.write('{0:s}\n'.format(self.heading))
         f_rch.write('{0:10d}{1:10d}\n'.format(self.nrchop, self.ipakcb))
         for kper in range(nper):

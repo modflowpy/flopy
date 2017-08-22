@@ -524,7 +524,6 @@ class Modflow(BaseModel):
             elif v.filetype == 'DISU':
                 version = 'mfusg'
                 ml.structured = False
-
         # update the modflow version
         ml.set_version(version)
 

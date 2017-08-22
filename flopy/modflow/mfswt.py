@@ -389,7 +389,7 @@ class ModflowSwt(Package):
         # add package to model
         self.parent.add_package(self)
 
-    def write_file(self):
+    def write_file(self,f=None):
         """
         Write the package file.
 
@@ -400,7 +400,8 @@ class ModflowSwt(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f = open(self.fn_path, 'w')
+        if f is None:
+            f = open(self.fn_path, 'w')
         # First line: heading
         f.write('{}\n'.format(self.heading))
         # write dataset 1

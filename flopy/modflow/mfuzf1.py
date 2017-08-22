@@ -511,7 +511,7 @@ class ModflowUzf1(Package):
             txt += 'end\n'
             f_uzf.write(txt)
 
-    def write_file(self):
+    def write_file(self,f=None):
         """
         Write the package file.
 
@@ -522,7 +522,10 @@ class ModflowUzf1(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f_uzf = open(self.fn_path, 'w')
+        if f is not None:
+            f_uzf = f
+        else:
+            f_uzf = open(self.fn_path, 'w')
         f_uzf.write('{}\n'.format(self.heading))
 
         # Dataset 1a

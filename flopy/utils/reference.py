@@ -364,11 +364,6 @@ class SpatialReference(object):
             elif "rotation" in item.lower():
                 try:
                     d['rotation'] = float(item.split(':')[1])
-                    if d['rotation'] != 0.0:
-                        msg = ('rotation arg has recently changed. It was '
-                               'previously treated as positive clockwise. It '
-                               'now is positive counterclockwise.')
-                        warnings.warn(msg)
                 except:
                     pass
             elif "proj4_str" in item.lower():
@@ -478,11 +473,6 @@ class SpatialReference(object):
             #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
             #                yll=self.yll)
         elif key == "rotation":
-            if float(value) != 0.0:
-                msg = ('rotation arg has recently changed. It was '
-                       'previously treated as positive clockwise. It '
-                       'now is positive counterclockwise.')
-                warnings.warn(msg)
             super(SpatialReference, self). \
                 __setattr__("rotation", float(value))
             #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
@@ -624,11 +614,6 @@ class SpatialReference(object):
             msg = ('Both yul and yll entered. Please enter either xul, yul or '
                    'xll, yll.')
             raise ValueError(msg)
-        if rotation != 0.0:
-            msg = ('rotation arg has recently changed. It was '
-                   'previously treated as positive clockwise. It '
-                   'now is positive counterclockwise.')
-            warnings.warn(msg)
         # set the origin priority based on the left corner specified
         # (the other left corner will be calculated).  If none are specified
         # then default to upper left
@@ -1235,6 +1220,7 @@ class SpatialReference(object):
     def get_3d_vertex_connectivity(self, nlay, botm, ibound=None):
         if ibound is None:
             ncells = nlay * self.nrow * self.ncol
+            ibound = np.ones((nlay, self.nrow, self.ncol), dtype=np.int)
         else:
             ncells = (ibound != 0).sum()
         npoints = ncells * 8
