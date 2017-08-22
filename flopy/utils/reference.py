@@ -904,6 +904,7 @@ class SpatialReference(object):
                               epsg=epsg, prj=prj)
 
     def get_vertices(self, i, j):
+        """Get vertices for a single cell or sequence if i, j locations."""
         pts = []
         xgrid, ygrid = self.xgrid, self.ygrid
         pts.append([xgrid[i, j], ygrid[i, j]])
@@ -911,7 +912,11 @@ class SpatialReference(object):
         pts.append([xgrid[i + 1, j + 1], ygrid[i + 1, j + 1]])
         pts.append([xgrid[i, j + 1], ygrid[i, j + 1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
-        return pts
+        if np.isscalar(i):
+            return pts
+        else:
+            vrts = np.array(pts).transpose([2, 0, 1])
+            return [v.tolist() for v in vrts]
 
     def get_rc(self, x, y):
         """Return the row and column of a point or sequence of points
@@ -1081,8 +1086,9 @@ class SpatialReference(object):
         """populate vertices for the whole grid"""
         jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
         jj, ii = jj.ravel(), ii.ravel()
-        vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
-        self._vertices = [v.tolist() for v in vrts]  # conversion to lists
+        return self.get_vertices(ii, jj)
+        #vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
+        #self._vertices = [v.tolist() for v in vrts]  # conversion to lists
 
         """
         code above is 3x faster
