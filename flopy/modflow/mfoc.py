@@ -88,7 +88,7 @@ class ModflowOc(Package):
         
         The list is used for every stress period and time step after the 
         (IPEROC, ITSOC) tuple until a (IPEROC, ITSOC) tuple is entered with
-        and empty list.
+        an empty list.
     compact : boolean
         Save results in compact budget form. (default is True).
     extension : list of strings

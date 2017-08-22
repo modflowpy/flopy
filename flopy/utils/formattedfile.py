@@ -166,18 +166,19 @@ class FormattedLayerFile(LayerFile):
             'Abstract method _get_text_header called in FormattedLayerFile. ' +
             'This method needs to be overridden.')
 
-    def _read_data(self):
+    def _read_data(self, shp):
         """
         Read 2-D data from file
 
         """
 
+        nrow, ncol = shp
         current_row = 0
         current_col = 0
-        result = np.empty((self.nrow, self.ncol), self.realtype)
+        result = np.empty((nrow, ncol), self.realtype)
         # Loop until all data retreived or eof
         while (
-                current_row < self.nrow or current_col < self.ncol) and self.file.tell() != self.totalbytes:
+                current_row < nrow or current_col < ncol) and self.file.tell() != self.totalbytes:
             line = self.file.readline()
 
             # Read data into 2-D array
@@ -189,12 +190,12 @@ class FormattedLayerFile(LayerFile):
                         ' Unable to convert data to float.')
                 result[current_row, current_col] = float(val)
                 current_col += 1
-                if current_col >= self.ncol:
+                if current_col >= ncol:
                     current_row += 1
-                    if current_row < self.nrow:
+                    if current_row < nrow:
                         current_col = 0
 
-        if current_row < self.nrow - 1 or current_col < self.ncol - 1:
+        if current_row < nrow - 1 or current_col < ncol - 1:
             raise Exception('Unexpected end of file while reading data.')
 
         return result
