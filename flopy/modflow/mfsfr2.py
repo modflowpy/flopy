@@ -1494,6 +1494,16 @@ class ModflowSfr2(Package):
                 continue
         f_sfr.close()
 
+    def export(self, f, **kwargs):
+        if isinstance(f, str) and f.lower().endswith(".shp"):
+            from flopy.utils.geometry import Polygon
+            from flopy.export.shapefile_utils import recarray2shp
+            verts = self.parent.sr.get_vertices(self.reach_data.i, self.reach_data.j)
+            geoms = [Polygon(v) for v in verts]
+            recarray2shp(self.reach_data, geoms, **kwargs)
+        else:
+            from flopy import export
+            return export.utils.package_helper(f, self, **kwargs)
 
     @staticmethod
     def ftype():
