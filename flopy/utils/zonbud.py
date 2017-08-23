@@ -57,10 +57,10 @@ class ZoneBudget(object):
             raise Exception(
                 'Cannot load cell budget file: {}.'.format(cbc_file))
 
-        if isinstance(z, list):
-            for zi in z:
-                assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
-            z = np.array(z)
+        # if isinstance(z, list):
+        #     for zi in z:
+        #         assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
+        #     z = np.array(z)
         elif isinstance(z, np.ndarray):
             assert z.dtype in [int, np.int32, np.int64], 'Zones dtype must be integer'
 
