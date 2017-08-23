@@ -61,8 +61,8 @@ class ZoneBudget(object):
         #     for zi in z:
         #         assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
         #     z = np.array(z)
-        elif isinstance(z, np.ndarray):
-            assert z.dtype in [int, np.int32, np.int64], 'Zones dtype must be integer'
+        if isinstance(z, np.ndarray):
+            assert np.issubdtype(z, np.integer), 'Zones dtype must be integer'
 
         # Check for negative zone values
         for zi in np.unique(z):
