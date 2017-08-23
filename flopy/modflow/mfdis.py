@@ -449,7 +449,7 @@ class ModflowDis(Package):
         nrc = self.nrow * self.ncol
         v = []
         for [k, i, j] in lrc_list:
-            node = int(((k - 1) * nrc) + ((i - 1) * self.ncol) + j)
+            node = int(((k) * nrc) + ((i) * self.ncol) + j)
             v.append(node)
         return v
 
