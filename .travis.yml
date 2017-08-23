@@ -1,6 +1,8 @@
 language: python
-
-sudo: false
+os: linux
+dist: trusty
+sudo: required
+compiler: gcc
 
 matrix:
   include:
@@ -24,7 +26,10 @@ cache:
 
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
+      - gfortran-6
       - python-pip
       - libhdf5-serial-dev
       - netcdf-bin
@@ -41,6 +46,10 @@ before_install:
 
 # command to install dependencies
 install:
+    - if [[ ! -d "$HOME/.local/bin" ]]; then
+        mkdir "$HOME/.local/bin";
+      fi
+    - export PATH="$HOME/.local/bin:$PATH"
     - if [[ $TRAVIS_PYTHON_VERSION < 3.3 ]];
       then pip install -r requirements2-34.travis.txt;
       fi
@@ -53,6 +62,7 @@ install:
     - if [[ $TRAVIS_PYTHON_VERSION > 3.4 ]];
       then pip install -r requirements.travis.txt;
       fi
+    - pip install https://github.com/modflowpy/pymake/zipball/master
 
 
 # command to run tests

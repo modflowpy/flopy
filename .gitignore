@@ -71,6 +71,7 @@ examples/scripts/data
 autotest/*.bin
 autotest/*.dat
 autotest/temp
+autotest/tempbin
 
 *.chk
 
