@@ -62,7 +62,9 @@ class ZoneBudget(object):
         #         assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
         #     z = np.array(z)
         if isinstance(z, np.ndarray):
-            assert np.issubdtype(z, np.integer), 'Zones dtype must be integer'
+            assert np.issubdtype(z.dtype, np.integer), 'Zones dtype must be integer'
+        else:
+            raise Exception('Please pass zones as a numpy ndarray of (positive) integers. {}'.format(z.dtype))
 
         # Check for negative zone values
         for zi in np.unique(z):
@@ -117,34 +119,25 @@ class ZoneBudget(object):
         # Set float and integer types
         self.float_type = np.float32
         self.int_type = np.int32
-        is_64bit = sys.maxsize > 2 ** 32
-        if is_64bit:
-            self.float_type = np.float64
-            self.int_type = np.int64
 
-        # Make sure the input zone array has the same shape as the cell budget file
-        if len(z.shape) == 2 and self.nlay == 1:
-            # Reshape a 2-D array to 3-D to match output from
-            # the CellBudgetFile object.
-            izone = np.zeros(self.cbc_shape, self.int_type)
-            izone[0, :, :] = z[:, :]
-        elif len(z.shape) == 2 and self.nlay > 1:
-            # 2-D array specified, but model is more than 1 layer. Don't assume
-            # user wants same zones for all layers.
-            raise Exception('Zone array and CellBudgetFile shapes '
-                            'do not match {} {}'.format(z.shape,
-                                                        self.cbc_shape))
-        elif len(z.shape) == 3:
+        # Check dimensions of input zone array
+        s = 'Row/col dimensions of zone array {}' \
+            ' do not match model row/col dimensions {}'.format(z.shape, self.cbc_shape)
+        assert z.shape[-2] == self.nrow and \
+               z.shape[-1] == self.ncol, s
+
+        if z.shape == self.cbc_shape:
             izone = z.copy()
+        elif len(z.shape) == 2:
+            izone = np.zeros(self.cbc_shape, self.int_type)
+            izone[:] = z[:, :]
+        elif len(z.shape) == 3 and z.shape[0] == 1:
+            izone = np.zeros(self.cbc_shape, self.int_type)
+            izone[:] = z[0, :, :]
         else:
             raise Exception(
-                'Shape of the zone array is not recognized: {}'.format(
-                    z.shape))
-
-        assert izone.shape == self.cbc_shape, \
-            'Shape of input zone array {} does not ' \
-            'match the cell by cell ' \
-            'budget file {}'.format(izone.shape, self.cbc_shape)
+                    'Shape of the zone array is not recognized: {}'.format(
+                        z.shape))
 
         # self.kstpkper = kstpkper
         # self.totim = totim
