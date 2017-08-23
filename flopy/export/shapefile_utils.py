@@ -365,7 +365,7 @@ def shp2recarray(shpname):
     return recarray
 
 
-def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None):
+def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None, **kwargs):
     """Write a numpy record array to a shapefile, using a corresponding
     list of geometries.
 

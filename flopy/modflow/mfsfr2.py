@@ -979,17 +979,36 @@ class ModflowSfr2(Package):
             outreach.append(nextrchid)
         self.reach_data['outreach'] = outreach
 
-    def get_slopes(self, default_slope=0.001):
+    def get_slopes(self, default_slope=0.001, minimum_slope=0.0001, maximum_slope=1.):
         """Compute slopes by reach using values in strtop (streambed top) and rchlen (reach length)
         columns of reach_data. The slope for a reach n is computed as strtop(n+1) - strtop(n) / rchlen(n).
-        Slopes for outlet reaches are set equal to a default value (default_slope). """
+        Slopes for outlet reaches are set equal to a default value (default_slope).
+        Populates the slope column in reach_data.
+        
+        Parameters
+        ----------
+        default_slope : float
+            Slope value applied to outlet reaches (where water leaves the model).
+            Default value is 0.001
+        minimum_slope : float
+            Assigned to reaches with computed slopes less than this value.
+            This ensures that the Manning's equation won't produce unreasonable values of stage
+            (in other words, that stage is consistent with assumption that
+            streamflow is primarily drive by the streambed gradient).
+            Default value is 0.0001.
+        maximum_slope : float
+            Assigned to reaches with computed slopes more than this value.
+            Default value is 1.
+        """
         rd = self.reach_data
         elev = dict(zip(rd.reachID, rd.strtop))
         dist = dict(zip(rd.reachID, rd.rchlen))
         dnelev = {rid: elev[rd.outreach[i]] if rd.outreach[i] != 0
         else -9999 for i, rid in enumerate(rd.reachID)}
-        slopes = [(elev[i] - dnelev[i]) / dist[i] if dnelev[i] != -9999
-                  else default_slope for i in rd.reachID]
+        slopes = np.array([(elev[i] - dnelev[i]) / dist[i] if dnelev[i] != -9999
+                  else default_slope for i in rd.reachID])
+        slopes[slopes < minimum_slope] = minimum_slope
+        slopes[slopes > maximum_slope] = maximum_slope
         self.reach_data['slope'] = slopes
 
 
@@ -1499,7 +1518,7 @@ class ModflowSfr2(Package):
             from flopy.export.shapefile_utils import recarray2shp
             verts = self.parent.sr.get_vertices(self.reach_data.i, self.reach_data.j)
             geoms = [Polygon(v) for v in verts]
-            recarray2shp(self.reach_data, geoms, **kwargs)
+            recarray2shp(self.reach_data, geoms, shpname=f, **kwargs)
         else:
             from flopy import export
             return export.utils.package_helper(f, self, **kwargs)
@@ -1549,6 +1568,7 @@ class check:
 
     def __init__(self, sfrpackage, verbose=True, level=1):
         self.sfr = sfrpackage
+        self.sr = self.sfr.parent.sr
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
         self.verbose = verbose
@@ -1752,6 +1772,53 @@ class check:
             if self.verbose:
                 print(txt)
         self._txt_footer(headertxt, txt, 'circular routing', warning=False)
+
+        # check reach connections for proximity
+        rd = self.sfr.reach_data
+        rd.sort(order=['reachID'])
+        x0 = self.sr.xcentergrid[rd.i, rd.j]
+        y0 = self.sr.ycentergrid[rd.i, rd.j]
+        loc = dict(zip(rd.reachID, zip(x0, y0)))
+
+        # compute distances between node centers of connected reaches
+        headertxt = 'Checking reach connections for proximity...\n'
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+        dist = []
+        for r in rd.reachID:
+            x0, y0 = loc[r]
+            outreach = rd.outreach[r - 1]
+            if outreach == 0:
+                dist.append(0)
+            else:
+                x1, y1 = loc[outreach]
+                dist.append(np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2))
+        dist = np.array(dist)
+
+        # compute max width of reach nodes (hypotenuse for rectangular nodes)
+        dx = (self.sr.delr * self.sr.length_multiplier)[rd.j]
+        dy = (self.sr.delc * self.sr.length_multiplier)[rd.i]
+        hyp = np.sqrt(dx ** 2 + dy ** 2)
+
+        # breaks are when the connection distance is greater than
+        # max node with * a tolerance
+        # 1.25 * hyp is greater than distance of two diagonally adjacent nodes
+        # where one is 1.5x larger than the other
+        breaks = np.where(dist > hyp * 1.25)
+        breaks_reach_data = rd[breaks]
+        if len(breaks) > 0:
+            txt += '{0} instances of non-adjacent reaches found.\n'.format(len(breaks_reach_data))
+            if self.level == 1:
+                txt += 'At segments:\n'
+                txt += ' '.join(map(str, breaks_reach_data.iseg)) + '\n'
+            else:
+                f = 'reach_connection_gaps.csv'
+                rd.tofile(f, sep='\t')
+                txt += 'See {} for details.'.format(f)
+            if self.verbose:
+                print(txt)
+        self._txt_footer(headertxt, txt, 'reach connections', warning=False)
 
     def overlapping_conductance(self, tol=1e-6):
         """checks for multiple SFR reaches in one cell; and whether more than one reach has Cond > 0
