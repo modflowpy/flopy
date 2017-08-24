@@ -117,14 +117,9 @@ class ModelCrossSection(object):
             for [v1, v2] in verts:
                 xp.append(v1)
                 yp.append(v2)
-            xp, yp = np.array(xp), np.array(yp)
-            # remove offset and rotation from line
-            xp -= self.sr.xul
-            yp -= self.sr.yul
-            xp, yp = self.sr.rotate(xp, yp, -self.sr.rotation, 0, self.sr.yedge[0])
-            pts = []
-            for xt, yt in zip(xp, yp):
-                pts.append((xt, yt))
+
+            xp, yp = self.sr.transform(xp, yp, inverse=True)
+            pts = [(xt, yt) for xt, yt in zip(xp, yp)]
         # convert pts list to numpy array
         self.pts = np.array(pts)
             

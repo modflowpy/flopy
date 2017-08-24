@@ -175,7 +175,7 @@ class SpatialReference(object):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
             xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
-                                self.length_multiplier)
+                               self.length_multiplier)
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
             xul = self._xul if self._xul is not None else 0.

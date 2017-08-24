@@ -530,7 +530,8 @@ def test_rotation():
     assert m.dis.sr.ygrid[0, 0] == yul
 
 
-def test_map_rotation():
+def test_sr_with_Map():
+    import matplotlib.pyplot as plt
     m = flopy.modflow.Modflow(rotation=20.)
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
                                    delr=250.,
@@ -541,6 +542,7 @@ def test_map_rotation():
                                    rotation=rotation)
     lc = modelmap.plot_grid()
     xll, yll = modelmap.sr.xll, modelmap.sr.yll
+    plt.close()
 
     def check_vertices():
         xllp, yllp = lc._paths[0].vertices[0]
@@ -556,6 +558,7 @@ def test_map_rotation():
                                    rotation=rotation)
     lc = modelmap.plot_grid()
     check_vertices()
+    plt.close()
 
     # transformation in m.sr
     sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
@@ -565,6 +568,7 @@ def test_map_rotation():
     modelmap = flopy.plot.ModelMap(model=m)
     lc = modelmap.plot_grid()
     check_vertices()
+    plt.close()
 
     # transformation assign from sr instance
     m.sr._reset()
@@ -572,6 +576,19 @@ def test_map_rotation():
     modelmap = flopy.plot.ModelMap(model=m, sr=sr)
     lc = modelmap.plot_grid()
     check_vertices()
+    plt.close()
+
+    # test plotting of line with specification of xul, yul in Dis/Model Map
+    mf = flopy.modflow.Modflow()
+
+    # Model domain and grid definition
+    dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=10, ncol=20, delr=1., delc=1., xul=100, yul=210)
+    #fig, ax = plt.subplots()
+    verts = [[101., 201.], [119., 209.]]
+    modelxsect = flopy.plot.ModelCrossSection(model=mf, line={'line': verts},
+                                              xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+    linecollection = modelxsect.plot_grid()
+    plt.close()
 
 
 def test_netcdf_classmethods():
@@ -694,8 +711,8 @@ if __name__ == '__main__':
     #test_sr()
     #test_mbase_sr()
     #test_rotation()
-    #test_map_rotation()
-    test_sr_scaling()
+    test_sr_with_Map()
+    #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
