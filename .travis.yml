@@ -22,7 +22,7 @@ cache:
   pip: true
   directories:
     - $HOME/.cache/pip
-    - $HOME/.local
+#    - $HOME/.local
 
 addons:
   apt:
