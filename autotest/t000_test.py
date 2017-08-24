@@ -54,6 +54,16 @@ def test_build_usg():
     return
 
 
+def test_build_lgr():
+    starget = 'MODFLOW-LGR'
+    exe_name = 'mflgr'
+    dirname = 'mflgr.2_0'
+    url = "http://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
+
+    build_target(starget, exe_name, url, dirname)
+    return
+
+
 def set_compiler():
     fct = fc
     cct = cc
@@ -90,8 +100,10 @@ def build_target(starget, exe_name, url, dirname):
     if platform.system().lower() == 'windows':
         exe_name += '.exe'
 
+    is_travis = 'TRAVIS' in os.environ
+
     exe_exists = flopy.which(exe_name)
-    if exe_exists is not None:
+    if exe_exists is not None and not is_travis:
         print('No need to build {} since it exists in the current path')
         return
 
