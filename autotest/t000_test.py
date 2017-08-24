@@ -14,6 +14,20 @@ bindir = os.path.abspath(bindir)
 print(bindir)
 
 
+def update_mt3dfiles(srcdir):
+    # Replace the getcl command with getarg
+    f1 = open(os.path.join(srcdir, 'mt3dms5.for'), 'r')
+    f2 = open(os.path.join(srcdir, 'mt3dms5.for.tmp'), 'w')
+    for line in f1:
+        f2.write(line.replace('CALL GETCL(FLNAME)', 'CALL GETARG(1,FLNAME)'))
+    f1.close()
+    f2.close()
+    os.remove(os.path.join(srcdir, 'mt3dms5.for'))
+    shutil.move(os.path.join(srcdir, 'mt3dms5.for.tmp'),
+                os.path.join(srcdir, 'mt3dms5.for'))
+    return
+
+
 def test_setup():
     tempdir = os.path.join('.', 'temp')
     if os.path.isdir(tempdir):
@@ -74,6 +88,19 @@ def test_build_mt3dusgs():
     return
 
 
+def test_build_mt3dms():
+    starget = 'MT3DMS'
+    exe_name = 'mt3dms'
+    dirname = '.'
+    url = "http://hydro.geo.ua.edu/mt3d/mt3dms_530.exe"
+
+    build_target(starget, exe_name, url, dirname,
+                 srcname=os.path.join('src', 'standard'),
+                 verify=False,
+                 replace_function=update_mt3dfiles)
+    return
+
+
 def set_compiler():
     fct = fc
     cct = cc
@@ -106,7 +133,7 @@ def set_compiler():
 
 
 def build_target(starget, exe_name, url, dirname, srcname='src',
-                 replace_function=None):
+                 replace_function=None, verify=True):
     print('Determining if {} needs to be built'.format(starget))
     if platform.system().lower() == 'windows':
         exe_name += '.exe'
@@ -134,7 +161,7 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     os.chdir(dstpth)
 
     # Download the distribution
-    pymake.download_and_unzip(url)
+    pymake.download_and_unzip(url, verify=verify)
 
     # Set srcdir name
     srcdir = os.path.join(dirname, srcname)
@@ -163,6 +190,7 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
 
 if __name__ == '__main__':
     test_setup()
-    test_build_modflow()
-    test_build_mfnwt()
-    test_build_usg()
+    #test_build_modflow()
+    #test_build_mfnwt()
+    #test_build_usg()
+    test_build_mt3dms()
