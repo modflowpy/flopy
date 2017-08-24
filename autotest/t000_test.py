@@ -28,6 +28,17 @@ def update_mt3dfiles(srcdir):
     return
 
 
+def update_seawatfiles(srcdir):
+    # rename all source files to lower case so compilation doesn't
+    # bomb on case-sensitive operating systems
+    srcfiles = os.listdir(srcdir)
+    for filename in srcfiles:
+        src = os.path.join(srcdir, filename)
+        dst = os.path.join(srcdir, filename.lower())
+        os.rename(src, dst)
+    return
+
+
 def test_setup():
     tempdir = os.path.join('.', 'temp')
     if os.path.isdir(tempdir):
@@ -62,7 +73,7 @@ def test_build_usg():
     starget = 'MODFLOW-USG'
     exe_name = 'mfusg'
     dirname = 'mfusg.1_3'
-    url = 'http://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
+    url = 'https://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
 
     build_target(starget, exe_name, url, dirname)
     return
@@ -72,7 +83,7 @@ def test_build_lgr():
     starget = 'MODFLOW-LGR'
     exe_name = 'mflgr'
     dirname = 'mflgr.2_0'
-    url = "http://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
+    url = "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
 
     build_target(starget, exe_name, url, dirname)
     return
@@ -82,7 +93,7 @@ def test_build_mt3dusgs():
     starget = 'MT3D-USGS'
     exe_name = 'mt3dusgs'
     dirname = 'mt3d-usgs_Distribution'
-    url = "http://water.usgs.gov/ogw/mt3d-usgs/mt3d-usgs_1.0.zip"
+    url = "https://water.usgs.gov/ogw/mt3d-usgs/mt3d-usgs_1.0.zip"
 
     build_target(starget, exe_name, url, dirname)
     return
@@ -98,6 +109,18 @@ def test_build_mt3dms():
                  srcname=os.path.join('src', 'standard'),
                  verify=False,
                  replace_function=update_mt3dfiles)
+    return
+
+
+def test_build_seawat():
+    starget = 'SEAWAT'
+    exe_name = 'swt_v4'
+    dirname = 'swt_v4_00_05'
+    url = "https://water.usgs.gov/ogw/seawat/{0}.zip".format(dirname)
+
+    build_target(starget, exe_name, url, dirname,
+                 srcname='source',
+                 replace_function=update_seawatfiles)
     return
 
 
@@ -190,7 +213,8 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
 
 if __name__ == '__main__':
     test_setup()
-    #test_build_modflow()
-    #test_build_mfnwt()
-    #test_build_usg()
-    test_build_mt3dms()
+    # test_build_modflow()
+    # test_build_mfnwt()
+    # test_build_usg()
+    # test_build_mt3dms()
+    test_build_seawat()
