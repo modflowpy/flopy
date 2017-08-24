@@ -25,6 +25,19 @@ def update_mt3dfiles(srcdir):
     os.remove(os.path.join(srcdir, 'mt3dms5.for'))
     shutil.move(os.path.join(srcdir, 'mt3dms5.for.tmp'),
                 os.path.join(srcdir, 'mt3dms5.for'))
+
+    # Replace filespec with standard fortran
+    l = '''
+          CHARACTER*20 ACCESS,FORM,ACTION(2)
+          DATA ACCESS/'STREAM'/
+          DATA FORM/'UNFORMATTED'/
+          DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
+    '''
+    fn = os.path.join(srcdir, 'FILESPEC.INC')
+    f = open(fn, 'w')
+    f.write(l)
+    f.close()
+
     return
 
 
@@ -156,7 +169,7 @@ def set_compiler():
 
 
 def build_target(starget, exe_name, url, dirname, srcname='src',
-                 replace_function=None, verify=True):
+                 replace_function=None, verify=True, replace=False):
     print('Determining if {} needs to be built'.format(starget))
     if platform.system().lower() == 'windows':
         exe_name += '.exe'
@@ -164,7 +177,7 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     is_travis = 'TRAVIS' in os.environ
 
     exe_exists = flopy.which(exe_name)
-    if exe_exists is not None and not is_travis:
+    if exe_exists is not None and not is_travis and not replace:
         print('No need to build {} since it exists in the current path')
         return
 
