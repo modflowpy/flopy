@@ -758,11 +758,11 @@ if __name__ == '__main__':
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()
-    test_get_vertices()
+    #test_get_vertices()
     #test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-    #test_freyberg_export()
+    test_freyberg_export()
     #test_wkt_parse()
     pass

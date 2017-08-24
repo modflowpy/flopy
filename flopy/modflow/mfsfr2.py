@@ -4,6 +4,7 @@ import sys
 import textwrap
 import os
 import numpy as np
+import copy
 from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
@@ -1000,6 +1001,9 @@ class ModflowSfr2(Package):
             Assigned to reaches with computed slopes more than this value.
             Default value is 1.
         """
+        # compute outreaches if they aren't there already
+        if np.diff(self.reach_data.outreach).max() == 0:
+            self.set_outreaches()
         rd = self.reach_data
         elev = dict(zip(rd.reachID, rd.strtop))
         dist = dict(zip(rd.reachID, rd.rchlen))
@@ -1081,7 +1085,7 @@ class ModflowSfr2(Package):
         r1[0] = 0
         outseg2 = np.array([r1[s] for s in outseg])
 
-        # function re-assing upseg numbers consecutively at one level relative to outlet(s)
+        # function re-assigning upseg numbers consecutively at one level relative to outlet(s)
         # counts down from the number of segments
         def reassign_upsegs(r, nexts, upsegs):
             nextupsegs = []
@@ -1567,7 +1571,7 @@ class check:
     """
 
     def __init__(self, sfrpackage, verbose=True, level=1):
-        self.sfr = sfrpackage
+        self.sfr = copy.copy(sfrpackage)
         self.sr = self.sfr.parent.sr
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
@@ -1957,30 +1961,39 @@ class check:
             print(headertxt.strip())
         passed = False
         if self.sfr.nstrm < 0 or self.sfr.reachinput and self.sfr.isfropt in [1, 2, 3]:  # see SFR input instructions
-            # first get an outreach for each reach
-            if np.diff(self.sfr.reach_data.outreach).max() == 0:  # not sure if this is the best test
+
+            # compute outreaches if they aren't there already
+            if np.diff(self.sfr.reach_data.outreach).max() == 0:
                 self.sfr.set_outreaches()
+
+            # compute changes in elevation
+            rd = self.reach_data.copy()
+            elev = dict(zip(rd.reachID, rd.strtop))
+            dnelev = {rid: elev[rd.outreach[i]] if rd.outreach[i] != 0
+            else -9999 for i, rid in enumerate(rd.reachID)}
+            strtopdn = np.array([dnelev[r] for r in rd.reachID])
+            diffs = np.array([(dnelev[i] - elev[i]) if dnelev[i] != -9999
+                               else -.001 for i in rd.reachID])
+
             reach_data = self.sfr.reach_data  # inconsistent with other checks that work with
             # reach_data attribute of check class. Want to have get_outreaches as a method of sfr class
             # (for other uses). Not sure if other check methods should also copy reach_data directly from
             # SFR package instance for consistency.
 
             # use outreach values to get downstream elevations
-            non_outlets = reach_data[reach_data.outreach != 0]
-            outreach_elevdn = np.array([reach_data.strtop[o - 1] for o in reach_data.outreach])
-            d_strtop = outreach_elevdn[reach_data.outreach != 0] - non_outlets.strtop
-            non_outlets = recfunctions.append_fields(non_outlets,
-                                                     names=['strtopdn', 'd_strtop'],
-                                                     data=[outreach_elevdn, d_strtop],
-                                                     asrecarray=True)
+            #non_outlets = reach_data[reach_data.outreach != 0]
+            #outreach_elevdn = np.array([reach_data.strtop[o - 1] for o in reach_data.outreach])
+            #d_strtop = outreach_elevdn[reach_data.outreach != 0] - non_outlets.strtop
+            rd = recfunctions.append_fields(rd, names=['strtopdn', 'd_strtop'],
+                                                data=[strtopdn, diffs],
+                                                asrecarray=True)
 
-            txt += self._boolean_compare(non_outlets[['k', 'i', 'j', 'iseg', 'ireach',
-                                                      'strtop', 'strtopdn', 'd_strtop', 'reachID']].copy(),
-                                         col1='d_strtop', col2=np.zeros(len(non_outlets)),
+            txt += self._boolean_compare(rd[['k', 'i', 'j', 'iseg', 'ireach',
+                                         'strtop', 'strtopdn', 'd_strtop', 'reachID']].copy(),
+                                         col1='d_strtop', col2=np.zeros(len(rd)),
                                          level0txt='{} reaches encountered with strtop < strtop of downstream reach.',
                                          level1txt='Elevation rises:',
                                          )
-
             if len(txt) == 0:
                 passed = True
         else:
