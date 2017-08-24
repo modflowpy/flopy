@@ -70,5 +70,6 @@ install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
+    - python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
-    - nosetests -v -w ./autotest
+    - nosetests -v --with-id -w ./autotest

@@ -64,6 +64,16 @@ def test_build_lgr():
     return
 
 
+def test_build_mt3dusgs():
+    starget = 'MT3D-USGS'
+    exe_name = 'mt3dusgs'
+    dirname = 'mt3d-usgs_Distribution'
+    url = "http://water.usgs.gov/ogw/mt3d-usgs/mt3d-usgs_1.0.zip"
+
+    build_target(starget, exe_name, url, dirname)
+    return
+
+
 def set_compiler():
     fct = fc
     cct = cc
@@ -95,7 +105,8 @@ def set_compiler():
     return fct, cct
 
 
-def build_target(starget, exe_name, url, dirname):
+def build_target(starget, exe_name, url, dirname, srcname='src',
+                 replace_function=None):
     print('Determining if {} needs to be built'.format(starget))
     if platform.system().lower() == 'windows':
         exe_name += '.exe'
@@ -126,7 +137,10 @@ def build_target(starget, exe_name, url, dirname):
     pymake.download_and_unzip(url)
 
     # Set srcdir name
-    srcdir = os.path.join(dirname, 'src')
+    srcdir = os.path.join(dirname, srcname)
+
+    if replace_function is not None:
+        replace_function(srcdir)
 
     # compile code
     print('compiling...{}'.format(os.path.relpath(target)))
