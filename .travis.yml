@@ -50,6 +50,8 @@ install:
         mkdir "$HOME/.local/bin";
       fi
     - export PATH="$HOME/.local/bin:$PATH"
+    - ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
+    - ls -l /usr/bin/gfortran-6
     - if [[ $TRAVIS_PYTHON_VERSION < 3.3 ]];
       then pip install -r requirements2-34.travis.txt;
       fi

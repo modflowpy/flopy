@@ -10,6 +10,7 @@ fc = 'gfortran'
 cc = 'gcc'
 double = False
 bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
+bindir = os.path.abspath(bindir)
 print(bindir)
 
 
