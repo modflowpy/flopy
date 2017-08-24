@@ -36,7 +36,7 @@ def test_build_modflow():
 def test_build_mfnwt():
     starget = 'MODFLOW-NWT'
     exe_name = 'mfnwt'
-    dirname = 'MODFLOW-NWT_1.1.2'
+    dirname = 'MODFLOW-NWT_1.1.3'
     url = "http://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(dirname)
 
     build_target(starget, exe_name, url, dirname)
