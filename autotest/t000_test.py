@@ -169,15 +169,13 @@ def set_compiler():
 
 
 def build_target(starget, exe_name, url, dirname, srcname='src',
-                 replace_function=None, verify=True, replace=False):
+                 replace_function=None, verify=True, keep=True):
     print('Determining if {} needs to be built'.format(starget))
     if platform.system().lower() == 'windows':
         exe_name += '.exe'
 
-    is_travis = 'TRAVIS' in os.environ
-
     exe_exists = flopy.which(exe_name)
-    if exe_exists is not None and not is_travis and not replace:
+    if exe_exists is not None and keep:
         print('No need to build {} since it exists in the current path')
         return
 
