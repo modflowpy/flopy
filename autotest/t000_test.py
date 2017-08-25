@@ -52,6 +52,59 @@ def update_seawatfiles(srcdir):
     return
 
 
+def update_mf2000files(srcdir):
+    # Remove six src folders
+    dlist = ['beale2k', 'hydprgm', 'mf96to2k', 'mfpto2k', 'resan2k', 'ycint2k']
+    for d in dlist:
+        dname = os.path.join(srcdir, d)
+        if os.path.isdir(dname):
+            print('Removing ', dname)
+            shutil.rmtree(os.path.join(srcdir, d))
+
+    # Move src files and serial src file to src directory
+    tpth = os.path.join(srcdir, 'mf2k')
+    files = [f for f in os.listdir(tpth) if
+             os.path.isfile(os.path.join(tpth, f))]
+    for f in files:
+        shutil.move(os.path.join(tpth, f), srcdir)
+    tpth = os.path.join(srcdir, 'mf2k', 'serial')
+    files = [f for f in os.listdir(tpth) if
+             os.path.isfile(os.path.join(tpth, f))]
+    for f in files:
+        shutil.move(os.path.join(tpth, f), srcdir)
+
+    # Remove mf2k directory in source directory
+    tpth = os.path.join(srcdir, 'mf2k')
+    shutil.rmtree(tpth)
+
+
+def update_mp6files(srcdir):
+    fname1 = os.path.join(srcdir, 'MP6Flowdata.for')
+    f = open(fname1, 'r')
+
+    fname2 = os.path.join(srcdir, 'MP6Flowdata_mod.for')
+    f2 = open(fname2, 'w')
+    for line in f:
+        line = line.replace('CD.QX2', 'CD%QX2')
+        f2.write(line)
+    f.close()
+    f2.close()
+    os.remove(fname1)
+
+    fname1 = os.path.join(srcdir, 'MP6MPBAS1.for')
+    f = open(fname1, 'r')
+
+    fname2 = os.path.join(srcdir, 'MP6MPBAS1_mod.for')
+    f2 = open(fname2, 'w')
+    for line in f:
+        line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL',
+                            'MPBASDAT(IGRID)%NCPPL=>NCPPL')
+        f2.write(line)
+    f.close()
+    f2.close()
+    os.remove(fname1)
+
+
 def test_setup():
     tempdir = os.path.join('.', 'temp')
     if os.path.isdir(tempdir):
@@ -102,6 +155,17 @@ def test_build_lgr():
     return
 
 
+def test_build_mf2000():
+    starget = 'MODFLOW-2000'
+    exe_name = 'mf2000'
+    dirname = 'mf2k.1_19'
+    url = "https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz"
+
+    build_target(starget, exe_name, url, dirname,
+                 replace_function=update_mf2000files)
+    return
+
+
 def test_build_mt3dusgs():
     starget = 'MT3D-USGS'
     exe_name = 'mt3dusgs'
@@ -134,7 +198,19 @@ def test_build_seawat():
     build_target(starget, exe_name, url, dirname,
                  srcname='source',
                  replace_function=update_seawatfiles,
-                 dble=True, keep=False)
+                 dble=True, keep=True)
+    return
+
+
+def test_build_modpath6():
+    starget = 'MODPATH 6'
+    exe_name = 'mp6'
+    dirname = 'modpath.6_0'
+    url = "https://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip"
+
+    build_target(starget, exe_name, url, dirname,
+                 replace_function=update_mp6files,
+                 keep=True)
     return
 
 
