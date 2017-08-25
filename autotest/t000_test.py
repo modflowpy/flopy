@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 import platform
+import subprocess
 import flopy
 import pymake
 
@@ -213,6 +214,63 @@ def test_build_modpath6():
                  keep=True)
     return
 
+def test_build_gridgen(keep=True):
+    starget = 'GRIDGEN'
+    exe_name = 'gridgen'
+    dirname = 'gridgen.1.0.02'
+    url = "https://water.usgs.gov/ogw/gridgen/{}.zip".format(dirname)
+
+    print('Determining if {} needs to be built'.format(starget))
+    if platform.system().lower() == 'windows':
+        exe_name += '.exe'
+
+    exe_exists = flopy.which(exe_name)
+    if exe_exists is not None and keep:
+        print('No need to build {} since it exists in the current path')
+        return
+
+    # get current directory
+    cpth = os.getcwd()
+
+    # create temporary path
+    dstpth = os.path.join('tempbin')
+    print('create...{}'.format(dstpth))
+    if not os.path.exists(dstpth):
+        os.makedirs(dstpth)
+    os.chdir(dstpth)
+
+    pymake.download_and_unzip(url)
+
+    # build with make
+    try:
+        apth = os.path.join(dirname, 'src')
+        b = subprocess.Popen(("make"),
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             cwd=apth).communicate()[0]
+    except:
+        msg = 'could not build gridgen'
+        assert len(msg) == 0, msg
+
+    # move the file
+    src = os.path.join(apth, exe_name)
+    dst = os.path.join(bindir, exe_name)
+    shutil.move(src, dst)
+
+    # make sure the file can be built
+    msg = '{} does not exist.'.format(os.path.relpath(dst))
+    assert os.path.isfile(dst), msg
+
+    # change back to original path
+    os.chdir(cpth)
+
+    # Clean up downloaded directory
+    print('delete...{}'.format(dstpth))
+    if os.path.isdir(dstpth):
+        shutil.rmtree(dstpth)
+
+    return
+
 
 def set_compiler():
     fct = fc
@@ -306,4 +364,5 @@ if __name__ == '__main__':
     # test_build_mfnwt()
     # test_build_usg()
     # test_build_mt3dms()
-    test_build_seawat()
+    # test_build_seawat()
+    test_build_gridgen()
