@@ -8,7 +8,7 @@ import pymake
 
 fc = 'gfortran'
 cc = 'gcc'
-double = False
+dbleprec = False
 bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
 bindir = os.path.abspath(bindir)
 print(bindir)
@@ -133,7 +133,8 @@ def test_build_seawat():
 
     build_target(starget, exe_name, url, dirname,
                  srcname='source',
-                 replace_function=update_seawatfiles)
+                 replace_function=update_seawatfiles,
+                 dble=True, keep=False)
     return
 
 
@@ -169,7 +170,8 @@ def set_compiler():
 
 
 def build_target(starget, exe_name, url, dirname, srcname='src',
-                 replace_function=None, verify=True, keep=True):
+                 replace_function=None, verify=True, keep=True,
+                 dble=dbleprec):
     print('Determining if {} needs to be built'.format(starget))
     if platform.system().lower() == 'windows':
         exe_name += '.exe'
@@ -206,7 +208,7 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     # compile code
     print('compiling...{}'.format(os.path.relpath(target)))
     pymake.main(srcdir, target, fct, cct, makeclean=True,
-                expedite=False, dryrun=False, double=double, debug=False)
+                expedite=False, dryrun=False, double=dble, debug=False)
 
     msg = '{} does not exist.'.format(os.path.relpath(target))
     assert os.path.isfile(target), msg
