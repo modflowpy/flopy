@@ -226,7 +226,8 @@ def test_build_gridgen(keep=True):
 
     exe_exists = flopy.which(exe_name)
     if exe_exists is not None and keep:
-        print('No need to build {} since it exists in the current path')
+        print('No need to build {}'.format(starget) +
+              ' since it exists in the current path')
         return
 
     # get current directory
@@ -312,7 +313,8 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
 
     exe_exists = flopy.which(exe_name)
     if exe_exists is not None and keep:
-        print('No need to build {} since it exists in the current path')
+        print('No need to build {}'.format(starget) +
+              ' since it exists in the current path')
         return
 
     fct, cct = set_compiler()
