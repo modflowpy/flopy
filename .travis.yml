@@ -65,6 +65,7 @@ install:
       then pip install -r requirements.travis.txt;
       fi
     - pip install https://github.com/modflowpy/pymake/zipball/master
+    - pip install nose-timer
     - pip install coveralls
 
 
@@ -73,6 +74,6 @@ script:
     - export PYTHONPATH=$PYTHONPATH:.
     - python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
-    - nosetests -v --with-id -w ./autotest --with-coverage --cover-package=flopy
+    - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
 after_success:
     - coveralls
