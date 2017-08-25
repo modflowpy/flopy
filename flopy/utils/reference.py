@@ -716,12 +716,12 @@ class SpatialReference(object):
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
-        if not np.isscalar(x):
-            x, y = x.copy(), y.copy()
         if isinstance(x, list):
             x = np.array(x)
             y = np.array(y)
-
+        if not np.isscalar(x):
+            x, y = x.copy(), y.copy()
+        
         if not inverse:
             x *= self.length_multiplier
             y *= self.length_multiplier
