@@ -101,10 +101,8 @@ def update_version():
 def add_updated_files():
     try:
         # add modified version file
-        print('Adding updated version file to repo')
-        fpths = '{}/{}'.format(pak, files[0])
-        fpths += ' {}'.format(files[1])
-        b = subprocess.Popen(("git", "add", fpths),
+        print('Adding updated files to repo')
+        b = subprocess.Popen(("git", "add", "-u"),
                              stdout=subprocess.PIPE).communicate()[0]
     except:
         print('Could not add updated version file')
