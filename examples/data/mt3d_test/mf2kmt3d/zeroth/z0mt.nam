@@ -1,8 +1,8 @@
-LIST 0  zeroth.M3D
-BTN  0  zeroth.BTN
-ADV  0  zeroth.ADV
-DSP  0  zeroth.DSP
-SSM  0  zeroth.SSM
-RCT  0  zeroth.RCT
-GCG  0  zeroth.GCG
-FTL  0  zeroth.FTL  print
+LIST 0  zeroth.m3d
+BTN  0  zeroth.btn
+ADV  0  zeroth.adv
+DSP  0  zeroth.dsp
+SSM  0  zeroth.ssm
+RCT  0  zeroth.rct
+GCG  0  zeroth.gcg
+FTL  0  zeroth.ftl  print
