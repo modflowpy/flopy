@@ -248,15 +248,23 @@ def test_build_gridgen(keep=True):
         b = subprocess.Popen(("make"),
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
-                             cwd=apth).communicate()[0]
+                             cwd=apth)
+        output, unused_err = b.communicate()
+
     except:
+        buff = b.decode('utf-8')
+        print(buff)
         msg = 'could not build gridgen'
         assert len(msg) == 0, msg
-
     # move the file
     src = os.path.join(apth, exe_name)
     dst = os.path.join(bindir, exe_name)
-    shutil.move(src, dst)
+    try:
+        shutil.move(src, dst)
+    except:
+        buff = output.decode('utf-8')
+        print(buff)
+        print('could not move {}'.format(exe_name))
 
     # make sure the file can be built
     msg = '{} does not exist.'.format(os.path.relpath(dst))
