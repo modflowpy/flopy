@@ -214,6 +214,7 @@ def test_build_modpath6():
                  keep=True)
     return
 
+
 def test_build_gridgen(keep=True):
     starget = 'GRIDGEN'
     exe_name = 'gridgen'
@@ -243,32 +244,30 @@ def test_build_gridgen(keep=True):
     pymake.download_and_unzip(url)
 
     # build with make
-    try:
-        apth = os.path.join(dirname, 'src')
-        b = subprocess.Popen(("make"),
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             cwd=apth)
-        output, unused_err = b.communicate()
+    print('Building...{}'.format(exe_name))
+    apth = os.path.join(dirname, 'src')
+    cmdlist = ['make', exe_name]
+    proc = subprocess.Popen(cmdlist, shell=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            cwd=apth)
+    stdout_data, stderr_data = proc.communicate()
+    if proc.returncode != 0:
+        msg = '{} failed\n'.format(cmdlist) + \
+              'status code:\n{}\n'.format(proc.returncode) + \
+              'stdout:\n{}\n'.format(stdout_data) + \
+              'stderr:\n{}\n'.format(stderr_data)
+        assert False, msg
+    else:
+        print(stdout_data)
 
-    except:
-        buff = b.decode('utf-8')
-        print(buff)
-        msg = 'could not build gridgen'
-        assert len(msg) == 0, msg
     # move the file
     src = os.path.join(apth, exe_name)
     dst = os.path.join(bindir, exe_name)
     try:
         shutil.move(src, dst)
     except:
-        buff = output.decode('utf-8')
-        print(buff)
         print('could not move {}'.format(exe_name))
-
-    # make sure the file can be built
-    msg = '{} does not exist.'.format(os.path.relpath(dst))
-    assert os.path.isfile(dst), msg
 
     # change back to original path
     os.chdir(cpth)
@@ -278,10 +277,14 @@ def test_build_gridgen(keep=True):
     if os.path.isdir(dstpth):
         shutil.rmtree(dstpth)
 
+    # make sure the gridgen was built
+    msg = '{} does not exist.'.format(os.path.relpath(dst))
+    assert os.path.isfile(dst), msg
+
     return
 
 
-def set_compiler():
+def set_compiler(starget):
     fct = fc
     cct = cc
     # parse command line arguments to see if user specified options
@@ -325,7 +328,7 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
               ' since it exists in the current path')
         return
 
-    fct, cct = set_compiler()
+    fct, cct = set_compiler(starget)
 
     # set up target
     target = os.path.abspath(os.path.join(bindir, exe_name))
@@ -354,9 +357,6 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     pymake.main(srcdir, target, fct, cct, makeclean=True,
                 expedite=False, dryrun=False, double=dble, debug=False)
 
-    msg = '{} does not exist.'.format(os.path.relpath(target))
-    assert os.path.isfile(target), msg
-
     # change back to original path
     os.chdir(cpth)
 
@@ -365,13 +365,16 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     if os.path.isdir(dstpth):
         shutil.rmtree(dstpth)
 
+    msg = '{} does not exist.'.format(os.path.relpath(target))
+    assert os.path.isfile(target), msg
+
     return
 
 
 if __name__ == '__main__':
     test_setup()
     # test_build_modflow()
-    # test_build_mfnwt()
+    test_build_mfnwt()
     # test_build_usg()
     # test_build_mt3dms()
     # test_build_seawat()
