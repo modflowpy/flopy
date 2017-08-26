@@ -136,6 +136,29 @@ def test_build_mfnwt():
     return
 
 
+def run_cmdlist(cmdlist, cwd='.'):
+    proc = subprocess.Popen(cmdlist, shell=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            cwd=cwd)
+    stdout_data, stderr_data = proc.communicate()
+    if proc.returncode != 0:
+        if isinstance(stdout_data, bytes):
+            stdout_data = stdout_data.decode('utf-8')
+            stderr_data = stderr_datab.decode('utf-8')
+        msg = '{} failed\n'.format(cmdlist) + \
+              'status code:\n{}\n'.format(proc.returncode) + \
+              'stdout:\n{}\n'.format(stdout_data) + \
+              'stderr:\n{}\n'.format(stderr_data)
+        assert False, msg
+    else:
+        if isinstance(stdout_data, bytes):
+            stdout_data = stdout_data.decode('utf-8')
+        print(stdout_data)
+
+    return
+
+
 def test_build_usg():
     starget = 'MODFLOW-USG'
     exe_name = 'mfusg'
@@ -243,23 +266,17 @@ def test_build_gridgen(keep=True):
 
     pymake.download_and_unzip(url)
 
+    # clean
+    print('Cleaning...{}'.format(exe_name))
+    apth = os.path.join(dirname, 'src')
+    cmdlist = ['make', 'clean']
+    run_cmdlist(cmdlist, apth)
+
     # build with make
     print('Building...{}'.format(exe_name))
     apth = os.path.join(dirname, 'src')
     cmdlist = ['make', exe_name]
-    proc = subprocess.Popen(cmdlist, shell=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            cwd=apth)
-    stdout_data, stderr_data = proc.communicate()
-    if proc.returncode != 0:
-        msg = '{} failed\n'.format(cmdlist) + \
-              'status code:\n{}\n'.format(proc.returncode) + \
-              'stdout:\n{}\n'.format(stdout_data) + \
-              'stderr:\n{}\n'.format(stderr_data)
-        assert False, msg
-    else:
-        print(stdout_data)
+    run_cmdlist(cmdlist, apth)
 
     # move the file
     src = os.path.join(apth, exe_name)
