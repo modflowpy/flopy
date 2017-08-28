@@ -145,7 +145,7 @@ class ModflowOc(Package):
                  cboufm=None, compact=True,
                  stress_period_data={(0, 0): ['save head']},
                  extension=['oc', 'hds', 'ddn', 'cbc', 'ibo'],
-                 unitnumber=None, filenames=None, **kwargs):
+                 unitnumber=None, filenames=None, label="LABEL", **kwargs):
 
         """
         Package constructor.
@@ -157,7 +157,7 @@ class ModflowOc(Package):
             if len(unitnumber) < 5:
                 for idx in range(len(unitnumber), 6):
                     unitnumber.append(0)
-
+        self.label = label
         # set filenames
         if filenames is None:
             filenames = [None, None, None, None, None]
@@ -322,7 +322,7 @@ class ModflowOc(Package):
         line = 'HEAD PRINT FORMAT {0:3.0f}\n'.format(self.ihedfm)
         f_oc.write(line)
         if self.chedfm is not None:
-            line = 'HEAD SAVE FORMAT {0:20s} LABEL\n'.format(self.chedfm)
+            line = 'HEAD SAVE FORMAT {0:20s} {1}\n'.format(self.chedfm,self.label)
             f_oc.write(line)
         if self.savehead:
             line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.iuhead)
@@ -330,7 +330,7 @@ class ModflowOc(Package):
 
         f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'.format(self.iddnfm))
         if self.cddnfm is not None:
-            line = 'DRAWDOWN SAVE FORMAT {0:20s} LABEL\n'.format(self.cddnfm)
+            line = 'DRAWDOWN SAVE FORMAT {0:20s} {1}\n'.format(self.cddnfm,self.label)
             f_oc.write(line)
         if self.saveddn:
             line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.iuddn)
@@ -338,7 +338,7 @@ class ModflowOc(Package):
 
         if self.saveibnd:
             if self.cboufm is not None:
-                line = 'IBOUND SAVE FORMAT {0:20s} LABEL\n'.format(self.cboufm)
+                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufmm,self.label)
                 f_oc.write(line)
             line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.iuibnd)
             f_oc.write(line)
