@@ -338,7 +338,7 @@ class ModflowOc(Package):
 
         if self.saveibnd:
             if self.cboufm is not None:
-                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufmm,self.label)
+                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufm,self.label)
                 f_oc.write(line)
             line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.iuibnd)
             f_oc.write(line)
