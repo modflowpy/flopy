@@ -104,11 +104,11 @@ class MfGrdFile(FlopyBinaryData):
                 sr = None
             elif self._grid == 'DIS':
                 delr, delc = self._datadict['DELR'], self._datadict['DELC']
-                xoff, yoff, rot = self._datadict['XOFFSET'], \
-                                  self._datadict['YOFFSET'], \
-                                  self._datadict['ANGROT']
+                xorigin, yorigin, rot = self._datadict['XORIGIN'], \
+                                        self._datadict['YORIGIN'], \
+                                        self._datadict['ANGROT']
                 sr = SpatialReference(delr=delr, delc=delc,
-                                      xul=xoff, yul=yoff, rotation=rot)
+                                      xll=xorigin, yll=yorigin, rotation=rot)
         except:
             print('could not set spatial reference for {}'.format(self.file.name))
 
