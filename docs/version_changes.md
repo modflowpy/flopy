@@ -10,6 +10,7 @@ FloPy Changes
 * Added `reset_budgetunit()` method to OC package to faciltate saving cell-by-cell binary output to a single file for all packages that can save cell-by-cell output.
 * Added a `get_residual` method to the `CellBudgetFile` class.
 * Added support for binary stress period files (`OPEN/CLOSE filename (BINARY)`) in `wel` stress packages on load and instantiation. Will extend to other list-based MODFLOW stress packages.
+* Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
 * Bug fixes:
     1. Fixed bug in OC when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
     2. Fixed bug in SUB if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load).

@@ -57,12 +57,14 @@ class ZoneBudget(object):
             raise Exception(
                 'Cannot load cell budget file: {}.'.format(cbc_file))
 
-        if isinstance(z, list):
-            for zi in z:
-                assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
-            z = np.array(z)
-        elif isinstance(z, np.ndarray):
-            assert z.dtype in [int, np.int32, np.int64], 'Zones dtype must be integer'
+        # if isinstance(z, list):
+        #     for zi in z:
+        #         assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
+        #     z = np.array(z)
+        if isinstance(z, np.ndarray):
+            assert np.issubdtype(z.dtype, np.integer), 'Zones dtype must be integer'
+        else:
+            raise Exception('Please pass zones as a numpy ndarray of (positive) integers. {}'.format(z.dtype))
 
         # Check for negative zone values
         for zi in np.unique(z):
@@ -117,34 +119,25 @@ class ZoneBudget(object):
         # Set float and integer types
         self.float_type = np.float32
         self.int_type = np.int32
-        is_64bit = sys.maxsize > 2 ** 32
-        if is_64bit:
-            self.float_type = np.float64
-            self.int_type = np.int64
 
-        # Make sure the input zone array has the same shape as the cell budget file
-        if len(z.shape) == 2 and self.nlay == 1:
-            # Reshape a 2-D array to 3-D to match output from
-            # the CellBudgetFile object.
-            izone = np.zeros(self.cbc_shape, self.int_type)
-            izone[0, :, :] = z[:, :]
-        elif len(z.shape) == 2 and self.nlay > 1:
-            # 2-D array specified, but model is more than 1 layer. Don't assume
-            # user wants same zones for all layers.
-            raise Exception('Zone array and CellBudgetFile shapes '
-                            'do not match {} {}'.format(z.shape,
-                                                        self.cbc_shape))
-        elif len(z.shape) == 3:
+        # Check dimensions of input zone array
+        s = 'Row/col dimensions of zone array {}' \
+            ' do not match model row/col dimensions {}'.format(z.shape, self.cbc_shape)
+        assert z.shape[-2] == self.nrow and \
+               z.shape[-1] == self.ncol, s
+
+        if z.shape == self.cbc_shape:
             izone = z.copy()
+        elif len(z.shape) == 2:
+            izone = np.zeros(self.cbc_shape, self.int_type)
+            izone[:] = z[:, :]
+        elif len(z.shape) == 3 and z.shape[0] == 1:
+            izone = np.zeros(self.cbc_shape, self.int_type)
+            izone[:] = z[0, :, :]
         else:
             raise Exception(
-                'Shape of the zone array is not recognized: {}'.format(
-                    z.shape))
-
-        assert izone.shape == self.cbc_shape, \
-            'Shape of input zone array {} does not ' \
-            'match the cell by cell ' \
-            'budget file {}'.format(izone.shape, self.cbc_shape)
+                    'Shape of the zone array is not recognized: {}'.format(
+                        z.shape))
 
         # self.kstpkper = kstpkper
         # self.totim = totim
@@ -1556,8 +1549,10 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
         The array of zones to be written.
     fname :  str
         The path and name of the file to be written.
-    width : int
+    fmtin : int
         The number of values to write to each line.
+    iprn : int
+        Padding space to add between each value.
 
     Returns
     -------
@@ -1623,6 +1618,111 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
 
 
 def read_zbarray(fname):
+    """
+    Reads an ascii array in a format readable by the zonebudget program executable.
+
+    Parameters
+    ----------
+    fname :  str
+        The path and name of the file to be written.
+
+    Returns
+    -------
+    zones : numpy ndarray
+        An integer array of the zones.
+    """
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+
+    # Initialize layer
+    lay = 0
+
+    # Initialize data counter
+    totlen = 0
+    i = 0
+
+    # First line contains array dimensions
+    dimstring = lines.pop(0).strip().split()
+    nlay, nrow, ncol = [int(v) for v in dimstring]
+    zones = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+
+    # The number of values to read before placing
+    # them into the zone array
+    datalen = nrow * ncol
+
+    # List of valid values for LOCAT
+    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
+
+    # ITERATE OVER THE ROWS
+    for line in lines:
+        rowitems = line.strip().split()
+
+        # Skip blank lines
+        if len(rowitems) == 0:
+            continue
+
+        # HEADER
+        if rowitems[0].upper() in locats:
+            vals = []
+            locat = rowitems[0].upper()
+
+            if locat == 'CONSTANT':
+                iconst = int(rowitems[1])
+            else:
+                fmt = rowitems[1].strip('()')
+                fmtin, iprn = [int(v) for v in fmt.split('I')]
+
+        # ZONE DATA
+        else:
+            if locat == 'CONSTANT':
+                vals = np.ones((nrow, ncol), dtype=np.int32) * iconst
+                lay += 1
+            elif locat == 'INTERNAL':
+                # READ ZONES
+                rowvals = [int(v) for v in rowitems]
+                s = 'Too many values encountered on this line.'
+                assert len(rowvals) <= fmtin, s
+                vals.extend(rowvals)
+
+            elif locat == 'EXTERNAL':
+                # READ EXTERNAL FILE
+                fname = rowitems[0]
+                if not os.path.isfile(fname):
+                    errmsg = 'Could not find external file "{}"'.format(fname)
+                    raise Exception(errmsg)
+                with open(fname, 'r') as ext_f:
+                    ext_flines = ext_f.readlines()
+                for ext_frow in ext_flines:
+                    ext_frowitems = ext_frow.strip().split()
+                    rowvals = [int(v) for v in ext_frowitems]
+                    vals.extend(rowvals)
+                if len(vals) != datalen:
+                    errmsg = 'The number of values read from external ' \
+                             'file "{}" does not match the expected ' \
+                             'number.'.format(len(vals))
+                    raise Exception(errmsg)
+            else:
+                # Should not get here
+                raise Exception('Locat not recognized: {}'.format(locat))
+
+                # IGNORE COMPOSITE ZONES
+
+            if len(vals) == datalen:
+                # place values for the previous layer into the zone array
+                vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
+                zones[lay, :, :] = vals[:, :]
+                lay += 1
+            totlen += len(rowitems)
+        i += 1
+    s = 'The number of values read ({:,.0f})' \
+        ' does not match the number expected' \
+        ' ({:,.0f})'.format(totlen,
+                            nlay * nrow * ncol)
+    assert totlen == nlay * nrow * ncol, s
+    return zones
+
+
+def read_zbarray_old(fname):
     with open(fname, 'r') as f:
         lines = f.readlines()
 

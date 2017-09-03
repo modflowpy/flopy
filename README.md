@@ -1,10 +1,11 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.7-dev
+### Version 3.2.6 develop &mdash; build 148
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/flopy.png)](https://pypi.python.org/pypi/flopy)
+[![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
 
 
 Introduction
@@ -53,15 +54,15 @@ FloPy requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The
 
 To install FloPy type:
 
-    pip install flopy
+pip install flopy
 
 To update FloPy type:
 
-    pip install flopy --upgrade
+pip install flopy --upgrade
 
 To uninstall FloPy type:
 
-    pip uninstall flopy
+pip uninstall flopy
 
 **Installing from the git repository:**
 
@@ -69,21 +70,21 @@ To uninstall FloPy type:
 
 To install the current version of FloPy from the git repository type:
 
-    pip install https://github.com/modflowpy/flopy/zipball/master
-    
+pip install https://github.com/modflowpy/flopy/zipball/master
+
 To update your version of FloPy with the current version from the git repository type:
 
-    pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
+pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
 
 ***Development version of FloPy:***
 
 To install the bleeding edge version of FloPy from the git repository type:
 
-    pip install https://github.com/modflowpy/flopy/zipball/develop
-    
+pip install https://github.com/modflowpy/flopy/zipball/develop
+
 To update your version of FloPy with the bleeding edge code from the git repository type:
 
-    pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
+pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
 FloPy Supported Packages

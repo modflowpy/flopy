@@ -178,7 +178,7 @@ class SpatialReference(object):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
             xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
-                                self.length_multiplier)
+                               self.length_multiplier)
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
             xul = self._xul if self._xul is not None else 0.
@@ -742,12 +742,12 @@ class SpatialReference(object):
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
-        if not np.isscalar(x):
-            x, y = x.copy(), y.copy()
         if isinstance(x, list):
             x = np.array(x)
             y = np.array(y)
-
+        if not np.isscalar(x):
+            x, y = x.copy(), y.copy()
+        
         if not inverse:
             x *= self.length_multiplier
             y *= self.length_multiplier

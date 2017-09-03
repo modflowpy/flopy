@@ -1970,7 +1970,7 @@ class check:
             rd = self.reach_data.copy()
             elev = dict(zip(rd.reachID, rd.strtop))
             dnelev = {rid: elev[rd.outreach[i]] if rd.outreach[i] != 0
-            else -9999 for i, rid in enumerate(rd.reachID)}
+                      else -9999 for i, rid in enumerate(rd.reachID)}
             strtopdn = np.array([dnelev[r] for r in rd.reachID])
             diffs = np.array([(dnelev[i] - elev[i]) if dnelev[i] != -9999
                                else -.001 for i in rd.reachID])
