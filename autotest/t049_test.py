@@ -2,6 +2,7 @@
 import os
 import shutil
 import flopy
+import matplotlib.pyplot as plt
 try:
     import pymake
 except:
@@ -14,20 +15,23 @@ if os.path.isdir(cpth):
 # make the directory
 os.makedirs(cpth)
 
+mf2005_exe = 'mf2005'
+v = flopy.which(mf2005_exe)
+
+mpth_exe = 'mp6'
+v2 = flopy.which(mpth_exe)
+
+rung = True
+if v is None or v2 is None:
+    rung = False
+
+
 def test_modpath():
 
     pth = os.path.join('..', 'examples', 'data', 'freyberg')
     mfnam = 'freyberg.nam'
 
-    mf2005_exe = 'mf2005'
-    v = flopy.which(mf2005_exe)
-
-    mpth_exe = 'mp6'
-    v2 = flopy.which(mpth_exe)
-
-    run = True
-    if v is None or v2 is None:
-        run = False
+    run = rung
     try:
         import pymake
         lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
@@ -118,6 +122,97 @@ def test_modpath():
 
     return
 
+def test_pathline_plot():
+    pth = os.path.join('..', 'examples', 'data', 'freyberg')
+    mfnam = 'freyberg.nam'
+
+    run = rung
+    try:
+        lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
+    except:
+        run = False
+        lpth = pth
+
+    # load the modflow files for model map
+    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True,
+                                   exe_name=mf2005_exe)
+
+    # load modpath output files
+    if run:
+        pthfile = os.path.join(lpth, 'freybergmpp.mppth')
+    else:
+        pthfile = os.path.join('..', 'examples', 'data', 'mp6_examples',
+                               'freybergmpp.gitmppth')
+
+    # load the pathline data
+    try:
+        pthobj = flopy.utils.PathlineFile(pthfile)
+    except:
+        assert False, 'could not load pathline file'
+    plines = pthobj.get_alldata()
+
+    mm = flopy.plot.ModelMap(model=m)
+    try:
+        mm.plot_pathline(plines, colors='blue', layer='all')
+    except:
+        assert False, 'could not plot pathline with layer="all"'
+
+    # plot the grid and ibound array
+    try:
+        mm.plot_grid()
+        mm.plot_ibound()
+    except:
+        assert False, 'could not plot grid and ibound'
+
+    try:
+        fpth = os.path.join(lpth, 'pathline.png')
+        plt.savefig(fpth)
+        plt.close()
+    except:
+        assert False, 'could not save plot as {}'.format(fpth)
+
+    mm = flopy.plot.ModelMap(model=m)
+    try:
+        mm.plot_pathline(plines, colors='green', layer=0)
+    except:
+        assert False, 'could not plot pathline with layer=0'
+
+    # plot the grid and ibound array
+    try:
+        mm.plot_grid()
+        mm.plot_ibound()
+    except:
+        assert False, 'could not plot grid and ibound'
+
+    try:
+        fpth = os.path.join(lpth, 'pathline2.png')
+        plt.savefig(fpth)
+        plt.close()
+    except:
+        assert False, 'could not save plot as {}'.format(fpth)
+
+    mm = flopy.plot.ModelMap(model=m)
+    try:
+        mm.plot_pathline(plines, colors='red')
+    except:
+        assert False, 'could not plot pathline'
+
+    # plot the grid and ibound array
+    try:
+        mm.plot_grid()
+        mm.plot_ibound()
+    except:
+        assert False, 'could not plot grid and ibound'
+
+    try:
+        fpth = os.path.join(lpth, 'pathline3.png')
+        plt.savefig(fpth)
+        plt.close()
+    except:
+        assert False, 'could not save plot as {}'.format(fpth)
+
+    return
 
 if __name__ == '__main__':
     test_modpath()
+    test_pathline_plot()
