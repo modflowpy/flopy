@@ -1576,7 +1576,9 @@ class HeadUFile(BinaryLayerFile):
             nend = self.recordarray['nrow'][idx]
             npl = nend - nstrt + 1
             if self.verbose:
-                print('Byte position in file: {0}'.format(ipos))
+                msg = 'Byte position in file: {} for '.format(ipos) + \
+                      'layer {}'.format(ilay)
+                print(msg)
             self.file.seek(ipos, 0)
             data[ilay - 1] = binaryread(self.file, self.realtype,
                                         shape=(npl, ))
