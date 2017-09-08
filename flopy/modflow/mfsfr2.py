@@ -1201,6 +1201,7 @@ class ModflowSfr2(Package):
 
         # plot selected segment numbers along path
         stride = np.floor(len(dist)/10)
+        stride = 1 if stride < 1 else stride
         inds = np.arange(0, len(dist), stride, dtype=int)
         plot_segnumbers = tmp.iseg.values[inds]
         xlocs = dist[inds]
@@ -1518,7 +1519,7 @@ class ModflowSfr2(Package):
 
     def export(self, f, **kwargs):
         if isinstance(f, str) and f.lower().endswith(".shp"):
-            from flopy.utils.geometry import Polygon
+            from flopy.utils.geometry import Polygon, LineString
             from flopy.export.shapefile_utils import recarray2shp
             verts = self.parent.sr.get_vertices(self.reach_data.i, self.reach_data.j)
             geoms = [Polygon(v) for v in verts]
@@ -1526,6 +1527,43 @@ class ModflowSfr2(Package):
         else:
             from flopy import export
             return export.utils.package_helper(f, self, **kwargs)
+
+    def export_linkages(self, f, **kwargs):
+        """Export linework shapefile showing routing connections between SFR reaches.
+        A length field containing the distance between connected reaches
+        """
+        from flopy.utils.geometry import LineString
+        from flopy.export.shapefile_utils import recarray2shp
+        rd = self.reach_data.copy()
+        m = self.parent
+        rd.sort(order=['reachID'])
+
+        # get the cell centers for each reach
+        x0 = m.sr.xcentergrid[rd.i, rd.j]
+        y0 = m.sr.ycentergrid[rd.i, rd.j]
+        loc = dict(zip(rd.reachID, zip(x0, y0)))
+
+        # make lines of the reach connections between cell centers
+        geoms = []
+        lengths = []
+        for r in rd.reachID:
+            x0, y0 = loc[r]
+            outreach = rd.outreach[r - 1]
+            if outreach == 0:
+                x1, y1 = x0, y0
+            else:
+                x1, y1 = loc[outreach]
+            geoms.append(LineString([(x0, y0), (x1, y1)]))
+            lengths.append(np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2))
+        lengths = np.array(lengths)
+
+        # append connection lengths for filtering in GIS
+        rd = recfunctions.append_fields(rd,
+                                        names=['length'],
+                                        data=[lengths],
+                                        usemask=False,
+                                        asrecarray=True)
+        recarray2shp(rd, geoms, f, **kwargs)
 
     @staticmethod
     def ftype():
@@ -1811,11 +1849,12 @@ class check:
         # where one is 1.5x larger than the other
         breaks = np.where(dist > hyp * 1.25)
         breaks_reach_data = rd[breaks]
+        segments_with_breaks = set(breaks_reach_data.iseg)
         if len(breaks) > 0:
-            txt += '{0} instances of non-adjacent reaches found.\n'.format(len(breaks_reach_data))
+            txt += '{0} segments with non-adjacent reaches found.\n'.format(len(segments_with_breaks))
             if self.level == 1:
                 txt += 'At segments:\n'
-                txt += ' '.join(map(str, breaks_reach_data.iseg)) + '\n'
+                txt += ' '.join(map(str, segments_with_breaks)) + '\n'
             else:
                 f = 'reach_connection_gaps.csv'
                 rd.tofile(f, sep='\t')
@@ -1836,12 +1875,13 @@ class check:
         reach_data = self.reach_data.copy()
         # if no dis file was supplied, can't compute node numbers
         # make nodes based on unique row, col pairs
-        if np.diff(reach_data.node).max() == 0:
-            uniquerc = {}
-            for i, (r, c) in enumerate(reach_data[['i', 'j']].copy()):
-                if (r, c) not in uniquerc:
-                    uniquerc[(r, c)] = i + 1
-            reach_data['node'] = [uniquerc[(r, c)] for r, c in reach_data[['i', 'j']].copy()]
+        #if np.diff(reach_data.node).max() == 0:
+        # always use unique rc, since flopy assigns nodes by k, i, j
+        uniquerc = {}
+        for i, (r, c) in enumerate(reach_data[['i', 'j']].copy()):
+            if (r, c) not in uniquerc:
+                uniquerc[(r, c)] = i + 1
+        reach_data['node'] = [uniquerc[(r, c)] for r, c in reach_data[['i', 'j']].copy()]
 
         K = reach_data.strhc1
         if K.max() == 0:
@@ -1879,7 +1919,7 @@ class check:
                 reach_data['strhc1'] = K
 
                 cols = [c for c in reach_data.dtype.names if c in \
-                        ['node', 'k', 'i', 'j', 'iseg', 'ireach', 'rchlen', 'strthick', 'strhc1']]
+                        ['k', 'i', 'j', 'iseg', 'ireach', 'rchlen', 'strthick', 'strhc1', 'width', 'conductance']]
 
                 reach_data = recfunctions.append_fields(reach_data,
                                                         names=['width', 'conductance'],
