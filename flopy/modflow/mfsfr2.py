@@ -1934,9 +1934,58 @@ class check:
 
         self._txt_footer(headertxt, txt, 'overlapping conductance')
 
-    def elevations(self):
+    def elevations(self, min_strtop=-10, max_strtop=15000):
         """checks streambed elevations for downstream rises and inconsistencies with model grid
         """
+        headertxt = 'Checking for streambed tops of less than {}...\n'.format(min_strtop)
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+
+        passed = False
+        if self.sfr.isfropt in [1, 2, 3]:
+            if np.diff(self.reach_data.strtop).max() == 0:
+                txt += 'isfropt setting of 1,2 or 3 requries strtop information!\n'
+            else:
+                is_less = self.reach_data.strtop < min_strtop
+                if np.any(is_less):
+                    below_minimum = self.reach_data[is_less]
+                    txt += '{} instances of streambed top below minimum found.\n'.format(len(below_minimum))
+                    if self.level == 1:
+                        txt += 'Reaches with low strtop:\n'
+                        txt += _print_rec_array(below_minimum, delimiter='\t')
+                if len(txt) == 0:
+                    passed = True
+        else:
+            txt += 'strtop not specified for isfropt={}\n'.format(self.sfr.isfropt)
+            passed = True
+        self._txt_footer(headertxt, txt, 'minimum streambed top', passed)
+
+        headertxt = 'Checking for streambed tops of greater than {}...\n'.format(max_strtop)
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+
+        passed = False
+        if self.sfr.isfropt in [1, 2, 3]:
+            if np.diff(self.reach_data.strtop).max() == 0:
+                txt += 'isfropt setting of 1,2 or 3 requries strtop information!\n'
+            else:
+                is_greater = self.reach_data.strtop > max_strtop
+                if np.any(is_greater):
+                    above_max = self.reach_data[is_greater]
+                    txt += '{} instances of streambed top above the maximum found.\n'.format(len(above_max))
+                    if self.level == 1:
+                        txt += 'Reaches with high strtop:\n'
+                        txt += _print_rec_array(above_max, delimiter='\t')
+                if len(txt) == 0:
+                    passed = True
+        else:
+            txt += 'strtop not specified for isfropt={}\n'.format(self.sfr.isfropt)
+            passed = True
+        self._txt_footer(headertxt, txt, 'maximum streambed top', passed)
+
+
         headertxt = 'Checking segment_data for downstream rises in streambed elevation...\n'
         txt = ''
         if self.verbose:
