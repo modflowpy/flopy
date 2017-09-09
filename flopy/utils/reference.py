@@ -386,10 +386,11 @@ class SpatialReference(object):
         if os.path.exists(reffile):
             with open(reffile) as input:
                 for line in input:
-                    if line.strip()[0] != '#':
-                        info = line.strip().split('#')[0].split()
-                        if len(info) > 1:
-                            d[info[0].lower()] = ' '.join(info[1:])
+                    if len(line) > 1:
+                        if line.strip()[0] != '#':
+                            info = line.strip().split('#')[0].split()
+                            if len(info) > 1:
+                                d[info[0].lower()] = ' '.join(info[1:])
             d['xul'] = float(d['xul'])
             d['yul'] = float(d['yul'])
             d['rotation'] = float(d['rotation'])
