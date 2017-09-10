@@ -187,8 +187,9 @@ class Vtk(object):
         # data
         nlay = a.shape[0]
 
-        cbd = np.where(self.model.dis.laycbd.array > 0)
-        ibound = np.insert(ibound, cbd[0]+1, ibound[cbd[0],:,:], axis=0)
+        if ibound is not None:
+            cbd = np.where(self.model.dis.laycbd.array > 0)
+            ibound = np.insert(ibound, cbd[0]+1, ibound[cbd[0],:,:], axis=0)
 
         for k in range(nlay):
             s = indent_level * '  '
