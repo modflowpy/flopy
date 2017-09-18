@@ -14,8 +14,8 @@ def test_mfgrddis():
     extents = sr.get_extent()
     vertc = dis.get_centroids()
     errmsg = 'extents {} of {} '.format(extents, grbnam) + \
-             'does not equal (0.0, 8000.0, -8000.0, 0.0)'
-    assert extents == (0.0, 8000.0, -8000.0, 0.0), errmsg
+             'does not equal (0.0, 8000.0, 0.0, 8000.0)'
+    assert extents == (0.0, 8000.0, 0.0, 8000.0), errmsg
     errmsg = 'shape of {} {} '.format(grbnam, verts.shape) + \
              'not equal to (32000, 2).'
     assert verts.shape == (32000, 2), errmsg

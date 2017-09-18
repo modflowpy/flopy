@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 import platform
+import subprocess
 import flopy
 import pymake
 
@@ -135,6 +136,29 @@ def test_build_mfnwt():
     return
 
 
+def run_cmdlist(cmdlist, cwd='.'):
+    proc = subprocess.Popen(cmdlist, shell=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            cwd=cwd)
+    stdout_data, stderr_data = proc.communicate()
+    if proc.returncode != 0:
+        if isinstance(stdout_data, bytes):
+            stdout_data = stdout_data.decode('utf-8')
+            stderr_data = stderr_datab.decode('utf-8')
+        msg = '{} failed\n'.format(cmdlist) + \
+              'status code:\n{}\n'.format(proc.returncode) + \
+              'stdout:\n{}\n'.format(stdout_data) + \
+              'stderr:\n{}\n'.format(stderr_data)
+        assert False, msg
+    else:
+        if isinstance(stdout_data, bytes):
+            stdout_data = stdout_data.decode('utf-8')
+        print(stdout_data)
+
+    return
+
+
 def test_build_usg():
     starget = 'MODFLOW-USG'
     exe_name = 'mfusg'
@@ -214,7 +238,70 @@ def test_build_modpath6():
     return
 
 
-def set_compiler():
+def test_build_gridgen(keep=True):
+    starget = 'GRIDGEN'
+    exe_name = 'gridgen'
+    dirname = 'gridgen.1.0.02'
+    url = "https://water.usgs.gov/ogw/gridgen/{}.zip".format(dirname)
+
+    print('Determining if {} needs to be built'.format(starget))
+    if platform.system().lower() == 'windows':
+        exe_name += '.exe'
+
+    exe_exists = flopy.which(exe_name)
+    if exe_exists is not None and keep:
+        print('No need to build {}'.format(starget) +
+              ' since it exists in the current path')
+        return
+
+    # get current directory
+    cpth = os.getcwd()
+
+    # create temporary path
+    dstpth = os.path.join('tempbin')
+    print('create...{}'.format(dstpth))
+    if not os.path.exists(dstpth):
+        os.makedirs(dstpth)
+    os.chdir(dstpth)
+
+    pymake.download_and_unzip(url)
+
+    # clean
+    print('Cleaning...{}'.format(exe_name))
+    apth = os.path.join(dirname, 'src')
+    cmdlist = ['make', 'clean']
+    run_cmdlist(cmdlist, apth)
+
+    # build with make
+    print('Building...{}'.format(exe_name))
+    apth = os.path.join(dirname, 'src')
+    cmdlist = ['make', exe_name]
+    run_cmdlist(cmdlist, apth)
+
+    # move the file
+    src = os.path.join(apth, exe_name)
+    dst = os.path.join(bindir, exe_name)
+    try:
+        shutil.move(src, dst)
+    except:
+        print('could not move {}'.format(exe_name))
+
+    # change back to original path
+    os.chdir(cpth)
+
+    # Clean up downloaded directory
+    print('delete...{}'.format(dstpth))
+    if os.path.isdir(dstpth):
+        shutil.rmtree(dstpth)
+
+    # make sure the gridgen was built
+    msg = '{} does not exist.'.format(os.path.relpath(dst))
+    assert os.path.isfile(dst), msg
+
+    return
+
+
+def set_compiler(starget):
     fct = fc
     cct = cc
     # parse command line arguments to see if user specified options
@@ -254,10 +341,11 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
 
     exe_exists = flopy.which(exe_name)
     if exe_exists is not None and keep:
-        print('No need to build {} since it exists in the current path')
+        print('No need to build {}'.format(starget) +
+              ' since it exists in the current path')
         return
 
-    fct, cct = set_compiler()
+    fct, cct = set_compiler(starget)
 
     # set up target
     target = os.path.abspath(os.path.join(bindir, exe_name))
@@ -286,9 +374,6 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     pymake.main(srcdir, target, fct, cct, makeclean=True,
                 expedite=False, dryrun=False, double=dble, debug=False)
 
-    msg = '{} does not exist.'.format(os.path.relpath(target))
-    assert os.path.isfile(target), msg
-
     # change back to original path
     os.chdir(cpth)
 
@@ -297,13 +382,17 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     if os.path.isdir(dstpth):
         shutil.rmtree(dstpth)
 
+    msg = '{} does not exist.'.format(os.path.relpath(target))
+    assert os.path.isfile(target), msg
+
     return
 
 
 if __name__ == '__main__':
     test_setup()
     # test_build_modflow()
-    # test_build_mfnwt()
+    test_build_mfnwt()
     # test_build_usg()
     # test_build_mt3dms()
-    test_build_seawat()
+    # test_build_seawat()
+    test_build_gridgen()
