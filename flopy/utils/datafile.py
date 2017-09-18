@@ -333,8 +333,8 @@ class LayerFile(object):
             ipos = self.iposarray[idx]
             ilay = self.recordarray['ilay'][idx]
             if self.verbose:
-                msg = 'Byte position in file: {0} for '
-                'layer {}'.format(ipos, ilay)
+                msg = 'Byte position in file: {} for '.format(ipos) + \
+                      'layer {}'.format(ilay)
                 print(msg)
             self.file.seek(ipos, 0)
             nrow = self.recordarray['nrow'][idx]

@@ -1,4 +1,5 @@
 import copy
+import sys
 import numpy as np
 try:
     import matplotlib.pyplot as plt
@@ -648,8 +649,9 @@ class ModelMap(object):
 
         if 'layer' in kwargs:
             kon = kwargs.pop('layer')
-            if isinstance(kon, bytes):
-                kon = kon.decode()
+            if sys.version_info[0] > 2:
+                if isinstance(kon, bytes):
+                    kon = kon.decode()
             if isinstance(kon, str):
                 if kon.lower() == 'all':
                     kon = -1
