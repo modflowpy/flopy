@@ -340,7 +340,7 @@ class ModflowSfr2(Package):
         if np.diff(self.reach_data.node).max() == 0 and 'DIS' in self.parent.get_package_list():
             # first make kij list
             lrc = self.reach_data[['k', 'i', 'j']].copy()
-            lrc = (lrc.view((int, len(lrc.dtype.names))) + 1).tolist()
+            lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
         self.reach_data.sort(order=['iseg', 'ireach'])
@@ -1529,8 +1529,9 @@ class ModflowSfr2(Package):
             return export.utils.package_helper(f, self, **kwargs)
 
     def export_linkages(self, f, **kwargs):
-        """Export linework shapefile showing routing connections between SFR reaches.
+        """Export linework shapefile showing all routing connections between SFR reaches.
         A length field containing the distance between connected reaches
+        can be used to filter for the longest connections in a GIS.
         """
         from flopy.utils.geometry import LineString
         from flopy.export.shapefile_utils import recarray2shp
@@ -1563,6 +1564,25 @@ class ModflowSfr2(Package):
                                         data=[lengths],
                                         usemask=False,
                                         asrecarray=True)
+        recarray2shp(rd, geoms, f, **kwargs)
+
+    def export_outlets(self, f, **kwargs):
+        """Export point shapefile showing locations where streamflow is leaving
+        the model (outset=0).
+        """
+        from flopy.utils.geometry import Point
+        from flopy.export.shapefile_utils import recarray2shp
+        rd = self.reach_data
+        if np.min(rd.outreach) == np.max(rd.outreach):
+            self.set_outreaches()
+        rd = self.reach_data[self.reach_data.outreach == 0].copy()
+        m = self.parent
+        rd.sort(order=['iseg', 'ireach'])
+
+        # get the cell centers for each reach
+        x0 = m.sr.xcentergrid[rd.i, rd.j]
+        y0 = m.sr.ycentergrid[rd.i, rd.j]
+        geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(rd, geoms, f, **kwargs)
 
     @staticmethod
