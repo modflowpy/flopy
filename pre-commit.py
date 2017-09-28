@@ -105,7 +105,7 @@ def add_updated_files():
         b = subprocess.Popen(("git", "add", "-u"),
                              stdout=subprocess.PIPE).communicate()[0]
     except:
-        print('Could not add updated version file')
+        print('Could not add updated files')
         sys.exit(1)
 
 
