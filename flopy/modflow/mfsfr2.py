@@ -340,7 +340,7 @@ class ModflowSfr2(Package):
         if np.diff(self.reach_data.node).max() == 0 and 'DIS' in self.parent.get_package_list():
             # first make kij list
             lrc = self.reach_data[['k', 'i', 'j']].copy()
-            lrc = (lrc.view((int, len(lrc.dtype.names))) + 1).tolist()
+            lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
         self.reach_data.sort(order=['iseg', 'ireach'])
@@ -1529,8 +1529,9 @@ class ModflowSfr2(Package):
             return export.utils.package_helper(f, self, **kwargs)
 
     def export_linkages(self, f, **kwargs):
-        """Export linework shapefile showing routing connections between SFR reaches.
+        """Export linework shapefile showing all routing connections between SFR reaches.
         A length field containing the distance between connected reaches
+        can be used to filter for the longest connections in a GIS.
         """
         from flopy.utils.geometry import LineString
         from flopy.export.shapefile_utils import recarray2shp
@@ -1563,6 +1564,25 @@ class ModflowSfr2(Package):
                                         data=[lengths],
                                         usemask=False,
                                         asrecarray=True)
+        recarray2shp(rd, geoms, f, **kwargs)
+
+    def export_outlets(self, f, **kwargs):
+        """Export point shapefile showing locations where streamflow is leaving
+        the model (outset=0).
+        """
+        from flopy.utils.geometry import Point
+        from flopy.export.shapefile_utils import recarray2shp
+        rd = self.reach_data
+        if np.min(rd.outreach) == np.max(rd.outreach):
+            self.set_outreaches()
+        rd = self.reach_data[self.reach_data.outreach == 0].copy()
+        m = self.parent
+        rd.sort(order=['iseg', 'ireach'])
+
+        # get the cell centers for each reach
+        x0 = m.sr.xcentergrid[rd.i, rd.j]
+        y0 = m.sr.ycentergrid[rd.i, rd.j]
+        geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(rd, geoms, f, **kwargs)
 
     @staticmethod
@@ -1934,9 +1954,58 @@ class check:
 
         self._txt_footer(headertxt, txt, 'overlapping conductance')
 
-    def elevations(self):
+    def elevations(self, min_strtop=-10, max_strtop=15000):
         """checks streambed elevations for downstream rises and inconsistencies with model grid
         """
+        headertxt = 'Checking for streambed tops of less than {}...\n'.format(min_strtop)
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+
+        passed = False
+        if self.sfr.isfropt in [1, 2, 3]:
+            if np.diff(self.reach_data.strtop).max() == 0:
+                txt += 'isfropt setting of 1,2 or 3 requries strtop information!\n'
+            else:
+                is_less = self.reach_data.strtop < min_strtop
+                if np.any(is_less):
+                    below_minimum = self.reach_data[is_less]
+                    txt += '{} instances of streambed top below minimum found.\n'.format(len(below_minimum))
+                    if self.level == 1:
+                        txt += 'Reaches with low strtop:\n'
+                        txt += _print_rec_array(below_minimum, delimiter='\t')
+                if len(txt) == 0:
+                    passed = True
+        else:
+            txt += 'strtop not specified for isfropt={}\n'.format(self.sfr.isfropt)
+            passed = True
+        self._txt_footer(headertxt, txt, 'minimum streambed top', passed)
+
+        headertxt = 'Checking for streambed tops of greater than {}...\n'.format(max_strtop)
+        txt = ''
+        if self.verbose:
+            print(headertxt.strip())
+
+        passed = False
+        if self.sfr.isfropt in [1, 2, 3]:
+            if np.diff(self.reach_data.strtop).max() == 0:
+                txt += 'isfropt setting of 1,2 or 3 requries strtop information!\n'
+            else:
+                is_greater = self.reach_data.strtop > max_strtop
+                if np.any(is_greater):
+                    above_max = self.reach_data[is_greater]
+                    txt += '{} instances of streambed top above the maximum found.\n'.format(len(above_max))
+                    if self.level == 1:
+                        txt += 'Reaches with high strtop:\n'
+                        txt += _print_rec_array(above_max, delimiter='\t')
+                if len(txt) == 0:
+                    passed = True
+        else:
+            txt += 'strtop not specified for isfropt={}\n'.format(self.sfr.isfropt)
+            passed = True
+        self._txt_footer(headertxt, txt, 'maximum streambed top', passed)
+
+
         headertxt = 'Checking segment_data for downstream rises in streambed elevation...\n'
         txt = ''
         if self.verbose:
