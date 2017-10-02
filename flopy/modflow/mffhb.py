@@ -16,7 +16,7 @@ from ..pakbase import Package
 
 class ModflowFhb(Package):
     """
-    MODFLOW Evapotranspiration Package Class.
+    MODFLOW Flow and Head Boundary Package Class.
 
     Parameters
     ----------
