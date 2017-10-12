@@ -136,6 +136,10 @@ class ModflowSfr2(Package):
     segment_data : recarray
         Numpy record array of length equal to nss, with columns for each variable entered in items 6a, 6b and 6c
         (see SFR package input instructions). Segment numbers are one-based.
+    dataset_5 : dict of lists
+        Optional; will be built automatically from segment_data unless specified.
+        Dict of lists, with key for each stress period. Each list contains the variables [itmp, irdflag, iptflag].
+        (see SFR documentation for more details):
     itmp : list of integers (len = NPER)
         For each stress period, an integer value for reusing or reading stream segment data that can change each
         stress period. If ITMP = 0 then all stream segment data are defined by Item 4 (NSFRPAR > 0; number of stream
@@ -143,11 +147,11 @@ class ModflowSfr2(Package):
         defined in Item 6 below for a number of segments equal to the value of ITMP. If ITMP < 0, then stream segment
         data not defined in Item 4 will be reused from the last stress period (Item 6 is not read for the current
         stress period). ITMP must be defined >= 0 for the first stress period of a simulation.
-    irdflag : list of integers (len = NPER)
+    irdflag : int or list of integers (len = NPER)
         For each stress period, an integer value for printing input data specified for this stress period.
         If IRDFLG = 0, input data for this stress period will be printed. If IRDFLG > 0, then input data for this
         stress period will not be printed.
-    iptflag : list of integers (len = NPER)
+    iptflag : int or list of integers (len = NPER)
         For each stress period, an integer value for printing streamflow-routing results during this stress period.
         If IPTFLG = 0, or whenever the variable ICBCFL or "Save Budget" is specified in Output Control, the results
         for specified time steps during this stress period will be printed. If IPTFLG > 0, then the results during
@@ -217,7 +221,7 @@ class ModflowSfr2(Package):
                  segment_data=None,
                  channel_geometry_data=None,
                  channel_flow_data=None,
-                 dataset_5=None,
+                 dataset_5=None, irdflag=0, iptflag=0,
                  reachinput=False, transroute=False,
                  tabfiles=False, tabfiles_dict=None,
                  extension='sfr', unit_number=None,
@@ -376,11 +380,10 @@ class ModflowSfr2(Package):
         self.channel_flow_data = channel_flow_data
 
         # Dataset 5 -----------------------------------------------------------------------
-        if dataset_5 is None:
-            dataset_5 = {0: [nss, 0, 0]}
-            for i in range(1, self.nper):
-                dataset_5[i] = [-1, 0, 0]
+        # set by property from segment_data unless specified manually
         self._dataset_5 = dataset_5
+        self.irdflag = irdflag
+        self.iptflag = iptflag
 
         # Attributes not included in SFR package input
         self.outsegs = {}  # dictionary of arrays; see Attributes section of documentation
@@ -402,6 +405,10 @@ class ModflowSfr2(Package):
         elif key == "dataset_5":
             super(ModflowSfr2, self). \
                 __setattr__("_dataset_5", value)
+        elif key == "segment_data":
+            super(ModflowSfr2, self). \
+                __setattr__("segment_data", value)
+            self._dataset_5 = None
         else: # return to default behavior of pakbase
             super(ModflowSfr2, self).__setattr__(key, value)
 
@@ -422,20 +429,18 @@ class ModflowSfr2(Package):
 
     @property
     def dataset_5(self):
-        """auto-update itmp so it is consistent with reach_data."""
-        nss = self.nss
-        ds5 = {}
-        for k, v in self._dataset_5.items():
-            itmp = np.sign(v[0]) * nss
-            ds5[k] = [itmp] + v[1:]
-        # fill out rest of dataset 5 with defaults if there are more periods
-        if len(self._dataset_5) < self.nper:
-            for per in range(len(self._dataset_5), self.nper):
-                ds5[per] = [-1, 0, 0]
-        elif len(self._dataset_5) > self.nper:
-            for per in range(self.nper, len(self._dataset_5)):
-                del ds5[per]
-        self._dataset_5 = ds5
+        """auto-update itmp so it is consistent with segment_data."""
+        ds5 = self._dataset_5
+        if ds5 is None:
+            irdflag = self._get_flag('irdflag')
+            iptflag = self._get_flag('iptflag')
+            ds5 = {0: [self.nss, irdflag[0], iptflag[0]]}
+            for per in range(1, self.nper):
+                sd = self.segment_data.get(per, None)
+                if sd is None:
+                    ds5[per] = [-self.nss, irdflag[per], iptflag[per]]
+                else:
+                    ds5[per] = [len(sd), irdflag[per], iptflag[per]]
         return ds5
 
     @property
@@ -470,6 +475,13 @@ class ModflowSfr2(Package):
         graph = self.graph
         self._paths = {seg: find_path(graph, seg) for seg in graph.keys()}
 
+    def _get_flag(self, flagname):
+        """populate values for each stress period"""
+        flg = self.__dict__[flagname]
+        flg = [flg] if np.isscalar(flg) else flg
+        if len(flg) < self.nper:
+            return flg + [flg[-1]] * (self.nper - len(flg))
+        return flg
 
     @staticmethod
     def get_empty_reach_data(nreaches=0, aux_names=None, structured=True, default_value=-1.0E+10):
@@ -843,7 +855,8 @@ class ModflowSfr2(Package):
                 for ib, jb in zip(below_i, below_j):
                     inds = (self.reach_data.i == ib) & (self.reach_data.j == jb)
                     botm[-1, ib, jb] = streambotms[inds].min() - pad
-                botm[-1, below_i, below_j] = streambotms[below] - pad
+                    #l.append(botm[-1, ib, jb])
+                #botm[-1, below_i, below_j] = streambotms[below] - pad
                 l.append(botm[-1, below_i, below_j])
                 header += ',new_model_botm'
                 self.parent.dis.botm = botm
@@ -1766,14 +1779,13 @@ class check:
             print(headertxt.strip())
         txt = ''
         passed = False
-        for per in range(self.sfr.nper):
-            if per > 0 > self.sfr.dataset_5[per][0]:
-                continue
-            # check segment numbering
-            txt += _check_numbers(self.sfr.nss,
-                                  self.segment_data[per]['nseg'],
-                                  level=self.level,
-                                  datatype='segment')
+
+        sd = self.segment_data[0]
+        # check segment numbering
+        txt += _check_numbers(self.sfr.nss,
+                              sd['nseg'],
+                              level=self.level,
+                              datatype='segment')
 
         # check reach numbering
         for segment in np.arange(1, self.sfr.nss + 1):
@@ -1793,20 +1805,20 @@ class check:
         passed = False
         if self.verbose:
             print(headertxt.strip())
-        for per, segment_data in self.segment_data.items():
+        #for per, segment_data in self.segment_data.items():
 
-            inds = (segment_data.outseg < segment_data.nseg) & (segment_data.outseg != 0)
+        inds = (sd.outseg < sd.nseg) & (sd.outseg != 0)
 
-            if len(txt) == 0 and np.any(inds):
-                decreases = segment_data[['nseg', 'outseg']][inds].copy()
-                txt += 'Found segment numbers decreasing in the downstream direction.\n'.format(len(decreases))
-                txt += 'MODFLOW will run but convergence may be slowed:\n'
-                if self.level == 1:
-                    txt += 'per nseg outseg\n'
-                    t = ''
-                    for ns, os in decreases:
-                        t += '{} {} {}\n'.format(per, ns, os)
-                    txt += t#'\n'.join(textwrap.wrap(t, width=10))
+        if len(txt) == 0 and np.any(inds):
+            decreases = sd[['nseg', 'outseg']][inds].copy()
+            txt += 'Found segment numbers decreasing in the downstream direction.\n'.format(len(decreases))
+            txt += 'MODFLOW will run but convergence may be slowed:\n'
+            if self.level == 1:
+                txt += 'nseg outseg\n'
+                t = ''
+                for ns, os in decreases:
+                    t += '{} {}\n'.format(ns, os)
+                txt += t#'\n'.join(textwrap.wrap(t, width=10))
         if len(t) == 0:
                 passed = True
         self._txt_footer(headertxt, txt, 'segment numbering order', passed)
