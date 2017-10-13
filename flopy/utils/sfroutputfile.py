@@ -55,7 +55,7 @@ class SfrFile():
         # get the number of rows to skip at top
         self.filename = filename
         self.sr, self.ncol = self.get_skiprows_ncols()
-        self.names = names = ["layer", "row", "column", "segment", "reach",
+        self.names = ["layer", "row", "column", "segment", "reach",
                               "Qin", "Qaquifer", "Qout", "Qovr",
                               "Qprecip", "Qet",
                               "stage", "depth", "width", "Cond"]
@@ -113,7 +113,7 @@ class SfrFile():
         df = self.pd.read_csv(self.filename, delim_whitespace=True,
                          header=None, names=self.names,
                          error_bad_lines=False,
-                         skiprows=self.sr)
+                         skiprows=self.sr, low_memory=False)
         # drop text between stress periods; convert to numeric
         df['layer'] = self.pd.to_numeric(df.layer, errors='coerce')
         df.dropna(axis=0, inplace=True)
