@@ -987,6 +987,7 @@ class SpatialReference(object):
             Path of output file. Export format is determined by
             file extention.
             '.asc'  Arc Ascii grid
+            '.tif'  GeoTIFF (requries rasterio package)
             '.shp'  Shapefile
         a : 2D numpy.ndarray
             Array to export
@@ -997,6 +998,7 @@ class SpatialReference(object):
             (default 'values')
         kwargs: 
             keyword arguments to np.savetxt (ascii) 
+            rasterio.open (GeoTIFF)
             or flopy.export.shapefile_utils.write_grid_shapefile2
             
         Notes
@@ -1043,6 +1045,35 @@ class SpatialReference(object):
                 output.write(txt)
             with open(filename, 'ab') as output:
                 np.savetxt(output, a, **kwargs)
+            print('wrote {}'.format(filename))
+
+        elif filename.lower().endswith(".tif"):
+            if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
+                    or self.delr[0] != self.delc[0]:
+                raise ValueError('GeoTIFF export require a uniform grid.')
+            try:
+                import rasterio
+                from rasterio import Affine
+            except:
+                print('GeoTIFF export requires the rasterio package.')
+                return
+            dxdy = self.delc[0] * self.length_multiplier
+            trans = Affine.translation(self.xul, self.yul) * \
+                    Affine.rotation(self.rotation) * \
+                    Affine.scale(dxdy, -dxdy)
+
+            meta = {'count': 1,
+                    'width': a.shape[1],
+                    'height': a.shape[0],
+                    'nodata': nodata,
+                    'dtype': a.dtype,
+                    'driver': 'GTiff',
+                    'crs': self.proj4_str,
+                    'transform': trans
+                    }
+            meta.update(kwargs)
+            with rasterio.open(filename, 'w', **meta) as dst:
+                dst.write(a, 1)
             print('wrote {}'.format(filename))
 
         elif filename.lower().endswith(".shp"):
