@@ -1085,6 +1085,76 @@ class SpatialReference(object):
             write_grid_shapefile2(filename, self, array_dict={fieldname: a}, nan_val=nodata,
                                   epsg=epsg, prj=prj)
 
+    def export_contours(self, filename, contours,
+                        fieldname='level',
+                        **kwargs):
+        """Convert matplotlib contour plot object to shapefile.
+
+        Parameters
+        ----------
+        filename : str
+            path of output shapefile
+        contours : matplotlib.contour.QuadContourSet or list of them
+            (object returned by matplotlib.pyplot.contour)
+        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+
+        Returns
+        -------
+        df : dataframe of shapefile contents
+        """
+        from flopy.utils.geometry import LineString
+        from flopy.export.shapefile_utils import recarray2shp
+
+        if not isinstance(contours, list):
+            contours = [contours]
+
+        geoms = []
+        level = []
+        for ctr in contours:
+            levels = ctr.levels
+            for i, c in enumerate(ctr.collections):
+                paths = c.get_paths()
+                geoms += [LineString(p.vertices) for p in paths]
+                level += list(np.ones(len(paths)) * levels[i])
+
+        # convert the dictionary to a recarray
+        ra = np.array(level,
+                       dtype=[(fieldname, float)]).view(np.recarray)
+
+        recarray2shp(ra, geoms, filename, **kwargs)
+
+    def export_array_contours(self, filename, a,
+                              fieldname='level',
+                              interval=None,
+                              levels=None,
+                              maxlevels=1000,
+                              **kwargs):
+        """Contour an array using matplotlib; write shapefile of contours.
+
+        Parameters
+        ----------
+        filename : str
+            Path of output file with '.shp' extention.
+        a : 2D numpy array
+            Array to contour
+
+        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+        """
+        import matplotlib.pyplot as plt
+
+        if interval is not None:
+            min = np.nanmin(a)
+            max = np.nanmax(a)
+            nlevels = np.round(np.abs(max-min)/interval, 2)
+            assert nlevels < maxlevels, \
+                    print('{:.0f} levels at interval of {} > maxlevels={}'.format(nlevels,
+                                                                          interval,
+                                                                          maxlevels))
+            levels = np.arange(min, max, interval)
+        fig, ax = plt.subplots()
+        ctr = self.contour_array(ax, a, levels=levels)
+        self.export_contours(filename, ctr, fieldname, **kwargs)
+
     def contour_array(self, ax, a, **kwargs):
         """
         Create a QuadMesh plot of the specified array using pcolormesh
