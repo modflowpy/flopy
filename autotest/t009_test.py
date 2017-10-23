@@ -16,6 +16,7 @@ except:
 import flopy
 fm = flopy.modflow
 from flopy.utils.sfroutputfile import SfrFile
+from flopy.utils.reference import SpatialReference
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
@@ -45,6 +46,19 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
                  'sfrfile': 'TL2009.sfr'}
              }
 
+def create_sfr_data():
+    r = np.zeros((27, 2), dtype=[('iseg', int), ('ireach', int)])
+    r = np.core.records.fromarrays(r.transpose(),
+                                   dtype=[('iseg', int), ('ireach', int)])
+    r['iseg'] = sorted(list(range(1, 10)) * 3)
+    r['ireach'] = [1, 2, 3] * 9
+
+    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
+    d = np.core.records.fromarrays(d.transpose(),
+                                   dtype=[('nseg', int), ('outseg', int)])
+    d['nseg'] = range(1, 10)
+    d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
+    return r, d
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
@@ -219,6 +233,25 @@ def test_sfr_renumbering():
     assert isequal(sfr.reach_data.slope[21], -2.)
     assert isequal(sfr.reach_data.slope[-1], default_slope)
 
+def test_const():
+
+    fm = flopy.modflow
+    m = fm.Modflow()
+    dis = fm.ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
+    m.sr = SpatialReference()
+    r, d = create_sfr_data()
+    sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
+    assert sfr.const == 86400.
+    m.dis.itmuni = 1.
+    m.sfr.const = None
+    assert sfr.const == 1.
+    m.dis.lenuni = 1.
+    m.sfr.const = None
+    assert sfr.const == 1.486
+    m.dis.itmuni = 4.
+    m.sfr.const = None
+    assert sfr.const == 1.486 * 86400.
+    assert True
 
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',
@@ -367,10 +400,11 @@ def test_sfr_plot():
 
 if __name__ == '__main__':
     #test_sfr()
-    test_sfr_renumbering()
+    #test_sfr_renumbering()
     #test_example()
     #test_transient_example()
     #test_sfr_plot()
     #test_assign_layers()
     #test_SfrFile()
+    test_const()
     pass
