@@ -10,7 +10,7 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from ..utils.flopy_io import _pop_item, line_parse
+from ..utils.flopy_io import _pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
 from ..utils import Util2d
 
@@ -674,10 +674,13 @@ class ModflowUzf1(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1a
+        if 'options' in line:
+            line = read_nwt_options(f)
         specifythtr, specifythti, nosurfleak = _parse1a(line)
+
         # dataset 1b
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
-        ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
+        ntrail2, nsets2, nuzgag, surfdep = _parse1(f.readline())
 
         arrays = {'finf': [],
                   # datasets 10, 12, 14, 16 are lists of util2d arrays
