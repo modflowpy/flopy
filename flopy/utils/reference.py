@@ -1025,7 +1025,8 @@ class SpatialReference(object):
                     xmin, ymin, xmax, ymax = self.bounds
                     dx = (xmax - xmin) / width_rot
                     dy = (ymax - ymin) / height_rot
-                    cellsize = dx
+                    cellsize = np.max((dx, dy))
+                    #cellsize = np.cos(np.radians(self.rotation)) * cellsize
                     xll, yll = xmin, ymin
                 except ImportError:
                     print('scipy package required to export rotated grid.')

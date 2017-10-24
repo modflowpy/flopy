@@ -1205,7 +1205,7 @@ class ModflowSfr2(Package):
         endidx = np.where(path == end_seg)[0]
         endidx = endidx if len(endidx) > 0 else None
         path = path[:np.squeeze(endidx)]
-        endseg = path
+        path = [s for s in path if s > 0] # skip lakes for now
 
         # get the values
         groups = df.groupby('iseg')

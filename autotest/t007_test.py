@@ -141,6 +141,55 @@ def test_export_output():
     arr_mask = arr.mask[0]
     assert np.array_equal(ibound_mask, arr_mask)
 
+def test_export_array():
+    namfile = 'freyberg.nam'
+    model_ws = '../examples/data/freyberg_multilayer_transient/'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
+                                   load_only=['DIS', 'BAS6'])
+    m.sr.rotation = 45.
+    nodata = -9999
+    m.sr.export_array(os.path.join(tpth, 'fb.asc'), m.dis.top.array, nodata=nodata)
+    arr = np.loadtxt(os.path.join(tpth, 'fb.asc'), skiprows=6)
+
+    m.sr.write_shapefile(os.path.join(tpth, 'grid.shp'))
+    # check bounds
+    with open(os.path.join(tpth, 'fb.asc')) as src:
+        for line in src:
+            if 'xllcorner' in line.lower():
+                val = float(line.strip().split()[-1])
+                assert np.abs(val - m.sr.bounds[0]) < 1e-6
+            if 'yllcorner' in line.lower():
+                val = float(line.strip().split()[-1])
+                assert np.abs(val - m.sr.bounds[1]) < 1e-6
+            if 'cellsize' in line.lower():
+                val = float(line.strip().split()[-1])
+                rot_cellsize = np.cos(np.radians(m.sr.rotation)) * m.sr.delr[0] * m.sr.length_multiplier
+                #assert np.abs(val - rot_cellsize) < 1e-6
+                break
+    rotate = False
+    rasterio = False
+    try:
+        # test that arc ascii grid was rotated correctly
+        from scipy.ndimage import rotate
+        rotated = rotate(m.dis.top.array, m.sr.rotation, cval=nodata)
+    except:
+        pass
+
+    if rotate:
+        assert rotated.shape == arr.shape
+
+    try:
+        # test GeoTIFF export
+        import rasterio
+        m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array, nodata=nodata)
+        with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
+            arr = src.read(1)
+    except:
+        pass
+    if rasterio:
+        assert src.shape == (m.nrow, m.ncol)
+        assert np.abs(src.bounds[0] - m.sr.bounds[0]) < 1e-6
+        assert np.abs(src.bounds[1] - m.sr.bounds[1]) < 1e-6
 
 def test_mbase_sr():
     import numpy as np
@@ -769,7 +818,7 @@ if __name__ == '__main__':
     #test_sr()
     #test_mbase_sr()
     #test_rotation()
-    test_sr_with_Map()
+    #test_sr_with_Map()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
@@ -780,6 +829,7 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-    test_freyberg_export()
+    #test_freyberg_export()
+    test_export_array()
     #test_wkt_parse()
     pass
