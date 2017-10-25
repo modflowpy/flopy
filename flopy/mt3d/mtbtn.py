@@ -606,9 +606,9 @@ class Mt3dBtn(Package):
         f_btn.write('{0:>10s}\n'.format(ss))
 
         # A16, A17
-        if self.timprs is None:
-            f_btn.write('{0:10d}\n'.format(self.nprs))
-        else:
+        f_btn.write('{0:10d}\n'.format(self.nprs))
+        
+        if self.nprs > 0:
             f_btn.write('{0:10d}\n'.format(len(self.timprs)))
             timprs = Util2d(self.parent, (len(self.timprs),),
                              np.float32, self.timprs, name='timprs',
@@ -617,11 +617,10 @@ class Mt3dBtn(Package):
             f_btn.write(timprs.string)
 
         # A18, A19
-        if self.obs is None:
-            f_btn.write('{0:10d}{1:10d}\n'.format(0, self.nprobs))
-        else:
-            nobs = self.obs.shape[0]
-            f_btn.write('{0:10d}{1:10d}\n'.format(nobs, self.nprobs))
+        f_btn.write('{0:10d}{1:10d}\n'.format(0, self.nprobs))
+        
+        nobs = self.obs.shape[0]
+        if nobs > 0:
             for i in range(nobs):
                 f_btn.write('{0:10d}{1:10d}{2:10d}\n' \
                             .format(self.obs[i, 0] + 1, self.obs[i, 1] + 1,
