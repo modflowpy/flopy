@@ -619,9 +619,8 @@ class Mt3dBtn(Package):
         # A18, A19
         f_btn.write('{0:10d}{1:10d}\n'.format(0, self.nprobs))
         
-        nobs = self.obs.shape[0]
-        if nobs > 0:
-            for i in range(nobs):
+        if self.nprobs > 0:
+            for i in range(self.nprobs):
                 f_btn.write('{0:10d}{1:10d}{2:10d}\n' \
                             .format(self.obs[i, 0] + 1, self.obs[i, 1] + 1,
                                     self.obs[i, 2] + 1))
