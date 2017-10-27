@@ -619,7 +619,7 @@ class Mt3dBtn(Package):
         # A18, A19
         if self.obs is None:
             f_btn.write('{0:10d}{1:10d}\n'.format(0, self.nprobs))
-        elif self.obs > 0:
+        else:
             nobs = self.obs.shape[0]
             f_btn.write('{0:10d}{1:10d}\n'.format(nobs, self.nprobs))
             for i in range(nobs):
