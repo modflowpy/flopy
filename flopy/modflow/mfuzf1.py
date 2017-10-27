@@ -716,7 +716,11 @@ class ModflowUzf1(Package):
             # dataset 6
             load_util2d('thts', np.float32)
 
-            if not model.dis.steady[0]:
+            if specifythtr:
+                # dataset 6b (residual water content)
+                load_util2d('thtr', np.float32)
+
+            if specifythti or np.any(~model.dis.steady):
                 # dataset 7 (initial water content; only read if not steady-state)
                 load_util2d('thti', np.float32)
 
