@@ -617,10 +617,12 @@ class Mt3dBtn(Package):
             f_btn.write(timprs.string)
 
         # A18, A19
-        f_btn.write('{0:10d}{1:10d}\n'.format(0, self.nprobs))
-        
-        if self.nprobs > 0:
-            for i in range(self.nprobs):
+        if self.obs is None:
+            f_btn.write('{0:10d}{1:10d}\n'.format(0, self.nprobs))
+        elif self.obs > 0:
+            nobs = self.obs.shape[0]
+            f_btn.write('{0:10d}{1:10d}\n'.format(nobs, self.nprobs))
+            for i in range(nobs):
                 f_btn.write('{0:10d}{1:10d}{2:10d}\n' \
                             .format(self.obs[i, 0] + 1, self.obs[i, 1] + 1,
                                     self.obs[i, 2] + 1))
