@@ -235,7 +235,7 @@ class ModflowSub(Package):
             model.add_output_file(idsave, fname=fname, extension='rst',
                                   package=ModflowSub.ftype())
         else:
-            ipakcb = 0
+            idsave = 0
 
         if idrest is None:
             idrest = 0
@@ -395,10 +395,11 @@ class ModflowSub(Package):
         f.write('{} {} {} {} {}\n'.format(self.ac1, self.ac2,
                                           self.itmin, self.idsave,
                                           self.idrest))
-        t = self.ln.array
-        for tt in t:
-            f.write('{} '.format(tt + 1))
-        f.write('\n')
+        if self.nndb > 0:
+            t = self.ln.array
+            for tt in t:
+                f.write('{} '.format(tt + 1))
+            f.write('\n')
         if self.ndb > 0:
             t = self.ldn.array
             for tt in t:
