@@ -226,7 +226,7 @@ class ModflowHyd(Package):
                 f.write('{} '.format(self.obsdata['pckg'][idx].decode()))
                 f.write('{} '.format(self.obsdata['arr'][idx].decode()))
                 f.write('{} '.format(self.obsdata['intyp'][idx].decode()))
-                f.write('{} '.format(self.obsdata['klay'][idx]))
+                f.write('{} '.format(self.obsdata['klay'][idx]+1))
                 f.write('{} '.format(self.obsdata['xl'][idx]))
                 f.write('{} '.format(self.obsdata['yl'][idx]))
                 f.write('{} '.format(self.obsdata['hydlbl'][idx].decode()))
@@ -317,7 +317,7 @@ class ModflowHyd(Package):
             obs['pckg'][idx] = t[0].strip()
             obs['arr'][idx] = t[1].strip()
             obs['intyp'][idx] = t[2].strip()
-            obs['klay'][idx] = int(t[3])
+            obs['klay'][idx] = int(t[3]) - 1
             obs['xl'][idx] = float(t[4])
             obs['yl'][idx] = float(t[5])
             obs['hydlbl'][idx] = t[6].strip()
