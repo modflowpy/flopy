@@ -1156,7 +1156,7 @@ class ModflowSfr2(Package):
             ISFROPT can be used to change the default format for entering reach and segment data
             or to specify that unsaturated flow beneath streams will be simulated.
             """
-            f_sfr.write('reachinput ')
+            f_sfr.write('options\n  reachinput \nend ')
         if self.transroute:
             """When TRANSROUTE is specified, optional variables IRTFLG, NUMTIM, WEIGHT, and FLWTOL
             also must be specified in Item 1c.
