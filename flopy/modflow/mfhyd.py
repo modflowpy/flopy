@@ -106,7 +106,7 @@ class ModflowHyd(Package):
     """
 
     def __init__(self, model, nhyd=1, ihydun=None, hydnoh=-999.,
-                 obsdata=[['BAS', 'HD', 'I', 1, 0., 0., 'HOBS1']],
+                 obsdata=[['BAS', 'HD', 'I', 0, 0., 0., 'HOBS1']],
                  extension=['hyd', 'hyd.bin'], unitnumber=None,
                  filenames=None):
         """
@@ -234,7 +234,7 @@ class ModflowHyd(Package):
                 f.write('{} '.format(self.obsdata['pckg'][idx]))
                 f.write('{} '.format(self.obsdata['arr'][idx]))
                 f.write('{} '.format(self.obsdata['intyp'][idx]))
-                f.write('{} '.format(self.obsdata['klay'][idx]))
+                f.write('{} '.format(self.obsdata['klay'][idx]+1))
                 f.write('{} '.format(self.obsdata['xl'][idx]))
                 f.write('{} '.format(self.obsdata['yl'][idx]))
                 f.write('{} '.format(self.obsdata['hydlbl'][idx]))
