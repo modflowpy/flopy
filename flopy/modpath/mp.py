@@ -236,6 +236,7 @@ class Modpath(BaseModel):
         group_placement = []
         ifaces = []
         face_ct = []
+        strt_file = None
         for package in packages:
 
             if package.upper() == 'WEL':
