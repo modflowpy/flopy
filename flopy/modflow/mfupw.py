@@ -13,6 +13,7 @@ import numpy as np
 from .mfpar import ModflowPar as mfpar
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
+from ..utils.flopy_io import line_parse
 
 
 class ModflowUpw(Package):
@@ -223,7 +224,7 @@ class ModflowUpw(Package):
                            name='vkcb', locat=self.unit_number[0])
         self.parent.add_package(self)
 
-    def write_file(self, check=True):
+    def write_file(self, check=True, f=None):
         """
         Write the package file.
 
@@ -241,7 +242,10 @@ class ModflowUpw(Package):
             self.check(f='{}.chk'.format(self.name[0]),
                        verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper  # Open file for writing
-        f_upw = open(self.fn_path, 'w')
+        if f is not None:
+            f_upw = f
+        else:
+            f_upw = open(self.fn_path, 'w')
         # Item 0: text
         f_upw.write('{}\n'.format(self.heading))
         # Item 1: IBCFCB, HDRY, NPLPF
@@ -338,7 +342,7 @@ class ModflowUpw(Package):
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
             print('   loading ipakcb, HDRY, NPUPW, IPHDRY...')
-        t = line.strip().split()
+        t = line_parse(line)
         ipakcb, hdry, npupw, iphdry = int(t[0]), \
                                       float(t[1]), \
                                       int(t[2]), \

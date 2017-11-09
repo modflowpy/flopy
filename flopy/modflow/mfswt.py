@@ -389,7 +389,7 @@ class ModflowSwt(Package):
         # add package to model
         self.parent.add_package(self)
 
-    def write_file(self):
+    def write_file(self,f=None):
         """
         Write the package file.
 
@@ -400,7 +400,8 @@ class ModflowSwt(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f = open(self.fn_path, 'w')
+        if f is None:
+            f = open(self.fn_path, 'w')
         # First line: heading
         f.write('{}\n'.format(self.heading))
         # write dataset 1
@@ -710,6 +711,7 @@ class ModflowSwt(Package):
                         iu, filenames[ipos] = \
                             model.get_ext_dict_attr(ext_unit_dict,
                                                     unit=unit)
+                        model.add_pop_key_list(unit)
                     ipos += 1
 
         # create sub-wt instance

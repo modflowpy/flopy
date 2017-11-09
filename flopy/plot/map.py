@@ -1,4 +1,5 @@
 import copy
+import sys
 import numpy as np
 try:
     import matplotlib.pyplot as plt
@@ -71,14 +72,16 @@ class ModelMap(object):
             # print("warning: the model arg to model map is deprecated")
             self.sr = copy.deepcopy(model.sr)
         else:
-            self.sr = SpatialReference(xll, yll, xul, yul, rotation,
-                                       length_multiplier)
+            self.sr = SpatialReference(xll=xll, yll=yll, xul=xul, yul=yul,
+                                       rotation=rotation,
+                                       length_multiplier=length_multiplier)
 
         # model map override spatial reference settings
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
             rotation != 0 or length_multiplier != 1.:
-            self.sr.set_spatialreference(xul, yul, xll, yll, rotation,
-                                         length_multiplier)
+            self.sr.length_multiplier = length_multiplier
+            self.sr.set_spatialreference(xul, yul, xll, yll, rotation)
+
         if ax is None:
             try:
                 self.ax = plt.gca()
@@ -646,8 +649,9 @@ class ModelMap(object):
 
         if 'layer' in kwargs:
             kon = kwargs.pop('layer')
-            if isinstance(kon, bytes):
-                kon = kon.decode()
+            if sys.version_info[0] > 2:
+                if isinstance(kon, bytes):
+                    kon = kon.decode()
             if isinstance(kon, str):
                 if kon.lower() == 'all':
                     kon = -1

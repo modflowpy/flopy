@@ -5,6 +5,7 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
+from ..utils.flopy_io import line_parse
 
 
 class ModflowBcf(Package):
@@ -169,7 +170,7 @@ class ModflowBcf(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self):
+    def write_file(self,f=None):
         """
         Write the package file.
 
@@ -185,7 +186,10 @@ class ModflowBcf(Package):
             dis = self.parent.get_package('DISU')
 
         # Open file for writing
-        f_bcf = open(self.fn_path, 'w')
+        if f is not None:
+            f_bcf = f
+        else:
+            f_bcf = open(self.fn_path, 'w')
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET
         f_bcf.write('{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n'.format(
             self.ipakcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit,
@@ -277,7 +281,7 @@ class ModflowBcf(Package):
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
             print('   loading ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
-        t = line.strip().split()
+        t = line_parse(line)
         ipakcb, hdry, iwdflg, wetfct, iwetit, ihdwet = int(t[0]), \
                                                        float(t[1]), \
                                                        int(t[2]), \

@@ -57,10 +57,14 @@ class ZoneBudget(object):
             raise Exception(
                 'Cannot load cell budget file: {}.'.format(cbc_file))
 
-        # Zones must be passed as an array
-        assert isinstance(z,
-                          np.ndarray), 'Please pass zones as type {}'.format(
-            np.ndarray)
+        # if isinstance(z, list):
+        #     for zi in z:
+        #         assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
+        #     z = np.array(z)
+        if isinstance(z, np.ndarray):
+            assert np.issubdtype(z.dtype, np.integer), 'Zones dtype must be integer'
+        else:
+            raise Exception('Please pass zones as a numpy ndarray of (positive) integers. {}'.format(z.dtype))
 
         # Check for negative zone values
         for zi in np.unique(z):
@@ -115,34 +119,25 @@ class ZoneBudget(object):
         # Set float and integer types
         self.float_type = np.float32
         self.int_type = np.int32
-        is_64bit = sys.maxsize > 2 ** 32
-        if is_64bit:
-            self.float_type = np.float64
-            self.int_type = np.int64
 
-        # Make sure the input zone array has the same shape as the cell budget file
-        if len(z.shape) == 2 and self.nlay == 1:
-            # Reshape a 2-D array to 3-D to match output from
-            # the CellBudgetFile object.
-            izone = np.zeros(self.cbc_shape, self.int_type)
-            izone[0, :, :] = z[:, :]
-        elif len(z.shape) == 2 and self.nlay > 1:
-            # 2-D array specified, but model is more than 1 layer. Don't assume
-            # user wants same zones for all layers.
-            raise Exception('Zone array and CellBudgetFile shapes '
-                            'do not match {} {}'.format(z.shape,
-                                                        self.cbc_shape))
-        elif len(z.shape) == 3:
+        # Check dimensions of input zone array
+        s = 'Row/col dimensions of zone array {}' \
+            ' do not match model row/col dimensions {}'.format(z.shape, self.cbc_shape)
+        assert z.shape[-2] == self.nrow and \
+               z.shape[-1] == self.ncol, s
+
+        if z.shape == self.cbc_shape:
             izone = z.copy()
+        elif len(z.shape) == 2:
+            izone = np.zeros(self.cbc_shape, self.int_type)
+            izone[:] = z[:, :]
+        elif len(z.shape) == 3 and z.shape[0] == 1:
+            izone = np.zeros(self.cbc_shape, self.int_type)
+            izone[:] = z[0, :, :]
         else:
             raise Exception(
-                'Shape of the zone array is not recognized: {}'.format(
-                    z.shape))
-
-        assert izone.shape == self.cbc_shape, \
-            'Shape of input zone array {} does not ' \
-            'match the cell by cell ' \
-            'budget file {}'.format(izone.shape, self.cbc_shape)
+                    'Shape of the zone array is not recognized: {}'.format(
+                        z.shape))
 
         # self.kstpkper = kstpkper
         # self.totim = totim
@@ -210,7 +205,7 @@ class ZoneBudget(object):
     def get_model_shape(self):
         return self.nlay, self.nrow, self.ncol
 
-    def get_record_names(self):
+    def get_record_names(self, stripped=False):
         """
         Get a list of water budget record names in the file.
 
@@ -225,9 +220,23 @@ class ZoneBudget(object):
         >>> recnames = zb.get_record_names()
 
         """
-        return np.unique(self._budget['name'])
+        if not stripped:
+            return np.unique(self._budget['name'])
+        else:
+            seen = []
+            for recname in self.get_record_names():
+                if recname in ['IN-OUT', 'TOTAL_IN', 'TOTAL_OUT']:
+                    continue
+                if recname.endswith('_IN'):
+                    recname = recname[:-3]
+                elif recname.endswith('_OUT'):
+                    recname = recname[:-4]
+                if recname not in seen:
+                    seen.append(recname)
+            seen.extend(['IN-OUT', 'TOTAL'])
+            return np.array(seen)
 
-    def get_budget(self, names=None, zones=None):
+    def get_budget(self, names=None, zones=None, net=False):
         """
         Get a list of zonebudget record arrays.
 
@@ -238,6 +247,8 @@ class ZoneBudget(object):
             A list of strings containing the names of the records desired.
         zones : list of ints or strings
             A list of integer zone numbers or zone names desired.
+        net : boolean
+            If True, returns net IN-OUT for each record.
 
         Returns
         -------
@@ -257,21 +268,35 @@ class ZoneBudget(object):
             zones = [zones]
         elif isinstance(zones, int):
             zones = [zones]
+        select_fields = ['totim', 'time_step', 'stress_period',
+                         'name'] + self._zonefieldnames
+        select_records = np.where(
+            (self._budget['name'] == self._budget['name']))
         if zones is not None:
             for idx, z in enumerate(zones):
                 if isinstance(z, int):
                     zones[idx] = 'ZONE_{}'.format(z)
             select_fields = ['totim', 'time_step', 'stress_period',
                              'name'] + zones
-        else:
-            select_fields = ['totim', 'time_step', 'stress_period',
-                             'name'] + self._zonefieldnames
         if names is not None:
+            names = self._clean_budget_names(names)
             select_records = np.in1d(self._budget['name'], names)
+        if net:
+            if names is None:
+                names = self._clean_budget_names(self.get_record_names())
+            net_budget = self._compute_net_budget()
+            seen = []
+            net_names = []
+            for name in names:
+                iname = '_'.join(name.split('_')[:-1])
+                if iname not in seen:
+                    seen.append(iname)
+                else:
+                    net_names.append(iname)
+            select_records = np.in1d(net_budget['name'], net_names)
+            return net_budget[select_fields][select_records]
         else:
-            select_records = np.where(
-                (self._budget['name'] == self._budget['name']))
-        return self._budget[select_fields][select_records]
+            return self._budget[select_fields][select_records]
 
     def to_csv(self, fname):
         """
@@ -301,12 +326,12 @@ class ZoneBudget(object):
         return
 
     def get_dataframes(self, start_datetime=None, timeunit='D',
-                       index_key='totim'):
+                       index_key='totim', names=None, zones=None, net=False):
         """
         Get pandas dataframes.
         Parameters
         ----------
-        
+
         start_datetime : str
             Datetime string indicating the time at which the simulation starts.
         timeunit : str
@@ -314,6 +339,12 @@ class ZoneBudget(object):
         index_key : str
             Indicates the fields to be used (in addition to "record") in the
             resulting DataFrame multi-index.
+        names : list of strings
+            A list of strings containing the names of the records desired.
+        zones : list of ints or strings
+            A list of integer zone numbers or zone names desired.
+        net : boolean
+            If True, returns net IN-OUT for each record.
 
         Returns
         -------
@@ -354,7 +385,7 @@ class ZoneBudget(object):
         assert timeunit in valid_timeunit, errmsg + ', '.join(
             valid_timeunit) + '.'
 
-        df = pd.DataFrame().from_records(self._budget)
+        df = pd.DataFrame().from_records(self.get_budget(names, zones, net))
         if start_datetime is not None:
             totim = totim_to_datetime(df.totim,
                                       start=pd.to_datetime(start_datetime),
@@ -367,8 +398,11 @@ class ZoneBudget(object):
             elif index_key == 'kstpkper':
                 index_cols = ['time_step', 'stress_period', 'name']
         df = df.set_index(index_cols).sort_index()
-        keep_cols = self._zonefieldnames
-        return df[keep_cols]
+        if zones is not None:
+            keep_cols = zones
+        else:
+            keep_cols = self._zonefieldnames
+        return df.loc[:, keep_cols]
 
     def copy(self):
         """
@@ -416,7 +450,8 @@ class ZoneBudget(object):
             chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True,
                                     kstpkper=kstpkper, totim=totim)[0]
             ich = np.zeros(self.cbc_shape, self.int_type)
-            ich[chd != 0] = 1
+            idxch = np.ma.where(chd != 0.)
+            ich[idxch] = 1
         if 'FLOW RIGHT FACE' in reclist:
             reclist.remove('FLOW RIGHT FACE')
             recordarray = self._accumulate_flow_frf(recordarray,
@@ -529,10 +564,16 @@ class ZoneBudget(object):
                             totim=None):
         # Builds empty records based on the specified flow direction and
         # record name for the given list of zones.
-        if kstpkper is not None:
-            totim = self.cbc_times[self.cbc_kstpkper.index(kstpkper)]
-        elif totim is not None:
-            kstpkper = self.cbc_kstpkper[self.cbc_times.index(totim)]
+        if (kstpkper is not None):
+            if len(self.cbc_times) > 0:
+                totim = self.cbc_times[self.cbc_kstpkper.index(kstpkper)]
+            else:
+                totim = 0.
+        elif (totim is not None):
+            if len(self.cbc_times) > 0:
+                kstpkper = self.cbc_kstpkper[self.cbc_times.index(totim)]
+            else:
+                kstpkper = (0, 0)
 
         row = [totim, kstpkper[0], kstpkper[1], recname]
         row += [0. for _ in self._zonefieldnames]
@@ -685,7 +726,8 @@ class ZoneBudget(object):
         """
         if self.ncol >= 2:
             data = \
-            self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)[0]
+                self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                  totim=totim)[0]
 
             # "FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
             # COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
@@ -943,7 +985,8 @@ class ZoneBudget(object):
         """
         if self.nrow >= 2:
             data = \
-            self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)[0]
+                self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                  totim=totim)[0]
 
             # "FLOW FRONT FACE"
             # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
@@ -1164,7 +1207,8 @@ class ZoneBudget(object):
         """
         if self.nlay >= 2:
             data = \
-            self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)[0]
+                self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                  totim=totim)[0]
 
             # "FLOW LOWER FACE"
             # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
@@ -1385,10 +1429,44 @@ class ZoneBudget(object):
 
         return recordarray
 
+    def _clean_budget_names(self, names):
+        newnames = []
+        for name in names:
+            if not name.endswith('_IN') and not name.endswith('_OUT'):
+                newname_in = name.upper() + '_IN'
+                newname_out = name.upper() + '_OUT'
+                if newname_in in self._budget['name']:
+                    newnames.append(newname_in)
+                if newname_out in self._budget['name']:
+                    newnames.append(newname_out)
+            else:
+                if name in self._budget['name']:
+                    newnames.append(name)
+        return newnames
+
+    def _compute_net_budget(self):
+        recnames = self.get_record_names()
+        innames = [n for n in recnames if n.endswith('_IN')]
+        outnames = [n for n in recnames if n.endswith('_OUT')]
+        select_fields = ['totim', 'time_step', 'stress_period',
+                         'name'] + self._zonefieldnames
+        select_records_in = np.in1d(self._budget['name'], innames)
+        select_records_out = np.in1d(self._budget['name'], outnames)
+        in_budget = self._budget[select_fields][select_records_in]
+        out_budget = self._budget[select_fields][select_records_out]
+        net_budget = in_budget.copy()
+        for f in [n for n in self._zonefieldnames if n in select_fields]:
+            net_budget[f] = np.array([r for r in in_budget[f]]) - np.array([r for r in out_budget[f]])
+        newnames = ['_'.join(n.split('_')[:-1]) for n in net_budget['name']]
+        net_budget['name'] = newnames
+        return net_budget
+
     def __mul__(self, other):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) * other
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1397,6 +1475,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1405,6 +1485,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1413,6 +1495,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) + other
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1421,6 +1505,8 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonefieldnames:
             newbud[f] = np.array([r for r in newbud[f]]) - other
+        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
         return newobj
@@ -1463,8 +1549,10 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
         The array of zones to be written.
     fname :  str
         The path and name of the file to be written.
-    width : int
+    fmtin : int
         The number of values to write to each line.
+    iprn : int
+        Padding space to add between each value.
 
     Returns
     -------
@@ -1477,6 +1565,8 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
     elif len(X.shape) < 2 or len(X.shape) > 3:
         raise Exception(
             'Shape of the input array is not recognized: {}'.format(X.shape))
+    if np.ma.is_masked(X):
+        X = np.ma.filled(X, 0)
 
     nlay, nrow, ncol = X.shape
 
@@ -1528,6 +1618,111 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
 
 
 def read_zbarray(fname):
+    """
+    Reads an ascii array in a format readable by the zonebudget program executable.
+
+    Parameters
+    ----------
+    fname :  str
+        The path and name of the file to be written.
+
+    Returns
+    -------
+    zones : numpy ndarray
+        An integer array of the zones.
+    """
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+
+    # Initialize layer
+    lay = 0
+
+    # Initialize data counter
+    totlen = 0
+    i = 0
+
+    # First line contains array dimensions
+    dimstring = lines.pop(0).strip().split()
+    nlay, nrow, ncol = [int(v) for v in dimstring]
+    zones = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+
+    # The number of values to read before placing
+    # them into the zone array
+    datalen = nrow * ncol
+
+    # List of valid values for LOCAT
+    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
+
+    # ITERATE OVER THE ROWS
+    for line in lines:
+        rowitems = line.strip().split()
+
+        # Skip blank lines
+        if len(rowitems) == 0:
+            continue
+
+        # HEADER
+        if rowitems[0].upper() in locats:
+            vals = []
+            locat = rowitems[0].upper()
+
+            if locat == 'CONSTANT':
+                iconst = int(rowitems[1])
+            else:
+                fmt = rowitems[1].strip('()')
+                fmtin, iprn = [int(v) for v in fmt.split('I')]
+
+        # ZONE DATA
+        else:
+            if locat == 'CONSTANT':
+                vals = np.ones((nrow, ncol), dtype=np.int32) * iconst
+                lay += 1
+            elif locat == 'INTERNAL':
+                # READ ZONES
+                rowvals = [int(v) for v in rowitems]
+                s = 'Too many values encountered on this line.'
+                assert len(rowvals) <= fmtin, s
+                vals.extend(rowvals)
+
+            elif locat == 'EXTERNAL':
+                # READ EXTERNAL FILE
+                fname = rowitems[0]
+                if not os.path.isfile(fname):
+                    errmsg = 'Could not find external file "{}"'.format(fname)
+                    raise Exception(errmsg)
+                with open(fname, 'r') as ext_f:
+                    ext_flines = ext_f.readlines()
+                for ext_frow in ext_flines:
+                    ext_frowitems = ext_frow.strip().split()
+                    rowvals = [int(v) for v in ext_frowitems]
+                    vals.extend(rowvals)
+                if len(vals) != datalen:
+                    errmsg = 'The number of values read from external ' \
+                             'file "{}" does not match the expected ' \
+                             'number.'.format(len(vals))
+                    raise Exception(errmsg)
+            else:
+                # Should not get here
+                raise Exception('Locat not recognized: {}'.format(locat))
+
+                # IGNORE COMPOSITE ZONES
+
+            if len(vals) == datalen:
+                # place values for the previous layer into the zone array
+                vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
+                zones[lay, :, :] = vals[:, :]
+                lay += 1
+            totlen += len(rowitems)
+        i += 1
+    s = 'The number of values read ({:,.0f})' \
+        ' does not match the number expected' \
+        ' ({:,.0f})'.format(totlen,
+                            nlay * nrow * ncol)
+    assert totlen == nlay * nrow * ncol, s
+    return zones
+
+
+def read_zbarray_old(fname):
     with open(fname, 'r') as f:
         lines = f.readlines()
 

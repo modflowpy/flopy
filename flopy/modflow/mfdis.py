@@ -15,6 +15,7 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, reference, check
+from ..utils.flopy_io import line_parse
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
 LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
@@ -853,13 +854,14 @@ class ModflowDis(Package):
                   '{0} layers, {1} rows, {2} columns, and {3} stress periods'.format(
                       nlay, nrow, ncol, nper))
             print('   loading laycbd...')
-        laycbd = np.empty((nlay), dtype=np.int)
+        laycbd = np.zeros(nlay, dtype=np.int)
         d = 0
         while True:
             line = f.readline()
             raw = line.strip('\n').split()
             for val in raw:
-                laycbd[d] = np.int(val)
+                if (np.int(val)) != 0:
+                    laycbd[d] = 1
                 d += 1
                 if d == nlay:
                     break
@@ -883,9 +885,11 @@ class ModflowDis(Package):
         top = Util2d.load(f, model, (nrow, ncol), np.float32, 'top',
                           ext_unit_dict)
         # dataset 6 -- botm
+        ncbd = laycbd.sum()
         if model.verbose:
             print('   loading botm...')
-        ncbd = laycbd.sum()
+            print('      for {} layers and '.format(nlay) +
+                  '{} confining beds'.format(ncbd))
         if nlay > 1:
             botm = Util3d.load(f, model, (nlay + ncbd, nrow, ncol), np.float32,
                                'botm', ext_unit_dict)
@@ -896,13 +900,14 @@ class ModflowDis(Package):
         # dataset 7 -- stress period info
         if model.verbose:
             print('   loading stress period data...')
+            print('       for {} stress periods'.format(nper))
         perlen = []
         nstp = []
         tsmult = []
         steady = []
         for k in range(nper):
             line = f.readline()
-            a1, a2, a3, a4 = line.strip().split()[0:4]
+            a1, a2, a3, a4 = line_parse(line)[0:4]
             a1 = float(a1)
             a2 = int(a2)
             a3 = float(a3)
@@ -924,9 +929,12 @@ class ModflowDis(Package):
                                         filetype=ModflowDis.ftype())
 
         # create dis object instance
-        dis = ModflowDis(model, nlay, nrow, ncol, nper, delr, delc, laycbd,
-                         top, botm, perlen, nstp, tsmult, steady, itmuni,
-                         lenuni, xul=xul, yul=yul, rotation=rotation,
+        dis = ModflowDis(model, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper,
+                         delr=delr, delc=delc, laycbd=laycbd,
+                         top=top, botm=botm,
+                         perlen=perlen, nstp=nstp, tsmult=tsmult,
+                         steady=steady, itmuni=itmuni, lenuni=lenuni,
+                         xul=xul, yul=yul, rotation=rotation,
                          proj4_str=proj4_str, start_datetime=start_datetime,
                          unitnumber=unitnumber, filenames=filenames)
         if check:

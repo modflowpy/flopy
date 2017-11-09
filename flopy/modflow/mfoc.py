@@ -88,7 +88,7 @@ class ModflowOc(Package):
         
         The list is used for every stress period and time step after the 
         (IPEROC, ITSOC) tuple until a (IPEROC, ITSOC) tuple is entered with
-        and empty list.
+        an empty list.
     compact : boolean
         Save results in compact budget form. (default is True).
     extension : list of strings
@@ -145,7 +145,7 @@ class ModflowOc(Package):
                  cboufm=None, compact=True,
                  stress_period_data={(0, 0): ['save head']},
                  extension=['oc', 'hds', 'ddn', 'cbc', 'ibo'],
-                 unitnumber=None, filenames=None, **kwargs):
+                 unitnumber=None, filenames=None, label="LABEL", **kwargs):
 
         """
         Package constructor.
@@ -157,7 +157,7 @@ class ModflowOc(Package):
             if len(unitnumber) < 5:
                 for idx in range(len(unitnumber), 6):
                     unitnumber.append(0)
-
+        self.label = label
         # set filenames
         if filenames is None:
             filenames = [None, None, None, None, None]
@@ -322,7 +322,7 @@ class ModflowOc(Package):
         line = 'HEAD PRINT FORMAT {0:3.0f}\n'.format(self.ihedfm)
         f_oc.write(line)
         if self.chedfm is not None:
-            line = 'HEAD SAVE FORMAT {0:20s} LABEL\n'.format(self.chedfm)
+            line = 'HEAD SAVE FORMAT {0:20s} {1}\n'.format(self.chedfm,self.label)
             f_oc.write(line)
         if self.savehead:
             line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.iuhead)
@@ -330,7 +330,7 @@ class ModflowOc(Package):
 
         f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'.format(self.iddnfm))
         if self.cddnfm is not None:
-            line = 'DRAWDOWN SAVE FORMAT {0:20s} LABEL\n'.format(self.cddnfm)
+            line = 'DRAWDOWN SAVE FORMAT {0:20s} {1}\n'.format(self.cddnfm,self.label)
             f_oc.write(line)
         if self.saveddn:
             line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.iuddn)
@@ -338,7 +338,7 @@ class ModflowOc(Package):
 
         if self.saveibnd:
             if self.cboufm is not None:
-                line = 'IBOUND SAVE FORMAT {0:20s} LABEL\n'.format(self.cboufm)
+                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufm,self.label)
                 f_oc.write(line)
             line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.iuibnd)
             f_oc.write(line)
@@ -361,8 +361,8 @@ class ModflowOc(Package):
         keys.sort()
 
         data = []
-        lines = ''
         ddnref = ''
+        lines = ''
         for kper in range(nper):
             for kstp in range(nstp[kper]):
                 kperkstp = (kper, kstp)
@@ -376,7 +376,7 @@ class ModflowOc(Package):
                             if 'DDREFERENCE' in item.upper():
                                 ddnref = item.lower()
                             else:
-                                lines += '{}\n'.format(item)
+                                lines += '  {}\n'.format(item)
                 if len(lines) > 0:
                     f_oc.write(
                         'period {} step {} {}\n'.format(kper + 1, kstp + 1,
@@ -384,9 +384,119 @@ class ModflowOc(Package):
                     f_oc.write(lines)
                     f_oc.write('\n')
                     ddnref = ''
+                    lines = ''
 
         # close oc file
         f_oc.close()
+
+    def _set_singlebudgetunit(self, budgetunit):
+        if budgetunit is None:
+            budgetunit = self.parent.next_ext_unit()
+        self.iubud = budgetunit
+
+    def _set_budgetunit(self):
+        iubud = []
+        for i, pp in enumerate(self.parent.packagelist):
+            if hasattr(pp, 'ipakcb'):
+                if pp.ipakcb > 0:
+                    iubud.append(pp.ipakcb)
+        if len(iubud) < 1:
+            iubud = None
+        elif len(iubud) == 1:
+            iubud = iubud[0]
+        self.iubud = iubud
+
+    def get_budgetunit(self):
+        """
+        Get the budget file unit number(s).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        iubud : integer ot list of integers
+            Unit number or list of cell-by-cell budget output unit numbers.
+            None is returned if ipakcb is less than one for all packages.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> dis = flopy.modflow.ModflowDis(m)
+        >>> bas = flopy.modflow.ModflowBas(m)
+        >>> lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)
+        >>> wel_data = {0: [[0, 0, 0, -1000.]]}
+        >>> wel = flopy.modflow.ModflowWel(m, ipakcb=101,
+        ... stress_period_data=wel_data)
+        >>> spd = {(0, 0): ['save head', 'save budget']}
+        >>> oc = flopy.modflow.ModflowOc(m, stress_period_data=spd)
+        >>> oc.get_budgetunit()
+        [100, 101]
+
+        """
+        # set iubud by iterating through the pacakages
+        self._set_budgetunit()
+        return self.iubud
+
+    def reset_budgetunit(self, budgetunit=None, fname=None):
+        """
+        Reset the cell-by-cell budget unit (ipakcb) for every package that
+        can write cell-by-cell data when SAVE BUDGET is specified in the
+        OC file to the specified budgetunit.
+
+        Parameters
+        ----------
+        budgetunit : int, optional
+            Unit number for cell-by-cell output data. If budgetunit is None
+            then the next available external unit number is assigned. Default
+            is None
+        fname : string, optional
+            Filename to use for cell-by-cell output file. If fname=None the
+            cell-by-cell output file will be created using the model name and
+            a '.cbc' file extension. Default is None.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> dis = flopy.modflow.ModflowDis(m)
+        >>> bas = flopy.modflow.ModflowBas(m)
+        >>> lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)
+        >>> wel_data = {0: [[0, 0, 0, -1000.]]}
+        >>> wel = flopy.modflow.ModflowWel(m, ipakcb=101,
+        ... stress_period_data=wel_data)
+        >>> spd = {(0, 0): ['save head', 'save budget']}
+        >>> oc = flopy.modflow.ModflowOc(m, stress_period_data=spd)
+        >>> oc.reset_budgetunit(budgetunit=1053, fname='test.cbc')
+
+        """
+
+        # remove existing output file
+        for i, pp in enumerate(self.parent.packagelist):
+            if hasattr(pp, 'ipakcb'):
+                if pp.ipakcb > 0:
+                    self.parent.remove_output(unit=pp.ipakcb)
+                    pp.ipakcb = 0
+
+        # set the unit number used for all cell-by-cell output
+        self._set_singlebudgetunit(budgetunit)
+
+        # add output file
+        for i, pp in enumerate(self.parent.packagelist):
+            if hasattr(pp, 'ipakcb'):
+                pp.ipakcb = self.iubud
+                self.parent.add_output_file(pp.ipakcb, fname=fname,
+                                            package=pp.name)
+
+        return
 
     @staticmethod
     def get_ocoutput_units(f, ext_unit_dict=None):

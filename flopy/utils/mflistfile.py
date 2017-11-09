@@ -45,7 +45,7 @@ class ListBudget(object):
     def __init__(self, file_name, budgetkey=None, timeunit='days'):
 
         # Set up file reading
-        assert os.path.exists(file_name)
+        assert os.path.exists(file_name),"file_name {0} not found".format(file_name)
         self.file_name = file_name
         if sys.version_info[0] == 2:
             self.f = open(file_name, 'r')
@@ -252,6 +252,63 @@ class ListBudget(object):
             names.insert(0, 'totim')
             return self.cum[names].view(np.recarray)
 
+    def get_model_runtime(self, units='seconds'):
+        """
+        Get the elapsed runtime of the model from the list file.
+
+        Parameters
+        ----------
+        units : str
+            Units in which to return the runtime. Acceptable values are 'seconds', 'minutes', 'hours'
+            (default is 'seconds')
+
+        Returns
+        -------
+        out : float
+        Floating point value with the runtime in requested units. Returns NaN if runtime not foudn in list file
+
+        Examples
+        --------
+        >>> mf_list = MfListBudget("my_model.list")
+        >>> budget = mf_list.get_model_runtime(units='hours')
+        """
+        if not self._isvalid:
+            return None
+
+        # reopen the file
+        if sys.version_info[0] == 2:
+            self.f = open(self.file_name, 'r')
+        elif sys.version_info[0] == 3:
+            self.f = open(self.file_name, 'r', encoding='ascii', errors='replace')
+        units = units.lower()
+        if not units == 'seconds' and not units == 'minutes' and not units == 'hours':
+            raise('"units" input variable must be "minutes", "hours", or "seconds": {0} was specified'.format(units))
+        try:
+            seekpoint = self._seek_to_string('Elapsed run time:')
+        except:
+            print('Elapsed run time not included in list file. Returning NaN')
+            return np.nan
+
+        self.f.seek(seekpoint)
+        line = self.f.readline()
+
+        self.f.close()
+        # yank out the floating point values from the Elapsed run time string
+        times = list(map(float, re.findall(r'[+-]?[0-9.]+', line)))
+        # pad an array with zeros and times with [days, hours, minutes, seconds]
+        times = np.array([0 for i in range(4-len(times))] + times)
+        # convert all to seconds
+        time2sec = np.array([24 * 60 * 60, 24 * 60, 60, 1])
+        times_sec = np.sum(times * time2sec)
+        # return in the requested units
+        if units == 'seconds':
+            return times_sec
+        elif units == 'minutes':
+            return times_sec / 60.0
+        elif units == 'hours':
+            return times_sec/60.0 / 60.0
+
+
     def get_budget(self, names=None):
         """
         Get the recarrays with the incremental and cumulative water budget items
@@ -439,10 +496,11 @@ class ListBudget(object):
                 df_vol.pop(in_name)
                 df_vol.pop(out_name)
             cols = list(df_flux.columns)
-            cols.sort()
             cols = [col.lower() for col in cols]
             df_flux.columns = cols
             df_vol.columns = cols
+            df_flux.sort_index(axis=1,inplace=True)
+            df_vol.sort_index(axis=1,inplace=True)
             return df_flux, df_vol
     def _build_index(self, maxentries):
         self.idx_map = self._get_index(maxentries)

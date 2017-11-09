@@ -2,7 +2,21 @@ FloPy Changes
 -----------------------------------------------
 
 ### Version 3.2.7 pre-release
-* Added version changes...
+
+* Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.
+* Added support for FORTRAN free format array data using n*value where n is the number of times value is repeated.
+* Added support for comma separators in 1D data in LPF and UPF files
+* Added support for comma separators on non array data lines in DIS, BCF, LPF, UPW, HFB, and RCH Packages.
+* Added `reset_budgetunit()` method to OC package to faciltate saving cell-by-cell binary output to a single file for all packages that can save cell-by-cell output.
+* Added a `get_residual` method to the `CellBudgetFile` class.
+* Added support for binary stress period files (`OPEN/CLOSE filename (BINARY)`) in `wel` stress packages on load and instantiation. Will extend to other list-based MODFLOW stress packages.
+* Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
+* Bug fixes:
+    1. Fixed bug in OC when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
+    2. Fixed bug in SUB if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load).
+    3. Fixed bugs in SUB and SUBWT load to pop original unit number.
+    4. Fixed bug in MT3D BTN obs.
+    5. Fixed bug in LPF regarding when HANI is read and written.
 
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.

@@ -52,7 +52,7 @@ class MfList(object):
     """
 
     def __init__(self, package, data=None, dtype=None, model=None,
-                 list_free_format=None):
+                 list_free_format=None, binary=False):
 
         if isinstance(data, MfList):
             for attr in data.__dict__.items():
@@ -78,10 +78,12 @@ class MfList(object):
             self.__dtype = self.package.dtype
         else:
             self.__dtype = dtype
+        self.__binary = binary
         self.__vtype = {}
         self.__data = {}
         if data is not None:
             self.__cast_data(data)
+        self.__df = None
         self.list_free_format = list_free_format
         return
 
@@ -174,6 +176,12 @@ class MfList(object):
     @property
     def data(self):
         return self.__data
+
+    @property
+    def df(self):
+        if self.__df is None:
+            self.__df = self.get_dataframe()
+        return self.__df
 
     @property
     def vtype(self):
@@ -351,6 +359,65 @@ class MfList(object):
                             str(e))
         self.__vtype[kper] = np.recarray
 
+    def get_dataframe(self, squeeze=True):
+        """Cast recarrays for stress periods into single
+        dataframe containing all stress periods. 
+        
+        Parameters
+        ----------
+        squeeze : bool
+            Reduce number of columns in dataframe to only include
+            stress periods where a variable changes.
+        
+        Returns
+        -------
+        df : dataframe
+            Dataframe of shape nrow = ncells, ncol = nvar x nper. If 
+            the squeeze option is choosen, nper is the number of 
+            stress periods where at least one cells is different, 
+            otherwise it is equal to the number of keys in MfList.data.
+        
+        Notes
+        -----
+        Requires pandas.
+        """
+        try:
+            import pandas as pd
+        except Exception as e:
+            print("this feature requires pandas")
+            return None
+
+        # make a dataframe of all data for all stress periods
+        dfs = []
+        for k, v in self.data.items():
+            df = pd.DataFrame(v)
+            df['per'] = k
+            df['id'] = df.index
+            dfs.append(df)
+        df = pd.concat(dfs)
+        df['node'] = df.i * self.model.ncol + df.j
+        kij = df[['id', 'node', 'k', 'i', 'j']].copy()
+        kij.index = kij.id
+        kij = kij.groupby(kij.index).mean()  # remove duplicates
+
+        # pivot the dataframe so that stress periods
+        # are represented across columns
+        # nrow == ncells, ncol = nvariables x nper
+        columns = list(set(df.columns).difference({'k', 'i', 'j', 'per', 'node', 'id'}))
+        dfs = [kij]
+        for c in columns:
+            pv = df[['per', c, 'id']].pivot(index='id', columns='per', values=c)
+
+            if squeeze:
+                diff = pv.diff(axis=1)
+                diff[0] = 1
+                diff = diff.astype(int)
+                changed = diff.sum(axis=0) > 0
+                pv = pv.loc[:, changed]
+            pv.columns = ['{}{}'.format(c, p) for p in pv.columns]
+            dfs.append(pv)
+        return pd.concat(dfs, axis=1)
+
     def add_record(self, kper, index, values):
         # Add a record to possible already set list for a given kper
         # index is a list of k,i,j or nodes.
@@ -455,6 +522,41 @@ class MfList(object):
                             "from file " + str(e))
         return d
 
+    def get_filenames(self):
+        kpers = list(self.data.keys())
+        kpers.sort()
+        filenames = []
+        first = kpers[0]
+        for kper in list(range(0, max(self.model.nper, max(kpers) + 1))):
+            # Fill missing early kpers with 0
+            if (kper < first):
+                itmp = 0
+                kper_vtype = int
+            elif (kper in kpers):
+                kper_vtype = self.__vtype[kper]
+
+            if self.model.array_free_format and self.model.external_path is not None:
+
+                # py_filepath = ''
+                # py_filepath = os.path.join(py_filepath,
+                #                            self.model.external_path)
+                filename = self.package.name[0] + \
+                            "_{0:04d}.dat".format(kper)
+                # py_filepath = os.path.join(py_filepath, filename)
+                # filenames.append(py_filepath)
+                filenames.append(filename)
+        return filenames
+
+    def get_filename(self,kper):
+        ext = "dat"
+        if self.binary:
+            ext = 'bin'
+        return self.package.name[0] + '_{0:04d}.{1}'.format(kper,ext)
+
+    @property
+    def binary(self):
+        return bool(self.__binary)
+
     def write_transient(self, f, single_per=None):
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
@@ -495,23 +597,31 @@ class MfList(object):
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
                     .format(itmp, 0, kper))
 
-            if self.model.array_free_format and self.model.external_path is not None:
+            isExternal = False
+            if self.model.array_free_format and \
+                            self.model.external_path is not None:
+                isExternal = True
+            if self.__binary:
+                isExternal = True
+            if isExternal:
                 if kper_vtype == np.recarray:
                     py_filepath = ''
                     if self.model.model_ws is not None:
                         py_filepath = self.model.model_ws
-                    py_filepath = os.path.join(py_filepath,
-                                               self.model.external_path)
-                    filename = self.package.name[0] + \
-                               "_{0:04d}.dat".format(kper)
+                    if self.model.external_path is not None:
+                        py_filepath = os.path.join(py_filepath,
+                                                   self.model.external_path)
+                    filename = self.get_filename(kper)
                     py_filepath = os.path.join(py_filepath, filename)
-                    model_filepath = os.path.join(self.model.external_path,
-                                                  filename)
+                    model_filepath = filename
+                    if self.model.external_path is not None:
+                        model_filepath = os.path.join(self.model.external_path,
+                                                      filename)
                     self.__tofile(py_filepath, kper_data)
                     kper_vtype = str
                     kper_data = model_filepath
 
-            if (kper_vtype == np.recarray):
+            if kper_vtype == np.recarray:
                 name = f.name
                 f.close()
                 f = open(name, 'ab+')
@@ -520,8 +630,11 @@ class MfList(object):
                 f.close()
                 f = open(name, 'a')
                 # print(f)
-            elif (kper_vtype == str):
-                f.write("         open/close " + kper_data + '\n')
+            elif kper_vtype == str:
+                f.write('         open/close ' + kper_data)
+                if self.__binary:
+                    f.write(' (BINARY)')
+                f.write('\n')
 
     def __tofile(self, f, data):
         # Write the recarray (data) to the file (or file handle) f
@@ -533,9 +646,17 @@ class MfList(object):
         # --make copy of data for multiple calls
         d = np.recarray.copy(data)
         for idx in ['k', 'i', 'j', 'node']:
-            if (idx in lnames):
+            if idx in lnames:
                 d[idx] += 1
-        np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
+        if self.__binary:
+            dtype2 = []
+            for name in self.dtype.names:
+                dtype2.append((name, np.float32))
+            dtype2 = np.dtype(dtype2)
+            d = np.array(d, dtype=dtype2)
+            d.tofile(f)
+        else:
+            np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
 
     def check_kij(self):
         names = self.dtype.names

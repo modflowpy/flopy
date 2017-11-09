@@ -1,4 +1,6 @@
 from __future__ import print_function
+import json
+import os
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList, \
     HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
@@ -7,51 +9,15 @@ from ..pakbase import Package
 from . import NetCdf, netcdf
 from . import shapefile_utils
 
-NC_UNITS_FORMAT = {"hk": "{0}/{1}", "sy": "", "ss": "1/{0}", "rech": "{0}/{1}",
-                   "strt": "{0}",
-                   "wel_flux": "{0}^3/{1}", "top": "{0}", "model_top": "{0}",
-                   "botm": "{0}", "thickness": "{0}",
-                   "ghb_cond": "{0}/{1}^2", "ghb_bhead": "{0}",
-                   "transmissivity": "{0}^2/{1}",
-                   "vertical_conductance": "{0}/{1}^2",
-                   "primary_storage_coefficient": "1/{1}",
-                   "horizontal_hydraulic_conductivity": "{0}/{1}",
-                   "riv_cond": "1/{1}",
-                   "riv_stage": "{0}", "riv_rbot": "{0}", "head": "{0}",
-                   "drawdown": "{0}", "cell_by_cell_flow": "{0}^3/{1}",
-                   "sy": "{1}/{1}",
-                   "prsity": "{1}/{1}", "hani": "{0}/{0}", "al": "{0}/{0}",
-                   "drn_elev": "{0}",
-                   "drn_cond": "1/{1}", "dz": "{0}", "subsidence": "{0}",
-                   "chd_shead": "{0}", "chd_ehead": "{0}",
-                   "2D_cumulative_well_flux": "{0}^3/{1}",
-                   "3D_cumulative_well_flux": "{0}^3/{1}", "vka": "{0}/{1}"}
+
 NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4",
                      np.int32: "i4"}
 
-NC_LONG_NAMES = {"hk": "horizontal hydraulic conductivity",
-                 "vka": "vertical hydraulic conductivity",
-                 "sy": "specific yield",
-                 "ss": "specific storage",
-                 "rech": " recharge",
-                 "strt": "starting heads",
-                 "wel_flux": "well flux",
-                 "top": "model top",
-                 "botm": "layer bottom",
-                 "thickness": "layer thickness",
-                 "ghb_cond": "GHB boundary conductance",
-                 "ghb_bhead": "GHB boundary head",
-                 "riv_cond": "river bed conductance",
-                 "riv_stage": "river stage",
-                 "riv_rbot": "river bottom elevation",
-                 "drn_elev": "drain elevation",
-                 "drn_cond": "drain conductance",
-                 "hani": "horizontal anisotropy",
-                 "prsity": "porosity",
-                 "sconc1": "starting concentration",
-                 "ibound": "flow model active array",
-                 "icbund": "transport model active array"
-                 }
+path = os.path.split(netcdf.__file__)[0]
+with open(path + '/longnames.json') as f:
+    NC_LONG_NAMES = json.load(f)
+with open(path + '/unitsformat.json') as f:
+    NC_UNITS_FORMAT = json.load(f)
 
 
 def get_var_array_dict(m):
@@ -509,8 +475,9 @@ def mflist_helper(f, mfl, **kwargs):
         f = NetCdf(f, mfl.model)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
-        kper = kwargs.get("kper", None)
         sparse = kwargs.get("sparse", False)
+        kper = kwargs.get("kper", 0)
+        squeeze = kwargs.get("squeeze", True)
         if mfl.sr is None:
             raise Exception("MfList.to_shapefile: SpatialReference not set")
         import flopy.utils.flopy_io as fio
@@ -532,8 +499,26 @@ def mflist_helper(f, mfl, **kwargs):
             shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
         else:
             from ..export.shapefile_utils import recarray2shp
-            recarray2shp()
-
+            from ..utils.geometry import Polygon
+            #if np.isscalar(kper):
+            #    kper = [kper]
+            sr = mfl.model.sr
+            df = mfl.get_dataframe(squeeze=squeeze)
+            if 'kper' in kwargs or df is None:
+                ra = mfl[kper]
+                verts = np.array(sr.get_vertices(ra.i, ra.j))
+            elif df is not None:
+                verts = np.array(sr.get_vertices(df.i.values, df.j.values))
+                ra = df.to_records(index=False)
+            # write the projection file
+            if sr.epsg is None:
+                epsg = kwargs.get('epsg', None)
+            else:
+                epsg = sr.epsg
+            prj = kwargs.get('prj', None)
+            verts = verts.transpose([2, 0, 1])
+            polys = np.array([Polygon(v) for v in verts])
+            recarray2shp(ra, geoms=polys, shpname=f, epsg=epsg, prj=prj)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
@@ -852,6 +837,10 @@ def util2d_helper(f, u2d, **kwargs):
                                              {name: u2d.array})
         return
 
+    elif isinstance(f, str) and f.lower().endswith(".asc"):
+        u2d.model.sr.export_array(f, u2d.array, **kwargs)
+        return
+
     elif isinstance(f, NetCdf) or isinstance(f, dict):
 
         # try to mask the array - assume layer 1 ibound is a good mask
@@ -923,3 +912,4 @@ def util2d_helper(f, u2d, **kwargs):
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
+

@@ -12,6 +12,7 @@ import numpy as np
 from ..pakbase import Package
 from .mfparbc import ModflowParBc as mfparbc
 from numpy.lib.recfunctions import stack_arrays
+from ..utils.flopy_io import line_parse
 
 
 class ModflowHfb(Package):
@@ -267,7 +268,7 @@ class ModflowHfb(Package):
             if line[0] != '#':
                 break
         # dataset 1
-        t = line.strip().split()
+        t = line_parse(line)
         nphfb = int(t[0])
         mxfb = int(t[1])
         nhfbnp = int(t[2])

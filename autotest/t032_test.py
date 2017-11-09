@@ -52,7 +52,7 @@ def test_polygon_from_ij():
              zip(recarray.i, recarray.j)]
 
     assert geoms[0].type == 'Polygon'
-    assert geoms[0].bounds[-1] - 5169784.473861726 < 1e-6
+    assert np.abs(geoms[0].bounds[-1] - 5169784.473861726) < 1e-4
     fpth = os.path.join(mpth, 'test.shp')
     recarray2shp(recarray, geoms, fpth, epsg=26715)
     import epsgref
@@ -65,8 +65,7 @@ def test_polygon_from_ij():
     fpth = os.path.join(mpth, 'test.shp')
     recarray2shp(recarray, geoms, fpth, prj=fpth2)
 
-
-def test_dtypes():
+    # test_dtypes
     fpth = os.path.join(mpth, 'test.shp')
     ra = shp2recarray(fpth)
     assert "int" in ra.dtype['k'].name
@@ -106,6 +105,6 @@ def test_epsgref():
 
 
 if __name__ == '__main__':
-    test_polygon_from_ij()
-    test_dtypes()
-    test_epsgref()
+    #test_polygon_from_ij()
+    #test_epsgref()
+    pass

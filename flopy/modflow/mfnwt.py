@@ -445,7 +445,10 @@ class ModflowNwt(Package):
                 for idx, (k, c) in enumerate(lindict.items()):
                     t.append(line[idx * 10:(idx + 1) * 10])
             for idx, (k, c) in enumerate(lindict.items()):
-                kwargs[k] = c(t[idx])
+                # forgive missing value for MXITERXMD (last value)
+                # (apparently NWT runs without it)
+                if len(t) > 0:
+                    kwargs[k] = c(t.pop(0))
 
         # close the open file
         f.close()

@@ -3,9 +3,12 @@ import os
 import platform
 import socket
 import copy
+import json
 import numpy as np
 from datetime import datetime
 import time
+from .metadata import acdd
+import flopy
 
 # globals
 FILLVALUE = -99999.9
@@ -17,6 +20,9 @@ PRECISION_STRS = ["f4", "f8", "i4"]
 STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "delr", "delc",
                  "time"]
 
+path = os.path.split(__file__)[0]
+with open(path + '/longnames.json') as f:
+    NC_LONG_NAMES = json.load(f)
 
 class Logger(object):
     """
@@ -112,6 +118,9 @@ class NetCdf(object):
         if not None, the constructor will initialize
         the file.  If None, the perlen array of ModflowDis
         will be used
+    z_positive : str ('up' or 'down')
+        Positive direction of vertical coordinates written to NetCDF file.
+        (default 'down')
     verbose : if True, stdout is verbose.  If str, then a log file
         is written to the verbose file
     forgive: what to do if a duplicate variable name is being created.  If
@@ -126,7 +135,8 @@ class NetCdf(object):
 
     """
 
-    def __init__(self, output_filename, model, time_values=None, verbose=None,
+    def __init__(self, output_filename, model, time_values=None, z_positive='up',
+                 verbose=None,
                  logger=None, forgive=False):
 
         assert output_filename.lower().endswith(".nc")
@@ -153,7 +163,14 @@ class NetCdf(object):
         self.start_datetime = self._dt_str(dateutil.parser.parse(
             self.model.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
+        proj4_str = self.model.sr.proj4_str
+        if proj4_str is None:
+            proj4_str = '+init=epsg:4326'
+            self.log('Warning: model has no coordinate reference system specified. '
+                     'Using default proj4 string: {}'.format(proj4_str))
+        self.proj4_str = proj4_str
         self.grid_units = LENUNI[self.model.sr.lenuni]
+        self.z_positive = z_positive
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
@@ -590,7 +607,8 @@ class NetCdf(object):
         except Exception as e:
             raise Exception("NetCdf error importing pyproj module:\n" + str(e))
 
-        proj4_str = self.model.sr.proj4_str
+        proj4_str = self.proj4_str
+
         if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
             proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
@@ -602,24 +620,13 @@ class NetCdf(object):
             raise Exception("error building grid crs:\n{0}".format(str(e)))
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
 
-        # self.zs = -1.0 * self.model.dis.zcentroids[:,:,::-1]
-        self.zs = -1.0 * self.model.dis.zcentroids
+        vmin, vmax = self.model.dis.botm.array.min(), self.model.dis.top.array.max()
+        if self.z_positive == 'down':
+            self.zs = -1.0 * self.model.dis.zcentroids
+            vmin, vmax = -vmax, -vmin
+        else:
+            self.zs = self.model.dis.zcentroids
 
-        # if self.grid_units.lower().startswith('f'):  # and \
-        #     # not self.model.sr.units.startswith("f"):
-        #     self.log("converting feet to meters")
-        #     sr = copy.deepcopy(self.model.sr)
-        #     sr.delr /= 3.281
-        #     sr.delc /= 3.281
-        #     if self.model.sr.units.startswith('f'):
-        #         self.log("converting xul,yul from feet to meters")
-        #         sr.xul /= 3.281
-        #         sr.yul /= 3.281
-        #         self.log("converting xul,yul from feet to meters")
-        #     ys = sr.ycentergrid.copy()
-        #     xs = sr.xcentergrid.copy()
-        #     self.log("converting feet to meters")
-        # else:
         ys = self.model.sr.ycentergrid.copy()
         xs = self.model.sr.xcentergrid.copy()
 
@@ -642,6 +649,16 @@ class NetCdf(object):
         base_y = self.model.sr.ygrid[0, 0]
         self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
                                                  base_y)
+
+        # get transformed bounds and record to check against ScienceBase later
+        xmin, ymin, xmax, ymax = self.model.sr.bounds
+        bbox = np.array([[xmin, ymin],
+                         [xmin, ymax],
+                         [xmax, ymax],
+                         [xmax, ymin]])
+        x, y = transform(self.grid_crs, nc_crs, *bbox.transpose())
+        self.bounds = x.min(), y.min(), x.max(), y.max()
+        self.vbounds = vmin, vmax
         pass
 
     def initialize_file(self, time_values=None):
@@ -680,10 +697,11 @@ class NetCdf(object):
 
         # write some attributes
         self.log("setting standard attributes")
-        self.nc.setncattr("Conventions", "CF-1.6")
+
+        self.nc.setncattr("Conventions", "CF-1.6, ACDD-1.3, flopy {}".format(flopy.__version__))
         self.nc.setncattr("date_created",
                           datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
-        self.nc.setncattr("geospatial_vertical_positive", "up")
+        self.nc.setncattr("geospatial_vertical_positive", "{}".format(self.z_positive))
         min_vertical = np.min(self.zs)
         max_vertical = np.max(self.zs)
         self.nc.setncattr("geospatial_vertical_min", min_vertical)
@@ -692,7 +710,7 @@ class NetCdf(object):
         self.nc.setncattr("featureType", "Grid")
         self.nc.setncattr("origin_x", self.model.sr.xul)
         self.nc.setncattr("origin_y", self.model.sr.yul)
-        self.nc.setncattr("origin_crs", self.model.sr.proj4_str)
+        self.nc.setncattr("origin_crs", self.proj4_str)
         self.nc.setncattr("grid_rotation_from_origin",
                           self.model.sr.rotation)
         for k, v in self.global_attributes.items():
@@ -726,7 +744,7 @@ class NetCdf(object):
 
         attribs = {"units": "{0} since {1}".format(self.time_units,
                                                    self.start_datetime),
-                   "standard_name": "time", "long_name": "time",
+                   "standard_name": "time", "long_name": NC_LONG_NAMES.get("time", "time"),
                    "calendar": "gregorian",
                    "_CoordinateAxisType": "Time"}
         time = self.create_variable("time", attribs, precision_str="f8",
@@ -739,7 +757,7 @@ class NetCdf(object):
         if self.grid_units.lower().startswith('f'):
             units = "feet"
         attribs = {"units": units, "standard_name": "elevation",
-                   "long_name": "elevation", "axis": "Z",
+                   "long_name": NC_LONG_NAMES.get("elevation", "elevation"), "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
                    "positive": "down"}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
@@ -748,7 +766,7 @@ class NetCdf(object):
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
-                   "long_name": "longitude", "axis": "X",
+                   "long_name": NC_LONG_NAMES.get("longitude", "longitude"), "axis": "X",
                    "_CoordinateAxisType": "Lon"}
         lon = self.create_variable("longitude", attribs, precision_str="f8",
                                    dimensions=("y", "x"))
@@ -758,7 +776,7 @@ class NetCdf(object):
         # Latitude
         self.log("creating latitude var")
         attribs = {"units": "degrees_north", "standard_name": "latitude",
-                   "long_name": "latitude", "axis": "Y",
+                   "long_name": NC_LONG_NAMES.get("latitude", "latitude"), "axis": "Y",
                    "_CoordinateAxisType": "Lat"}
         lat = self.create_variable("latitude", attribs, precision_str="f8",
                                    dimensions=("y", "x"))
@@ -766,14 +784,14 @@ class NetCdf(object):
 
         # layer
         self.log("creating layer var")
-        attribs = {"units": "", "standard_name": "layer", "long_name": "layer",
+        attribs = {"units": "", "standard_name": "layer", "long_name": NC_LONG_NAMES.get("layer", "layer"),
                    "positive": "down", "axis": "Z"}
         lay = self.create_variable("layer", attribs, dimensions=("layer",))
         lay[:] = np.arange(0, self.shape[0])
         self.log("creating layer var")
 
         # delc
-        attribs = {"units": "meters", "long_names": "row spacing",
+        attribs = {"units": "meters", "long_name": NC_LONG_NAMES.get("delc", "Model row spacing"),
                    "origin_x": self.model.sr.xul,
                    "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
@@ -787,7 +805,7 @@ class NetCdf(object):
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
         # delr
-        attribs = {"units": "meters", "long_names": "col spacing",
+        attribs = {"units": "meters", "long_name": NC_LONG_NAMES.get("delr", "Model column spacing"),
                    "origin_x": self.model.sr.xul,
                    "origin_y": self.model.sr.yul,
                    "origin_crs": self.nc_epsg_str}
@@ -929,6 +947,124 @@ class NetCdf(object):
         self.nc.setncatts(attr_dict)
         self.log("setting global attributes")
 
+    def add_sciencebase_metadata(self, id, check=True):
+        """Add metadata from ScienceBase using the
+        flopy.export.metadata.acdd class.
+        
+        Returns
+        -------
+        metadata : flopy.export.metadata.acdd object
+        """
+        md = acdd(id, model=self.model)
+        if check:
+            self._check_vs_sciencebase(md)
+        # get set of public attributes
+        attr = {n for n in dir(md) if '_' not in n[0]}
+        # skip some convenience attributes
+        skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage',
+                'get_sciencebase_xml_metadata',
+                'get_sciencebase_metadata'}
+        towrite = sorted(list(attr.difference(skip)))
+        for k in towrite:
+            v = md.__getattribute__(k)
+            if v is not None:
+                # convert everything to strings
+                if not isinstance(v, str):
+                    if isinstance(v, list):
+                        v = ','.join(v)
+                    else:
+                        v = str(v)
+                self.global_attributes[k] = v
+                self.nc.setncattr(k, v)
+        self.write()
+        return md
+
+    def _check_vs_sciencebase(self, md):
+        """Check that model bounds read from flopy are consistent with those in ScienceBase."""
+        xmin, ymin, xmax, ymax = self.bounds
+        tol = 1e-5
+        assert md.geospatial_lon_min - xmin < tol
+        assert md.geospatial_lon_max - xmax < tol
+        assert md.geospatial_lat_min - ymin < tol
+        assert md.geospatial_lat_max - ymax < tol
+        assert md.geospatial_vertical_min - self.vbounds[0] < tol
+        assert md.geospatial_vertical_max - self.vbounds[1] < tol
+        pass
+
+    def get_longnames_from_docstrings(self, outfile='longnames.json'):
+        """
+        This is experimental.
+        
+        Scrape Flopy module docstrings and return docstrings for parameters
+        included in the list of variables added to NetCdf object. Create
+        a dictionary of longnames keyed by the NetCdf variable names; make each
+        longname from the first sentence of the docstring for that parameter.
+        
+        One major limitation is that variables from mflists often aren't described
+        in the docstrings.
+        """
+        import inspect
+        path = ''
+        try:
+            from numpydoc.docscrape import NumpyDocString
+        except Exception as e:
+            raise Exception("NetCdf error importing numpydoc module:\n" + str(e))
+
+        def startstop(ds):
+            """Get just the Parameters section of the docstring."""
+            start, stop = 0, -1
+            for i, l in enumerate(ds):
+                if 'Parameters' in l and '----' in ds[i+1]:
+                    start = i + 2
+                if l.strip() in ['Attributes', 'Methods', 'Returns', 'Notes']:
+                    stop = i-1
+                    break
+                if i >= start and '----' in l:
+                    stop = i-2
+                    break
+            return start, stop
+
+        def get_entries(ds):
+            """Parse docstring entries into dictionary."""
+            stuff = {}
+            k = None
+            for line in ds:
+                if len(line) >= 5 and line[:4] == ' ' * 4 \
+                        and line[4] != ' ' and ':' in line:
+                    k = line.split(':')[0].strip()
+                    stuff[k] = ''
+                # lines with parameter descriptions
+                elif k is not None and len(line) > 10: # avoid orphans
+                    stuff[k] += line.strip() + ' '
+            return stuff
+
+        # get a list of the flopy classes
+        #packages = inspect.getmembers(flopy.modflow, inspect.isclass)
+        packages = [(pp.name[0], pp) for pp in self.model.packagelist]
+        # get a list of the NetCDF variables
+        attr = [v.split('_')[-1] for v in self.nc.variables]
+
+        # parse docstrings to get long names
+        longnames = {}
+        for cname, obj in packages:
+            # parse the docstring
+            ds = obj.__doc__.split('\n')
+            start, stop = startstop(ds)
+            txt = ds[start:stop]
+            if stop - start > 0:
+                params = get_entries(txt)
+                for k, v in params.items():
+                    if k in attr:
+                        longnames[k] = v.split('. ')[0]
+
+        # add in any variables that weren't found
+        for var in attr:
+            if var not in longnames.keys():
+                longnames[var] = ''
+        with open(outfile, 'w') as output:
+            json.dump(longnames, output, sort_keys=True, indent=2)
+        return longnames
+
     @staticmethod
     def get_solver_H_R_tols(model):
         if model.pcg is not None:
@@ -939,3 +1075,4 @@ class NetCdf(object):
             return model.sip.hclose, -999
         elif model.gmg is not None:
             return model.gmg.hclose, model.gmg.rclose
+

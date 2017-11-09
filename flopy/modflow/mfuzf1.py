@@ -148,6 +148,52 @@ class ModflowUzf1(Package):
     nosurfleak : boolean
         key word for inactivating calculation of surface leakage.
         (default is 0)
+    specifysurfk : boolean
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
+        An optional character variable. When SPECIFYSURFK is specified, 
+        the variable SURFK is specfied in Data Set 4b.
+    rejectsurfk : boolean
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
+        An optional character variable. When REJECTSURFK is specified, 
+        SURFK instead of VKS is used for calculating rejected infiltration. 
+        REJECTSURFK only is included if SPECIFYSURFK is included.
+    seepsurfk : boolean
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
+        An optional character variable. When SEEPSURFK is specified, 
+        SURFK instead of VKS is used for calculating surface leakage. 
+        SEEPSURFK only is included if SPECIFYSURFK is included.
+    etsquare : float (smoothfact)
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later)
+        An optional character variable. When ETSQUARE is specified, 
+        groundwater ET is simulated using a constant potential ET rate, 
+        and is smoothed over a specified smoothing interval. 
+        This option is recommended only when using the NWT solver.
+
+        etsquare is activated in flopy by specifying a real value
+        for smoothfact (default is None).
+        For example, if the interval factor (smoothfact) 
+        is specified as smoothfact=0.1 (recommended), 
+        then the smoothing inerval will be calculated as: 
+        SMOOTHINT = 0.1*EXTDP and  is applied over the range for groundwater head (h):
+        *   h < CELTOP-EXTDP, ET is zero;
+        *   CELTOP-EXTDP < h < CELTOP-EXTDP+SMOOTHINT, ET is smoothed;
+        CELTOP-EXTDP+SMOOTHINT < h, ET is equal to potential ET.
+    netflux : list of [Unitrech (int), Unitdis (int)]
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
+        An optional character variable. When NETFLUX is specified, 
+        the sum of recharge (L3/T) and the sum of discharge (L3/T) is written 
+        to separate unformatted files using module UBDSV3. 
+        
+        netflux is activated in flopy by specifying a list for 
+        Unitrech and Unitdis (default is None). 
+        Unitrech and Unitdis are the unit numbers to which these values 
+        are written when “SAVE BUDGET” is specified in Output Control. 
+        Values written to Unitrech are the sum of recharge values 
+        for the UZF, SFR2, and LAK packages, and values written to Unitdis 
+        are the sum of discharge values for the UZF, SFR2, and LAK packages. 
+        Values are averaged over the period between output times.
+        
+[NETFLUX unitrech unitdis]
     finf : float
         used to define the infiltration rates (LT-1) at land surface for each
         vertical column of cells. If FINF is specified as being greater than
@@ -225,6 +271,9 @@ class ModflowUzf1(Package):
                  thtr=0.15, thti=0.20,
                  specifythtr=0, specifythti=0, nosurfleak=0,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
+                 nwt_11_fmt=False,
+                 specifysurfk=False, rejectsurfk=False, seepsurfk=False,
+                 etsquare=None, netflux=None,
                  uzgag=None, extension='uzf', unitnumber=None,
                  filenames=None):
         # set default unit number of one is not specified
@@ -299,9 +348,29 @@ class ModflowUzf1(Package):
         self.url = 'uzf_unsaturated_zone_flow_pack.htm'
 
         # Data Set 1a
+        self.nwt_11_fmt = nwt_11_fmt
         self.specifythtr = specifythtr
         self.specifythti = specifythti
         self.nosurfleak = nosurfleak
+        self.specifysurfk = specifysurfk
+        self.rejectsurfk = rejectsurfk
+        self.seepsurfk = seepsurfk
+        self.etsquare = False
+        self.smoothfact = None
+        if etsquare is not None:
+            try:
+                float(etsquare)
+            except:
+                print('etsquare must be specified by entering a real number for smoothfact.')
+            self.etsquare = True
+            self.smoothfact = etsquare
+        self.netflux = False
+        self.unitrech = None
+        self.unitdis = None
+        if netflux is not None:
+            assert len(netflux) == 2, 'netflux must be a length=2 sequence of unitrech, unitdis'
+            self.netflux = True
+            self.unitrech, self.unitdis = netflux
 
         # Data Set 1b
         # NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 [NTRAIL2 NSETS2] NUZGAG SURFDEP
@@ -415,7 +484,34 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
-    def write_file(self):
+    def _write_1a(self, f_uzf):
+
+        if not self.nwt_11_fmt:
+            specify_temp = ''
+            if self.specifythtr > 0:
+                specify_temp += 'SPECIFYTHTR '
+            if self.specifythti > 0:
+                specify_temp += 'SPECIFYTHTI '
+            if self.nosurfleak > 0:
+                specify_temp += 'NOSURFLEAK'
+            if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
+                f_uzf.write('%s\n' % specify_temp)
+            del specify_temp
+        else:
+            txt = 'options\n'
+            for var in ['specifythtr', 'specifythti', 'nosurfleak',
+                        'specifysurfk', 'rejectsurfk', 'seepsurfk']:
+                value = self.__dict__[var]
+                if int(value) > 0:
+                    txt += '{}\n'.format(var)
+            if self.etsquare:
+                txt += 'etsquare {}\n'.format(self.smoothfact)
+            if self.netflux:
+                txt += 'netflux {} {}\n'.format(self.unitrech, self.unitdis)
+            txt += 'end\n'
+            f_uzf.write(txt)
+
+    def write_file(self,f=None):
         """
         Write the package file.
 
@@ -426,19 +522,15 @@ class ModflowUzf1(Package):
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
-        f_uzf = open(self.fn_path, 'w')
+        if f is not None:
+            f_uzf = f
+        else:
+            f_uzf = open(self.fn_path, 'w')
         f_uzf.write('{}\n'.format(self.heading))
+
         # Dataset 1a
-        specify_temp = ''
-        if self.specifythtr > 0:
-            specify_temp += 'SPECIFYTHTR '
-        if self.specifythti > 0:
-            specify_temp += 'SPECIFYTHTI '
-        if self.nosurfleak > 0:
-            specify_temp += 'NOSURFLEAK'
-        if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
-            f_uzf.write('%s\n' % specify_temp)
-        del specify_temp
+        self._write_1a(f_uzf)
+
         # Dataset 1b
         if self.iuzfopt > 0:
             comment = ' #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NTRAIL NSETS NUZGAGES'

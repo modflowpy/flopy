@@ -108,7 +108,7 @@ class ModflowWel(Package):
     """
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
-                 extension='wel', options=None,
+                 extension='wel', options=None, binary=False,
                  unitnumber=None, filenames=None):
         """
         Package constructor.
@@ -165,14 +165,35 @@ class ModflowWel(Package):
                 self.phiramp_unit = np.int(t[2])
                 options.pop(idx)
                 break
-        self.options = options
-        self.parent.add_package(self)
+        #self.options = options
+        #self.parent.add_package(self)
+
         if dtype is not None:
             self.dtype = dtype
         else:
             self.dtype = self.get_default_dtype(
                 structured=self.parent.structured)
-        self.stress_period_data = MfList(self, stress_period_data)
+
+        # determine if any aux variables in dtype
+        dt = self.get_default_dtype(structured=self.parent.structured)
+        if len(self.dtype.names) > len(dt.names):
+            for name in self.dtype.names[len(dt.names):]:
+                ladd = True
+                for option in options:
+                    if name.lower() in option.lower():
+                        ladd = False
+                        break
+                if ladd:
+                    options.append('aux {} '.format(name))
+
+        # add options
+        self.options = options
+
+        # initialize MfList
+        self.stress_period_data = MfList(self, stress_period_data,
+                                         binary=binary)
+
+        self.parent.add_package(self)
 
     def ncells(self):
         # Returns the  maximum number of cells that have a well
@@ -222,7 +243,7 @@ class ModflowWel(Package):
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recaray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowWel.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
