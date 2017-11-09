@@ -169,6 +169,16 @@ def test_build_usg():
     return
 
 
+def test_build_mf6():
+    starget = 'MODFLOW6'
+    exe_name = 'mf6'
+    dirname = 'mf6.0.1'
+    url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
+
+    build_target(starget, exe_name, url, dirname, include_subdirs=True)
+    return
+
+
 def test_build_lgr():
     starget = 'MODFLOW-LGR'
     exe_name = 'mflgr'
@@ -334,7 +344,7 @@ def set_compiler(starget):
 
 def build_target(starget, exe_name, url, dirname, srcname='src',
                  replace_function=None, verify=True, keep=True,
-                 dble=dbleprec):
+                 dble=dbleprec, include_subdirs=False):
     print('Determining if {} needs to be built'.format(starget))
     if platform.system().lower() == 'windows':
         exe_name += '.exe'
@@ -372,7 +382,8 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     # compile code
     print('compiling...{}'.format(os.path.relpath(target)))
     pymake.main(srcdir, target, fct, cct, makeclean=True,
-                expedite=False, dryrun=False, double=dble, debug=False)
+                expedite=False, dryrun=False, double=dble, debug=False,
+                include_subdirs=include_subdirs)
 
     # change back to original path
     os.chdir(cpth)
@@ -390,9 +401,10 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
 
 if __name__ == '__main__':
     test_setup()
+    test_build_mf6()
     # test_build_modflow()
-    test_build_mfnwt()
+    #test_build_mfnwt()
     # test_build_usg()
     # test_build_mt3dms()
     # test_build_seawat()
-    test_build_gridgen()
+    #test_build_gridgen()
