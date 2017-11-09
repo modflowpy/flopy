@@ -230,3 +230,33 @@ def shapefile_to_cvfd(shp, **kwargs):
     return verts, iverts
 
 
+def shapefile_to_xcyc(shp):
+    """
+
+    Get cell centroid coordinates
+
+    Parameters
+    ----------
+    shp : string
+        Name of shape file
+
+    Returns
+    -------
+    xcyc : ndarray
+        x, y coordinates of all polygons in shp
+
+    """
+    import shapefile
+    print('Translating shapefile ({}) into cell centroids'.format(shp))
+    sf = shapefile.Reader(shp)
+    shapes = sf.shapes()
+    ncells = len(shapes)
+    xcyc = np.empty((ncells, 2), dtype=np.float)
+    for icell, shape in enumerate(shapes):
+        points = shape.points
+        xc, yc = centroid_of_polygon(points)
+        xcyc[icell, 0] = xc
+        xcyc[icell, 1] = yc
+    return xcyc
+
+
