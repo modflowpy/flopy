@@ -25,9 +25,6 @@ __author__ = 'Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy Whit
 from .version import __version__, __build__
 
 #imports
-from . import modflow
-from . import utils
-from . import plot
 from .data import mfdatascalar, mfdatalist, mfdataarray
 from .mfsimulation import MFSimulation
 from .mfmodel import MFModel
