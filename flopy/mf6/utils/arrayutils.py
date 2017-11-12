@@ -1,6 +1,5 @@
 # package containing array reshaping utilities to assist in plotting and creating shapefiles.
 import numpy as np
-import pandas as pd
 # from flopy6.modflow.mfdata import MFArray, MFList, MFScalar
 # todo: set a single import statement for MFArray, etc. after input is finished
 # from flopy6.utils.StructTestData.StructDataTest import MFArray, MFScalar, MFList, MFTransientArray, MFTransientList
@@ -490,6 +489,11 @@ class AdvancedPackageUtil(object):
                            packages
 
         """
+        try:
+            import pandas as pd
+        except Exception as e:
+            print("this feature requires pandas")
+            return None
         keyarray = pd.DataFrame.from_records(keyarray)
         x = keyarray.pivot(index=idname, columns='keyword', values='value')
         x = x.rename(columns=lambda x: x.lower())

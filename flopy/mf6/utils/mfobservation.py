@@ -176,7 +176,11 @@ class Observations:
         pd.DataFrame
 
         '''
-        import pandas as pd
+        try:
+            import pandas as pd
+        except Exception as e:
+            print("this feature requires pandas")
+            return None
 
         data_str = self._reader(self.Obsname)
         data = self._array_to_dict(data_str)

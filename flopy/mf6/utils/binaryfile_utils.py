@@ -1,6 +1,5 @@
 import os
 import numpy as np
-import pandas as pd
 import flopy.utils.binaryfile as bf
 
 
@@ -207,6 +206,13 @@ class MFOutputRequester:
         topv: (n x nlayers) dimensional Pandas object of cell top elevations coresponding to a row column location
         botmv: (n x nlayers) dimensional Pandas object of cell bottom elevations coresponding to a row column location
         """
+
+        try:
+            import pandas as pd
+        except Exception as e:
+            print("this feature requires pandas")
+            return None
+
         mname = key[0]
         cellid = mfdict[(mname, 'DISV8', 'CELL2D', 'cell2d_num')]
 
