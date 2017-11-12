@@ -1,0 +1,176 @@
+# --------------------- gwf rcha options ---------------------
+
+block options
+name readasarrays
+type keyword
+shape
+reader urword
+optional false
+longname use array-based input
+description indicates that array-based input will be used for the Recharge Package.  This keyword must be specified to use array-based input.
+
+block options
+name fixed_cell
+type keyword
+shape
+reader urword
+optional true
+longname if cell is dry do not apply recharge to underlying cell
+description indicates that recharge will not be reassigned to a cell underlying the cell specified in the list if the specified cell is inactive.
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname keyword to specify aux variables
+description REPLACE auxnames {'{#1}': 'Groundwater Flow'}
+
+block options
+name auxmultname
+type string
+shape
+reader urword
+optional true
+longname name of auxiliary variable for multiplier
+description REPLACE auxmultname {'{#1}': 'recharge'}
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'recharge'}
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print recharge rates to listing file
+description REPLACE print_flows {'{#1}': 'recharge'}
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save CHD flows to budget file
+description REPLACE save_flows {'{#1}': 'recharge'}
+
+block options
+name tas_filerecord
+type record tas6 filein tas6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name tas6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname head keyword
+description keyword to specify that record corresponds to a time-array-series file.
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name tas6_filename
+type string
+in_record true
+reader urword
+optional false
+tagged false
+longname file name of time series information
+description defines a time-array-series file defining a time-array series that can be used to assign time-varying values. See the Time-Variable Input section for instructions on using the time-array series capability.
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name obs6_filename
+type string
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description REPLACE obs6_filename {'{#1}': 'Recharge'}
+
+
+# --------------------- gwf rcha period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name irch
+type integer
+shape (ncol*nrow; ncpl)
+reader readarray
+optional true
+longname layer number for recharge
+description \texttt{irch} is the layer number that defines the layer in each vertical column where recharge is applied. If \texttt{irch} is omitted, recharge by default is applied to cells in layer 1.  \texttt{irch} can only be used if READASARRAYS is specified in the OPTIONS block.
+
+block period
+name recharge
+type double precision
+shape (ncol*nrow; ncpl)
+reader readarray
+longname recharge rate
+description is the recharge flux rate ($LT^{-1}$).  This rate is multiplied inside the program by the surface area of the cell to calculate the volumetric recharge rate. The recharge array may be defined by a time-array series (see the "Using Time-Array Series in a Package" section).
+
+block period
+name aux
+type double precision
+shape (ncol*nrow; ncpl)
+reader readarray
+optional true
+longname auxiliary variable iaux
+description is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  A separate array can be specified for each auxiliary variable.  If an array is not specified for an auxiliary variable, then a value of zero is assigned.  If the value specified here for the auxiliary variable is the same as auxmultname, then the recharge array will be multiplied by this array.

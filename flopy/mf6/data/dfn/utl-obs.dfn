@@ -1,0 +1,121 @@
+# --------------------- gwf obs options ---------------------
+
+block options
+name precision
+type double precision
+shape
+reader urword
+optional true
+longname
+description Keyword and precision specifier for output of binary data, which can be either SINGLE or DOUBLE. The default is DOUBLE. When simulated values are written to a file specified as file type DATA(BINARY) in the Name File, the precision specifier controls whether the data (including simulated values and, for continuous observations, time values) are written as single- or double-precision.
+
+block options
+name digits
+type integer
+shape
+reader urword
+optional true
+longname
+description Keyword and an integer digits specifier used for conversion of simulated values to text on output. The default is 5 digits. When simulated values are written to a file specified as file type DATA in the Name File, the digits specifier controls the number of significant digits with which simulated values are written to the output file. The digits specifier has no effect on the number of significant digits with which the simulation time is written for continuous observations.
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname print input to listing file
+description REPLACE print_input {'{#1}': 'observation'}
+
+# --------------------- gwf obs continuous ---------------------
+
+block continuous
+name obsblockrec
+type record fileout obs_output_file_name binary
+shape
+block_variable true
+in_record = false
+reader urword
+optional false
+longname
+description
+
+block continuous
+name fileout
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an output filename is expected next.
+
+block continuous
+name obs_output_file_name
+type string
+in_record true
+shape
+tagged false
+reader urword
+longname
+description Name of a file to which simulated values corresponding to observations in the block are to be written. The file name can be an absolute or relative path name. A unique output file must be specified for each SINGLE or CONTINUOUS block. If the ``BINARY'' option is used, output is written in binary form. By convention, text output files have the extension ``csv'' (for ``Comma-Separated Values'') and binary output files have the extension ``bsv'' (for ``Binary Simulated Values'').
+
+block continuous
+name binary
+type keyword
+in_record true
+shape
+reader urword
+optional true
+longname
+description an optional keyword used to indicate that the output file should be written in binary (unformatted) form.
+
+block continuous
+name continuousrecarray
+type recarray obsname obstype id id2
+shape
+reader urword
+optional false
+longname
+description
+
+block continuous
+name obsname
+type string
+shape
+tagged false
+in_record true
+reader urword
+longname observation name
+description string of 1 to 40 nonblank characters used to identify the observation. The identifier need not be unique; however, identification and post-processing of observations in the output files are facilitated if each observation is given a unique name.
+
+block continuous
+name obstype
+type string
+shape
+tagged false
+in_record true
+reader urword
+longname observation type
+description a string of characters used to identify the observation type.
+
+block continuous
+name id
+type string
+shape
+tagged false
+in_record true
+reader urword
+longname time
+description Text identifying cell where observation is located. For packages other than NPF, if boundary names are defined in the corresponding package input file, ID can be a boundary name. Otherwise ID is a cellid. If the model discretization is type DIS, cellid is three integers (layer, row, column). If the discretization is DISV, cellid is two integers (layer, cell number). If the discretization is DISU, cellid is one integer (node number).
+
+block continuous
+name id2
+type string
+shape
+tagged false
+in_record true
+reader urword
+optional true
+longname time
+description Text identifying cell adjacent to cell identified by ID. The form of ID2 is as described for ID. ID2 is used for intercell-flow observations of a GWF model, for three observation types of the LAK Package, for two observation types of the MAW Package, and one observation type of the UZF Package.

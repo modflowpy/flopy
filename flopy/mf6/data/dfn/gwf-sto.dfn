@@ -1,0 +1,96 @@
+# --------------------- gwf sto options ---------------------
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname keyword to save NPF flows
+description keyword to indicate that cell-by-cell flow terms will be written to the file specified with ``BUDGET SAVE FILE'' in Output Control.
+
+block options
+name storagecoefficient
+type keyword
+reader urword
+optional true
+longname keyword to indicate SS is read as storage coefficient
+description keyword to indicate that the \texttt{ss} array is read as storage coefficient rather than specific storage.
+
+block options
+name no_newton
+type keyword
+shape
+reader urword
+optional true
+longname
+description REPLACE no_newton {'{#1}': 'Storage'}
+
+
+# --------------------- gwf sto griddata ---------------------
+
+block griddata
+name iconvert
+type integer
+shape (nodes)
+valid
+reader readarray
+optional false
+longname convertible indicator
+description is a flag for each cell that specifies whether or not a cell is convertible for the storage calculation.  0 indicates confined storage is used. $>$0 indicates confined storage is used when head is above cell top and unconfined storage is used when head is below cell top.  A mixed formulation is when when a cell converts from confined to unconfined (or vice versa) during a single time step.
+
+block griddata
+name ss
+type double precision
+shape (nodes)
+valid
+reader readarray
+optional false
+longname specific storage
+description is specific storage (or the storage coefficient if STORAGECOEFFICIENT is specified as an option).
+
+block griddata
+name sy
+type double precision
+shape (nodes)
+valid
+reader readarray
+optional false
+longname specific yield
+description is specific yield.
+
+
+# --------------------- gwf sto period ---------------------
+
+block period
+name iper
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+valid
+reader urword
+optional false
+longname stress period number
+description REPLACE iper {}
+
+block period
+name steady-state
+type keyword
+shape
+valid
+reader urword
+optional true
+longname steady state indicator
+description keyword to indicate that stress-period \texttt{iper} is steady-state. Steady-state conditions will apply until the \texttt{TRANSIENT} keyword is specified in a subsequent \texttt{BEGIN PERIOD} block.
+
+block period
+name transient
+type keyword
+shape
+valid
+reader urword
+optional true
+longname transient indicator
+description keyword to indicate that stress-period \texttt{iper} is transient. Transient conditions will apply until the \texttt{STEADY-STATE} keyword is specified in a subsequent \texttt{BEGIN PERIOD} block.
+
