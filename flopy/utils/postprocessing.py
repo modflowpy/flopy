@@ -89,6 +89,14 @@ def get_transmissivities(heads, m,
 
     # compute thickness of open interval in each layer
     thick = openinvtop - openinvbotm
+
+    # assign open intervals above or below model to closest cell in column
+    not_in_layer = np.sum(thick < 0, axis=0)
+    not_in_any_layer = not_in_layer == thick.shape[0]
+    for i, n in enumerate(not_in_any_layer):
+        if n:
+            closest = np.argmax(thick[:, i])
+            thick[closest, i] = 1.
     thick[thick < 0] = 0
     thick[heads == nodata] = 0  # exclude nodata cells
 
