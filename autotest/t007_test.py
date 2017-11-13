@@ -674,6 +674,16 @@ def test_get_vertices():
     a2 = np.array(m.sr.get_vertices(i, j))
     assert np.array_equal(a1, a2)
 
+def test_get_rc_from_node_coordinates():
+    m = flopy.modflow.Modflow(rotation=20.)
+    nrow, ncol = 10, 10
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=nrow, ncol=ncol,
+                                   delr=100.,
+                                   delc=100., top=10, botm=0)
+    r, c = m.dis.get_rc_from_node_coordinates([50., 110.], [50., 220.])
+    assert np.array_equal(r, np.array([9, 7]))
+    assert np.array_equal(c, np.array([0, 1]))
+
 def test_netcdf_classmethods():
     import os
     import flopy
@@ -830,6 +840,7 @@ if __name__ == '__main__':
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
     #test_freyberg_export()
-    test_export_array()
+    #test_export_array()
     #test_wkt_parse()
+    test_get_rc_from_node_coordinates()
     pass

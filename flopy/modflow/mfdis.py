@@ -424,7 +424,7 @@ class ModflowDis(Package):
         r : row or sequence of rows (zero-based)
         c : column or sequence of columns (zero-based)
         """
-        xn, yn, zn = self.get_node_coordinates()
+        yn, xn, zn = self.get_node_coordinates()
         if np.isscalar(x):
             c = (np.abs(xn - x)).argmin()
             r = (np.abs(yn - y)).argmin()
