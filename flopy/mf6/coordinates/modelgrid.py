@@ -340,7 +340,7 @@ class ModelGrid(object):
         return self.grid_type() == self._grid_type
 
     def get_connections_array(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        if self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return np.arange(1, self.num_connections() + 1, 1, np.int)
         else:
             except_str = 'ERROR: Can not get connections arrays for model "{}" ' \
@@ -349,12 +349,12 @@ class ModelGrid(object):
             raise MFGridException(except_str)
 
     def get_horizontal_cross_section_dim_arrays(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return [np.arange(1, self.num_rows() + 1, 1, np.int),
                     np.arange(1, self.num_columns() + 1, 1, np.int)]
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return [np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             except_str = 'ERROR: Can not get horizontal plane arrays for model "{}" ' \
                          'DISU grid.  DISU grids do not support individual ' \
                          'layers.'.format(self._model_name)
@@ -362,22 +362,22 @@ class ModelGrid(object):
             raise MFGridException(except_str)
 
     def get_model_dim(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return [self.num_layers(), self.num_rows(), self.num_columns()]
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return [self.num_layers(), self.num_cells_per_layer()]
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return [self.num_cells()]
 
     def get_model_dim_arrays(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return [np.arange(1, self.num_layers() + 1, 1, np.int),
                     np.arange(1, self.num_rows() + 1, 1, np.int),
                     np.arange(1, self.num_columns() + 1, 1, np.int)]
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return [np.arange(1, self.num_layers() + 1, 1, np.int),
                     np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return [np.arange(1, self.num_cells() + 1, 1, np.int)]
 
     def get_row_array(self):
@@ -390,30 +390,30 @@ class ModelGrid(object):
         return np.arange(1, self.num_layers() + 1, 1, np.int)
 
     def get_horizontal_cross_section_dim_names(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return ['row', 'column']
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return ['layer_cell_num']
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             except_str = 'ERROR: Can not get layer dimension name for model "{}" DISU grid. ' \
                          ' DISU grids do not support layers.'.format(self._model_name)
             print(except_str)
             raise MFGridException(except_str)
 
     def get_model_dim_names(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return ['layer', 'row', 'column']
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return ['layer', 'layer_cell_num']
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return ['node']
 
     def get_num_spatial_coordinates(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return 3
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return 2
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return 1
 
     def change_grid_spacing(self, spacing_factor):
@@ -423,7 +423,7 @@ class ModelGrid(object):
         self.test = 1
 
     def num_rows(self):
-        if self.grid_type() != modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() != modeldimensions.DiscretizationType.DIS:
             except_str = 'ERROR: Model "{}" does not have rows.  Can not return ' \
                          'number of rows.'.format(self._model_name)
             print(except_str)
@@ -432,7 +432,7 @@ class ModelGrid(object):
         return self._simulation_data.mfdata[(self._model_name, 'dis', 'dimensions', 'nrow')].get_data()
 
     def num_columns(self):
-        if self.grid_type() != modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() != modeldimensions.DiscretizationType.DIS:
             except_str = 'ERROR: Model "{}" does not have columns.  Can not return ' \
                          'number of columns.'.format(self._model_name)
             print(except_str)
@@ -441,7 +441,7 @@ class ModelGrid(object):
         return self._simulation_data.mfdata[(self._model_name, 'dis', 'dimensions', 'ncol')].get_data()
 
     def num_connections(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        if self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return self._simulation_data.mfdata[(self._model_name, 'disu', 'dimensions', 'nja')].get_data()
         else:
             except_str = 'ERROR: Can not get number of connections for model "{}" ' \
@@ -450,46 +450,46 @@ class ModelGrid(object):
             raise MFGridException(except_str)
 
     def num_cells_per_layer(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return self.num_rows() * self.num_columns()
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return self._simulation_data.mfdata[(self._model_name, 'disv', 'dimensions', 'ncpl')].get_data()
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             except_str = 'ERROR: Model "{}" is unstructured and does not have a consistant number ' \
                          'of cells per layer.'.format(self._model_name)
             print(except_str)
             raise MFGridException(except_str)
 
     def num_layers(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return self._simulation_data.mfdata[(self._model_name, 'dis', 'dimensions', 'nlay')].get_data()
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return self._simulation_data.mfdata[(self._model_name, 'disv', 'dimensions', 'nlay')].get_data()
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return None
 
     def num_cells(self):
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             return self.num_rows() * self.num_columns() * self.num_layers()
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             return self.num_layers() * self.num_cells_per_layer()
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             return self._simulation_data.mfdata[(self._model_name, 'disu', 'dimensions', 'nodes')].get_data()
 
     def get_all_model_cells(self):
         model_cells = []
-        if self.grid_type() == modeldimensions.DiscritizationType.DIS:
+        if self.grid_type() == modeldimensions.DiscretizationType.DIS:
             for layer in range(0, self.num_layers()):
                 for row in range(0, self.num_rows()):
                     for column in range(0, self.num_columns()):
                         model_cells.append((layer+1, row+1, column+1))
             return model_cells
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISV:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISV:
             for layer in range(0, self.num_layers()):
                 for layer_cellid in range(0, self.num_rows()):
                     model_cells.append((layer+1, layer_cellid+1))
             return model_cells
-        elif self.grid_type() == modeldimensions.DiscritizationType.DISU:
+        elif self.grid_type() == modeldimensions.DiscretizationType.DISU:
             for node in range(0, self.num_cells()):
                 model_cells.append(node+1)
             return model_cells
@@ -522,7 +522,7 @@ class UnstructuredModelGrid(ModelGrid):
     """
     def __init__(self, model_name, simulation_data):
         super(UnstructuredModelGrid, self).__init__(model_name, simulation_data,
-                                                    modeldimensions.DiscritizationType.DISU)
+                                                    modeldimensions.DiscretizationType.DISU)
 
     def __getitem__(self, index):
         return UnstructuredModelCell(index, self._simulation_data, self._model_name)

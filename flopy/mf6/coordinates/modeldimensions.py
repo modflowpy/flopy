@@ -24,9 +24,9 @@ class ModflowDataAxis(Enum):
     elv = 7
 
 
-class DiscritizationType(Enum):
+class DiscretizationType(Enum):
     """
-    Enumeration of discritization types
+    Enumeration of discretization types
     """
     UNDEFINED = 0
     DIS = 1
@@ -314,18 +314,18 @@ class ModelDimensions(object):
         return self._model_grid
 
     def _create_model_grid(self, grid_type):
-        if grid_type == DiscritizationType.DIS:
+        if grid_type == DiscretizationType.DIS:
             self._model_grid = modelgrid.ModelGrid(self.model_name,
-                                                   self.simulation_data, DiscritizationType.DIS)
-        elif grid_type == DiscritizationType.DISV:
+                                                   self.simulation_data, DiscretizationType.DIS)
+        elif grid_type == DiscretizationType.DISV:
             self._model_grid = modelgrid.ModelGrid(self.model_name,
-                                                   self.simulation_data, DiscritizationType.DISV)
-        elif grid_type == DiscritizationType.DISU:
+                                                   self.simulation_data, DiscretizationType.DISV)
+        elif grid_type == DiscretizationType.DISU:
             self._model_grid = modelgrid.UnstructuredModelGrid(self.model_name,
                                                                self.simulation_data)
         else:
             self._model_grid = modelgrid.ModelGrid(self.model_name,
-                                                   self.simulation_data, DiscritizationType.UNDEFINED)
+                                                   self.simulation_data, DiscretizationType.UNDEFINED)
 
     # Returns a shape for a given set of axes
     def get_data_shape(self, structure, data_item=None, data_set_struct=None, data=None, path=None,
@@ -588,17 +588,17 @@ class ModelDimensions(object):
         deconstructed_shape_array = []
         for entry in shape_array:
             if entry == 'ncpl':
-                if self.get_model_grid().grid_type() == DiscritizationType.DIS:
+                if self.get_model_grid().grid_type() == DiscretizationType.DIS:
                     deconstructed_shape_array.append('ncol')
                     deconstructed_shape_array.append('nrow')
                 else:
                     deconstructed_shape_array.append(entry)
             elif entry == 'nodes':
-                if self.get_model_grid().grid_type() == DiscritizationType.DIS:
+                if self.get_model_grid().grid_type() == DiscretizationType.DIS:
                     deconstructed_shape_array.append('ncol')
                     deconstructed_shape_array.append('nrow')
                     deconstructed_shape_array.append('nlay')
-                elif self.get_model_grid().grid_type() == DiscritizationType.DISV:
+                elif self.get_model_grid().grid_type() == DiscretizationType.DISV:
                     deconstructed_shape_array.append('ncpl')
                     deconstructed_shape_array.append('nlay')
                 else:

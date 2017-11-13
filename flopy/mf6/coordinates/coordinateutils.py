@@ -20,13 +20,13 @@ def get_grid_type(simulation_data, model_name):
     package_recarray = simulation_data.mfdata[(model_name, 'nam', 'packages', 'packagerecarray')]
     structure = mfstructure.MFStructure()
     if package_recarray.search_data('dis{}'.format(structure.get_version_string()),0) is not None:
-        return modeldimensions.DiscritizationType.DIS
+        return modeldimensions.DiscretizationType.DIS
     elif package_recarray.search_data('disv{}'.format(structure.get_version_string()),0) is not None:
-        return modeldimensions.DiscritizationType.DISV
+        return modeldimensions.DiscretizationType.DISV
     elif package_recarray.search_data('disu{}'.format(structure.get_version_string()),0) is not None:
-        return modeldimensions.DiscritizationType.DISU
+        return modeldimensions.DiscretizationType.DISU
 
-    return modeldimensions.DiscritizationType.UNDEFINED
+    return modeldimensions.DiscretizationType.UNDEFINED
 
 
 def convert_to_unstruct_jagged_array(unstruct_con_array, iac):

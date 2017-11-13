@@ -77,7 +77,7 @@ class MFArray(mfdata.MFMultiDimVar):
         super(MFArray, self).__init__(sim_data, structure, enable, path, dimensions)
         if self.structure.layered:
             model_grid = self._data_dimensions.get_model_grid()
-            if model_grid.grid_type() == modeldimensions.DiscritizationType.DISU:
+            if model_grid.grid_type() == modeldimensions.DiscretizationType.DISU:
                 self._number_of_layers = 1
             else:
                 self._number_of_layers = model_grid.num_layers()
@@ -156,11 +156,11 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def supports_layered(self):
         model_grid = self._data_dimensions.get_model_grid()
-        return self.structure.layered and model_grid.grid_type() != modeldimensions.DiscritizationType.DISU
+        return self.structure.layered and model_grid.grid_type() != modeldimensions.DiscretizationType.DISU
 
     def set_layered_data(self, layered_data):
         if layered_data is True and self.structure.layered is False:
-            if self._data_dimensions.get_model_grid().grid_type() == modeldimensions.DiscritizationType.DISU:
+            if self._data_dimensions.get_model_grid().grid_type() == modeldimensions.DiscretizationType.DISU:
                 except_str = 'Layered option not available for unstructured grid. {}'.format(self._path)
             else:
                 except_str = 'Data "{}" does not support layered option. {}'.format(self._data_name, self._path)
@@ -172,7 +172,7 @@ class MFArray(mfdata.MFMultiDimVar):
         if self.supports_layered():
             self._get_storage_obj().make_layered()
         else:
-            if self._data_dimensions.get_model_grid().grid_type() == modeldimensions.DiscritizationType.DISU:
+            if self._data_dimensions.get_model_grid().grid_type() == modeldimensions.DiscretizationType.DISU:
                 except_str = 'Layered option not available for unstructured grid. {}'.format(self._path)
             else:
                 except_str = 'Data "{}" does not support layered option. {}'.format(self._data_name, self._path)
@@ -216,7 +216,7 @@ class MFArray(mfdata.MFMultiDimVar):
         super(MFArray, self).load(first_line, file_handle, block_header, pre_data_comments=None)
         if self.structure.layered and self._number_of_layers != self._data_dimensions.get_model_grid().num_layers():
             model_grid = self._data_dimensions.get_model_grid()
-            if model_grid.grid_type() == modeldimensions.DiscritizationType.DISU:
+            if model_grid.grid_type() == modeldimensions.DiscretizationType.DISU:
                 self._number_of_layers = 1
             else:
                 self._number_of_layers = model_grid.num_layers()
