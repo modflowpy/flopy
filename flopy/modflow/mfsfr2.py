@@ -992,6 +992,7 @@ class ModflowSfr2(Package):
         """
         self.reach_data.sort(order=['iseg', 'ireach'])
         self.reset_reaches() # ensure that each segment starts with reach 1
+        self.repair_outsegs() # ensure that all outsegs are segments, outlets, or negative (lakes)
         rd = self.reach_data
         outseg = self.graph
         reach1IDs = dict(zip(rd[rd.ireach == 1].iseg,
@@ -1094,6 +1095,10 @@ class ModflowSfr2(Package):
             all_upsegs[per] = {u: list(set(upsegs[u])) for u in outsegs}
         return all_upsegs
 
+    def repair_outsegs(self):
+        isasegment = np.in1d(self.segment_data[0].outseg, self.segment_data[0].nseg)
+        isasegment = isasegment| (self.segment_data[0].outseg < 0)
+        self.segment_data[0]['outseg'][~isasegment] = 0.
 
     def renumber_segments(self):
         """Renumber segments so that segment numbering is continuous and always increases
