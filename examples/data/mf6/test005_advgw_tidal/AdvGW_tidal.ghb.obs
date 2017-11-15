@@ -1,0 +1,10 @@
+BEGIN OPTIONS
+  DIGITS  10
+  PRINT_INPUT
+END OPTIONS
+
+BEGIN CONTINUOUS  FILEOUT  ghb_flows.csv
+  estuary2  ghb  estuary-l2
+  estuary3  ghb  estuary-l3
+END CONTINUOUS  FILEOUT  ghb_flows.csv
+

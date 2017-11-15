@@ -1,0 +1,19 @@
+BEGIN OPTIONS
+END OPTIONS
+
+BEGIN PACKAGES
+  IC6  advgw_tidal.ic
+  NPF6  advgw_tidal.npf
+  WEL6  advgw_tidal.wel  wel  character limit)
+  RIV6  advgw_tidal.riv  riv
+  RCH6  advgw_tidal_1.rch  rch-zone_1
+  RCH6  advgw_tidal_2.rch  rch-zone_2
+  RCH6  advgw_tidal_3.rch  rch-zone_3
+  OC6  advgw_tidal.oc
+  DIS6  advgw_tidal.dis
+  GHB6  advgw_tidal.ghb  ghb-tidal
+  STO6  advgw_tidal.sto
+  EVT6  advgw_tidal.evt  evt
+  OBS6  advgw_tidal.obs
+END PACKAGES
+

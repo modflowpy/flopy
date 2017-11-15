@@ -1,0 +1,46 @@
+BEGIN OPTIONS
+  BOUNDNAMES
+  PRINT_INPUT
+  PRINT_FLOWS
+  SAVE_FLOWS
+  TS6  FILEIN  tides.ts
+  OBS6  FILEIN  advgw_tidal.ghb.obs
+END OPTIONS
+
+BEGIN DIMENSIONS
+  MAXBOUND  30
+END DIMENSIONS
+
+BEGIN PERIOD  1
+  2 1 10  tides  15.0  estuary-l2
+  2 2 10  tides  15.0  estuary-l2
+  2 3 10  tides  15.0  estuary-l2
+  2 4 10  tides  15.0  estuary-l2
+  2 5 10  tides  15.0  estuary-l2
+  2 6 10  tides  15.0  estuary-l2
+  2 7 10  tides  15.0  estuary-l2
+  2 8 10  tides  15.0  estuary-l2
+  2 9 10  tides  15.0  estuary-l2
+  2 10 10  tides  15.0  estuary-l2
+  2 11 10  tides  15.0  estuary-l2
+  2 12 10  tides  15.0  estuary-l2
+  2 13 10  tides  15.0  estuary-l2
+  2 14 10  tides  15.0  estuary-l2
+  2 15 10  tides  15.0  estuary-l2
+  3 1 10  tides  1500.0  estuary-l3
+  3 2 10  tides  1500.0  estuary-l3
+  3 3 10  tides  1500.0  estuary-l3
+  3 4 10  tides  1500.0  estuary-l3
+  3 5 10  tides  1500.0  estuary-l3
+  3 6 10  tides  1500.0  estuary-l3
+  3 7 10  tides  1500.0  estuary-l3
+  3 8 10  tides  1500.0  estuary-l3
+  3 9 10  tides  1500.0  estuary-l3
+  3 10 10  tides  1500.0  estuary-l3
+  3 11 10  tides  1500.0  estuary-l3
+  3 12 10  tides  1500.0  estuary-l3
+  3 13 10  tides  1500.0  estuary-l3
+  3 14 10  tides  1500.0  estuary-l3
+  3 15 10  tides  1500.0  estuary-l3
+END PERIOD  1
+

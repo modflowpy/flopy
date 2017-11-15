@@ -1,0 +1,12 @@
+# obsname        type  time  lay  row  col
+  rv1-3-1        RIV   25.0   1    3    1
+  rv1-4-2        RIV   25.0   1    4    2
+  rv1-5-3        RIV   25.0   1    5    3
+  rv1-5-4        RIV   25.0   1    5    4
+  rv1-6-5        RIV   25.0   1    6    5
+  rv1-c6         RIV   25.0   riv1_c6     # river flow at river boundary "riv1_c6"
+  rv1-c7         RIV   25.0   riv1_c7     # river flow at river boundary "riv1_c7"
+  rv2-upper      RIV   25.0   riv2_upper  # sum of river flows at boundaries named "riv2_upper"
+  rv2-7-4        RIV   25.0   1    7    4
+  rv2-8-5        RIV   25.0   1    7    5
+  rv2-9-6        RIV   25.0   1    6    6
