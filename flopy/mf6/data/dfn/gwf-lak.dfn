@@ -74,6 +74,7 @@ description keyword to specify that record corresponds to stage.
 block options
 name stagefile
 type string
+preserve_case true
 shape
 in_record true
 reader urword
@@ -117,6 +118,7 @@ description keyword to specify that an output filename is expected next.
 block options
 name budgetfile
 type string
+preserve_case true
 shape
 in_record true
 reader urword
@@ -160,6 +162,7 @@ description keyword to specify that an input filename is expected next.
 block options
 name ts6_filename
 type string
+preserve_case true
 in_record true
 reader urword
 optional false
@@ -191,6 +194,7 @@ description keyword to specify that record corresponds to an observations file.
 block options
 name obs6_filename
 type string
+preserve_case true
 in_record true
 tagged false
 reader urword
@@ -206,15 +210,6 @@ reader urword
 optional true
 longname
 description REPLACE mover {'{#1}': 'LAK'}
-
-block options
-name no_newton
-type keyword
-shape
-reader urword
-optional true
-longname
-description REPLACE no_newton {'{#1}': 'Lake'}
 
 block options
 name surfdep
@@ -390,7 +385,7 @@ tagged false
 in_record true
 reader urword
 longname bed leakance
-description real value that defines the bed leakance for the lake-\texttt{GWF} connection. \texttt{bedk} must be greater than or equal to zero.
+description character string or real value that defines the bed leakance for the lake-\texttt{GWF} connection. \texttt{bedleak} must be greater than or equal to zero or specified to be \texttt{none}. If \texttt{bedleak} is specified to be \texttt{none}, the lake-\texttt{GWF} connection conductance is solely a function of aquifer properties in the connected \texttt{GWF} cell and lakebed sediments are assumed to be absent.
 
 block connectiondata
 name belev
@@ -478,6 +473,7 @@ description keyword to specify that an input filename is expected next.
 block tables
 name tab6_filename
 type string
+preserve_case true
 in_record true
 reader urword
 optional false

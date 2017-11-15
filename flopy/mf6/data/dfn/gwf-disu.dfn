@@ -142,7 +142,7 @@ optional true
 shape (nja)
 reader readarray
 longname angle of face normal to connection
-description is the angle (in degrees) between the horizontal x-axis and the outward normal to the face between a cell and its connecting cells (see figure 8 in the MODFLOW-USG documentation). The angle varies between zero and 360.0.  \texttt{angldegx} is only needed if horizontal anisotropy is specified in the NPF Package.  \texttt{angldegx} does not need to be specified if horizontal anisotropy is not used.  \texttt{angldegx} is of size nja; values specified for vertical connections and for the diagonal position are not used.  Note that \texttt{angldegx} is read in degrees, which is different from MODFLOW-USG, which reads a similar variable (anglex) in radians.
+description is the angle (in degrees) between the horizontal x-axis and the outward normal to the face between a cell and its connecting cells (see figure 8 in the MODFLOW-USG documentation). The angle varies between zero and 360.0 degrees.  \texttt{angldegx} is only needed if horizontal anisotropy is specified in the NPF Package or if the XT3D option is used in the NPF Package.  \texttt{angldegx} does not need to be specified if horizontal anisotropy or the XT3D option is not used.  \texttt{angldegx} is of size nja; values specified for vertical connections and for the diagonal position are not used.  Note that \texttt{angldegx} is read in degrees, which is different from MODFLOW-USG, which reads a similar variable (anglex) in radians.
 
 # --------------------- gwf disu vertices ---------------------
 

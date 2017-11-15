@@ -59,6 +59,7 @@ description keyword to specify that an output filename is expected next.
 block options
 name budgetfile
 type string
+preserve_case true
 shape
 in_record true
 reader urword

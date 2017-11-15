@@ -35,6 +35,7 @@ description keyword to specify that an output filename is expected next.
 block options
 name budgetfile
 type string
+preserve_case true
 shape
 in_record true
 reader urword
@@ -67,6 +68,7 @@ description keyword to specify that record corresponds to head.
 block options
 name headfile
 type string
+preserve_case true
 shape
 in_record true
 reader urword
@@ -269,7 +271,7 @@ description save at the specified time step frequency. This keyword may be used 
 block period
 name steps
 type integer
-shape (<nstp)
+shape (nstp)
 tagged true
 in_record true
 reader urword

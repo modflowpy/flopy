@@ -85,6 +85,7 @@ description keyword to specify that an output filename is expected next.
 
 block options
 name budgetfile
+preserve_case true
 type string
 shape
 in_record true
@@ -129,6 +130,7 @@ description keyword to specify that an input filename is expected next.
 block options
 name ts6_filename
 type string
+preserve_case true
 in_record true
 reader urword
 optional false
@@ -160,6 +162,7 @@ description keyword to specify that record corresponds to an observations file.
 block options
 name obs6_filename
 type string
+preserve_case true
 in_record true
 tagged false
 reader urword
@@ -175,15 +178,6 @@ reader urword
 optional true
 longname
 description REPLACE mover {'{#1}': 'UZF'}
-
-block options
-name no_newton
-type keyword
-shape
-reader urword
-optional true
-longname
-description REPLACE no_newton {'{#1}': 'UZF'}
 
 block options
 name simulate_et

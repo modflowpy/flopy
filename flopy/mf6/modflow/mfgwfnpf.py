@@ -37,10 +37,10 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         ihdwet : is a keyword and integer flag that determines which equation is used to define the initial head at cells that become wet. If ihdwet is 0, $h = BOT + WETFCT (hm - BOT)$. If ihdwet is not 0, $h = BOT + WETFCT (THRESH)$.
     xt3doptions : [(xt3d : keyword), (rhs : keyword)]
         none
-        xt3d : keyword indicating that the XT3D formulation will be used. If the RHS keyword is also included, then the XT3D additional terms will be added to the right-hand side. If the RHS keyword is excluded, then the XT3D terms will be put into the coefficient matrix. Use of XT3D will substantially increase the computational effort, but will result in improved accuracy for anisotropic conductivity fields and for unstructured grids in which the CVFD requirement is violated.
+        xt3d : keyword indicating that the XT3D formulation will be used. If the RHS keyword is also included, then the XT3D additional terms will be added to the right-hand side. If the RHS keyword is excluded, then the XT3D terms will be put into the coefficient matrix. Use of XT3D will substantially increase the computational effort, but will result in improved accuracy for anisotropic conductivity fields and for unstructured grids in which the CVFD requirement is violated. XT3D requires additional information about the shapes of grid cells. If XT3D is active and the DISU Package is used, then the user will need to provide in the DISU Package the angldegx array in the CONNECTIONDATA block and the VERTICES and CELL2D blocks.
         rhs : If the RHS keyword is also included, then the XT3D additional terms will be added to the right-hand side. If the RHS keyword is excluded, then the XT3D terms will be put into the coefficient matrix.
-    no_newton : (no_newton : keyword)
-        keyword that deactivates the Newton-Raphson formulation for the Node Property Flow Package.
+    save_specific_discharge : (save_specific_discharge : keyword)
+        keyword to indicate that x, y, and z components of specific discharge will be calculated at cell centers and written to the cell-by-cell flow file, which is specified with ``BUDGET SAVE FILE'' in Output Control.
     icelltype : [(icelltype : integer)]
         flag for each cell that specifies how saturated thickness is treated. 0 means saturated thickness is held constant; $>$0 means saturated thickness varies with computed head when head is below the cell top; $<$0 means saturated thickness varies with computed head unless the THICKSTRT option is in effect. When THICKSTRT is in effect, a negative value of icelltype indicates that saturated thickness will be computed as STRT-BOT and held constant.
     k : [(k : double)]
@@ -61,8 +61,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     """
     def __init__(self, model, add_to_package_list=True, save_flows=None, alternative_cell_averaging=None,
                  thickstrt=None, cvoptions=None, perched=None, rewet_record=None, xt3doptions=None,
-                 no_newton=None, icelltype=None, k=None, k22=None, k33=None, angle1=None, angle2=None,
-                 angle3=None, wetdry=None, fname=None, pname=None, parent_file=None):
+                 save_specific_discharge=None, icelltype=None, k=None, k22=None, k33=None,
+                 angle1=None, angle2=None, angle3=None, wetdry=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowGwfnpf, self).__init__(model, "npf", fname, pname, add_to_package_list, parent_file)        
 
         # set up variables
@@ -80,7 +81,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
 
         self.xt3doptions = self.build_mfdata("xt3doptions", xt3doptions)
 
-        self.no_newton = self.build_mfdata("no_newton", no_newton)
+        self.save_specific_discharge = self.build_mfdata("save_specific_discharge", save_specific_discharge)
 
         self.icelltype = self.build_mfdata("icelltype", icelltype)
 

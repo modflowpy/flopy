@@ -30,6 +30,7 @@ description is a flag that controls printing of detailed memory manager usage to
 
 block timing
 name tdis6
+preserve_case true
 type string
 reader urword
 optional
@@ -60,6 +61,7 @@ block models
 name mfname
 in_record true
 type string
+preserve_case true
 tagged false
 reader urword
 longname file name for model name file
@@ -98,6 +100,7 @@ block exchanges
 name exgfile
 in_record true
 type string
+preserve_case true
 tagged false
 reader urword
 longname input file for exchange
@@ -163,6 +166,7 @@ description is the type of solution.  The Integrated Model Solution (IMS6) is th
 block solutiongroup
 name slnfname
 type string
+preserve_case true
 in_record true
 tagged false
 reader urword

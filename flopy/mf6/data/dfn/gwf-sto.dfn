@@ -16,16 +16,6 @@ optional true
 longname keyword to indicate SS is read as storage coefficient
 description keyword to indicate that the \texttt{ss} array is read as storage coefficient rather than specific storage.
 
-block options
-name no_newton
-type keyword
-shape
-reader urword
-optional true
-longname
-description REPLACE no_newton {'{#1}': 'Storage'}
-
-
 # --------------------- gwf sto griddata ---------------------
 
 block griddata

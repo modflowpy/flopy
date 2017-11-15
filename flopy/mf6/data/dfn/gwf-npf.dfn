@@ -116,7 +116,7 @@ in_record true
 type keyword
 reader urword
 longname keyword to activate XT3D
-description keyword indicating that the XT3D formulation will be used.  If the \texttt{RHS} keyword is also included, then the XT3D additional terms will be added to the right-hand side.  If the \texttt{RHS} keyword is excluded, then the XT3D terms will be put into the coefficient matrix.  Use of XT3D will substantially increase the computational effort, but will result in improved accuracy for anisotropic conductivity fields and for unstructured grids in which the CVFD requirement is violated.
+description keyword indicating that the XT3D formulation will be used.  If the \texttt{RHS} keyword is also included, then the XT3D additional terms will be added to the right-hand side.  If the \texttt{RHS} keyword is excluded, then the XT3D terms will be put into the coefficient matrix.  Use of XT3D will substantially increase the computational effort, but will result in improved accuracy for anisotropic conductivity fields and for unstructured grids in which the CVFD requirement is violated.  XT3D requires additional information about the shapes of grid cells.  If XT3D is active and the DISU Package is used, then the user will need to provide in the DISU Package the \texttt{angldegx} array in the CONNECTIONDATA block and the VERTICES and CELL2D blocks.
 
 block options
 name rhs
@@ -128,13 +128,12 @@ longname keyword to XT3D on right hand side
 description If the \texttt{RHS} keyword is also included, then the XT3D additional terms will be added to the right-hand side.  If the \texttt{RHS} keyword is excluded, then the XT3D terms will be put into the coefficient matrix.
 
 block options
-name no_newton
+name save_specific_discharge
 type keyword
-shape
 reader urword
 optional true
-longname
-description REPLACE no_newton {'{#1}': 'Node Property Flow'}
+longname keyword to save specific discharge
+description keyword to indicate that x, y, and z components of specific discharge will be calculated at cell centers and written to the cell-by-cell flow file, which is specified with ``BUDGET SAVE FILE'' in Output Control.
 
 
 # --------------------- gwf npf griddata ---------------------

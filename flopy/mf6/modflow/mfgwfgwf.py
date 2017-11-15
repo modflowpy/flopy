@@ -21,7 +21,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     exgmnameb : <string>
         is the name of the second model that is part of this exchange.
     auxiliary : [(auxiliary : string)]
-        an array of auxiliary variable names. There is no limit on the number of auxiliary variables that can be provided. Most auxiliary variables will not be used by the GWF-GWF Exchange, but they will be available for use by other parts of the program. If an auxiliary variable with the name ``ANGLDEGX'' is found, then this information will be used as the angle (provided in degrees) between the connection face normal and the x axis. Additional information on ``ANGLDEGX'' is provided in the description of the DISU Package.
+        an array of auxiliary variable names. There is no limit on the number of auxiliary variables that can be provided. Most auxiliary variables will not be used by the GWF-GWF Exchange, but they will be available for use by other parts of the program. If an auxiliary variable with the name ``ANGLDEGX'' is found, then this information will be used as the angle (provided in degrees) between the connection face normal and the x axis. Additional information on ``ANGLDEGX'' is provided in the description of the DISU Package. If an auxiliary variable with the name ``CDIST'' is found, then this information will be used as the straight-line connection distance between the two cell centers. CDIST is required if specific discharge is calculated for either of the groundwater models.
     print_input : (print_input : keyword)
         keyword to indicate that the list of exchange entries will be echoed to the listing file immediately after it is read.
     print_flows : (print_flows : keyword)

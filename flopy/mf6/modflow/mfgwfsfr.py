@@ -48,8 +48,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         obs6_filename : name of input file to define observations for the SFR package. See the ``Observation utility'' section for instructions for preparing observation input files. Table obstype lists observation type(s) supported by the SFR package.
     mover : (mover : keyword)
         keyword to indicate that this instance of the SFR Package can be used with the Water Mover (MVR) Package. When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
-    no_newton : (no_newton : keyword)
-        keyword that deactivates the Newton-Raphson formulation for the SFR Package.
     maximum_iterations : (maximum_iterations : double)
         value that defines an maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, maxsfrit is equal to 100.
     maximum_depth_change : (maximum_depth_change : double)
@@ -99,11 +97,10 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     def __init__(self, model, add_to_package_list=True, auxiliary=None, boundnames=None, print_input=None,
                  print_stage=None, print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, ts_filerecord=None, obs_filerecord=None, mover=None,
-                 no_newton=None, maximum_iterations=None, maximum_depth_change=None,
-                 unit_conversion=None, nreaches=None, sfrrecarray=None,
-                 reach_connectivityrecarray=None, reach_diversionsrecarray=None,
-                 reachperiodrecarray=None, diversion=None, idv=None, divrate=None, auxname=None,
-                 auxval=None, fname=None, pname=None, parent_file=None):
+                 maximum_iterations=None, maximum_depth_change=None, unit_conversion=None,
+                 nreaches=None, sfrrecarray=None, reach_connectivityrecarray=None,
+                 reach_diversionsrecarray=None, reachperiodrecarray=None, diversion=None, idv=None,
+                 divrate=None, auxname=None, auxval=None, fname=None, pname=None, parent_file=None):
         super(ModflowGwfsfr, self).__init__(model, "sfr", fname, pname, add_to_package_list, parent_file)        
 
         # set up variables
@@ -128,8 +125,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         self.obs_filerecord = self.build_mfdata("obs_filerecord", obs_filerecord)
 
         self.mover = self.build_mfdata("mover", mover)
-
-        self.no_newton = self.build_mfdata("no_newton", no_newton)
 
         self.maximum_iterations = self.build_mfdata("maximum_iterations", maximum_iterations)
 

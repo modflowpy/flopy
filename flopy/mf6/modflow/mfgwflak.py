@@ -50,8 +50,6 @@ class ModflowGwflak(mfpackage.MFPackage):
         obs6_filename : name of input file to define observations for the LAK package. See the ``Observation utility'' section for instructions for preparing observation input files. Table obstype lists observation type(s) supported by the LAK package.
     mover : (mover : keyword)
         keyword to indicate that this instance of the LAK Package can be used with the Water Mover (MVR) Package. When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
-    no_newton : (no_newton : keyword)
-        keyword that deactivates the Newton-Raphson formulation for the Lake Package.
     surfdep : (surfdep : double)
         real value that defines the surface depression depth for VERTICAL lake-GWF connections. If specified, surfdep must be greater than or equal to zero. If SURFDEP is not specified, a default value of zero is used for all vertical lake-GWF connections.
     time_conversion : (time_conversion : double)
@@ -75,7 +73,7 @@ class ModflowGwflak(mfpackage.MFPackage):
         iconn : integer value that defines the GWF connection number for this lake connection entry. iconn must be greater than zero and less than or equal to nlakeconn for lake lakeno.
         cellid : is the cell identifier, and depends on the type of grid that is used for the simulation. For a structured grid that uses the DIS input file, cellid is the layer, row, and column. For a grid that uses the DISV input file, cellid is the layer and cell2d number. If the model uses the unstructured discretization (DISU) input file, then cellid is the node number for the cell.
         claktype : character string that defines the lake-GWF connection type for the lake connection. Possible lake-GWF connection type strings include: VERTICAL--character keyword to indicate the lake-GWF connection is vertical and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33$ tensor component defined for cellid in the NPF package. HORIZONTAL--character keyword to indicate the lake-GWF connection is horizontal and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11$ tensor component defined for cellid in the NPF package. EMBEDDEDH--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11$ tensor component defined for cellid in the NPF package. EMBEDDEDV--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33$ tensor component defined for cellid in the NPF package. Embedded lakes can only be connected to a single cell (nlakconn = 1) and there must be a lake table associated with each embedded lake.
-        bedleak : real value that defines the bed leakance for the lake-GWF connection. bedk must be greater than or equal to zero.
+        bedleak : character string or real value that defines the bed leakance for the lake-GWF connection. bedleak must be greater than or equal to zero or specified to be none. If bedleak is specified to be none, the lake-GWF connection conductance is solely a function of aquifer properties in the connected GWF cell and lakebed sediments are assumed to be absent.
         belev : real value that defines the bottom elevation for a HORIZONTAL lake-GWF connection. Any value can be specified if claktype is VERTICAL, EMBEDDEDH, or EMBEDDEDV. If claktype is HORIZONTAL and belev is not equal to telev, belev must be greater than or equal to the bottom of the GWF cell cellid. If belev is equal to telev, belev is reset to the bottom of the GWF cell cellid.
         telev : real value that defines the top elevation for a HORIZONTAL lake-GWF connection. Any value can be specified if claktype is VERTICAL, EMBEDDEDH, or EMBEDDEDV. If claktype is HORIZONTAL and telev is not equal to belev, telev must be less than or equal to the top of the GWF cell cellid. If telev is equal to belev, telev is reset to the top of the GWF cell cellid.
         connlen : real value that defines the distance between the connected GWF cellid node and the lake for a HORIZONTAL, EMBEDDEDH, or EMBEDDEDV lake-GWF connection. connlen must be greater than zero for a HORIZONTAL, EMBEDDEDH, or EMBEDDEDV lake-GWF connection. Any value can be specified if claktype is VERTICAL.
@@ -111,11 +109,11 @@ class ModflowGwflak(mfpackage.MFPackage):
     def __init__(self, model, add_to_package_list=True, auxiliary=None, boundnames=None, print_input=None,
                  print_stage=None, print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, ts_filerecord=None, obs_filerecord=None, mover=None,
-                 no_newton=None, surfdep=None, time_conversion=None, length_conversion=None,
-                 nlakes=None, noutlets=None, ntables=None, lakrecarray_package=None,
-                 lakrecarray=None, lake_tablesrecarray=None, outletsrecarray=None,
-                 lakeperiodrecarray=None, rate=None, auxname=None, auxval=None,
-                 outletperiodrecarray=None, fname=None, pname=None, parent_file=None):
+                 surfdep=None, time_conversion=None, length_conversion=None, nlakes=None,
+                 noutlets=None, ntables=None, lakrecarray_package=None, lakrecarray=None,
+                 lake_tablesrecarray=None, outletsrecarray=None, lakeperiodrecarray=None, rate=None,
+                 auxname=None, auxval=None, outletperiodrecarray=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowGwflak, self).__init__(model, "lak", fname, pname, add_to_package_list, parent_file)        
 
         # set up variables
@@ -140,8 +138,6 @@ class ModflowGwflak(mfpackage.MFPackage):
         self.obs_filerecord = self.build_mfdata("obs_filerecord", obs_filerecord)
 
         self.mover = self.build_mfdata("mover", mover)
-
-        self.no_newton = self.build_mfdata("no_newton", no_newton)
 
         self.surfdep = self.build_mfdata("surfdep", surfdep)
 

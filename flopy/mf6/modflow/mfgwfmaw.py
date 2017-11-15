@@ -55,8 +55,6 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         obs6_filename : name of input file to define observations for the MAW package. See the ``Observation utility'' section for instructions for preparing observation input files. Table obstype lists observation type(s) supported by the MAW package.
     mover : (mover : keyword)
         keyword to indicate that this instance of the MAW Package can be used with the Water Mover (MVR) Package. When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
-    no_newton : (no_newton : keyword)
-        keyword that deactivates the Newton-Raphson formulation for the MAW Package.
     nmawwells : (nmawwells : integer)
         integer value specifying the number of multi-aquifer wells that will be simulated for all stress periods.
     wellrecarray : [(wellno : integer), (radius : double), (bottom : double), (strt : double), (condeqn : string), (ngwfnodes : integer), (aux : double), (boundname : string)]
@@ -107,11 +105,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                  print_head=None, print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, no_well_storage=None, flowing_wells=None,
                  shutdown_theta=None, shutdown_kappa=None, ts_filerecord=None, obs_filerecord=None,
-                 mover=None, no_newton=None, nmawwells=None, wellrecarray=None,
-                 wellconnectionsrecarray=None, wellperiodrecarray=None, flowing_well=None,
-                 fwelev=None, fwcond=None, shut_off=None, minrate=None, maxrate=None,
-                 rate_scaling=None, pump_elevation=None, scaling_length=None, auxname=None,
-                 auxval=None, fname=None, pname=None, parent_file=None):
+                 mover=None, nmawwells=None, wellrecarray=None, wellconnectionsrecarray=None,
+                 wellperiodrecarray=None, flowing_well=None, fwelev=None, fwcond=None, shut_off=None,
+                 minrate=None, maxrate=None, rate_scaling=None, pump_elevation=None,
+                 scaling_length=None, auxname=None, auxval=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowGwfmaw, self).__init__(model, "maw", fname, pname, add_to_package_list, parent_file)        
 
         # set up variables
@@ -144,8 +142,6 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         self.obs_filerecord = self.build_mfdata("obs_filerecord", obs_filerecord)
 
         self.mover = self.build_mfdata("mover", mover)
-
-        self.no_newton = self.build_mfdata("no_newton", no_newton)
 
         self.nmawwells = self.build_mfdata("nmawwells", nmawwells)
 

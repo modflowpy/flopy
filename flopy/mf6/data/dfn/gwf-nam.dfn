@@ -69,7 +69,6 @@ description
 
 block packages
 name ftype
-ucase true
 in_record true
 type string
 tagged false
@@ -81,6 +80,7 @@ block packages
 name fname
 in_record true
 type string
+preserve_case true
 tagged false
 reader urword
 longname file name

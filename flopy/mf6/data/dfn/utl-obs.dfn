@@ -53,6 +53,7 @@ description keyword to specify that an output filename is expected next.
 block continuous
 name obs_output_file_name
 type string
+preserve_case true
 in_record true
 shape
 tagged false
