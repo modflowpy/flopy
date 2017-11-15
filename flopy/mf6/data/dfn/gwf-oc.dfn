@@ -271,7 +271,7 @@ description save at the specified time step frequency. This keyword may be used 
 block period
 name steps
 type integer
-shape (nstp)
+shape (<nstp)
 tagged true
 in_record true
 reader urword
