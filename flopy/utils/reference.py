@@ -1003,10 +1003,17 @@ class SpatialReference(object):
             
         Notes
         -----
-        Rotated grids will be unrotated prior to export to Arc Ascii format,
-        using scipy.ndimage.rotate. As a result, their pixels will no longer 
-        coincide exactly with the model grid.
+        Rotated grids will be either be unrotated prior to export,
+        using scipy.ndimage.rotate (Arc Ascii format) or rotation will be
+        included in their transform property (GeoTiff format). In either case
+        the pixels will be displayed in the (unrotated) projected geographic coordinate system,
+        so the pixels will no longer align exactly with the model grid
+        (as displayed from a shapefile, for example). A key difference between
+        Arc Ascii and GeoTiff (besides disk usage) is that the
+        unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
+        will have the same number of rows and pixels as the original.
         """
+
         if filename.lower().endswith(".asc"):
             if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
                     or self.delr[0] != self.delc[0]:
@@ -1155,6 +1162,7 @@ class SpatialReference(object):
         fig, ax = plt.subplots()
         ctr = self.contour_array(ax, a, levels=levels)
         self.export_contours(filename, ctr, fieldname, **kwargs)
+        plt.close()
 
     def contour_array(self, ax, a, **kwargs):
         """

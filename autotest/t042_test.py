@@ -5,9 +5,7 @@ Test postprocessing utilties
 import sys
 sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import numpy as np
-import matplotlib.pyplot as plt
 import flopy
-import flopy.utils.binaryfile as bf
 from flopy.utils.postprocessing import get_transmissivities, get_water_table, get_gradients, get_saturated_thickness
 
 mf = flopy.modflow
