@@ -4,34 +4,11 @@ modeldimensions module.  Contains the model dimension information
 
 """
 
-from enum import Enum
-from ..coordinates import coordinateutils
-from ..coordinates import simulationtime
-from ..coordinates import modelgrid
-from ..data import mfstructure, mfdatautil
-
-
-class ModflowDataAxis(Enum):
-    """
-    Enumeration of model data axis
-    """
-    time = 1
-    row = 2
-    column = 3
-    layer = 4
-    x_coord = 5
-    y_coord = 6
-    elv = 7
-
-
-class DiscretizationType(Enum):
-    """
-    Enumeration of discretization types
-    """
-    UNDEFINED = 0
-    DIS = 1
-    DISV = 2
-    DISU = 3
+from .simulationtime import SimulationTime
+from .modelgrid import UnstructuredModelGrid, ModelGrid
+from ..data.mfstructure import StructException
+from ..data.mfdatautil import DatumUtil, NameIter
+from ..utils.mfenums import DiscretizationType
 
 
 class DataDimensions(object):
@@ -104,7 +81,7 @@ class DataDimensions(object):
         else:
             assert(len(self.structure.data_item_structures) > data_item_num)
             model_num = self.structure.data_item_structures[data_item_num][-1]
-            if mfdatautil.DatumUtil.is_int(model_num):
+            if DatumUtil.is_int(model_num):
                 return self.package_dim.model_dim[int(model_num)]
 
 
@@ -197,7 +174,7 @@ class PackageDimensions(object):
         if tas_record_path in self.model_dim[model_num].simulation_data.mfdata:
             tas_record_data = self.model_dim[model_num].simulation_data.mfdata[tas_record_path].get_data()
             if tas_record_data is not None:
-                name_iter = mfdatautil.NameIter('tas')
+                name_iter = NameIter('tas')
                 for tas_name in name_iter:
                     tas_names_path = self.package_path + (tas_name,
                                                           'attributes',
@@ -220,7 +197,7 @@ class PackageDimensions(object):
         if ts_record_path in self.model_dim[model_num].simulation_data.mfdata:
             ts_record_data = self.model_dim[model_num].simulation_data.mfdata[ts_record_path].get_data()
             if ts_record_data is not None:
-                name_iter = mfdatautil.NameIter('ts')
+                name_iter = NameIter('ts')
                 for ts_name in name_iter:
                     ts_names_path = self.package_path + (ts_name,
                                                          'attributes',
@@ -285,8 +262,7 @@ class ModelDimensions(object):
         self.model_name = model_name
         self.simulation_data = simulation_data
         self._model_grid = None
-#        self.model_grid = modelgrid.ModelGrid(model_name, simulation_data)
-        self.simulation_time = simulationtime.SimulationTime(simulation_data)
+        self.simulation_time = SimulationTime(simulation_data)
         self.locked = False
         self.stored_shapes = {}
 
@@ -300,7 +276,7 @@ class ModelDimensions(object):
     # returns model grid
     def get_model_grid(self):
         if not self.locked or self._model_grid is None:
-            grid_type = coordinateutils.get_grid_type(self.simulation_data, self.model_name)
+            grid_type = ModelGrid.get_grid_type(self.simulation_data, self.model_name)
             if not self._model_grid:
                 self._create_model_grid(grid_type)
             else:
@@ -315,16 +291,16 @@ class ModelDimensions(object):
 
     def _create_model_grid(self, grid_type):
         if grid_type == DiscretizationType.DIS:
-            self._model_grid = modelgrid.ModelGrid(self.model_name,
+            self._model_grid = ModelGrid(self.model_name,
                                                    self.simulation_data, DiscretizationType.DIS)
         elif grid_type == DiscretizationType.DISV:
-            self._model_grid = modelgrid.ModelGrid(self.model_name,
+            self._model_grid = ModelGrid(self.model_name,
                                                    self.simulation_data, DiscretizationType.DISV)
         elif grid_type == DiscretizationType.DISU:
-            self._model_grid = modelgrid.UnstructuredModelGrid(self.model_name,
+            self._model_grid = UnstructuredModelGrid(self.model_name,
                                                                self.simulation_data)
         else:
-            self._model_grid = modelgrid.ModelGrid(self.model_name,
+            self._model_grid = ModelGrid(self.model_name,
                                                    self.simulation_data, DiscretizationType.UNDEFINED)
 
     # Returns a shape for a given set of axes
@@ -409,7 +385,7 @@ class ModelDimensions(object):
                         shape_dimensions += dim_size
                     else:
                         shape_dimensions.append(self.resolve_exp(item, dim_size))
-                elif item[0].lower() == 'nstp' and mfdatautil.DatumUtil.is_int(repeating_key):
+                elif item[0].lower() == 'nstp' and DatumUtil.is_int(repeating_key):
                     # repeating_key is a stress period.  get number of time steps for that stress period
                     shape_dimensions.append(self.simulation_time.get_sp_time_steps(int(repeating_key)))
                 else:
@@ -429,7 +405,7 @@ class ModelDimensions(object):
                             consistent_shape = False
                             shape_dimensions.append(-9999)
                             shape_dimensions.append(-9999)
-                        elif mfdatautil.DatumUtil.is_int(item[0]):
+                        elif DatumUtil.is_int(item[0]):
                             shape_dimensions.append(int(item[0]))
                         else:
                             # try to resolve dimension within the existing block
@@ -443,12 +419,12 @@ class ModelDimensions(object):
                                     consistent_shape = False
                                 elif result[1] is not None:
                                     # if int return first value otherwise return shape of data stored
-                                    if mfdatautil.DatumUtil.is_int(data[result[1]]):
+                                    if DatumUtil.is_int(data[result[1]]):
                                         shape_dimensions.append(self.resolve_exp(item, int(data)))
                                     else:
                                         shape_dimensions.append(self.resolve_exp(item, len(data[result[1]])))
                                 else:
-                                    if mfdatautil.DatumUtil.is_int(data):
+                                    if DatumUtil.is_int(data):
                                         shape_dimensions.append(self.resolve_exp(item, int(data)))
                                     else:
                                         shape_dimensions.append(self.resolve_exp(item, len(data)))
@@ -469,14 +445,14 @@ class ModelDimensions(object):
 
     def resolve_exp(self, expression, value):
         if len(expression) == 3 and value is not None:
-            if not mfdatautil.DatumUtil.is_int(expression[1]):
+            if not DatumUtil.is_int(expression[1]):
                 # try to resolve the 2nd term in the equation
                 expression[1] = self.dimension_size(expression[1])
                 if expression[1] is None:
                     except_str = 'ERROR: Expression "{}" contains an invalid second term and can not be ' \
                                  'resolved.'.format(expression)
                     print(except_str)
-                    raise mfstructure.StructException(except_str, '')
+                    raise StructException(except_str, '')
 
             if expression[2] == '+':
                 return value + int(expression[1])
@@ -490,7 +466,7 @@ class ModelDimensions(object):
                 except_str = 'ERROR: Expression "{}" contains an invalid operator and can not be ' \
                              'resolved.'.format(expression)
                 print(except_str)
-                raise mfstructure.StructException(except_str, '')
+                raise StructException(except_str, '')
         else:
             return value
 

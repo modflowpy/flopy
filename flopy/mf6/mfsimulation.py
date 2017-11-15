@@ -3,6 +3,7 @@ mfsimulation module.  contains the MFSimulation class
 
 
 """
+import errno
 import collections
 import os.path
 import flopy.mbase
@@ -300,9 +301,10 @@ class MFSimulation(PackageContainer):
         # try to build directory structure
         try:
             os.makedirs(self.simulation_data.mfpath.get_sim_path())
-        except FileExistsError:
-            print('Directory structure already exists for simulation path '
-                  '{}'.format(self.simulation_data.mfpath.get_sim_path()))
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                print('Directory structure already exists for simulation path '
+                      '{}'.format(self.simulation_data.mfpath.get_sim_path()))
 
         # set simulation validity initially to false since the user must first add at least one model
         # to the simulation and fill out the name and tdis files

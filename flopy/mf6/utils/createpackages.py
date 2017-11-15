@@ -1,7 +1,7 @@
 import os
 import keyword
 from enum import Enum
-from flopy.mf6.data import mfstructure, mfdatautil, dfn
+from flopy.mf6.data import mfstructure, mfdatautil
 
 
 class PackageLevel(Enum):
@@ -155,7 +155,7 @@ def create_packages():
                                                                      package_container_text))
         import_string = 'from .. import mfpackage\nfrom ..data import mfdatautil'
 
-        if package[0].dfn_type == dfn.DfnType.exch_file:
+        if package[0].dfn_type == mfstructure.DfnType.exch_file:
             add_var(init_vars, None, init_param_list, package_properties, doc_string, data_structure_dict,
                     'exgtype', 'exgtype', '<string>', 'is the exchange type (GWF-GWF or GWF-GWT).', None, None, True)
             add_var(init_vars, None, init_param_list, package_properties, doc_string, data_structure_dict,

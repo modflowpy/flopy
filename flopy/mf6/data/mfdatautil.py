@@ -17,7 +17,7 @@ def find_keyword(arr_line, keyword_dict):
     return None
 
 
-class TemplateGenerator():
+class TemplateGenerator(object):
     """
     Abstract base class for building a data template for different data types.  This is a generic class that is
     initialized with a path that identifies the data to be built.
@@ -405,7 +405,9 @@ class ArrayUtil(object):
             for item in current_list:
                 if isinstance(item, list) or isinstance(current_list, np.ndarray):
                     # still in a list of lists, recurse
-                    yield from ArrayUtil.next_item(item, list_size == 1, nesting_change + 1, list_size == len(current_list))
+                    for item in ArrayUtil.next_item(item, list_size == 1, nesting_change + 1,
+                                                     list_size == len(current_list)):
+                        yield item
                     nesting_change = -(nesting_change + 1)
                 else:
                     yield (item, list_size == len(current_list), list_size == 1, nesting_change)
@@ -544,6 +546,8 @@ class ArrayIndexIter(object):
                 self.current_index -= 1
         raise StopIteration()
 
+    next = __next__  # Python 2 support
+
 
 class MultiListIter(object):
     def __init__(self, multi_list, detailed_info=False):
@@ -561,6 +565,8 @@ class MultiListIter(object):
         else:
             return next_val[0]
 
+    next = __next__  # Python 2 support
+
 
 class ConstIter(object):
     def __init__(self, value):
@@ -571,6 +577,8 @@ class ConstIter(object):
 
     def __next__(self):
         return self.value
+
+    next = __next__  # Python 2 support
 
 
 class FileIter(object):
@@ -611,6 +619,8 @@ class FileIter(object):
             return
         self._current_data = ArrayUtil.split_data_line(data_line)
 
+    next = __next__  # Python 2 support
+
 
 class NameIter(object):
     def __init__(self, name, first_not_numbered=True):
@@ -628,6 +638,8 @@ class NameIter(object):
         else:
             return '{}_{}'.format(self.name, self.iter_num)
 
+    next = __next__  # Python 2 support
+
 
 class PathIter(object):
     def __init__(self, path, first_not_numbered=True):
@@ -639,6 +651,8 @@ class PathIter(object):
 
     def __next__(self):
         return self.path[0:-1] + (self.name_iter.__next__(),)
+
+    next = __next__  # Python 2 support
 
 
 class MFDocString(object):

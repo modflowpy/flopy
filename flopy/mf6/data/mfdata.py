@@ -4,8 +4,10 @@ import numpy as np
 from shutil import copyfile
 from collections import OrderedDict
 from enum import Enum
-from ..coordinates import modeldimensions
-from ..data import mfstructure, mfdatautil
+from ..data.mfstructure import MFDataException, MFFileParseException, MFInvalidTransientBlockHeaderException, \
+                               MFDataItemStructure
+from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, ConstIter, ArrayIndexIter
+from ..coordinates.modeldimensions import DataDimensions
 
 
 class MFComment(object):
@@ -403,7 +405,7 @@ class DataStorage(object):
             if self.layer_storage[0].data_storage_type == DataStorageType.external_file:
                 except_str = 'Converting external file data into layered data currently not support.'
                 print(except_str)
-                raise mfstructure.MFDataException(except_str)
+                raise MFDataException(except_str)
 
             previous_storage = self.layer_storage[0]
             data = previous_storage.get_data()
@@ -613,7 +615,7 @@ class DataStorage(object):
                                                                    len(data),
                                                                    self.data_dimensions.structure.path)
                     print(except_str)
-                    raise mfstructure.MFDataException(except_str)
+                    raise MFDataException(except_str)
             else:
                 self._set_array(data, layer, multiplier, key, autofill)
 
@@ -648,7 +650,7 @@ class DataStorage(object):
                                                       layer,
                                                       self.data_dimensions.structure.path)
                 print(except_str)
-                raise mfstructure.MFDataException(except_str)
+                raise MFDataException(except_str)
         elif layer is None:
             self.layered = False
             self.num_layers = 1
@@ -674,7 +676,7 @@ class DataStorage(object):
                 multiplier, iprn, flags_found = self.process_internal_line(data)
                 if len(data['data']) == 1:
                     # merge multiplier with single value and make constant
-                    if mfdatautil.DatumUtil.is_float(multiplier):
+                    if DatumUtil.is_float(multiplier):
                         mult = 1.0
                     else:
                         mult = 1
@@ -696,15 +698,15 @@ class DataStorage(object):
             multiplier, iprn, binary = self.process_open_close_line(new_data, layer, False)
             model_name = self.data_dimensions.package_dim.model_dim[0].model_name
             resolved_path = self._simulation_data.mfpath.resolve_path(new_data[1], model_name)
-            if self._verify_data(mfdatautil.FileIter(resolved_path), layer):
+            if self._verify_data(FileIter(resolved_path), layer):
                 # store location to file
                 self.store_external(new_data[1], layer, [multiplier], print_format=iprn, binary=binary,
                                     do_not_verify=True)
                 return True
         # try to resolve as internal array
         if not (self.layer_storage[self._resolve_layer(layer)].data_storage_type == DataStorageType.internal_constant
-                and mfdatautil.ArrayUtil.has_one_item(data)) and \
-                self._verify_data(mfdatautil.MultiListIter(data), layer):
+                and ArrayUtil.has_one_item(data)) and \
+                self._verify_data(MultiListIter(data), layer):
             # store data as is
             self.store_internal(data, layer, False, multiplier, key=key)
             return True
@@ -794,7 +796,7 @@ class DataStorage(object):
                 current_size = 0
                 model_name = self.data_dimensions.package_dim.model_dim[0].model_name
                 fd = open(self._simulation_data.mfpath.resolve_path(file_path, model_name), 'w')
-                for data_item in mfdatautil.MultiListIter(data, True):
+                for data_item in MultiListIter(data, True):
                     if data_item[2] and current_size > 0:
                         # new list/dimension, add appropriate formatting to the file
                         fd.write('\n')
@@ -806,7 +808,7 @@ class DataStorage(object):
                                  'received {}.'.format(self.data_dimensions.structure.path, fd.name, data_size, current_size)
                     print(except_str)
                     fd.close()
-                    raise mfstructure.MFDataException(except_str)
+                    raise MFDataException(except_str)
                 fd.close()
             elif self._simulation_data.verify_external_data and do_not_verify is None:
                 self.external_to_internal(layer)
@@ -868,7 +870,7 @@ class DataStorage(object):
             fd = open(self._simulation_data.mfpath.resolve_path(self.layer_storage[layer].fname,
                                                                 model_dim.model_name), 'r')
         for line in fd:
-            arr_line = mfdatautil.ArrayUtil.split_data_line(line, True)
+            arr_line = ArrayUtil.split_data_line(line, True)
             for data in arr_line:
                 if data != '':
                     if current_size == data_size:
@@ -885,7 +887,7 @@ class DataStorage(object):
             print(except_str)
             if close_file:
                 fd.close()
-            raise mfstructure.MFDataException(except_str)
+            raise MFDataException(except_str)
 
         if close_file:
             fd.close()
@@ -947,7 +949,7 @@ class DataStorage(object):
                              'multiplier. {}'.format(self.data_dimensions.structure.name,
                                                      self.data_dimensions.structure.path)
                 print(except_str)
-                raise mfstructure.MFFileParseException(except_str)
+                raise MFFileParseException(except_str)
 
             index = 1
             while index < len(arr_line):
@@ -990,7 +992,7 @@ class DataStorage(object):
                 except_str = 'ERROR: Data array "{}" contains a OPEN/CLOSE that is not followed by a file. ' \
                              '{}'.format(self.data_dimensions.structure.name, self.data_dimensions.structure.path)
                 print(except_str)
-                raise mfstructure.MFFileParseException(except_str)
+                raise MFFileParseException(except_str)
 
             while index < len(arr_line):
                 if isinstance(arr_line[index], str):
@@ -1032,7 +1034,7 @@ class DataStorage(object):
                              'No data file specified. {}'.format(self.data_dimensions.structure.name,
                                                                  self.data_dimensions.structure.path)
                 print(except_str)
-                raise mfstructure.MFDataException(except_str)
+                raise MFDataException(except_str)
             # store external info
             self.store_external(data_file, layer, [multiplier], print_format, binary=binary)
 
@@ -1069,7 +1071,7 @@ class DataStorage(object):
     def _duplicate_last_item(self):
         last_item = self._recarray_type_list[-1]
         arr_item_name = last_item[0].split('_')
-        if mfdatautil.DatumUtil.is_int(arr_item_name[-1]):
+        if DatumUtil.is_int(arr_item_name[-1]):
             new_item_num = int(arr_item_name[-1]) + 1
             new_item_name = '_'.join(arr_item_name[0:-1])
             new_item_name = '{}_{}'.format(new_item_name, new_item_num)
@@ -1160,15 +1162,15 @@ class DataStorage(object):
         if data_dimensions[0] < 0:
             return self.layer_storage[layer]._data_const_value
         else:
-            return self._fill_dimensions(mfdatautil.ConstIter(self.layer_storage[layer]._data_const_value), data_dimensions)
+            return self._fill_dimensions(ConstIter(self.layer_storage[layer]._data_const_value), data_dimensions)
 
     def _is_type(self, data_item, data_type):
         if data_type == 'string' or data_type == 'keyword':
             return True
         elif data_type == 'integer':
-            return mfdatautil.DatumUtil.is_int(data_item)
+            return DatumUtil.is_int(data_item)
         elif data_type == 'float' or data_type == 'double':
-            return mfdatautil.DatumUtil.is_float(data_item)
+            return DatumUtil.is_float(data_item)
         elif data_type == 'keystring':
             # TODO: support keystring type
             print('Keystring type currently not supported.')
@@ -1182,7 +1184,7 @@ class DataStorage(object):
             # initialize array
             data_array = np.ndarray(shape=dimensions, dtype=float)
             # fill array
-            for index in mfdatautil.ArrayIndexIter(dimensions):
+            for index in ArrayIndexIter(dimensions):
                 data_array.itemset(index, data_iter.__next__()[0])
             return data_array
         elif self.data_structure_type == DataStructureType.scalar:
@@ -1191,7 +1193,7 @@ class DataStorage(object):
             data_array = None
             data_line = ()
             # fill array
-            array_index_iter = mfdatautil.ArrayIndexIter(dimensions)
+            array_index_iter = ArrayIndexIter(dimensions)
             current_col = 0
             for index in array_index_iter:
                 data_line += (index,)
@@ -1234,7 +1236,7 @@ class DataStorage(object):
               or not self.in_model:
                 if len(self._recarray_type_list) in self._data_type_overrides:
                     data_type = self._data_type_overrides[len(self._recarray_type_list)]
-                elif isinstance(data_item, mfstructure.MFDataItemStructure):
+                elif isinstance(data_item, MFDataItemStructure):
                     data_type = data_item.get_rec_type()
                 else:
                     data_type = None
@@ -1292,7 +1294,7 @@ class DataStorage(object):
                         elif resolved_shape[0] == -9999 or shape_rule is not None:
                             if data is not None:
                                 # shape is an indeterminate 1-d array and should consume the remainder of the data
-                                resolved_shape[0] = mfdatautil.ArrayUtil.max_multi_dim_list_size(data) - \
+                                resolved_shape[0] = ArrayUtil.max_multi_dim_list_size(data) - \
                                                     len(self._recarray_type_list)
                             else:
                                 # shape is indeterminate 1-d array and no data provided to resolve
@@ -1361,22 +1363,22 @@ class DataStorage(object):
                     # fix any scientific formatting that python can't handle
                     data = data.replace('d', 'e')
 
-                return float(mfdatautil.ArrayUtil.clean_numeric(data))
+                return float(ArrayUtil.clean_numeric(data))
             except ValueError:
                 except_str = 'Variable "{}" with value "{}" can not be converted to ' \
                              'float. {}'.format(self.data_dimensions.structure.name,
                                                 data, self.data_dimensions.structure.path)
                 print(except_str)
-                raise mfstructure.MFDataException(except_str)
+                raise MFDataException(except_str)
         elif type == 'int' or type == 'integer':
             try:
-                return int(mfdatautil.ArrayUtil.clean_numeric(data))
+                return int(ArrayUtil.clean_numeric(data))
             except ValueError:
                 except_str = 'Variable "{}" with value "{}" can not be converted to ' \
                              'int. {}'.format(self.data_dimensions.structure.name,
                                               data, self.data_dimensions.structure.path)
                 print(except_str)
-                raise mfstructure.MFDataException(except_str)
+                raise MFDataException(except_str)
         elif type == 'string' and data is not None:
             # keep strings lower case
             return data.lower()
@@ -1481,7 +1483,7 @@ class MFTransient(object):
                 except_str = 'Invalid transient key "{}" in block "{}" {}'.format(transient_key,
                                                                                   block_header.name,
                                                                                   self.structure.path)
-                raise mfstructure.MFInvalidTransientBlockHeaderException(except_str)
+                raise MFInvalidTransientBlockHeaderException(except_str)
         if transient_key not in self._data_storage:
             self.add_transient_key(transient_key)
         self._current_key = transient_key
@@ -1567,7 +1569,7 @@ class MFData(object):
         self._internal_data = None
         self._keyword = ''
         if self._simulation_data is not None:
-            self._data_dimensions = modeldimensions.DataDimensions(dimensions, structure)
+            self._data_dimensions = DataDimensions(dimensions, structure)
             # build a unique path in the simulation dictionary
             self._org_path = self._path
             index = 0
@@ -1684,7 +1686,7 @@ class MFData(object):
                              'at line "{}". {}'.format(self._data_name, self._keyword, aux_text, ' '.join(arr_line),
                                                        self._path)
                 print(except_str)
-                raise mfstructure.MFFileParseException(except_str)
+                raise MFFileParseException(except_str)
             return (index_num + 1, aux_var_index)
         return (index_num, aux_var_index)
 
@@ -1697,7 +1699,7 @@ class MFData(object):
             storage.pre_data_comments = None
 
         # read through any fully commented or empty lines
-        arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+        arr_line = ArrayUtil.split_data_line(line)
         while MFComment.is_comment(arr_line, True) and line != '':
             if storage.pre_data_comments:
                 storage.pre_data_comments.add_text('\n')
@@ -1708,7 +1710,7 @@ class MFData(object):
             self._add_data_line_comment(arr_line, line_num)
 
             line = file_handle.readline()
-            arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+            arr_line = ArrayUtil.split_data_line(line)
         return line
 
     def _add_data_line_comment(self, comment, line_num):
