@@ -142,3 +142,83 @@ def get_water_table(heads, nodata, per_idx=None):
         assert len(wt_per) == nrow * ncol
         wt.append(np.reshape(wt_per, (nrow, ncol)))
     return np.squeeze(wt)
+
+def get_saturated_thickness(heads, m, nodata, per_idx=None):
+    """Calculates the saturated thickness for each cell from the heads
+    array for each stress period.
+
+    Parameters
+    ----------
+    heads : 3 or 4-D np.ndarray
+        Heads array.
+    m : flopy.modflow.Modflow object
+        Must have a flopy.modflow.ModflowDis object attached.
+    nodata : real
+        HDRY value indicating dry cells.
+    per_idx : int or sequence of ints
+        stress periods to return. If None,
+        returns all stress periods (default).
+    Returns
+    -------
+    sat_thickness : 3 or 4-D np.ndarray
+        Array of saturated thickness
+    """
+    heads = np.array(heads, ndmin=4)
+    botm = m.dis.botm.array
+    thickness = m.dis.thickness.array
+    nper, nlay, nrow, ncol = heads.shape
+    if per_idx is None:
+        per_idx = list(range(nper))
+    elif np.isscalar(per_idx):
+        per_idx = [per_idx]
+
+    heads[heads == nodata] = np.nan
+    sat_thickness = []
+    for per in per_idx:
+        hds = heads[per]
+        perthickness = hds - botm
+        conf = perthickness > thickness
+        perthickness[conf] = thickness[conf]
+        sat_thickness.append(perthickness)
+    return np.squeeze(sat_thickness)
+
+def get_gradients(heads, m, nodata, per_idx=None):
+    """Calculates the hydraulic gradients from the heads
+    array for each stress period.
+
+    Parameters
+    ----------
+    heads : 3 or 4-D np.ndarray
+        Heads array.
+    m : flopy.modflow.Modflow object
+        Must have a flopy.modflow.ModflowDis object attached.
+    nodata : real
+        HDRY value indicating dry cells.
+    per_idx : int or sequence of ints
+        stress periods to return. If None,
+        returns all stress periods (default).
+    Returns
+    -------
+    grad : 3 or 4-D np.ndarray
+        Array of hydraulic gradients
+    """
+    heads = np.array(heads, ndmin=4)
+    nper, nlay, nrow, ncol = heads.shape
+    if per_idx is None:
+        per_idx = list(range(nper))
+    elif np.isscalar(per_idx):
+        per_idx = [per_idx]
+
+    heads[heads == nodata] = np.nan
+    grad = []
+    for per in per_idx:
+        hds = heads[per]
+        zcnt_per = m.dis.zcentroids.copy()
+        unsat = zcnt_per > hds
+        zcnt_per[np.isnan(hds)] = np.nan
+        zcnt_per[unsat] = hds[unsat]
+
+        dz = np.diff(zcnt_per, axis=0)
+        dh = np.diff(hds, axis=0)
+        grad.append(dh/dz)
+    return np.squeeze(grad)

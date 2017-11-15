@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.utils.postprocessing import get_transmissivities, get_water_table
+from flopy.utils.postprocessing import get_transmissivities, get_water_table, get_gradients, get_saturated_thickness
 
 mf = flopy.modflow
 
@@ -66,8 +66,36 @@ def test_get_water_table():
     assert wt[1, 1] == 1.
     assert np.sum(wt) == 17.
 
+def test_get_sat_thickness_gradients():
+    nodata = -9999.
+    hds = np.ones ((3, 3, 3), dtype=float) * nodata
+    hds[1, :, :] = 2.4
+    hds[0, 1, 1] = 3.2
+    hds[2, :, :] = 2.5
+    hds[1, 1, 1] = 3.
+    hds[2, 1, 1] = 2.6
 
+    nl, nr, nc = hds.shape
+    botm = np.ones((nl, nr, nc), dtype=float)
+    top = np.ones((nr, nc), dtype=float) * 4.
+    botm[0, :, :] = 3.
+    botm[1, :, :] = 2.
+
+    m = mf.Modflow('junk', version='mfnwt', model_ws='temp')
+    dis = mf.ModflowDis(m, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
+
+    grad = get_gradients(hds, m, nodata=nodata)
+    dh = np.diff(hds[:, 1, 1])
+    dz = np.array([-.7, -1.])
+    assert np.abs(dh/dz - grad[:, 1, 1]).sum() < 1e-6
+    dh = np.diff(hds[:, 1, 0])
+    dz = np.array([np.nan, -.9])
+    assert np.nansum(np.abs(dh / dz - grad[:, 1, 0])) < 1e-6
+
+    sat_thick = get_saturated_thickness(hds, m, nodata)
+    assert np.abs(np.sum(sat_thick[:, 1, 1] - np.array([0.2, 1., 1.]))) < 1e-6
 
 if __name__ == '__main__':
-    test_get_transmissivities()
+    #test_get_transmissivities()
     #test_get_water_table()
+    test_get_sat_thickness_gradients()
