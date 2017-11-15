@@ -195,8 +195,196 @@ def test003_gwfs_disv():
         head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, 'model.hds')
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
         budget_frf = sim.simulation_data.mfdata[(model_name, 'CBC', 'FLOW-JA-FACE')]
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
+
+        # clean up
+        sim.delete_output_files()
+
+    return
+
+def test005_advgw_tidal():
+    # init paths
+    test_ex_name = 'test005_advgw_tidal'
+    model_name = 'gwf_1'
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'AdvGW_tidal_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder, 'AdvGW_tidal_adj.hds')
+
+    # load simulation
+    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+
+    # make temp folder to save simulation
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'AdvGW_tidal.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+    # change some settings
+    """
+    hydchr = sim.simulation_data.mfdata[(model_name, 'HFB8', 'PERIOD', 'hydchr')]
+    hydchr[2] = 0.000002
+    hydchr[3] = 0.000003
+    hydchr[4] = 0.0000004
+    cond = sim.simulation_data.mfdata[(model_name, 'DRN8_1', 'PERIOD', 'cond')]
+    for index in range(0, len(cond)):
+        cond[index] = 2.1
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # get expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_obj = bf.HeadFile(head_file, precision='double')
+        head_valid = np.array(head_obj.get_alldata())
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'AdvGW_tidal.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+    """
+
+def test006_gwf3():
+    from flopy.mf6.utils.binaryfile_utils import _reshape_binary_data
+
+    # init paths
+    test_ex_name = 'test006_gwf3'
+    model_name = 'gwf_1'
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'flow_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder, 'flow_adj.hds')
+    expected_cbc_file_a = os.path.join(expected_output_folder, 'flow_unch.cbc')
+    expected_cbc_file_b = os.path.join(expected_output_folder, 'flow_adj.cbc')
+
+    array_util = ArrayUtil()
+
+    # load simulation
+    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+
+    # make temp folder to save simulation
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
+        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_fjf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
+        jaentries = budget_fjf_valid.shape[-1]
+        budget_fjf_valid.shape = (-1, jaentries)
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'flow.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        budget_fjf = np.array(sim.simulation_data.mfdata[(model_name, 'CBC', 'FLOW-JA-FACE')])
+        assert array_util.array_comp(np.array(budget_fjf_valid), np.array(budget_fjf))
+
+    # change some settings
+    model = sim.get_model(model_name)
+    hk = model.get_package('npf').k
+    hk_data = hk.get_data()
+    hk_data[2] = 3.5
+    hk.set_data(hk_data)
+    ex_happened = False
+    try:
+        hk.make_layered()
+    except:
+        ex_happened = True
+    assert(ex_happened)
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # get expected results
+        budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
+        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_fjf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
+        jaentries = budget_fjf_valid.shape[-1]
+        budget_fjf_valid.shape = (-1, jaentries)
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'flow.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        budget_fjf = np.array(sim.simulation_data.mfdata[(model_name, 'CBC', 'FLOW-JA-FACE')])
+        assert array_util.array_comp(np.array(budget_fjf_valid), np.array(budget_fjf))
+
+    # confirm that files did move
+    save_folder = os.path.join(run_folder, 'temp_two')
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+
+    # write with "copy_external_files" turned off so external files do not get copied to new location
+    sim.write_simulation(ext_file_action=flopy.mf6.mfbase.ExtFileAction.copy_none)
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # get expected results
+        budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
+        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_fjf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
+        jaentries = budget_fjf_valid.shape[-1]
+        budget_fjf_valid.shape = (-1, jaentries)
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'flow.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        budget_fjf = np.array(sim.simulation_data.mfdata[(model_name, 'CBC', 'FLOW-JA-FACE')])
+        assert array_util.array_comp(np.array(budget_fjf_valid), np.array(budget_fjf))
+
+        # confirm that files did not move
+        assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.ja.dat'))
+        assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.iac.dat'))
+        assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.cl12.dat'))
+        assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.area.dat'))
+        assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.hwva.dat'))
 
         # clean up
         sim.delete_output_files()
@@ -206,3 +394,5 @@ def test003_gwfs_disv():
 if __name__ == '__main__':
     test001a_Tharmonic()
     test003_gwfs_disv()
+    test005_advgw_tidal()
+    test006_gwf3()
