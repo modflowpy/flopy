@@ -60,7 +60,7 @@ class ModpathSim(Package):
                  particle_cell_cnt=[[2, 2, 2]],
                  cell_bd_ct=1, bud_loc=[[1, 1, 1, 1]], trace_id=1, stop_zone=1,
                  zone=1,
-                 retard_fac=1.0, retard_fcCB=1.0, extension='mpsim'):
+                 retard_fac=1.0, retard_fcCB=1.0, strt_file=None,extension='mpsim'):
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, 'MPSIM', 32)
@@ -99,6 +99,8 @@ class ModpathSim(Package):
         self.ifaces = ifaces
         self.part_ct = part_ct
         self.strt_file = '{}.{}'.format(model.name, 'loc')
+        if strt_file is not None:
+            self.strt_file = strt_file
         self.time_ct = time_ct
         self.release_time_incr = release_time_incr
         self.time_pts = time_pts
