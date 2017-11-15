@@ -1,8 +1,9 @@
 # Test export module
 import sys
-
+import glob
 sys.path.insert(0, '..')
 import copy
+import glob
 import os
 import shutil
 import numpy as np
@@ -140,6 +141,55 @@ def test_export_output():
     arr_mask = arr.mask[0]
     assert np.array_equal(ibound_mask, arr_mask)
 
+def test_export_array():
+    namfile = 'freyberg.nam'
+    model_ws = '../examples/data/freyberg_multilayer_transient/'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
+                                   load_only=['DIS', 'BAS6'])
+    m.sr.rotation = 45.
+    nodata = -9999
+    m.sr.export_array(os.path.join(tpth, 'fb.asc'), m.dis.top.array, nodata=nodata)
+    arr = np.loadtxt(os.path.join(tpth, 'fb.asc'), skiprows=6)
+
+    m.sr.write_shapefile(os.path.join(tpth, 'grid.shp'))
+    # check bounds
+    with open(os.path.join(tpth, 'fb.asc')) as src:
+        for line in src:
+            if 'xllcorner' in line.lower():
+                val = float(line.strip().split()[-1])
+                assert np.abs(val - m.sr.bounds[0]) < 1e-6
+            if 'yllcorner' in line.lower():
+                val = float(line.strip().split()[-1])
+                assert np.abs(val - m.sr.bounds[1]) < 1e-6
+            if 'cellsize' in line.lower():
+                val = float(line.strip().split()[-1])
+                rot_cellsize = np.cos(np.radians(m.sr.rotation)) * m.sr.delr[0] * m.sr.length_multiplier
+                #assert np.abs(val - rot_cellsize) < 1e-6
+                break
+    rotate = False
+    rasterio = False
+    try:
+        # test that arc ascii grid was rotated correctly
+        from scipy.ndimage import rotate
+        rotated = rotate(m.dis.top.array, m.sr.rotation, cval=nodata)
+    except:
+        pass
+
+    if rotate:
+        assert rotated.shape == arr.shape
+
+    try:
+        # test GeoTIFF export
+        import rasterio
+        m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array, nodata=nodata)
+        with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
+            arr = src.read(1)
+    except:
+        pass
+    if rasterio:
+        assert src.shape == (m.nrow, m.ncol)
+        assert np.abs(src.bounds[0] - m.sr.bounds[0]) < 1e-6
+        assert np.abs(src.bounds[1] - m.sr.bounds[1]) < 1e-6
 
 def test_mbase_sr():
     import numpy as np
@@ -478,7 +528,8 @@ def test_read_usgs_model_reference():
     delr, delc = 250, 500
     #xll, yll = 272300, 5086000
     model_ws = os.path.join('temp', 't007')
-    shutil.copy('../examples/data/usgs.model.reference', model_ws)
+    mrf = os.path.join(model_ws, 'usgs.model.reference')
+    shutil.copy('../examples/data/usgs.model.reference', mrf)
     fm = flopy.modflow
     m = fm.Modflow(modelname='junk', model_ws=model_ws)
     # feet and days
@@ -489,15 +540,32 @@ def test_read_usgs_model_reference():
     # test reading of SR information from usgs.model.reference
     m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
     from flopy.utils.reference import SpatialReference
-    d = SpatialReference.read_usgs_model_reference_file(os.path.join('temp', 't007', 'usgs.model.reference'))
+    d = SpatialReference.read_usgs_model_reference_file(mrf)
     assert m2.sr.xul == d['xul']
     assert m2.sr.yul == d['yul']
     assert m2.sr.rotation == d['rotation']
     assert m2.sr.lenuni == d['lenuni']
     assert m2.sr.epsg == d['epsg']
+
+    # test reading non-default units from usgs.model.reference
+    shutil.copy(mrf, mrf+'_copy')
+    with open(mrf+'_copy') as src:
+        with open(mrf, 'w') as dst:
+            for line in src:
+                if 'time_unit' in line:
+                    line = line.replace('days', 'seconds')
+                elif 'length_units' in line:
+                    line = line.replace('feet', 'meters')
+                dst.write(line)
+    m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
+    assert m2.tr.itmuni == 1
+    assert m2.sr.lenuni == 2
     # have to delete this, otherwise it will mess up other tests
-    if os.path.exists(os.path.join(tpth, 'usgs.model.reference')):
-        os.remove(os.path.join(tpth, 'usgs.model.reference'))
+    to_del = glob.glob(mrf + '*')
+    for f in to_del:
+        if os.path.exists(f):
+            os.remove(os.path.join(f))
+    assert True
 
 
 def test_rotation():
@@ -590,6 +658,31 @@ def test_sr_with_Map():
     linecollection = modelxsect.plot_grid()
     plt.close()
 
+def test_get_vertices():
+    m = flopy.modflow.Modflow(rotation=20.)
+    nrow, ncol = 40, 20
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=nrow, ncol=ncol,
+                                   delr=250.,
+                                   delc=250., top=10, botm=0)
+    xul, yul = 500000, 2934000
+    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                        delc=m.dis.delc.array,
+                                        xul=xul, yul=yul, rotation=45.)
+    a1 = np.array(m.sr.vertices)
+    j = np.array(list(range(ncol)) * nrow)
+    i = np.array(sorted(list(range(nrow)) * ncol))
+    a2 = np.array(m.sr.get_vertices(i, j))
+    assert np.array_equal(a1, a2)
+
+def test_get_rc_from_node_coordinates():
+    m = flopy.modflow.Modflow(rotation=20.)
+    nrow, ncol = 10, 10
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=nrow, ncol=ncol,
+                                   delr=100.,
+                                   delc=100., top=10, botm=0)
+    r, c = m.dis.get_rc_from_node_coordinates([50., 110.], [50., 220.])
+    assert np.array_equal(r, np.array([9, 7]))
+    assert np.array_equal(c, np.array([0, 1]))
 
 def test_netcdf_classmethods():
     import os
@@ -653,7 +746,31 @@ def test_netcdf_classmethods():
 #            fdiv2.nc.variables["model_top"][0,0]
 #
 #     assert f.nc.variables["ibound"][0,0,0] == 1
+def test_wkt_parse():
+    """Test parsing of Coordinate Reference System parameters
+    from well-known-text in .prj files."""
 
+    from flopy.utils.reference import crs
+
+    prjs = glob.glob('../examples/data/prj_test/*')
+
+    for prj in prjs:
+        with open(prj) as src:
+            wkttxt = src.read()
+            wkttxt = wkttxt.replace("'", '"')
+        if len(wkttxt) > 0 and 'projcs' in wkttxt.lower():
+            crsobj = crs(esri_wkt=wkttxt)
+            geocs_params = ['wktstr', 'geogcs', 'datum', 'spheriod_name',
+                            'semi_major_axis', 'inverse_flattening',
+                            'primem', 'gcs_unit']
+            for k in geocs_params:
+                assert crsobj.__dict__[k] is not None
+            projcs_params = [k for k in crsobj.__dict__
+                             if k not in geocs_params]
+            if crsobj.projcs is not None:
+                for k in projcs_params:
+                    if k in wkttxt.lower():
+                        assert crsobj.__dict__[k] is not None
 
 def test_shapefile_ibound():
     import os
@@ -711,15 +828,19 @@ if __name__ == '__main__':
     #test_sr()
     #test_mbase_sr()
     #test_rotation()
-    test_sr_with_Map()
+    #test_sr_with_Map()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
     #test_namfile_readwrite()
     # test_free_format_flag()
-    # test_export_output()
+    #test_get_vertices()
+    #test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
     #test_freyberg_export()
+    #test_export_array()
+    #test_wkt_parse()
+    test_get_rc_from_node_coordinates()
     pass

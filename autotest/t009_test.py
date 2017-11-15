@@ -16,6 +16,7 @@ except:
 import flopy
 fm = flopy.modflow
 from flopy.utils.sfroutputfile import SfrFile
+from flopy.utils.reference import SpatialReference
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
@@ -45,6 +46,19 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
                  'sfrfile': 'TL2009.sfr'}
              }
 
+def create_sfr_data():
+    r = np.zeros((27, 2), dtype=[('iseg', int), ('ireach', int)])
+    r = np.core.records.fromarrays(r.transpose(),
+                                   dtype=[('iseg', int), ('ireach', int)])
+    r['iseg'] = sorted(list(range(1, 10)) * 3)
+    r['ireach'] = [1, 2, 3] * 9
+
+    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
+    d = np.core.records.fromarrays(d.transpose(),
+                                   dtype=[('nseg', int), ('outseg', int)])
+    d['nseg'] = range(1, 10)
+    d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
+    return r, d
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
@@ -190,6 +204,54 @@ def test_sfr_renumbering():
     assert 'continuity in segment and reach numbering' in chk.passed
     assert 'segment numbering order' in chk.passed
 
+    # test computing of outreaches
+    assert np.array_equal(sfr.reach_data.outreach,
+                          np.array([2, 3, 7,
+                                    5, 6, 10,
+                                    8, 9, 16,
+                                    11, 12, 19,
+                                    14, 15, 22,
+                                    17, 18, 22,
+                                    20, 21, 22,
+                                    23, 24, 25,
+                                    26, 27, 0]))
+    # test slope
+    sfr.reach_data['rchlen'] = [10] * 3 * 5 + [100] * 2 * 3 + [1] * 2 * 3
+    strtop = np.zeros(len(sfr.reach_data))
+    strtop[6] = 3.
+    strtop[21] = -2.
+    sfr.reach_data['strtop'] = strtop
+    default_slope = .0001
+    sfr.get_slopes(default_slope=default_slope)
+    sl1 = sfr.reach_data.slope[2]
+    def isequal(v1, v2):
+        return np.abs(v1-v2) < 1e-6
+    assert (sl1 + 0.3) < 1e-6
+    assert (sfr.reach_data.slope[6] + sl1) < 1e-6
+    assert isequal(sfr.reach_data.slope[14], 0.2)
+    assert isequal(sfr.reach_data.slope[20], sfr.reach_data.slope[17])
+    assert isequal(sfr.reach_data.slope[21], -2.)
+    assert isequal(sfr.reach_data.slope[-1], default_slope)
+
+def test_const():
+
+    fm = flopy.modflow
+    m = fm.Modflow()
+    dis = fm.ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
+    m.sr = SpatialReference()
+    r, d = create_sfr_data()
+    sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
+    assert sfr.const == 86400.
+    m.dis.itmuni = 1.
+    m.sfr.const = None
+    assert sfr.const == 1.
+    m.dis.lenuni = 1.
+    m.sfr.const = None
+    assert sfr.const == 1.486
+    m.dis.itmuni = 4.
+    m.sfr.const = None
+    assert sfr.const == 1.486 * 86400.
+    assert True
 
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',
@@ -248,6 +310,21 @@ def test_example():
                                     channel_geometry_data=channel_geometry_data,
                                     channel_flow_data=channel_flow_data,
                                     dataset_5=dataset_5)
+
+    # test default construction of dataset_5
+    sfr2 = flopy.modflow.ModflowSfr2(m, nstrm=nstrm, nss=nss, const=const,
+                                    dleak=dleak, ipakcb=ipakcb, istcb2=istcb2,
+                                    reach_data=reach_data,
+                                    segment_data=segment_data,
+                                    channel_geometry_data=channel_geometry_data,
+                                    channel_flow_data=channel_flow_data)
+    assert len(sfr2.dataset_5) == 1
+    assert sfr2.dataset_5[0][0] == sfr2.nss
+    nper = 9
+    m.dis.nper = nper
+    assert len(sfr2.dataset_5) == nper
+    for i in range(1, nper):
+        assert sfr2.dataset_5[i][0] == -1
 
 def test_transient_example():
     path = os.path.join('temp', 't009')
@@ -322,11 +399,12 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    test_sfr()
+    #test_sfr()
     #test_sfr_renumbering()
     #test_example()
     #test_transient_example()
     #test_sfr_plot()
     #test_assign_layers()
     #test_SfrFile()
+    test_const()
     pass

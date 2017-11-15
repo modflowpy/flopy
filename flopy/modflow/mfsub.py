@@ -60,7 +60,7 @@ class ModflowSub(Package):
         for the head changes to compute the head at the new iteration. Values
         are normally between 1.0 and 2.0, but the optimum is probably closer to 1.0
         than to 2.0. However this parameter also can be used to help convergence of
-        the iterative solution by using values between 0 and 1. (default is 0.2).
+        the iterative solution by using values between 0 and 1. (default is 1.0).
     itmin : int
         ITMIN is the minimum number of iterations for which one-dimensional equations
         will be solved for flow in interbeds when the Strongly Implicit Procedure (SIP)
@@ -196,7 +196,7 @@ class ModflowSub(Package):
     """
 
     def __init__(self, model, ipakcb=None, isuboc=0, idsave=None, idrest=None,
-                 nndb=1, ndb=1, nmz=1, nn=20, ac1=0., ac2=0.2, itmin=5,
+                 nndb=1, ndb=1, nmz=1, nn=20, ac1=0., ac2=1.0, itmin=5,
                  ln=0, ldn=0, rnb=1,
                  hc=100000., sfe=1.e-4, sfv=1.e-3, com=0.,
                  dp=[1.e-6, 6.e-6, 6.e-4],
@@ -235,7 +235,7 @@ class ModflowSub(Package):
             model.add_output_file(idsave, fname=fname, extension='rst',
                                   package=ModflowSub.ftype())
         else:
-            ipakcb = 0
+            idsave = 0
 
         if idrest is None:
             idrest = 0
@@ -395,10 +395,11 @@ class ModflowSub(Package):
         f.write('{} {} {} {} {}\n'.format(self.ac1, self.ac2,
                                           self.itmin, self.idsave,
                                           self.idrest))
-        t = self.ln.array
-        for tt in t:
-            f.write('{} '.format(tt + 1))
-        f.write('\n')
+        if self.nndb > 0:
+            t = self.ln.array
+            for tt in t:
+                f.write('{} '.format(tt + 1))
+            f.write('\n')
         if self.ndb > 0:
             t = self.ldn.array
             for tt in t:

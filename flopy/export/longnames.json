@@ -1,8 +1,8 @@
 {
   "botm": "Model layer bottom elevations",
   "crs": "Coordinate reference system",
-  "delc": "Model row spacing",
-  "delr": "Model col spacing",
+  "delc": "Model grid cell spacing along a column",
+  "delr": "Model grid cell spacing along a row",
   "drn_cond": "Drain package conductance",
   "drn_elev": "Drain package elevation",
   "elevation": "Elevation",

@@ -508,7 +508,7 @@ def mflist_helper(f, mfl, **kwargs):
                 ra = mfl[kper]
                 verts = np.array(sr.get_vertices(ra.i, ra.j))
             elif df is not None:
-                verts = np.array(sr.get_vertices(df.i.values, df.j.values))
+                verts = sr.get_vertices(df.i.values, df.j.values)
                 ra = df.to_records(index=False)
             # write the projection file
             if sr.epsg is None:
@@ -516,7 +516,6 @@ def mflist_helper(f, mfl, **kwargs):
             else:
                 epsg = sr.epsg
             prj = kwargs.get('prj', None)
-            verts = verts.transpose([2, 0, 1])
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(ra, geoms=polys, shpname=f, epsg=epsg, prj=prj)
 

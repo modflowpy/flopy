@@ -18,22 +18,25 @@ def test_hydmodfile_create():
     m.hyd.write_file()
     pth = os.path.join(model_ws, 'test.hyd')
     hydload = flopy.modflow.ModflowHyd.load(pth, m)
-    assert np.array_equal(hyd.obsdata, hydload.obsdata), 'Written hydmod data not equal to loaded hydmod data'
+    assert np.array_equal(hyd.obsdata,
+                          hydload.obsdata), 'Written hydmod data not equal to loaded hydmod data'
 
     # test obsdata as recarray
-    obsdata = np.array([(3208, 'BAS', 'HD', 'I', 4, 630486.19, 5124733.18, 'well1')],
-          dtype=[('index', '<i8'),
-                 ('pckg', 'O'),
-                 ('arr', 'O'),
-                 ('intyp', 'O'),
-                 ('klay', '<i8'),
-                 ('xl', '<f8'),
-                 ('yl', '<f8'),
-                 ('hydlbl', 'O')]).view(np.recarray)
+    obsdata = np.array(
+        [(3208, 'BAS', 'HD', 'I', 4, 630486.19, 5124733.18, 'well1')],
+        dtype=[('index', '<i8'),
+               ('pckg', 'O'),
+               ('arr', 'O'),
+               ('intyp', 'O'),
+               ('klay', '<i8'),
+               ('xl', '<f8'),
+               ('yl', '<f8'),
+               ('hydlbl', 'O')]).view(np.recarray)
     hyd = flopy.modflow.ModflowHyd(m, obsdata=obsdata)
 
     # test obsdata as object array
-    obsdata = np.array([('BAS', 'HD', 'I', 4, 630486.19, 5124733.18, 'well1')], dtype=object)
+    obsdata = np.array([('BAS', 'HD', 'I', 4, 630486.19, 5124733.18, 'well1')],
+                       dtype=object)
     hyd = flopy.modflow.ModflowHyd(m, obsdata=obsdata)
     assert True
     return
@@ -42,9 +45,11 @@ def test_hydmodfile_create():
 def test_hydmodfile_load():
     model = 'test1tr.nam'
     pth = os.path.join('..', 'examples', 'data', 'hydmod_test')
-    m = flopy.modflow.Modflow.load(model, version='mf2005', model_ws=pth, verbose=True)
+    m = flopy.modflow.Modflow.load(model, version='mf2005', model_ws=pth,
+                                   verbose=True)
     hydref = m.hyd
-    assert isinstance(hydref, flopy.modflow.ModflowHyd), 'Did not load hydmod package...test1tr.hyd'
+    assert isinstance(hydref,
+                      flopy.modflow.ModflowHyd), 'Did not load hydmod package...test1tr.hyd'
 
     model_ws = os.path.join(mpth)
     if not os.path.exists(model_ws):
@@ -104,7 +109,7 @@ def test_hydmodfile_read():
     assert data.shape == (len(times),), \
         'data shape is not ({},)'.format(len(times))
     assert len(data.dtype.names) == nitems + 1, \
-        'data column length is not {}'.format(len(nitems+1))
+        'data column length is not {}'.format(len(nitems + 1))
 
     try:
         import pandas as pd
@@ -130,6 +135,6 @@ def test_hydmodfile_read():
 
 
 if __name__ == '__main__':
-    #test_hydmodfile_read()
     test_hydmodfile_create()
-    #test_hydmodfile_load()
+    test_hydmodfile_load()
+    test_hydmodfile_read()

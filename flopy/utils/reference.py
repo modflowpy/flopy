@@ -104,7 +104,9 @@ class SpatialReference(object):
 
     defaults = {"xul": None, "yul": None, "rotation": 0.,
                 "proj4_str": None,
-                "units": None, "lenuni": 2, "length_multiplier": None}
+                "units": None, "lenuni": 2,
+                "length_multiplier": None,
+                "source": 'defaults'}
 
     lenuni_values = {'undefined': 0,
                      'feet': 1,
@@ -114,7 +116,7 @@ class SpatialReference(object):
 
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=2,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
-                 proj4_str=None, epsg=None, units=None,
+                 proj4_str=None, epsg=None, prj=None, units=None,
                  length_multiplier=None):
 
         for delrc in [delr, delc]:
@@ -142,7 +144,8 @@ class SpatialReference(object):
         self._epsg = epsg
         if epsg is not None:
             self._proj4_str = getproj4(self._epsg)
-
+        self.prj = prj
+        self.crs = crs(prj=prj, epsg=epsg)
 
         self.supported_units = ["feet", "meters"]
         self._units = units
@@ -195,17 +198,20 @@ class SpatialReference(object):
 
     @property
     def proj4_str(self):
-        if self._proj4_str is not None and \
-                        "epsg" in self._proj4_str.lower():
-            if "init" not in self._proj4_str.lower():
-                proj4_str = "+init=" + self._proj4_str
+        proj4_str = None
+        if self._proj4_str is not None:
+            if "epsg" in self._proj4_str.lower():
+                if "init" not in self._proj4_str.lower():
+                    proj4_str = "+init=" + self._proj4_str
+                else:
+                    proj4_str = self._proj4_str
+                # set the epsg if proj4 specifies it
+                tmp = [i for i in self._proj4_str.split() if 'epsg' in i.lower()]
+                self._epsg = int(tmp[0].split(':')[1])
             else:
                 proj4_str = self._proj4_str
-            # set the epsg if proj4 specifies it
-            tmp = [i for i in self._proj4_str.split() if 'epsg' in i.lower()]
-            self._epsg = int(tmp[0].split(':')[1])
-        else:
-            proj4_str = self._proj4_str
+        elif self.epsg is not None:
+            proj4_str = '+init=epsg:{}'.format(self.epsg)
         return proj4_str
 
     @property
@@ -216,6 +222,18 @@ class SpatialReference(object):
         #instead reset proj4 when epsg is set
         #(on init or setattr)
         return self._epsg
+
+    @property
+    def wkt(self):
+        if self._wkt is None:
+            if self.prj is not None:
+                with open(self.prj) as src:
+                    wkt = src.read()
+            elif self.epsg is not None:
+                wkt = getprj(self.epsg)
+            return wkt
+        else:
+            return self._wkt
 
     @property
     def lenuni(self):
@@ -322,6 +340,7 @@ class SpatialReference(object):
     def attribs_from_namfile_header(namefile):
         # check for reference info in the nam file header
         d = SpatialReference.defaults.copy()
+        d['source'] = 'namfile'
         if namefile is None:
             return None
         header = []
@@ -382,6 +401,7 @@ class SpatialReference(object):
         itmuni_values = {v: k for k, v in ITMUNI.items()}
 
         d = SpatialReference.defaults.copy()
+        d['source'] = 'usgs.model.reference'
         d.pop('proj4_str') # discard default to avoid confusion with epsg code if entered
         if os.path.exists(reffile):
             with open(reffile) as input:
@@ -418,7 +438,7 @@ class SpatialReference(object):
 
             # drop any other items that aren't used in sr class
             d = {k:v for k, v in d.items() if k.lower() in SpatialReference.defaults.keys()
-                 or k.lower() in {'epsg', 'start_datetime', 'itmuni'}}
+                 or k.lower() in {'epsg', 'start_datetime', 'itmuni', 'source'}}
             return d
         else:
             return None
@@ -475,13 +495,19 @@ class SpatialReference(object):
             if units is not None:
                 self._units = units
             self._epsg = None
-
         elif key == "epsg":
             super(SpatialReference, self). \
                 __setattr__("_epsg", value)
             # reset the units and proj4
             self._units = None
             self._proj4_str = getproj4(self._epsg)
+            self.crs = crs(epsg=value)
+        elif key == "prj":
+            super(SpatialReference, self). \
+                __setattr__("prj", value)
+            # translation to proj4 strings in crs class not robust yet
+            # leave units and proj4 alone for now.
+            self.crs = crs(prj=value, epsg=self.epsg)
         else:
             super(SpatialReference, self).__setattr__(key, value)
             reset = False
@@ -878,6 +904,7 @@ class SpatialReference(object):
                               epsg=epsg, prj=prj)
 
     def get_vertices(self, i, j):
+        """Get vertices for a single cell or sequence if i, j locations."""
         pts = []
         xgrid, ygrid = self.xgrid, self.ygrid
         pts.append([xgrid[i, j], ygrid[i, j]])
@@ -885,7 +912,11 @@ class SpatialReference(object):
         pts.append([xgrid[i + 1, j + 1], ygrid[i + 1, j + 1]])
         pts.append([xgrid[i, j + 1], ygrid[i, j + 1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
-        return pts
+        if np.isscalar(i):
+            return pts
+        else:
+            vrts = np.array(pts).transpose([2, 0, 1])
+            return [v.tolist() for v in vrts]
 
     def get_rc(self, x, y):
         """Return the row and column of a point or sequence of points
@@ -956,6 +987,7 @@ class SpatialReference(object):
             Path of output file. Export format is determined by
             file extention.
             '.asc'  Arc Ascii grid
+            '.tif'  GeoTIFF (requries rasterio package)
             '.shp'  Shapefile
         a : 2D numpy.ndarray
             Array to export
@@ -966,6 +998,7 @@ class SpatialReference(object):
             (default 'values')
         kwargs: 
             keyword arguments to np.savetxt (ascii) 
+            rasterio.open (GeoTIFF)
             or flopy.export.shapefile_utils.write_grid_shapefile2
             
         Notes
@@ -981,6 +1014,7 @@ class SpatialReference(object):
 
             xll, yll = self.xll, self.yll
             cellsize = self.delr[0] * self.length_multiplier
+            fmt = kwargs.get('fmt', '%.18e')
             a = a.copy()
             a[np.isnan(a)] = nodata
             if self.rotation != 0:
@@ -991,7 +1025,8 @@ class SpatialReference(object):
                     xmin, ymin, xmax, ymax = self.bounds
                     dx = (xmax - xmin) / width_rot
                     dy = (ymax - ymin) / height_rot
-                    cellsize = dx
+                    cellsize = np.max((dx, dy))
+                    #cellsize = np.cos(np.radians(self.rotation)) * cellsize
                     xll, yll = xmin, ymin
                 except ImportError:
                     print('scipy package required to export rotated grid.')
@@ -1005,11 +1040,41 @@ class SpatialReference(object):
             txt += 'xllcorner  {:f}\n'.format(xll)
             txt += 'yllcorner  {:f}\n'.format(yll)
             txt += 'cellsize  {}\n'.format(cellsize)
-            txt += 'NODATA_value  {:.0f}\n'.format(nodata)
+            # ensure that nodata fmt consistent w values
+            txt += 'NODATA_value  {}\n'.format(fmt) %(nodata)
             with open(filename, 'w') as output:
                 output.write(txt)
             with open(filename, 'ab') as output:
                 np.savetxt(output, a, **kwargs)
+            print('wrote {}'.format(filename))
+
+        elif filename.lower().endswith(".tif"):
+            if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
+                    or self.delr[0] != self.delc[0]:
+                raise ValueError('GeoTIFF export require a uniform grid.')
+            try:
+                import rasterio
+                from rasterio import Affine
+            except:
+                print('GeoTIFF export requires the rasterio package.')
+                return
+            dxdy = self.delc[0] * self.length_multiplier
+            trans = Affine.translation(self.xul, self.yul) * \
+                    Affine.rotation(self.rotation) * \
+                    Affine.scale(dxdy, -dxdy)
+
+            meta = {'count': 1,
+                    'width': a.shape[1],
+                    'height': a.shape[0],
+                    'nodata': nodata,
+                    'dtype': a.dtype,
+                    'driver': 'GTiff',
+                    'crs': self.proj4_str,
+                    'transform': trans
+                    }
+            meta.update(kwargs)
+            with rasterio.open(filename, 'w', **meta) as dst:
+                dst.write(a, 1)
             print('wrote {}'.format(filename))
 
         elif filename.lower().endswith(".shp"):
@@ -1020,6 +1085,76 @@ class SpatialReference(object):
                 epsg = self.epsg
             write_grid_shapefile2(filename, self, array_dict={fieldname: a}, nan_val=nodata,
                                   epsg=epsg, prj=prj)
+
+    def export_contours(self, filename, contours,
+                        fieldname='level',
+                        **kwargs):
+        """Convert matplotlib contour plot object to shapefile.
+
+        Parameters
+        ----------
+        filename : str
+            path of output shapefile
+        contours : matplotlib.contour.QuadContourSet or list of them
+            (object returned by matplotlib.pyplot.contour)
+        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+
+        Returns
+        -------
+        df : dataframe of shapefile contents
+        """
+        from flopy.utils.geometry import LineString
+        from flopy.export.shapefile_utils import recarray2shp
+
+        if not isinstance(contours, list):
+            contours = [contours]
+
+        geoms = []
+        level = []
+        for ctr in contours:
+            levels = ctr.levels
+            for i, c in enumerate(ctr.collections):
+                paths = c.get_paths()
+                geoms += [LineString(p.vertices) for p in paths]
+                level += list(np.ones(len(paths)) * levels[i])
+
+        # convert the dictionary to a recarray
+        ra = np.array(level,
+                       dtype=[(fieldname, float)]).view(np.recarray)
+
+        recarray2shp(ra, geoms, filename, **kwargs)
+
+    def export_array_contours(self, filename, a,
+                              fieldname='level',
+                              interval=None,
+                              levels=None,
+                              maxlevels=1000,
+                              **kwargs):
+        """Contour an array using matplotlib; write shapefile of contours.
+
+        Parameters
+        ----------
+        filename : str
+            Path of output file with '.shp' extention.
+        a : 2D numpy array
+            Array to contour
+
+        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+        """
+        import matplotlib.pyplot as plt
+
+        if interval is not None:
+            min = np.nanmin(a)
+            max = np.nanmax(a)
+            nlevels = np.round(np.abs(max-min)/interval, 2)
+            assert nlevels < maxlevels, \
+                    print('{:.0f} levels at interval of {} > maxlevels={}'.format(nlevels,
+                                                                          interval,
+                                                                          maxlevels))
+            levels = np.arange(min, max, interval)
+        fig, ax = plt.subplots()
+        ctr = self.contour_array(ax, a, levels=levels)
+        self.export_contours(filename, ctr, fieldname, **kwargs)
 
     def contour_array(self, ax, a, **kwargs):
         """
@@ -1053,8 +1188,9 @@ class SpatialReference(object):
         """populate vertices for the whole grid"""
         jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
         jj, ii = jj.ravel(), ii.ravel()
-        vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
-        self._vertices = [v.tolist() for v in vrts]  # conversion to lists
+        self._vertices = self.get_vertices(ii, jj)
+        #vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
+        #self._vertices = [v.tolist() for v in vrts]  # conversion to lists
 
         """
         code above is 3x faster
@@ -1550,6 +1686,31 @@ class SpatialReferenceUnstructured(SpatialReference):
         return contour_set
 
 
+class TemporalReference(object):
+    """For now, just a container to hold start time and time units files
+    outside of DIS package."""
+
+    defaults = {'itmuni': 4,
+                'start_datetime': '01-01-1970'}
+
+    itmuni_values = {'undefined': 0,
+                     'seconds': 1,
+                     'minutes': 2,
+                     'hours': 3,
+                     'days': 4,
+                     'years': 5}
+
+    itmuni_text = {v: k for k, v in itmuni_values.items()}
+
+    def __init__(self, itmuni=4, start_datetime=None):
+        self.itmuni = itmuni
+        self.start_datetime = start_datetime
+
+    @property
+    def model_time_units(self):
+        return self.itmuni_text[self.itmuni]
+
+
 class epsgRef:
     """Sets up a local database of projection file text referenced by epsg code.
     The database is located in the site packages folder in epsgref.py, which
@@ -1604,6 +1765,182 @@ class epsgRef:
             print('{}:\n{}\n'.format(k, v))
 
 
+class crs(object):
+    """Container to parse and store coordinate reference system parameters,
+    and translate between different formats."""
+    def __init__(self, prj=None, esri_wkt=None, epsg=None):
+
+        self.wktstr = None
+        if prj is not None:
+            with open(prj) as input:
+                self.wktstr = input.read()
+        elif esri_wkt is not None:
+            self.wktstr = esri_wkt
+        elif epsg is not None:
+            wktstr = getprj(epsg)
+            if wktstr is not None:
+                self.wktstr = wktstr
+        if self.wktstr is not None:
+            self.parse_wkt()
+
+    @property
+    def crs(self):
+        """Dict mapping crs attibutes to proj4 parameters"""
+        # projection
+        if 'mercator' in self.projcs.lower():
+            if 'transvers' in self.projcs.lower() or \
+                            'tm' in self.projcs.lower():
+                proj = 'tmerc'
+            else:
+                proj = 'merc'
+        elif 'utm' in self.projcs.lower() and \
+                        'zone' in self.projcs.lower():
+            proj = 'utm'
+        elif 'stateplane' in self.projcs.lower():
+            proj = 'lcc'
+        elif 'lambert' and 'conformal' and 'conic' in self.projcs.lower():
+            proj = 'lcc'
+        elif 'albers' in self.projcs.lower():
+            proj = 'aea'
+        else:
+            proj = None
+
+        # datum
+        if 'NAD' in self.datum.lower() or \
+            'north' in self.datum.lower() and \
+                'america' in self.datum.lower():
+            datum = 'nad'
+            if '83' in self.datum.lower():
+                datum += '83'
+            elif '27' in self.datum.lower():
+                datum += '27'
+        elif '84' in self.datum.lower():
+            datum = 'wgs84'
+
+        # ellipse
+        if '1866' in self.spheriod_name:
+            ellps = 'clrk66'
+        elif 'grs' in self.spheriod_name.lower():
+            ellps = 'grs80'
+        elif 'wgs' in self.spheriod_name.lower():
+            ellps = 'wgs84'
+
+        # prime meridian
+        pm = self.primem[0].lower()
+
+        return {'proj': proj,
+                   'datum': datum,
+                   'ellps': ellps,
+                   'a': self.semi_major_axis,
+                   'rf': self.inverse_flattening,
+                   'lat_0': self.latitude_of_origin,
+                   'lat_1': self.standard_parallel_1,
+                   'lat_2': self.standard_parallel_2,
+                   'lon_0': self.central_meridian,
+                   'k_0': self.scale_factor,
+                   'x_0': self.false_easting,
+                   'y_0': self.false_northing,
+                   'units': self.projcs_unit,
+                   'zone': self.utm_zone}
+
+    @property
+    def grid_mapping_attribs(self):
+        """Map parameters for CF Grid Mappings
+        http://cfconventions.org/cf-conventions/v1.6.0
+        /cf-conventions.html#appendix-grid-mappings"""
+        if self.wktstr is not None:
+            sp = [p for p in [self.standard_parallel_1,
+                              self.standard_parallel_2]
+                  if p is not None]
+            sp = sp if len(sp) > 0 else None
+            proj = self.crs['proj']
+            names = {'aea': 'albers_conical_equal_area',
+                     'aeqd': 'azimuthal_equidistant',
+                     'laea': 'lambert_azimuthal_equal_area',
+                     'lcc': 'lambert_conformal_conic',
+                     'merc': 'mercator',
+                     'tmerc': 'transverse_mercator',
+                     'utm': 'transverse_mercator'}
+            attribs = {'grid_mapping_name': names[proj],
+                       'semi_major_axis': self.crs['a'],
+                       'inverse_flattening': self.crs['rf'],
+                       'standard_parallel': sp,
+                       'longitude_of_central_meridian': self.crs['lon_0'],
+                       'latitude_of_projection_origin': self.crs['lat_0'],
+                       'scale_factor_at_projection_origin': self.crs['k_0'],
+                       'false_easting': self.crs['x_0'],
+                       'false_northing': self.crs['y_0']}
+            return {k:v for k, v in attribs.items() if v is not None}
+
+    @property
+    def proj4(self):
+        """Not implemented yet"""
+        return None
+
+    def parse_wkt(self):
+
+        self.projcs = self._gettxt('PROJCS["', '"')
+        self.utm_zone = None
+        if 'utm' in self.projcs.lower():
+            self.utm_zone = self.projcs[-3:].lower().strip('n').strip('s')
+        self.geogcs = self._gettxt('GEOGCS["', '"')
+        self.datum = self._gettxt('DATUM["', '"')
+        tmp = self._getgcsparam('SPHEROID')
+        self.spheriod_name = tmp.pop(0)
+        self.semi_major_axis = tmp.pop(0)
+        self.inverse_flattening = tmp.pop(0)
+        self.primem = self._getgcsparam('PRIMEM')
+        self.gcs_unit = self._getgcsparam('UNIT')
+        self.projection = self._gettxt('PROJECTION["', '"')
+        self.latitude_of_origin = self._getvalue('latitude_of_origin')
+        self.central_meridian = self._getvalue('central_meridian')
+        self.standard_parallel_1 = self._getvalue('standard_parallel_1')
+        self.standard_parallel_2 = self._getvalue('standard_parallel_2')
+        self.scale_factor = self._getvalue('scale_factor')
+        self.false_easting = self._getvalue('false_easting')
+        self.false_northing = self._getvalue('false_northing')
+        self.projcs_unit = self._getprojcs_unit()
+
+    def _gettxt(self, s1, s2):
+        s = self.wktstr.lower()
+        strt = s.find(s1.lower())
+        if strt >= 0:  # -1 indicates not found
+            strt += len(s1)
+            end = s[strt:].find(s2.lower()) + strt
+            return self.wktstr[strt:end]
+
+    def _getvalue(self, k):
+        s = self.wktstr.lower()
+        strt = s.find(k.lower())
+        if strt >= 0:
+            strt += len(k)
+            end = s[strt:].find(']') + strt
+            try:
+                return float(self.wktstr[strt:end].split(',')[1])
+            except:
+                pass
+
+    def _getgcsparam(self, txt):
+        nvalues = 3 if txt.lower() == 'spheroid' else 2
+        tmp = self._gettxt('{}["'.format(txt), ']')
+        if tmp is not None:
+            tmp = tmp.replace('"', '').split(',')
+            name = tmp[0:1]
+            values = list(map(float, tmp[1:nvalues]))
+            return name + values
+        else:
+            return [None]*nvalues
+
+    def _getprojcs_unit(self):
+        if self.projcs is not None:
+            tmp = self.wktstr.lower().split('unit["')[-1]
+            uname, ufactor = tmp.strip().strip(']').split('",')[0:2]
+            ufactor = float(ufactor.split(']')[0].split()[0].split(',')[0])
+            return uname, ufactor
+        return None, None
+
+
+
 def getprj(epsg, addlocalreference=True, text='esriwkt'):
     """Gets projection file (.prj) text for given epsg code from spatialreference.org
     See: https://www.epsg-registry.org/
@@ -1622,18 +1959,17 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
         text for a projection (*.prj) file.
     """
     epsgfile = epsgRef()
-    prj = None
+    wktstr = None
     try:
         from epsgref import prj
-        prj = prj.get(epsg)
+        wktstr = prj.get(epsg)
     except:
         epsgfile.make()
-
-    if prj is None:
-        prj = get_spatialreference(epsg, text=text)
-    if addlocalreference:
-        epsgfile.add(epsg, prj)
-    return prj
+    if wktstr is None:
+        wktstr = get_spatialreference(epsg, text=text)
+    if addlocalreference and wktstr is not None:
+        epsgfile.add(epsg, wktstr)
+    return wktstr
 
 
 def get_spatialreference(epsg, text='esriwkt'):
@@ -1657,12 +1993,13 @@ def get_spatialreference(epsg, text='esriwkt'):
     """
     from flopy.utils.flopy_io import get_url_text
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
-    text = get_url_text(url,
+    result = get_url_text(url,
                         error_msg='No internet connection or epsg code {} '
                                   'not found on spatialreference.org.'.format(epsg))
-    if text is None: # epsg code not listed on spatialreference.org may still work with pyproj
+    if result is not None:
+        return result.replace("\n", "")
+    elif text == 'epsg': # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
-    return text.replace("\n", "")
 
 
 def getproj4(epsg):

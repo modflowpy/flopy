@@ -87,6 +87,30 @@ def test_sfrcheck():
     assert 'continuity in segment and reach numbering' in chk.errors
     chk.routing()
     assert 'circular routing' in chk.errors
+    m.sfr.segment_data[0]['nseg'][-1] -= 1
+    m.sfr.isfropt = 1.
+    chk = check(m.sfr)
+    chk.elevations()
+    # throw warning if isfropt=1 and strtop at default
+    assert 'maximum streambed top' in chk.warnings
+    assert 'minimum streambed top' in chk.warnings
+    m.sfr.reach_data['strtop'] = m.sfr._interpolate_to_reaches('elevup', 'elevdn')
+    m.sfr.get_slopes()
+    m.sfr.reach_data['strhc1'] = 1.
+    m.sfr.reach_data['strthick'] = 1.
+    chk = check(m.sfr)
+    chk.elevations()
+    assert 'maximum streambed top' in chk.passed
+    assert 'minimum streambed top' in chk.passed
+    m.sfr.reach_data['strtop'][2] = -99.
+    chk = check(m.sfr)
+    chk.elevations()
+    assert 'minimum streambed top' in chk.warnings
+    m.sfr.reach_data['strtop'][2] = 99999.
+    chk = check(m.sfr)
+    chk.elevations()
+    assert 'maximum streambed top' in chk.warnings
+    assert True
     
 
 def test_sfrloadcheck():

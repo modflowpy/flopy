@@ -136,7 +136,7 @@ class NetCdf(object):
     """
 
     def __init__(self, output_filename, model, time_values=None, z_positive='up',
-                 verbose=None,
+                 verbose=None, prj=None,
                  logger=None, forgive=False):
 
         assert output_filename.lower().endswith(".nc")
@@ -157,6 +157,9 @@ class NetCdf(object):
 
         assert model.dis is not None
         self.model = model
+        self.sr = model.sr
+        if prj is not None:
+            self.sr.prj = prj
         self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
 
         import dateutil.parser
@@ -174,7 +177,7 @@ class NetCdf(object):
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
-        self.time_units = ITMUNI[self.model.dis.itmuni]
+        self.time_units = ITMUNI[self.model.tr.itmuni]
 
         # this gives us confidence that every NetCdf instance
         # has the same attributes
@@ -622,8 +625,7 @@ class NetCdf(object):
 
         vmin, vmax = self.model.dis.botm.array.min(), self.model.dis.top.array.max()
         if self.z_positive == 'down':
-            self.zs = -1.0 * self.model.dis.zcentroids
-            vmin, vmax = -vmax, -vmin
+            vmin, vmax = vmax, vmin
         else:
             self.zs = self.model.dis.zcentroids
 
@@ -708,11 +710,6 @@ class NetCdf(object):
         self.nc.setncattr("geospatial_vertical_max", max_vertical)
         self.nc.setncattr("geospatial_vertical_resolution", "variable")
         self.nc.setncattr("featureType", "Grid")
-        self.nc.setncattr("origin_x", self.model.sr.xul)
-        self.nc.setncattr("origin_y", self.model.sr.yul)
-        self.nc.setncattr("origin_crs", self.proj4_str)
-        self.nc.setncattr("grid_rotation_from_origin",
-                          self.model.sr.rotation)
         for k, v in self.global_attributes.items():
             try:
                 self.nc.setncattr(k, v)
@@ -721,6 +718,7 @@ class NetCdf(object):
                     "error setting global attribute {0}".format(k))
         self.global_attributes = {}
         self.log("setting standard attributes")
+
         # spatial dimensions
         self.log("creating dimensions")
         # time
@@ -753,16 +751,14 @@ class NetCdf(object):
         time[:] = np.asarray(time_values)
 
         # Elevation
-        units = "meters"
-        if self.grid_units.lower().startswith('f'):
-            units = "feet"
-        attribs = {"units": units, "standard_name": "elevation",
+        sr = self.model.sr
+        attribs = {"units": sr.units, "standard_name": "elevation",
                    "long_name": NC_LONG_NAMES.get("elevation", "elevation"), "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
-                   "positive": "down"}
+                   "positive": self.z_positive}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
                                     dimensions=("layer", "y", "x"))
-        elev[:] = self.zs
+        elev[:] = self.zs * sr.length_multiplier # consistent w/ horizontal units
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
@@ -782,6 +778,28 @@ class NetCdf(object):
                                    dimensions=("y", "x"))
         lat[:] = self.ys
 
+        # x
+        self.log("creating x var")
+        attribs = {"units": sr.units, "standard_name": "projection_x_coordinate",
+                   "long_name": NC_LONG_NAMES.get("x", "x coordinate of projection"), "axis": "X"}
+        x = self.create_variable("x_proj", attribs, precision_str="f8",
+                                   dimensions=("y", "x"))
+        x[:] = sr.xcentergrid
+
+        # y
+        self.log("creating y var")
+        attribs = {"units": sr.units, "standard_name": "projection_y_coordinate",
+                   "long_name": NC_LONG_NAMES.get("y", "y coordinate of projection"), "axis": "Y"}
+        y = self.create_variable("y_proj", attribs, precision_str="f8",
+                                 dimensions=("y", "x"))
+        y[:] = sr.ycentergrid
+
+        # grid mapping variable
+        attribs = self.sr.crs.grid_mapping_attribs
+        if attribs is not None:
+            self.log("creating grid mapping variable")
+            gmv = self.create_variable(attribs['grid_mapping_name'], attribs, precision_str="f8")
+
         # layer
         self.log("creating layer var")
         attribs = {"units": "", "standard_name": "layer", "long_name": NC_LONG_NAMES.get("layer", "layer"),
@@ -791,29 +809,22 @@ class NetCdf(object):
         self.log("creating layer var")
 
         # delc
-        attribs = {"units": "meters", "long_name": NC_LONG_NAMES.get("delc", "Model row spacing"),
-                   "origin_x": self.model.sr.xul,
-                   "origin_y": self.model.sr.yul,
-                   "origin_crs": self.nc_epsg_str}
+        attribs = {"units": self.sr.units.strip('s'),
+                   "long_name": NC_LONG_NAMES.get("delc", "Model grid cell spacing along a column"),
+                   }
         delc = self.create_variable('delc', attribs, dimensions=('y',))
-        if self.grid_units.lower().startswith('f'):
-            delc[:] = self.model.sr.delc[::-1] * 0.3048
-        else:
-            delc[:] = self.model.sr.delc[::-1]
+        delc[:] = self.model.sr.delc[::-1] * self.model.sr.length_multiplier
         if self.model.sr.rotation != 0:
             delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
+
         # delr
-        attribs = {"units": "meters", "long_name": NC_LONG_NAMES.get("delr", "Model column spacing"),
-                   "origin_x": self.model.sr.xul,
-                   "origin_y": self.model.sr.yul,
-                   "origin_crs": self.nc_epsg_str}
+        attribs = {"units": self.sr.units.strip('s'),
+                   "long_name": NC_LONG_NAMES.get("delr", "Model grid cell spacing along a row"),
+                   }
         delr = self.create_variable('delr', attribs, dimensions=('x',))
-        if self.grid_units.lower().startswith('f'):
-            delr[:] = self.model.sr.delr[::-1] * 0.3048
-        else:
-            delr[:] = self.model.sr.delr[::-1]
+        delr[:] = self.model.sr.delr[::-1] * self.model.sr.length_multiplier
         if self.model.sr.rotation != 0:
             delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
@@ -956,28 +967,29 @@ class NetCdf(object):
         metadata : flopy.export.metadata.acdd object
         """
         md = acdd(id, model=self.model)
-        if check:
-            self._check_vs_sciencebase(md)
-        # get set of public attributes
-        attr = {n for n in dir(md) if '_' not in n[0]}
-        # skip some convenience attributes
-        skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage',
-                'get_sciencebase_xml_metadata',
-                'get_sciencebase_metadata'}
-        towrite = sorted(list(attr.difference(skip)))
-        for k in towrite:
-            v = md.__getattribute__(k)
-            if v is not None:
-                # convert everything to strings
-                if not isinstance(v, str):
-                    if isinstance(v, list):
-                        v = ','.join(v)
-                    else:
-                        v = str(v)
-                self.global_attributes[k] = v
-                self.nc.setncattr(k, v)
-        self.write()
-        return md
+        if md.sb is not None:
+            if check:
+                self._check_vs_sciencebase(md)
+            # get set of public attributes
+            attr = {n for n in dir(md) if '_' not in n[0]}
+            # skip some convenience attributes
+            skip = {'bounds', 'creator', 'sb', 'xmlroot', 'time_coverage',
+                    'get_sciencebase_xml_metadata',
+                    'get_sciencebase_metadata'}
+            towrite = sorted(list(attr.difference(skip)))
+            for k in towrite:
+                v = md.__getattribute__(k)
+                if v is not None:
+                    # convert everything to strings
+                    if not isinstance(v, str):
+                        if isinstance(v, list):
+                            v = ','.join(v)
+                        else:
+                            v = str(v)
+                    self.global_attributes[k] = v
+                    self.nc.setncattr(k, v)
+            self.write()
+            return md
 
     def _check_vs_sciencebase(self, md):
         """Check that model bounds read from flopy are consistent with those in ScienceBase."""

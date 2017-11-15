@@ -236,8 +236,11 @@ class Modpath(BaseModel):
         group_placement = []
         ifaces = []
         face_ct = []
+        strt_file = None
         for package in packages:
+
             if package.upper() == 'WEL':
+                ParticleGenerationOption = 1
                 if 'WEL' not in pak_list:
                     raise Exception(
                         'Error: no well package in the passed model')
@@ -269,6 +272,7 @@ class Modpath(BaseModel):
                             icnt += 1
             # this is kind of a band aid pending refactoring of mpsim class
             elif 'MNW' in package.upper():
+                ParticleGenerationOption = 1
                 if 'MNW2' not in pak_list:
                     raise Exception(
                         'Error: no MNW2 package in the passed model')
@@ -310,6 +314,7 @@ class Modpath(BaseModel):
                                 append_node(side_faces,
                                             wellid, n, k, i, j)
             elif package.upper() == 'RCH':
+                ParticleGenerationOption = 1
                 # for j in range(nrow):
                 #    for i in range(ncol):
                 #        group_name.append('rch')
@@ -326,6 +331,20 @@ class Modpath(BaseModel):
                     ifaces.append(default_ifaces)
                     face_ct.append(len(default_ifaces))
 
+
+            else:
+                model_ws = ''
+                if self.__mf is not None:
+                    model_ws = self.__mf.model_ws
+                if os.path.exists(os.path.join(model_ws,package)):
+                    print("detected a particle starting locations file in packages")
+                    assert len(packages) == 1, "if a particle starting locations file is passed" + \
+                                               ", other packages cannot be specified"
+                    ParticleGenerationOption = 2
+                    strt_file = package
+                else:
+                    raise Exception("package '{0}' not supported".format(package))
+
         SimulationType = 1
         if simtype.lower() == 'endpoint':
             SimulationType = 1
@@ -341,7 +360,7 @@ class Modpath(BaseModel):
         WeakSourceOption = 1
 
         StopOption = 2
-        ParticleGenerationOption = 1
+
         if SimulationType == 1:
             TimePointOption = 1
         else:
@@ -364,4 +383,5 @@ class Modpath(BaseModel):
                           group_placement=group_placement,
                           group_name=group_name,
                           group_region=group_region,
-                          face_ct=face_ct, ifaces=ifaces)
+                          face_ct=face_ct, ifaces=ifaces,
+                          strt_file=strt_file)
