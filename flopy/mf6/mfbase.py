@@ -267,7 +267,7 @@ class PackageContainer(object):
                 continue
 
             # import
-            module = importlib.import_module("flopy6.modflow.{}".format(module_path))
+            module = importlib.import_module("flopy.mf6.modflow.{}".format(module_path))
 
             # iterate imported items
             for item in dir(module):

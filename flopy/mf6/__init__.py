@@ -1,6 +1,6 @@
 # imports
-from . import data
 from . import coordinates
+from . import data
 from . import modflow
 from . import plot
 from . import utils

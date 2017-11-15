@@ -1,7 +1,7 @@
 import os
 import keyword
 from enum import Enum
-from flopy6.data import mfstructure, mfdatautil, dfn
+from flopy.mf6.data import mfstructure, mfdatautil, dfn
 
 
 class PackageLevel(Enum):

@@ -139,7 +139,7 @@ class VertexArray(object):
     """
     def __init__(self, dataset, key, sr):
         # todo: replace local imports with a single global import after input code is working
-        from flopy6.utils.VertexTestData.VertexDataTest import MFArray, \
+        from flopy.mf6.utils.VertexTestData.VertexDataTest import MFArray, \
             MFScalar, MFList, MFTransientArray, MFTransientList
         self.sr = sr
         self.nlay = sr.nlay
