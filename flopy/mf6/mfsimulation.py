@@ -99,8 +99,9 @@ class SimulationDict(collections.OrderedDict):
         self.input_keys()
         try:
             self.output_keys()
-        except FileNotFoundError:
-            pass
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                pass
         try:
             self.observation_keys()
         except KeyError:

@@ -332,7 +332,9 @@ class MFList(mfdata.MFMultiDimVar):
                     storage.store_internal(storage.convert_data(arr_line[1],
                                                                 self.structure.data_item_structures[1].type),
                                                                 0, const=True, multiplier=[1.0])
-                    for line in file_handle:
+                    line = ' '
+                    while line != '':
+                        line = file_handle.readline()
                         arr_line = mfdatautil.ArrayUtil.split_data_line(line)
                         if arr_line and (len(arr_line[0]) >= 2 and arr_line[0][:3].upper() == 'END'):
                             return [False, line]
@@ -354,7 +356,9 @@ class MFList(mfdata.MFMultiDimVar):
         recarray_len = len(recarrays)
 
         # loop until end of block
-        for line in file_handle:
+        line = ' '
+        while line != '':
+            line = file_handle.readline()
             arr_line = mfdatautil.ArrayUtil.split_data_line(line)
             if arr_line and (len(arr_line[0]) >= 2 and arr_line[0][:3].upper() == 'END'):
                 # end of block

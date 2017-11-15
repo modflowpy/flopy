@@ -869,7 +869,9 @@ class DataStorage(object):
             model_dim = self.data_dimensions.package_dim.model_dim[0]
             fd = open(self._simulation_data.mfpath.resolve_path(self.layer_storage[layer].fname,
                                                                 model_dim.model_name), 'r')
-        for line in fd:
+        line = ' '
+        while line != '':
+            line = fd.readline()
             arr_line = ArrayUtil.split_data_line(line, True)
             for data in arr_line:
                 if data != '':

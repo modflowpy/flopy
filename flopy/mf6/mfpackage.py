@@ -450,7 +450,9 @@ class MFBlock(object):
                 if results[1] is None or results[1][:3].upper() != 'END':
                     # block consists of unordered datasets
                     # load the data sets out of order based on initial constants
-                    for line in fd_block:
+                    line = ' '
+                    while line != '':
+                        line = fd_block.readline()
                         arr_line = mfdatautil.ArrayUtil.split_data_line(line)
                         if arr_line:
                             # determine if at end of block
@@ -837,12 +839,13 @@ class MFPackage(PackageContainer):
         # open file
         try:
             fd_input_file = open(self.get_file_path(), 'r')
-        except FileNotFoundError:
-            excpt_str = 'File {} of type {} could not be opened. {}'.format(self.get_file_path(),
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                excpt_str = 'File {} of type {} could not be opened. {}'.format(self.get_file_path(),
                                                                             self.package_type,
                                                                             self.path)
-            print(excpt_str)
-            raise mfstructure.MFFileParseException(excpt_str)
+                print(excpt_str)
+                raise mfstructure.MFFileParseException(excpt_str)
 
         try:
             self._load_blocks(fd_input_file, strict)
@@ -878,7 +881,9 @@ class MFPackage(PackageContainer):
 
         blocks_read = 0
         found_first_block = False
-        for line in fd_input_file:
+        line = ' '
+        while line != '':
+            line = fd_input_file.readline()
             clean_line = line.strip()
             # If comment or empty line
             if mfdata.MFComment.is_comment(clean_line, True):
@@ -906,7 +911,8 @@ class MFPackage(PackageContainer):
                                   '{}.'.format(block_key, self.package_type)
                     print(warning_str)
                     self._store_comment(line, found_first_block)
-                    for line in fd_input_file:
+                    while line != '':
+                        line = fd_input_file.readline()
                         self._store_comment(line, found_first_block)
                         arr_line = mfdatautil.ArrayUtil.split_data_line(line)
                         if arr_line and (len(arr_line[0]) <= 2 or arr_line[0][:3].upper() == 'END'):
