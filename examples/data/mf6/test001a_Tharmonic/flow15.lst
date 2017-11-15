@@ -1,0 +1,206 @@
+                                 MODFLOW 6 Beta
+                U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
+                          GROUNDWATER FLOW MODEL (GWF)
+                           VERSION 0.9.02 05/19/2017
+
+This software is preliminary or provisional and is subject to revision. 
+It is being provided to meet the need for timely best science. The 
+software has not received final approval by the U.S. Geological Survey 
+(USGS). No warranty, expressed or implied, is made by the USGS or the 
+U.S. Government as to the functionality of the software and related 
+material nor shall the fact of release constitute any such warranty. The 
+software is provided on the condition that neither the USGS nor the U.S. 
+Government shall be held liable for any damages resulting from the 
+authorized or unauthorized use of the software.
+
+
+MODFLOW was compiled using uniform precision.
+Precision of REAL variables: 15
+
+
+ OPENED flow15.dis
+ FILE TYPE:DIS6                   UNIT 1004   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED flow15.ic
+ FILE TYPE:IC6                    UNIT 1005   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED flow15.npf
+ FILE TYPE:NPF6                   UNIT 1006   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED flow15_constant.chd
+ FILE TYPE:CHD6                   UNIT 1007   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED flow15.oc
+ FILE TYPE:OC6                    UNIT 1008   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+Warning TDIS6 detected in GWF name file.
+ Simulation TDIS file will be used instead.
+
+Warning IMS6 detected in GWF name file.
+ Simulation IMS6 file will be used instead.
+
+ DIS -- STRUCTURED GRID DISCRETIZATION PACKAGE, VERSION 2 : 3/27/2014 - INPUT READ FROM UNIT 1004
+
+
+ # DIS8 input file, prepared by mf5to15 on 4/10/2015 at 9:04:54.
+ PROCESSING DISCRETIZATION OPTIONS
+    MODEL LENGTH UNIT IS METERS
+ END OF DISCRETIZATION OPTIONS
+ PROCESSING DISCRETIZATION DIMENSIONS
+    NLAY =       1
+    NROW =       1
+    NCOL =      10
+ END OF DISCRETIZATION DIMENSIONS
+ PROCESSING GRIDDATA
+
+                     DELR =   100.0000    
+
+                     DELC =   1000.000    
+
+ TOP ELEVATION OF LAYER 1 =   10.00000    
+
+   MODEL LAYER BOTTOM EL. =  -10.00000     FOR LAYER 1
+ END PROCESSING GRIDDATA
+
+ NPF -- NODE PROPERTY FLOW PACKAGE, VERSION 1, 3/30/2015 INPUT READ FROM UNIT 1006
+
+
+ # NPF8 input file, prepared by mf5to15 on 4/10/2015 at 9:04:54.
+ PROCESSING NPF OPTIONS
+    CELL-BY-CELL FLOW INFORMATION WILL BE SAVED TO BINARY FILE WHENEVER ICBCFL IS NOT ZERO.
+ END OF NPF OPTIONS
+
+ CHD   -- CHD PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM UNIT 1007
+ # CHD8 input file, prepared by mf5to15 on 4/10/2015 at 9:04:54.
+
+ PROCESSING CHD OPTIONS
+    CHD FLOWS WILL BE PRINTED TO LISTING FILE.
+    LISTS OF CHD CELLS WILL BE PRINTED.
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+ END OF CHD OPTIONS
+
+ PROCESSING CHD DIMENSIONS
+    MAXBOUND =       2
+ END OF CHD DIMENSIONS
+
+ IC -- INITIAL CONDITIONS PACKAGE, VERSION 8, 3/28/2015 INPUT READ FROM UNIT 1005
+ # IC8 input file, prepared by mf5to15 on 4/10/2015 at 9:04:54.
+ PROCESSING IC OPTIONS
+ END OF IC OPTIONS
+ PROCESSING GRIDDATA
+ END PROCESSING GRIDDATA
+ PROCESSING GRIDDATA
+
+                ICELLTYPE = 1 FOR LAYER 1
+
+                        K =   10.00000     FOR LAYER 1
+ K33 not provided.  Assuming K33 = K.
+ K22 not provided.  Assuming K22 = K.
+ END PROCESSING GRIDDATA
+    BINARY GRID INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1010
+      FILE NAME: flow15.dis.grb
+
+ OPENED flow15.dis.grb
+ FILE TYPE:DATA(BINARY)   UNIT 1010   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+      THE LAST TIME STEP WILL BE PRINTED
+      THE LAST TIME STEP WILL BE PRINTED
+ PROCESSING OC2 OPTIONS
+    HEAD INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1011
+      FILE NAME: flow15_flow.hds
+
+ OPENED flow15_flow.hds
+ FILE TYPE:DATA(BINARY)   UNIT 1011   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+    BUDGET INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1012
+      FILE NAME: flow15_flow.cbc
+
+ OPENED flow15_flow.cbc
+ FILE TYPE:DATA(BINARY)   UNIT 1012   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+ END OF OC OPTIONS
+
+ BEGIN READING OUTPUT CONTROL FOR STRESS PERIOD 1
+      ALL TIME STEPS WILL BE PRINTED
+      ALL TIME STEPS WILL BE SAVED
+      ALL TIME STEPS WILL BE PRINTED
+      ALL TIME STEPS WILL BE SAVED
+
+ END READING OUTPUT CONTROL FOR STRESS PERIOD 1
+
+ CHD NO.  LAYER    ROW    COL            HEAD         
+ -----------------------------------------------------
+      1      1      1      1       10.00    
+      2      1      1     10       0.000    
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1012 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV06 SAVING              CHD IN MODEL FLOW15           PACKAGE FLOW15          CONNECTED TO MODEL FLOW15           PACKAGE CHD-1            ON UNIT   1012 AT TIME STEP      1, STRESS PERIOD      1
+
+              CHD   PERIOD 1   STEP 1
+ BOUNDARY        1  CELL              (1,1,1)   RATE     1663.78    
+ BOUNDARY        2  CELL             (1,1,10)   RATE    -1663.78    
+1
+  HEAD IN LAYER   1 AT END OF TIME STEP   1 IN STRESS PERIOD    1
+  ---------------------------------------------------------------------------
+
+            1           2           3           4           5           6           7           8           9          10
+ ........................................................................................................................
+   1    10.00       9.150       8.260       7.324       6.334       5.281       4.148       2.916       1.552       0.000    
+
+ HEAD WILL BE SAVED ON UNIT 1011 AT END OF TIME STEP    1, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+                 CHD =        1663.7834                   CHD =        1663.7834     CHD-1           
+
+            TOTAL IN =        1663.7834              TOTAL IN =        1663.7834
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 CHD =        1663.7834                   CHD =        1663.7834     CHD-1           
+
+           TOTAL OUT =        1663.7834             TOTAL OUT =        1663.7834
+
+            IN - OUT =      -1.1141E-11              IN - OUT =      -1.1141E-11
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
