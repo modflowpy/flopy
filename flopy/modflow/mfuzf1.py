@@ -680,7 +680,7 @@ class ModflowUzf1(Package):
 
         # dataset 1b
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
-        ntrail2, nsets2, nuzgag, surfdep = _parse1(f.readline())
+        ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
 
         arrays = {'finf': [],
                   # datasets 10, 12, 14, 16 are lists of util2d arrays
@@ -720,7 +720,7 @@ class ModflowUzf1(Package):
                 # dataset 6b (residual water content)
                 load_util2d('thtr', np.float32)
 
-            if specifythti or np.any(~model.dis.steady):
+            if specifythti or np.all(~model.dis.steady.array):
                 # dataset 7 (initial water content; only read if not steady-state)
                 load_util2d('thti', np.float32)
 
