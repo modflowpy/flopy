@@ -114,4 +114,10 @@ def runmodels():
 
 
 if __name__ == '__main__':
+
+    # to run them all with python
     runmodels()
+
+    # or to run just test, pass the example name into runmodel
+    #runmodel('ex30-vilhelmsen-gf')
+    
