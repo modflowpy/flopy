@@ -59,6 +59,17 @@ def pop_item(line, dtype=str):
             return int(float(line.pop(0)))
     return 0
 
+def read_nwt_options(f):
+    """convert options codeblock to single line."""
+    options = []
+    while True:
+        options += line_parse(f.readline().lower())
+        if 'end' in options:
+            return ' '.join(options[:-1])
+
+
+
+
 def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
     """
 
