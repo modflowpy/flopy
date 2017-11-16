@@ -69,7 +69,8 @@ class MFScalar(mfdata.MFData):
             data = data[0]
             if (isinstance(data, list) or isinstance(data, tuple)) and len(data) > 1:
                 self._add_data_line_comment(data[1:], 0)
-        self._get_storage_obj().set_data(self._get_storage_obj().convert_data(data, self._data_type),
+        self._get_storage_obj().set_data(self._get_storage_obj().convert_data(data, self._data_type,
+                                                                              self.structure.data_item_structures[0]),
                                          key=self._current_key)
 
     def add_one(self):
@@ -161,7 +162,8 @@ class MFScalar(mfdata.MFData):
                 raise mfstructure.MFFileParseException(except_str)
 
             # read next word as data
-            self._get_storage_obj().set_data(self._get_storage_obj().convert_data(arr_line[index_num], self._data_type),
+            self._get_storage_obj().set_data(self._get_storage_obj().convert_data(arr_line[index_num], self._data_type,
+                                                                                  self.structure.data_item_structures[0]),
                                              key=self._current_key)
             index_num += 1
 
