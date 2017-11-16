@@ -25,7 +25,7 @@ if not os.path.isdir(cpth):
     os.makedirs(cpth)
 
 
-def test001a_Tharmonic():
+def test001a_tharmonic():
     # init paths
     test_ex_name = 'test001a_Tharmonic'
     model_name = 'flow15'
@@ -237,7 +237,8 @@ def test005_advgw_tidal():
         # compare output to expected results
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, 'AdvGW_tidal.hds')
-        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new, outfile=outfile)
 
     # change some settings
     """
@@ -391,8 +392,276 @@ def test006_gwf3():
 
     return
 
+
+def test045_lake1ss_table():
+    # init paths
+    test_ex_name = 'test045_lake1ss_table'
+    model_name = 'lakeex1b'
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'lakeex1b_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder, 'lakeex1b_adj.hds')
+
+    # load simulation
+    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+
+    # make temp folder to save simulation
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'lakeex1b.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+    # change some settings
+    model = sim.get_model(model_name)
+    laktbl = model.get_package('tab').laktabrecarray
+    laktbl_data = laktbl.get_data()
+    laktbl_data[-1][0] = 700.0
+    laktbl.set_data(laktbl_data)
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'lakeex1b.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        # clean up
+        sim.delete_output_files()
+
+    return
+
+
+def test006_2models_mvr():
+    # init paths
+    test_ex_name = 'test006_2models_mvr'
+    sim_name = 'test006_2models_mvr'
+    model_names = ['parent', 'child']
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'model1_unch.hds')
+    expected_head_file_aa = os.path.join(expected_output_folder, 'model2_unch.hds')
+    expected_cbc_file_a = os.path.join(expected_output_folder, 'model1_unch.cbc')
+
+    expected_head_file_b = os.path.join(expected_output_folder, 'model1_adj.hds')
+    expected_head_file_bb = os.path.join(expected_output_folder, 'model2_adj.hds')
+
+    # load simulation
+    sim = MFSimulation.load(sim_name, 'mf6', 'mf6.exe', pth)
+
+    # make temp folder to save simulation
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'model1.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        head_file = os.path.join(os.getcwd(), expected_head_file_aa)
+        head_new = os.path.join(run_folder, 'model2.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
+        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj.list_records()
+
+    # change some settings
+    parent_model = sim.get_model(model_names[0])
+    maw_pkg = parent_model.get_package('maw')
+    period_data = maw_pkg.wellperiodrecarray.get_data()
+    period_data[0][2] = -1.0
+    maw_pkg.wellperiodrecarray.set_data(period_data, 0)
+
+    exg_pkg = sim.get_exchange_file('simulation.exg')
+    exg_data = exg_pkg.gwfgwfrecarray.get_data()
+    for index in range(0, len(exg_data)):
+        exg_data[index][6] = 500.0
+    exg_pkg.gwfgwfrecarray.set_data(exg_data)
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'model1.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        head_file = os.path.join(os.getcwd(), expected_head_file_bb)
+        head_new = os.path.join(save_folder, 'model2.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+        # clean up
+        sim.delete_output_files()
+
+    return
+
+
+def test001e_uzf_3lay():
+    # init paths
+    test_ex_name = 'test001e_UZF_3lay'
+    model_name = 'gwf_1'
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'test001e_UZF_3lay_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder, 'test001e_UZF_3lay_adj.hds')
+
+    # load simulation
+    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+
+    # make temp folder to save simulation
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'test001e_UZF_3lay.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+    # change some settings
+    model = sim.get_model(model_name)
+    uzf = model.get_package('uzf')
+    uzf_data = uzf.uzfrecarray
+    uzf_array = uzf_data.get_data()
+    # increase initial water content
+    for index in range(0, len(uzf_array)):
+        uzf_array[index][7] = 0.3
+    uzf_data.set_data(uzf_array)
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'test001e_UZF_3lay.hds')
+        outfile = os.path.join(save_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new, outfile=outfile)
+
+
+def test045_lake2tr():
+    # init paths
+    test_ex_name = 'test045_lake2tr'
+    model_name = 'lakeex2a'
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'lakeex2a_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder, 'lakeex2a_adj.hds')
+
+    # load simulation
+    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+
+    # write simulation to new location
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'lakeex2a.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+    # change some settings
+    model = sim.get_model(model_name)
+    evt = model.get_package('evt')
+    evt.rate.set_data([0.05], key=0)
+
+    lak = model.get_package('lak')
+    lak_period = lak.lakeperiodrecarray
+    lak_period_data = lak_period.get_data()
+    lak_period_data[2][2] = '0.05'
+    lak_period.set_data(lak_period_data, 0)
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'lakeex2a.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+
 if __name__ == '__main__':
-    test001a_Tharmonic()
+    test045_lake2tr()
+    test001e_uzf_3lay()
+    test006_2models_mvr()
+    test045_lake1ss_table()
+    test001a_tharmonic()
     test003_gwfs_disv()
     test005_advgw_tidal()
     test006_gwf3()
