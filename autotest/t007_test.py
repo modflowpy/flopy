@@ -142,6 +142,13 @@ def test_export_output():
     assert np.array_equal(ibound_mask, arr_mask)
 
 def test_export_array():
+
+    try:
+        from scipy.ndimage import rotate
+    except:
+        rotate = False
+        pass
+
     namfile = 'freyberg.nam'
     model_ws = '../examples/data/freyberg_multilayer_transient/'
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
@@ -157,10 +164,17 @@ def test_export_array():
         for line in src:
             if 'xllcorner' in line.lower():
                 val = float(line.strip().split()[-1])
-                assert np.abs(val - m.sr.bounds[0]) < 1e-6
+                # ascii grid origin will differ if it was unrotated
+                if rotate:
+                    assert np.abs(val - m.sr.bounds[0]) < 1e-6
+                else:
+                    assert np.abs(val - m.sr.xll) < 1e-6
             if 'yllcorner' in line.lower():
                 val = float(line.strip().split()[-1])
-                assert np.abs(val - m.sr.bounds[1]) < 1e-6
+                if rotate:
+                    assert np.abs(val - m.sr.bounds[1]) < 1e-6
+                else:
+                    assert np.abs(val - m.sr.yll) < 1e-6
             if 'cellsize' in line.lower():
                 val = float(line.strip().split()[-1])
                 rot_cellsize = np.cos(np.radians(m.sr.rotation)) * m.sr.delr[0] * m.sr.length_multiplier
@@ -168,12 +182,8 @@ def test_export_array():
                 break
     rotate = False
     rasterio = False
-    try:
-        # test that arc ascii grid was rotated correctly
-        from scipy.ndimage import rotate
+    if rotate:
         rotated = rotate(m.dis.top.array, m.sr.rotation, cval=nodata)
-    except:
-        pass
 
     if rotate:
         assert rotated.shape == arr.shape
@@ -840,7 +850,7 @@ if __name__ == '__main__':
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
     #test_freyberg_export()
-    #test_export_array()
+    test_export_array()
     #test_wkt_parse()
-    test_get_rc_from_node_coordinates()
+    #test_get_rc_from_node_coordinates()
     pass

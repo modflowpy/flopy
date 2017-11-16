@@ -1,6 +1,7 @@
 """
 Module for exporting and importing flopy model attributes
 """
+import copy
 import shutil
 import numpy as np
 import numpy.lib.recfunctions as rf
@@ -108,7 +109,7 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
 
     sf = import_shapefile()
-    verts = sr.vertices.copy()
+    verts = copy.copy(sr.vertices)
 
     w = sf.Writer(5) # polygon
     w.autoBalance = 1

@@ -1154,10 +1154,10 @@ class SpatialReference(object):
             min = np.nanmin(a)
             max = np.nanmax(a)
             nlevels = np.round(np.abs(max-min)/interval, 2)
-            assert nlevels < maxlevels, \
-                    print('{:.0f} levels at interval of {} > maxlevels={}'.format(nlevels,
+            msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(nlevels,
                                                                           interval,
-                                                                          maxlevels))
+                                                                          maxlevels)
+            assert nlevels < maxlevels, msg
             levels = np.arange(min, max, interval)
         fig, ax = plt.subplots()
         ctr = self.contour_array(ax, a, levels=levels)
