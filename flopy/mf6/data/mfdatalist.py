@@ -386,7 +386,8 @@ class MFList(mfdata.MFMultiDimVar):
                         if sub_entry[1] is not None:
                             if sub_entry[2] > 0:
                                 # is a cellid
-                                cell_num = storage.convert_data(arr_line[sub_entry[0]], sub_entry[1], None)
+                                cell_num = storage.convert_data(arr_line[sub_entry[0]], sub_entry[1],
+                                                                self.structure.data_item_structures[index])
                                 cellid_tuple += (cell_num - 1,)
                                 # increment index
                                 cellid_index += 1
@@ -397,7 +398,8 @@ class MFList(mfdata.MFMultiDimVar):
                                     cellid_tuple = ()
                             else:
                                 # not a cellid
-                                self._data_line += (storage.convert_data(arr_line[sub_entry[0]], sub_entry[1], None),)
+                                self._data_line += (storage.convert_data(arr_line[sub_entry[0]], sub_entry[1],
+                                                                         self.structure.data_item_structures[index]),)
                         else:
                             self._data_line += (None,)
                 data_loaded.append(self._data_line)

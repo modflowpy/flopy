@@ -147,7 +147,8 @@ class MFScalar(mfdata.MFData):
                 index += 1
 
             self._get_storage_obj().set_data(self._get_storage_obj().convert_data(arr_line[index],
-                                        self.structure.data_item_structures[index].type), key=self._current_key)
+                                             self.structure.data_item_structures[index].type,
+                                             self.structure.data_item_structures[0]), key=self._current_key)
         elif self.structure.get_datatype() == mfstructure.DataType.scalar_keyword or \
           self.structure.get_datatype() == mfstructure.DataType.scalar_keyword_transient:
             # store as true
