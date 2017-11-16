@@ -1,0 +1,15 @@
+BEGIN Options
+END Options
+
+BEGIN PACKAGES
+  DIS6          twrihfb2015.dis
+  IC6           twrihfb2015.ic
+  NPF6          twrihfb2015.npf
+  HFB6          twrihfb2015.hfb
+  CHD6          twrihfb2015_constant.chd
+  OC6           twrihfb2015.oc
+  WEL6          twrihfb2015.wel
+  DRN6          twrihfb2015.drn
+  RCH6          twrihfb2015.rch
+END PACKAGES
+

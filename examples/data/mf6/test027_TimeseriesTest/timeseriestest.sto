@@ -1,0 +1,24 @@
+#option block.  Note -- no comments allowed on auxiliary line
+begin options
+  OLDSTORAGEFORMULATION
+end options
+
+BEGIN GRIDDATA
+  iconvert LAYERED
+    constant 1
+    constant 1
+  ss LAYERED
+    constant 1.e-5
+    constant 1.e-5
+  sy LAYERED
+    constant 0.1
+    constant 0.1
+END GRIDDATA
+
+begin period 1
+  steady-state
+end period
+
+begin period 2
+  transient
+end period

@@ -1,0 +1,10 @@
+#Valley aquifer with 2 sand layers separated by silt.  Stress period 1 is natur
+# conditions.  Stress period 2 adds wells.
+begin options
+end options
+
+BEGIN GRIDDATA
+  strt LAYERED
+    CONSTANT 3.05    STRT LAYER 1
+    CONSTANT 9.14    STRT LAYER 2
+END GRIDDATA

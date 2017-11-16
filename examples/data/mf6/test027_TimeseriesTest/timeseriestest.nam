@@ -1,0 +1,15 @@
+BEGIN OPTIONS
+END OPTIONS
+
+BEGIN PACKAGES
+  IC6           timeseriestest.ic
+  NPF6          timeseriestest.npf
+  STO6          timeseriestest.sto
+  OC6           timeseriestest.oc
+  DIS6          timeseriestest.dis
+  WEL6          timeseriestest.wel
+  GHB6          timeseriestest.ghb
+  RCH6          timeseriestest.rch
+  OBS6          timeseriestest.obs
+END PACKAGES
+

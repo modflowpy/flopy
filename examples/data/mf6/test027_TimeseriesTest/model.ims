@@ -1,0 +1,29 @@
+begin options
+  PRINT_OPTION SUMMARY
+end options
+
+begin nonlinear
+	outer_hclose 1.e-9
+	outer_maximum 50 
+	under_relaxation none
+	under_relaxation_theta 0.9
+	under_relaxation_kappa 0.100000E-03
+	under_relaxation_gamma 0.
+	under_relaxation_momentum 0.1
+	BACKTRACKING_NUMBER 0
+	BACKTRACKING_TOLERANCE 2.
+	BACKTRACKING_REDUCTION_FACTOR 0.6
+	BACKTRACKING_RESIDUAL_LIMIT 1.
+end nonlinear
+
+
+begin linear
+	inner_hclose 1.0e-9
+	inner_rclose 0.001
+	inner_maximum 100
+	linear_acceleration cg
+	scaling_method none
+	REORDERING_METHOD none
+	relaxation_factor 0.99
+end linear
+
