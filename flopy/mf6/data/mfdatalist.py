@@ -330,8 +330,9 @@ class MFList(mfdata.MFMultiDimVar):
                     storage = self._get_storage_obj()
                     storage.layer_storage[0].data_storage_type = mfdata.DataStorageType.internal_constant
                     storage.store_internal(storage.convert_data(arr_line[1],
-                                                                self.structure.data_item_structures[1].type),
-                                                                0, const=True, multiplier=[1.0])
+                                                                self.structure.data_item_structures[1].type,
+                                                                self.structure.data_item_structures[0]),
+                                           0, const=True, multiplier=[1.0])
                     line = ' '
                     while line != '':
                         line = file_handle.readline()
@@ -380,12 +381,12 @@ class MFList(mfdata.MFMultiDimVar):
                 self._data_line = ()
                 cellid_index = 0
                 cellid_tuple = ()
-                for entry in self._last_line_info:
+                for index, entry in enumerate(self._last_line_info):
                     for sub_entry in entry:
                         if sub_entry[1] is not None:
                             if sub_entry[2] > 0:
                                 # is a cellid
-                                cell_num = storage.convert_data(arr_line[sub_entry[0]], sub_entry[1])
+                                cell_num = storage.convert_data(arr_line[sub_entry[0]], sub_entry[1], None)
                                 cellid_tuple += (cell_num - 1,)
                                 # increment index
                                 cellid_index += 1
@@ -396,7 +397,7 @@ class MFList(mfdata.MFMultiDimVar):
                                     cellid_tuple = ()
                             else:
                                 # not a cellid
-                                self._data_line += (storage.convert_data(arr_line[sub_entry[0]], sub_entry[1]),)
+                                self._data_line += (storage.convert_data(arr_line[sub_entry[0]], sub_entry[1], None),)
                         else:
                             self._data_line += (None,)
                 data_loaded.append(self._data_line)
@@ -444,8 +445,7 @@ class MFList(mfdata.MFMultiDimVar):
             # read variables
             var_index = 0
             data = ''
-            for data_item, data_item_index in zip(data_set.data_item_structures,
-                                                  range(0, len(data_set.data_item_structures))):
+            for data_item_index, data_item in enumerate(data_set.data_item_structures):
                 if not data_item.optional or not ignore_optional_vars:
                     if data_item.name == 'aux':
                         data_index = self._process_aux(arr_line, arr_line_len, data_item, data_index, var_index)
@@ -623,7 +623,7 @@ class MFList(mfdata.MFMultiDimVar):
                         print(except_str)
                         raise mfstructure.MFFileParseException(except_str)
 
-                    data_converted = self._get_storage_obj().convert_data(arr_line[index], data_item.type)
+                    data_converted = self._get_storage_obj().convert_data(arr_line[index], data_item.type, data_item)
                     cellid_tuple = cellid_tuple + (int(data_converted)-1,)
                     self._last_line_info[-1].append([index, 'integer', cellid_size])
                 new_index = data_index + cellid_size
@@ -647,7 +647,8 @@ class MFList(mfdata.MFMultiDimVar):
                     self._get_storage_obj().override_data_type(var_index, object)
                     self._last_line_info[-1].append([data_index, 'string', 0])
                 else:
-                    data_converted = self._get_storage_obj().convert_data(arr_line[data_index], data_item.type)
+                    data_converted = self._get_storage_obj().convert_data(arr_line[data_index], data_item.type,
+                                                                          data_item)
                     self._last_line_info[-1].append([data_index, data_item.type, 0])
             self._data_line = self._data_line + (data_converted,)
             more_data_expected, unknown_repeats = self._resolve_shape(data_item, repeat_count)

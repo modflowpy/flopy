@@ -477,6 +477,7 @@ class MFDataItemStructure(object):
         self.is_cellid = False
         self.possible_cellid = False
         self.ucase = False
+        self.preserve_case = False
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -552,6 +553,8 @@ class MFDataItemStructure(object):
             elif arr_line[0] == 'ucase':
                 if len(arr_line) > 1:
                     self.ucase = bool(arr_line[1])
+            elif arr_line[0] == 'preserve_case':
+                self.preserve_case = self._get_boolean_val(arr_line)
 
     @staticmethod
     def remove_cellid(resolved_shape, cellid_size):

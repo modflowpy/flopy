@@ -1358,7 +1358,7 @@ class DataStorage(object):
             data_size = data_size * dimension
         return data_size
 
-    def convert_data(self, data, type):
+    def convert_data(self, data, type, data_item=None):
         if type == 'float' or type == 'double':
             try:
                 if isinstance(data, str):
@@ -1382,8 +1382,9 @@ class DataStorage(object):
                 print(except_str)
                 raise MFDataException(except_str)
         elif type == 'string' and data is not None:
-            # keep strings lower case
-            return data.lower()
+            if data_item is None or not data_item.preserve_case:
+                # keep strings lower case
+                return data.lower()
         return data
 
 
