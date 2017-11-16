@@ -1,0 +1,55 @@
+begin options
+  digits 10
+  print_input
+end options
+
+
+begin Continuous FILEOUT obstest.lak.csv
+  lake1v       volume       1
+  lake2v       volume       2
+  lakev        volume       lakes
+  lake2-5gwf   lak          2 5
+  lakegwf      lak          lakes
+  TO-MVR1      TO-MVR       1
+  TO-MVR2      TO-MVR       2
+  TO-MVR       TO-MVR       lakes
+  sa1          surface-area 1
+  sa2          surface-area 2
+  surface-area surface-area lakes
+  wa2-5        wetted-area  2 5
+  wetted-area  wetted-area  lakes
+  cond2-5      wetted-area  1 5
+  conductance  conductance  lakes
+end Continuous
+
+begin Continuous FILEOUT bud.lak.csv
+  ext-inflow  ext-inflow  lakes
+  frommvr     from-mvr    lakes
+  rain        rainfall    lakes
+  runoff      runoff      lakes
+  gwf         lak         lakes
+  evaporation evaporation lakes
+  WITHDRAWAL  WITHDRAWAL  lakes
+  ext-outflow ext-outflow lakes
+  TO-MVR      TO-MVR      lakes
+  storage     storage     lakes
+  constant    constant    lakes
+  outlet1     outlet      1
+  outlet2     outlet      2
+  outlet      outlet      lakes
+end Continuous
+
+begin Continuous FILEOUT lakeex2a.lak.csv
+  L1STAGE  STAGE 1
+  L2STAGE  STAGE 2
+  L1VOL    VOLUME 1
+  L2VOL    VOLUME 2
+  L1INFLOW EXT-INFLOW 1
+  L1SURFOUT EXT-OUTFLOW 1
+  L2INFLOW EXT-INFLOW 2
+  L2SURFOUT EXT-OUTFLOW 2
+  FROM-MVR1 FROM-MVR 1
+  TO-MVR1 TO-MVR 1
+  FROM-MVR2 FROM-MVR 2
+  TO-MVR2 TO-MVR 2
+end Continuous

@@ -6,7 +6,7 @@ BEGIN TIMING
 END TIMING
 
 BEGIN MODELS
-  gwf6  advgw_tidal.nam  gwf_1
+  GWF6  advgw_tidal.nam  gwf_1
 END MODELS
 
 BEGIN EXCHANGES
