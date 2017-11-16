@@ -10,6 +10,8 @@ from ..pakbase import Package
 from ..utils import MfList
 from ..utils.flopy_io import line_parse
 import matplotlib.pyplot as plt
+from ..utils import SpatialReference
+
 
 try:
     import pandas as pd
@@ -1666,6 +1668,10 @@ class check:
     def __init__(self, sfrpackage, verbose=True, level=1):
         self.sfr = copy.copy(sfrpackage)
         self.sr = self.sfr.parent.sr
+
+        if self.sr is None and self.sfr.parent.dis is not None:
+            self.sr = SpatialReference(delr=self.sfr.parent.dis.delr.array,
+                                       delc=self.sfr.parent.dis.delc.array)
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
         self.verbose = verbose
@@ -1870,52 +1876,56 @@ class check:
         self._txt_footer(headertxt, txt, 'circular routing', warning=False)
 
         # check reach connections for proximity
-        rd = self.sfr.reach_data
-        rd.sort(order=['reachID'])
-        x0 = self.sr.xcentergrid[rd.i, rd.j]
-        y0 = self.sr.ycentergrid[rd.i, rd.j]
-        loc = dict(zip(rd.reachID, zip(x0, y0)))
+        if self.sr is not None:
+            rd = self.sfr.reach_data
+            rd.sort(order=['reachID'])
+            x0 = self.sr.xcentergrid[rd.i, rd.j]
+            y0 = self.sr.ycentergrid[rd.i, rd.j]
+            loc = dict(zip(rd.reachID, zip(x0, y0)))
 
-        # compute distances between node centers of connected reaches
-        headertxt = 'Checking reach connections for proximity...\n'
-        txt = ''
-        if self.verbose:
-            print(headertxt.strip())
-        dist = []
-        for r in rd.reachID:
-            x0, y0 = loc[r]
-            outreach = rd.outreach[r - 1]
-            if outreach == 0:
-                dist.append(0)
-            else:
-                x1, y1 = loc[outreach]
-                dist.append(np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2))
-        dist = np.array(dist)
-
-        # compute max width of reach nodes (hypotenuse for rectangular nodes)
-        dx = (self.sr.delr * self.sr.length_multiplier)[rd.j]
-        dy = (self.sr.delc * self.sr.length_multiplier)[rd.i]
-        hyp = np.sqrt(dx ** 2 + dy ** 2)
-
-        # breaks are when the connection distance is greater than
-        # max node with * a tolerance
-        # 1.25 * hyp is greater than distance of two diagonally adjacent nodes
-        # where one is 1.5x larger than the other
-        breaks = np.where(dist > hyp * 1.25)
-        breaks_reach_data = rd[breaks]
-        segments_with_breaks = set(breaks_reach_data.iseg)
-        if len(breaks) > 0:
-            txt += '{0} segments with non-adjacent reaches found.\n'.format(len(segments_with_breaks))
-            if self.level == 1:
-                txt += 'At segments:\n'
-                txt += ' '.join(map(str, segments_with_breaks)) + '\n'
-            else:
-                f = 'reach_connection_gaps.csv'
-                rd.tofile(f, sep='\t')
-                txt += 'See {} for details.'.format(f)
+            # compute distances between node centers of connected reaches
+            headertxt = 'Checking reach connections for proximity...\n'
+            txt = ''
             if self.verbose:
-                print(txt)
-        self._txt_footer(headertxt, txt, 'reach connections', warning=False)
+                print(headertxt.strip())
+            dist = []
+            for r in rd.reachID:
+                x0, y0 = loc[r]
+                outreach = rd.outreach[r - 1]
+                if outreach == 0:
+                    dist.append(0)
+                else:
+                    x1, y1 = loc[outreach]
+                    dist.append(np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2))
+            dist = np.array(dist)
+
+            # compute max width of reach nodes (hypotenuse for rectangular nodes)
+            dx = (self.sr.delr * self.sr.length_multiplier)[rd.j]
+            dy = (self.sr.delc * self.sr.length_multiplier)[rd.i]
+            hyp = np.sqrt(dx ** 2 + dy ** 2)
+
+            # breaks are when the connection distance is greater than
+            # max node with * a tolerance
+            # 1.25 * hyp is greater than distance of two diagonally adjacent nodes
+            # where one is 1.5x larger than the other
+            breaks = np.where(dist > hyp * 1.25)
+            breaks_reach_data = rd[breaks]
+            segments_with_breaks = set(breaks_reach_data.iseg)
+            if len(breaks) > 0:
+                txt += '{0} segments with non-adjacent reaches found.\n'.format(len(segments_with_breaks))
+                if self.level == 1:
+                    txt += 'At segments:\n'
+                    txt += ' '.join(map(str, segments_with_breaks)) + '\n'
+                else:
+                    f = 'reach_connection_gaps.csv'
+                    rd.tofile(f, sep='\t')
+                    txt += 'See {} for details.'.format(f)
+                if self.verbose:
+                    print(txt)
+            self._txt_footer(headertxt, txt, 'reach connections', warning=False)
+        else:
+            txt += 'No DIS package or SpatialReference object; cannot check reach proximities.'
+            self._txt_footer(headertxt, txt, '')
 
     def overlapping_conductance(self, tol=1e-6):
         """checks for multiple SFR reaches in one cell; and whether more than one reach has Cond > 0
@@ -2057,7 +2067,9 @@ class check:
                 segment_data.sort(order='nseg')
                 t = _check_numbers(len(segment_data), segment_data.nseg, level=1, datatype='Segment')
                 if len(t) > 0:
-                    raise Exception('Elevation check requires consecutive segment numbering.')
+                    txt += 'Elevation check requires consecutive segment numbering.'
+                    self._txt_footer(headertxt, txt, '')
+                    return
 
                 # first check for segments where elevdn > elevup
                 d_elev = segment_data.elevdn - segment_data.elevup
