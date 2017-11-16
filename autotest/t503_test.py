@@ -60,7 +60,7 @@ if v is None:
     run = False
 
 
-def run_test(f):
+def runmodel(f):
 
     print('\n\n')
     print('**** RUNNING TEST: {} ****'.format(f))
@@ -102,16 +102,16 @@ def run_test(f):
 # for running tests with nosetests
 def test_load_mf6_distribution_models():
     for f in folders:
-        yield run_test, f
+        yield runmodel, f
     return
 
 
 # for running outside of nosetests
-def run_tests():
+def runmodels():
     for f in folders:
-        run_test(f)
+        runmodel(f)
     return
 
 
 if __name__ == '__main__':
-    run_tests()
+    runmodels()
