@@ -149,7 +149,7 @@ def test_sfr():
     sfr.reachinput = True
     sfr.isfropt = 1
     sfr.reach_data = interpolate_to_reaches(sfr)
-    sfr.get_slopes()
+    sfr.get_slopes(minimum_slope=-100, maximum_slope=100)
     reach_inds = 29
     outreach = sfr.reach_data.outreach[reach_inds]
     out_inds = np.where(sfr.reach_data.reachID == outreach)
@@ -399,7 +399,7 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    #test_sfr()
+    test_sfr()
     test_sfr_renumbering()
     test_example()
     #test_transient_example()
