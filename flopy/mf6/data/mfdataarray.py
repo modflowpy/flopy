@@ -4,6 +4,7 @@ from ..data import mfstructure, mfdatautil, mfdata
 from ..mfbase import ExtFileAction
 from ..utils.mfenums import DiscretizationType
 
+
 class MFArray(mfdata.MFMultiDimVar):
     """
     Provides an interface for the user to access and update MODFLOW array data.
@@ -431,7 +432,7 @@ class MFArray(mfdata.MFMultiDimVar):
         else:
             #  external data
             file_entry = '{}{}{}'.format(file_entry, indent_string,
-                                         self._get_external_formatting_string(layer, ext_file_action).upper())
+                                         self._get_external_formatting_string(layer, ext_file_action))
             #  add to active list of external files
             file_path = data_storage.get_external_file_path(layer)
             model_name = self._data_dimensions.package_dim.model_dim[0].model_name
