@@ -47,7 +47,7 @@ def test001a_tharmonic():
     array_util = ArrayUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -141,7 +141,7 @@ def test003_gwfs_disv():
     array_util = ArrayUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -222,7 +222,7 @@ def test005_advgw_tidal():
     expected_head_file_b = os.path.join(expected_output_folder, 'AdvGW_tidal_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -293,7 +293,7 @@ def test006_gwf3():
     array_util = ArrayUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -411,7 +411,7 @@ def test045_lake1ss_table():
     expected_head_file_b = os.path.join(expected_output_folder, 'lakeex1b_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -477,7 +477,7 @@ def test006_2models_mvr():
     expected_head_file_bb = os.path.join(expected_output_folder, 'model2_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(sim_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -556,7 +556,7 @@ def test001e_uzf_3lay():
     expected_head_file_b = os.path.join(expected_output_folder, 'test001e_UZF_3lay_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -616,7 +616,7 @@ def test045_lake2tr():
     expected_head_file_b = os.path.join(expected_output_folder, 'lakeex2a_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', 'mf6.exe', pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
 
     # write simulation to new location
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -656,7 +656,133 @@ def test045_lake2tr():
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
 
 
+def test036_twrihfb():
+    # init paths
+    test_ex_name = 'test036_twrihfb'
+    model_name = 'twrihfb2015'
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'twrihfb2015_output_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder, 'twrihfb2015_output_adj.hds')
+
+    # load simulation
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+
+    # make temp folder to save simulation
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'twrihfb2015_output.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+    # change some settings
+    hydchr = sim.simulation_data.mfdata[(model_name, 'hfb', 'period', 'hfbrecarray')]
+    hydchr_data = hydchr.get_data()
+    hydchr_data[2][2] = 0.000002
+    hydchr_data[3][2] = 0.000003
+    hydchr_data[4][2] = 0.0000004
+    hydchr.set_data(hydchr_data, 0)
+    cond = sim.simulation_data.mfdata[(model_name, 'drn', 'period', 'periodrecarray')]
+    cond_data = cond.get_data()
+    for index in range(0, len(cond_data)):
+        cond_data[index][2] = 2.1
+    cond.set_data(cond_data, 0)
+
+    rch = sim.simulation_data.mfdata[(model_name, 'rcha', 'period', 'recharge')]
+    rch_data = rch.get_data()
+    assert(rch_data[5][1] == 0.00000003)
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'twrihfb2015_output.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+
+def test027_timeseriestest():
+    # init paths
+    test_ex_name = 'test027_TimeseriesTest'
+    model_name = 'gwf_1'
+
+    pth = os.path.join('..', 'examples', 'data', 'mf6', test_ex_name)
+    run_folder = os.path.join(cpth, test_ex_name)
+    if not os.path.isdir(run_folder):
+        os.makedirs(run_folder)
+    save_folder = os.path.join(run_folder, 'temp')
+    if not os.path.isdir(save_folder):
+        os.makedirs(save_folder)
+
+    expected_output_folder = os.path.join(pth, 'expected_output')
+    expected_head_file_a = os.path.join(expected_output_folder, 'timeseriestest_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder, 'timeseriestest_adj.hds')
+
+    # load simulation
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+
+    # make temp folder to save simulation
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    # write simulation to new location
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_a)
+        head_new = os.path.join(run_folder, 'timeseriestest.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new, outfile=outfile)
+
+    model = sim.get_model(model_name)
+    rch = model.get_package('rcha')
+    tas_rch = rch.get_package('tas')
+    tas_array_data = tas_rch.tas_array.get_data(12.0)
+    assert tas_array_data == 0.0003
+    tas_array_data = 0.02
+    tas_rch.tas_array.set_data(tas_array_data, key=12.0)
+
+    # write simulation again
+    sim.simulation_data.mfpath.set_sim_path(save_folder)
+    sim.write_simulation()
+
+    if run:
+        # run simulation
+        sim.run_simulation()
+
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_b)
+        head_new = os.path.join(save_folder, 'timeseriestest.hds')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+
+
 if __name__ == '__main__':
+    test027_timeseriestest()
+    test036_twrihfb()
     test045_lake2tr()
     test001e_uzf_3lay()
     test006_2models_mvr()
