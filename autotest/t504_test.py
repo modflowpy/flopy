@@ -237,7 +237,7 @@ def test005_advgw_tidal():
 
         # compare output to expected results
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
-        head_new = os.path.join(run_folder, 'AdvGW_tidal.hds')
+        head_new = os.path.join(run_folder, 'advgw_tidal.hds')
         outfile = os.path.join(run_folder, 'head_compare.dat')
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new, outfile=outfile)
 
