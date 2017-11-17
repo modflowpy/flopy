@@ -4,7 +4,7 @@ BEGIN options
   PRINT_FLOWS
   SAVE_FLOWS
   TS6  FILEIN  river_stages.ts
-  OBS6  FILEIN  advgw_tidal.riv.obs
+  OBS6  FILEIN  AdvGW_tidal.riv.obs
 END options
 
 BEGIN dimensions
