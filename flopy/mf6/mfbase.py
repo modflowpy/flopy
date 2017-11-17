@@ -70,6 +70,7 @@ class MFFileMgmt(object):
     def set_model_relative_path(self, model, path):
         path = self.string_to_file_path(path)
         self.model_relative_path[model] = path
+        self.set_last_accessed_path()
 
     def copy_files(self, copy_relative_only=True):
         num_files_copied = 0

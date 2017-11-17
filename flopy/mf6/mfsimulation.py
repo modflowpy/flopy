@@ -296,6 +296,8 @@ class MFSimulation(PackageContainer):
         self._gnc_file_num = 0
         self._mvr_file_num = 0
 
+        self.simulation_data.mfpath.set_last_accessed_path()
+
         # build simulation name file
         self.name_file = mfnam.ModflowNam(self, fname='mfsim.nam')
 
