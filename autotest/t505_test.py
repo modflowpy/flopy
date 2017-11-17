@@ -38,7 +38,8 @@ try:
 except:
     print('could not import pymake')
 
-exe_name = 'mf6'
+#exe_name = 'mf6'
+exe_name = 'C:\\WrdApp\\mf6.0.1\\bin\\mf6'
 if platform.system() == 'Windows':
     exe_name += '.exe'
 v = flopy.which(exe_name)
@@ -80,10 +81,9 @@ def np001():
                     model_nam_file='{}.nam'.format(model_name),
                     ims_file_name='{}.ims'.format(model_name))
 
-    dis_package = ModflowGwfdis(model, length_units='FEET', nlay=1, nrow=1, ncol=10, delr=500.0, delc=500.0,
-                                top=100.0, botm=50.0, fname='{}.dis'.format(model_name), pname='mydispkg')
-    ic_package = ModflowGwfic(model, strt='initial_heads.txt',
-                              fname='{}.ic'.format(model_name))
+    dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1, nrow=1, ncol=10, delr=500.0, delc=500.0,
+                                          top=100.0, botm=50.0, fname='{}.dis'.format(model_name), pname='mydispkg')
+    ic_package = flopy.mf6.ModflowGwfic(model, strt='initial_heads.txt', fname='{}.ic'.format(model_name))
     npf_package = ModflowGwfnpf(model, save_flows=True, alternative_cell_averaging='logarithmic',
                                 icelltype=1, k=5.0)
 
@@ -115,7 +115,7 @@ def np001():
     pkg = sim.get_package('tdis')
     assert isinstance(pkg, ModflowTdis)
     pkg = model.get_package('mydispkg')
-    assert isinstance(pkg, ModflowGwfdis) and pkg.package_name == 'mydispkg'
+    assert isinstance(pkg, flopy.mf6.ModflowGwfdis) and pkg.package_name == 'mydispkg'
 
     # verify external file contents
     array_util = ArrayUtil()
@@ -271,8 +271,8 @@ def test021_twri():
                              inner_hclose=0.0001, rcloserecord=0.001, linear_acceleration='CG',
                              scaling_method='NONE', reordering_method='NONE', relaxation_factor=0.97)
     sim.register_ims_package(ims_package, [model.name])
-    dis_package = ModflowGwfdis(model, nlay=3, nrow=15, ncol=15, delr=5000.0, delc=5000.0,
-                                top=200.0, botm=[-200, -300, -450], fname='{}.dis'.format(model_name))
+    dis_package = flopy.mf6.ModflowGwfdis(model, nlay=3, nrow=15, ncol=15, delr=5000.0, delc=5000.0,
+                                          top=200.0, botm=[-200, -300, -450], fname='{}.dis'.format(model_name))
     ic_package = ModflowGwfic(model, strt=0.0,
                               fname='{}.ic'.format(model_name))
     npf_package = ModflowGwfnpf(model, save_flows=True, perched=True, cvoptions='dewatered',
@@ -1165,13 +1165,13 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
+    np001()
     test028_sfr()
     test050_circle_island()
     test006_2models_gnc()
     test006_gwf3_disv()
     test035_fhb()
     test004_bcfss()
-    np001()
     np002()
     test005_advgw_tidal()
     test021_twri()

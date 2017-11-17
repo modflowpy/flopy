@@ -19,15 +19,18 @@ class ModflowGwflaktab(mfpackage.MFPackage):
         barea : real value that defines the lake-GWF exchange area corresponding to the stage specified on the line. barea is only specified if the claktype for the lake is EMBEDDEDH or EMBEDDEDV.
 
     """
-    def __init__(self, model, add_to_package_list=True, nrow=None, ncol=None, laktabrecarray=None, fname=None,
+
+    def __init__(self, model, add_to_package_list=True, nrow=None, ncol=None,
+                 laktabrecarray=None, fname=None,
                  pname=None, parent_file=None):
-        super(ModflowGwflaktab, self).__init__(model, "laktab", fname, pname, add_to_package_list, parent_file)        
+        super(ModflowGwflaktab, self).__init__(model, "laktab", fname, pname,
+                                               add_to_package_list,
+                                               parent_file)
 
         # set up variables
         self.nrow = self.build_mfdata("nrow", nrow)
 
         self.ncol = self.build_mfdata("ncol", ncol)
 
-        self.laktabrecarray = self.build_mfdata("laktabrecarray", laktabrecarray)
-
-
+        self.laktabrecarray = self.build_mfdata("laktabrecarray",
+                                                laktabrecarray)
