@@ -8,6 +8,11 @@ Minimum Python version?
 
 What's different
 
+Models and Packages
+-----------------------------------------------
+List of classes 
+
+
 Getting Help
 -----------------------------------------------
 Link to sphinx documentation
@@ -19,13 +24,11 @@ Notebooks
 -----------------------------------------------
 Instructions for using the new MODFLOW 6 capabilities in Flopy are described in the following Jupyter Notebooks.
 
-1. Building the simple lake model [flopy3_mf6_A_simple-model](../examples/Notebooks/flopy3_mf6_A_simple-model.ipynb) Notebook
-2. Building a real model
+1. Building the simple lake model ([flopy3_mf6_A_simple-model](../examples/Notebooks/flopy3_mf6_A_simple-model.ipynb) Notebook)
+2. Building a complex model ([flopy3_mf6_B_complex-model](../examples/Notebooks/flopy3_mf6_B_complex-model.ipynb) Notebook)
 3. Building an LGR model
 4. Understanding Flopy data objects for MODFLOW 6
 5. Loading models, making changes, and rerunning
-6. Working with time series
-7. Working with observations
 
 
 Future Plans
