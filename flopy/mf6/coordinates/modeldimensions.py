@@ -13,24 +13,28 @@ from ..utils.mfenums import DiscretizationType
 
 class DataDimensions(object):
     """
-    Resolves dimension information for model data using information contained in the model files
+    Resolves dimension information for model data using information contained
+    in the model files
 
     Parameters
     ----------
     package_dim : PackageDimensions
         PackageDimension object for the package that the data is contained in
     structure : MFDataStructure
-        MFDataStructure object of data whose dimensions need to be resolved (optional)
+        MFDataStructure object of data whose dimensions need to be resolved
+        (optional)
 
     Methods
     ----------
     get_model_grid : ()
         returns a model grid based on the current simulation data
 
-    def get_data_shape(data_item : MFDataItemStructure, data_set_struct : MFDataStructure, data_item_num : int):
-        returns the shape of modflow data structure.  returns shape of entire data structure if no data item is
-        specified, otherwise returns shape of individual data time.  user data and the dictionary path to the data can
-        be passed in "data" to help resolve the data shape
+    def get_data_shape(data_item : MFDataItemStructure, data_set_struct :
+      MFDataStructure, data_item_num : int):
+        returns the shape of modflow data structure.  returns shape of entire
+        data structure if no data item is specified, otherwise returns shape of
+        individual data time.  user data and the dictionary path to the data
+        can be passed in "data" to help resolve the data shape
     model_subspace_size : (subspace_string : string)
         returns the size of the model subspace specified in subspace_string
 
@@ -43,6 +47,7 @@ class DataDimensions(object):
     Examples
     --------
     """
+
     def __init__(self, package_dim, structure):
         self.package_dim = package_dim
         self.structure = structure
@@ -61,25 +66,29 @@ class DataDimensions(object):
     def get_model_grid(self, data_item_num=None):
         if self.locked:
             if self.model_grid is None:
-                self.model_grid = self.get_model_dim(data_item_num).get_model_grid()
+                self.model_grid = self.get_model_dim(
+                    data_item_num).get_model_grid()
             return self.model_grid
         else:
             return self.get_model_dim(data_item_num).get_model_grid()
 
-    def get_data_shape(self, data_item=None, data_set_struct=None, data=None, data_item_num=None, repeating_key=None):
-        return self.get_model_dim(data_item_num).get_data_shape(self.structure, data_item,
-                                                                data_set_struct, data,
-                                                                self.package_dim.package_path,
-                                                                repeating_key=repeating_key)
+    def get_data_shape(self, data_item=None, data_set_struct=None, data=None,
+                       data_item_num=None, repeating_key=None):
+        return self.get_model_dim(data_item_num). \
+            get_data_shape(self.structure, data_item, data_set_struct, data,
+                           self.package_dim.package_path,
+                           repeating_key=repeating_key)
 
     def model_subspace_size(self, subspace_string='', data_item_num=None):
-        return self.get_model_dim(data_item_num).model_subspace_size(subspace_string)
+        return self.get_model_dim(data_item_num). \
+            model_subspace_size(subspace_string)
 
     def get_model_dim(self, data_item_num):
-        if self.package_dim.model_dim is None or data_item_num is None or len(self.package_dim.model_dim) == 1:
+        if self.package_dim.model_dim is None or data_item_num is None or \
+                        len(self.package_dim.model_dim) == 1:
             return self.package_dim.model_dim[0]
         else:
-            assert(len(self.structure.data_item_structures) > data_item_num)
+            assert (len(self.structure.data_item_structures) > data_item_num)
             model_num = self.structure.data_item_structures[data_item_num][-1]
             if DatumUtil.is_int(model_num):
                 return self.package_dim.model_dim[int(model_num)]
@@ -118,6 +127,7 @@ class PackageDimensions(object):
     Examples
     --------
     """
+
     def __init__(self, model_dim, structure, package_path):
         self.model_dim = model_dim
         self.package_struct = structure
@@ -147,7 +157,8 @@ class PackageDimensions(object):
             return self.aux_variables[model_num]
         aux_path = self.package_path + ('options', 'auxiliary')
         if aux_path in self.model_dim[model_num].simulation_data.mfdata:
-            ret_val = self.model_dim[model_num].simulation_data.mfdata[aux_path].get_data()
+            ret_val = self.model_dim[model_num].simulation_data. \
+                mfdata[aux_path].get_data()
         else:
             ret_val = None
         if self.locked:
@@ -160,7 +171,8 @@ class PackageDimensions(object):
         ret_val = False
         bound_path = self.package_path + ('options', 'boundnames')
         if bound_path in self.model_dim[model_num].simulation_data.mfdata:
-            if self.model_dim[model_num].simulation_data.mfdata[bound_path].get_data() is not None:
+            if self.model_dim[model_num].simulation_data.mfdata[bound_path]. \
+                    get_data() is not None:
                 ret_val = True
         if self.locked:
             self.boundnames_dict[model_num] = ret_val
@@ -172,15 +184,19 @@ class PackageDimensions(object):
         names_dict = {}
         tas_record_path = self.package_path + ('options', 'tas_filerecord')
         if tas_record_path in self.model_dim[model_num].simulation_data.mfdata:
-            tas_record_data = self.model_dim[model_num].simulation_data.mfdata[tas_record_path].get_data()
+            tas_record_data = self.model_dim[model_num].simulation_data.mfdata[
+                tas_record_path].get_data()
             if tas_record_data is not None:
                 name_iter = NameIter('tas')
                 for tas_name in name_iter:
                     tas_names_path = self.package_path + (tas_name,
                                                           'attributes',
                                                           'time_series_namerecord')
-                    if tas_names_path in self.model_dim[model_num].simulation_data.mfdata:
-                        tas_names_data = self.model_dim[model_num].simulation_data.mfdata[tas_names_path].get_data()
+                    if tas_names_path in self.model_dim[
+                        model_num].simulation_data.mfdata:
+                        tas_names_data = \
+                        self.model_dim[model_num].simulation_data.mfdata[
+                            tas_names_path].get_data()
                         if tas_names_data is not None:
                             names_dict[tas_names_data[0][0]] = 0
                     else:
@@ -195,15 +211,19 @@ class PackageDimensions(object):
         names_dict = {}
         ts_record_path = self.package_path + ('options', 'ts_filerecord')
         if ts_record_path in self.model_dim[model_num].simulation_data.mfdata:
-            ts_record_data = self.model_dim[model_num].simulation_data.mfdata[ts_record_path].get_data()
+            ts_record_data = self.model_dim[model_num].simulation_data.mfdata[
+                ts_record_path].get_data()
             if ts_record_data is not None:
                 name_iter = NameIter('ts')
                 for ts_name in name_iter:
                     ts_names_path = self.package_path + (ts_name,
                                                          'attributes',
                                                          'time_series_namerecord')
-                    if ts_names_path in self.model_dim[model_num].simulation_data.mfdata:
-                        ts_names_data = self.model_dim[model_num].simulation_data.mfdata[ts_names_path].get_data()
+                    if ts_names_path in self.model_dim[
+                        model_num].simulation_data.mfdata:
+                        ts_names_data = \
+                        self.model_dim[model_num].simulation_data.mfdata[
+                            ts_names_path].get_data()
                         if ts_names_data is not None:
                             for name in ts_names_data[0]:
                                 names_dict[name] = 0
@@ -225,7 +245,8 @@ class ModelDimensions(object):
     simulation_data : MFSimulationData
         contains all simulation related data
     structure : MFDataStructure
-        MFDataStructure object of data whose dimensions need to be resolved (optional)
+        MFDataStructure object of data whose dimensions need to be resolved
+        (optional)
 
     Attributes
     ----------
@@ -237,12 +258,16 @@ class ModelDimensions(object):
     get_model_grid : ()
         returns a model grid based on the current simulation data
 
-    def get_data_shape(structure : MFDataStructure, data_item : MFDataItemStructure, data_set_struct : MFDataStructure,
+    def get_data_shape(structure : MFDataStructure, data_item :
+                       MFDataItemStructure, data_set_struct : MFDataStructure,
                        data : list, path : tuple, deconstruct_axis : bool):
-        returns the shape of modflow data structure.  returns shape of entire data structure if no data item is
-        specified, otherwise returns shape of individual data time.  user data and the dictionary path to the data can
-        be passed in "data" to help resolve the data shape.  if deconstruct_axis is True any spatial axis will be
-        automatically deconstructed into its component parts (model grid will be deconstructed into layer/row/col)
+        returns the shape of modflow data structure.  returns shape of entire
+        data structure if no data item is specified, otherwise returns shape of
+        individual data time.  user data and the dictionary path to the data
+        can be passed in "data" to help resolve the data shape.  if
+        deconstruct_axis is True any spatial axis will be automatically
+        deconstructed into its component parts (model grid will be
+        deconstructed into layer/row/col)
     data_reshape : ()
         reshapes jagged model data
     model_subspace_size : (subspace_string : string)
@@ -276,7 +301,8 @@ class ModelDimensions(object):
     # returns model grid
     def get_model_grid(self):
         if not self.locked or self._model_grid is None:
-            grid_type = ModelGrid.get_grid_type(self.simulation_data, self.model_name)
+            grid_type = ModelGrid.get_grid_type(self.simulation_data,
+                                                self.model_name)
             if not self._model_grid:
                 self._create_model_grid(grid_type)
             else:
@@ -284,34 +310,43 @@ class ModelDimensions(object):
                 if not self._model_grid.grid_type_consistent():
                     # create new model grid and return
                     self._create_model_grid(grid_type)
-                    print('WARNING: Model grid type has changed.  get_model_grid() is returning a new model grid '
-                          'object of the appropriate type.  References to the old model grid object are invalid.')
+                    print(
+                    'WARNING: Model grid type has changed.  get_model_grid() '
+                    'is returning a new model grid object of the appropriate '
+                    'type.  References to the old model grid object are '
+                    'invalid.')
         self._model_grid.freeze_grid = True
         return self._model_grid
 
     def _create_model_grid(self, grid_type):
         if grid_type == DiscretizationType.DIS:
             self._model_grid = ModelGrid(self.model_name,
-                                                   self.simulation_data, DiscretizationType.DIS)
+                                         self.simulation_data,
+                                         DiscretizationType.DIS)
         elif grid_type == DiscretizationType.DISV:
             self._model_grid = ModelGrid(self.model_name,
-                                                   self.simulation_data, DiscretizationType.DISV)
+                                         self.simulation_data,
+                                         DiscretizationType.DISV)
         elif grid_type == DiscretizationType.DISU:
             self._model_grid = UnstructuredModelGrid(self.model_name,
-                                                               self.simulation_data)
+                                                     self.simulation_data)
         else:
             self._model_grid = ModelGrid(self.model_name,
-                                                   self.simulation_data, DiscretizationType.UNDEFINED)
+                                         self.simulation_data,
+                                         DiscretizationType.UNDEFINED)
 
     # Returns a shape for a given set of axes
-    def get_data_shape(self, structure, data_item=None, data_set_struct=None, data=None, path=None,
+    def get_data_shape(self, structure, data_item=None, data_set_struct=None,
+                       data=None, path=None,
                        deconstruct_axis=True, repeating_key=None):
-        assert(structure is not None)
+        assert (structure is not None)
         if self.locked:
             if data_item is not None and data_item.path in self.stored_shapes:
-                return self.stored_shapes[data_item.path][0], self.stored_shapes[data_item.path][1]
+                return self.stored_shapes[data_item.path][0], \
+                       self.stored_shapes[data_item.path][1]
             if structure.path in self.stored_shapes:
-                return self.stored_shapes[structure.path][0], self.stored_shapes[structure.path][1]
+                return self.stored_shapes[structure.path][0], \
+                       self.stored_shapes[structure.path][1]
 
         shape_dimensions = []
         shape_rule = None
@@ -321,35 +356,44 @@ class ModelDimensions(object):
                 if structure.type == 'record':
                     num_rows = 1
                 else:
-                    num_rows, consistent_shape = self._resolve_data_item_shape(structure)[0]
+                    num_rows, consistent_shape = \
+                    self._resolve_data_item_shape(structure)[0]
                     shape_consistent = shape_consistent and consistent_shape
                 num_cols = 0
                 for data_item_struct in structure.data_item_structures:
                     if data_item_struct.type != 'keyword':
-                        num, shape_rule, consistent_shape = self._resolve_data_item_shape(data_item_struct, path=path,
-                                                                              repeating_key=repeating_key)[0]
+                        num, shape_rule, consistent_shape = \
+                        self._resolve_data_item_shape(data_item_struct,
+                                                      path=path,
+                                                      repeating_key=
+                                                      repeating_key)[0]
                         num_cols = num_cols + num
                         shape_consistent = shape_consistent and consistent_shape
                 shape_dimensions = [num_rows, num_cols]
             else:
                 for data_item_struct in structure.data_item_structures:
                     if len(shape_dimensions) == 0:
-                        shape_dimensions, shape_rule, consistent_shape = self._resolve_data_item_shape(data_item_struct,
-                                                                                           repeating_key=repeating_key)
+                        shape_dimensions, shape_rule, consistent_shape = self._resolve_data_item_shape(
+                            data_item_struct,
+                            repeating_key=repeating_key)
                     else:
 
-                        dim, shape_rule, consistent_shape = self._resolve_data_item_shape(data_item_struct,
-                                                                              repeating_key=repeating_key)
+                        dim, shape_rule, consistent_shape = self._resolve_data_item_shape(
+                            data_item_struct,
+                            repeating_key=repeating_key)
                         shape_dimensions += dim
                     shape_consistent = shape_consistent and consistent_shape
             if self.locked and shape_consistent:
-                self.stored_shapes[structure.path] = (shape_dimensions, shape_rule)
+                self.stored_shapes[structure.path] = (
+                shape_dimensions, shape_rule)
         else:
-            shape_dimensions, shape_rule, consistent_shape = self._resolve_data_item_shape(data_item, data_set_struct, data,
-                                                                               path, deconstruct_axis,
-                                                                               repeating_key=repeating_key)
+            shape_dimensions, shape_rule, consistent_shape = \
+                self._resolve_data_item_shape(data_item, data_set_struct, data,
+                                              path, deconstruct_axis,
+                                              repeating_key=repeating_key)
             if self.locked and consistent_shape:
-                self.stored_shapes[data_item.path] = (shape_dimensions, shape_rule)
+                self.stored_shapes[data_item.path] = (
+                shape_dimensions, shape_rule)
 
         return shape_dimensions, shape_rule
 
@@ -357,7 +401,8 @@ class ModelDimensions(object):
     def shape_data(self, data, modflowdataaxes):
         self.test = 1
 
-    def _resolve_data_item_shape(self, data_item_struct, data_set_struct=None, data=None, path=None,
+    def _resolve_data_item_shape(self, data_item_struct, data_set_struct=None,
+                                 data=None, path=None,
                                  deconstruct_axis=True, repeating_key=None):
         shape_rule = None
         consistent_shape = True
@@ -377,28 +422,37 @@ class ModelDimensions(object):
             if deconstruct_axis:
                 shape = self.deconstruct_axis(shape)
             ordered_shape = self._order_shape(shape)
-            ordered_shape_expression = self.build_shape_expression(ordered_shape)
+            ordered_shape_expression = self.build_shape_expression(
+                ordered_shape)
             for item in ordered_shape_expression:
                 dim_size = self.dimension_size(item[0])
                 if dim_size is not None:
                     if isinstance(dim_size, list):
                         shape_dimensions += dim_size
                     else:
-                        shape_dimensions.append(self.resolve_exp(item, dim_size))
-                elif item[0].lower() == 'nstp' and DatumUtil.is_int(repeating_key):
-                    # repeating_key is a stress period.  get number of time steps for that stress period
-                    shape_dimensions.append(self.simulation_time.get_sp_time_steps(int(repeating_key)))
+                        shape_dimensions.append(
+                            self.resolve_exp(item, dim_size))
+                elif item[0].lower() == 'nstp' and DatumUtil.is_int(
+                        repeating_key):
+                    # repeating_key is a stress period.  get number of time
+                    # steps for that stress period
+                    shape_dimensions.append(
+                        self.simulation_time.get_sp_time_steps(
+                            int(repeating_key)))
                 else:
                     result = None
                     if data_set_struct is not None:
-                        # try to resolve dimension in the existing data set first
-                        result = self.resolve_exp(item, self._find_in_dataset(data_set_struct, item[0], data))
+                        # try to resolve dimension in the existing data
+                        # set first
+                        result = self.resolve_exp(item, self._find_in_dataset(
+                            data_set_struct, item[0], data))
                         if result:
                             consistent_shape = False
                     if result:
                         shape_dimensions.append(result)
                     else:
-                        if item[0] == 'any1d' or item[0] == 'naux' or item[0] == 'nconrno' or item[0] == 'unknown':
+                        if item[0] == 'any1d' or item[0] == 'naux' or item[
+                            0] == 'nconrno' or item[0] == 'unknown':
                             consistent_shape = False
                             shape_dimensions.append(-9999)
                         elif item[0] == 'any2d':
@@ -409,32 +463,45 @@ class ModelDimensions(object):
                             shape_dimensions.append(int(item[0]))
                         else:
                             # try to resolve dimension within the existing block
-                            result = self.simulation_data.mfdata.find_in_path(parent_path, item[0])
+                            result = self.simulation_data.mfdata.find_in_path(
+                                parent_path, item[0])
                             if result[0] is not None:
                                 data = result[0].get_data()
                                 if data is None:
-                                    print('WARNING: Unable to resolve dimension of {} based on shape '
-                                          '"{}".'.format(data_item_struct.path, item[0]))
+                                    print(
+                                    'WARNING: Unable to resolve dimension of '
+                                    '{} based on shape '
+                                    '"{}".'.format(data_item_struct.path,
+                                                   item[0]))
                                     shape_dimensions.append(-9999)
                                     consistent_shape = False
                                 elif result[1] is not None:
-                                    # if int return first value otherwise return shape of data stored
+                                    # if int return first value otherwise
+                                    # return shape of data stored
                                     if DatumUtil.is_int(data[result[1]]):
-                                        shape_dimensions.append(self.resolve_exp(item, int(data)))
+                                        shape_dimensions.append(
+                                            self.resolve_exp(item, int(data)))
                                     else:
-                                        shape_dimensions.append(self.resolve_exp(item, len(data[result[1]])))
+                                        shape_dimensions.append(
+                                            self.resolve_exp(item, len(
+                                                data[result[1]])))
                                 else:
                                     if DatumUtil.is_int(data):
-                                        shape_dimensions.append(self.resolve_exp(item, int(data)))
+                                        shape_dimensions.append(
+                                            self.resolve_exp(item, int(data)))
                                     else:
-                                        shape_dimensions.append(self.resolve_exp(item, len(data)))
+                                        shape_dimensions.append(
+                                            self.resolve_exp(item, len(data)))
                             else:
-                                print('WARNING: Unable to resolve dimension of {} based on shape '
-                                      '"{}".'.format(data_item_struct.path, item[0]))
+                                print(
+                                'WARNING: Unable to resolve dimension of {} '
+                                'based on shape '
+                                '"{}".'.format(data_item_struct.path, item[0]))
                                 shape_dimensions.append(-9999)
                                 consistent_shape = False
         else:
-            if data_item_struct.type == 'recarray' or data_item_struct.type == 'record':
+            if data_item_struct.type == 'recarray' or \
+              data_item_struct.type == 'record':
                 # shape is unknown
                 shape_dimensions.append(-9999)
                 consistent_shape = False
@@ -449,7 +516,8 @@ class ModelDimensions(object):
                 # try to resolve the 2nd term in the equation
                 expression[1] = self.dimension_size(expression[1])
                 if expression[1] is None:
-                    except_str = 'ERROR: Expression "{}" contains an invalid second term and can not be ' \
+                    except_str = 'ERROR: Expression "{}" contains an invalid ' \
+                                 'second term and can not be ' \
                                  'resolved.'.format(expression)
                     print(except_str)
                     raise StructException(except_str, '')
@@ -463,7 +531,8 @@ class ModelDimensions(object):
             elif expression[2] == '/':
                 return value / int(expression[1])
             else:
-                except_str = 'ERROR: Expression "{}" contains an invalid operator and can not be ' \
+                except_str = 'ERROR: Expression "{}" contains an invalid ' \
+                             'operator and can not be ' \
                              'resolved.'.format(expression)
                 print(except_str)
                 raise StructException(except_str, '')
@@ -473,9 +542,11 @@ class ModelDimensions(object):
     @staticmethod
     def _find_in_dataset(data_set_struct, item, data):
         if data is not None:
-            for index, data_item in zip(range(0,len(data_set_struct.data_item_structures)),
-                                        data_set_struct.data_item_structures):
-                if data_item.name.lower() == item.lower() and len(data[0]) > index:
+            for index, data_item in zip(
+                    range(0, len(data_set_struct.data_item_structures)),
+                    data_set_struct.data_item_structures):
+                if data_item.name.lower() == item.lower() and len(
+                        data[0]) > index:
                     # always use the maximum value
                     max_val = 0
                     for data_line in data:
@@ -574,7 +645,8 @@ class ModelDimensions(object):
                     deconstructed_shape_array.append('ncol')
                     deconstructed_shape_array.append('nrow')
                     deconstructed_shape_array.append('nlay')
-                elif self.get_model_grid().grid_type() == DiscretizationType.DISV:
+                elif self.get_model_grid().grid_type() == \
+                  DiscretizationType.DISV:
                     deconstructed_shape_array.append('ncpl')
                     deconstructed_shape_array.append('nlay')
                 else:
@@ -582,5 +654,3 @@ class ModelDimensions(object):
             else:
                 deconstructed_shape_array.append(entry)
         return deconstructed_shape_array
-
-

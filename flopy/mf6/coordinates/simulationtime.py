@@ -94,19 +94,22 @@ class SimulationTime(object):
 
     def __init__(self, simdata):
         self.simdata = simdata
-#        self.time_units = simdata[('TDIS', 'OPTIONS', 'time_units')]
-#        self.stress_periods = simdata[('TDIS', 'STRESS_PERIODS', 'perlen,nstp,tsmult')
-#        self.calendar_start_time = calendar_start_time
 
-#    def get_stress_period_array(self):
-#        return np.arange(1, self.get_num_stress_periods(), 1, np.int)
+    #        self.time_units = simdata[('TDIS', 'OPTIONS', 'time_units')]
+    #        self.stress_periods = simdata[('TDIS', 'STRESS_PERIODS',
+    #        'perlen,nstp,tsmult')
+    #        self.calendar_start_time = calendar_start_time
+
+    #    def get_stress_period_array(self):
+    #        return np.arange(1, self.get_num_stress_periods(), 1, np.int)
 
     def get_num_stress_periods(self):
         return self.simdata.mfdata[('tdis', 'dimensions', 'nper')].get_data()
 
     def get_sp_time_steps(self, sp_num):
-        tdisrecarray = self.simdata.mfdata[('tdis', 'perioddata', 'tdisrecarray')].get_data()
-        assert(len(tdisrecarray) > sp_num)
+        tdisrecarray = self.simdata.mfdata[
+            ('tdis', 'perioddata', 'tdisrecarray')].get_data()
+        assert (len(tdisrecarray) > sp_num)
         return tdisrecarray[sp_num][1]
 
     def get_stress_period(self, sp_num):

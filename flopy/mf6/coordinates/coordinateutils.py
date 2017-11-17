@@ -1,16 +1,15 @@
-
-
 class CoordUtil(object):
     @staticmethod
     def convert_to_unstruct_jagged_array(unstruct_con_array, iac):
         """
-        Converts and unstructured connection array (ja, cl12, ...) that is currently
-        stored as a 1-d array into a jagged array
+        Converts and unstructured connection array (ja, cl12, ...) that is
+        currently stored as a 1-d array into a jagged array
 
         Example:
             cell1_connection cell1_connection cell1_connection cell1_connection
             cell2_connection cell2_connection cell2_connection
-            cell3_connection cell2_connection cell2_connection cell2_connection cell2_connection
+            cell3_connection cell2_connection cell2_connection cell2_connection
+            cell2_connection
 
         Parameters
         ----------
