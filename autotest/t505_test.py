@@ -38,8 +38,8 @@ try:
 except:
     print('could not import pymake')
 
-#exe_name = 'mf6'
-exe_name = 'C:\\WrdApp\\mf6.0.1\\bin\\mf6'
+exe_name = 'mf6'
+#exe_name = 'C:\\WrdApp\\mf6.0.1\\bin\\mf6'
 if platform.system() == 'Windows':
     exe_name += '.exe'
 v = flopy.which(exe_name)
@@ -71,7 +71,8 @@ def np001():
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
+                               tdisrecarray=tdis_rc)
     ims_package = ModflowIms(sim, print_option='ALL', complexity='SIMPLE',outer_hclose=0.00001,
                              outer_maximum=50, under_relaxation='NONE', inner_maximum=30,
                              inner_hclose=0.00001, linear_acceleration='CG',
