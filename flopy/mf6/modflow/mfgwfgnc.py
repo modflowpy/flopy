@@ -3,8 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfgnc(mfpackage.MFPackage):
-    package_abbr = "gwfgnc"
-    gncdatarecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'gnc', 'gncdata', 'gncdatarecarray'))
     """
     ModflowGwfgnc defines a gnc package within a gwf6 model.
 
@@ -27,6 +25,9 @@ class ModflowGwfgnc(mfpackage.MFPackage):
         alphasj : is the contributing factors for each contributing node in cellidsj. Note that if the number of actual contributing cells is less than numalphaj for any ghost node, then dummy cellids should be inserted with an associated contributing factor of zero.
 
     """
+    gncdatarecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'gnc', 'gncdata', 'gncdatarecarray'))
+    package_abbr = "gwfgnc"
+
     def __init__(self, model, add_to_package_list=True, print_input=None, print_flows=None, explicit=None,
                  numgnc=None, numalphaj=None, gncdatarecarray=None, fname=None, pname=None,
                  parent_file=None):

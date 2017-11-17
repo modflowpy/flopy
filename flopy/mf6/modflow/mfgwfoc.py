@@ -3,12 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfoc(mfpackage.MFPackage):
-    package_abbr = "gwfoc"
-    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'options', 'budget_filerecord'))
-    head_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'options', 'head_filerecord'))
-    headprintrecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'options', 'headprintrecord'))
-    saverecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'period', 'saverecord'))
-    printrecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'period', 'printrecord'))
     """
     ModflowGwfoc defines a oc package within a gwf6 model.
 
@@ -36,6 +30,13 @@ class ModflowGwfoc(mfpackage.MFPackage):
         ocsetting : specifies the steps for which the data will be saved.
 
     """
+    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'options', 'budget_filerecord'))
+    head_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'options', 'head_filerecord'))
+    headprintrecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'options', 'headprintrecord'))
+    saverecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'period', 'saverecord'))
+    printrecord = mfdatautil.ListTemplateGenerator(('gwf6', 'oc', 'period', 'printrecord'))
+    package_abbr = "gwfoc"
+
     def __init__(self, model, add_to_package_list=True, budget_filerecord=None, head_filerecord=None,
                  headprintrecord=None, saverecord=None, printrecord=None, fname=None, pname=None,
                  parent_file=None):

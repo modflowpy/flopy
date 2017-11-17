@@ -3,10 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowNam(mfpackage.MFPackage):
-    package_abbr = "nam"
-    modelrecarray = mfdatautil.ListTemplateGenerator(('nam', 'models', 'modelrecarray'))
-    exchangerecarray = mfdatautil.ListTemplateGenerator(('nam', 'exchanges', 'exchangerecarray'))
-    solutionrecarray = mfdatautil.ListTemplateGenerator(('nam', 'solutiongroup', 'solutionrecarray'))
     """
     ModflowNam defines a nam package.
 
@@ -40,6 +36,11 @@ class ModflowNam(mfpackage.MFPackage):
         slnmnames : is the array of model names to add to this solution.
 
     """
+    modelrecarray = mfdatautil.ListTemplateGenerator(('nam', 'models', 'modelrecarray'))
+    exchangerecarray = mfdatautil.ListTemplateGenerator(('nam', 'exchanges', 'exchangerecarray'))
+    solutionrecarray = mfdatautil.ListTemplateGenerator(('nam', 'solutiongroup', 'solutionrecarray'))
+    package_abbr = "nam"
+
     def __init__(self, simulation, add_to_package_list=True, continue_=None, nocheck=None, memory_print_option=None,
                  tdis6=None, modelrecarray=None, exchangerecarray=None, mxiter=None,
                  solutionrecarray=None, fname=None, pname=None, parent_file=None):

@@ -3,10 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfsto(mfpackage.MFPackage):
-    package_abbr = "gwfsto"
-    iconvert = mfdatautil.ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'iconvert'))
-    ss = mfdatautil.ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
-    sy = mfdatautil.ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
     """
     ModflowGwfsto defines a sto package within a gwf6 model.
 
@@ -28,6 +24,11 @@ class ModflowGwfsto(mfpackage.MFPackage):
         keyword to indicate that stress-period iper is transient. Transient conditions will apply until the STEADY-STATE keyword is specified in a subsequent BEGIN PERIOD block.
 
     """
+    iconvert = mfdatautil.ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'iconvert'))
+    ss = mfdatautil.ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
+    sy = mfdatautil.ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
+    package_abbr = "gwfsto"
+
     def __init__(self, model, add_to_package_list=True, save_flows=None, storagecoefficient=None, iconvert=None,
                  ss=None, sy=None, steady_state=None, transient=None, fname=None, pname=None,
                  parent_file=None):

@@ -132,6 +132,10 @@ def create_packages():
         for key, package in model.package_struct_objs.items():
             package_list.append((package, PackageLevel.model_level, model_key))
 
+    util_path, tail = os.path.split(os.path.realpath(__file__))
+    init_file = open(os.path.join(util_path, '..', 'modflow', '__init__.py'), 'w')
+    init_file.write('# imports\n')
+
     # loop through packages list
     for package in package_list:
         data_structure_dict = {}
@@ -180,10 +184,9 @@ def create_packages():
         plotters_string = ''.join(plotters)
         plotters_def_string = '\n'.join(plotter_defs)
         package_short_name = clean_class_string(package[0].file_type).lower()
-        class_def_string = 'class Modflow{}(mfpackage.MFPackage):\n    package_abbr ' \
-                           '= "{}"'.format(package_name.title(), package_name)
+        class_def_string = 'class Modflow{}(mfpackage.MFPackage):\n'.format(package_name.title())
         class_def_string = class_def_string.replace('-', '_')
-        class_def_string = '{}\n{}'.format(class_def_string, '\n'.join(class_vars))
+        class_var_string = '{}\n    package_abbr = "{}"'.format('\n'.join(class_vars), package_name)
         line_chars = len(init_string_def)
         init_string_full = init_string_def
         # add variables to init string
@@ -213,16 +216,18 @@ def create_packages():
                              '        # set up variables'.format(package_name.title(), init_var, package_short_name)
 
         # assemble full package string
-        package_string = '{}\n\n\n{}\n{}\n{}{}{}\n{}\n\n{}'.format(import_string, class_def_string,
-                                                                   doc_string.get_doc_string(), init_string_full,
-                                                                   parent_init_string, plotters_string, init_vars,
-                                                                   plotters_def_string)
+        package_string = '{}\n\n\n{}{}\n{}\n\n{}{}{}\n{}\n\n{}'.format(import_string, class_def_string,
+                                                                   doc_string.get_doc_string(), class_var_string,
+                                                                   init_string_full, parent_init_string,
+                                                                   plotters_string, init_vars, plotters_def_string)
 
-        util_path, tail = os.path.split(os.path.realpath(__file__))
         # open new Packages file
         pb_file = open(os.path.join(util_path, '..', 'modflow', 'mf{}.py'.format(package_name)), 'w')
         pb_file.write(package_string)
         pb_file.close()
+
+        init_file.write('from mf{} import Modflow{}\n'.format(package_name, package_name.title()))
+    init_file.close()
 
 if __name__ == '__main__':
     create_packages()

@@ -3,11 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowUtltas(mfpackage.MFPackage):
-    package_abbr = "utltas"
-    time_series_namerecord = mfdatautil.ListTemplateGenerator(('tas', 'attributes', 'time_series_namerecord'))
-    interpolation_methodrecord = mfdatautil.ListTemplateGenerator(('tas', 'attributes', 'interpolation_methodrecord'))
-    sfacrecord = mfdatautil.ListTemplateGenerator(('tas', 'attributes', 'sfacrecord'))
-    tas_array = mfdatautil.ArrayTemplateGenerator(('tas', 'time', 'tas_array'))
     """
     ModflowUtltas defines a tas package within a utl model.
 
@@ -26,6 +21,12 @@ class ModflowUtltas(mfpackage.MFPackage):
         An array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility.
 
     """
+    time_series_namerecord = mfdatautil.ListTemplateGenerator(('tas', 'attributes', 'time_series_namerecord'))
+    interpolation_methodrecord = mfdatautil.ListTemplateGenerator(('tas', 'attributes', 'interpolation_methodrecord'))
+    sfacrecord = mfdatautil.ListTemplateGenerator(('tas', 'attributes', 'sfacrecord'))
+    tas_array = mfdatautil.ArrayTemplateGenerator(('tas', 'time', 'tas_array'))
+    package_abbr = "utltas"
+
     def __init__(self, model, add_to_package_list=True, time_series_namerecord=None,
                  interpolation_methodrecord=None, sfacrecord=None, tas_array=None, fname=None,
                  pname=None, parent_file=None):

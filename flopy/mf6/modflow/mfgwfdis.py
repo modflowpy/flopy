@@ -3,12 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfdis(mfpackage.MFPackage):
-    package_abbr = "gwfdis"
-    delr = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delr'))
-    delc = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delc'))
-    top = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'top'))
-    botm = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'botm'))
-    idomain = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'idomain'))
     """
     ModflowGwfdis defines a dis package within a gwf6 model.
 
@@ -42,6 +36,13 @@ class ModflowGwfdis(mfpackage.MFPackage):
         is an optional array that characterizes the existence status of a cell. If the idomain array is not specified, then all model cells exist within the solution. If the idomain value for a cell is 0, the cell does not exist in the simulation. Input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution. If the idomain value for a cell is 1, the cell exists in the simulation. If the idomain value for a cell is -1, the cell does not exist in the simulation. Furthermore, the first existing cell above will be connected to the first existing cell below. This type of cell is referred to as a ``vertical pass through'' cell.
 
     """
+    delr = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delr'))
+    delc = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delc'))
+    top = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'top'))
+    botm = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'botm'))
+    idomain = mfdatautil.ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'idomain'))
+    package_abbr = "gwfdis"
+
     def __init__(self, model, add_to_package_list=True, length_units=None, nogrb=None, xorigin=None, yorigin=None,
                  angrot=None, nlay=None, nrow=None, ncol=None, delr=None, delc=None, top=None,
                  botm=None, idomain=None, fname=None, pname=None, parent_file=None):

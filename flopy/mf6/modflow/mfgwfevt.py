@@ -3,11 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfevt(mfpackage.MFPackage):
-    package_abbr = "gwfevt"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'options', 'auxiliary'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'options', 'obs_filerecord'))
-    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'period', 'periodrecarray'))
     """
     ModflowGwfevt defines a evt package within a gwf6 model.
 
@@ -53,6 +48,12 @@ class ModflowGwfevt(mfpackage.MFPackage):
         boundname : name of the evapotranspiration cell. boundname is an ASCII character variable that can contain as many as 40 characters. If boundname contains spaces in it, then the entire name must be enclosed within single quotes.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'options', 'auxiliary'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'options', 'obs_filerecord'))
+    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'evt', 'period', 'periodrecarray'))
+    package_abbr = "gwfevt"
+
     def __init__(self, model, add_to_package_list=True, fixed_cell=None, auxiliary=None, auxmultname=None,
                  boundnames=None, print_input=None, print_flows=None, save_flows=None,
                  ts_filerecord=None, obs_filerecord=None, surf_rate_specified=None, maxbound=None,

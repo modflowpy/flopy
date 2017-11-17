@@ -3,15 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfmaw(mfpackage.MFPackage):
-    package_abbr = "gwfmaw"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'auxiliary'))
-    stage_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'stage_filerecord'))
-    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'budget_filerecord'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'obs_filerecord'))
-    wellrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'packagedata', 'wellrecarray'))
-    wellconnectionsrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'connectiondata', 'wellconnectionsrecarray'))
-    wellperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'period', 'wellperiodrecarray'))
     """
     ModflowGwfmaw defines a maw package within a gwf6 model.
 
@@ -101,6 +92,16 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'auxiliary'))
+    stage_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'stage_filerecord'))
+    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'budget_filerecord'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'options', 'obs_filerecord'))
+    wellrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'packagedata', 'wellrecarray'))
+    wellconnectionsrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'connectiondata', 'wellconnectionsrecarray'))
+    wellperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'maw', 'period', 'wellperiodrecarray'))
+    package_abbr = "gwfmaw"
+
     def __init__(self, model, add_to_package_list=True, auxiliary=None, boundnames=None, print_input=None,
                  print_head=None, print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, no_well_storage=None, flowing_wells=None,

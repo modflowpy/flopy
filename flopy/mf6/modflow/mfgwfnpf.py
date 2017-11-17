@@ -3,16 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfnpf(mfpackage.MFPackage):
-    package_abbr = "gwfnpf"
-    rewet_record = mfdatautil.ListTemplateGenerator(('gwf6', 'npf', 'options', 'rewet_record'))
-    icelltype = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'icelltype'))
-    k = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k'))
-    k22 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k22'))
-    k33 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k33'))
-    angle1 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle1'))
-    angle2 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle2'))
-    angle3 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle3'))
-    wetdry = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'wetdry'))
     """
     ModflowGwfnpf defines a npf package within a gwf6 model.
 
@@ -59,6 +49,17 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         is a combination of the wetting threshold and a flag to indicate which neighboring cells can cause a cell to become wet. If wetdry $<$ 0, only a cell below a dry cell can cause the cell to become wet. If wetdry $>$ 0, the cell below a dry cell and horizontally adjacent cells can cause a cell to become wet. If wetdry is 0, the cell cannot be wetted. The absolute value of wetdry is the wetting threshold. When the sum of BOT and the absolute value of wetdry at a dry cell is equaled or exceeded by the head at an adjacent cell, the cell is wetted. wetdry must be specified if ``REWET'' is specified in the OPTIONS block. If ``REWET'' is not specified in the options block, then wetdry can be entered, and memory will be allocated for it, even though it is not used.
 
     """
+    rewet_record = mfdatautil.ListTemplateGenerator(('gwf6', 'npf', 'options', 'rewet_record'))
+    icelltype = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'icelltype'))
+    k = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k'))
+    k22 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k22'))
+    k33 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'k33'))
+    angle1 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle1'))
+    angle2 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle2'))
+    angle3 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'angle3'))
+    wetdry = mfdatautil.ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 'wetdry'))
+    package_abbr = "gwfnpf"
+
     def __init__(self, model, add_to_package_list=True, save_flows=None, alternative_cell_averaging=None,
                  thickstrt=None, cvoptions=None, perched=None, rewet_record=None, xt3doptions=None,
                  save_specific_discharge=None, icelltype=None, k=None, k22=None, k33=None,

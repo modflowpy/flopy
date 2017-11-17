@@ -3,8 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowTdis(mfpackage.MFPackage):
-    package_abbr = "tdis"
-    tdisrecarray = mfdatautil.ListTemplateGenerator(('tdis', 'perioddata', 'tdisrecarray'))
     """
     ModflowTdis defines a tdis package.
 
@@ -22,6 +20,9 @@ class ModflowTdis(mfpackage.MFPackage):
         tsmult : is the multiplier for the length of successive time steps. The length of a time step is calculated by multiplying the length of the previous time step by TSMULT. The length of the first time step, $\Delta t_1$, is related to PERLEN, NSTP, and TSMULT by the relation $\Delta t_1= perlen \frac{tsmult - 1{tsmult^{nstp-1$.
 
     """
+    tdisrecarray = mfdatautil.ListTemplateGenerator(('tdis', 'perioddata', 'tdisrecarray'))
+    package_abbr = "tdis"
+
     def __init__(self, simulation, add_to_package_list=True, time_units=None, start_date_time=None, nper=None,
                  tdisrecarray=None, fname=None, pname=None, parent_file=None):
         super(ModflowTdis, self).__init__(simulation, "tdis", fname, pname, add_to_package_list, parent_file)        

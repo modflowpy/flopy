@@ -3,16 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfsfr(mfpackage.MFPackage):
-    package_abbr = "gwfsfr"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'auxiliary'))
-    stage_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'stage_filerecord'))
-    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'budget_filerecord'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'obs_filerecord'))
-    sfrrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'packagedata', 'sfrrecarray'))
-    reach_connectivityrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'connectiondata', 'reach_connectivityrecarray'))
-    reach_diversionsrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'diversions', 'reach_diversionsrecarray'))
-    reachperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'period', 'reachperiodrecarray'))
     """
     ModflowGwfsfr defines a sfr package within a gwf6 model.
 
@@ -94,6 +84,17 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'auxiliary'))
+    stage_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'stage_filerecord'))
+    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'budget_filerecord'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'obs_filerecord'))
+    sfrrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'packagedata', 'sfrrecarray'))
+    reach_connectivityrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'connectiondata', 'reach_connectivityrecarray'))
+    reach_diversionsrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'diversions', 'reach_diversionsrecarray'))
+    reachperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'period', 'reachperiodrecarray'))
+    package_abbr = "gwfsfr"
+
     def __init__(self, model, add_to_package_list=True, auxiliary=None, boundnames=None, print_input=None,
                  print_stage=None, print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, ts_filerecord=None, obs_filerecord=None, mover=None,

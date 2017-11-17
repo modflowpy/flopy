@@ -3,12 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfdisv(mfpackage.MFPackage):
-    package_abbr = "gwfdisv"
-    top = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'top'))
-    botm = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'botm'))
-    idomain = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'idomain'))
-    verticesrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disv', 'vertices', 'verticesrecarray'))
-    cell2drecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disv', 'cell2d', 'cell2drecarray'))
     """
     ModflowGwfdisv defines a disv package within a gwf6 model.
 
@@ -48,6 +42,13 @@ class ModflowGwfdisv(mfpackage.MFPackage):
         icvert : is an array of integer values containing vertex numbers (in the VERTICES block) used to define the cell. Vertices must be listed in clockwise order. Cells that are connected must share vertices.
 
     """
+    top = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'top'))
+    botm = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'botm'))
+    idomain = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'idomain'))
+    verticesrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disv', 'vertices', 'verticesrecarray'))
+    cell2drecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disv', 'cell2d', 'cell2drecarray'))
+    package_abbr = "gwfdisv"
+
     def __init__(self, model, add_to_package_list=True, length_units=None, nogrb=None, xorigin=None, yorigin=None,
                  angrot=None, nlay=None, ncpl=None, nvert=None, top=None, botm=None, idomain=None,
                  verticesrecarray=None, cell2drecarray=None, fname=None, pname=None,

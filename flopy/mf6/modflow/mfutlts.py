@@ -3,13 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowUtlts(mfpackage.MFPackage):
-    package_abbr = "utlts"
-    time_series_namerecord = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'time_series_namerecord'))
-    interpolation_methodrecord = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'interpolation_methodrecord'))
-    interpolation_methodrecord_single = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'interpolation_methodrecord_single'))
-    sfacrecord = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'sfacrecord'))
-    sfacrecord_single = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'sfacrecord_single'))
-    time_seriesrecarray = mfdatautil.ListTemplateGenerator(('ts', 'timeseries', 'time_seriesrecarray'))
     """
     ModflowUtlts defines a ts package within a utl model.
 
@@ -35,6 +28,14 @@ class ModflowUtlts(mfpackage.MFPackage):
         tas_array : A 2-D array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility.
 
     """
+    time_series_namerecord = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'time_series_namerecord'))
+    interpolation_methodrecord = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'interpolation_methodrecord'))
+    interpolation_methodrecord_single = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'interpolation_methodrecord_single'))
+    sfacrecord = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'sfacrecord'))
+    sfacrecord_single = mfdatautil.ListTemplateGenerator(('ts', 'attributes', 'sfacrecord_single'))
+    time_seriesrecarray = mfdatautil.ListTemplateGenerator(('ts', 'timeseries', 'time_seriesrecarray'))
+    package_abbr = "utlts"
+
     def __init__(self, model, add_to_package_list=True, time_series_namerecord=None,
                  interpolation_methodrecord=None, interpolation_methodrecord_single=None,
                  sfacrecord=None, sfacrecord_single=None, time_seriesrecarray=None, fname=None,

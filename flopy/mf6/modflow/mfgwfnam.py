@@ -3,8 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfnam(mfpackage.MFPackage):
-    package_abbr = "gwfnam"
-    packagerecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'nam', 'packages', 'packagerecarray'))
     """
     ModflowGwfnam defines a nam package within a gwf6 model.
 
@@ -28,6 +26,9 @@ class ModflowGwfnam(mfpackage.MFPackage):
         pname : is the user-defined name for the package. Pname is restricted to 16 characters. No spaces are allowed in Pname. Pname character values are read and stored by the program for stress packages only. These names may be useful for labeling purposes when multiple stress packages of the same type are located within a single GWF Model. If Pname is specified for a stress package, then Pname will be used in the flow budget table in the listing file; it will also be used for the text entry in the cell-by-cell budget file. Pname is case insensitive and is stored in all upper case letters.
 
     """
+    packagerecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'nam', 'packages', 'packagerecarray'))
+    package_abbr = "gwfnam"
+
     def __init__(self, model, add_to_package_list=True, list=None, print_input=None, print_flows=None,
                  save_flows=None, newtonoptions=None, packagerecarray=None, fname=None, pname=None,
                  parent_file=None):

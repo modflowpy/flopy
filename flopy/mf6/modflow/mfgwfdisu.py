@@ -3,18 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfdisu(mfpackage.MFPackage):
-    package_abbr = "gwfdisu"
-    top = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'griddata', 'top'))
-    bot = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'griddata', 'bot'))
-    area = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'griddata', 'area'))
-    iac = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'iac'))
-    ja = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'ja'))
-    ihc = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'ihc'))
-    cl12 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'cl12'))
-    hwva = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'hwva'))
-    angldegx = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'angldegx'))
-    verticesrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disu', 'vertices', 'verticesrecarray'))
-    cell2drecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disu', 'cell2d', 'cell2drecarray'))
     """
     ModflowGwfdisu defines a disu package within a gwf6 model.
 
@@ -66,6 +54,19 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         icvert : is an array of integer values containing vertex numbers (in the VERTICES block) used to define the cell. Vertices must be listed in clockwise order.
 
     """
+    top = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'griddata', 'top'))
+    bot = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'griddata', 'bot'))
+    area = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'griddata', 'area'))
+    iac = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'iac'))
+    ja = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'ja'))
+    ihc = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'ihc'))
+    cl12 = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'cl12'))
+    hwva = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'hwva'))
+    angldegx = mfdatautil.ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 'angldegx'))
+    verticesrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disu', 'vertices', 'verticesrecarray'))
+    cell2drecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'disu', 'cell2d', 'cell2drecarray'))
+    package_abbr = "gwfdisu"
+
     def __init__(self, model, add_to_package_list=True, length_units=None, nogrb=None, xorigin=None, yorigin=None,
                  angrot=None, nodes=None, nja=None, nvert=None, top=None, bot=None, area=None, iac=None,
                  ja=None, ihc=None, cl12=None, hwva=None, angldegx=None, verticesrecarray=None,

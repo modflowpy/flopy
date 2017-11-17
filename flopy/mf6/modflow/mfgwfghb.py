@@ -3,11 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfghb(mfpackage.MFPackage):
-    package_abbr = "gwfghb"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'options', 'auxiliary'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'options', 'obs_filerecord'))
-    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'period', 'periodrecarray'))
     """
     ModflowGwfghb defines a ghb package within a gwf6 model.
 
@@ -45,6 +40,12 @@ class ModflowGwfghb(mfpackage.MFPackage):
         boundname : name of the general-head boundary cell. boundname is an ASCII character variable that can contain as many as 40 characters. If boundname contains spaces in it, then the entire name must be enclosed within single quotes.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'options', 'auxiliary'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'options', 'obs_filerecord'))
+    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'ghb', 'period', 'periodrecarray'))
+    package_abbr = "gwfghb"
+
     def __init__(self, model, add_to_package_list=True, auxiliary=None, auxmultname=None, boundnames=None,
                  print_input=None, print_flows=None, save_flows=None, ts_filerecord=None,
                  obs_filerecord=None, mover=None, maxbound=None, periodrecarray=None, fname=None,

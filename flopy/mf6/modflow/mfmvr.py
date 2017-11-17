@@ -3,10 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowMvr(mfpackage.MFPackage):
-    package_abbr = "mvr"
-    budget_filerecord = mfdatautil.ListTemplateGenerator(('mvr', 'options', 'budget_filerecord'))
-    packagesrecarray = mfdatautil.ListTemplateGenerator(('mvr', 'packages', 'packagesrecarray'))
-    periodrecarray = mfdatautil.ListTemplateGenerator(('mvr', 'period', 'periodrecarray'))
     """
     ModflowMvr defines a mvr package.
 
@@ -40,6 +36,11 @@ class ModflowMvr(mfpackage.MFPackage):
         value : is the value to be used in the equation for calculating the amount of water to move. For the ``FACTOR'' option, value is the $\alpha$ factor. For the remaining options, value is the specified flow rate, $Q_S$.
 
     """
+    budget_filerecord = mfdatautil.ListTemplateGenerator(('mvr', 'options', 'budget_filerecord'))
+    packagesrecarray = mfdatautil.ListTemplateGenerator(('mvr', 'packages', 'packagesrecarray'))
+    periodrecarray = mfdatautil.ListTemplateGenerator(('mvr', 'period', 'periodrecarray'))
+    package_abbr = "mvr"
+
     def __init__(self, simulation, add_to_package_list=True, print_input=None, print_flows=None, modelnames=None,
                  budget_filerecord=None, maxmvr=None, maxpackages=None, packagesrecarray=None,
                  periodrecarray=None, fname=None, pname=None, parent_file=None):

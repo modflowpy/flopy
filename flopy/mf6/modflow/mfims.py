@@ -3,9 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowIms(mfpackage.MFPackage):
-    package_abbr = "ims"
-    csv_output_filerecord = mfdatautil.ListTemplateGenerator(('ims', 'options', 'csv_output_filerecord'))
-    rcloserecord = mfdatautil.ListTemplateGenerator(('ims', 'linear', 'rcloserecord'))
     """
     ModflowIms defines a ims package.
 
@@ -64,6 +61,10 @@ class ModflowIms(mfpackage.MFPackage):
         an optional keyword that defines the matrix reordering approach used. By default, matrix reordering is not applied. NONE - original ordering. RCM - reverse Cuthill McKee ordering. MD - minimum degree ordering.
 
     """
+    csv_output_filerecord = mfdatautil.ListTemplateGenerator(('ims', 'options', 'csv_output_filerecord'))
+    rcloserecord = mfdatautil.ListTemplateGenerator(('ims', 'linear', 'rcloserecord'))
+    package_abbr = "ims"
+
     def __init__(self, simulation, add_to_package_list=True, print_option=None, complexity=None,
                  csv_output_filerecord=None, outer_hclose=None, outer_maximum=None,
                  under_relaxation=None, under_relaxation_theta=None, under_relaxation_kappa=None,

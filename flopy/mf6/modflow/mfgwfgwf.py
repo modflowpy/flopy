@@ -3,12 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfgwf(mfpackage.MFPackage):
-    package_abbr = "gwfgwf"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'auxiliary'))
-    gnc_filerecord = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'gnc_filerecord'))
-    mvr_filerecord = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'mvr_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'obs_filerecord'))
-    gwfgwfrecarray = mfdatautil.ListTemplateGenerator(('gwfgwf', 'exchangedata', 'gwfgwfrecarray'))
     """
     ModflowGwfgwf defines a gwfgwf package.
 
@@ -60,6 +54,13 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         aux : represents the values of the auxiliary variables for each GWFGWF Exchange. The values of auxiliary variables must be present for each exchange. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'auxiliary'))
+    gnc_filerecord = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'gnc_filerecord'))
+    mvr_filerecord = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'mvr_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwfgwf', 'options', 'obs_filerecord'))
+    gwfgwfrecarray = mfdatautil.ListTemplateGenerator(('gwfgwf', 'exchangedata', 'gwfgwfrecarray'))
+    package_abbr = "gwfgwf"
+
     def __init__(self, simulation, add_to_package_list=True, exgtype=None, exgmnamea=None, exgmnameb=None, auxiliary=None,
                  print_input=None, print_flows=None, save_flows=None, cell_averaging=None,
                  cvoptions=None, newton=None, gnc_filerecord=None, mvr_filerecord=None,

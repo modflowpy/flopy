@@ -50,11 +50,11 @@ class SimulationDict(collections.OrderedDict):
         # check if the key refers to a binary output file, or an observation output file,
         # if so override the dictionary request and call output requester classes
         if key[1] in ('CBC', 'HDS', 'DDN', 'UCN'):
-            val = binaryfile_utils.MFOutput(collections.OrderedDict(self), self._path, key)
+            val = binaryfile_utils.MFOutput(self, self._path, key)
             return val.data
 
         elif key[-1] == 'Observations':
-            val = mfobservation.MFObservation(collections.OrderedDict(self), self._path, key)
+            val = mfobservation.MFObservation(self, self._path, key)
             return val.data
 
         val = collections.OrderedDict.__getitem__(self, key)

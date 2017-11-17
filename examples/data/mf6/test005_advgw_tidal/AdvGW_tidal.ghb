@@ -4,7 +4,7 @@ BEGIN OPTIONS
   PRINT_FLOWS
   SAVE_FLOWS
   TS6  FILEIN  tides.ts
-  OBS6  FILEIN  advgw_tidal.ghb.obs
+  OBS6  FILEIN  AdvGW_tidal.ghb.obs
 END OPTIONS
 
 BEGIN DIMENSIONS

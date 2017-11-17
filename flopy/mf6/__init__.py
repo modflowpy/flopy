@@ -1,7 +1,7 @@
 # imports
 from . import coordinates
 from . import data
-from . import modflow
+from modflow import *
 from . import plot
 from . import utils
 

@@ -3,18 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwflak(mfpackage.MFPackage):
-    package_abbr = "gwflak"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'auxiliary'))
-    stage_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'stage_filerecord'))
-    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'budget_filerecord'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'obs_filerecord'))
-    lakrecarray_package = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'packagedata', 'lakrecarray_package'))
-    lakrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'connectiondata', 'lakrecarray'))
-    lake_tablesrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'tables', 'lake_tablesrecarray'))
-    outletsrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'outlets', 'outletsrecarray'))
-    lakeperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'period', 'lakeperiodrecarray'))
-    outletperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'period', 'outletperiodrecarray'))
     """
     ModflowGwflak defines a lak package within a gwf6 model.
 
@@ -106,6 +94,19 @@ class ModflowGwflak(mfpackage.MFPackage):
         outletsetting : line of information that is parsed into a keyword and values. Keyword values that can be used to start the outletsetting string include: RATE, INVERT, WIDTH, SLOPE, and ROUGH.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'auxiliary'))
+    stage_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'stage_filerecord'))
+    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'budget_filerecord'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'options', 'obs_filerecord'))
+    lakrecarray_package = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'packagedata', 'lakrecarray_package'))
+    lakrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'connectiondata', 'lakrecarray'))
+    lake_tablesrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'tables', 'lake_tablesrecarray'))
+    outletsrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'outlets', 'outletsrecarray'))
+    lakeperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'period', 'lakeperiodrecarray'))
+    outletperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'lak', 'period', 'outletperiodrecarray'))
+    package_abbr = "gwflak"
+
     def __init__(self, model, add_to_package_list=True, auxiliary=None, boundnames=None, print_input=None,
                  print_stage=None, print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, ts_filerecord=None, obs_filerecord=None, mover=None,

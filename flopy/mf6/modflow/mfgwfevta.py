@@ -3,15 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfevta(mfpackage.MFPackage):
-    package_abbr = "gwfevta"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'evta', 'options', 'auxiliary'))
-    tas_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evta', 'options', 'tas_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evta', 'options', 'obs_filerecord'))
-    ievt = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'ievt'))
-    surface = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'surface'))
-    rate = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'rate'))
-    depth = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'depth'))
-    aux = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'aux(iaux)'))
     """
     ModflowGwfevta defines a evta package within a gwf6 model.
 
@@ -51,6 +42,16 @@ class ModflowGwfevta(mfpackage.MFPackage):
         is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables. A separate array can be specified for each auxiliary variable. If an array is not specified for an auxiliary variable, then a value of zero is assigned. If the value specified here for the auxiliary variable is the same as auxmultname, then the evapotranspiration rate will be multiplied by this array.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'evta', 'options', 'auxiliary'))
+    tas_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evta', 'options', 'tas_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'evta', 'options', 'obs_filerecord'))
+    ievt = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'ievt'))
+    surface = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'surface'))
+    rate = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'rate'))
+    depth = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'depth'))
+    aux = mfdatautil.ArrayTemplateGenerator(('gwf6', 'evta', 'period', 'aux(iaux)'))
+    package_abbr = "gwfevta"
+
     def __init__(self, model, add_to_package_list=True, readasarrays=None, fixed_cell=None, auxiliary=None,
                  auxmultname=None, print_input=None, print_flows=None, save_flows=None,
                  tas_filerecord=None, obs_filerecord=None, ievt=None, surface=None, rate=None,

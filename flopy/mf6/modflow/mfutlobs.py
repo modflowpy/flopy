@@ -3,8 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowUtlobs(mfpackage.MFPackage):
-    package_abbr = "utlobs"
-    continuousrecarray = mfdatautil.ListTemplateGenerator(('obs', 'continuous', 'continuousrecarray'))
     """
     ModflowUtlobs defines a obs package within a utl model.
 
@@ -23,6 +21,9 @@ class ModflowUtlobs(mfpackage.MFPackage):
         id2 : Text identifying cell adjacent to cell identified by ID. The form of ID2 is as described for ID. ID2 is used for intercell-flow observations of a GWF model, for three observation types of the LAK Package, for two observation types of the MAW Package, and one observation type of the UZF Package.
 
     """
+    continuousrecarray = mfdatautil.ListTemplateGenerator(('obs', 'continuous', 'continuousrecarray'))
+    package_abbr = "utlobs"
+
     def __init__(self, model, add_to_package_list=True, precision=None, digits=None, print_input=None,
                  continuousrecarray=None, fname=None, pname=None, parent_file=None):
         super(ModflowUtlobs, self).__init__(model, "obs", fname, pname, add_to_package_list, parent_file)        

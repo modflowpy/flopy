@@ -3,11 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfrch(mfpackage.MFPackage):
-    package_abbr = "gwfrch"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'options', 'auxiliary'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'options', 'obs_filerecord'))
-    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'period', 'periodrecarray'))
     """
     ModflowGwfrch defines a rch package within a gwf6 model.
 
@@ -44,6 +39,12 @@ class ModflowGwfrch(mfpackage.MFPackage):
         boundname : name of the recharge cell. boundname is an ASCII character variable that can contain as many as 40 characters. If boundname contains spaces in it, then the entire name must be enclosed within single quotes.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'options', 'auxiliary'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'options', 'obs_filerecord'))
+    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'rch', 'period', 'periodrecarray'))
+    package_abbr = "gwfrch"
+
     def __init__(self, model, add_to_package_list=True, fixed_cell=None, auxiliary=None, auxmultname=None,
                  boundnames=None, print_input=None, print_flows=None, save_flows=None,
                  ts_filerecord=None, obs_filerecord=None, maxbound=None, periodrecarray=None,

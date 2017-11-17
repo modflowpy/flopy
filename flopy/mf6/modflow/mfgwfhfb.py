@@ -3,8 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfhfb(mfpackage.MFPackage):
-    package_abbr = "gwfhfb"
-    hfbrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'hfb', 'period', 'hfbrecarray'))
     """
     ModflowGwfhfb defines a hfb package within a gwf6 model.
 
@@ -20,6 +18,9 @@ class ModflowGwfhfb(mfpackage.MFPackage):
         hydchr : is the hydraulic characteristic of the horizontal-flow barrier. The hydraulic characteristic is the barrier hydraulic conductivity divided by the width of the horizontal-flow barrier. If hydraulic characteristic is negative, then it acts as a multiplier to the conductance between the two model cells specified as containing a barrier. For example, if the value for hydchr was specified as 1.5, the conductance calculated for the two cells would be multiplied by 1.5.
 
     """
+    hfbrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'hfb', 'period', 'hfbrecarray'))
+    package_abbr = "gwfhfb"
+
     def __init__(self, model, add_to_package_list=True, print_input=None, maxhfb=None, hfbrecarray=None, fname=None,
                  pname=None, parent_file=None):
         super(ModflowGwfhfb, self).__init__(model, "hfb", fname, pname, add_to_package_list, parent_file)        

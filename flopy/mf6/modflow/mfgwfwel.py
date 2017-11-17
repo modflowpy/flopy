@@ -3,11 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfwel(mfpackage.MFPackage):
-    package_abbr = "gwfwel"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'options', 'auxiliary'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'options', 'obs_filerecord'))
-    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'period', 'periodrecarray'))
     """
     ModflowGwfwel defines a wel package within a gwf6 model.
 
@@ -46,6 +41,12 @@ class ModflowGwfwel(mfpackage.MFPackage):
         boundname : name of the well cell. boundname is an ASCII character variable that can contain as many as 40 characters. If boundname contains spaces in it, then the entire name must be enclosed within single quotes.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'options', 'auxiliary'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'options', 'obs_filerecord'))
+    periodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'wel', 'period', 'periodrecarray'))
+    package_abbr = "gwfwel"
+
     def __init__(self, model, add_to_package_list=True, auxiliary=None, auxmultname=None, boundnames=None,
                  print_input=None, print_flows=None, save_flows=None, auto_flow_reduce=None,
                  ts_filerecord=None, obs_filerecord=None, mover=None, maxbound=None,

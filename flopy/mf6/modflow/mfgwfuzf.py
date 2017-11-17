@@ -3,13 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfuzf(mfpackage.MFPackage):
-    package_abbr = "gwfuzf"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'auxiliary'))
-    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'budget_filerecord'))
-    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'ts_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'obs_filerecord'))
-    uzfrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'packagedata', 'uzfrecarray'))
-    uzfperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'period', 'uzfperiodrecarray'))
     """
     ModflowGwfuzf defines a uzf package within a gwf6 model.
 
@@ -83,6 +76,14 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         aux : represents the values of the auxiliary variables for each UZF. The values of auxiliary variables must be present for each UZF. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block. If the package supports time series and the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'auxiliary'))
+    budget_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'budget_filerecord'))
+    ts_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'ts_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'options', 'obs_filerecord'))
+    uzfrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'packagedata', 'uzfrecarray'))
+    uzfperiodrecarray = mfdatautil.ListTemplateGenerator(('gwf6', 'uzf', 'period', 'uzfperiodrecarray'))
+    package_abbr = "gwfuzf"
+
     def __init__(self, model, add_to_package_list=True, auxiliary=None, auxmultname=None, boundnames=None,
                  print_input=None, print_flows=None, save_flows=None, budget_filerecord=None,
                  ts_filerecord=None, obs_filerecord=None, mover=None, simulate_et=None,

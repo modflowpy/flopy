@@ -3,8 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowUtltab(mfpackage.MFPackage):
-    package_abbr = "utltab"
-    laktabrecarray = mfdatautil.ListTemplateGenerator(('tab', 'table', 'laktabrecarray'))
     """
     ModflowUtltab defines a tab package within a utl model.
 
@@ -21,6 +19,9 @@ class ModflowUtltab(mfpackage.MFPackage):
         barea : real value that defines the lake-GWF exchange area corresponding to the stage specified on the line. barea is only specified if the claktype for the lake is EMBEDDEDH or EMBEDDEDV.
 
     """
+    laktabrecarray = mfdatautil.ListTemplateGenerator(('tab', 'table', 'laktabrecarray'))
+    package_abbr = "utltab"
+
     def __init__(self, model, add_to_package_list=True, nrow=None, ncol=None, laktabrecarray=None, fname=None,
                  pname=None, parent_file=None):
         super(ModflowUtltab, self).__init__(model, "tab", fname, pname, add_to_package_list, parent_file)        

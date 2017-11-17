@@ -3,13 +3,6 @@ from ..data import mfdatautil
 
 
 class ModflowGwfrcha(mfpackage.MFPackage):
-    package_abbr = "gwfrcha"
-    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'rcha', 'options', 'auxiliary'))
-    tas_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rcha', 'options', 'tas_filerecord'))
-    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rcha', 'options', 'obs_filerecord'))
-    irch = mfdatautil.ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'irch'))
-    recharge = mfdatautil.ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'recharge'))
-    aux = mfdatautil.ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'aux'))
     """
     ModflowGwfrcha defines a rcha package within a gwf6 model.
 
@@ -45,6 +38,14 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables. A separate array can be specified for each auxiliary variable. If an array is not specified for an auxiliary variable, then a value of zero is assigned. If the value specified here for the auxiliary variable is the same as auxmultname, then the recharge array will be multiplied by this array.
 
     """
+    auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'rcha', 'options', 'auxiliary'))
+    tas_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rcha', 'options', 'tas_filerecord'))
+    obs_filerecord = mfdatautil.ListTemplateGenerator(('gwf6', 'rcha', 'options', 'obs_filerecord'))
+    irch = mfdatautil.ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'irch'))
+    recharge = mfdatautil.ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'recharge'))
+    aux = mfdatautil.ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'aux'))
+    package_abbr = "gwfrcha"
+
     def __init__(self, model, add_to_package_list=True, readasarrays=None, fixed_cell=None, auxiliary=None,
                  auxmultname=None, print_input=None, print_flows=None, save_flows=None,
                  tas_filerecord=None, obs_filerecord=None, irch=None, recharge=None, aux=None,
