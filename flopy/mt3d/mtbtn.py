@@ -106,9 +106,11 @@ class Mt3dBtn(Package):
         concentration cell; If icbund < 0, the cell is a constant-concentration
         cell; If icbund > 0, the cell is an active concentration cell where the
         concentration value will be calculated. (default is 1).
-    sconc : float, array of (nlay, nrow, ncol), or filename, or a list (length
-        ncomp) of these for multi-species simulations
-        The starting concentration for the solute transport simulation.
+    sconc : float, array of (nlay, nrow, ncol), or filename
+        sconc is the starting concentration for the first species.  To specify
+        starting concentrations for other species in a multi-species
+        simulation, include additional keywords, such as sconc2, sconc3, and
+        so forth.
     cinact : float
         The value for indicating an inactive concentration cell. (default is
         1e30).

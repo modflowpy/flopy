@@ -201,6 +201,8 @@ class ModflowDis(Package):
                                              self.lenuni, xul=xul, yul=yul,
                                              rotation=rotation,
                                              proj4_str=proj4_str)
+        self.tr = reference.TemporalReference(itmuni=self.itmuni,
+                                              start_datetime=start_datetime)
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
@@ -408,6 +410,31 @@ class ModflowDis(Package):
                 z[l, :, :] = (self.botm[l - 1, :, :] + self.botm[l, :, :]) / 2.
         return y, x, z
 
+    def get_rc_from_node_coordinates(self, x, y):
+        """Return the row and column of a point or sequence of points
+        in model coordinates.
+
+        Parameters
+        ----------
+        x : scalar or sequence of x coordinates
+        y : scalar or sequence of y coordinates
+
+        Returns
+        -------
+        r : row or sequence of rows (zero-based)
+        c : column or sequence of columns (zero-based)
+        """
+        yn, xn, zn = self.get_node_coordinates()
+        if np.isscalar(x):
+            c = (np.abs(xn - x)).argmin()
+            r = (np.abs(yn - y)).argmin()
+        else:
+            xcp = np.array([xn] * (len(x)))
+            ycp = np.array([yn] * (len(x)))
+            c = (np.abs(xcp.transpose() - x)).argmin(axis=0)
+            r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
+        return r, c
+
     def get_lrc(self, nodes):
         """
         Get layer, row, column from a list of MODFLOW node numbers.
@@ -447,7 +474,7 @@ class ModflowDis(Package):
         nrc = self.nrow * self.ncol
         v = []
         for [k, i, j] in lrc_list:
-            node = int(((k - 1) * nrc) + ((i - 1) * self.ncol) + j)
+            node = int(((k) * nrc) + ((i) * self.ncol) + j)
             v.append(node)
         return v
 

@@ -162,7 +162,7 @@ def test_mf2000_MultiDiffusion():
 
 def test_mf2000_reinject():
     pth = os.path.join(pth2000, 'reinject')
-    namfile = 'P3MF2K.NAM'
+    namfile = 'p3mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth,
                                     version='mf2k', verbose=True,
                                     exe_name=mf2k_exe)
@@ -175,12 +175,12 @@ def test_mf2000_reinject():
         success, buff = mf.run_model(silent=True)
         assert success, '{} did not run'.format(mf.name)
 
-    namfile = 'P3MT.NAM'
+    namfile = 'p3mt.nam'
     mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True,
                                    exe_name=mt3d_exe)
 
     mt.model_ws = cpth
-    ftlfile = 'p3.FTL'
+    ftlfile = 'p3.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
     if ismt3d is not None and ismf2k is not None:
@@ -273,7 +273,7 @@ def test_mf2000_zeroth():
     mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True,
                                    exe_name=mt3d_exe)
     mt.model_ws = cpth
-    ftlfile = 'zeroth.FTL'
+    ftlfile = 'zeroth.ftl'
     mt.ftlfilename = ftlfile
     mt.write_input()
     if ismt3d is not None and ismf2k is not None:

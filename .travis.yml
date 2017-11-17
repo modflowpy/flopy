@@ -1,6 +1,8 @@
 language: python
-
-sudo: false
+os: linux
+dist: trusty
+sudo: required
+compiler: gcc
 
 matrix:
   include:
@@ -24,7 +26,11 @@ cache:
 
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
+      - gfortran-6
+      - g++-6
       - python-pip
       - libhdf5-serial-dev
       - netcdf-bin
@@ -41,6 +47,15 @@ before_install:
 
 # command to install dependencies
 install:
+    - if [[ ! -d "$HOME/.local/bin" ]]; then
+        mkdir "$HOME/.local/bin";
+      fi
+    - export PATH="$HOME/.local/bin:$PATH"
+    - ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
+    - ls -l /usr/bin/gfortran-6
+    - ln -fs /usr/bin/g++-6 "$HOME/.local/bin/g++" && g++ --version
+    - ls -l /usr/bin/g++-6
+    - export CXX="g++"
     - if [[ $TRAVIS_PYTHON_VERSION < 3.3 ]];
       then pip install -r requirements2-34.travis.txt;
       fi
@@ -53,10 +68,17 @@ install:
     - if [[ $TRAVIS_PYTHON_VERSION > 3.4 ]];
       then pip install -r requirements.travis.txt;
       fi
+    - pip install https://github.com/modflowpy/pymake/zipball/master
+    - pip install nose-timer
+    - pip install coveralls
 
 
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
+    - python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
-    - nosetests -v -w ./autotest
+    - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
+    - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
+after_success:
+    - coveralls

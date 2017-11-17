@@ -8,6 +8,8 @@ pakbase module
 from __future__ import print_function
 
 import os
+import sys
+import platform
 import webbrowser as wb
 
 import numpy as np
@@ -234,7 +236,8 @@ class Package(object):
                             # also checks for nan values
                             elev_name = chk.bc_stage_names[self.name[0]]
                             botms = self.parent.dis.botm.array[inds]
-                            chk.stress_period_data_values(spd, spd[elev_name] < botms,
+                            chk.stress_period_data_values(spd, spd[
+                                elev_name] < botms,
                                                           col=elev_name,
                                                           error_name='BC elevation below cell bottom',
                                                           error_type='Error')
@@ -318,7 +321,8 @@ class Package(object):
                                  chk.property_threshold_values['vkcb'],
                                  'quasi-3D confining bed Kv')
 
-            if not np.all(self.parent.dis.steady):  # only check storage if model is transient
+            if not np.all(
+                    self.parent.dis.steady):  # only check storage if model is transient
 
                 # do the same for storage if the model is transient
                 sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
@@ -625,7 +629,12 @@ class Package(object):
 
         if not hasattr(f, 'read'):
             filename = f
-            f = open(filename, 'r')
+            if platform.system().lower() == 'windows' and \
+                            sys.version_info[0] < 3:
+                import io
+                f = io.open(filename, 'r')
+            else:
+                f = open(filename, 'r')
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -668,15 +677,16 @@ class Package(object):
         # set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
-        if "modflowwel" in str(pack_type).lower():
+        if 'modflowwel' in str(pack_type).lower():
             partype = ['flux']
 
-        if "nwt" in model.version.lower() and 'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
+        if 'nwt' in model.version.lower() and \
+            'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
 
             specify = False
             ipos = f.tell()
             line = f.readline()
-            # test for specify keyword if a NWT well file - This is a temporary hack
+            # test for specify keyword if a NWT well file
             if 'specify' in line.lower():
                 specify = True
                 t = line.strip().split()
@@ -869,7 +879,7 @@ class Package(object):
 
         pak = pack_type(model, ipakcb=ipakcb,
                         stress_period_data=stress_period_data,
-                        dtype=dtype,  options=options,
+                        dtype=dtype, options=options,
                         unitnumber=unitnumber, filenames=filenames)
         if check:
             pak.check(f='{}.chk'.format(pak.name[0]),

@@ -23,13 +23,14 @@
 from .mfreadnam import parsenamefile
 from .util_array import Util3d, Util2d, Transient2d, Transient3d, read1d
 from .util_list import MfList
-from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile
+from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile, \
+    HeadUFile
 from .formattedfile import FormattedHeadFile
 from .modpathfile import PathlineFile, EndpointFile
 from .swroutputfile import SwrStage, SwrBudget, SwrFlow, SwrExchange, \
     SwrStructure
 from .observationfile import HydmodObs, SwrObs
-from .reference import SpatialReference
+from .reference import SpatialReference, crs, TemporalReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget
 from .check import check, get_neighbors

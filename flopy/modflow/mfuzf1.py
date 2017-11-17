@@ -10,7 +10,7 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from ..utils.flopy_io import _pop_item, line_parse
+from ..utils.flopy_io import _pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
 from ..utils import Util2d
 
@@ -674,7 +674,10 @@ class ModflowUzf1(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1a
+        if 'options' in line:
+            line = read_nwt_options(f)
         specifythtr, specifythti, nosurfleak = _parse1a(line)
+
         # dataset 1b
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
         ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
@@ -713,7 +716,11 @@ class ModflowUzf1(Package):
             # dataset 6
             load_util2d('thts', np.float32)
 
-            if not model.dis.steady[0]:
+            if specifythtr:
+                # dataset 6b (residual water content)
+                load_util2d('thtr', np.float32)
+
+            if specifythti or np.all(~model.dis.steady.array):
                 # dataset 7 (initial water content; only read if not steady-state)
                 load_util2d('thti', np.float32)
 

@@ -84,7 +84,7 @@ def test_seawat_henry():
     mswt.write_input()
 
     if isseawat is not None:
-        success, buff = mswt.run_model(silent=True)
+        success, buff = mswt.run_model(silent=False)
         assert success, '{} did not run'.format(mswt.name)
 
     return
@@ -123,7 +123,7 @@ def test_seawat2_henry():
     m.write_input()
 
     if isseawat is not None:
-        success, buff = m.run_model(silent=True)
+        success, buff = m.run_model(silent=False)
         assert success, '{} did not run'.format(m.name)
 
     return

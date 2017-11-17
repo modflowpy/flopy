@@ -5,7 +5,7 @@ import subprocess
 
 # flopy imports
 from ..modflow.mfdisu import ModflowDisU
-from .util_array import read1d, Util2d
+from .util_array import Util2d  #read1d,
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 
@@ -21,6 +21,21 @@ except:
 # program layer functionality for plot method
 # support an asciigrid option for top and bottom interpolation
 # add intersection capability
+
+
+def read1d(f, a):
+    """
+    Quick file to array reader for reading gridgen output.  Much faster
+    than the read1d function in util_array
+
+    """
+    dtype = a.dtype.type
+    lines = f.readlines()
+    l = []
+    for line in lines:
+        l += [dtype(i) for i in line.strip().split()]
+    a[:] = np.array(l, dtype=dtype)
+    return a
 
 
 def features_to_shapefile(features, featuretype, filename):
@@ -850,7 +865,21 @@ class Gridgen(object):
 
         return gridprops
 
-    def to_disu8(self, fname, writevertices=True):
+    def to_disu6(self, fname, writevertices=True):
+        """
+        Create a MODFLOW 6 DISU file
+
+        Parameters
+        ----------
+        fname : str
+            name of file to write
+        writevertices : bool
+            include vertices in the DISU file. (default is True)
+
+        Returns
+        -------
+
+        """
 
         gridprops = self.get_gridprops()
         f = open(fname, 'w')
@@ -867,22 +896,22 @@ class Gridgen(object):
             f.write('  NVERT {}\n'.format(gridprops['nvert']))
         f.write('END DIMENSIONS\n\n')
 
-        # disdata
-        f.write('BEGIN DISDATA\n')
+        # griddata
+        f.write('BEGIN GRIDDATA\n')
         for prop in ['top', 'bot', 'area']:
             f.write('  {}\n'.format(prop.upper()))
-            f.write('    INTERNAL 1 (FREE)\n')
+            f.write('    INTERNAL\n')
             a = gridprops[prop]
             for aval in a:
                 f.write('{} '.format(aval))
             f.write('\n')
-        f.write('END DISDATA\n\n')
+        f.write('END GRIDDATA\n\n')
 
         # condata
         f.write('BEGIN CONNECTIONDATA\n')
         for prop in ['iac', 'ja', 'ihc', 'cl12', 'hwva', 'angldegx']:
             f.write('  {}\n'.format(prop.upper()))
-            f.write('    INTERNAL 1 (FREE)\n')
+            f.write('    INTERNAL\n')
             a = gridprops[prop]
             for aval in a:
                 f.write('{} '.format(aval))
@@ -913,6 +942,99 @@ class Gridgen(object):
                 iv += 4
             f.write('END CELL2D\n\n')
 
+        f.close()
+        return
+
+    def to_disv6(self, fname, verbose=False):
+        """
+        Create a MODFLOW 6 DISV file
+
+        Parameters
+        ----------
+        fname : str
+            name of file to write
+
+        Returns
+        -------
+
+        """
+
+        if verbose:
+            print('Loading properties from gridgen output.')
+        gridprops = self.get_gridprops()
+        f = open(fname, 'w')
+
+        # determine sizes
+        nlay = gridprops['nlay']
+        nodelay = gridprops['nodelay']
+        ncpl = nodelay.min()
+        assert ncpl == nodelay.max(), 'Cannot create DISV package '
+        'because the number of cells is not the same for all layers'
+
+        # use the cvfdutil helper to eliminate redundant vertices and add
+        # hanging nodes
+        from .cvfdutil import to_cvfd
+        verts, iverts = to_cvfd(self._vertdict, nodestop=ncpl, verbose=verbose)
+        nvert = verts.shape[0]
+
+        # opts
+        if verbose:
+            print('writing options.')
+        f.write('BEGIN OPTIONS\n')
+        f.write('END OPTIONS\n\n')
+
+        # dims
+        if verbose:
+            print('writing dimensions.')
+        f.write('BEGIN DIMENSIONS\n')
+        f.write('  NCPL {}\n'.format(ncpl))
+        f.write('  NLAY {}\n'.format(nlay))
+        f.write('  NVERT {}\n'.format(nvert))
+        f.write('END DIMENSIONS\n\n')
+
+        # griddata
+        if verbose:
+            print('writing griddata.')
+        f.write('BEGIN GRIDDATA\n')
+        for prop in ['top', 'bot']:
+            a = gridprops[prop]
+            if prop == 'bot':
+                prop = 'botm'
+            f.write('  {}\n'.format(prop.upper()))
+            f.write('    INTERNAL\n')
+            if prop == 'top':
+                a = a[0 : ncpl]
+            for aval in a:
+                f.write('{} '.format(aval))
+            f.write('\n')
+        f.write('END GRIDDATA\n\n')
+
+        # vertices
+        if verbose:
+            print('writing vertices.')
+        f.write('BEGIN VERTICES\n')
+        for i, row in enumerate(verts):
+            x = row[0]
+            y = row[1]
+            s = '  {} {} {}\n'.format(i + 1, x, y)
+            f.write(s)
+        f.write('END VERTICES\n\n')
+
+        # celldata
+        if verbose:
+            print('writing cell2d.')
+        f.write('BEGIN CELL2D\n')
+        cellxy = gridprops['cellxy']
+        for icell, icellverts in enumerate(iverts):
+            xc, yc = cellxy[icell]
+            s = '  {} {} {} {}'.format(icell + 1, xc, yc, len(icellverts))
+            for iv in icellverts:
+                s += ' {}'.format(iv + 1)
+            f.write(s + '\n')
+        f.write('END CELL2D\n\n')
+
+        if verbose:
+            print('done writing disv.')
         f.close()
         return
 

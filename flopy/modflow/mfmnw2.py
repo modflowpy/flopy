@@ -870,7 +870,7 @@ class ModflowMnw2(Package):
             self.make_stress_period_data(self.mnw)
 
         if stress_period_data is not None:
-            if 'k' not in stress_period_data[0].dtype.names:
+            if 'k' not in stress_period_data[list(stress_period_data.keys())[0]].dtype.names:
                 self._add_kij_to_stress_period_data()
 
         self.parent.add_package(self)
