@@ -215,7 +215,7 @@ class Mt3dms(BaseModel):
     """
 
     def __init__(self, modelname='mt3dtest', namefile_ext='nam',
-                 modflowmodel=None, ftlfilename=None, ftlfree=False,
+                 modflowmodel=None, ftlfilename="mt3d_link.ftl", ftlfree=False,
                  version='mt3dms', exe_name='mt3dms.exe',
                  structured=True, listunit=None, ftlunit=None,
                  model_ws='.', external_path=None,
@@ -295,8 +295,8 @@ class Mt3dms(BaseModel):
         # the starting external data unit number
         self._next_ext_unit = 2000
         if external_path is not None:
-            assert model_ws == '.', "ERROR: external cannot be used " + \
-                                    "with model_ws"
+            #assert model_ws == '.', "ERROR: external cannot be used " + \
+            #                        "with model_ws"
 
             # external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
