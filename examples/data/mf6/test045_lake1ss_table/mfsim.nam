@@ -1,0 +1,19 @@
+BEGIN Options
+END Options
+
+BEGIN Timing
+  TDIS6  lakeex1b.tdis
+END Timing
+
+BEGIN Models
+  gwf6  lakeex1b.nam  lakeex1b
+END Models
+
+BEGIN Exchanges
+END Exchanges
+
+BEGIN SOLUTIONGROUP  1
+  MXITER  1
+  ims6  lakeex1b.ims  lakeex1b
+END SOLUTIONGROUP  1
+

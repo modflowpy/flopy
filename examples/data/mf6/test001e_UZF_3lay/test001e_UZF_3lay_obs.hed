@@ -1,0 +1,8 @@
+BEGIN OPTIONS
+END OPTIONS
+
+BEGIN CONTINUOUS FILEOUT  test001e_UZF_3lay_obshead.out
+H1          head  1 1 2
+H2          head  2 1 2
+H3          head  3 1 2
+END CONTINUOUS

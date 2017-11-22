@@ -1,0 +1,24 @@
+BEGIN OPTIONS
+#none
+END OPTIONS
+
+BEGIN TIMING
+  TDIS6 simulation.tdis
+END TIMING
+
+BEGIN MODELS
+  #modeltype      namefile      modelname
+         GWF6    model1.nam      PARENT
+         GWF6    model2.nam      CHILD
+END MODELS
+
+BEGIN EXCHANGES
+  GWF6-GWF6 simulation.exg PARENT CHILD
+END EXCHANGES
+
+BEGIN SOLUTIONGROUP 1
+  MXITER 1
+  IMS6 simulation.ims PARENT CHILD
+END SOLUTIONGROUP
+
+

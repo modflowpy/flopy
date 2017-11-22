@@ -1,0 +1,30 @@
+# Structured discretization file for MODFLOW-USG
+begin options
+  LENGTH_UNITS meters
+end options
+
+begin dimensions
+  nlay 1
+  nrow 7
+  ncol 7
+end dimensions
+
+BEGIN GRIDDATA
+  IDOMAIN
+  INTERNAL  FACTOR  1 IPRN
+ 1  1  1  1  1  1  1
+ 1  1  1  1  1  1  1
+ 1  1  0  0  0  1  1
+ 1  1  0  0  0  1  1
+ 1  1  0  0  0  1  1
+ 1  1  1  1  1  1  1
+ 1  1  1  1  1  1  1
+  delr
+    constant 100.
+  delc
+    constant 100.
+  top
+    constant   0.
+  botm
+    constant -100
+END GRIDDATA

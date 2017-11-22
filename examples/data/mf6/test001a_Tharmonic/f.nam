@@ -1,0 +1,20 @@
+# Simulation name file for MODFLOW 6
+
+BEGIN Options
+END Options
+
+BEGIN Timing
+  TDIS  flow15.tdis
+END Timing
+
+BEGIN Models
+  GWF  flow15.nam  flow15
+END Models
+
+BEGIN Exchanges
+END Exchanges
+
+BEGIN SOLUTIONGROUP 1
+  MXITER  1
+  IMS8  flow15.ims  flow15
+END SOLUTIONGROUP

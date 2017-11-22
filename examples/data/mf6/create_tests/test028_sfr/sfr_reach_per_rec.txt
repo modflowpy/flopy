@@ -1,0 +1,4 @@
+   1 inflow 25. 
+  16 inflow 10.
+  28 inflow 150.
+   4 diversion 1 0.5

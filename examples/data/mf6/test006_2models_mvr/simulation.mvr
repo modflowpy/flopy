@@ -1,0 +1,21 @@
+BEGIN OPTIONS
+  PRINT_INPUT
+  PRINT_FLOWS
+  MODELNAMES
+END OPTIONS
+
+BEGIN DIMENSIONS
+  MAXMVR 10
+  MAXPACKAGES 2
+END DIMENSIONS
+
+BEGIN PACKAGES
+  'PARENT' 'MAW-1'
+  'CHILD' 'MAW-1'
+END PACKAGES
+
+BEGIN PERIOD 1
+#  mnamep packnamep idp   mnamer packnamer idr   type val
+# -------------------------------------------------------
+  'CHILD'   'MAW-1'   1 'PARENT'   'MAW-1'   1 FACTOR 0.5
+END PERIOD 1

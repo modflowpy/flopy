@@ -1,0 +1,31 @@
+# Unstructured discretization file for MODFLOW-USG
+begin options
+  LENGTH_UNITS meters
+end options
+
+begin dimensions
+  nodes 121
+  nja 601
+end dimensions
+
+BEGIN GRIDDATA
+  top
+    constant 0.
+  bot
+    constant -100.
+  area
+    open/close 'flow.disu.area.dat' FACTOR  1.0  IPRN  0
+END GRIDDATA
+
+begin connectiondata
+  ihc
+    constant 1
+  iac
+    open/close 'flow.disu.iac.dat' FACTOR  1  IPRN  0
+  ja
+    open/close 'flow.disu.ja.dat' FACTOR  1  IPRN  0
+  cl12
+    open/close 'flow.disu.cl12.dat' FACTOR  1.0  IPRN  0
+  hwva
+    open/close 'flow.disu.hwva.dat' FACTOR  1.0  IPRN  0
+end connectiondata

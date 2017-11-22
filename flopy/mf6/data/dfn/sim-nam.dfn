@@ -1,0 +1,185 @@
+# --------------------- sim nam options ---------------------
+
+block options
+name continue
+type keyword
+reader urword
+optional true
+longname continue if not converged
+description keyword flag to indicate that the simulation should continue even if one or more solutions do not converge.
+
+block options
+name nocheck
+type keyword
+reader urword
+optional true
+longname turn off checking
+description keyword flag to indicate that the model input check routines should not be called prior to each time step. Checks are performed by default.
+
+block options
+name memory_print_option
+type string
+reader urword
+optional true
+longname memory print option
+description is a flag that controls printing of detailed memory manager usage to the end of the simulation list file.  \texttt{NONE} means do not print detailed information. \texttt{SUMMARY} means print only the total memory for each simulation component. \texttt{ALL} means print information for each variable stored in the memory manager. \texttt{NONE} is default if \texttt{memory\_print\_option} is not specified.
+
+
+
+# --------------------- sim nam timing ---------------------
+
+block timing
+name tdis6
+preserve_case true
+type string
+reader urword
+optional
+longname name of tdis input file
+description is the name of the Temporal Discretization (TDIS) Input File.
+
+
+# --------------------- sim nam models ---------------------
+
+block models
+name modelrecarray
+type recarray mtype mfname mname
+reader urword
+optional
+longname list of models
+description is the list of model types, model name files, and model names.
+
+block models
+name mtype
+in_record true
+type string
+tagged false
+reader urword
+longname model type
+description is the type of model to add to simulation.
+
+block models
+name mfname
+in_record true
+type string
+preserve_case true
+tagged false
+reader urword
+longname file name for model name file
+description is the file name of the model name file.
+
+block models
+name mname
+in_record true
+type string
+tagged false
+reader urword
+longname name of model
+description is the user-assigned name of the model.  The model name cannot exceed 16 characters and must not have blanks within the name.  The model name is case insensitive; any lowercase letters are converted and stored as upper case letters.
+
+
+# --------------------- sim nam exchanges ---------------------
+
+block exchanges
+name exchangerecarray
+type recarray exgtype exgfile exgmnamea exgmnameb
+reader urword
+optional
+longname list of exchanges
+description is the list of exchange types, exchange files, and model names.
+
+block exchanges
+name exgtype
+in_record true
+type string
+tagged false
+reader urword
+longname exchange type
+description is the exchange type.
+
+block exchanges
+name exgfile
+in_record true
+type string
+preserve_case true
+tagged false
+reader urword
+longname input file for exchange
+description is the input file for the exchange.
+
+block exchanges
+name exgmnamea
+in_record true
+type string
+tagged false
+reader urword
+longname name of model A
+description is the name of the first model that is part of this exchange.
+
+block exchanges
+name exgmnameb
+in_record true
+type string
+tagged false
+reader urword
+longname name of model B
+description is the name of the second model that is part of this exchange.
+
+
+# --------------------- sim nam solutiongroup ---------------------
+
+block solutiongroup
+name group_num
+type integer
+block_variable True
+in_record true
+tagged false
+shape
+reader urword
+longname
+description is the group number of the solution group.  Solution groups must be numbered sequentially, starting with group number one.
+
+block solutiongroup
+name mxiter
+type integer
+reader urword
+optional true
+longname maximum solution group iterations
+description is the maximum number of outer iterations for this solution group.  The default value is 1.  If there is only one solution in the solution group, then MXITER must be 1.
+
+block solutiongroup
+name solutionrecarray
+type recarray slntype slnfname slnmnames
+reader urword
+longname solution type and models in the solution
+description is the list of solution types and models in the solution.
+
+block solutiongroup
+name slntype
+type string
+valid_values ims6
+in_record true
+tagged false
+reader urword
+longname type of solution
+description is the type of solution.  The Integrated Model Solution (IMS6) is the only supported option in this version.
+
+block solutiongroup
+name slnfname
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+longname file name for solution input
+description name of file containing solution input.
+
+block solutiongroup
+name slnmnames
+type string
+in_record true
+shape (nslnmod)
+tagged false
+reader urword
+longname array of model names in this solution
+description is the array of model names to add to this solution.
+

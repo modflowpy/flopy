@@ -1,0 +1,15 @@
+BEGIN Options
+  NEWTON
+  PRINT_INPUT
+END Options
+
+BEGIN PACKAGES
+  DIS6          test001e_UZF_3lay.dis
+  IC6           test001e_UZF_3lay.ic
+  NPF6          test001e_UZF_3lay.npf 
+  STO6          test001e_UZF_3lay.sto
+  CHD6          test001e_UZF_3lay.chd
+  OC6           test001e_UZF_3lay.oc
+  UZF6         test001e_UZF_3lay.uzf
+  OBS6         test001e_UZF_3lay_obs.hed
+END PACKAGES

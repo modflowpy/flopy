@@ -1,0 +1,13 @@
+BEGIN OPTIONS
+  NEWTON
+END OPTIONS
+
+BEGIN PACKAGES
+  DIS6           model1.dis
+  IC6            model1.ic
+  NPF6           model1.npf
+  CHD6           model1.chd
+  MAW6           model1.mawq
+  OC6            model1.oc
+END PACKAGES
+

@@ -1,0 +1,102 @@
+BEGIN OPTIONS
+  FIXED_CELL
+  AUXILIARY  multiplier
+  AUXMULTNAME  multiplier
+  BOUNDNAMES
+  PRINT_INPUT
+  PRINT_FLOWS
+  SAVE_FLOWS
+  TS6  FILEIN  recharge_rates_1.ts
+END OPTIONS
+
+BEGIN DIMENSIONS
+  MAXBOUND  84
+END DIMENSIONS
+
+BEGIN PERIOD  1
+  1 1 1  rch_1  1.0  rch-1-1
+  1 1 2  rch_1  1.0  rch-1-2
+  1 1 3  rch_1  0.5
+  1 2 1  rch_1  1.0
+  1 2 2  rch_1  1.0
+  1 2 3  rch_1  1.0  rch-2-3
+  1 2 4  rch_1  0.5
+  1 3 1  rch_1  1.0
+  1 3 2  rch_1  1.0
+  1 3 3  rch_1  1.0
+  1 3 4  rch_1  1.0
+  1 3 5  rch_1  0.5
+  1 4 1  rch_1  1.0
+  1 4 2  rch_1  1.0
+  1 4 3  rch_1  1.0
+  1 4 4  rch_1  1.0
+  1 4 5  rch_1  1.0
+  1 4 6  rch_1  0.5
+  1 5 1  rch_1  1.0
+  1 5 2  rch_1  1.0
+  1 5 3  rch_1  1.0
+  1 5 4  rch_1  1.0
+  1 5 5  rch_1  1.0
+  1 5 6  rch_1  1.0
+  1 6 1  rch_1  1.0
+  1 6 2  rch_1  1.0
+  1 6 3  rch_1  1.0
+  1 6 4  rch_1  1.0
+  1 6 5  rch_1  1.0
+  1 6 6  rch_1  1.0
+  1 7 1  rch_1  1.0
+  1 7 2  rch_1  1.0
+  1 7 3  rch_1  1.0
+  1 7 4  rch_1  1.0
+  1 7 5  rch_1  1.0
+  1 7 6  rch_1  1.0
+  1 8 1  rch_1  1.0
+  1 8 2  rch_1  1.0
+  1 8 3  rch_1  1.0
+  1 8 4  rch_1  1.0
+  1 8 5  rch_1  1.0
+  1 8 6  rch_1  1.0
+  1 9 1  rch_1  1.0
+  1 9 2  rch_1  1.0
+  1 9 3  rch_1  1.0
+  1 9 4  rch_1  1.0
+  1 9 5  rch_1  1.0
+  1 9 6  rch_1  1.0
+  1 10 1  rch_1  1.0
+  1 10 2  rch_1  1.0
+  1 10 3  rch_1  1.0
+  1 10 4  rch_1  1.0
+  1 10 5  rch_1  1.0
+  1 10 6  rch_1  1.0
+  1 11 1  rch_1  1.0
+  1 11 2  rch_1  1.0
+  1 11 3  rch_1  1.0
+  1 11 4  rch_1  1.0
+  1 11 5  rch_1  1.0
+  1 11 6  rch_1  1.0
+  1 12 1  rch_1  1.0
+  1 12 2  rch_1  1.0
+  1 12 3  rch_1  1.0
+  1 12 4  rch_1  1.0
+  1 12 5  rch_1  1.0
+  1 12 6  rch_1  1.0
+  1 13 1  rch_1  1.0
+  1 13 2  rch_1  1.0
+  1 13 3  rch_1  1.0
+  1 13 4  rch_1  1.0
+  1 13 5  rch_1  1.0
+  1 13 6  rch_1  1.0
+  1 14 1  rch_1  1.0
+  1 14 2  rch_1  1.0
+  1 14 3  rch_1  1.0
+  1 14 4  rch_1  1.0
+  1 14 5  rch_1  1.0
+  1 14 6  rch_1  1.0
+  1 15 1  rch_1  1.0
+  1 15 2  rch_1  1.0
+  1 15 3  rch_1  1.0
+  1 15 4  rch_1  1.0
+  1 15 5  rch_1  1.0
+  1 15 6  rch_1  1.0
+END PERIOD  1
+

@@ -34,4 +34,5 @@ from . import utils
 from . import plot
 from . import export
 from . import pest
+from . import mf6
 from .mbase import run_model, which, is_exe

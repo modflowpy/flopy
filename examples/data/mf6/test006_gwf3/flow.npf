@@ -1,0 +1,34 @@
+begin options
+  SAVE_FLOWS
+end options
+#
+BEGIN GRIDDATA
+#
+#apply these arrays for the entire simulation
+#
+#icelltype(nodes) is 0:confined, 1:convertible, 4:upstream?
+  icelltype
+    constant 0
+#	
+#K(nodes) horizontal hydraulic conductivity
+  K
+    constant 1.
+#
+#K33(nodes) vertical hydraulic conductivity
+  K33
+    constant 1.
+#
+#this will crash it  funkyarray
+#	constant
+END GRIDDATA
+
+
+        50  -1.0e+30         0         0
+ 0
+ 0
+ 1
+ 1
+ 0
+        0  1.000e+00          (10G13.0)         -1 HK() = Horizontal hydraulic conductivity of layer 1
+        0  1.000e+00          (10G13.0)         -1 VKA() = Vertical hydraulic conductivity of layer 1
+        0  0.000e+00          (10G13.0)         -1 WETDRY() = Wetting threshold of layer 1
