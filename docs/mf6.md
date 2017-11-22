@@ -16,13 +16,6 @@ The following is a list of the classes available to work with MODFLOW 6 models. 
 * ModflowNam
 * ModflowTdis
 * ModflowGwfgwf
-* ModflowIms
-* ModflowMvr
-* ModflowGnc
-* ModflowUtlobs
-* ModflowUtlts
-* ModflowUtltab
-* ModflowUtltas
 * ModflowGwfnam
 * ModflowGwfdis
 * ModflowGwfdisv
@@ -47,6 +40,13 @@ The following is a list of the classes available to work with MODFLOW 6 models. 
 * ModflowGwfmvr
 * ModflowGwfgnc
 * ModflowGwfoc
+* ModflowIms
+* ModflowMvr
+* ModflowGnc
+* ModflowUtlobs
+* ModflowUtlts
+* ModflowUtltab
+* ModflowUtltas
 
 
 Getting Help
