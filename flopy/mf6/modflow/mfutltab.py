@@ -9,9 +9,9 @@ class ModflowUtltab(mfpackage.MFPackage):
     Attributes
     ----------
     nrow : (nrow : integer)
-        integer value specifying the number of rows in the lake table. There must be nrow rows of data in the TABLE block.
+        nrow : integer value specifying the number of rows in the lake table. There must be nrow rows of data in the TABLE block.
     ncol : (ncol : integer)
-        integer value specifying the number of colums in the lake table. There must be ncol columns of data in the TABLE block. For lakes with HORIZONTAL and/or VERTICAL ctype connections, NROW must be equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV ctype connections, NROW must be equal to 4.
+        ncol : integer value specifying the number of colums in the lake table. There must be ncol columns of data in the TABLE block. For lakes with HORIZONTAL and/or VERTICAL ctype connections, NROW must be equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV ctype connections, NROW must be equal to 4.
     laktabrecarray : [(stage : double), (volume : double), (sarea : double), (barea : double)]
         stage : real value that defines the stage corresponding to the remaining data on the line.
         volume : real value that defines the lake volume corresponding to the stage specified on the line.

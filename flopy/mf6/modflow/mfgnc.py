@@ -8,17 +8,17 @@ class ModflowGnc(mfpackage.MFPackage):
 
     Attributes
     ----------
-    print_input : (print_input : keyword)
-        keyword to indicate that the list of GNC information will be written to the listing file immediately after it is read.
-    print_flows : (print_flows : keyword)
-        keyword to indicate that the list of GNC flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
-    explicit : (explicit : keyword)
-        keyword to indicate that the ghost node correction is applied in an explicit manner on the right-hand side of the matrix. The explicit approach will likely require additional outer iterations. If the keyword is not specified, then the correction will be applied in an implicit manner on the left-hand side. The implicit approach will likely converge better, but may require additional memory. If the EXPLICIT keyword is not specified, then the BICGSTAB linear acceleration option should be specified within the LINEAR block of the Sparse Matrix Solver.
+    print_input : (print_input : boolean)
+        print_input : keyword to indicate that the list of GNC information will be written to the listing file immediately after it is read.
+    print_flows : (print_flows : boolean)
+        print_flows : keyword to indicate that the list of GNC flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
+    explicit : (explicit : boolean)
+        explicit : keyword to indicate that the ghost node correction is applied in an explicit manner on the right-hand side of the matrix. The explicit approach will likely require additional outer iterations. If the keyword is not specified, then the correction will be applied in an implicit manner on the left-hand side. The implicit approach will likely converge better, but may require additional memory. If the EXPLICIT keyword is not specified, then the BICGSTAB linear acceleration option should be specified within the LINEAR block of the Sparse Matrix Solver.
     numgnc : (numgnc : integer)
-        is the number of GNC entries.
+        numgnc : is the number of GNC entries.
     numalphaj : (numalphaj : integer)
-        is the number of contributing factors.
-    gncdatarecarray : [(cellidn : integer), (cellidm : integer), (cellidsj : integer), (alphasj : double)]
+        numalphaj : is the number of contributing factors.
+    gncdatarecarray : [(cellidn : (integer, ...)), (cellidm : (integer, ...)), (cellidsj : (integer, ...)), (alphasj : double)]
         cellidn : is the cellid of the cell, $n$, in which the ghost node is located. For a structured grid that uses the DIS input file, cellidn is the layer, row, and column numbers of the cell. For a grid that uses the DISV input file, cellidn is the layer number and cell2d number for the two cells. If the model uses the unstructured discretization (DISU) input file, then cellidn is the node number for the cell.
         cellidm : is the cellid of the connecting cell, $m$, to which flow occurs from the ghost node. For a structured grid that uses the DIS input file, cellidm is the layer, row, and column numbers of the cell. For a grid that uses the DISV input file, cellidm is the layer number and cell2d number for the two cells. If the model uses the unstructured discretization (DISU) input file, then cellidm is the node number for the cell.
         cellidsj : is the array of cellids for the contributing $j$ cells, which contribute to the interpolated head value at the ghost node. This item contains one cellid for each of the contributing cells of the ghost node. Note that if the number of actual contributing cells needed by the user is less than numalphaj for any ghost node, then a dummy cellid of zero(s) should be inserted with an associated contributing factor of zero. For a structured grid that uses the DIS input file, cellid is the layer, row, and column numbers of the cell. For a grid that uses the DISV input file, cellid is the layer number and cell2d number for the two cells. If the model uses the unstructured discretization (DISU) input file, then cellid is the node number for the cell.

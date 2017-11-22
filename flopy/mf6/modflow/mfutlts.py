@@ -8,21 +8,16 @@ class ModflowUtlts(mfpackage.MFPackage):
 
     Attributes
     ----------
-    time_series_namerecord : [(names : keyword), (time_series_names : string)]
-        names : 
+    time_series_namerecord : [(time_series_names : string)]
         time_series_names : Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package.
-    interpolation_methodrecord : [(methods : keyword), (interpolation_method : string)]
-        methods : 
+    interpolation_methodrecord : [(interpolation_method : string)]
         interpolation_method : Interpolation method, which is either STEPWISE or LINEAR.
-    interpolation_methodrecord_single : [(method : keyword), (interpolation_method_single : string)]
-        method : 
+    interpolation_methodrecord_single : [(interpolation_method_single : string)]
         interpolation_method_single : Interpolation method, which is either STEPWISE or LINEAR.
-    sfacrecord : [(sfacs : keyword), (sfacval : double)]
-        sfacs : 
+    sfacrecord : [(sfacval : double)]
         sfacval : Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
-    sfacrecord_single : [(sfac : keyword), (sfacval : double)]
+    sfacrecord_single : [(sfacval : double)]
         sfacval : Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
-        sfac : 
     time_seriesrecarray : [(tas_time : double), (tas_array : double)]
         tas_time : A numeric time relative to the start of the simulation, in the time unit used in the simulation. Times must be strictly increasing.
         tas_array : A 2-D array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility.

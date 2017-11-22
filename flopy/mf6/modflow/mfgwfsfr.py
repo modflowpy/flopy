@@ -9,44 +9,36 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     Attributes
     ----------
     auxiliary : [(auxiliary : string)]
-        defines an array of one or more auxiliary variable names. There is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here. The number of auxiliary variables detected on this line determines the value for naux. Comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names. Auxiliary variables may not be used by the package, but they will be available for use by other parts of the program. The program will terminate with an error if auxiliary variables are specified on more than one line in the options block.
-    boundnames : (boundnames : keyword)
-        keyword to indicate that boundary names may be provided with the list of stream reach cells.
-    print_input : (print_input : keyword)
-        keyword to indicate that the list of stream reach information will be written to the listing file immediately after it is read.
-    print_stage : (print_stage : keyword)
-        keyword to indicate that the list of stream reach stages will be printed to the listing file for every stress period in which ``HEAD PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_STAGE is specified, then stages are printed for the last time step of each stress period.
-    print_flows : (print_flows : keyword)
-        keyword to indicate that the list of stream reach flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
-    save_flows : (save_flows : keyword)
-        keyword to indicate that stream reach flow terms will be written to the file specified with ``BUDGET FILEOUT'' in Output Control.
-    stage_filerecord : [(stage : keyword), (fileout : keyword), (stagefile : string)]
-        stage : keyword to specify that record corresponds to stage.
+        auxiliary : defines an array of one or more auxiliary variable names. There is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here. The number of auxiliary variables detected on this line determines the value for naux. Comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names. Auxiliary variables may not be used by the package, but they will be available for use by other parts of the program. The program will terminate with an error if auxiliary variables are specified on more than one line in the options block.
+    boundnames : (boundnames : boolean)
+        boundnames : keyword to indicate that boundary names may be provided with the list of stream reach cells.
+    print_input : (print_input : boolean)
+        print_input : keyword to indicate that the list of stream reach information will be written to the listing file immediately after it is read.
+    print_stage : (print_stage : boolean)
+        print_stage : keyword to indicate that the list of stream reach stages will be printed to the listing file for every stress period in which ``HEAD PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_STAGE is specified, then stages are printed for the last time step of each stress period.
+    print_flows : (print_flows : boolean)
+        print_flows : keyword to indicate that the list of stream reach flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
+    save_flows : (save_flows : boolean)
+        save_flows : keyword to indicate that stream reach flow terms will be written to the file specified with ``BUDGET FILEOUT'' in Output Control.
+    stage_filerecord : [(stagefile : string)]
         stagefile : name of the binary output file to write stage information.
-        fileout : keyword to specify that an output filename is expected next.
-    budget_filerecord : [(budget : keyword), (fileout : keyword), (budgetfile : string)]
-        budget : keyword to specify that record corresponds to the budget.
-        fileout : keyword to specify that an output filename is expected next.
+    budget_filerecord : [(budgetfile : string)]
         budgetfile : name of the binary output file to write budget information.
-    ts_filerecord : [(ts6 : keyword), (filein : keyword), (ts6_filename : string)]
-        ts6 : keyword to specify that record corresponds to a time-series file.
-        filein : keyword to specify that an input filename is expected next.
+    ts_filerecord : [(ts6_filename : string)]
         ts6_filename : defines a time-series file defining time series that can be used to assign time-varying values. See the ``Time-Variable Input'' section for instructions on using the time-series capability.
-    obs_filerecord : [(obs6 : keyword), (filein : keyword), (obs6_filename : string)]
-        filein : keyword to specify that an input filename is expected next.
-        obs6 : keyword to specify that record corresponds to an observations file.
+    obs_filerecord : [(obs6_filename : string)]
         obs6_filename : name of input file to define observations for the SFR package. See the ``Observation utility'' section for instructions for preparing observation input files. Table obstype lists observation type(s) supported by the SFR package.
-    mover : (mover : keyword)
-        keyword to indicate that this instance of the SFR Package can be used with the Water Mover (MVR) Package. When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
+    mover : (mover : boolean)
+        mover : keyword to indicate that this instance of the SFR Package can be used with the Water Mover (MVR) Package. When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
     maximum_iterations : (maximum_iterations : double)
-        value that defines an maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, maxsfrit is equal to 100.
+        maximum_iterations : value that defines an maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, maxsfrit is equal to 100.
     maximum_depth_change : (maximum_depth_change : double)
-        value that defines the depth closure tolerance. By default, dmaxchg is equal to $1 \times 10^{-5$.
+        maximum_depth_change : value that defines the depth closure tolerance. By default, dmaxchg is equal to $1 \times 10^{-5$.
     unit_conversion : (unit_conversion : double)
-        value (or conversion factor) that is used in calculating stream depth for stream reach. A constant of 1.486 is used for flow units of cubic feet per second, and a constant of 1.0 is used for units of cubic meters per second. The constant must be multiplied by 86,400 when using time units of days in the simulation.
+        unit_conversion : value (or conversion factor) that is used in calculating stream depth for stream reach. A constant of 1.486 is used for flow units of cubic feet per second, and a constant of 1.0 is used for units of cubic meters per second. The constant must be multiplied by 86,400 when using time units of days in the simulation.
     nreaches : (nreaches : integer)
-        integer value specifying the number of stream reaches. There must be nreaches entries in the PACKAGEDATA block.
-    sfrrecarray : [(rno : integer), (cellid : integer), (rlen : double), (rwid : double), (rgrd : double), (rtp : double), (rbth : double), (rhk : double), (man : string), (ncon : integer), (ustrf : double), (ndv : integer), (aux : double), (boundname : string)]
+        nreaches : integer value specifying the number of stream reaches. There must be nreaches entries in the PACKAGEDATA block.
+    sfrrecarray : [(rno : integer), (cellid : (integer, ...)), (rlen : double), (rwid : double), (rgrd : double), (rtp : double), (rbth : double), (rhk : double), (man : string), (ncon : integer), (ustrf : double), (ndv : integer), (aux : double), (boundname : string)]
         rno : integer value that defines the reach number associated with the specified PACKAGEDATA data on the line. rno must be greater than zero and less than or equal to nreaches. Reach information must be specified for every reach or the program will terminate with an error. The program will also terminate with an error if information for a reach is specified more than once.
         cellid : The keyword `none' must be specified for reaches that are not connected to an underlying GWF cell. The keyword `none' is used for reaches that are in cells that have IDOMAIN values less than one or are in areas not covered by the GWF model grid. Reach-aquifer flow is not calculated if the keyword `none' is specified.
         rlen : real value that defines the reach length. rlen must be greater than zero.
@@ -72,16 +64,16 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     reachperiodrecarray : [(rno : integer), (sfrsetting : keystring)]
         rno : integer value that defines the reach number associated with the specified PERIOD data on the line. rno must be greater than zero and less than or equal to NREACHES.
         sfrsetting : line of information that is parsed into a keyword and values. Keyword values that can be used to start the sfrsetting string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL, EVAPORATION, RUNOFF, DIVERSION, UPSTREAM\_FRACTION, and AUXILIARY.
-    diversion : (diversion : keyword)
-        keyword to indicate diversion record.
+    diversion : (diversion : boolean)
+        diversion : keyword to indicate diversion record.
     idv : (idv : integer)
-        diversion number.
+        idv : diversion number.
     divrate : (divrate : double)
-        real or character value that defines the volumetric diversion (divflow) rate for the streamflow routing reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+        divrate : real or character value that defines the volumetric diversion (divflow) rate for the streamflow routing reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
     auxname : (auxname : string)
-        name for the auxiliary variable to be assigned auxval. auxname must match one of the auxiliary variable names defined in the OPTIONS block. If auxname does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
+        auxname : name for the auxiliary variable to be assigned auxval. auxname must match one of the auxiliary variable names defined in the OPTIONS block. If auxname does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
     auxval : (auxval : double)
-        value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+        auxval : value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
     """
     auxiliary = mfdatautil.ListTemplateGenerator(('gwf6', 'sfr', 'options', 'auxiliary'))

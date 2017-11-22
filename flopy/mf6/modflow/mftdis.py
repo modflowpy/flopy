@@ -9,11 +9,11 @@ class ModflowTdis(mfpackage.MFPackage):
     Attributes
     ----------
     time_units : (time_units : string)
-        is the time units of the simulation. This is a text string that is used as a label within model output files. Values for time\_units may be ``unknown'', ``seconds'', ``minutes'', ``hours'', ``days'', or ``years''. The default time unit is ``unknown''.
+        time_units : is the time units of the simulation. This is a text string that is used as a label within model output files. Values for time\_units may be ``unknown'', ``seconds'', ``minutes'', ``hours'', ``days'', or ``years''. The default time unit is ``unknown''.
     start_date_time : (start_date_time : string)
-        is the starting date and time of the simulation. This is a text string that is used as a label within the simulation list file. The value has no affect on the simulation. The recommended format for the starting date and time is described at https://www.w3.org/TR/NOTE-datetime.
+        start_date_time : is the starting date and time of the simulation. This is a text string that is used as a label within the simulation list file. The value has no affect on the simulation. The recommended format for the starting date and time is described at https://www.w3.org/TR/NOTE-datetime.
     nper : (nper : integer)
-        is the number of stress periods for the simulation.
+        nper : is the number of stress periods for the simulation.
     tdisrecarray : [(perlen : double), (nstp : integer), (tsmult : double)]
         perlen : is the length of a stress period.
         nstp : is the number of time steps in a stress period.

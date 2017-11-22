@@ -9,11 +9,11 @@ class ModflowUtlobs(mfpackage.MFPackage):
     Attributes
     ----------
     precision : (precision : double)
-        Keyword and precision specifier for output of binary data, which can be either SINGLE or DOUBLE. The default is DOUBLE. When simulated values are written to a file specified as file type DATA(BINARY) in the Name File, the precision specifier controls whether the data (including simulated values and, for continuous observations, time values) are written as single- or double-precision.
+        precision : Keyword and precision specifier for output of binary data, which can be either SINGLE or DOUBLE. The default is DOUBLE. When simulated values are written to a file specified as file type DATA(BINARY) in the Name File, the precision specifier controls whether the data (including simulated values and, for continuous observations, time values) are written as single- or double-precision.
     digits : (digits : integer)
-        Keyword and an integer digits specifier used for conversion of simulated values to text on output. The default is 5 digits. When simulated values are written to a file specified as file type DATA in the Name File, the digits specifier controls the number of significant digits with which simulated values are written to the output file. The digits specifier has no effect on the number of significant digits with which the simulation time is written for continuous observations.
-    print_input : (print_input : keyword)
-        keyword to indicate that the list of observation information will be written to the listing file immediately after it is read.
+        digits : Keyword and an integer digits specifier used for conversion of simulated values to text on output. The default is 5 digits. When simulated values are written to a file specified as file type DATA in the Name File, the digits specifier controls the number of significant digits with which simulated values are written to the output file. The digits specifier has no effect on the number of significant digits with which the simulation time is written for continuous observations.
+    print_input : (print_input : boolean)
+        print_input : keyword to indicate that the list of observation information will be written to the listing file immediately after it is read.
     continuousrecarray : [(obsname : string), (obstype : string), (id : string), (id2 : string)]
         obsname : string of 1 to 40 nonblank characters used to identify the observation. The identifier need not be unique; however, identification and post-processing of observations in the output files are facilitated if each observation is given a unique name.
         obstype : a string of characters used to identify the observation type.

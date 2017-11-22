@@ -201,7 +201,8 @@ def create_packages():
                             data_structure_dict,
                             data_structure.name, data_structure.python_name,
                             data_structure.get_type_string(),
-                            data_structure.description, data_structure.path,
+                            data_structure.get_description(),
+                            data_structure.path,
                             data_structure.get_datatype())
 
         # build package builder class string

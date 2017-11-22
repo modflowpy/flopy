@@ -9,30 +9,26 @@ class ModflowGwfghb(mfpackage.MFPackage):
     Attributes
     ----------
     auxiliary : [(auxiliary : string)]
-        defines an array of one or more auxiliary variable names. There is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here. The number of auxiliary variables detected on this line determines the value for naux. Comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names. Auxiliary variables may not be used by the package, but they will be available for use by other parts of the program. The program will terminate with an error if auxiliary variables are specified on more than one line in the options block.
+        auxiliary : defines an array of one or more auxiliary variable names. There is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here. The number of auxiliary variables detected on this line determines the value for naux. Comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names. Auxiliary variables may not be used by the package, but they will be available for use by other parts of the program. The program will terminate with an error if auxiliary variables are specified on more than one line in the options block.
     auxmultname : (auxmultname : string)
-        name of auxiliary variable to be used as multiplier of general-head boundary conductance.
-    boundnames : (boundnames : keyword)
-        keyword to indicate that boundary names may be provided with the list of general-head boundary cells.
-    print_input : (print_input : keyword)
-        keyword to indicate that the list of general-head boundary information will be written to the listing file immediately after it is read.
-    print_flows : (print_flows : keyword)
-        keyword to indicate that the list of general-head boundary flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
-    save_flows : (save_flows : keyword)
-        keyword to indicate that general-head boundary flow terms will be written to the file specified with ``BUDGET FILEOUT'' in Output Control.
-    ts_filerecord : [(ts6 : keyword), (filein : keyword), (ts6_filename : string)]
-        ts6 : keyword to specify that record corresponds to a time-series file.
-        filein : keyword to specify that an input filename is expected next.
+        auxmultname : name of auxiliary variable to be used as multiplier of general-head boundary conductance.
+    boundnames : (boundnames : boolean)
+        boundnames : keyword to indicate that boundary names may be provided with the list of general-head boundary cells.
+    print_input : (print_input : boolean)
+        print_input : keyword to indicate that the list of general-head boundary information will be written to the listing file immediately after it is read.
+    print_flows : (print_flows : boolean)
+        print_flows : keyword to indicate that the list of general-head boundary flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
+    save_flows : (save_flows : boolean)
+        save_flows : keyword to indicate that general-head boundary flow terms will be written to the file specified with ``BUDGET FILEOUT'' in Output Control.
+    ts_filerecord : [(ts6_filename : string)]
         ts6_filename : defines a time-series file defining time series that can be used to assign time-varying values. See the ``Time-Variable Input'' section for instructions on using the time-series capability.
-    obs_filerecord : [(obs6 : keyword), (filein : keyword), (obs6_filename : string)]
-        filein : keyword to specify that an input filename is expected next.
-        obs6 : keyword to specify that record corresponds to an observations file.
+    obs_filerecord : [(obs6_filename : string)]
         obs6_filename : name of input file to define observations for the General-Head Boundary package. See the ``Observation utility'' section for instructions for preparing observation input files. Table obstype lists observation type(s) supported by the General-Head Boundary package.
-    mover : (mover : keyword)
-        keyword to indicate that this instance of the General-Head Boundary Package can be used with the Water Mover (MVR) Package. When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
+    mover : (mover : boolean)
+        mover : keyword to indicate that this instance of the General-Head Boundary Package can be used with the Water Mover (MVR) Package. When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
     maxbound : (maxbound : integer)
-        integer value specifying the maximum number of general-head boundary cells that will be specified for use during any stress period.
-    periodrecarray : [(cellid : integer), (bhead : double), (cond : double), (aux : double), (boundname : string)]
+        maxbound : integer value specifying the maximum number of general-head boundary cells that will be specified for use during any stress period.
+    periodrecarray : [(cellid : (integer, ...)), (bhead : double), (cond : double), (aux : double), (boundname : string)]
         cellid : is the cell identifier, and depends on the type of grid that is used for the simulation. For a structured grid that uses the DIS input file, cellid is the layer, row, and column. For a grid that uses the DISV input file, cellid is the layer and cell2d number. If the model uses the unstructured discretization (DISU) input file, then cellid is the node number for the cell.
         bhead : is the boundary head. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
         cond : is the hydraulic conductance of the interface between the aquifer cell and the boundary. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.

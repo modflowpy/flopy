@@ -8,17 +8,14 @@ class ModflowUtltas(mfpackage.MFPackage):
 
     Attributes
     ----------
-    time_series_namerecord : [(name : keyword), (time_series_name : string)]
-        name : 
+    time_series_namerecord : [(time_series_name : string)]
         time_series_name : Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package.
-    interpolation_methodrecord : [(method : keyword), (interpolation_method : string)]
-        method : 
+    interpolation_methodrecord : [(interpolation_method : string)]
         interpolation_method : Interpolation method, which is either STEPWISE or LINEAR.
-    sfacrecord : [(sfac : keyword), (sfacval : double)]
-        sfac : 
+    sfacrecord : [(sfacval : double)]
         sfacval : Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
     tas_array : [(tas_array : double)]
-        An array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility.
+        tas_array : An array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility.
 
     """
     time_series_namerecord = mfdatautil.ListTemplateGenerator(('tas', 'attributes', 'time_series_namerecord'))

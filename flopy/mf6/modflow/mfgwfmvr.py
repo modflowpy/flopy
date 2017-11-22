@@ -8,20 +8,18 @@ class ModflowGwfmvr(mfpackage.MFPackage):
 
     Attributes
     ----------
-    print_input : (print_input : keyword)
-        keyword to indicate that the list of MVR information will be written to the listing file immediately after it is read.
-    print_flows : (print_flows : keyword)
-        keyword to indicate that the list of MVR flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
-    modelnames : (modelnames : keyword)
-        keyword to indicate that all package names will be preceded by the model name for the package. Model names are required when the Mover Package is used with a GWF-GWF Exchange. The MODELNAME keyword should not be used for a Mover Package that is for a single GWF Model.
-    budget_filerecord : [(budget : keyword), (fileout : keyword), (budgetfile : string)]
-        budget : keyword to specify that record corresponds to the budget.
-        fileout : keyword to specify that an output filename is expected next.
+    print_input : (print_input : boolean)
+        print_input : keyword to indicate that the list of MVR information will be written to the listing file immediately after it is read.
+    print_flows : (print_flows : boolean)
+        print_flows : keyword to indicate that the list of MVR flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
+    modelnames : (modelnames : boolean)
+        modelnames : keyword to indicate that all package names will be preceded by the model name for the package. Model names are required when the Mover Package is used with a GWF-GWF Exchange. The MODELNAME keyword should not be used for a Mover Package that is for a single GWF Model.
+    budget_filerecord : [(budgetfile : string)]
         budgetfile : name of the output file to write budget information.
     maxmvr : (maxmvr : integer)
-        integer value specifying the maximum number of water mover entries that will specified for any stress period.
+        maxmvr : integer value specifying the maximum number of water mover entries that will specified for any stress period.
     maxpackages : (maxpackages : integer)
-        integer value specifying the number of unique packages that are included in this water mover input file.
+        maxpackages : integer value specifying the number of unique packages that are included in this water mover input file.
     packagesrecarray : [(mname : string), (pname : string)]
         mname : name of model containing the package.
         pname : is the name of a package that may be included in a subsequent stress period block.
