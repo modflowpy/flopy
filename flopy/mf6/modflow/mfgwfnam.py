@@ -9,16 +9,14 @@ class ModflowGwfnam(mfpackage.MFPackage):
     Attributes
     ----------
     list : (list : string)
-        is name of the listing file to create for this GWF model. If not specified, then the name of the list file will be the basename of the GWF model name file and the '.lst' extension. For example, if the GWF name file is called ``my.model.nam'' then the list file will be called ``my.model.lst''.
-    print_input : (print_input : keyword)
-        keyword to indicate that the list of all model stress package information will be written to the listing file immediately after it is read.
-    print_flows : (print_flows : keyword)
-        keyword to indicate that the list of all model package flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
-    save_flows : (save_flows : keyword)
-        keyword to indicate that all model package flow terms will be written to the file specified with ``BUDGET FILEOUT'' in Output Control.
-    newtonoptions : [(newton : keyword), (under_relaxation : keyword)]
-        none
-        newton : keyword that activates the Newton-Raphson formulation for groundwater flow between connected, convertible groundwater cells and stress packages that support calculation of Newton-Raphson terms for groundwater exchanges. Cells will not dry when this option is used. By default, the Newton-Raphson formulation is not applied.
+        list : is name of the listing file to create for this GWF model. If not specified, then the name of the list file will be the basename of the GWF model name file and the '.lst' extension. For example, if the GWF name file is called ``my.model.nam'' then the list file will be called ``my.model.lst''.
+    print_input : (print_input : boolean)
+        print_input : keyword to indicate that the list of all model stress package information will be written to the listing file immediately after it is read.
+    print_flows : (print_flows : boolean)
+        print_flows : keyword to indicate that the list of all model package flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control. If there is no Output Control option and PRINT\_FLOWS is specified, then flow rates are printed for the last time step of each stress period.
+    save_flows : (save_flows : boolean)
+        save_flows : keyword to indicate that all model package flow terms will be written to the file specified with ``BUDGET FILEOUT'' in Output Control.
+    newtonoptions : [(under_relaxation : string)]
         under_relaxation : keyword that indicates whether the groundwater head in a cell will be under-relaxed when water levels fall below the bottom of the model below any given cell. By default, Newton-Raphson UNDER\_RELAXATION is not applied.
     packagerecarray : [(ftype : string), (fname : string), (pname : string)]
         ftype : is the file type, which must be one of the following character values shown in tableftype. Ftype may be entered in any combination of uppercase and lowercase.
