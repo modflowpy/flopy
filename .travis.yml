@@ -69,6 +69,8 @@ install:
       then pip install -r requirements.travis.txt;
       fi
     - pip install https://github.com/modflowpy/pymake/zipball/master
+    - pip install --upgrade jupyter
+    - pip install nbconvert
     - pip install nose-timer
     - pip install coveralls
 

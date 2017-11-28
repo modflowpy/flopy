@@ -105,11 +105,14 @@ class Polygon:
             fig, ax = plt.subplots()
         else:
             fig = ax.figure
-        ax.add_patch(self.get_patch(**kwargs))
-        xmin, ymin, xmax, ymax = self.bounds
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
-        plt.show()
+        try:
+            ax.add_patch(self.get_patch(**kwargs))
+            xmin, ymin, xmax, ymax = self.bounds
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin, ymax)
+            plt.show()
+        except:
+            print('could not plot polygon feature')
 
 class LineString:
 

@@ -1,4 +1,7 @@
 matplotlib
 netcdf4
+fiona
+rasterio
+descartes
 pyproj
 pyshp

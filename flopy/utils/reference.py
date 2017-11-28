@@ -1469,18 +1469,18 @@ class SpatialReferenceUnstructured(SpatialReference):
         self.iverts = iverts
         self.ncpl = ncpl
         self.layered = layered
-        self.lenuni = lenuni
+        self._lenuni = lenuni
         self._proj4_str = proj4_str
-        self.epsg = epsg
+        self._epsg = epsg
         if epsg is not None:
             self._proj4_str = getproj4(epsg)
         self.supported_units = ["feet", "meters"]
         self._units = units
-        self.length_multiplier = length_multiplier
+        self._length_multiplier = length_multiplier
 
         # set defaults
-        self.xul = 0.
-        self.yul = 0.
+        self._xul = 0.
+        self._yul = 0.
         self.rotation = 0.
 
         if self.layered:
@@ -1767,10 +1767,14 @@ class epsgRef:
     def show():
         import importlib
         import epsgref
-        importlib.reload(epsgref)
         from epsgref import prj
+        if (sys.version_info > (3, 0)):
+            importlib.reload(epsgref)
+        else:
+            reload(epsgref)
         for k, v in prj.items():
             print('{}:\n{}\n'.format(k, v))
+
 
 
 class crs(object):
