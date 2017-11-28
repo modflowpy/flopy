@@ -3,6 +3,7 @@ FloPy Changes
 
 ### Version 3.2.7 pre-release
 
+* Added beta support for MODFLOW 6 See [here](./mf6.md) for more information.
 * Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.
 * Added support for FORTRAN free format array data using n*value where n is the number of times value is repeated.
 * Added support for comma separators in 1D data in LPF and UPF files
