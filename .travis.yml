@@ -35,6 +35,8 @@ addons:
       - libhdf5-serial-dev
       - netcdf-bin
       - libnetcdf-dev
+      - gdal-bin
+      - libgdal-dev
 
 env:
   global:
