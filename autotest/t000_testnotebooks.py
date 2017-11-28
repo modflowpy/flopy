@@ -1,7 +1,7 @@
 # Remove the temp directory and then create a fresh one
 import os
+import sys
 import shutil
-import subprocess as sp
 
 nbdir = os.path.join('..', 'examples', 'Notebooks')
 testdir = os.path.join('.', 'temp', 'Notebooks')
@@ -9,6 +9,7 @@ if os.path.isdir(testdir):
     shutil.rmtree(testdir)
 os.mkdir(testdir)
 
+sys.path.append(os.path.abspath(os.path.join('..')))
 
 def get_Notebooks():
     return [f for f in os.listdir(nbdir) if f.endswith('.ipynb')]
