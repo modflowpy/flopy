@@ -82,7 +82,9 @@ install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
+    - echo python path; python -c "from __future__ import print_function; import sys; print(sys.path)"
     - python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
+    - echo flopy version; python -c "from __future__ import print_function; import flopy; print(flopy.__version__)"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
     - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
