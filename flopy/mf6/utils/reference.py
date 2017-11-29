@@ -487,7 +487,11 @@ class StructuredSpatialReference(object):
             array of size (npts)
 
         """
-        from scipy.interpolate import griddata
+        try:
+            from scipy.interpolate import griddata
+        except:
+            print('scipy not installed\ntry pip install scipy')
+            return None
 
         # Create a 2d array of points for the grid centers
         points = np.empty((self.ncol * self.nrow, 2))

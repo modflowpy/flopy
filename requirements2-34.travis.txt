@@ -1,10 +1,8 @@
 matplotlib
 netcdf4<1.2.8
 fiona
-rasterio!=0.36
 descartes
 pyproj
-pyshp!=1.2.12
+pyshp!=1.2.11
 enum34
 pandas
-scipy

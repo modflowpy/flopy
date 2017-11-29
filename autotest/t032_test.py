@@ -4,10 +4,11 @@ Test shapefile stuff
 import sys
 import os
 
-if (sys.version_info[0], sys.version_info[1]) > (3, 3):
-    from importlib import reload
-# python2 (reload in default namespace)
-sys.path.insert(0, '..')
+# python < 3.4 (reload in default namespace)
+if sys.version_info[0] == 3:
+    if sys.version_info[1] > 3:
+        from importlib import reload
+
 import shutil
 import numpy as np
 import flopy

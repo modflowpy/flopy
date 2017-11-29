@@ -1242,7 +1242,11 @@ class SpatialReference(object):
             array of size (npts)
 
         """
-        from scipy.interpolate import griddata
+        try:
+            from scipy.interpolate import griddata
+        except:
+            print('scipy not installed\ntry pip install scipy')
+            return None
 
         # Create a 2d array of points for the grid centers
         points = np.empty((self.ncol * self.nrow, 2))
@@ -1774,8 +1778,9 @@ class epsgRef:
 
     @staticmethod
     def show():
-        if (sys.version_info[0], sys.version_info[1]) > (3, 3):
-            from importlib import reload
+        if sys.version_info[0] == 3:
+            if sys.version_info[1] > 3:
+                from importlib import reload
         import epsgref
         from epsgref import prj
         reload(epsgref)
