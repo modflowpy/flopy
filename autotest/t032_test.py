@@ -1,13 +1,13 @@
 """
 Test shapefile stuff
 """
-import sys
 import os
 
 # python < 3.4 (reload in default namespace)
-if sys.version_info[0] == 3:
-    if sys.version_info[1] > 3:
-        from importlib import reload
+try:
+    from importlib import reload
+except:
+    from imp import reload
 
 import shutil
 import numpy as np

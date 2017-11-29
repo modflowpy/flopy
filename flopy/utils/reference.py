@@ -1778,9 +1778,10 @@ class epsgRef:
 
     @staticmethod
     def show():
-        if sys.version_info[0] == 3:
-            if sys.version_info[1] > 3:
-                from importlib import reload
+        try:
+            from importlib import reload
+        except:
+            from imp import reload
         import epsgref
         from epsgref import prj
         reload(epsgref)
