@@ -1768,7 +1768,7 @@ class epsgRef:
         import importlib
         import epsgref
         from epsgref import prj
-        if (sys.version_info > (3, 0)):
+        if sys.version_info > (3, 3):
             importlib.reload(epsgref)
         else:
             reload(epsgref)

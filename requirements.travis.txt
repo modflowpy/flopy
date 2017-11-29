@@ -1,7 +1,7 @@
 matplotlib
 netcdf4
 fiona
-rasterio
+rasterio!=0.36
 descartes
 pyproj
 pyshp
