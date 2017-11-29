@@ -331,7 +331,7 @@ ax = fig.add_subplot(2, 2, 2)
 # axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
-for idx in range(5, len(years)):
+for idx in range(5, len(years)-1):
     # layer 1
     ax.plot(xcell, zeta[idx, 0, 30, :], drawstyle='steps-mid',
             linewidth=0.5, color=cc[idx - 5],
@@ -357,7 +357,7 @@ ax = fig.add_subplot(2, 2, 3)
 # axes limits
 ax.set_xlim(-1500, 1500)
 ax.set_ylim(-50, -10)
-for idx in range(5, len(years)):
+for idx in range(5, len(years)-1):
     # layer 1
     ax.plot(xcell, zeta2[idx, 0, 30, :], drawstyle='steps-mid',
             linewidth=0.5, color=cc[idx - 5],

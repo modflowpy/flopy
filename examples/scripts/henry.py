@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import flopy
@@ -7,6 +8,16 @@ workspace = os.path.join('henry')
 # make sure workspace directory exists
 if not os.path.exists(workspace):
     os.makedirs(workspace)
+
+fext = 'png'
+narg = len(sys.argv)
+iarg = 0
+if narg > 1:
+    while iarg < narg - 1:
+        iarg += 1
+        basearg = sys.argv[iarg].lower()
+        if basearg == '--pdf':
+            fext = 'pdf'
 
 # Input variables for the Henry Problem
 Lx = 2.
@@ -123,7 +134,10 @@ ax.quiver(X[::iskip, ::iskip], Z[::iskip, ::iskip],
           qx_avg[::iskip, 0, ::iskip], -qz_avg[::iskip, 0, ::iskip],
           color='w', scale=5, headwidth=3, headlength=2,
           headaxislength=2, width=0.0025)
-# plt.savefig(os.path.join(workspace, 'henry.png'))
+
+outfig = os.path.join(workspace, 'henry_flows.{0}'.format(fext))
+fig.savefig(outfig, dpi=300)
+print('created...', outfig)
 
 # Extract the heads
 fname = os.path.join(workspace, 'henry.hds')
@@ -138,4 +152,6 @@ im = ax.imshow(head[:, 0, :], interpolation='nearest',
                extent=(0, Lx, 0, Lz))
 ax.set_title('Simulated Heads')
 
-plt.show()
+outfig = os.path.join(workspace, 'henry_heads.{0}'.format(fext))
+fig.savefig(outfig, dpi=300)
+print('created...', outfig)

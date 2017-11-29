@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -8,6 +9,16 @@ workspace = os.path.join('lake')
 # make sure workspace directory exists
 if not os.path.exists(workspace):
     os.makedirs(workspace)
+
+fext = 'png'
+narg = len(sys.argv)
+iarg = 0
+if narg > 1:
+    while iarg < narg - 1:
+        iarg += 1
+        basearg = sys.argv[iarg].lower()
+        if basearg == '--pdf':
+            fext = 'pdf'
 
 # save the starting path
 cwdpth = os.getcwd()
@@ -50,7 +61,7 @@ dis = flopy.modflow.ModflowDis(ml, nlay=Nlay, nrow=N, ncol=N, delr=delrow,
 # are used to define the heads in the fixed head cells (this is a steady simulation, so none of
 # the other starting values matter). So we set the starting heads to `h1` everywhere, except for
 # the head at the center of the model in the top layer.
-Nhalf = (N - 1) / 2
+Nhalf = int((N - 1) / 2)
 ibound = np.ones((Nlay, N, N), dtype=np.int)
 ibound[:, 0, :] = -1
 ibound[:, -1, :] = -1
@@ -100,15 +111,27 @@ x = y = np.linspace(0, L, N)
 c = plt.contour(x, y, h[0], np.arange(90, 100.1, 0.2))
 plt.clabel(c, fmt='%2.1f')
 plt.axis('scaled')
-plt.show()
+
+outfig = os.path.join(workspace, 'lake1.{0}'.format(fext))
+fig = plt.gcf()
+fig.savefig(outfig, dpi=300)
+print('created...', outfig)
 
 x = y = np.linspace(0, L, N)
 c = plt.contour(x, y, h[-1], np.arange(90, 100.1, 0.2))
 plt.clabel(c, fmt='%1.1f')
 plt.axis('scaled')
-plt.show()
+
+outfig = os.path.join(workspace, 'lake2.{0}'.format(fext))
+fig = plt.gcf()
+fig.savefig(outfig, dpi=300)
+print('created...', outfig)
 
 z = np.linspace(-H / Nlay / 2, -H + H / Nlay / 2, Nlay)
 c = plt.contour(x, z, h[:, 50, :], np.arange(90, 100.1, .2))
 plt.axis('scaled')
-plt.show()
+
+outfig = os.path.join(workspace, 'lake3.{0}'.format(fext))
+fig = plt.gcf()
+fig.savefig(outfig, dpi=300)
+print('created...', outfig)
