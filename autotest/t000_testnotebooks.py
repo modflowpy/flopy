@@ -9,6 +9,7 @@ if os.path.isdir(testdir):
     shutil.rmtree(testdir)
 os.mkdir(testdir)
 
+
 def get_Notebooks():
     return [f for f in os.listdir(nbdir) if f.endswith('.ipynb')]
 
