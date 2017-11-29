@@ -4,6 +4,12 @@ import sys
 import shutil
 
 nbdir = os.path.join('..', 'examples', 'Notebooks')
+
+# -- make working directories
+ddir = os.path.join(nbdir, 'data')
+if os.path.isdir(ddir):
+    shutil.rmtree(ddir)
+os.mkdir(ddir)
 testdir = os.path.join('.', 'temp', 'Notebooks')
 if os.path.isdir(testdir):
     shutil.rmtree(testdir)
