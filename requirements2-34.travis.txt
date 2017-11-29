@@ -4,7 +4,7 @@ fiona
 rasterio!=0.36
 descartes
 pyproj
-pyshp
+pyshp!=1.2.12
 enum34
 pandas
 scipy
