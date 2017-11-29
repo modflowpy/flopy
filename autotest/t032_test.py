@@ -4,9 +4,8 @@ Test shapefile stuff
 import sys
 import os
 
-if sys.version_info[0] == 3:
-    if sys.version_info[1] > 3:
-        from importlib import reload
+if (sys.version_info[0], sys.version_info[1]) > (3, 3):
+    from importlib import reload
 # python2 (reload in default namespace)
 sys.path.insert(0, '..')
 import shutil
