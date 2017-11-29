@@ -7,4 +7,4 @@ pyproj
 pyshp
 enum34
 pandas
-scipy
+scipy<0.17

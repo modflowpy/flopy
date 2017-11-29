@@ -1,6 +1,5 @@
 # Remove the temp directory and then create a fresh one
 import os
-import sys
 import shutil
 
 nbdir = os.path.join('..', 'examples', 'Notebooks')
@@ -32,7 +31,7 @@ def run_notebook(fn):
     assert ival == 0, 'could not run {}'.format(fn)
 
 
-def test_notebooks(silent=False):
+def test_notebooks():
     files = get_Notebooks()
 
     for fn in files:
