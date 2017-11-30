@@ -131,7 +131,7 @@ def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
 
     # read README.md into memory
     with open(files[1], 'r') as file:
-        lines = [line.strip() for line in file]
+        lines = [line.rstrip() for line in file]
 
     # rewrite README.md
     f = open(files[1], 'w')
