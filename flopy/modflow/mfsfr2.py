@@ -9,7 +9,6 @@ from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
 from ..utils.flopy_io import line_parse
-import matplotlib.pyplot as plt
 from ..utils import SpatialReference
 
 
@@ -1196,7 +1195,7 @@ class ModflowSfr2(Package):
         -------
         ax : matplotlib.axes._subplots.AxesSubplot object
         """
-
+        import matplotlib.pyplot as plt
         if not pd:
             print('This method requires pandas')
             return
