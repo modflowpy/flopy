@@ -172,7 +172,7 @@ class ObsFiles(FlopyBinaryData):
             from ..utils.utils_def import totim_to_datetime
         except Exception as e:
             raise Exception(
-                    "HydmodObs.get_dataframe() error import pandas: " + \
+                    "ObsFiles.get_dataframe() error import pandas: " + \
                     str(e))
         i0 = 0
         i1 = self.data.shape[0]

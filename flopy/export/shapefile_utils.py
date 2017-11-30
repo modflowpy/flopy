@@ -9,6 +9,7 @@ import numpy.lib.recfunctions as rf
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..utils.reference import getprj
 
+
 def import_shapefile():
     try:
         import shapefile as sf
@@ -16,6 +17,7 @@ def import_shapefile():
     except Exception as e:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
+
 
 def write_gridlines_shapefile(filename, sr):
     """
@@ -88,7 +90,7 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             array = array[0, :, :]
         assert array.shape == (sr.nrow, sr.ncol)
         array[np.where(np.isnan(array))] = nan_val
-        if array.dtype in [np.int,np.int32,np.int64]:
+        if array.dtype in [np.int, np.int32, np.int64]:
             wr.field(name, "N", 20, 0)
         else:
             wr.field(name, "N", 20, 12)
@@ -105,13 +107,13 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     wr.save(filename)
     print('wrote {}'.format(filename))
 
+
 def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
-
     sf = import_shapefile()
     verts = copy.copy(sr.vertices)
 
-    w = sf.Writer(5) # polygon
+    w = sf.Writer(5)  # polygon
     w.autoBalance = 1
     # set up the attribute fields
     names = ['row', 'column'] + list(array_dict.keys())
@@ -122,7 +124,8 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
     # set-up array of attributes of shape ncells x nattributes
     col = list(range(1, sr.ncol + 1)) * sr.nrow
     row = sorted(list(range(1, sr.nrow + 1)) * sr.ncol)
-    at = np.vstack([row, col] + [arr.ravel() for arr in array_dict.values()]).transpose()
+    at = np.vstack(
+        [row, col] + [arr.ravel() for arr in array_dict.values()]).transpose()
     at[np.isnan(at)] = nan_val
 
     for i, npdtype in enumerate(dtypes):
@@ -138,7 +141,8 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
     write_prj(filename, epsg, prj)
 
 
-def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=None,
+def model_attributes_to_shapefile(filename, ml, package_names=None,
+                                  array_dict=None,
                                   **kwargs):
     """
     Wrapper function for writing a shapefile of model data.  If package_names is
@@ -215,7 +219,8 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                             for k in range(array.shape[0]):
                                 # aname = name + "{0:03d}{1:02d}".format(kper, k)
                                 name = shape_attr_name(name, length=4)
-                                aname = "{}{:03d}{:03d}".format(name, k + 1, kper + 1)
+                                aname = "{}{:03d}{:03d}".format(name, k + 1,
+                                                                kper + 1)
                                 array_dict[aname] = array[k].astype(np.float32)
                 elif isinstance(a, list):
                     for v in a:
@@ -225,7 +230,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None, array_dict=N
                                 name = shape_attr_name(u2d.name)
                                 name += '_{:03d}'.format(i + 1)
                                 array_dict[name] = u2d.array
-                                
+
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.sr, array_dict)
     # write the projection file
@@ -297,9 +302,9 @@ def enforce_10ch_limit(names):
     -------
     names : list of unique strings of len <= 10.
     """
-    names = [n[:9]+'1' if len(n) > 10 else n
+    names = [n[:9] + '1' if len(n) > 10 else n
              for n in names]
-    dups = {x:names.count(x) for x in names}
+    dups = {x: names.count(x) for x in names}
     suffix = {n: list(range(len(cnt))) for n, cnt in dups.items() if cnt > 1}
     for i, n in enumerate(names):
         if dups[n] > 1:
@@ -357,17 +362,20 @@ def shp2recarray(shpname):
     dtype = [(f[0], get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
 
     geoms = [shape(s) for s in sfobj.iterShapes()]
-    records = [tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())]
+    records = [tuple(r) + (geoms[i],) for i, r in
+               enumerate(sfobj.iterRecords())]
     dtype += [('geometry', np.object)]
-    #recfunctions.append_fields(array, names='tmp1', data=col1,
+    # recfunctions.append_fields(array, names='tmp1', data=col1,
     #                                           asrecarray=True)
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
     return recarray
 
 
-def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None, **kwargs):
-    """Write a numpy record array to a shapefile, using a corresponding
+def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
+                 **kwargs):
+    """
+    Write a numpy record array to a shapefile, using a corresponding
     list of geometries.
 
     Parameters
@@ -375,7 +383,8 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None, *
     recarray : np.recarry
         Numpy record array with attribute information that will go in the shapefile
     geoms : list of flopy.utils.geometry objects
-        The number of geometries in geoms must equal the number of records in recarray.
+        The number of geometries in geoms must equal the number of records in
+        recarray.
     shpname : str
         Path for the output shapefile
     epsg : int
@@ -398,7 +407,8 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None, *
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
     if len(recarray) != len(geoms):
-        raise IndexError('Number of geometries must equal the number of records!')
+        raise IndexError(
+            'Number of geometries must equal the number of records!')
 
     if len(recarray) == 0:
         raise Exception("Recarray is empty")
@@ -414,7 +424,10 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None, *
     # set up the attribute fields
     names = enforce_10ch_limit(recarray.dtype.names)
     for i, npdtype in enumerate(recarray.dtype.descr):
-        w.field(names[i], *get_pyshp_field_info(npdtype[1]))
+        key = names[i]
+        if not isinstance(key, str):
+            key = str(key)
+        w.field(key, *get_pyshp_field_info(npdtype[1]))
 
     # write the geometry and attributes for each record
     ralist = recarray.tolist()
@@ -433,6 +446,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None, *
     w.save(shpname)
     write_prj(shpname, epsg, prj)
     print('wrote {}'.format(shpname))
+
 
 def write_prj(shpname, epsg=None, prj=None):
     # write the projection file

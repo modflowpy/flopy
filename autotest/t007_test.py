@@ -1,7 +1,4 @@
 # Test export module
-import sys
-import glob
-sys.path.insert(0, '..')
 import copy
 import glob
 import os

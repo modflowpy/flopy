@@ -24,6 +24,7 @@ path = os.path.split(__file__)[0]
 with open(path + '/longnames.json') as f:
     NC_LONG_NAMES = json.load(f)
 
+
 class Logger(object):
     """
     Basic class for logging events during the linear analysis calculations
@@ -135,7 +136,8 @@ class NetCdf(object):
 
     """
 
-    def __init__(self, output_filename, model, time_values=None, z_positive='up',
+    def __init__(self, output_filename, model, time_values=None,
+                 z_positive='up',
                  verbose=None, prj=None,
                  logger=None, forgive=False):
 
@@ -162,15 +164,23 @@ class NetCdf(object):
             self.sr.prj = prj
         self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
 
-        import dateutil.parser
+        try:
+            import dateutil.parser
+        except:
+            print('python-dateutil is not installed\n' +
+                  'try pip install python-dateutil')
+            return None
+
         self.start_datetime = self._dt_str(dateutil.parser.parse(
             self.model.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
+
         proj4_str = self.model.sr.proj4_str
         if proj4_str is None:
             proj4_str = '+init=epsg:4326'
-            self.log('Warning: model has no coordinate reference system specified. '
-                     'Using default proj4 string: {}'.format(proj4_str))
+            self.log(
+                'Warning: model has no coordinate reference system specified. '
+                'Using default proj4 string: {}'.format(proj4_str))
         self.proj4_str = proj4_str
         self.grid_units = LENUNI[self.model.sr.lenuni]
         self.z_positive = z_positive
@@ -700,10 +710,12 @@ class NetCdf(object):
         # write some attributes
         self.log("setting standard attributes")
 
-        self.nc.setncattr("Conventions", "CF-1.6, ACDD-1.3, flopy {}".format(flopy.__version__))
+        self.nc.setncattr("Conventions", "CF-1.6, ACDD-1.3, flopy {}".format(
+            flopy.__version__))
         self.nc.setncattr("date_created",
                           datetime.utcnow().strftime("%Y-%m-%dT%H:%M:00Z"))
-        self.nc.setncattr("geospatial_vertical_positive", "{}".format(self.z_positive))
+        self.nc.setncattr("geospatial_vertical_positive",
+                          "{}".format(self.z_positive))
         min_vertical = np.min(self.zs)
         max_vertical = np.max(self.zs)
         self.nc.setncattr("geospatial_vertical_min", min_vertical)
@@ -742,7 +754,8 @@ class NetCdf(object):
 
         attribs = {"units": "{0} since {1}".format(self.time_units,
                                                    self.start_datetime),
-                   "standard_name": "time", "long_name": NC_LONG_NAMES.get("time", "time"),
+                   "standard_name": "time",
+                   "long_name": NC_LONG_NAMES.get("time", "time"),
                    "calendar": "gregorian",
                    "_CoordinateAxisType": "Time"}
         time = self.create_variable("time", attribs, precision_str="f8",
@@ -753,16 +766,19 @@ class NetCdf(object):
         # Elevation
         sr = self.model.sr
         attribs = {"units": sr.units, "standard_name": "elevation",
-                   "long_name": NC_LONG_NAMES.get("elevation", "elevation"), "axis": "Z",
+                   "long_name": NC_LONG_NAMES.get("elevation", "elevation"),
+                   "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
                    "positive": self.z_positive}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
                                     dimensions=("layer", "y", "x"))
-        elev[:] = self.zs * sr.length_multiplier # consistent w/ horizontal units
+        elev[
+        :] = self.zs * sr.length_multiplier  # consistent w/ horizontal units
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
-                   "long_name": NC_LONG_NAMES.get("longitude", "longitude"), "axis": "X",
+                   "long_name": NC_LONG_NAMES.get("longitude", "longitude"),
+                   "axis": "X",
                    "_CoordinateAxisType": "Lon"}
         lon = self.create_variable("longitude", attribs, precision_str="f8",
                                    dimensions=("y", "x"))
@@ -772,7 +788,8 @@ class NetCdf(object):
         # Latitude
         self.log("creating latitude var")
         attribs = {"units": "degrees_north", "standard_name": "latitude",
-                   "long_name": NC_LONG_NAMES.get("latitude", "latitude"), "axis": "Y",
+                   "long_name": NC_LONG_NAMES.get("latitude", "latitude"),
+                   "axis": "Y",
                    "_CoordinateAxisType": "Lat"}
         lat = self.create_variable("latitude", attribs, precision_str="f8",
                                    dimensions=("y", "x"))
@@ -780,16 +797,22 @@ class NetCdf(object):
 
         # x
         self.log("creating x var")
-        attribs = {"units": sr.units, "standard_name": "projection_x_coordinate",
-                   "long_name": NC_LONG_NAMES.get("x", "x coordinate of projection"), "axis": "X"}
+        attribs = {"units": sr.units,
+                   "standard_name": "projection_x_coordinate",
+                   "long_name": NC_LONG_NAMES.get("x",
+                                                  "x coordinate of projection"),
+                   "axis": "X"}
         x = self.create_variable("x_proj", attribs, precision_str="f8",
-                                   dimensions=("y", "x"))
+                                 dimensions=("y", "x"))
         x[:] = sr.xcentergrid
 
         # y
         self.log("creating y var")
-        attribs = {"units": sr.units, "standard_name": "projection_y_coordinate",
-                   "long_name": NC_LONG_NAMES.get("y", "y coordinate of projection"), "axis": "Y"}
+        attribs = {"units": sr.units,
+                   "standard_name": "projection_y_coordinate",
+                   "long_name": NC_LONG_NAMES.get("y",
+                                                  "y coordinate of projection"),
+                   "axis": "Y"}
         y = self.create_variable("y_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
         y[:] = sr.ycentergrid
@@ -798,11 +821,13 @@ class NetCdf(object):
         attribs = self.sr.crs.grid_mapping_attribs
         if attribs is not None:
             self.log("creating grid mapping variable")
-            gmv = self.create_variable(attribs['grid_mapping_name'], attribs, precision_str="f8")
+            gmv = self.create_variable(attribs['grid_mapping_name'], attribs,
+                                       precision_str="f8")
 
         # layer
         self.log("creating layer var")
-        attribs = {"units": "", "standard_name": "layer", "long_name": NC_LONG_NAMES.get("layer", "layer"),
+        attribs = {"units": "", "standard_name": "layer",
+                   "long_name": NC_LONG_NAMES.get("layer", "layer"),
                    "positive": "down", "axis": "Z"}
         lay = self.create_variable("layer", attribs, dimensions=("layer",))
         lay[:] = np.arange(0, self.shape[0])
@@ -810,7 +835,8 @@ class NetCdf(object):
 
         # delc
         attribs = {"units": self.sr.units.strip('s'),
-                   "long_name": NC_LONG_NAMES.get("delc", "Model grid cell spacing along a column"),
+                   "long_name": NC_LONG_NAMES.get("delc",
+                                                  "Model grid cell spacing along a column"),
                    }
         delc = self.create_variable('delc', attribs, dimensions=('y',))
         delc[:] = self.model.sr.delc[::-1] * self.model.sr.length_multiplier
@@ -821,7 +847,8 @@ class NetCdf(object):
 
         # delr
         attribs = {"units": self.sr.units.strip('s'),
-                   "long_name": NC_LONG_NAMES.get("delr", "Model grid cell spacing along a row"),
+                   "long_name": NC_LONG_NAMES.get("delr",
+                                                  "Model grid cell spacing along a row"),
                    }
         delr = self.create_variable('delr', attribs, dimensions=('x',))
         delr[:] = self.model.sr.delr[::-1] * self.model.sr.length_multiplier
@@ -1020,19 +1047,20 @@ class NetCdf(object):
         try:
             from numpydoc.docscrape import NumpyDocString
         except Exception as e:
-            raise Exception("NetCdf error importing numpydoc module:\n" + str(e))
+            raise Exception(
+                "NetCdf error importing numpydoc module:\n" + str(e))
 
         def startstop(ds):
             """Get just the Parameters section of the docstring."""
             start, stop = 0, -1
             for i, l in enumerate(ds):
-                if 'Parameters' in l and '----' in ds[i+1]:
+                if 'Parameters' in l and '----' in ds[i + 1]:
                     start = i + 2
                 if l.strip() in ['Attributes', 'Methods', 'Returns', 'Notes']:
-                    stop = i-1
+                    stop = i - 1
                     break
                 if i >= start and '----' in l:
-                    stop = i-2
+                    stop = i - 2
                     break
             return start, stop
 
@@ -1046,12 +1074,12 @@ class NetCdf(object):
                     k = line.split(':')[0].strip()
                     stuff[k] = ''
                 # lines with parameter descriptions
-                elif k is not None and len(line) > 10: # avoid orphans
+                elif k is not None and len(line) > 10:  # avoid orphans
                     stuff[k] += line.strip() + ' '
             return stuff
 
         # get a list of the flopy classes
-        #packages = inspect.getmembers(flopy.modflow, inspect.isclass)
+        # packages = inspect.getmembers(flopy.modflow, inspect.isclass)
         packages = [(pp.name[0], pp) for pp in self.model.packagelist]
         # get a list of the NetCDF variables
         attr = [v.split('_')[-1] for v in self.nc.variables]
@@ -1087,4 +1115,3 @@ class NetCdf(object):
             return model.sip.hclose, -999
         elif model.gmg is not None:
             return model.gmg.hclose, model.gmg.rclose
-

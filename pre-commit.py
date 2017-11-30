@@ -149,6 +149,19 @@ def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
                    'modflowpy/flopy/badge.svg?branch={})]'.format(branch) + \
                    '(https://coveralls.io/github/modflowpy/' + \
                    'flopy?branch={})'.format(branch)
+        elif 'http://dx.doi.org/10.5066/F7BK19FH' in line:
+            now = datetime.datetime.now()
+            sb = ''
+            if vbuild > 0:
+                sb = ' &mdash; {}'.format(branch)
+            line = '[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., ' + \
+                   'White, J.T., Starn, J.J., and Fienen, M.N., ' + \
+                   '{}, '.format(now.year) + \
+                   'FloPy v{}{}: '.format(version, sb) + \
+                   'U.S. Geological Survey Software Release, ' + \
+                   '{}, '.format(now.strftime('%d %B %Y')) + \
+                   'http://dx.doi.org/10.5066/F7BK19FH]' + \
+                   '(http://dx.doi.org/10.5066/F7BK19FH)\n'
         f.write('{}\n'.format(line))
     f.close()
 

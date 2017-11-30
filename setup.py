@@ -27,12 +27,15 @@ setup(name=__name__,
       description='FloPy is a Python package to create, run, and post-process MODFLOW-based models.',
       long_description=long_description,
       author=__author__,
-      author_email='mark.bakker@tudelft.nl, vincent.post@flinders.edu.au, langevin@usgs.gov, jdhughes@usgs.gov, ' +
-                   'jwhite@usgs.gov, jjstarn@usgs.gov, mnfienen@usgs.gov, aleaf@usgs.gov, frances.alain@gmail.com',
+      author_email='mark.bakker@tudelft.nl, vincent.post@flinders.edu.au, ' +
+                   'langevin@usgs.gov, jdhughes@usgs.gov, jwhite@usgs.gov, ' +
+                   'aleaf@usgs.gov, spaulinski@usgs.gov, jjstarn@usgs.gov, ' +
+                   'mnfienen@usgs.gov, frances.alain@gmail.com',
       url='https://github.com/modflowpy/flopy/',
       license='New BSD',
       platforms='Windows, Mac OS-X',
-      install_requires=['numpy>=1.7'],
+      install_requires=['enum34;python_version<"3.4"',
+                        'numpy>=1.9'],
       packages=['flopy', 'flopy.modflow', 'flopy.modflowlgr', 'flopy.modpath',
                 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot',
                 'flopy.pest', 'flopy.export'],

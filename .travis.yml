@@ -35,6 +35,8 @@ addons:
       - libhdf5-serial-dev
       - netcdf-bin
       - libnetcdf-dev
+      - gdal-bin
+      - libgdal-dev
 
 env:
   global:
@@ -53,6 +55,8 @@ install:
     - export PATH="$HOME/.local/bin:$PATH"
     - ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
     - ls -l /usr/bin/gfortran-6
+    - ln -fs /usr/bin/gcc-6 "$HOME/.local/bin/gcc" && gcc --version
+    - ls -l /usr/bin/gcc-6
     - ln -fs /usr/bin/g++-6 "$HOME/.local/bin/g++" && g++ --version
     - ls -l /usr/bin/g++-6
     - export CXX="g++"
@@ -69,6 +73,8 @@ install:
       then pip install -r requirements.travis.txt;
       fi
     - pip install https://github.com/modflowpy/pymake/zipball/master
+    - pip install --upgrade jupyter
+    - pip install nbconvert
     - pip install nose-timer
     - pip install coveralls
 
@@ -76,7 +82,9 @@ install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
+    - echo python path; python -c "from __future__ import print_function; import sys; print(sys.path)"
     - python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
+    - echo flopy version; python -c "from __future__ import print_function; import flopy; print(flopy.__version__)"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
     - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy

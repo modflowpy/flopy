@@ -110,6 +110,7 @@ class MfGrdFile(FlopyBinaryData):
                 sr = SpatialReference(delr=delr, delc=delc,
                                       xll=xorigin, yll=yorigin, rotation=rot)
         except:
+            sr = None
             print('could not set spatial reference for {}'.format(self.file.name))
 
         return sr

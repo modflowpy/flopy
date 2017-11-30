@@ -12,12 +12,37 @@ FloPy Changes
 * Added a `get_residual` method to the `CellBudgetFile` class.
 * Added support for binary stress period files (`OPEN/CLOSE filename (BINARY)`) in `wel` stress packages on load and instantiation. Will extend to other list-based MODFLOW stress packages.
 * Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
+* Added metadata.acdd class to fetch model metadata from ScienceBase.gov and manage CF/ACDD-complient metadata for NetCDF export
+* Added sparse export option for boundary condition stress period data, where only cells for that B.C. are exported: e.g. `package.stress_period_data.export('stuff.shp', sparse=True)`
+* SFR package support. 
+	* `export_linkages` and `export_outlets` methods to export routing linkages and outlets
+	* sparse shapefile export, where only cells with SFR reaches are included
+	* `plot_path` method to plot streambed elevation profile along sequence of segments
+	* `assign_layers` method
+	* additional error checks and bug fixes
+* `SpatialReference` / GIS export
+	* GeoTiff export option to `SpatialReference.export_array`   
+	* `SpatialReference.export_array_contours`: contours an array and then exports contours to shapefile 
+	* inverse option added to `SpatialReference.transform`
+	* automatic reading of spatial reference info from .nam or usgs.model.reference files
+* Node numbers in SFR package and `ModflowDis.get_node()` now zero-based. 
+* DIS package: 
+	* added `get_layer` method
 * Bug fixes:
     1. Fixed bug in OC when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
     2. Fixed bug in SUB if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load).
     3. Fixed bugs in SUB and SUBWT load to pop original unit number.
     4. Fixed bug in MT3D BTN obs.
     5. Fixed bug in LPF regarding when HANI is read and written.
+    6. UZF package: added support for MODFLOW NWT options block; fixed issue with loading files with thti/thtr options
+    7. SFR package: fixed bug with segment renumbering, issues with reading transient text file output, 
+    8. Fixed issues with dynamic setting of `SpatialReference` parameters
+    9. NWT solver: forgive missing value for MXITERXMD
+    10. MNW2: fix bug where ztop and zbotm were written incorrectly in `get_allnode_data()`. This was not affecting writing of these variables, only their values in this summary array.
+
+    
+* `flopy.utils.postprocessing`: change `get_transmissivities` so that open intervals above or below model have transmissivity of closest layer
+* added `get_saturated_thickness` and `get_gradients` methods
 
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.

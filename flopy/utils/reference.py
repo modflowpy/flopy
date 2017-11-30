@@ -5,7 +5,6 @@ Module spatial referencing for flopy model objects
 import sys
 import os
 import numpy as np
-import warnings
 
 
 class SpatialReference(object):
@@ -112,7 +111,7 @@ class SpatialReference(object):
                      'feet': 1,
                      'meters': 2,
                      'centimeters': 3}
-    lenuni_text = {v:k for k, v in lenuni_values.items()}
+    lenuni_text = {v: k for k, v in lenuni_values.items()}
 
     def __init__(self, delr=np.array([]), delc=np.array([]), lenuni=2,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
@@ -125,8 +124,10 @@ class SpatialReference(object):
                        'length to the number of rows/columns.')
                 raise TypeError(msg)
 
-        self.delc = np.atleast_1d(np.array(delc)).astype(np.float64)  # * length_multiplier
-        self.delr = np.atleast_1d(np.array(delr)).astype(np.float64)   # * length_multiplier
+        self.delc = np.atleast_1d(np.array(delc)).astype(
+            np.float64)  # * length_multiplier
+        self.delr = np.atleast_1d(np.array(delr)).astype(
+            np.float64)  # * length_multiplier
 
         if self.delr.sum() == 0 or self.delc.sum() == 0:
             if xll is None or yll is None:
@@ -160,7 +161,7 @@ class SpatialReference(object):
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
             xll = self._xul - (np.sin(self.theta) * self.yedge[0] *
-                                   self.length_multiplier)
+                               self.length_multiplier)
         return xll
 
     @property
@@ -170,7 +171,7 @@ class SpatialReference(object):
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
             yll = self._yul - (np.cos(self.theta) * self.yedge[0] *
-                        self.length_multiplier)
+                               self.length_multiplier)
         return yll
 
     @property
@@ -189,7 +190,7 @@ class SpatialReference(object):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
             yul = self._yll + (np.cos(self.theta) * self.yedge[0] *
-                                self.length_multiplier)
+                               self.length_multiplier)
 
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
@@ -206,7 +207,8 @@ class SpatialReference(object):
                 else:
                     proj4_str = self._proj4_str
                 # set the epsg if proj4 specifies it
-                tmp = [i for i in self._proj4_str.split() if 'epsg' in i.lower()]
+                tmp = [i for i in self._proj4_str.split() if
+                       'epsg' in i.lower()]
                 self._epsg = int(tmp[0].split(':')[1])
             else:
                 proj4_str = self._proj4_str
@@ -216,11 +218,11 @@ class SpatialReference(object):
 
     @property
     def epsg(self):
-        #don't reset the proj4 string here
-        #because proj4 attribute may already be populated
-        #(with more details than getproj4 would return)
-        #instead reset proj4 when epsg is set
-        #(on init or setattr)
+        # don't reset the proj4 string here
+        # because proj4 attribute may already be populated
+        # (with more details than getproj4 would return)
+        # instead reset proj4 when epsg is set
+        # (on init or setattr)
         return self._epsg
 
     @property
@@ -276,7 +278,7 @@ class SpatialReference(object):
         else:
             units = self._parse_units_from_proj4()
         if units is None:
-            #print("warning: assuming SpatialReference units are meters")
+            # print("warning: assuming SpatialReference units are meters")
             units = 'meters'
         assert units in self.supported_units
         return units
@@ -296,15 +298,15 @@ class SpatialReference(object):
                     lm = 1.
             elif self.model_length_units == 'meters':
                 if self.units == 'feet':
-                    lm = 1/.3048
+                    lm = 1 / .3048
                 elif self.units == 'meters':
                     lm = 1.
             elif self.model_length_units == 'centimeters':
                 if self.units == 'meters':
-                    lm = 1/100.
+                    lm = 1 / 100.
                 elif self.units == 'feet':
-                    lm = 1/30.48
-            else: # model units unspecified; default to 1
+                    lm = 1 / 30.48
+            else:  # model units unspecified; default to 1
                 lm = 1.
         return lm
 
@@ -396,13 +398,15 @@ class SpatialReference(object):
         """read spatial reference info from the usgs.model.reference file
         https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
 
-        ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
+        ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours",
+                  4: "days",
                   5: "years"}
         itmuni_values = {v: k for k, v in ITMUNI.items()}
 
         d = SpatialReference.defaults.copy()
         d['source'] = 'usgs.model.reference'
-        d.pop('proj4_str') # discard default to avoid confusion with epsg code if entered
+        d.pop(
+            'proj4_str')  # discard default to avoid confusion with epsg code if entered
         if os.path.exists(reffile):
             with open(reffile) as input:
                 for line in input:
@@ -437,8 +441,10 @@ class SpatialReference(object):
                 d['proj4_str'] = d['proj4']
 
             # drop any other items that aren't used in sr class
-            d = {k:v for k, v in d.items() if k.lower() in SpatialReference.defaults.keys()
-                 or k.lower() in {'epsg', 'start_datetime', 'itmuni', 'source'}}
+            d = {k: v for k, v in d.items() if
+                 k.lower() in SpatialReference.defaults.keys()
+                 or k.lower() in {'epsg', 'start_datetime', 'itmuni',
+                                  'source'}}
             return d
         else:
             return None
@@ -470,17 +476,17 @@ class SpatialReference(object):
         elif key == "length_multiplier":
             super(SpatialReference, self). \
                 __setattr__("_length_multiplier", float(value))
-            #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
             #                yll=self.yll)
         elif key == "rotation":
             super(SpatialReference, self). \
                 __setattr__("rotation", float(value))
-            #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
             #                yll=self.yll)
         elif key == "lenuni":
             super(SpatialReference, self). \
                 __setattr__("_lenuni", int(value))
-            #self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
+            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
             #                yll=self.yll)
         elif key == "units":
             value = value.lower()
@@ -631,7 +637,7 @@ class SpatialReference(object):
         self._yll = yll if yll is not None else 0.
         self._xul = xul if xul is not None else 0.
         self._yul = yul if yul is not None else 0.
-        #self.set_origin(xul, yul, xll, yll)
+        # self.set_origin(xul, yul, xll, yll)
         return
 
     def __repr__(self):
@@ -649,7 +655,7 @@ class SpatialReference(object):
             self._xll = xll if xll is not None else 0.
             self.yll = yll if yll is not None else 0.
             self.xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
-                                   self.length_multiplier)
+                                    self.length_multiplier)
             self.yul = self.yll + (np.cos(self.theta) * self.yedge[0] *
                                    self.length_multiplier)
 
@@ -658,7 +664,7 @@ class SpatialReference(object):
             self.xul = xul if xul is not None else 0.
             self.yul = yul if yul is not None else 0.
             self._xll = self.xul - (np.sin(self.theta) * self.yedge[0] *
-                                   self.length_multiplier)
+                                    self.length_multiplier)
             self.yll = self.yul - (np.cos(self.theta) * self.yedge[0] *
                                    self.length_multiplier)
         self._reset()
@@ -747,7 +753,7 @@ class SpatialReference(object):
             y = np.array(y)
         if not np.isscalar(x):
             x, y = x.copy(), y.copy()
-        
+
         if not inverse:
             x *= self.length_multiplier
             y *= self.length_multiplier
@@ -1033,13 +1039,14 @@ class SpatialReference(object):
                     dx = (xmax - xmin) / width_rot
                     dy = (ymax - ymin) / height_rot
                     cellsize = np.max((dx, dy))
-                    #cellsize = np.cos(np.radians(self.rotation)) * cellsize
+                    # cellsize = np.cos(np.radians(self.rotation)) * cellsize
                     xll, yll = xmin, ymin
                 except ImportError:
                     print('scipy package required to export rotated grid.')
                     pass
 
-            filename = '.'.join(filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
+            filename = '.'.join(
+                filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
             nrow, ncol = a.shape
             a[np.isnan(a)] = nodata
             txt = 'ncols  {:d}\n'.format(ncol)
@@ -1048,7 +1055,7 @@ class SpatialReference(object):
             txt += 'yllcorner  {:f}\n'.format(yll)
             txt += 'cellsize  {}\n'.format(cellsize)
             # ensure that nodata fmt consistent w values
-            txt += 'NODATA_value  {}\n'.format(fmt) %(nodata)
+            txt += 'NODATA_value  {}\n'.format(fmt) % (nodata)
             with open(filename, 'w') as output:
                 output.write(txt)
             with open(filename, 'ab') as output:
@@ -1090,7 +1097,8 @@ class SpatialReference(object):
             prj = kwargs.get('prj', None)
             if epsg is None and prj is None:
                 epsg = self.epsg
-            write_grid_shapefile2(filename, self, array_dict={fieldname: a}, nan_val=nodata,
+            write_grid_shapefile2(filename, self, array_dict={fieldname: a},
+                                  nan_val=nodata,
                                   epsg=epsg, prj=prj)
 
     def export_contours(self, filename, contours,
@@ -1127,7 +1135,7 @@ class SpatialReference(object):
 
         # convert the dictionary to a recarray
         ra = np.array(level,
-                       dtype=[(fieldname, float)]).view(np.recarray)
+                      dtype=[(fieldname, float)]).view(np.recarray)
 
         recarray2shp(ra, geoms, filename, **kwargs)
 
@@ -1153,10 +1161,11 @@ class SpatialReference(object):
         if interval is not None:
             min = np.nanmin(a)
             max = np.nanmax(a)
-            nlevels = np.round(np.abs(max-min)/interval, 2)
-            msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(nlevels,
-                                                                          interval,
-                                                                          maxlevels)
+            nlevels = np.round(np.abs(max - min) / interval, 2)
+            msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(
+                nlevels,
+                interval,
+                maxlevels)
             assert nlevels < maxlevels, msg
             levels = np.arange(min, max, interval)
         fig, ax = plt.subplots()
@@ -1197,8 +1206,8 @@ class SpatialReference(object):
         jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
         jj, ii = jj.ravel(), ii.ravel()
         self._vertices = self.get_vertices(ii, jj)
-        #vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
-        #self._vertices = [v.tolist() for v in vrts]  # conversion to lists
+        # vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
+        # self._vertices = [v.tolist() for v in vrts]  # conversion to lists
 
         """
         code above is 3x faster
@@ -1233,7 +1242,11 @@ class SpatialReference(object):
             array of size (npts)
 
         """
-        from scipy.interpolate import griddata
+        try:
+            from scipy.interpolate import griddata
+        except:
+            print('scipy not installed\ntry pip install scipy')
+            return None
 
         # Create a 2d array of points for the grid centers
         points = np.empty((self.ncol * self.nrow, 2))
@@ -1469,18 +1482,18 @@ class SpatialReferenceUnstructured(SpatialReference):
         self.iverts = iverts
         self.ncpl = ncpl
         self.layered = layered
-        self.lenuni = lenuni
+        self._lenuni = lenuni
         self._proj4_str = proj4_str
-        self.epsg = epsg
+        self._epsg = epsg
         if epsg is not None:
             self._proj4_str = getproj4(epsg)
         self.supported_units = ["feet", "meters"]
         self._units = units
-        self.length_multiplier = length_multiplier
+        self._length_multiplier = length_multiplier
 
         # set defaults
-        self.xul = 0.
-        self.yul = 0.
+        self._xul = 0.
+        self._yul = 0.
         self.rotation = 0.
 
         if self.layered:
@@ -1765,10 +1778,13 @@ class epsgRef:
 
     @staticmethod
     def show():
-        import importlib
+        try:
+            from importlib import reload
+        except:
+            from imp import reload
         import epsgref
-        importlib.reload(epsgref)
         from epsgref import prj
+        reload(epsgref)
         for k, v in prj.items():
             print('{}:\n{}\n'.format(k, v))
 
@@ -1776,6 +1792,7 @@ class epsgRef:
 class crs(object):
     """Container to parse and store coordinate reference system parameters,
     and translate between different formats."""
+
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
 
         self.wktstr = None
@@ -1815,8 +1832,8 @@ class crs(object):
 
         # datum
         if 'NAD' in self.datum.lower() or \
-            'north' in self.datum.lower() and \
-                'america' in self.datum.lower():
+                                'north' in self.datum.lower() and \
+                                'america' in self.datum.lower():
             datum = 'nad'
             if '83' in self.datum.lower():
                 datum += '83'
@@ -1837,19 +1854,19 @@ class crs(object):
         pm = self.primem[0].lower()
 
         return {'proj': proj,
-                   'datum': datum,
-                   'ellps': ellps,
-                   'a': self.semi_major_axis,
-                   'rf': self.inverse_flattening,
-                   'lat_0': self.latitude_of_origin,
-                   'lat_1': self.standard_parallel_1,
-                   'lat_2': self.standard_parallel_2,
-                   'lon_0': self.central_meridian,
-                   'k_0': self.scale_factor,
-                   'x_0': self.false_easting,
-                   'y_0': self.false_northing,
-                   'units': self.projcs_unit,
-                   'zone': self.utm_zone}
+                'datum': datum,
+                'ellps': ellps,
+                'a': self.semi_major_axis,
+                'rf': self.inverse_flattening,
+                'lat_0': self.latitude_of_origin,
+                'lat_1': self.standard_parallel_1,
+                'lat_2': self.standard_parallel_2,
+                'lon_0': self.central_meridian,
+                'k_0': self.scale_factor,
+                'x_0': self.false_easting,
+                'y_0': self.false_northing,
+                'units': self.projcs_unit,
+                'zone': self.utm_zone}
 
     @property
     def grid_mapping_attribs(self):
@@ -1878,7 +1895,7 @@ class crs(object):
                        'scale_factor_at_projection_origin': self.crs['k_0'],
                        'false_easting': self.crs['x_0'],
                        'false_northing': self.crs['y_0']}
-            return {k:v for k, v in attribs.items() if v is not None}
+            return {k: v for k, v in attribs.items() if v is not None}
 
     @property
     def proj4(self):
@@ -1937,7 +1954,7 @@ class crs(object):
             values = list(map(float, tmp[1:nvalues]))
             return name + values
         else:
-            return [None]*nvalues
+            return [None] * nvalues
 
     def _getprojcs_unit(self):
         if self.projcs is not None:
@@ -1946,7 +1963,6 @@ class crs(object):
             ufactor = float(ufactor.split(']')[0].split()[0].split(',')[0])
             return uname, ufactor
         return None, None
-
 
 
 def getprj(epsg, addlocalreference=True, text='esriwkt'):
@@ -2002,11 +2018,12 @@ def get_spatialreference(epsg, text='esriwkt'):
     from flopy.utils.flopy_io import get_url_text
     url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
     result = get_url_text(url,
-                        error_msg='No internet connection or epsg code {} '
-                                  'not found on spatialreference.org.'.format(epsg))
+                          error_msg='No internet connection or epsg code {} '
+                                    'not found on spatialreference.org.'.format(
+                              epsg))
     if result is not None:
         return result.replace("\n", "")
-    elif text == 'epsg': # epsg code not listed on spatialreference.org may still work with pyproj
+    elif text == 'epsg':  # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
 
 

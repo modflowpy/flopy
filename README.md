@@ -1,17 +1,16 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.6 develop &mdash; build 174
+### Version 3.2.6 develop &mdash; build 398
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
 
 
 Introduction
 -----------------------------------------------
 
-FloPy includes support for MODFLOW-2000, MODFLOW-2005, MODFLOW-NWT, and MODFLOW-USG. Other supported MODFLOW-based models include MODPATH (version 6), MT3D and SEAWAT.
+FloPy includes support for MODFLOW-2000, MODFLOW-2005, MODFLOW-NWT, and MODFLOW-USG. Other supported MODFLOW-based models include MODPATH (version 6), MT3DMS, MT3D-USGS,  and SEAWAT.
 
 FloPy now includes beta support for MODFLOW 6.  Click [here](docs/mf6.md) for more information.
 
@@ -25,14 +24,26 @@ Documentation
 
 FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
-FloPy is citable!  Please see our paper in Groundwater:
 
-[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N. (2016), Scripting MODFLOW Model Development Using Python and FloPy. Groundwater, 54: 733–739. doi:10.1111/gwat.12413](http://dx.doi.org/10.1111/gwat.12413)
+How to Cite
+-----------------------------------------------
+
+##### ***Citation for FloPy:***
+
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)
+
+##### ***Software/Code citation for FloPy:***
+
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2017, FloPy v3.2.6 &mdash; develop: U.S. Geological Survey Software Release, 30 November 2017, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+
+
+
+
 
 Examples
 -----------------------------------------------
 
-### [IPython Notebook Examples](docs/notebook_examples.md)
+### [jupyter Notebook Examples](docs/notebook_examples.md)
 
 ### [Python Script Examples](docs/script_examples.md)
 
@@ -49,7 +60,35 @@ FloPy requires **Python** 2.7 or **Python** 3.3 (or higher)
 
 **Dependencies:**
 
-FloPy requires **NumPy** 1.9 (or higher) and **matplotlib** 1.4 (or higher). The mapping and cross-section capabilities in the `flopy.plot` submodule and shapefile export capabilities (`to_shapefile()`) require **Pyshp** 1.2 (or higher). The NetCDF export capabilities in the `flopy.export` submodule require **python-dateutil** 2.4 (or higher), **netcdf4** 1.1 (or higher), and **pyproj** 1.9 (or higher). Other NetCDF dependencies are detailed on the [UniData](http://unidata.github.io/netcdf4-python/) website. The `get_dataframes` method in the `ListBudget` class in the `flopy.utils` submodule require **pandas** 0.15 (or higher).
+FloPy requires **NumPy** 1.9 (or higher) and **enum34** for **Python** 2.7 or **Python** 3.3.
+
+
+***Optional Method Dependencies:***
+
+Additional dependencies to use optional FloPy helper methods are listed below.
+
+| Method                                                                               | Python Package                                     |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `.plot()`                                                                            | **matplotlib** >= 1.4                              |
+| `.plot_shapefile()`                                                                  | **matplotlib** >= 1.4 and **Pyshp** >= 1.2         |
+| `.to_shapefile()`                                                                    | **Pyshp** >= 1.2                                   |
+| `.export(*.shp)`                                                                     | **Pyshp** >= 1.2                                   |
+| `.export(*.nc)`                                                                      | **netcdf4** >= 1.1 and **python-dateutil** >= 2.4  |
+| `.export(*.tif)`                                                                     | **rasterio**                                       |
+| `.export(*.asc)` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.ndimage**                                  |
+| `.interpolate()` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.interpolate**                              |
+| `.interpolate()` in `flopy.mf6.utils.reference` `StructuredSpatialReference` class   | **scipy.interpolate**                              |
+| `.get_dataframes()` in `flopy.utils.mflistfile` `ListBudget` class                   | **pandas** >= 0.15                                 |
+| `.get_dataframes()` in `flopy.utils.observationfile` `ObsFiles` class                | **pandas** >= 0.15                                 |
+| `.get_dataframes()` in `flopy.utils.sfroutputfile` `ModflowSfr2` class               | **pandas** >= 0.15                                 |
+| `.get_dataframes()` in `flopy.utils.util_list` `MfList` class                        | **pandas** >= 0.15                                 |
+| `.get_dataframes()` in `flopy.utils.zonebud` `ZoneBudget` class                      | **pandas** >= 0.15                                 |
+| `.pivot_keyarray()` in `flopy.mf6.utils.arrayutils` `AdvancedPackageUtil` class      | **pandas** >= 0.15                                 |
+| `._get_vertices()` in `flopy.mf6.utils.binaryfile_utils` `MFOutputRequester` class   | **pandas** >= 0.15                                 |
+| `.get_dataframe()` in `flopy.mf6.utils.mfobservation` `Observations` class           | **pandas** >= 0.15                                 |
+| `.df()` in `flopy.modflow.mfsfr2` `SfrFile` class                                    | **pandas** >= 0.15                                 |
+| `.time_coverage()` in `flopy.export.metadata` `acc` class - ***used if available***  | **pandas** >= 0.15                                 |
+| `.loadtxt()` in `flopy.utils.flopyio` - ***used if available***                      | **pandas** >= 0.15                                 |
 
 
 **For base Python distributions:**

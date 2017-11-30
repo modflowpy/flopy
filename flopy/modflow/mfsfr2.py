@@ -1958,7 +1958,10 @@ class check:
         w = self.sfr._interpolate_to_reaches('width1', 'width2')
 
         # Calculate SFR conductance for each reach
-        Cond = K * w * L / b
+        binv = np.zeros(b.shape, dtype=b.dtype)
+        idx = b > 0.
+        binv[idx] = 1. / b[idx]
+        Cond = K * w * L * binv
 
         shared_cells = _get_duplicates(reach_data.node)
 
