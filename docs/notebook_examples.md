@@ -15,7 +15,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 
 + An overview of FloPy3 capabilities to load a SFR2 file and evaluate data contained in the file is given in the [flopy3_SFR2_load](../examples/Notebooks/flopy3_SFR2_load.ipynb) Notebook.
 
-+ An overview of FloPy3 capabilities to create a SFR2 file and evaluate data contained in the file is given in the [flopy3_sfrpackage_example](../examples/Notebooks/flopy3_sfrpackage_example.ipynb) Notebook.
++ An overview of FloPy3 capabilities to create a SFR2 file and evaluate data contained in the file is given in the [flopy3_sfrpackage_example](../examples/Notebooks/flopy3_sfrpackage_example.ipynb) Notebook. This example also shows how to read SFR water balance output into a pandas dataframe for additional postprocessing.
 
 + An overview of FloPy3 capabilities to create a MNW2 file and evaluate data contained in the file is given in the [flopy3_mnw2package_example](../examples/Notebooks/flopy3_mnw2package_example.ipynb) Notebook.
 
@@ -53,6 +53,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 	* compute vertically-averaged head target values representative of observation wells of varying open intervals (including variability in saturated thickness due to the position of the water table). This may be especially important for reducing error in observations used for parameter estimation, in areas with appreciable vertical head gradients (due to aquitards, pumping, discharge to surface water, etc.)
 	* apportion boundary fluxes (e.g. from an analytic element model) among model layers based on transmissivity.
 	* any other analysis where a distribution of transmissivity is needed for a specified vertical interval of the model.
++ An overview of utilties for [post-processing head results from MODFLOW](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb)
 
 #### Plotting examples
 
@@ -67,6 +68,7 @@ The following IPython Notebooks contain example FloPy scripts for a variety of m
 #### Export examples
 
 + An overview of the FloPy [netCDF and shapefile export capabilities](../examples/Notebooks/flopy3_export.ipynb).
++ [Exporting 2-D arrays as rasters or contour shapefiles](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb)
 
 #### Parameter Estimation examples
 
