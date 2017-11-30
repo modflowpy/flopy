@@ -11,52 +11,72 @@ for arg in sys.argv:
 
 sdir = os.path.join('..', 'examples', 'scripts')
 
-# -- make working directories
+# make working directories
 testdir = os.path.join('.', 'temp', 'scripts')
 if os.path.isdir(testdir):
     shutil.rmtree(testdir)
 os.mkdir(testdir)
 
+# add testdir to python path
+sys.path.append(testdir)
 
-def get_scripts():
+
+def copy_scripts():
     files = [f for f in os.listdir(sdir) if f.endswith('.py')]
+
+    # exclude unwanted files
     for e in exclude:
         if e in files:
             files.remove(e)
+
+    # copy files
+    for fn in files:
+        pth = os.path.join(sdir, fn)
+        opth = os.path.join(testdir, fn)
+
+        # copy script
+        print('copying {} from {} to {}'.format(fn, sdir, testdir))
+        shutil.copyfile(pth, opth)
+
     return files
 
+
+def import_from(mod, name):
+    mod = __import__(mod)
+    main = getattr(mod, name)
+    return main
+
+
 def run_scripts(fn):
-    pth = os.path.join(sdir, fn)
-    opth = os.path.join(testdir, fn)
+    # import run function from scripts
+    s = os.path.splitext(fn)[0]
+    run = import_from(s, 'run')
 
-    # copy script
-    print('copying {} from {} to {}'.format(fn, sdir, testdir))
-    shutil.copyfile(pth, opth)
-
-    # change to the correct directory
-    odir = os.getcwd()
-    print('change directory to {}'.format(testdir))
+    # change to working directory
+    opth = os.getcwd()
+    print('changing to working directory "{}"'.format(testdir))
     os.chdir(testdir)
 
-    cmd = 'python {}'.format(fn)
-    ival = os.system(cmd)
+    # run the script
+    ival = run()
 
-    print('change directory to {}'.format(testdir))
-    os.chdir(odir)
+    # change back to starting directory
+    print('changing back to starting directory "{}"'.format(opth))
+    os.chdir(opth)
 
     # make sure script ran successfully
     assert ival == 0, 'could not run {}'.format(fn)
 
 
 def test_notebooks():
-    files = get_scripts()
+    files = copy_scripts()
 
     for fn in files:
         yield run_scripts, fn
 
 
 if __name__ == '__main__':
-    files = get_scripts()
+    files = copy_scripts()
     print(files)
     for fn in files:
         run_scripts(fn)
