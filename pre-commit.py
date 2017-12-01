@@ -164,7 +164,7 @@ def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
                    'U.S. Geological Survey Software Release, ' + \
                    '{}, '.format(now.strftime('%d %B %Y')) + \
                    'http://dx.doi.org/10.5066/F7BK19FH]' + \
-                   '(http://dx.doi.org/10.5066/F7BK19FH)\n'
+                   '(http://dx.doi.org/10.5066/F7BK19FH)'
         f.write('{}\n'.format(line))
     f.close()
 
@@ -243,15 +243,11 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
             writeline = True
         elif line == 'Examples':
             writeline = False
-        elif line == 'Installation':
-            writeline = False
-        elif '***Development version of FloPy:***' in line:
-            writeline = False
         elif 'Click [here](docs/mf6.md) for more information.' in line:
             line = line.replace('Click [here](docs/mf6.md) for more information.', '')
-        elif ' Github Issue tracker toward the upper-right corner of this page' in line:
-            line = line.replace(' Github Issue tracker toward the upper-right corner of this page',
-                                ' [Github Issue tracker](https://github.com/modflowpy/flopy/issues)')
+        elif ' Pull requests will only be accepted on the develop branch of the repository.' in line:
+            line = line.replace(' Pull requests will only be accepted on the develop branch of the repository.',
+                                '')
         if writeline:
             f.write('{}\n'.format(line))
             line = line.replace('***', '*')
