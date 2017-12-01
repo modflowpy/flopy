@@ -69,9 +69,14 @@ Instructions for making a FloPy release
 
     from a terminal.
 
-3.  Open the [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock) 
+3.  Pull upsteam [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock) into local copy of the [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock) repo:
 
-4.  Update the version number in `{% set version = "3.2.7" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
+    ```
+    cd /Users/jdhughes/Documents/Development/flopy-feedstock_git
+    git fetch upstream
+    ```
+
+3.  Update the version number in `{% set version = "3.2.7" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
 
 5.  Commit changes and push to [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock).
 

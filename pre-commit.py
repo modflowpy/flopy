@@ -249,6 +249,9 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
             writeline = False
         elif 'Click [here](docs/mf6.md) for more information.' in line:
             line = line.replace('Click [here](docs/mf6.md) for more information.', '')
+        elif ' Github Issue tracker toward the upper-right corner of this page' in line:
+            line = line.replace(' Github Issue tracker toward the upper-right corner of this page',
+                                ' [Github Issue tracker](https://github.com/modflowpy/flopy/issues)')
         if writeline:
             f.write('{}\n'.format(line))
             line = line.replace('***', '*')
@@ -270,6 +273,8 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     line += '```\n'
     line += 'pip install {} --upgrade\n'.format(cweb)
     line += '```\n'
+
+    #
     f.write(line)
 
     # close the USGS_release.md file
