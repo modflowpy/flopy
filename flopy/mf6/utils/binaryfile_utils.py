@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import flopy.utils.binaryfile as bf
+from ...utils import binaryfile as bf
 
 
 class MFOutput:
