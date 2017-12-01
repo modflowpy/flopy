@@ -199,6 +199,10 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     fpth = os.path.join('docs', 'USGS_release.md')
     f = open(fpth, 'w')
 
+    # write USGS_release.md
+    fpth = os.path.join('docs', 'PyPi_release.md')
+    f2 = open(fpth, 'w')
+
     # date and branch information
     now = datetime.datetime.now()
     sdate = now.strftime("%m/%d/%Y")
@@ -247,24 +251,38 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
             line = line.replace('Click [here](docs/mf6.md) for more information.', '')
         if writeline:
             f.write('{}\n'.format(line))
+            line = line.replace('***', '*')
+            line = line.replace('##### ', '')
+            f2.write('{}\n'.format(line))
 
     # write installation information
     cweb = 'https://water.usgs.gov/ogw/flopy/flopy-{}.zip'.format(version)
-    f.write('Installation\n')
-    f.write('-----------------------------------------------\n')
-    f.write('To install FloPy version {}{} '.format(version, sb))
-    f.write('from the USGS FloPy website:\n')
-    f.write('```\n')
-    f.write('pip install {}\n'.format(cweb))
-    f.write('```\n\n')
-    f.write('To update to FloPy version {}{} '.format(version, sb))
-    f.write('from the USGS FloPy website:\n')
-    f.write('```\n')
-    f.write('pip install {} --upgrade\n'.format(cweb))
-    f.write('```\n')
+    line = ''
+    line += 'Installation\n'
+    line += '-----------------------------------------------\n'
+    line += 'To install FloPy version {}{} '.format(version, sb)
+    line += 'from the USGS FloPy website:\n'
+    line += '```\n'
+    line += 'pip install {}\n'.format(cweb)
+    line += '```\n\n'
+    line += 'To update to FloPy version {}{} '.format(version, sb)
+    line += 'from the USGS FloPy website:\n'
+    line += '```\n'
+    line += 'pip install {} --upgrade\n'.format(cweb)
+    line += '```\n'
+    f.write(line)
 
     # close the USGS_release.md file
     f.close()
+
+    line = line.replace(cweb, 'flopy')
+    line = line.replace(' from the USGS FloPy website', '')
+
+    f2.write(line)
+
+
+    # close the PyPi_release.md file
+    f2.close()
 
     return
 

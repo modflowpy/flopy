@@ -18,8 +18,8 @@ long_description = ''
 
 try:
     import pypandoc
-
-    long_description = pypandoc.convert('README.md', 'rst')
+    fpth = os.path.join('docs', 'PyPi_release.md')
+    long_description = pypandoc.convert(fpth, 'rst')
 except:
     pass
 
