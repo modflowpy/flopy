@@ -97,6 +97,9 @@ def update_version():
     # update README.md with new version information
     update_readme_markdown(vmajor, vminor, vmicro, vbuild)
 
+    # update docs/USGS_release.md with new version information
+    update_USGSmarkdown(vmajor, vminor, vmicro, vbuild)
+
 
 def add_updated_files():
     try:
@@ -163,6 +166,104 @@ def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
                    'http://dx.doi.org/10.5066/F7BK19FH]' + \
                    '(http://dx.doi.org/10.5066/F7BK19FH)\n'
         f.write('{}\n'.format(line))
+    f.close()
+
+    return
+
+
+def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
+    try:
+        # determine current buildstat branch
+        b = subprocess.Popen(("git", "status"),
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).communicate()[0]
+        if isinstance(b, bytes):
+            b = b.decode('utf-8')
+
+        # determine current buildstat branch
+        for line in b.splitlines():
+            if 'On branch' in line:
+                branch = line.replace('On branch ', '').rstrip()
+    except:
+        print('Cannot update README.md - could not determine current branch')
+        return
+
+    # create version
+    version = get_tag(vmajor, vminor, vmicro)
+
+    # read README.md into memory
+    with open(files[1], 'r') as file:
+        lines = [line.rstrip() for line in file]
+
+    # write USGS_release.md
+    fpth = os.path.join('docs', 'USGS_release.md')
+    f = open(fpth, 'w')
+
+    # date and branch information
+    now = datetime.datetime.now()
+    sdate = now.strftime("%m/%d/%Y")
+    sb = ''
+    if vbuild > 0:
+        sb = ' &mdash; {}'.format(branch)
+
+    # write header information
+    f.write('---\n')
+    f.write('title: FloPy Release Notes\n')
+    f.write('author:\n')
+    f.write('    - Mark Bakker\n')
+    f.write('    - Vincent Post\n')
+    f.write('    - Christian D. Langevin\n')
+    f.write('    - Joseph D. Hughes\n')
+    f.write('    - Jeremy T. White\n')
+    f.write('    - Andrew T. Leaf\n')
+    f.write('    - Scott R. Paulinski\n')
+    f.write('    - Jeffrey Starn\n')
+    f.write('    - Michael N. Fienen\n')
+    f.write('header-includes:\n')
+    f.write('    - \\usepackage{fancyhdr}\n')
+    f.write('    - \\usepackage{lastpage}\n')
+    f.write('    - \\pagestyle{fancy}\n')
+    f.write('    - \\fancyhf{{}}\n')
+    f.write('    - \\fancyhead[LE, LO, RE, RO]{}\n')
+    f.write('    - \\fancyhead[CE, CO]{FloPy Release Notes}\n')
+    f.write('    - \\fancyfoot[LE, RO]{{FloPy version {}{}}}\n'.format(version, sb))
+    f.write('    - \\fancyfoot[CO, CE]{\\thepage\\ of \\pageref{LastPage}}\n')
+    f.write('    - \\fancyfoot[RE, LO]{{{}}}\n'.format(sdate))
+    f.write('geometry: margin=0.75in\n')
+    f.write('---\n\n')
+
+    # write select information from README.md
+    writeline = False
+    for line in lines:
+        if line == 'Introduction':
+            writeline = True
+        elif line == 'Examples':
+            writeline = False
+        elif line == 'Installation':
+            writeline = False
+        elif '***Development version of FloPy:***' in line:
+            writeline = False
+        elif 'Click [here](docs/mf6.md) for more information.' in line:
+            line = line.replace('Click [here](docs/mf6.md) for more information.', '')
+        if writeline:
+            f.write('{}\n'.format(line))
+
+    # write installation information
+    cweb = 'https://water.usgs.gov/ogw/flopy/flopy-{}.zip'.format(version)
+    f.write('Installation\n')
+    f.write('-----------------------------------------------\n')
+    f.write('To install FloPy version {}{} '.format(version, sb))
+    f.write('from the USGS FloPy website:\n')
+    f.write('```\n')
+    f.write('pip install {}\n'.format(cweb))
+    f.write('```\n\n')
+    f.write('To update to FloPy version {}{} '.format(version, sb))
+    f.write('from the USGS FloPy website:\n')
+    f.write('```\n')
+    f.write('pip install {} --upgrade\n'.format(cweb))
+    f.write('```\n')
+
+    # close the USGS_release.md file
     f.close()
 
     return
