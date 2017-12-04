@@ -269,7 +269,7 @@ class MFSimulation(PackageContainer):
 
     """
     def __init__(self, sim_name='modflowtest', version='mf6', exe_name='mf6.exe',
-                 sim_ws='.', sim_tdis_file='modflowtest.tdis'):
+                 sim_ws='.', sim_tdis_file='modflow6.tdis'):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         # verify metadata
         fpdata = mfstructure.MFStructure()
