@@ -1,6 +1,11 @@
 FloPy Changes
 -----------------------------------------------
 
+### Version 3.2.7 - develop
+* Added SFR2 package functionarlity
+	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.  
+
+		
 ### Version 3.2.7
 * Added beta support for MODFLOW 6 See [here](./mf6.md) for more information.
 * Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.
