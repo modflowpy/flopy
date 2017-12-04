@@ -13,7 +13,7 @@ FloPy Changes
 * Added support for binary stress period files (`OPEN/CLOSE filename (BINARY)`) in `wel` stress packages on load and instantiation. Will extend to other list-based MODFLOW stress packages.
 * Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
 * Added metadata.acdd class to fetch model metadata from ScienceBase.gov and manage CF/ACDD-complient metadata for NetCDF export
-* Added sparse export option for boundary condition stress period data, where only cells for that B.C. are exported: e.g. `package.stress_period_data.export('stuff.shp', sparse=True)`
+* Added sparse export option for boundary condition stress period data, where only cells for that B.C. are exported: e.g. `package.stress_period_data.export('stuff.shp', sparse=True)`. By default, redundant stress period data will be "squeezed," so that only periods with changes in forcing are exported in the attribute data (requires pandas).
 * SFR package support. 
 	* `export_linkages` and `export_outlets` methods to export routing linkages and outlets
 	* sparse shapefile export, where only cells with SFR reaches are included
