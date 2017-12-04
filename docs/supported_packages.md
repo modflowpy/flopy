@@ -92,3 +92,47 @@ FloPy Supported Packages
 | River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
 | Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
 | Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
+
+### MODFLOW 6
+| Package                                        | Creation and Write   | Load Available       | 
+| ---------------------------------------------- | -------------------- | -------------------- | 
+| Temporal Discretization (TDIS6)                | Supported            | Supported            |
+| Structured Discretization (DIS6)               | Supported            | Supported            |
+| Discretization with Vertices (DISV6)           | Supported            | Supported            |
+| Unstructured Discretization (DISU6)            | Supported            | Supported            |
+| Initial Conditions (IC6)                       | Supported            | Supported            |
+| Output Control (OC6)                           | Supported            | Supported            |
+| Groundwater Flow Observations (OBS6)           | Supported            | Supported            |
+| Node Property Flow (NPF6)                      | Supported            | Supported            |
+| Horizontal Flow Barrier (HFB6)                 | Supported            | Supported            |
+| Storage (STO6)                                 | Supported            | Supported            |
+| Constant-Head (CHD6)                           | Supported            | Supported            |
+| Constant-Head Observations (OBS6)              | Supported            | Supported            |
+| Well (WEL6)                                    | Supported            | Supported            |
+| Well Observations (OBS6)                       | Supported            | Supported            |
+| Drain (DRN6)                                   | Supported            | Supported            |
+| Drain Observations (OBS6)                      | Supported            | Supported            |
+| River (RIV6)                                   | Supported            | Supported            |
+| River Observations (OBS6)                      | Supported            | Supported            |
+| General-Head-Boundary (GHB6)                   | Supported            | Supported            |
+| General-Head-Boundary Observations (OBS6)      | Supported            | Supported            |
+| Recharge (RCH6) - List-Based                   | Supported            | Supported            |
+| Recharge (RCH6) - Array-Based                  | Supported            | Supported            |
+| Recharge Observations (OBS6)                   | Supported            | Supported            |
+| Evapotranspiration (EVT6) - List-Based         | Supported            | Supported            |
+| Evapotranspiration (EVT6) - Array-Based        | Supported            | Supported            |
+| Evapotranspiration Observations (OBS6)         | Supported            | Supported            |
+| Multi-Aquifer Well (MAW6)                      | Supported            | Supported            |
+| Multi-Aquifer Well Observations (OBS6)         | Supported            | Supported            |
+| Streamflow Routing (SFR6)                      | Supported            | Supported            |
+| Streamflow Routing Observations (OBS6)         | Supported            | Supported            |
+| Lake Package (LAK6)                            | Supported            | Supported            |
+| Lake Table Input                               | Supported            | Supported            |
+| Lake Observations (OBS6)                       | Supported            | Supported            |
+| Unsaturated Zone Flow (UZF6)                   | Supported            | Supported            |
+| Unsaturated Zone Flow Observations (OBS6)      | Supported            | Supported            |
+| Water Mover (MVR6)                             | Supported            | Supported            |
+| Ghost-Node Correction (GNC6)                   | Supported            | Supported            |
+| Groundwater Flow Exchange (GWF-GWF)            | Supported            | Supported            |
+| Iterative Model Solution (IMS6)                | Supported            | Supported            |
+| Timeseries File (TS6)                          | Supported            | Supported            |

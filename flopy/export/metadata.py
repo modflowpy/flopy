@@ -5,6 +5,8 @@ try:
     import pandas as pd
 except:
     pd = False
+
+
 class acdd:
     """Translate ScienceBase global metadata attributes to CF and ACDD
     global attributes.
@@ -21,11 +23,13 @@ class acdd:
     model : flopy model object
     
     """
+
     def __init__(self, sciencebase_id, model):
 
         self.id = sciencebase_id
         self.model = model
-        self.sciencebase_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(sciencebase_id)
+        self.sciencebase_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(
+            sciencebase_id)
         self.sb = self.get_sciencebase_metadata(sciencebase_id)
         if self.sb is None:
             return
@@ -46,28 +50,32 @@ class acdd:
         self.keywords = [t['name'] for t in self.sb['tags']]
 
         # recommended global attributes
-        self.naming_authority = 'ScienceBase' # org. that provides the id
-        #self.history = None # This is a character array with a line for each invocation of a program that has modified the dataset.
+        self.naming_authority = 'ScienceBase'  # org. that provides the id
+        # self.history = None # This is a character array with a line for each invocation of a program that has modified the dataset.
         # Well-behaved generic netCDF applications should append a line containing:
         # date, time of day, user name, program name and command arguments.
-        self.source = model.model_ws # The method of production of the original data.
+        self.source = model.model_ws  # The method of production of the original data.
         # If it was model-generated, source should name the model and its version.
-        #self.processing_level = None # 	A textual description of the processing (or quality control) level of the data.
-        #self.comment = None #	Miscellaneous information about the data, not captured elsewhere.
+        # self.processing_level = None # 	A textual description of the processing (or quality control) level of the data.
+        # self.comment = None #	Miscellaneous information about the data, not captured elsewhere.
         # This attribute is defined in the CF Conventions.
         self.acknowledgement = self._get_xml_attribute('datacred')
-        #self.license = None #
-        #self.standard_name_vocabulary = None
-        self.date_created = self.sb['provenance']['linkProcess'].get('dateCreated')
+        # self.license = None #
+        # self.standard_name_vocabulary = None
+        self.date_created = self.sb['provenance']['linkProcess'].get(
+            'dateCreated')
         self.creator_name = self.creator.get('name')
         self.creator_email = self.creator.get('email')
-        #self.creator_url = self.sb['webLinks'][0].get('uri')
-        self.creator_institution = self.creator['organization'].get('displayText')
-        self.institution = self.creator_institution # also in CF convention for global attributes
+        # self.creator_url = self.sb['webLinks'][0].get('uri')
+        self.creator_institution = self.creator['organization'].get(
+            'displayText')
+        self.institution = self.creator_institution  # also in CF convention for global attributes
         self.project = self.sb['title']
-        self.publisher_name = [d.get('name') for d in self.sb['contacts'] if 'publisher' in d.get('type').lower()][0]
-        self.publisher_email = self.sb['provenance']['linkProcess'].get('processedBy')
-        self.publisher_url = 'https://www2.usgs.gov/water/'#self.sb['provenance']['linkProcess'].get('linkReference')
+        self.publisher_name = [d.get('name') for d in self.sb['contacts'] if
+                               'publisher' in d.get('type').lower()][0]
+        self.publisher_email = self.sb['provenance']['linkProcess'].get(
+            'processedBy')
+        self.publisher_url = 'https://www2.usgs.gov/water/'  # self.sb['provenance']['linkProcess'].get('linkReference')
         self.geospatial_bounds_crs = 'EPSG:4326'
         self.geospatial_lat_min = self.bounds.get('minY')
         self.geospatial_lat_max = self.bounds.get('maxY')
@@ -75,7 +83,7 @@ class acdd:
         self.geospatial_lon_max = self.bounds.get('maxX')
         self.geospatial_vertical_min = self.model.dis.botm.array.min()
         self.geospatial_vertical_max = self.model.dis.top.array.max()
-        self.geospatial_vertical_positive = 'up' # assumed to always be up for GW models
+        self.geospatial_vertical_positive = 'up'  # assumed to always be up for GW models
         self.time_coverage_start = self.time_coverage.get('start')
         self.time_coverage_end = self.time_coverage.get('end')
         self.time_coverage_duration = self.time_coverage.get('duration')
@@ -96,7 +104,8 @@ class acdd:
 
     @property
     def creator(self):
-        return [d for d in self.sb['contacts'] if 'point of contact' in d['type'].lower()][0]
+        return [d for d in self.sb['contacts'] if
+                'point of contact' in d['type'].lower()][0]
 
     @property
     def creator_url(self):
@@ -139,7 +148,7 @@ class acdd:
         tc = {}
         for t in ['start', 'end']:
             tc[t] = [d.get('dateString') for d in l
-                           if t in d['type'].lower()][0]
+                     if t in d['type'].lower()][0]
         if not np.all(self.model.dis.steady) and pd:
             # replace with times from model reference
             tc['start'] = self.model.dis.start_datetime
@@ -223,5 +232,3 @@ class acdd:
         text = get_url_text(url,
                             error_msg='Need an internet connection to get metadata from ScienceBase.')
         return ET.fromstring(text)
-
-

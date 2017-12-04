@@ -6,7 +6,7 @@ mfsimulation module.  contains the MFSimulation class
 import errno
 import collections
 import os.path
-import flopy.mbase
+from ..mbase import run_model
 from .mfbase import PackageContainer, MFFileMgmt, ExtFileAction, PackageContainerType
 from .mfmodel import MFModel
 from .mfpackage import MFPackage
@@ -570,8 +570,8 @@ class MFSimulation(PackageContainer):
         """
         Run the simulation.
         """
-        return flopy.mbase.run_model(self._exe_name, self.name_file.filename,
-                                     self.simulation_data.mfpath.get_sim_path())
+        return run_model(self._exe_name, self.name_file.filename,
+                         self.simulation_data.mfpath.get_sim_path())
 
     def delete_output_files(self):
         """

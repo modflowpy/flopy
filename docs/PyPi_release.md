@@ -1,28 +1,3 @@
----
-title: FloPy Release Notes
-author:
-    - Mark Bakker
-    - Vincent Post
-    - Christian D. Langevin
-    - Joseph D. Hughes
-    - Jeremy T. White
-    - Andrew T. Leaf
-    - Scott R. Paulinski
-    - Jeffrey Starn
-    - Michael N. Fienen
-header-includes:
-    - \usepackage{fancyhdr}
-    - \usepackage{lastpage}
-    - \pagestyle{fancy}
-    - \fancyhf{{}}
-    - \fancyhead[LE, LO, RE, RO]{}
-    - \fancyhead[CE, CO]{FloPy Release Notes}
-    - \fancyfoot[LE, RO]{FloPy version 3.2.7 &mdash; develop}
-    - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{12/01/2017}
-geometry: margin=0.75in
----
-
 Introduction
 -----------------------------------------------
 
@@ -44,23 +19,23 @@ FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](
 How to Cite
 -----------------------------------------------
 
-##### ***Citation for FloPy:***
+*Citation for FloPy:*
 
 [Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)
 
-##### ***Software/Code citation for FloPy:***
+*Software/Code citation for FloPy:*
 
 [Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2017, FloPy v3.2.7 &mdash; develop: U.S. Geological Survey Software Release, 01 December 2017, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.2.7 &mdash; develop from the USGS FloPy website:
+To install FloPy version 3.2.7 &mdash; develop:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.7.zip
+pip install flopy
 ```
 
-To update to FloPy version 3.2.7 &mdash; develop from the USGS FloPy website:
+To update to FloPy version 3.2.7 &mdash; develop:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.7.zip --upgrade
+pip install flopy --upgrade
 ```

@@ -75,4 +75,6 @@ autotest/tempbin
 autotest/.noseids
 
 *.chk
+*.chk.csv
+
 
