@@ -47,9 +47,32 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
              }
 
 def create_sfr_data():
-    r = np.zeros((27, 2), dtype=[('iseg', int), ('ireach', int)])
+    dtype = [('k', int),
+             ('i', int),
+             ('j', int),
+             ('iseg', int),
+             ('ireach', int)]
+    r = np.zeros((27, 5), dtype=dtype)
     r = np.core.records.fromarrays(r.transpose(),
-                                   dtype=[('iseg', int), ('ireach', int)])
+                                   dtype=dtype)
+    r['i'] = [3, 4, 5,
+              7, 8, 9,
+              0, 1, 2,
+              4, 4, 5,
+              0, 0, 0,
+              3, 4, 5,
+              0, 1, 2,
+              4, 5, 6,
+              2, 2, 2]
+    r['j'] = [0, 1, 2,
+              6, 6, 6,
+              6, 6, 6,
+              3, 4, 5,
+              9, 8, 7,
+              6, 6, 6,
+              0, 0, 0,
+              6, 6, 6,
+              9, 8, 7]
     r['iseg'] = sorted(list(range(1, 10)) * 3)
     r['ireach'] = [1, 2, 3] * 9
 
@@ -253,6 +276,37 @@ def test_const():
     assert sfr.const == 1.486 * 86400.
     assert True
 
+def test_export():
+    fm = flopy.modflow
+    m = fm.Modflow()
+    dis = fm.ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
+    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array)
+    m.sr.write_shapefile(os.path.join(outpath, 'grid.shp'))
+    r, d = create_sfr_data()
+    sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
+    sfr.segment_data[0]['flow'][-1] = 1e4
+    sfr.stress_period_data.export(os.path.join(outpath, 'sfr.shp'), sparse=True)
+    sfr.export_linkages(os.path.join(outpath, 'linkages.shp'))
+    sfr.export_outlets(os.path.join(outpath, 'outlets.shp'))
+    sfr.export_inlets(os.path.join(outpath, 'inlets.shp'))
+
+    from flopy.export.shapefile_utils import shp2recarray
+    ra = shp2recarray(os.path.join(outpath, 'inlets.shp'))
+    assert ra.flow[0] == 1e4
+    ra = shp2recarray(os.path.join(outpath, 'outlets.shp'))
+    assert ra.iseg[0] + ra.ireach[0] == 5
+    ra = shp2recarray(os.path.join(outpath, 'linkages.shp'))
+    crds = np.array(list(ra.geometry[2].coords))
+    assert np.array_equal(crds, np.array([[2.5,  4.5], [3.5,  5.5]]))
+    ra = shp2recarray(os.path.join(outpath, 'sfr.shp'))
+    assert ra.iseg0.sum() == sfr.reach_data.iseg.sum()
+    assert ra.ireach0.sum() == sfr.reach_data.ireach.sum()
+    y = np.concatenate([np.array(g.exterior)[:, 1] for g in ra.geometry])
+    x = np.concatenate([np.array(g.exterior)[:, 0] for g in ra.geometry])
+    assert (x.min(), y.min(), x.max(), y.max()) == m.sr.bounds
+    assert ra[(ra.iseg0 == 2) & (ra.ireach0 == 1)]['geometry'][0].bounds \
+        == (6.0, 2.0, 7.0, 3.0)
+
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',
                                    exe_name='mf2005.exe',
@@ -399,9 +453,10 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    test_sfr()
-    test_sfr_renumbering()
-    test_example()
+    #test_sfr()
+    #test_sfr_renumbering()
+    #test_example()
+    test_export()
     #test_transient_example()
     #test_sfr_plot()
     #test_assign_layers()

@@ -1678,6 +1678,31 @@ class ModflowSfr2(Package):
         geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(rd, geoms, f, **kwargs)
 
+    def export_inlets(self, f, **kwargs):
+        """Export point shapefile showing locations where streamflow is entering
+        the model (outset=0).
+        """
+        from flopy.utils.geometry import Point
+        from flopy.export.shapefile_utils import recarray2shp
+        rd = self.reach_data
+        if np.min(rd.outreach) == np.max(rd.outreach):
+            self.set_outreaches()
+        inletsegs = self.segment_data[0].flow != 0
+        inlets = self.segment_data[0].nseg[inletsegs]
+        isinlet = np.array([True if s in inlets else False for s in self.reach_data.iseg])
+        isinlet = isinlet & (self.reach_data.ireach == 1)
+        rd = self.reach_data[isinlet].copy()
+        m = self.parent
+        rd.sort(order=['iseg'])
+        sd = self.segment_data[0][inletsegs].copy()
+        sd.sort(order='nseg')
+
+        # get the cell centers for each reach
+        x0 = m.sr.xcentergrid[rd.i, rd.j]
+        y0 = m.sr.ycentergrid[rd.i, rd.j]
+        geoms = [Point(x, y) for x, y in zip(x0, y0)]
+        recarray2shp(sd, geoms, f, **kwargs)
+
     @staticmethod
     def ftype():
         return 'SFR'
