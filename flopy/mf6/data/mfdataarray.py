@@ -265,6 +265,8 @@ class MFArray(mfdata.MFMultiDimVar):
                     storage.add_layer()
             else:
                 layers = 1
+                storage.flatten()
+
         else:
             layers = 1
         total_size = self._data_dimensions.model_subspace_size(self.structure.shape)
@@ -276,10 +278,12 @@ class MFArray(mfdata.MFMultiDimVar):
         if aux_var_index is None:
             # loop through the number of layers
             for layer in range(0, layers):
-                self._load_layer(layer, layer_size, storage, arr_line, file_handle)
+                self._load_layer(layer, layer_size, storage, arr_line,
+                                 file_handle)
         else:
             # write the aux var to it's unique index
-            self._load_layer(aux_var_index, layer_size, storage, arr_line, file_handle)
+            self._load_layer(aux_var_index, layer_size, storage, arr_line,
+                             file_handle)
         return [False, None]
 
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):

@@ -395,13 +395,18 @@ class DataStorage(object):
     def __str__(self):
         return self.get_data_str(False)
 
+    def flatten(self):
+        self.layered = False
+        self.layer_storage = [LayerStorage(self, 0, self.layer_storage[0].data_storage_type)]
+        self.num_layers = 1
+
     def make_layered(self):
         if not self.layered:
             if self.data_structure_type != DataStructureType.ndarray:
                 except_str = 'Data structure type "{}" does not support layered ' \
                              'data.'.format(self.data_structure_type)
                 print(except_str)
-                raise mfstructure.MFDataException(except_str)
+                raise MFDataException(except_str)
             if self.layer_storage[0].data_storage_type == DataStorageType.external_file:
                 except_str = 'Converting external file data into layered data currently not support.'
                 print(except_str)
