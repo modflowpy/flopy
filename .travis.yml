@@ -59,7 +59,10 @@ install:
     - ln -fs /usr/bin/g++-6 "$HOME/.local/bin/g++" && g++ --version
     - ls -l /usr/bin/g++-6
     - export CXX="g++"
-    - if [[ $TRAVIS_PYTHON_VERSION <= 3.4 ]];
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]];
+      then pip install -r requirements2-34.travis.txt;
+      fi
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.4 ]];
       then pip install -r requirements2-34.travis.txt;
       fi
     - if [[ $TRAVIS_PYTHON_VERSION > 3.4 ]];
