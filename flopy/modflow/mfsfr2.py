@@ -711,6 +711,7 @@ class ModflowSfr2(Package):
                 current_aux = {}  # container to hold any auxillary variables
                 current_6d = {}  # these could also be implemented as structured arrays with a column for segment number
                 current_6e = {}
+                #print(i,icalc,nstrm,isfropt,reachinput)
                 for j in range(itmp):
                     dataset_6a = _parse_6a(next(f), option)
                     current_aux[j] = dataset_6a[-1]
@@ -2754,16 +2755,18 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         depth = line.pop(0)
     elif isfropt in [0, 4, 5] and icalc == 1:
         hcond = line.pop(0)
-        if per == 0:
+        if isfropt in [4,5] and per > 0:
+            pass
+        else:
             thickm = line.pop(0)
             elevupdn = line.pop(0)
-            width = line.pop(
-                0)  # depth is not read if icalc == 1; see table in online guide
-            thts = _pop_item(line)
-            thti = _pop_item(line)
-            eps = _pop_item(line)
-            if isfropt == 5:
-                uhc = line.pop(0)
+        width = line.pop(
+            0)  # depth is not read if icalc == 1; see table in online guide
+        thts = _pop_item(line)
+        thti = _pop_item(line)
+        eps = _pop_item(line)
+        if isfropt == 5:
+            uhc = line.pop(0)
     elif isfropt in [0, 4, 5] and icalc >= 2:
         hcond = line.pop(0)
         if isfropt in [4, 5] and per > 0 and icalc == 2:
