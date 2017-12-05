@@ -7,7 +7,6 @@ compiler: gcc
 matrix:
   include:
     - python: 2.7
-    - python: 3.3
     - python: 3.4
     - python: 3.5
     - python: 3.6
@@ -60,13 +59,7 @@ install:
     - ln -fs /usr/bin/g++-6 "$HOME/.local/bin/g++" && g++ --version
     - ls -l /usr/bin/g++-6
     - export CXX="g++"
-    - if [[ $TRAVIS_PYTHON_VERSION < 3.3 ]];
-      then pip install -r requirements2-34.travis.txt;
-      fi
-    - if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]];
-      then pip install -r requirements33.travis.txt;
-      fi
-    - if [[ $TRAVIS_PYTHON_VERSION == 3.4 ]];
+    - if [[ $TRAVIS_PYTHON_VERSION <= 3.4 ]];
       then pip install -r requirements2-34.travis.txt;
       fi
     - if [[ $TRAVIS_PYTHON_VERSION > 3.4 ]];
@@ -87,6 +80,8 @@ script:
     - echo flopy version; python -c "from __future__ import print_function; import flopy; print(flopy.__version__)"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
+    - nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
+    - nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
     - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
 after_success:
     - coveralls

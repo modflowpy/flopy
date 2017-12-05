@@ -322,7 +322,8 @@ class ModflowOc(Package):
         line = 'HEAD PRINT FORMAT {0:3.0f}\n'.format(self.ihedfm)
         f_oc.write(line)
         if self.chedfm is not None:
-            line = 'HEAD SAVE FORMAT {0:20s} {1}\n'.format(self.chedfm,self.label)
+            line = 'HEAD SAVE FORMAT {0:20s} {1}\n'.format(self.chedfm,
+                                                           self.label)
             f_oc.write(line)
         if self.savehead:
             line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.iuhead)
@@ -330,7 +331,8 @@ class ModflowOc(Package):
 
         f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'.format(self.iddnfm))
         if self.cddnfm is not None:
-            line = 'DRAWDOWN SAVE FORMAT {0:20s} {1}\n'.format(self.cddnfm,self.label)
+            line = 'DRAWDOWN SAVE FORMAT {0:20s} {1}\n'.format(self.cddnfm,
+                                                               self.label)
             f_oc.write(line)
         if self.saveddn:
             line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.iuddn)
@@ -338,7 +340,8 @@ class ModflowOc(Package):
 
         if self.saveibnd:
             if self.cboufm is not None:
-                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufm,self.label)
+                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufm,
+                                                                 self.label)
                 f_oc.write(line)
             line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.iuibnd)
             f_oc.write(line)
