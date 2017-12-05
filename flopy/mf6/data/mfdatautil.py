@@ -1,6 +1,6 @@
 import os
 import numpy as np
-
+from copy import deepcopy
 
 def find_keyword(arr_line, keyword_dict):
     # convert to lower case
@@ -195,7 +195,8 @@ class ListTemplateGenerator(TemplateGenerator):
                 template_data.append(None)
         return tuple(template_data)
 
-    def empty(self, model, maxbound=None, aux_vars=None, boundnames=False, nseg=None, timeseries=False):
+    def empty(self, model, maxbound=None, aux_vars=None, boundnames=False,
+              nseg=None, timeseries=False, stress_periods=None):
         from ..data import mfdata, mfstructure
 
         data_struct, data_dimensions = self._get_data_dimensions(model)
@@ -234,7 +235,13 @@ class ListTemplateGenerator(TemplateGenerator):
         # if transient/multiple list
         if data_type == mfstructure.DataType.list_transient or data_type == mfstructure.DataType.list_multiple:
             # Return as dictionary
-            return {0:rec_array}
+            if stress_periods is None:
+                return {0:rec_array}
+            else:
+                template = {}
+                for stress_period in stress_periods:
+                    template[stress_period] = deepcopy(rec_array)
+                return template
         else:
             return rec_array
 
