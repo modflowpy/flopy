@@ -715,7 +715,8 @@ class Util3d(object):
                                      mflay=mflay, fignum=fignum, **kwargs)
 
     def __getitem__(self, k):
-        if isinstance(k, int) or isinstance(k,np.int64):
+        if (isinstance(k, int) or
+                np.issubdtype(getattr(k, 'dtype', None), np.integer)):
             return self.util_2ds[k]
         elif len(k) == 3:
             return self.array[k[0], k[1], k[2]]
