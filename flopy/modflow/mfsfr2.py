@@ -2774,7 +2774,7 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         else:
             thickm = line.pop(0)
             elevupdn = line.pop(0)
-            if isfropt in [4, 5] and icalc == 2 and per == 0:
+            if isfropt in [4, 5] and per == 0:
                 # table in online guide suggests that the following items should be present in this case
                 # but in the example
                 thts = _pop_item(line)
