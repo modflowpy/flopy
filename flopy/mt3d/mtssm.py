@@ -277,7 +277,7 @@ class Mt3dSsm(Package):
                 else:
                     self.crch = None
             except:
-                pass
+                self.crch = None
 
         if cevt is not None:
             self.cevt = []
@@ -315,7 +315,7 @@ class Mt3dSsm(Package):
                 else:
                     self.cevt = None
             except:
-                pass
+                self.cevt = None
 
         if len(list(kwargs.keys())) > 0:
             raise Exception("SSM error: unrecognized kwargs: " +
