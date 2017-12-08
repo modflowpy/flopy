@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from textwrap import TextWrapper
 from copy import deepcopy
 
 def find_keyword(arr_line, keyword_dict):
@@ -701,12 +702,18 @@ class MFDocString(object):
             param_descr_array = param_descr.split('\n')
         else:
             param_descr_array = ['\n']
+        twr = TextWrapper(width=79, initial_indent=self.indent * 2,
+                          subsequent_indent='  {}'.format(self.indent * 2))
         for index in range(0, len(param_descr_array)):
-            param_descr_array[index] = '{}{}{}'.format(self.indent, self.indent, param_descr_array[index])
+            param_descr_array[index] = '\n'.join(twr.wrap(param_descr_array[
+                                                              index]))
         param_descr = '\n'.join(param_descr_array)
-
         # build doc string
-        param_doc_string = self._resolve_string(('{} : {}\n{}'.format(param_name, param_type, param_descr)))
+        param_doc_string = '{} : {}'.format(param_name, param_type)
+        twr = TextWrapper(width=79, initial_indent='',
+                          subsequent_indent='  {}'.format(self.indent))
+        param_doc_string = '\n'.join(twr.wrap(param_doc_string))
+        param_doc_string = self._resolve_string(('{}\n{}'.format(param_doc_string, param_descr)))
         self.parameters.append(param_doc_string)
 
     def get_doc_string(self):
