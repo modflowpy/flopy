@@ -274,9 +274,8 @@ class PackageContainer(object):
             for item in dir(module):
                 value = getattr(module, item)
                 # verify this is a class
-                if not value:
-                    continue
-                if not inspect.isclass(value):
+                if not value or not inspect.isclass(value) or not \
+                  hasattr(value, 'package_abbr'):
                     continue
                 # check package type
                 if value.package_abbr == package_abbr or value.package_abbr == package_utl_abbr:
