@@ -55,8 +55,10 @@ class MFFileMgmt(object):
         self._sim_path = ''
         self.set_sim_path(path)
 
-        self.existing_file_dict = {}  # keys:fully pathed filenames, vals:FilePath instances
-        self.distributed_file_dict = {}  # keys:filenames,vals:instance name
+        # keys:fully pathed filenames, vals:FilePath instances
+        self.existing_file_dict = {}
+        # keys:filenames,vals:instance name
+        self.distributed_file_dict = {}
 
         self.model_relative_path = collections.OrderedDict()
 
@@ -78,22 +80,29 @@ class MFFileMgmt(object):
             for key, mffile_path in self.existing_file_dict.items():
                 for model_name in mffile_path.model_name:
                     if model_name in self._last_loaded_model_relative_path:
-                        if os.path.isfile(self.resolve_path(mffile_path, model_name, True)) and \
+                        if os.path.isfile(self.resolve_path(mffile_path,
+                                                            model_name,
+                                                            True)) and \
                           (not mffile_path.isabs() or not copy_relative_only):
-                            if not os.path.exists(self.resolve_path(mffile_path, model_name)):
-                                copyfile(self.resolve_path(mffile_path, model_name, True),
-                                         self.resolve_path(mffile_path, model_name))
+                            if not os.path.exists(
+                              self.resolve_path(mffile_path, model_name)):
+                                copyfile(self.resolve_path(mffile_path,
+                                                           model_name, True),
+                                         self.resolve_path(mffile_path,
+                                                           model_name))
                                 num_files_copied += 1
         print('INFORMATION: {} external files copied'.format(num_files_copied))
 
-    def get_updated_path(self, external_file_path, model_name, ext_file_action):
+    def get_updated_path(self, external_file_path, model_name,
+                         ext_file_action):
         external_file_path = self.string_to_file_path(external_file_path)
         if ext_file_action == ExtFileAction.copy_all:
             if os.path.isabs(external_file_path):
                 # move file path to local model or simulation path
                 base_path, file_name = os.path.split(external_file_path)
                 if model_name:
-                    return os.path.join(self.get_model_path(model_name), file_name)
+                    return os.path.join(self.get_model_path(model_name),
+                                        file_name)
                 else:
                     return os.path.join(self.get_sim_path(), file_name)
             else:
@@ -104,7 +113,8 @@ class MFFileMgmt(object):
             if os.path.isabs(external_file_path):
                 return external_file_path
             else:
-                return os.path.join(self._build_relative_path(model_name), external_file_path)
+                return os.path.join(self._build_relative_path(model_name),
+                                    external_file_path)
         else:
             return None
 
@@ -140,7 +150,8 @@ class MFFileMgmt(object):
 
     def get_model_path(self, key, last_loaded_path=False):
         if last_loaded_path:
-            return os.path.join(self._last_loaded_sim_path, self._last_loaded_model_relative_path[key])
+            return os.path.join(self._last_loaded_sim_path,
+                                self._last_loaded_model_relative_path[key])
         else:
             return os.path.join(self._sim_path, self.model_relative_path[key])
 
@@ -166,7 +177,8 @@ class MFFileMgmt(object):
         Parameters
         ----------
         path : string
-            full path or relative path from working directory to simulation folder
+            full path or relative path from working directory to
+            simulation folder
 
         Returns
         -------
@@ -185,7 +197,8 @@ class MFFileMgmt(object):
             # assume path is relative to working directory
             self._sim_path = os.path.join(os.getcwd(), path)
 
-    def resolve_path(self, path, model_name, last_loaded_path=False, move_abs_paths=False):
+    def resolve_path(self, path, model_name, last_loaded_path=False,
+                     move_abs_paths=False):
         if isinstance(path, MFFilePath):
             file_path = path.file_path
         else:
@@ -203,9 +216,12 @@ class MFFileMgmt(object):
         else:
             # path is a relative path
             if model_name is None:
-                return os.path.join(self.get_sim_path(last_loaded_path), file_path)
+                return os.path.join(self.get_sim_path(last_loaded_path),
+                                    file_path)
             else:
-                return os.path.join(self.get_model_path(model_name, last_loaded_path), file_path)
+                return os.path.join(self.get_model_path(model_name,
+                                                        last_loaded_path),
+                                    file_path)
 
 
 class PackageContainer(object):
@@ -232,12 +248,14 @@ class PackageContainer(object):
 
     Methods
     -------
-    package_factory : (package_type : string, model_type : string) : MFPackage subclass
-        Static method that returns the appropriate package type object based on the package_type and
-        model_type strings
+    package_factory : (package_type : string, model_type : string) :
+      MFPackage subclass
+        Static method that returns the appropriate package type object based
+        on the package_type and model_type strings
     get_package : (name : string) : MFPackage or [MfPackage]
-        finds a package by package name, package key, package type, or partial package name.
-        returns either a single package, a list of packages, or None
+        finds a package by package name, package key, package type, or partial
+        package name. returns either a single package, a list of packages,
+        or None
     register_package : (package : MFPackage) : (tuple, PackageStructure)
         base class method for package registration
     """
@@ -263,12 +281,14 @@ class PackageContainer(object):
         for package_file_path in package_file_paths:
             package_file_name = os.path.basename(package_file_path)
             module_path = os.path.splitext(package_file_name)[0]
-            module_name = '{}{}{}'.format('Modflow', module_path[2].upper(), module_path[3:])
+            module_name = '{}{}{}'.format('Modflow', module_path[2].upper(),
+                                          module_path[3:])
             if module_name.startswith("__"):
                 continue
 
             # import
-            module = importlib.import_module("flopy.mf6.modflow.{}".format(module_path))
+            module = importlib.import_module("flopy.mf6.modflow.{}".format(
+              module_path))
 
             # iterate imported items
             for item in dir(module):
@@ -278,7 +298,8 @@ class PackageContainer(object):
                   hasattr(value, 'package_abbr'):
                     continue
                 # check package type
-                if value.package_abbr == package_abbr or value.package_abbr == package_utl_abbr:
+                if value.package_abbr == package_abbr or \
+                  value.package_abbr == package_utl_abbr:
                     return value
         return None
 
