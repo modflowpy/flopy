@@ -234,7 +234,7 @@ class MfList(object):
                 if use_free:
                     fmt_string += ' %15.7E'
                 else:
-                    fmt_string += '%10G'
+                    fmt_string += ' %9.3E'
 
             elif vtype == 'o':
                 if use_free:

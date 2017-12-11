@@ -672,6 +672,7 @@ class Mt3dSsm(Package):
                         tt = line[istop:].strip().split()
                         for ivar in range(ncssms):
                             t.append(tt[ivar])
+                    print(ibnd,line)
                     current[ibnd] = tuple(t[:len(current.dtype.names)])
                 # convert indices to zero-based
                 current['k'] -= 1

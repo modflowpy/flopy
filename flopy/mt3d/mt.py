@@ -563,11 +563,8 @@ class Mt3dms(BaseModel):
         try:
             pck = btn.package.load(btn.filename, mt,
                                    ext_unit_dict=ext_unit_dict)
-        except:
-            if forgive:
-                return None
-            else:
-                raise Exception('BTN not found in name file.')
+        except Exception as e:
+            raise Exception('error loading BTN: {0}'.format(str(e)))
         files_succesfully_loaded.append(btn.filename)
         if mt.verbose:
             sys.stdout.write('   {:4s} package load...success\n'
@@ -602,7 +599,22 @@ class Mt3dms(BaseModel):
         for key, item in ext_unit_dict.items():
             if item.package is not None:
                 if item.filetype in load_only:
-                    try:
+                    if forgive:
+                        try:
+                            pck = item.package.load(item.filename, mt,
+                                                    ext_unit_dict=ext_unit_dict)
+                            files_succesfully_loaded.append(item.filename)
+                            if mt.verbose:
+                                sys.stdout.write(
+                                    '   {:4s} package load...success\n'
+                                        .format(pck.name[0]))
+                        except BaseException as o:
+                            if mt.verbose:
+                                sys.stdout.write(
+                                    '   {:4s} package load...failed\n   {!s}\n'
+                                        .format(item.filetype, o))
+                            files_not_loaded.append(item.filename)
+                    else:
                         pck = item.package.load(item.filename, mt,
                                                 ext_unit_dict=ext_unit_dict)
                         files_succesfully_loaded.append(item.filename)
@@ -610,12 +622,6 @@ class Mt3dms(BaseModel):
                             sys.stdout.write(
                                 '   {:4s} package load...success\n'
                                     .format(pck.name[0]))
-                    except BaseException as o:
-                        if mt.verbose:
-                            sys.stdout.write(
-                                '   {:4s} package load...failed\n   {!s}\n'
-                                    .format(item.filetype, o))
-                        files_not_loaded.append(item.filename)
                 else:
                     if mt.verbose:
                         sys.stdout.write('   {:4s} package load...skipped\n'
