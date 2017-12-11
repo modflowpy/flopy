@@ -241,7 +241,7 @@ def test_mf2000_tob():
 
     namfile = 'p7mt.nam'
     mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True,
-                                   exe_name=mt3d_exe)
+                                   exe_name=mt3d_exe,forgive=True)
     mt.model_ws = cpth
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
@@ -389,13 +389,13 @@ def test_mfnwt_keat_uzf():
 
 if __name__ == '__main__':
     #test_mf2000_mnw()
-    test_mf2005_p07()
+    #test_mf2005_p07()
     #test_mf2000_p07()
     #test_mf2000_HSSTest()
     #test_mf2000_MultiDiffusion()
     #test_mf2000_reinject()
     #test_mf2000_SState()
-    #test_mf2000_tob()
+    test_mf2000_tob()
     #test_mf2000_zeroth()
     #test_mfnwt_CrnkNic()
     #test_mfnwt_LKT()
