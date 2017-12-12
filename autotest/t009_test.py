@@ -288,11 +288,12 @@ def test_export():
     sfr.stress_period_data.export(os.path.join(outpath, 'sfr.shp'), sparse=True)
     sfr.export_linkages(os.path.join(outpath, 'linkages.shp'))
     sfr.export_outlets(os.path.join(outpath, 'outlets.shp'))
-    sfr.export_inlets(os.path.join(outpath, 'inlets.shp'))
+    sfr.export_transient_variable(os.path.join(outpath, 'inlets.shp'),
+                                  'flow')
 
     from flopy.export.shapefile_utils import shp2recarray
     ra = shp2recarray(os.path.join(outpath, 'inlets.shp'))
-    assert ra.flow[0] == 1e4
+    assert ra.flow0[0] == 1e4
     ra = shp2recarray(os.path.join(outpath, 'outlets.shp'))
     assert ra.iseg[0] + ra.ireach[0] == 5
     ra = shp2recarray(os.path.join(outpath, 'linkages.shp'))
