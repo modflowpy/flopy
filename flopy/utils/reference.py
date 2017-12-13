@@ -984,7 +984,7 @@ class SpatialReference(object):
     def export_array(self, filename, a, nodata=-9999,
                      fieldname='value',
                      **kwargs):
-        s"""Write a numpy array to Arc Ascii grid 
+        """Write a numpy array to Arc Ascii grid
         or shapefile with the model reference.
 
         Parameters
