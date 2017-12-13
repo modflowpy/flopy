@@ -155,7 +155,8 @@ class DfnFile(object):
                         new_data_item_struct.set_value(next_line, common)
 
                 # if block does not exist
-                if current_block is None or current_block.name != new_data_item_struct.block_name:
+                if current_block is None or \
+                        current_block.name != new_data_item_struct.block_name:
                     # create block
                     current_block = MFBlockStructure(
                         new_data_item_struct.block_name, path, model_file)
@@ -195,9 +196,11 @@ class DfnFile(object):
 
                     # if data item belongs to existing dataset(s)
                     item_location_found = False
-                    if new_data_item_struct.name in self.dataset_items_needed_dict:
+                    if new_data_item_struct.name in \
+                            self.dataset_items_needed_dict:
                         if new_data_item_struct.type == 'record':
-                            # record within a record - create a data set in place of the data item
+                            # record within a record - create a data set in
+                            # place of the data item
                             new_data_item_struct = self._new_dataset(
                                 new_data_item_struct, current_block,
                                 dataset_items_in_block, path,
@@ -208,9 +211,11 @@ class DfnFile(object):
                             new_data_item_struct.name]:
                             item_added = dataset.add_item(new_data_item_struct,
                                                           record=True)
-                            item_location_found = item_location_found or item_added
+                            item_location_found = item_location_found or \
+                                                  item_added
                     # if data item belongs to an existing keystring
-                    if new_data_item_struct.name in keystring_items_needed_dict:
+                    if new_data_item_struct.name in \
+                            keystring_items_needed_dict:
                         new_data_item_struct.set_path(
                             keystring_items_needed_dict[
                                 new_data_item_struct.name].path)
@@ -222,7 +227,8 @@ class DfnFile(object):
 
                     if new_data_item_struct.type == 'keystring':
                         # add keystrings to search list
-                        for key, val in new_data_item_struct.keystring_dict.items():
+                        for key, val in \
+                                new_data_item_struct.keystring_dict.items():
                             keystring_items_needed_dict[
                                 key] = new_data_item_struct
 
@@ -232,15 +238,16 @@ class DfnFile(object):
                                           dataset_items_in_block,
                                           path, model_file, True)
                         if current_block.name.upper() == 'SOLUTIONGROUP' and \
-                                        len(
-                                            current_block.block_header_structure) == 0:
+                                len(current_block.block_header_structure) == 0:
                             # solution_group a special case for now
                             block_data_item_struct = MFDataItemStructure()
                             block_data_item_struct.name = 'order_num'
                             block_data_item_struct.data_items = ['order_num']
                             block_data_item_struct.type = 'integer'
                             block_data_item_struct.longname = 'order_num'
-                            block_data_item_struct.description = 'internal variable to keep track or solution group number'
+                            block_data_item_struct.description = \
+                                'internal variable to keep track of ' \
+                                'solution group number'
                             block_dataset_struct = MFDataStructure(
                                 block_data_item_struct, model_file)
                             block_dataset_struct.parent_block = current_block
@@ -272,7 +279,8 @@ class DfnFile(object):
     def _process_needed_data_items(self, current_dataset_struct,
                                    dataset_items_in_block):
         # add data items needed to dictionary
-        for item_name, val in current_dataset_struct.expected_data_items.items():
+        for item_name, val in \
+                current_dataset_struct.expected_data_items.items():
             if item_name in dataset_items_in_block:
                 current_dataset_struct.add_item(
                     dataset_items_in_block[item_name])
@@ -426,44 +434,52 @@ class MFDataItemStructure(object):
     name : str
         name of data item
     name_list : list
-        list of alternate names for the data item, includes data item's main name "name"
+        list of alternate names for the data item, includes data item's main
+        name "name"
     python_name : str
-        name of data item referenced in python, with illegal python characters removed
+        name of data item referenced in python, with illegal python characters
+        removed
     type : str
         type of the data item as it appears in the dfn file
     type_obj : python type
         type of the data item as a python type
     valid_values : list
-        list of valid values for the data item.  if empty, this constraint does not apply
+        list of valid values for the data item.  if empty, this constraint does
+        not apply
     data_items : list
         list of data items contained in this data_item, including itself
     in_record : bool
         in_record attribute as appears in dfn file
     tagged : bool
-        whether data item is tagged.  if the data item is tagged its name is included in the MF6 input file
+        whether data item is tagged.  if the data item is tagged its name is
+        included in the MF6 input file
     just_data : bool
-        when just_data is true only data appears in the MF6 input file.  otherwise, name information appears
+        when just_data is true only data appears in the MF6 input file.
+        otherwise, name information appears
     shape : list
         describes the shape of the data
     reader : basestring
         reader that MF6 uses to read the data
     optional : bool
-        whether data item is optional or required as part of the MFData in the MF6 input file
+        whether data item is optional or required as part of the MFData in the
+        MF6 input file
     longname : str
         long name of the data item
     description : str
         description of the data item
     path : tuple
-        a tuple describing the data item's location within the simulation (<model>,<package>,<block>,<data>)
+        a tuple describing the data item's location within the simulation
+        (<model>,<package>,<block>,<data>)
     repeating : bool
         whether or not the data item can repeat in the MF6 input file
     block_variable : bool
         if true, this data item is part of the block header
     block_type : BlockType
-        whether the block containing this item is a single non-repeating block, a multiple repeating block,
-        or a transient repeating block
+        whether the block containing this item is a single non-repeating block,
+        a multiple repeating block, or a transient repeating block
     keystring_dict : dict
-        dictionary containing acceptable keystrings if this data item is of type keystring
+        dictionary containing acceptable keystrings if this data item is of
+        type keystring
     is_cellid : bool
         true if this data item is definitely of type cellid
     possible_cellid : bool
@@ -476,11 +492,13 @@ class MFDataItemStructure(object):
     remove_cellid : (resolved_shape : list, cellid_size : int)
         removes the cellid size from the shape of a data item
     resolve_shape : (simulation_data : SimulationData)
-        resolves the shape of this data item based on the simulation data contained in simulation_data
+        resolves the shape of this data item based on the simulation data
+        contained in simulation_data
     set_path : (path : tuple)
         sets the path to this data item to path
     get_rec_type : () : object type
-        gets the type of object of this data item to be used in a numpy recarray
+        gets the type of object of this data item to be used in a numpy
+        recarray
     valid_type : (value : any)
         returns true of value is an acceptable type for this data item
 
@@ -545,7 +563,8 @@ class MFDataItemStructure(object):
                 type_line = arr_line[1:]
                 assert (len(type_line) > 0)
                 self.type = type_line[0].lower()
-                if self.type == 'recarray' or self.type == 'record' or self.type == 'repeating_record' \
+                if self.type == 'recarray' or self.type == 'record' or \
+                        self.type == 'repeating_record' \
                         or self.type == 'keystring':
                     self.data_items = type_line[1:]
                     if self.type == 'keystring':
@@ -573,8 +592,9 @@ class MFDataItemStructure(object):
                             dimension = dimension.replace(',', '')
                             self.shape.append(dimension)
                         else:
-                            # only process what is after the last ; which by convention is the most
-                            # generalized form of the shape
+                            # only process what is after the last ; which by
+                            # convention is the most generalized form of the
+                            # shape
                             self.shape = []
                 if len(self.shape) > 0:
                     self.repeating = True
@@ -714,15 +734,19 @@ class MFDataStructure(object):
     type : str
         type of the data as it appears in the dfn file
     path : tuple
-        a tuple describing the data's location within the simulation (<model>,<package>,<block>,<data>)
+        a tuple describing the data's location within the simulation
+        (<model>,<package>,<block>,<data>)
     optional : bool
-        whether data is optional or required as part of the MFBlock in the MF6 input file
+        whether data is optional or required as part of the MFBlock in the MF6
+        input file
     name : str
         name of data item
     name_list : list
-        list of alternate names for the data, includes data item's main name "name"
+        list of alternate names for the data, includes data item's main name
+        "name"
     python_name : str
-        name of data referenced in python, with illegal python characters removed
+        name of data referenced in python, with illegal python characters
+        removed
     longname : str
         long name of the data
     repeating : bool
@@ -730,14 +754,16 @@ class MFDataStructure(object):
     layered : bool
         whether this data can appear by layer
     num_data_items : int
-        number of data item structures contained in this MFDataStructure, including itself
+        number of data item structures contained in this MFDataStructure,
+        including itself
     record_within_record : bool
-        true if this MFDataStructure is a record within a container MFDataStructure
+        true if this MFDataStructure is a record within a container
+        MFDataStructure
     file_data : bool
         true if data points to a file
     block_type : BlockType
-        whether the block containing this data is a single non-repeating block, a multiple repeating block,
-        or a transient repeating block
+        whether the block containing this data is a single non-repeating block,
+        a multiple repeating block, or a transient repeating block
     block_variable : bool
         if true, this data is part of the block header
     model_data : bool
@@ -762,11 +788,13 @@ class MFDataStructure(object):
     add_item : (item : MFDataItemStructure, record : bool)
         adds a data item to this MFDataStructure
     set_path : (path : tuple)
-        sets the path describing the data's location within the simulation (<model>,<package>,<block>,<data>)
+        sets the path describing the data's location within the simulation
+        (<model>,<package>,<block>,<data>)
     get_datatype : () : DataType
         returns the DataType of this data (array, list, scalar, ...)
     get_record_size : () : int
-        gets the number of data items, excluding keyword data items, in this MFDataStructure
+        gets the number of data items, excluding keyword data items, in this
+        MFDataStructure
     all_keywords : () : bool
         returns true of all data items are keywords
     get_type_string : () : str
@@ -776,12 +804,15 @@ class MFDataStructure(object):
     get_type_array : (type_array : list):
         builds an array of data type information in type_array
     get_datum_type : (numpy_type : bool):
-        returns the object type of the first data item in this MFDataStructure with a standard type.  if numpy_type is true returns the
-        type as a numpy type
+        returns the object type of the first data item in this MFDataStructure
+        with a standard type.  if numpy_type is true returns the type as a
+        numpy type
     get_data_item_types: () : list
-        returns a list of object type for every data item in this MFDataStructure
+        returns a list of object type for every data item in this
+        MFDataStructure
     first_non_keyword_index : () : int
-        return the index of the first data item in this MFDataStructure that is not a keyword
+        return the index of the first data item in this MFDataStructure that is
+        not a keyword
 
     See Also
     --------
@@ -817,7 +848,8 @@ class MFDataStructure(object):
         self.data_item_structures = []
         self.expected_data_items = OrderedDict()
         self.shape = data_item.shape
-        if self.type == 'recarray' or self.type == 'record' or self.type == 'repeating_record':
+        if self.type == 'recarray' or self.type == 'record' or \
+                self.type == 'repeating_record':
             # record expected data for later error checking
             for data_item_name in data_item.data_items:
                 self.expected_data_items[data_item_name] = len(
@@ -834,7 +866,8 @@ class MFDataStructure(object):
 
     def get_keywords(self):
         keywords = []
-        if self.type == 'recarray' or self.type == 'record' or self.type == 'repeating_record':
+        if self.type == 'recarray' or self.type == 'record' or \
+                self.type == 'repeating_record':
             for data_item_struct in self.data_item_structures:
                 if data_item_struct.type == 'keyword':
                     if len(keywords) == 0:
@@ -857,7 +890,8 @@ class MFDataStructure(object):
                 elif len(keywords) == 0:
                     if len(data_item_struct.valid_values) > 0:
                         new_keywords = []
-                        # loop through all valid values and append to the end of each keyword tuple
+                        # loop through all valid values and append to the end
+                        # of each keyword tuple
                         for valid_value in data_item_struct.valid_values:
                             if len(keywords) == 0:
                                 new_keywords.append((valid_value,))
@@ -883,7 +917,8 @@ class MFDataStructure(object):
     def add_item(self, item, record=False):
         item_added = False
         if item.type != 'recarray' and ((item.type != 'record' and
-                                                 item.type != 'repeating_record') or record == True):
+                                         item.type != 'repeating_record') or
+           record == True):
             assert (item.name in self.expected_data_items)
             item.set_path(self.path)
             if len(self.data_item_structures) == 0:
@@ -931,9 +966,10 @@ class MFDataStructure(object):
                 return DataType.list
         if self.type == 'record' or self.type == 'repeating_record':
             record_size, repeating_data_item = self.get_record_size()
-            if (
-                    record_size >= 1 and not self.all_keywords()) or repeating_data_item:
-                if self.block_type != BlockType.single and not self.block_variable:
+            if (record_size >= 1 and not self.all_keywords()) or \
+                    repeating_data_item:
+                if self.block_type != BlockType.single and \
+                        not self.block_variable:
                     if self.block_type == BlockType.transient:
                         return DataType.list_transient
                     else:
@@ -941,12 +977,13 @@ class MFDataStructure(object):
                 else:
                     return DataType.list
             else:
-                if self.block_type != BlockType.single and not self.block_variable:
+                if self.block_type != BlockType.single and \
+                        not self.block_variable:
                     return DataType.scalar_transient
                 else:
                     return DataType.scalar
-        elif len(self.data_item_structures) > 0 and self.data_item_structures[
-            0].repeating:
+        elif len(self.data_item_structures) > 0 and \
+                self.data_item_structures[0].repeating:
             if self.data_item_structures[0].type.lower() == 'string':
                 return DataType.list
             else:
@@ -954,8 +991,8 @@ class MFDataStructure(object):
                     return DataType.array
                 else:
                     return DataType.array_transient
-        elif len(self.data_item_structures) > 0 and self.data_item_structures[
-            0].type.lower() == 'keyword':
+        elif len(self.data_item_structures) > 0 and \
+                self.data_item_structures[0].type.lower() == 'keyword':
             if self.block_type != BlockType.single and not self.block_variable:
                 return DataType.scalar_keyword_transient
             else:
@@ -996,7 +1033,8 @@ class MFDataStructure(object):
         type_string = ', '.join(type_array)
         type_header = ''
         type_footer = ''
-        if len(self.data_item_structures) > 1 or self.data_item_structures[
+        if len(self.data_item_structures) > 1 or \
+                self.data_item_structures[
             0].repeating:
             type_header = '['
             type_footer = ']'
@@ -1038,8 +1076,8 @@ class MFDataStructure(object):
                     if item.is_cellid:
                         item_type = '(integer, ...)'
                     # two keywords
-                    if len(self.data_item_structures) == 2 and first_nk_idx \
-                      is None:
+                    if len(self.data_item_structures) == 2 and \
+                            first_nk_idx is None:
                         # keyword type is string
                         item_type = 'string'
                     type_array.append('({} : {})'.format(item.name, item_type))
@@ -1100,7 +1138,8 @@ class MFBlockStructure(object):
     name : string
         block name
     path : tuple
-        tuple that describes location of block within simulation (<model>, <package>, <block>)
+        tuple that describes location of block within simulation
+        (<model>, <package>, <block>)
     model_block : bool
         true if this block is part of a model
 
@@ -1109,28 +1148,36 @@ class MFBlockStructure(object):
     name : string
         block name
     path : tuple
-        tuple that describes location of block within simulation (<model>, <package>, <block>)
+        tuple that describes location of block within simulation
+        (<model>, <package>, <block>)
     model_block : bool
         true if this block is part of a model
     data_structures : OrderedDict
-        dictionary of data items in this block, with the data item name as the key
+        dictionary of data items in this block, with the data item name as
+        the key
     block_header_structure : list
         list of data items that are part of this block's "header"
 
     Methods
     -------
     repeating() : bool
-        Returns true if more than one instance of this block can appear in a MF6 package file
+        Returns true if more than one instance of this block can appear in a
+        MF6 package file
     add_dataset(dataset : MFDataStructure, block_header_dataset : bool)
-        Adds dataset to this block, as a header dataset of block_header_dataset is true
+        Adds dataset to this block, as a header dataset of block_header_dataset
+        is true
     number_non_optional_data() : int
-        Returns the number of non-optional non-header data structures in this block
+        Returns the number of non-optional non-header data structures in
+        this block
     number_non_optional_block_header_data() : int
-        Returns the number of non-optional block header data structures in this block
+        Returns the number of non-optional block header data structures in
+        this block
     get_data_structure(path : tuple) : MFDataStructure
-        Returns the data structure in this block with name defined by path[0].  If name does not exist, returns None.
+        Returns the data structure in this block with name defined by path[0].
+        If name does not exist, returns None.
     get_all_recarrays() : list
-        Returns all data non-header data structures in this block that are of type recarray
+        Returns all data non-header data structures in this block that are of
+        type recarray
 
     See Also
     --------
@@ -1144,8 +1191,7 @@ class MFBlockStructure(object):
 
     """
 
-    def __init__(self, name, path,
-                 model_block):  # block_label, block_struct, path, ref_file_path = None):
+    def __init__(self, name, path, model_block):
         # initialize
         self.data_structures = OrderedDict()
         self.block_header_structure = []
@@ -1205,8 +1251,8 @@ class MFInputFileStructure(object):
     dfn_file : string
         the definition file used to define the structure of this input file
     path : tuple
-        path defining the location of the container of this input file structure within the overall
-        simulation structure
+        path defining the location of the container of this input file
+        structure within the overall simulation structure
     common : bool
         is this the common dfn file
     model_file : bool
@@ -1217,7 +1263,8 @@ class MFInputFileStructure(object):
     valid : boolean
         simulation structure validity
     path : tuple
-        path defining the location of this input file structure within the overall simulation structure
+        path defining the location of this input file structure within the
+        overall simulation structure
     read_as_arrays : bool
         if this input file structure is the READASARRAYS version of a package
 
@@ -1226,8 +1273,8 @@ class MFInputFileStructure(object):
     is_valid() : bool
         Checks all structures objects within the file for validity
     get_data_structure(path : string)
-        Returns a data structure of it exists, otherwise returns None.  Data structure type returned is based
-        on the tuple/list "path"
+        Returns a data structure of it exists, otherwise returns None.  Data
+        structure type returned is based on the tuple/list "path"
 
     See Also
     --------
@@ -1306,8 +1353,8 @@ class MFModelStructure(object):
     is_valid() : bool
         Checks all structures objects within the model for validity
     get_data_structure(path : string)
-        Returns a data structure of it exists, otherwise returns None.  Data structure type returned is based
-        on the tuple/list "path"
+        Returns a data structure of it exists, otherwise returns None.  Data
+        structure type returned is based on the tuple/list "path"
 
     See Also
     --------
@@ -1392,7 +1439,8 @@ class MFSimulationStructure(object):
     Methods
     -------
     process_dfn : (dfn_file : DfnFile)
-        reads in the contents of a dfn file, storing that contents in the appropriate object
+        reads in the contents of a dfn file, storing that contents in the
+        appropriate object
     add_namefile : (dfn_file : DfnFile, model_file=True : bool)
         Adds a namefile structure object to the simulation
     add_util : (dfn_file : DfnFile)
@@ -1406,11 +1454,11 @@ class MFSimulationStructure(object):
     is_valid() : bool
         Checks all structures objects within the simulation for validity
     get_data_structure(path : string)
-        Returns a data structure of it exists, otherwise returns None.  Data structure type returned is based
-        on the tuple/list "path"
+        Returns a data structure of it exists, otherwise returns None.  Data
+        structure type returned is based on the tuple/list "path"
     tag_read_as_arrays
-        Searches through all packages and tags any packages with a name that indicates they are the READASARRAYS
-        version of a package.
+        Searches through all packages and tags any packages with a name that
+        indicates they are the READASARRAYS version of a package.
 
     See Also
     --------
@@ -1436,21 +1484,26 @@ class MFSimulationStructure(object):
             self.store_common(dfn_file)
         elif dfn_file.dfn_type == DfnType.sim_name_file:
             self.add_namefile(dfn_file, False)
-        elif dfn_file.dfn_type == DfnType.sim_tdis_file or dfn_file.dfn_type == DfnType.exch_file or \
-                        dfn_file.dfn_type == DfnType.ims_file:
+        elif dfn_file.dfn_type == DfnType.sim_tdis_file or \
+                dfn_file.dfn_type == DfnType.exch_file or \
+                dfn_file.dfn_type == DfnType.ims_file:
             self.add_package(dfn_file, False)
         elif dfn_file.dfn_type == DfnType.utl:
             self.add_util(dfn_file)
-        elif dfn_file.dfn_type == DfnType.gwf_model_file or dfn_file.dfn_type == DfnType.gwf_name_file or \
-                        dfn_file.dfn_type == DfnType.gnc_file or dfn_file.dfn_type == DfnType.mvr_file:
+        elif dfn_file.dfn_type == DfnType.gwf_model_file or \
+                dfn_file.dfn_type == DfnType.gwf_name_file or \
+                dfn_file.dfn_type == DfnType.gnc_file or \
+                dfn_file.dfn_type == DfnType.mvr_file:
             gwf_ver = 'gwf{}'.format(MFStructure().get_version_string())
             if gwf_ver not in self.model_struct_objs:
                 self.add_model(gwf_ver)
             if dfn_file.dfn_type == DfnType.gwf_model_file:
                 self.model_struct_objs[gwf_ver].add_package(dfn_file,
                                                             self.common)
-            elif dfn_file.dfn_type == DfnType.gnc_file or dfn_file.dfn_type == DfnType.mvr_file:
-                # gnc and mvr files belong both on the simulation and model level
+            elif dfn_file.dfn_type == DfnType.gnc_file or \
+                    dfn_file.dfn_type == DfnType.mvr_file:
+                # gnc and mvr files belong both on the simulation and model
+                # level
                 self.model_struct_objs[gwf_ver].add_package(dfn_file,
                                                             self.common)
                 self.add_package(dfn_file, False)
@@ -1476,8 +1529,8 @@ class MFSimulationStructure(object):
         self.common = dfn_file.dict_by_name()
 
     def add_model(self, model_type):
-        self.model_struct_objs[model_type] = MFModelStructure(model_type,
-                                                              self.utl_struct_objs)
+        self.model_struct_objs[model_type] = MFModelStructure(
+            model_type, self.utl_struct_objs)
 
     def is_valid(self):
         valid = True
@@ -1536,16 +1589,18 @@ class MFSimulationStructure(object):
             if key[0:-1] in self.package_struct_objs and key[-1] == 'a':
                 package_struct.read_as_arrays = True
         for model_key, model_struct in self.model_struct_objs.items():
-            for key, package_struct in model_struct.package_struct_objs.items():
-                if key[0:-1] in model_struct.package_struct_objs and key[
-                    -1] == 'a':
+            for key, package_struct in \
+                    model_struct.package_struct_objs.items():
+                if key[0:-1] in model_struct.package_struct_objs and \
+                        key[-1] == 'a':
                     package_struct.read_as_arrays = True
 
 
 class MFStructure(object):
     """
-    Singleton class for accessing the contents of the json structure file (only one instance
-    of this class can exist, which loads the json file on initialization)
+    Singleton class for accessing the contents of the json structure file
+    (only one instance of this class can exist, which loads the json file on
+    initialization)
 
     Parameters
     ----------
@@ -1556,8 +1611,8 @@ class MFStructure(object):
     sim_struct : MFSimulationStructure
         Object containing file structure for all simulation files
     dimension_dict : dict
-        Dictionary mapping paths to dimension information to the dataitem whose dimension information
-        is being described
+        Dictionary mapping paths to dimension information to the dataitem whose
+        dimension information is being described
     """
     _instance = None
 

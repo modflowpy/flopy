@@ -70,7 +70,8 @@ def create_init_var(clean_ds_name, data_structure_name):
     else:
         init_var = '{}"{}", '.format(init_var, data_structure_name)
         if len(init_var) + len(clean_ds_name) + 2 > 79:
-            init_var = '{}\n{}{})'.format(init_var, leading_spaces, clean_ds_name)
+            init_var = '{}\n{}{})'.format(init_var, leading_spaces,
+                                          clean_ds_name)
         else:
             init_var = '{} {})'.format(init_var, clean_ds_name)
     return init_var
@@ -242,8 +243,8 @@ def create_packages():
         init_string_full = init_string_def
         # add variables to init string
         if package[1] == PackageLevel.sim_level:
-            init_string_full = '{}, simulation, add_to_package_list=True'.format(
-                init_string_full)
+            init_string_full = '{}, simulation, add_to_package_list=' \
+                               'True'.format(init_string_full)
         else:
             init_string_full = '{}, model, add_to_package_list=True'.format(
                 init_string_full)
