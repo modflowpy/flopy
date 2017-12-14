@@ -58,7 +58,7 @@ jupyter Notebooks
 -----------------------------------------------
 Instructions for using the new MODFLOW 6 capabilities in Flopy are described in the following Jupyter Notebooks.
 
-1. Tutorial of MODFLOW 6 capabilities in Flopy ([flopy6_mf6_tutorial](../examples/Notebooks/flopy6_mf6_tutorial.ipynb) Notebook)
+1. Tutorial of MODFLOW 6 capabilities in Flopy ([flopy3_mf6_tutorial](../examples/Notebooks/flopy3_mf6_tutorial.ipynb) Notebook)
 2. Building the simple lake model ([flopy3_mf6_A_simple-model](../examples/Notebooks/flopy3_mf6_A_simple-model.ipynb) Notebook)
 3. Building a complex model ([flopy3_mf6_B_complex-model](../examples/Notebooks/flopy3_mf6_B_complex-model.ipynb) Notebook)
 4. Building an LGR model (coming soon)
