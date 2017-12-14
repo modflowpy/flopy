@@ -5,9 +5,9 @@ from ...utils import binaryfile as bf
 
 class MFOutput:
     """
-    Wrapper class for Binary Arrays. This class enables directly getting slices from the binary output.
-    It is intended to be called from the __getitem__ method of the  SimulationDict() class.
-    Implemented to conserve memory.
+    Wrapper class for Binary Arrays. This class enables directly getting slices
+    from the binary output. It is intended to be called from the __getitem__
+    method of the  SimulationDict() class.  Implemented to conserve memory.
 
     Parameters
     ----------
@@ -48,8 +48,9 @@ class MFOutput:
 
 class MFOutputRequester:
     """
-        MFOutputRequest class is a helper function to enable the user to query binary data from the SimulationDict()
-        object on the fly without actually storing it in the SimulationDict() object.
+        MFOutputRequest class is a helper function to enable the user to query
+        binary data from the SimulationDict() object on the fly without
+        actually storing it in the SimulationDict() object.
 
         Parameters:
         ----------
@@ -73,13 +74,15 @@ class MFOutputRequester:
         self.path = path
         self.mfdict = mfdict
         self.dataDict = {}
-        # get the binary file locations, create a dictionary key to look them up from, store in self.dataDict
+        # get the binary file locations, create a dictionary key to look them
+        # up from, store in self.dataDict
         self._getbinaryfilepaths()
 
         # check if supplied key exists, and model grid type
         if key in self.dataDict:
             if (key[0], 'disv', 'dimensions', 'nvert') in self.mfdict:
-                self.querybinarydata = self._querybinarydata_verticed(self.mfdict, key)
+                self.querybinarydata = \
+                    self._querybinarydata_verticed(self.mfdict, key)
             elif (key[0], 'disu', 'connectiondata', 'iac') in self.mfdict:
                 self.querybinarydata = self._querybinarydata_unstructured(key)
             else:
@@ -93,7 +96,8 @@ class MFOutputRequester:
             raise KeyError('Invalid key {}'.format(key))
 
     def _querybinarydata(self, key):
-        # Basic definition to get output from modflow binary files for simulations using a structured grid
+        # Basic definition to get output from modflow binary files for
+        # simulations using a structured grid
         path = self.dataDict[key]
         bintype = key[1]
 
@@ -106,7 +110,8 @@ class MFOutputRequester:
             return np.array(bindata.get_alldata())
 
     def _querybinarydata_verticed(self, mfdict, key):
-        # Basic definition to get output data from binary output files for simulations that define grid by vertices
+        # Basic definition to get output data from binary output files for
+        # simulations that define grid by vertices
         path = self.dataDict[key]
         bintype = key[1]
 
@@ -115,8 +120,8 @@ class MFOutputRequester:
         if bintype == 'CBC':
             if key[-1] == 'FLOW-JA-FACE':
                 data = np.array(bindata.get_data(text=key[-1]))
-                # todo: uncomment line to remove unnecessary dimensions from data
-                # data.shape = (len(times), -1)
+                # todo: uncomment line to remove unnecessary dimensions from
+                # data data.shape = (len(times), -1)
                 return data
 
             else:
@@ -146,13 +151,6 @@ class MFOutputRequester:
 
         if key[-1] == "FLOW-JA-FACE":
             return data
-            # todo: uncomment this block to return data in a more reasonable format
-            # iac = np.array(self.mfdict[(key[0], 'disu', 'connectiondata', 'iac')].get_data())
-            # dataja = []
-            # for ts in data:
-            #     dataja.append(CU.convert_to_unstruct_jagged_array(ts, iac))
-
-            # return dataja
 
         else:
             return data
@@ -163,25 +161,29 @@ class MFOutputRequester:
             try:
                 return bf.CellBudgetFile(path, precision='double')
             except AssertionError:
-                raise AssertionError('{} does not exist'.format(self.dataDict[key]))
+                raise AssertionError('{} does not '
+                                     'exist'.format(self.dataDict[key]))
 
         elif bintype == 'HDS':
             try:
                 return bf.HeadFile(path, precision='double')
             except AssertionError:
-                raise AssertionError('{} does not exist'.format(self.dataDict[key]))
+                raise AssertionError('{} does not '
+                                     'exist'.format(self.dataDict[key]))
 
         elif bintype == 'DDN':
             try:
                 return bf.HeadFile(path, text='drawdown', precision='double')
             except AssertionError:
-                raise AssertionError('{} does not exist'.format(self.dataDict[key]))
+                raise AssertionError('{} does not '
+                                     'exist'.format(self.dataDict[key]))
 
         elif bintype == 'UCN':
             try:
                 return bf.UcnFile(path, precision="single")
             except AssertionError:
-                raise AssertionError('{} does not exist'.format(self.dataDict[key]))
+                raise AssertionError('{} does not '
+                                     'exist'.format(self.dataDict[key]))
 
         else:
             raise AssertionError()
@@ -197,14 +199,20 @@ class MFOutputRequester:
 
         Returns
         -------
-        information defining specifice vertices for all model cells to be added to xarray as coordinates.
+        information defining specifice vertices for all model cells to be added
+        to xarray as coordinates.
         cellid: (list) corresponds to the modflow CELL2d cell number
-        xcyc: (n x 2) dimensional Pandas object of tuples defining the CELL2d center coordinates
+        xcyc: (n x 2) dimensional Pandas object of tuples defining the CELL2d
+        center coordinates
         nverts: (list) number of xy vertices corresponding to a cell
-        xv: (n x nverts) dimensional Pandas object of tuples. Contains x vertices for a cell
-        yv: (n x nverts) dimensional Pandas object of tuples. Contains y vertices for a cell
-        topv: (n x nlayers) dimensional Pandas object of cell top elevations coresponding to a row column location
-        botmv: (n x nlayers) dimensional Pandas object of cell bottom elevations coresponding to a row column location
+        xv: (n x nverts) dimensional Pandas object of tuples. Contains x
+        vertices for a cell
+        yv: (n x nverts) dimensional Pandas object of tuples. Contains y
+        vertices for a cell
+        topv: (n x nlayers) dimensional Pandas object of cell top elevations
+        coresponding to a row column location
+        botmv: (n x nlayers) dimensional Pandas object of cell bottom
+        elevations coresponding to a row column location
         """
 
         try:
@@ -260,27 +268,35 @@ class MFOutputRequester:
             self.modelpathdict[i] = self.path.get_model_path(i)
 
         self.binarypathdict = {}
-        # check output control to see if a binary file is supposed to exist. Get path to that file
+        # check output control to see if a binary file is supposed to exist.
+        # Get path to that file
         for i in self.modelpathdict:
             if (i, 'oc', 'options', 'budget_filerecord') in self.mfdict:
                 cbc = self.mfdict[(i, 'oc', 'options', 'budget_filerecord')]
                 if cbc.get_data() is not None:
-                    self.binarypathdict[(i, 'CBC')] = os.path.join(self.modelpathdict[i], cbc.get_data()[0][0])
+                    self.binarypathdict[(i, 'CBC')] = \
+                        os.path.join(self.modelpathdict[i],
+                                     cbc.get_data()[0][0])
 
             if (i, 'oc', 'options', 'head_filerecord') in self.mfdict:
                 hds = self.mfdict[(i, 'oc', 'options', 'head_filerecord')]
                 if hds.get_data() is not None:
-                    self.binarypathdict[(i, 'HDS')] = os.path.join(self.modelpathdict[i], hds.get_data()[0][0])
+                    self.binarypathdict[(i, 'HDS')] = \
+                        os.path.join(self.modelpathdict[i],
+                                     hds.get_data()[0][0])
 
             if (i, 'oc', 'options', 'drawdown_filerecord') in self.mfdict:
                 ddn = self.mfdict[(i, 'oc', 'options', 'drawdown_filerecord')]
                 if ddn.get_data() is not None:
-                    self.binarypathdict[(i, 'DDN')] = os.path.join(self.modelpathdict[i], ddn.get_data()[0][0])
+                    self.binarypathdict[(i, 'DDN')] = \
+                        os.path.join(self.modelpathdict[i],
+                                     ddn.get_data()[0][0])
 
         self._setbinarykeys(self.binarypathdict)
 
     def _setbinarykeys(self, binarypathdict):
-        # check that if a binary file is supposed to exist, it does, and create a dictionary key to access that data
+        # check that if a binary file is supposed to exist, it does, and create
+        # a dictionary key to access that data
         for key in binarypathdict:
             path = binarypathdict[key]
             if key[1] == 'CBC':
@@ -306,7 +322,8 @@ class MFOutputRequester:
 
             elif key[1] == 'DDN':
                 try:
-                    readddn = bf.HeadFile(path, text='drawdown', precision='double')
+                    readddn = bf.HeadFile(path, text='drawdown',
+                                          precision='double')
                     self.dataDict[(key[0], key[1], 'DRAWDOWN')] = path
                     readddn.close()
 
@@ -338,7 +355,8 @@ class MFOutputRequester:
 
 
 def _reshape_binary_data(data, dtype=None):
-    # removes unneccesary dimensions from data returned by flopy.utils.binaryfile
+    # removes unneccesary dimensions from data returned by
+    # flopy.utils.binaryfile
     time = len(data)
     data = np.array(data)
     if dtype is None:
