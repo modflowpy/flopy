@@ -80,8 +80,7 @@ class MFModel(PackageContainer):
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
                                                        model_name,
-                                                       model_nam_file,
-                                                       ims_file_name)
+                                                       model_nam_file)
         else:
             self.structure = structure
         self.simulation_data = simulation.simulation_data

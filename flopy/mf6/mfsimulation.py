@@ -87,19 +87,18 @@ class SimulationDict(collections.OrderedDict):
 
     def output_keys(self, print_keys=True):
         # get keys to request binary output
-        x = binaryfile_utils.MFOutputRequester.getkeys(
-            collections.OrderedDict(self), self._path, print_keys=print_keys)
+        x = binaryfile_utils.MFOutputRequester.getkeys(self, self._path,
+                                                       print_keys=print_keys)
         return [key for key in x.dataDict]
 
     def input_keys(self):
         # get keys to request input ie. package data
-        for key in collections.OrderedDict(self):
+        for key in self:
             print(key)
 
     def observation_keys(self):
         # get keys to request observation file output
-        mfobservation.MFObservationRequester.getkeys(
-            collections.OrderedDict(self), self._path)
+        mfobservation.MFObservationRequester.getkeys(self, self._path)
 
     def keys(self):
         # overrides the built in keys to print all keys, input and output
@@ -831,8 +830,7 @@ class MFSimulation(PackageContainer):
             print(excpt_str)
             raise mfstructure.MFFileParseException(excpt_str)
 
-    def register_model(self, model, model_type, model_name, model_namefile,
-                       ims_file_name):
+    def register_model(self, model, model_type, model_name, model_namefile):
         """
         add a model to the simulation.
 
