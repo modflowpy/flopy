@@ -349,11 +349,11 @@ class ModflowSfr2(Package):
                 self.reach_data[n] = reach_data[n]
 
         # assign node numbers if there are none (structured grid)
-        if np.diff(
-                self.reach_data.node).max() == 0 and 'DIS' in self.parent.get_package_list():
+        if np.diff(self.reach_data.node).max() == 0 and self.parent.has_package('DIS'):
             # first make kij list
             lrc = self.reach_data[['k', 'i', 'j']].copy()
             lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
+
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
         self.reach_data.sort(order=['iseg', 'ireach'])
