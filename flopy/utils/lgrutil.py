@@ -160,7 +160,7 @@ class Lgr(object):
 
         # parent cell to right
         if (jc + 1) % self.ncpp == 0:
-            if jp + 1 < self.parent.dis.ncol - 1:
+            if jp + 1 < self.parent.dis.ncol:
                 if self.ibndp[kp, ip, jp + 1] != 0:
                     parentlist.append(((kp, ip, jp + 1), 1))
 
