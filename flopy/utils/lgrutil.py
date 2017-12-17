@@ -190,12 +190,13 @@ class Lgr(object):
         """
         Get the list of parent/child connections
 
-        <cellidm1> <cellidm2> <ihc> <cl1> <cl2> <hwva>
+        <cellidm1> <cellidm2> <ihc> <cl1> <cl2> <hwva> <angledegx>
 
         Returns
         -------
             exglist : list
                 list of connections between parent and child
+
         """
 
         exglist = []
