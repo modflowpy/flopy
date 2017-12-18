@@ -15,7 +15,13 @@ Instructions for making a FloPy release
 
 ## Build USGS release notes
 
-1.  Run pandoc from the terminal in the root directory to create USGS release notes using:
+1.  Manually run pre-commit.py to update version information using:
+
+    ```
+    python pre-commit.py
+    ```
+
+2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
 
     ```
     pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
