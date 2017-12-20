@@ -313,6 +313,28 @@ class MFBlock(object):
             for key, dataitem in block_header.data_items:
                 dataitem.new_simulation(self._simulation_data)
 
+    def set_model_relative_path(self, model_ws):
+        for key, dataset in self.datasets.items():
+            if dataset.structure.file_data:
+                file_data = dataset.get_data()
+                if file_data:
+                    # update file path location for all file paths
+                    for file_line in file_data:
+                        old_file_path, old_file_name = \
+                                os.path.split(file_line[0])
+                        file_line[0] = os.path.join(model_ws, old_file_name)
+        for block_header in self.block_headers:
+            for dataset in block_header.data_items:
+                if dataset.structure.file_data:
+                    file_data = dataset.get_data()
+                    if file_data:
+                        # update file path location for all file paths
+                        for file_line in file_data:
+                            old_file_path, old_file_name = \
+                                os.path.split(file_line[1])
+                            file_line[1] = os.path.join(model_ws,
+                                                        old_file_name)
+
     def add_dataset(self, dataset_struct, data, var_path):
         self.datasets[var_path[-1]] = self.data_factory(self._simulation_data,
                                                         dataset_struct, True,
@@ -880,10 +902,10 @@ class MFPackage(PackageContainer):
             self.filename = MFFileMgmt.string_to_file_path(filename)
 
         self.path, \
-        self.structure = model_or_sim.register_package(self,
-                                                       add_to_package_list,
-                                                       pname is None, filename
-                                                       is None)
+            self.structure = model_or_sim.register_package(self,
+                                                           add_to_package_list,
+                                                           pname is None,
+                                                           filename is None)
         self.dimensions = self.create_package_dimensions()
 
         if self.path is None:
@@ -950,6 +972,10 @@ class MFPackage(PackageContainer):
         except_message = 'Unable to find variable "{}" in package ' \
                          '"{}".'.format(var_name, self.package_type)
         raise mfstructure.MFDataException(except_message)
+
+    def set_model_relative_path(self, model_ws):
+        for key, block in self.blocks.items():
+            block.set_model_relative_path(model_ws)
 
     def load(self, strict=True):
         # open file
@@ -1106,7 +1132,7 @@ class MFPackage(PackageContainer):
             model_dims = [modeldimensions.ModelDimensions(
                 self.path[0], self._simulation_data)]
         else:
-            # this is a simulation file that does not coorespond to a specific
+            # this is a simulation file that does not correspond to a specific
             # model.  figure out which model to use and return a dimensions
             # object for that model
             if self.structure.file_type == 'gwfgwf':

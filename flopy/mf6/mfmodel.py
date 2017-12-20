@@ -2,7 +2,7 @@
 mfmodel module.  Contains the MFModel class
 
 """
-
+import os
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfpackage import MFPackage
 from .modflow import mfgwfnam
@@ -56,7 +56,7 @@ class MFModel(PackageContainer):
         a class method that loads a model from files
     write
         writes the simulation to files
-    set_model_path : (path : string)
+    set_model_relative_path : (path : string)
         sets the file path to the model folder and updates all model file paths
     is_valid : () : boolean
         checks the validity of the model and all of its packages
@@ -76,13 +76,14 @@ class MFModel(PackageContainer):
                  exe_name='mf6.exe', add_to_simulation = True,
                  structure = None, model_rel_path='.', **kwargs):
         super(MFModel, self).__init__(simulation.simulation_data, model_name)
-        self.set_model_path(model_rel_path)
+        self.set_model_relative_path(model_rel_path)
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
                                                        model_name,
                                                        model_nam_file)
         else:
             self.structure = structure
+        self.simulation = simulation
         self.simulation_data = simulation.simulation_data
         self.name = model_name
         self.exe_name = exe_name
@@ -280,9 +281,11 @@ class MFModel(PackageContainer):
 
         return True
 
-    def set_model_path(self, model_ws):
+    def set_model_relative_path(self, model_ws):
         """
-        sets the file path to the model folder and updates all model file paths
+        sets the file path to the model folder relative to the simulation
+        folder and updates all model file paths, placing them in the model
+        folder
 
         Parameters
         ----------
@@ -295,25 +298,43 @@ class MFModel(PackageContainer):
         Examples
         --------
         """
+        # update path in the file manager
+        file_mgr = self.simulation_data.mfpath
+        path = file_mgr.string_to_file_path(model_ws)
+        file_mgr.model_relative_path[self.name] = path
+        file_mgr.set_last_accessed_path()
 
-        self.simulation_data.mfpath.set_model_relative_path(self.name,
-                                                            model_ws)
+        if model_ws and model_ws != '.':
+            # update model name file location in simulation name file
+            model_nam_path = os.path.join(path, self.name)
+            models = self.simulation.name_file.modelrecarray
+            models_data = models.get_data()
+            for index, entry in enumerate(models_data):
+                old_model_path, old_model_file_name = os.path.split(entry[1])
+                old_model_base_name = os.path.splitext(old_model_file_name)[0]
+                if old_model_base_name.lower() == self.name.lower() or \
+                        self.name == entry[2]:
+                    models_data[index][1] = os.path.join(path, old_model_file_name)
+                    break
+            models.set_data(models_data)
 
-    def set_model_grid(self, model_grid):
-        """
-        sets the model grid to model_grid and creates the appropriate
-        dis package
+            # update listing file location in model name file
+            list_file = self.name_file.list.get_data()
+            if list_file:
+                path, list_file_name = os.path.split(list_file)
+                self.name_file.list.set_data(os.path.join(path, list_file_name))
 
-        Parameters
-        ----------
-        model_grid : ModelGrid
-            a model grid
-        """
-        # check for conflicts
+            # update package file locations in model name file
+            packages = self.name_file.packagerecarray
+            packages_data = packages.get_data()
+            for index, entry in enumerate(packages_data):
+                old_package_path, old_package_name = os.path.split(entry[1])
+                packages_data[index][1] = os.path.join(path, old_package_name)
+            packages.set_data(packages_data)
 
-        # build dis package
-
-        # add dis package
+            # update files referenced from within packages
+            for package in self.packages:
+                package.set_model_relative_path(model_ws)
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):

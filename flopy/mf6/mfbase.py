@@ -69,11 +69,6 @@ class MFFileMgmt(object):
     def python_path(self):
         return self._python_path
 
-    def set_model_relative_path(self, model, path):
-        path = self.string_to_file_path(path)
-        self.model_relative_path[model] = path
-        self.set_last_accessed_path()
-
     def copy_files(self, copy_relative_only=True):
         num_files_copied = 0
         if self._last_loaded_sim_path is not None:
@@ -153,7 +148,10 @@ class MFFileMgmt(object):
             return os.path.join(self._last_loaded_sim_path,
                                 self._last_loaded_model_relative_path[key])
         else:
-            return os.path.join(self._sim_path, self.model_relative_path[key])
+            if key in self.model_relative_path:
+                return os.path.join(self._sim_path, self.model_relative_path[key])
+            else:
+                return self._sim_path
 
     def get_sim_path(self, last_loaded_path=False):
         if last_loaded_path:
@@ -275,7 +273,7 @@ class PackageContainer(object):
         package_utl_abbr = 'utl{}'.format(package_type)
         base_path, tail = os.path.split(os.path.realpath(__file__))
         package_path = os.path.join(base_path, 'modflow')
-
+        package_list = []
         # iterate through python files
         package_file_paths = glob.glob(os.path.join(package_path, "*.py"))
         for package_file_path in package_file_paths:
@@ -297,11 +295,17 @@ class PackageContainer(object):
                 if not value or not inspect.isclass(value) or not \
                   hasattr(value, 'package_abbr'):
                     continue
-                # check package type
-                if value.package_abbr == package_abbr or \
-                  value.package_abbr == package_utl_abbr:
-                    return value
-        return None
+                if package_type is None:
+                    package_list.append(value)
+                else:
+                    # check package type
+                    if value.package_abbr == package_abbr or \
+                      value.package_abbr == package_utl_abbr:
+                        return value
+        if package_type is None:
+            return package_list
+        else:
+            return None
 
     def _add_package(self, package, path):
         # put in packages list and update lookup dictionaries

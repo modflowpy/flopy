@@ -1821,9 +1821,9 @@ class MFData(object):
         sim_data.mfdata[self._path] = self
 
     def __getattribute__(self, name):
-        if name == 'array':
+         if name == 'array':
             return self.get_data(apply_mult=True)
-        return object.__getattribute__(self, name)
+         return object.__getattribute__(self, name)
 
     def __repr__(self):
         return repr(self._get_storage_obj())
