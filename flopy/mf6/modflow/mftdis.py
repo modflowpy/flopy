@@ -34,6 +34,25 @@ class ModflowTdis(mfpackage.MFPackage):
     tdisrecarray = ListTemplateGenerator(('tdis', 'perioddata', 
                                           'tdisrecarray'))
     package_abbr = "tdis"
+    package_type = "tdis"
+    dfn = [["block options", "name time_units", "type string", 
+            "reader urword", "optional true"],
+           ["block options", "name start_date_time", "type string", 
+            "reader urword", "optional true"],
+           ["block dimensions", "name nper", "type integer", 
+            "reader urword", "optional false"],
+           ["block perioddata", "name tdisrecarray", 
+            "type recarray perlen nstp tsmult", "reader urword", 
+            "optional false"],
+           ["block perioddata", "name perlen", "type double precision", 
+            "in_record true", "tagged false", "reader urword", 
+            "optional false"],
+           ["block perioddata", "name nstp", "type integer", 
+            "in_record true", "tagged false", "reader urword", 
+            "optional false"],
+           ["block perioddata", "name tsmult", "type double precision", 
+            "in_record true", "tagged false", "reader urword", 
+            "optional false"]]
 
     def __init__(self, simulation, add_to_package_list=True, time_units=None,
                  start_date_time=None, nper=None, tdisrecarray=None,

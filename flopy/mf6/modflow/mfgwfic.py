@@ -23,6 +23,9 @@ class ModflowGwfic(mfpackage.MFPackage):
     """
     strt = ArrayTemplateGenerator(('gwf6', 'ic', 'griddata', 'strt'))
     package_abbr = "gwfic"
+    package_type = "ic"
+    dfn = [["block griddata", "name strt", "type double precision", 
+            "shape (nodes)", "reader readarray"]]
 
     def __init__(self, model, add_to_package_list=True, strt=None, fname=None,
                  pname=None, parent_file=None):

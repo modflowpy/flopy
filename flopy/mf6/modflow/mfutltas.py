@@ -31,6 +31,37 @@ class ModflowUtltas(mfpackage.MFPackage):
                                         'sfacrecord'))
     tas_array = ArrayTemplateGenerator(('tas', 'time', 'tas_array'))
     package_abbr = "utltas"
+    package_type = "tas"
+    dfn = [["block attributes", "name time_series_namerecord", 
+            "type record name time_series_name", "shape", "reader urword", 
+            "tagged false", "optional false"],
+           ["block attributes", "name name", "type keyword", "shape", 
+            "reader urword", "optional false"],
+           ["block attributes", "name time_series_name", "type string", 
+            "shape any1d", "tagged false", "reader urword", "optional false"],
+           ["block attributes", "name interpolation_methodrecord", 
+            "type record method interpolation_method", "shape", 
+            "reader urword", "tagged false", "optional true"],
+           ["block attributes", "name method", "type keyword", "shape", 
+            "reader urword", "optional false"],
+           ["block attributes", "name interpolation_method", "type string", 
+            "valid stepwise linear linearend", "shape", "tagged false", 
+            "reader urword", "optional false"],
+           ["block attributes", "name sfacrecord", 
+            "type record sfac sfacval", "shape", "reader urword", 
+            "tagged true", "optional true"],
+           ["block attributes", "name sfac", "type keyword", "shape", 
+            "reader urword", "optional false"],
+           ["block attributes", "name sfacval", "type double precision", 
+            "shape time_series_name", "tagged false", "reader urword", 
+            "optional false"],
+           ["block time", "name time_from_model_start", 
+            "type double precision", "block_variable True", "in_record true", 
+            "tagged false", "shape", "tagged false", "valid", "reader urword", 
+            "optional false"],
+           ["block time", "name tas_array", "type double precision", 
+            "tagged false", "just_data true", "shape (unknown)", 
+            "reader readarray", "optional false", "repeating true"]]
 
     def __init__(self, model, add_to_package_list=True,
                  time_series_namerecord=None, interpolation_methodrecord=None,

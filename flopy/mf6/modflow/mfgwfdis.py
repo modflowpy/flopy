@@ -67,6 +67,33 @@ class ModflowGwfdis(mfpackage.MFPackage):
     idomain = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 
                                       'idomain'))
     package_abbr = "gwfdis"
+    package_type = "dis"
+    dfn = [["block options", "name length_units", "type string", 
+            "reader urword", "optional true"],
+           ["block options", "name nogrb", "type keyword", "reader urword", 
+            "optional true"],
+           ["block options", "name xorigin", "type double precision", 
+            "reader urword", "optional true"],
+           ["block options", "name yorigin", "type double precision", 
+            "reader urword", "optional true"],
+           ["block options", "name angrot", "type double precision", 
+            "reader urword", "optional true"],
+           ["block dimensions", "name nlay", "type integer", 
+            "reader urword", "optional false"],
+           ["block dimensions", "name nrow", "type integer", 
+            "reader urword", "optional false"],
+           ["block dimensions", "name ncol", "type integer", 
+            "reader urword", "optional false"],
+           ["block griddata", "name delr", "type double precision", 
+            "shape (ncol)", "reader readarray"],
+           ["block griddata", "name delc", "type double precision", 
+            "shape (nrow)", "reader readarray"],
+           ["block griddata", "name top", "type double precision", 
+            "shape (ncol, nrow)", "reader readarray"],
+           ["block griddata", "name botm", "type double precision", 
+            "shape (ncol, nrow, nlay)", "reader readarray"],
+           ["block griddata", "name idomain", "type integer", 
+            "shape (ncol, nrow, nlay)", "reader readarray", "optional true"]]
 
     def __init__(self, model, add_to_package_list=True, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,

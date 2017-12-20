@@ -56,6 +56,31 @@ class ModflowGwfnam(mfpackage.MFPackage):
     packagerecarray = ListTemplateGenerator(('gwf6', 'nam', 'packages', 
                                              'packagerecarray'))
     package_abbr = "gwfnam"
+    package_type = "nam"
+    dfn = [["block options", "name list", "type string", "reader urword", 
+            "optional true"],
+           ["block options", "name print_input", "type keyword", 
+            "reader urword", "optional true"],
+           ["block options", "name print_flows", "type keyword", 
+            "reader urword", "optional true"],
+           ["block options", "name save_flows", "type keyword", 
+            "reader urword", "optional true"],
+           ["block options", "name newtonoptions", 
+            "type record newton under_relaxation", "reader urword", 
+            "optional true"],
+           ["block options", "name newton", "in_record true", 
+            "type keyword", "reader urword"],
+           ["block options", "name under_relaxation", "in_record true", 
+            "type keyword", "reader urword", "optional true"],
+           ["block packages", "name packagerecarray", 
+            "type recarray ftype fname pname", "reader urword", 
+            "optional false"],
+           ["block packages", "name ftype", "in_record true", "type string", 
+            "ucase true", "tagged false", "reader urword"],
+           ["block packages", "name fname", "in_record true", "type string", 
+            "preserve_case true", "tagged false", "reader urword"],
+           ["block packages", "name pname", "in_record true", "type string", 
+            "tagged false", "reader urword", "optional true"]]
 
     def __init__(self, model, add_to_package_list=True, list=None,
                  print_input=None, print_flows=None, save_flows=None,

@@ -44,6 +44,24 @@ class ModflowGwfsto(mfpackage.MFPackage):
     ss = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
     sy = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
     package_abbr = "gwfsto"
+    package_type = "sto"
+    dfn = [["block options", "name save_flows", "type keyword", 
+            "reader urword", "optional true"],
+           ["block options", "name storagecoefficient", "type keyword", 
+            "reader urword", "optional true"],
+           ["block griddata", "name iconvert", "type integer", 
+            "shape (nodes)", "valid", "reader readarray", "optional false"],
+           ["block griddata", "name ss", "type double precision", 
+            "shape (nodes)", "valid", "reader readarray", "optional false"],
+           ["block griddata", "name sy", "type double precision", 
+            "shape (nodes)", "valid", "reader readarray", "optional false"],
+           ["block period", "name iper", "type integer", 
+            "block_variable True", "in_record true", "tagged false", "shape", 
+            "valid", "reader urword", "optional false"],
+           ["block period", "name steady-state", "type keyword", "shape", 
+            "valid", "reader urword", "optional true"],
+           ["block period", "name transient", "type keyword", "shape", 
+            "valid", "reader urword", "optional true"]]
 
     def __init__(self, model, add_to_package_list=True, save_flows=None,
                  storagecoefficient=None, iconvert=None, ss=None, sy=None,

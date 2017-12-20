@@ -3,6 +3,7 @@ import numpy as np
 from textwrap import TextWrapper
 from copy import deepcopy
 
+
 def find_keyword(arr_line, keyword_dict):
     # convert to lower case
     arr_line_lower = []

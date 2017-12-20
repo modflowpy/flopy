@@ -266,7 +266,7 @@ class MFOutputRequester:
         self.modelpathdict = {}
         for i in self.path.model_relative_path:
             self.modelpathdict[i] = self.path.get_model_path(i)
-
+        sim_path = self.path.get_sim_path()
         self.binarypathdict = {}
         # check output control to see if a binary file is supposed to exist.
         # Get path to that file
@@ -275,22 +275,19 @@ class MFOutputRequester:
                 cbc = self.mfdict[(i, 'oc', 'options', 'budget_filerecord')]
                 if cbc.get_data() is not None:
                     self.binarypathdict[(i, 'CBC')] = \
-                        os.path.join(self.modelpathdict[i],
-                                     cbc.get_data()[0][0])
+                        os.path.join(sim_path, cbc.get_data()[0][0])
 
             if (i, 'oc', 'options', 'head_filerecord') in self.mfdict:
                 hds = self.mfdict[(i, 'oc', 'options', 'head_filerecord')]
                 if hds.get_data() is not None:
                     self.binarypathdict[(i, 'HDS')] = \
-                        os.path.join(self.modelpathdict[i],
-                                     hds.get_data()[0][0])
+                        os.path.join(sim_path, hds.get_data()[0][0])
 
             if (i, 'oc', 'options', 'drawdown_filerecord') in self.mfdict:
                 ddn = self.mfdict[(i, 'oc', 'options', 'drawdown_filerecord')]
                 if ddn.get_data() is not None:
                     self.binarypathdict[(i, 'DDN')] = \
-                        os.path.join(self.modelpathdict[i],
-                                     ddn.get_data()[0][0])
+                        os.path.join(sim_path, ddn.get_data()[0][0])
 
         self._setbinarykeys(self.binarypathdict)
 

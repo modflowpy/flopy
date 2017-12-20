@@ -35,6 +35,23 @@ class ModflowUtltab(mfpackage.MFPackage):
     laktabrecarray = ListTemplateGenerator(('tab', 'table', 
                                             'laktabrecarray'))
     package_abbr = "utltab"
+    package_type = "tab"
+    dfn = [["block dimensions", "name nrow", "type integer", 
+            "reader urword", "optional false"],
+           ["block dimensions", "name ncol", "type integer", 
+            "reader urword", "optional false"],
+           ["block table", "name laktabrecarray", 
+            "type recarray stage volume sarea barea", "shape (nrow)", 
+            "reader urword"],
+           ["block table", "name stage", "type double precision", "shape", 
+            "tagged false", "in_record true", "reader urword"],
+           ["block table", "name volume", "type double precision", "shape", 
+            "tagged false", "in_record true", "reader urword"],
+           ["block table", "name sarea", "type double precision", "shape", 
+            "tagged false", "in_record true", "reader urword"],
+           ["block table", "name barea", "type double precision", "shape", 
+            "tagged false", "in_record true", "reader urword", 
+            "optional true"]]
 
     def __init__(self, model, add_to_package_list=True, nrow=None, ncol=None,
                  laktabrecarray=None, fname=None, pname=None,

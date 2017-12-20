@@ -69,6 +69,30 @@ class ModflowGwfgnc(mfpackage.MFPackage):
     gncdatarecarray = ListTemplateGenerator(('gwf6', 'gnc', 'gncdata', 
                                              'gncdatarecarray'))
     package_abbr = "gwfgnc"
+    package_type = "gnc"
+    dfn = [["block options", "name print_input", "type keyword", 
+            "reader urword", "optional true"],
+           ["block options", "name print_flows", "type keyword", 
+            "reader urword", "optional true"],
+           ["block options", "name explicit", "type keyword", "tagged true", 
+            "reader urword", "optional true"],
+           ["block dimensions", "name numgnc", "type integer", 
+            "reader urword", "optional false"],
+           ["block dimensions", "name numalphaj", "type integer", 
+            "reader urword", "optional false"],
+           ["block gncdata", "name gncdatarecarray", 
+            "type recarray cellidn cellidm cellidsj alphasj", 
+            "shape (maxbound)", "reader urword"],
+           ["block gncdata", "name cellidn", "type integer", "shape", 
+            "tagged false", "in_record true", "reader urword"],
+           ["block gncdata", "name cellidm", "type integer", "shape", 
+            "tagged false", "in_record true", "reader urword"],
+           ["block gncdata", "name cellidsj", "type integer", 
+            "shape (numalphaj)", "tagged false", "in_record true", 
+            "reader urword"],
+           ["block gncdata", "name alphasj", "type double precision", 
+            "shape (numalphaj)", "tagged false", "in_record true", 
+            "reader urword"]]
 
     def __init__(self, model, add_to_package_list=True, print_input=None,
                  print_flows=None, explicit=None, numgnc=None, numalphaj=None,

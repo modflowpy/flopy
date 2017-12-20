@@ -45,6 +45,25 @@ class ModflowGwfhfb(mfpackage.MFPackage):
     hfbrecarray = ListTemplateGenerator(('gwf6', 'hfb', 'period', 
                                          'hfbrecarray'))
     package_abbr = "gwfhfb"
+    package_type = "hfb"
+    dfn = [["block options", "name print_input", "type keyword", 
+            "reader urword", "optional true"],
+           ["block dimensions", "name maxhfb", "type integer", 
+            "reader urword", "optional false"],
+           ["block period", "name iper", "type integer", 
+            "block_variable True", "in_record true", "tagged false", "shape", 
+            "valid", "reader urword", "optional false"],
+           ["block period", "name hfbrecarray", 
+            "type recarray cellid1 cellid2 hydchr", "shape (maxhfb)", 
+            "reader urword"],
+           ["block period", "name cellid1", "type integer", 
+            "shape (ncelldim)", "tagged false", "in_record true", 
+            "reader urword"],
+           ["block period", "name cellid2", "type integer", 
+            "shape (ncelldim)", "tagged false", "in_record true", 
+            "reader urword"],
+           ["block period", "name hydchr", "type double precision", "shape", 
+            "tagged false", "in_record true", "reader urword"]]
 
     def __init__(self, model, add_to_package_list=True, print_input=None,
                  maxhfb=None, hfbrecarray=None, fname=None, pname=None,
