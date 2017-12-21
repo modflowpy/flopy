@@ -1,3 +1,5 @@
+# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
+# mf6/utils/createpackages.py
 from .. import mfpackage
 from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
 

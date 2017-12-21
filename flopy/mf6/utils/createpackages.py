@@ -338,10 +338,11 @@ def create_packages():
                              'add_to_package_list, parent_file)        \n\n' \
                              '        # set up variables'.format(
             parent_init_string, init_var, package_short_name, spaces)
-
+        comment_string = '# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE ' \
+                         'MUST BE CREATED BY\n# mf6/utils/createpackages.py'
         # assemble full package string
-        package_string = '{}\n\n\n{}{}\n{}\n{}\n\n{}{}\n{}\n'.format(
-            import_string, class_def_string,
+        package_string = '{}\n{}\n\n\n{}{}\n{}\n{}\n\n{}{}\n{}\n'.format(
+            comment_string, import_string, class_def_string,
             doc_string.get_doc_string(), class_var_string, dfn_string,
             init_string_full, parent_init_string, init_vars)
 
