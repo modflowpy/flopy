@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from ..utils.flopy_io import _pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
-from ..utils import Util2d
+from ..utils import Util2d, Transient2d
 
 
 class ModflowUzf1(Package):
@@ -436,6 +436,16 @@ class ModflowUzf1(Package):
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
+        self.finf = Transient2d(model, (nrow, ncol), np.float32,
+                                finf, name='finf')
+        if ietflg > 0:
+            self.pet = Transient2d(model, (nrow, ncol), np.float32,
+                                   pet, name='pet')
+            self.extdp = Transient2d(model, (nrow, ncol), np.float32,
+                                    extdp, name='extdp')
+            self.extwc = Transient2d(model, (nrow, ncol), np.int,
+                                    extwc, name='extwc')
+        '''
         self.finf = []
         for i, a in enumerate(self._2list(finf)):
             b = Util2d(model, (nrow, ncol), np.float32, a,
@@ -464,6 +474,7 @@ class ModflowUzf1(Package):
                     b = Util2d(model, (nrow, ncol), np.float32, a,
                                name='extwc_' + str(i + 1))
                     self.extwc.append(b)
+        '''
         self.parent.add_package(self)
 
     def _2list(self, arg):
@@ -590,6 +601,25 @@ class ModflowUzf1(Package):
                     for v in values:
                         f_uzf.write('{:10d}'.format(v))
                     f_uzf.write('{}\n'.format(comment))
+
+
+        def write_transient(name):
+            invar, var = self.__dict__[name].get_kper_entry(n)
+
+            comment = ' #{} for stress period '.format(name) + str(n + 1)
+            f_uzf.write('{0:10d}{1:20s}\n'.format(invar, comment))
+            if (invar >= 0):
+                f_uzf.write(var)
+
+        for n in range(nper):
+            write_transient('finf')
+            if self.ietflg > 0:
+                write_transient('pet')
+                write_transient('extdp')
+                if self.iuzfopt > 0:
+                    write_transient('extwc')
+
+        '''
         for n in range(nper):
             comment = ' #NUZF1 for stress period ' + str(n + 1)
             if n < len(self.finf):
@@ -625,6 +655,7 @@ class ModflowUzf1(Package):
                     f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf4, comment))
                     if n < len(self.extwc):
                         f_uzf.write(self.extwc[n].get_file_entry())
+        '''
         f_uzf.close()
 
     @staticmethod
@@ -682,18 +713,18 @@ class ModflowUzf1(Package):
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
         ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
 
-        arrays = {'finf': [],
+        arrays = {'finf': {},
                   # datasets 10, 12, 14, 16 are lists of util2d arrays
-                  'pet': [],
-                  'extdp': [],
-                  'extwc': []}
+                  'pet': {},
+                  'extdp': {},
+                  'extwc': {}}
 
         def load_util2d(name, dtype, per=None):
             print('   loading {} array...'.format(name))
             if per is not None:
-                arrays[name].append(
+                arrays[name][per] =\
                     Util2d.load(f, model, (nrow, ncol), dtype, name,
-                                ext_unit_dict))
+                                ext_unit_dict)
             else:
                 arrays[name] = Util2d.load(f, model, (nrow, ncol), dtype, name,
                                            ext_unit_dict)

@@ -45,6 +45,7 @@ def test_create():
 
     finf = np.loadtxt(os.path.join(datpth, 'finf.dat'))
     finf = np.reshape(finf, (m.nper, m.nrow, m.ncol))
+    finf = {i: finf[i] for i in range(finf.shape[0])}
 
     extwc = np.loadtxt(os.path.join(datpth, 'extwc.dat'))
 
@@ -75,7 +76,7 @@ def test_create():
     m2 = flopy.modflow.Modflow.load('UZFtest2.nam', version='mf2005',
                                     exe_name='mf2005',
                                     verbose=True,
-                                    model_ws=os.path.split(gpth)[0])
+                                    model_ws=os.path.split(gpth)[0], forgive=False)
 
     # verify that all of the arrays in the created UZF package are the same
     # as those in the loaded example
