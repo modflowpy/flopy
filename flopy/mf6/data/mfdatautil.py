@@ -755,7 +755,7 @@ class MFDocString(object):
     def __init__(self, description):
         self.indent = '    '
         self.description = self._resolve_string(description)
-        self.parameter_header = '{}Attributes\n{}' \
+        self.parameter_header = '{}Parameters\n{}' \
                                 '----------'.format(self.indent, self.indent)
         self.parameters = []
 
@@ -766,7 +766,7 @@ class MFDocString(object):
         else:
             param_descr_array = ['\n']
         twr = TextWrapper(width=79, initial_indent=self.indent * 2,
-                          subsequent_indent='  {}'.format(self.indent * 2))
+                          subsequent_indent='{}'.format(self.indent * 2))
         for index in range(0, len(param_descr_array)):
             param_descr_array[index] = '\n'.join(twr.wrap(param_descr_array[
                                                               index]))

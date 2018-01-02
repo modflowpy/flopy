@@ -1231,11 +1231,11 @@ class MFDataStructure(object):
                                               item.get_description())
             elif self.display_item(index):
                 if len(description.strip()) > 0:
-                    description = '{}\n{} : {}'.format(description,
+                    description = '{}\n{} {}'.format(description,
                                                        item.name,
                                                        item.description)
                 else:
-                    description = '{} : {}'.format(item.name,
+                    description = '{} {}'.format(item.name,
                                                    item.description)
         return description.strip()
 
@@ -1258,7 +1258,8 @@ class MFDataStructure(object):
                             first_nk_idx is None:
                         # keyword type is string
                         item_type = 'string'
-                    type_array.append('({} : {})'.format(item.name, item_type))
+                    #type_array.append('({} : {})'.format(item.name, item_type))
+                    type_array.append('{}'.format(item_type))
 
     def display_item(self, item_num):
         item = self.data_item_structures[item_num]
