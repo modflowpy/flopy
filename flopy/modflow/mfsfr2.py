@@ -377,8 +377,8 @@ class ModflowSfr2(Package):
             for i in segment_data.keys():
                 self.segment_data[i] = self.get_empty_segment_data(nss)
                 for n in segment_data[i].dtype.names:
-                    inds = (segment_data[i]['nseg'] -1).astype(int)
-                    self.segment_data[i][n][inds] = segment_data[i][n]
+                    #inds = (segment_data[i]['nseg'] -1).astype(int)
+                    self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
         if len(self.segment_data[0]) == 1 or \
                                 np.diff(self.segment_data[
