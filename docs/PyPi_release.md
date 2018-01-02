@@ -25,17 +25,17 @@ How to Cite
 
 *Software/Code citation for FloPy:*
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2017, FloPy v3.2.7 &mdash; develop: U.S. Geological Survey Software Release, 01 December 2017, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2017, FloPy v3.2.8 &mdash; develop: U.S. Geological Survey Software Release, 18 December 2017, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.2.7 &mdash; develop:
+To install FloPy version 3.2.8 &mdash; develop:
 ```
 pip install flopy
 ```
 
-To update to FloPy version 3.2.7 &mdash; develop:
+To update to FloPy version 3.2.8 &mdash; develop:
 ```
 pip install flopy --upgrade
 ```

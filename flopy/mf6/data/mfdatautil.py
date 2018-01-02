@@ -1,12 +1,15 @@
 import os
 import numpy as np
+from textwrap import TextWrapper
+from copy import deepcopy
 
 
 def find_keyword(arr_line, keyword_dict):
     # convert to lower case
     arr_line_lower = []
     for word in arr_line:
-        if not DatumUtil.is_int(word) and not DatumUtil.is_float(word):  # integers and floats are not keywords
+        # integers and floats are not keywords
+        if not DatumUtil.is_int(word) and not DatumUtil.is_float(word):
             arr_line_lower.append(word.lower())
     # look for constants in order of most words to least words
     key = ''
@@ -19,13 +22,15 @@ def find_keyword(arr_line, keyword_dict):
 
 class TemplateGenerator(object):
     """
-    Abstract base class for building a data template for different data types.  This is a generic class that is
-    initialized with a path that identifies the data to be built.
+    Abstract base class for building a data template for different data types.
+    This is a generic class that is initialized with a path that identifies
+    the data to be built.
 
     Parameters
     ----------
     path : string
-        tuple containing path of data is described in dfn files (<model>,<package>,<block>,<data name>)
+        tuple containing path of data is described in dfn files
+        (<model>,<package>,<block>,<data name>)
     """
     def __init__(self, path):
         self.path = path
@@ -40,8 +45,11 @@ class TemplateGenerator(object):
 
         # get dimension info
         data_struct = sim_struct.get_data_structure(self.path)
-        package_dim = modeldimensions.PackageDimensions([model.dimensions], package_struct, self.path[0:-1])
-        return data_struct, modeldimensions.DataDimensions(package_dim, data_struct)
+        package_dim = modeldimensions.PackageDimensions([model.dimensions],
+                                                        package_struct,
+                                                        self.path[0:-1])
+        return data_struct, modeldimensions.DataDimensions(package_dim,
+                                                           data_struct)
 
     def build_type_header(self, type, data=None):
         from ..data.mfdata import DataStorageType
@@ -60,29 +68,36 @@ class TemplateGenerator(object):
 
 class ArrayTemplateGenerator(TemplateGenerator):
     """
-    Class that builds a data template for MFArrays.  This is a generic class that is initialized with
-    a path that identifies the data to be built.
+    Class that builds a data template for MFArrays.  This is a generic class
+    that is initialized with a path that identifies the data to be built.
 
     Parameters
     ----------
     path : string
-        tuple containing path of data is described in dfn files (<model>,<package>,<block>,<data name>)
+        tuple containing path of data is described in dfn files
+        (<model>,<package>,<block>,<data name>)
 
     Methods
     -------
-    empty: (model: MFModel, layered: boolean, data_storage_type_list: boolean, default_value: int/float) : variable
-        Builds a template for the data you need to specify for a specific data type (ie. "hk") in a specific model.
-        The data type and dimensions is determined by "path" during initialization of this class and the model is
-        passed in to this method as the "model" parameter.  If the data is transient a dictionary containing a single
-        stress period will be returned.  If "layered" is set to true, data will be returned as a list ndarrays, one for
-        each layer.  data_storage_type_list is a list of DataStorageType, one type for each layer.  If "default_value"
-        is specified the data template will be populated with that value, otherwise each ndarray in the data template
-        will be populated with np.empty (0 or 0.0 if the DataStorageType is a constant).
+    empty: (model: MFModel, layered: boolean, data_storage_type_list: boolean,
+            default_value: int/float) : variable
+        Builds a template for the data you need to specify for a specific data
+        type (ie. "hk") in a specific model.  The data type and dimensions
+        is determined by "path" during initialization of this class and the
+        model is passed in to this method as the "model" parameter.  If the
+        data is transient a dictionary containing a single stress period
+        will be returned.  If "layered" is set to true, data will be returned
+        as a list ndarrays, one for each layer.  data_storage_type_list is a
+        list of DataStorageType, one type for each layer.  If "default_value"
+        is specified the data template will be populated with that value,
+        otherwise each ndarray in the data template will be populated with
+        np.empty (0 or 0.0 if the DataStorageType is a constant).
     """
     def __init__(self, path):
         super(ArrayTemplateGenerator, self).__init__(path)
 
-    def empty(self, model=None, layered=False, data_storage_type_list=None, default_value=None):
+    def empty(self, model=None, layered=False, data_storage_type_list=None,
+              default_value=None):
         from ..data import mfdata, mfstructure
         from ..data.mfdata import DataStorageType
 
@@ -91,19 +106,23 @@ class ArrayTemplateGenerator(TemplateGenerator):
         datum_type = data_struct.get_datum_type()
         data_type = data_struct.get_datatype()
         # build a temporary data storge object
-        data_storage = mfdata.DataStorage(model.simulation_data,
-                                          data_dimensions,
-                                          mfdata.DataStorageType.internal_array,
-                                          mfdata.DataStructureType.recarray)
+        data_storage = mfdata.DataStorage(
+                model.simulation_data,
+                data_dimensions,
+                mfdata.DataStorageType.internal_array,
+                mfdata.DataStructureType.recarray)
         dimension_list = data_storage.get_data_dimensions(None)
 
         # if layered data
         if layered and dimension_list[0] > 1:
             data_with_header = ''
-            if data_storage_type_list is not None and len(data_storage_type_list) != dimension_list[0]:
-                except_str = 'data_storage_type_list specified with the wrong size.  Size {} but expected to be ' \
-                             'the same as the number of layers, {}.'.format(len(data_storage_type_list),
-                                                                            dimension_list[0])
+            if data_storage_type_list is not None and \
+                    len(data_storage_type_list) != dimension_list[0]:
+                except_str = 'data_storage_type_list specified with the ' \
+                             'wrong size.  Size {} but expected to be ' \
+                             'the same as the number of layers, ' \
+                             '{}.'.format(len(data_storage_type_list),
+                                          dimension_list[0])
                 print(except_str)
                 raise mfstructure.MFDataException(except_str)
             # build each layer
@@ -115,14 +134,22 @@ class ArrayTemplateGenerator(TemplateGenerator):
                 else:
                     data_storage_type = data_storage_type_list[layer]
                 # build data type header
-                data_with_header.append(self._build_layer(datum_type, data_storage_type, default_value, dimension_list))
+                data_with_header.append(self._build_layer(datum_type,
+                                                          data_storage_type,
+                                                          default_value,
+                                                          dimension_list))
         else:
-            if data_storage_type_list is None or data_storage_type_list[0] == DataStorageType.internal_array:
+            if data_storage_type_list is None or \
+                    data_storage_type_list[0] == \
+                            DataStorageType.internal_array:
                 data_storage_type = DataStorageType.internal_array
             else:
                 data_storage_type = data_storage_type_list[0]
             # build data type header
-            data_with_header = self._build_layer(datum_type, data_storage_type, default_value, dimension_list, True)
+            data_with_header = self._build_layer(datum_type,
+                                                 data_storage_type,
+                                                 default_value,
+                                                 dimension_list, True)
 
         # if transient/multiple list
         if data_type == mfstructure.DataType.array_transient:
@@ -131,7 +158,8 @@ class ArrayTemplateGenerator(TemplateGenerator):
         else:
             return data_with_header
 
-    def _build_layer(self, data_type, data_storage_type, default_value, dimension_list, all_layers=False):
+    def _build_layer(self, data_type, data_storage_type, default_value,
+                     dimension_list, all_layers=False):
         from ..data.mfdata import DataStorageType
 
         # build data
@@ -145,7 +173,8 @@ class ArrayTemplateGenerator(TemplateGenerator):
                 if all_layers:
                     data = np.full(dimension_list, default_value, data_type)
                 else:
-                    data = np.full(dimension_list[1:], default_value, data_type)
+                    data = np.full(dimension_list[1:], default_value,
+                                   data_type)
         elif data_storage_type == DataStorageType.internal_constant:
             if default_value is None:
                 if data_type == np.int:
@@ -162,24 +191,29 @@ class ArrayTemplateGenerator(TemplateGenerator):
 
 class ListTemplateGenerator(TemplateGenerator):
     """
-    Class that builds a data template for MFLists.  This is a generic class that is initialized with
-    a path that identifies the data to be built.
+    Class that builds a data template for MFLists.  This is a generic class
+    that is initialized with a path that identifies the data to be built.
 
     Parameters
     ----------
     path : string
-        tuple containing path of data is described in dfn files (<model>,<package>,<block>,<data name>)
+        tuple containing path of data is described in dfn files
+        (<model>,<package>,<block>,<data name>)
 
     Methods
     -------
-    empty: (maxbound: int, aux_vars: list, boundnames: boolean, nseg: int) : dictionary
-        Builds a template for the data you need to specify for a specific data type (ie. "periodrecarray") in a
-        specific model.  The data type is determined by "path" during initialization of this class.  If the data is
-        transient a dictionary containing a single stress period will be returned.  The number of entries in the
-        recarray are determined by the "maxbound" parameter.  The "aux_vars" parameter is a list of aux var names
-        to be used in this data list.  If boundnames is set to true and boundname field will be included in the
-        recarray.  nseg is only used on list data that contains segments.  If timeseries is true, a template that is
-        compatible with time series data is returned.
+    empty: (maxbound: int, aux_vars: list, boundnames: boolean, nseg: int) :
+            dictionary
+        Builds a template for the data you need to specify for a specific data
+        type (ie. "periodrecarray") in a specific model.  The data type is
+        determined by "path" during initialization of this class.  If the data
+        is transient a dictionary containing a single stress period will be
+        returned.  The number of entries in the recarray are determined by
+        the "maxbound" parameter.  The "aux_vars" parameter is a list of aux
+        var names to be used in this data list.  If boundnames is set to
+        true and boundname field will be included in the recarray.  nseg is
+        only used on list data that contains segments.  If timeseries is true,
+        a template that is compatible with time series data is returned.
     """
     def __init__(self, path):
         super(ListTemplateGenerator, self).__init__(path)
@@ -195,21 +229,24 @@ class ListTemplateGenerator(TemplateGenerator):
                 template_data.append(None)
         return tuple(template_data)
 
-    def empty(self, model, maxbound=None, aux_vars=None, boundnames=False, nseg=None, timeseries=False):
+    def empty(self, model, maxbound=None, aux_vars=None, boundnames=False,
+              nseg=None, timeseries=False, stress_periods=None):
         from ..data import mfdata, mfstructure
 
         data_struct, data_dimensions = self._get_data_dimensions(model)
         data_type = data_struct.get_datatype()
         # build a temporary data storge object
-        data_storage = mfdata.DataStorage(model.simulation_data,
-                                          data_dimensions,
-                                          mfdata.DataStorageType.internal_array,
-                                          mfdata.DataStructureType.recarray)
+        data_storage = mfdata.DataStorage(
+                model.simulation_data,
+                data_dimensions,
+                mfdata.DataStorageType.internal_array,
+                mfdata.DataStructureType.recarray)
 
         # build type list
         type_list = data_storage.build_type_list(nseg=nseg)
         if aux_vars is not None:
-            if len(aux_vars) > 0 and (isinstance(aux_vars[0], list) or isinstance(aux_vars[0], tuple)):
+            if len(aux_vars) > 0 and (isinstance(aux_vars[0], list) or
+                    isinstance(aux_vars[0], tuple)):
                 aux_vars = aux_vars[0]
             for aux_var in aux_vars:
                 type_list.append((aux_var, object))
@@ -232,9 +269,16 @@ class ListTemplateGenerator(TemplateGenerator):
         rec_array = np.rec.array(rec_array_data, type_list)
 
         # if transient/multiple list
-        if data_type == mfstructure.DataType.list_transient or data_type == mfstructure.DataType.list_multiple:
+        if data_type == mfstructure.DataType.list_transient or \
+                data_type == mfstructure.DataType.list_multiple:
             # Return as dictionary
-            return {0:rec_array}
+            if stress_periods is None:
+                return {0:rec_array}
+            else:
+                template = {}
+                for stress_period in stress_periods:
+                    template[stress_period] = deepcopy(rec_array)
+                return template
         else:
             return rec_array
 
@@ -276,10 +320,12 @@ class ArrayUtil(object):
     -------
     is_empty_list : (current_list : list) : boolean
         determines if an n-dimensional list is empty
-    con_convert : (data : string, data_type : type that has conversion operation) : boolean
+    con_convert : (data : string, data_type : type that has conversion
+                   operation) : boolean
         returns true if data can be converted into data_type
     multi_dim_list_size : (current_list : list) : boolean
-        determines the number of items in a multi-dimensional list 'current_list'
+        determines the number of items in a multi-dimensional list
+        'current_list'
     first_item : (current_list : list) : variable
         returns the first item in the list 'current_list'
     next_item : (current_list : list) : variable
@@ -287,13 +333,15 @@ class ArrayUtil(object):
     array_comp : (first_array : list, second_array : list) : boolean
         compares two lists, returns true if they are identical (with max_error)
     spilt_data_line : (line : string) : list
-        splits a string apart (using split) and then cleans up the results dealing with
-        various MODFLOW input file releated delimiters
+        splits a string apart (using split) and then cleans up the results
+        dealing with various MODFLOW input file releated delimiters
     clean_numeric : (text : string) : string
         returns a cleaned up version of 'text' with only numeric characters
-    save_array_diff : (first_array : list, second_array : list, first_array_name : string, second_array_name : string)
-        saves lists 'first_array' and 'second_array' to files first_array_name and second_array_name and then
-        saves the difference of the two arrays to 'debug_array_diff.txt'
+    save_array_diff : (first_array : list, second_array : list,
+                       first_array_name : string, second_array_name : string)
+        saves lists 'first_array' and 'second_array' to files first_array_name
+        and second_array_name and then saves the difference of the two
+        arrays to 'debug_array_diff.txt'
     save_array(filename : string, multi_array : list)
         saves 'multi_array' to the file 'filename'
     """
@@ -330,11 +378,14 @@ class ArrayUtil(object):
 
     @ staticmethod
     def has_one_item(current_list):
-        if not isinstance(current_list, list) and not isinstance(current_list, np.ndarray):
+        if not isinstance(current_list, list) and not isinstance(current_list,
+                                                                 np.ndarray):
             return True
         if len(current_list) != 1:
             return False
-        if (isinstance(current_list[0], list) or isinstance(current_list, np.ndarray)) and len(current_list[0] != 0):
+        if (isinstance(current_list[0], list) or
+                isinstance(current_list, np.ndarray)) and \
+                len(current_list[0] != 0):
             return False
         return True
 
@@ -395,22 +446,29 @@ class ArrayUtil(object):
                 return item
 
     @ staticmethod
-    def next_item(current_list, new_list=True, nesting_change=0, end_of_list=True):
+    def next_item(current_list, new_list=True, nesting_change=0,
+                  end_of_list=True):
         # returns the next item in a nested list along with other information:
-        # (<next item>, <end of list>, <entering new list>, <change in nesting level>
-        if not isinstance(current_list, list) and not isinstance(current_list, np.ndarray):
+        # (<next item>, <end of list>, <entering new list>,
+        #  <change in nesting level>
+        if not isinstance(current_list, list) and \
+                not isinstance(current_list, np.ndarray):
             yield (current_list, end_of_list, new_list, nesting_change)
         else:
             list_size = 1
             for item in current_list:
-                if isinstance(item, list) or isinstance(current_list, np.ndarray):
+                if isinstance(item, list) or isinstance(current_list,
+                                                        np.ndarray):
                     # still in a list of lists, recurse
-                    for item in ArrayUtil.next_item(item, list_size == 1, nesting_change + 1,
-                                                     list_size == len(current_list)):
+                    for item in ArrayUtil.next_item(item, list_size == 1,
+                                                    nesting_change + 1,
+                                                    list_size ==
+                                                    len(current_list)):
                         yield item
                     nesting_change = -(nesting_change + 1)
                 else:
-                    yield (item, list_size == len(current_list), list_size == 1, nesting_change)
+                    yield (item, list_size == len(current_list),
+                           list_size == 1, nesting_change)
                     nesting_change = 0
                 list_size += 1
 
@@ -427,8 +485,8 @@ class ArrayUtil(object):
         delimiter_list = {',': 0, '\t': 0, ' ': 0}
         clean_line = line.strip().split()
         if external_file:
-            # try lots of different delimitiers for external files and use the one the breaks the data
-            # apart the most
+            # try lots of different delimitiers for external files and use the
+            # one the breaks the data apart the most
             max_split_size = len(clean_line)
             max_split_type = None
             for delimiter in delimiter_list:
@@ -457,10 +515,14 @@ class ArrayUtil(object):
                             if index < len(clean_line):
                                 item = clean_line[index]
                                 if item[-1] in quote_list:
-                                    arr_fixed_line[-1] = '{} {}'.format(arr_fixed_line[-1], item[:-1])
+                                    arr_fixed_line[-1] = \
+                                        '{} {}'.format(arr_fixed_line[-1],
+                                                       item[:-1])
                                     break
                                 else:
-                                    arr_fixed_line[-1] = '{} {}'.format(arr_fixed_line[-1], item)
+                                    arr_fixed_line[-1] = \
+                                        '{} {}'.format(arr_fixed_line[-1],
+                                                       item)
                 else:
                     # no quote, just append
                     arr_fixed_line.append(item)
@@ -471,17 +533,21 @@ class ArrayUtil(object):
     @staticmethod
     def clean_numeric(text):
         if isinstance(text, str):
-            numeric_chars = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0, '.': 0, '-': 0}
-            # remove all non-numeric text from leading and trailing positions of text
+            numeric_chars = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0,
+                             '6': 0, '7': 0, '8': 0, '9': 0, '.': 0, '-': 0}
+            # remove all non-numeric text from leading and trailing positions
+            # of text
             if text:
-                while text and (text[0] not in numeric_chars or text[-1] not in numeric_chars):
+                while text and (text[0] not in numeric_chars or text[-1]
+                                not in numeric_chars):
                     if text[0] not in numeric_chars:
                         text = text[1:]
                     if text and text[-1] not in numeric_chars:
                         text = text[:-1]
         return text
 
-    def save_array_diff(self, first_array, second_array, first_array_name, second_array_name):
+    def save_array_diff(self, first_array, second_array, first_array_name,
+                        second_array_name):
         try:
             diff = first_array - second_array
             self.save_array(first_array_name, first_array)
@@ -534,7 +600,8 @@ class ArrayIndexIter(object):
             else:
                 return self.current_location[0]
         while self.current_index >= 0:
-            if self.current_location[self.current_index] < self.array_shape[self.current_index] - 1:
+            location = self.current_location[self.current_index]
+            if location < self.array_shape[self.current_index] - 1:
                 self.current_location[self.current_index] += 1
                 self.current_index = len(self.current_location) - 1
                 if len(self.current_location) > 1:
@@ -599,7 +666,8 @@ class FileIter(object):
         if self.eof:
             raise StopIteration()
         else:
-            while self._current_data is not None and self._data_index >= len(self._current_data):
+            while self._current_data is not None and \
+                  self._data_index >= len(self._current_data):
                 self._next_line()
                 self._data_index = 0
                 if self.eof:
@@ -677,15 +745,18 @@ class MFDocString(object):
 
     Methods
     -------
-    add_parameter : (param_name : string, param_type : string, param_descr : string)
-        adds doc string for a parameter with name 'param_name', type 'param_type' and description 'param_descr'
+    add_parameter : (param_name : string, param_type : string,
+                     param_descr : string)
+        adds doc string for a parameter with name 'param_name', type
+        'param_type' and description 'param_descr'
     get_doc_string : () : string
         builds and returns the docstring for the class
     """
     def __init__(self, description):
         self.indent = '    '
         self.description = self._resolve_string(description)
-        self.parameter_header = '{}Attributes\n{}----------'.format(self.indent, self.indent)
+        self.parameter_header = '{}Attributes\n{}' \
+                                '----------'.format(self.indent, self.indent)
         self.parameters = []
 
     def add_parameter(self, param_name, param_type, param_descr):
@@ -694,16 +765,25 @@ class MFDocString(object):
             param_descr_array = param_descr.split('\n')
         else:
             param_descr_array = ['\n']
+        twr = TextWrapper(width=79, initial_indent=self.indent * 2,
+                          subsequent_indent='  {}'.format(self.indent * 2))
         for index in range(0, len(param_descr_array)):
-            param_descr_array[index] = '{}{}{}'.format(self.indent, self.indent, param_descr_array[index])
+            param_descr_array[index] = '\n'.join(twr.wrap(param_descr_array[
+                                                              index]))
         param_descr = '\n'.join(param_descr_array)
-
         # build doc string
-        param_doc_string = self._resolve_string(('{} : {}\n{}'.format(param_name, param_type, param_descr)))
+        param_doc_string = '{} : {}'.format(param_name, param_type)
+        twr = TextWrapper(width=79, initial_indent='',
+                          subsequent_indent='  {}'.format(self.indent))
+        param_doc_string = '\n'.join(twr.wrap(param_doc_string))
+        new_string = '{}\n{}'.format(param_doc_string, param_descr)
+        param_doc_string = self._resolve_string((new_string))
         self.parameters.append(param_doc_string)
 
     def get_doc_string(self):
-        doc_string = '{}"""\n{}{}\n\n{}\n'.format(self.indent, self.indent, self.description, self.parameter_header)
+        doc_string = '{}"""\n{}{}\n\n{}\n'.format(self.indent, self.indent,
+                                                  self.description,
+                                                  self.parameter_header)
         for parameter in self.parameters:
             doc_string += '{}{}\n'.format(self.indent, parameter)
         doc_string += '\n{}"""'.format(self.indent)
@@ -715,4 +795,3 @@ class MFDocString(object):
         doc_string = doc_string.replace('~\\ref{table:', '')
         doc_string = doc_string.replace('\\reftable:', '')
         return doc_string
-

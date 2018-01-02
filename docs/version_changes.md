@@ -1,5 +1,11 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.8
+* Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
+* Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.
+* Bug fixes:
+    * Installation: Added dfn files required by MODFLOW 6 functionality to MANIFEST.in so that they are included in the distribution.
+    * SFR2 package: Fixed issue reading transient data when `ISFOPT` is 4 or 5 for the first stress period.
 
 ### Version 3.2.7 - develop
 * Added SFR2 package functionarlity

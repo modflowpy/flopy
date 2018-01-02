@@ -189,9 +189,8 @@ class PackageDimensions(object):
             if tas_record_data is not None:
                 name_iter = NameIter('tas')
                 for tas_name in name_iter:
-                    tas_names_path = self.package_path + (tas_name,
-                                                          'attributes',
-                                                          'time_series_namerecord')
+                    tas_names_path = self.package_path + \
+                            (tas_name, 'attributes', 'time_series_namerecord')
                     if tas_names_path in self.model_dim[
                         model_num].simulation_data.mfdata:
                         tas_names_data = \
@@ -216,9 +215,8 @@ class PackageDimensions(object):
             if ts_record_data is not None:
                 name_iter = NameIter('ts')
                 for ts_name in name_iter:
-                    ts_names_path = self.package_path + (ts_name,
-                                                         'attributes',
-                                                         'time_series_namerecord')
+                    ts_names_path = self.package_path + \
+                            (ts_name, 'attributes', 'time_series_namerecord')
                     if ts_names_path in self.model_dim[
                         model_num].simulation_data.mfdata:
                         ts_names_data = \
@@ -337,8 +335,8 @@ class ModelDimensions(object):
 
     # Returns a shape for a given set of axes
     def get_data_shape(self, structure, data_item=None, data_set_struct=None,
-                       data=None, path=None,
-                       deconstruct_axis=True, repeating_key=None):
+                       data=None, path=None, deconstruct_axis=True,
+                       repeating_key=None):
         assert (structure is not None)
         if self.locked:
             if data_item is not None and data_item.path in self.stored_shapes:
@@ -368,19 +366,22 @@ class ModelDimensions(object):
                                                       repeating_key=
                                                       repeating_key)[0]
                         num_cols = num_cols + num
-                        shape_consistent = shape_consistent and consistent_shape
+                        shape_consistent = shape_consistent and \
+                                           consistent_shape
                 shape_dimensions = [num_rows, num_cols]
             else:
                 for data_item_struct in structure.data_item_structures:
                     if len(shape_dimensions) == 0:
-                        shape_dimensions, shape_rule, consistent_shape = self._resolve_data_item_shape(
-                            data_item_struct,
-                            repeating_key=repeating_key)
+                        shape_dimensions, shape_rule, consistent_shape = \
+                                self._resolve_data_item_shape(data_item_struct,
+                                                              repeating_key=
+                                                              repeating_key)
                     else:
 
-                        dim, shape_rule, consistent_shape = self._resolve_data_item_shape(
-                            data_item_struct,
-                            repeating_key=repeating_key)
+                        dim, shape_rule, consistent_shape = \
+                            self._resolve_data_item_shape(data_item_struct,
+                                                          repeating_key=
+                                                          repeating_key)
                         shape_dimensions += dim
                     shape_consistent = shape_consistent and consistent_shape
             if self.locked and shape_consistent:
@@ -516,7 +517,7 @@ class ModelDimensions(object):
                 # try to resolve the 2nd term in the equation
                 expression[1] = self.dimension_size(expression[1])
                 if expression[1] is None:
-                    except_str = 'ERROR: Expression "{}" contains an invalid ' \
+                    except_str = 'ERROR: Expression "{}" contains an invalid '\
                                  'second term and can not be ' \
                                  'resolved.'.format(expression)
                     print(except_str)

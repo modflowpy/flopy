@@ -357,7 +357,7 @@ class Mt3dSft(Package):
                 self.sf_stress_period_data.write_transient(f,
                                                            single_per=kper)
             else:
-                f.write('{0:10d}       # ntmp - SP {1:5d}'.format(0, kper))
+                f.write('{0:10d}       # ntmp - SP {1:5d}\n'.format(0, kper))
 
         f.close()
         return

@@ -266,7 +266,18 @@ class Mt3dSsm(Package):
                                       array_free_format=False)
                     self.crch.append(t2d)
         else:
-            self.crch = None
+            try:
+                if model.mf.rch is not None:
+                    print("found 'rch' in modflow model, resetting crch to 0.0")
+                    self.crch = [Transient2d(model, (nrow, ncol), np.float32,
+                                  0, name='crch1',
+                                  locat=self.unit_number[0],
+                                  array_free_format=False)]
+
+                else:
+                    self.crch = None
+            except:
+                self.crch = None
 
         if cevt is not None:
             self.cevt = []
@@ -293,7 +304,18 @@ class Mt3dSsm(Package):
                     self.cevt.append(t2d)
 
         else:
-            self.cevt = None
+            try:
+                if model.mf.evt is not None or model.mf.ets is not None:
+                    print("found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
+                    self.cevt = [Transient2d(model, (nrow, ncol), np.float32,
+                                            0, name='cevt1',
+                                            locat=self.unit_number[0],
+                                            array_free_format=False)]
+
+                else:
+                    self.cevt = None
+            except:
+                self.cevt = None
 
         if len(list(kwargs.keys())) > 0:
             raise Exception("SSM error: unrecognized kwargs: " +

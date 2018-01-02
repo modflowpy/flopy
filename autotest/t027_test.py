@@ -30,8 +30,8 @@ def test_load():
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
                                    verbose=True, forgive=False)
     m.change_model_ws(cpth)
-    assert 'MNW2' in m.get_package_list()
-    assert 'MNWI' in m.get_package_list()
+    assert m.has_package('MNW2')
+    assert m.has_package('MNWI')
 
     # load a real mnw2 package from a steady state model (multiple wells)
     m2 = flopy.modflow.Modflow('br', model_ws=cpth)

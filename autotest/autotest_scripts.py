@@ -12,6 +12,11 @@ for arg in sys.argv:
 sdir = os.path.join('..', 'examples', 'scripts')
 
 # make working directories
+tempdir = os.path.join('.', 'temp')
+if os.path.isdir(tempdir):
+    shutil.rmtree(tempdir)
+os.mkdir(tempdir)
+
 testdir = os.path.join('.', 'temp', 'scripts')
 if os.path.isdir(testdir):
     shutil.rmtree(testdir)

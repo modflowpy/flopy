@@ -86,9 +86,8 @@ class ModflowOc(Package):
             for PRINT HEAD, SAVE HEAD, PRINT DRAWDOWN, SAVE DRAWDOWN, and
             SAVE IBOUND.
         
-        The list is used for every stress period and time step after the 
-        (IPEROC, ITSOC) tuple until a (IPEROC, ITSOC) tuple is entered with
-        an empty list.
+        If stress_period_data is None, then heads and budgets
+        are saved for the last time step of each stress period
     compact : boolean
         Save results in compact budget form. (default is True).
     extension : list of strings
@@ -143,7 +142,7 @@ class ModflowOc(Package):
     def __init__(self, model, \
                  ihedfm=0, iddnfm=0, chedfm=None, cddnfm=None,
                  cboufm=None, compact=True,
-                 stress_period_data={(0, 0): ['save head']},
+                 stress_period_data={(0,0): ['save head']},
                  extension=['oc', 'hds', 'ddn', 'cbc', 'ibo'],
                  unitnumber=None, filenames=None, label="LABEL", **kwargs):
 
@@ -172,6 +171,10 @@ class ModflowOc(Package):
         dis = model.get_package('DIS')
         if dis is None:
             dis = model.get_package('DISU')
+
+        if stress_period_data is None:
+            stress_period_data = {(kper,dis.nstp.array[kper]-1):["save head","save budget"] for kper in range(dis.nper)}
+
 
         # process kwargs
         if 'save_every' in kwargs:
@@ -306,6 +309,8 @@ class ModflowOc(Package):
 
         self.parent.add_package(self)
 
+
+
     def write_file(self):
         """
         Write the package file.
@@ -322,7 +327,8 @@ class ModflowOc(Package):
         line = 'HEAD PRINT FORMAT {0:3.0f}\n'.format(self.ihedfm)
         f_oc.write(line)
         if self.chedfm is not None:
-            line = 'HEAD SAVE FORMAT {0:20s} {1}\n'.format(self.chedfm,self.label)
+            line = 'HEAD SAVE FORMAT {0:20s} {1}\n'.format(self.chedfm,
+                                                           self.label)
             f_oc.write(line)
         if self.savehead:
             line = 'HEAD SAVE UNIT {0:5.0f}\n'.format(self.iuhead)
@@ -330,7 +336,8 @@ class ModflowOc(Package):
 
         f_oc.write('DRAWDOWN PRINT FORMAT {0:3.0f}\n'.format(self.iddnfm))
         if self.cddnfm is not None:
-            line = 'DRAWDOWN SAVE FORMAT {0:20s} {1}\n'.format(self.cddnfm,self.label)
+            line = 'DRAWDOWN SAVE FORMAT {0:20s} {1}\n'.format(self.cddnfm,
+                                                               self.label)
             f_oc.write(line)
         if self.saveddn:
             line = 'DRAWDOWN SAVE UNIT {0:5.0f}\n'.format(self.iuddn)
@@ -338,7 +345,8 @@ class ModflowOc(Package):
 
         if self.saveibnd:
             if self.cboufm is not None:
-                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufm,self.label)
+                line = 'IBOUND SAVE FORMAT {0:20s} {1}\n'.format(self.cboufm,
+                                                                 self.label)
                 f_oc.write(line)
             line = 'IBOUND SAVE UNIT {0:5.0f}\n'.format(self.iuibnd)
             f_oc.write(line)
@@ -388,6 +396,8 @@ class ModflowOc(Package):
 
         # close oc file
         f_oc.close()
+
+
 
     def _set_singlebudgetunit(self, budgetunit):
         if budgetunit is None:

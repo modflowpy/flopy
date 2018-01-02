@@ -1,5 +1,5 @@
 import os
-import keyword
+import textwrap
 from enum import Enum
 from flopy.mf6.data import mfstructure, mfdatautil
 
@@ -57,29 +57,74 @@ def clean_class_string(name):
     return name
 
 
-def create_plotter_classes(cname):
-    if cname == 'Plot':
-        def_name = cname.lower()
-        iname = cname
-    else:
-        def_name = 'to_' + cname.lower()
-        iname = cname[0] + cname[1:].lower()
-
-    plot_class_string = "    def {}(self, key, **kwargs):\n" \
-                        "        from ..plot import MF{}\n" \
-                        "        defaults = {'mfdict': self._mfdict, 'modelname': self._key[0], " \
-                        "'path': self._path, 'show': True}\n" \
-                        "        for kwarg in kwargs:\n" \
-                        "            defaults[kwarg] = kwargs[kwarg]\n" \
-                        "        MF{}.{}Selection((self._key[0], self._key[1], key), **defaults)\n" \
-                        "        return\n".format(def_name, iname, cname,
-                                                  cname)
-    return plot_class_string
+def build_dfn_string(dfn_list):
+    dfn_string = '    dfn = ['
+    line_length = len(dfn_string)
+    leading_spaces = ' ' * line_length
+    first_di = True
+    # process all data items
+    for data_item in dfn_list:
+        line_length += 1
+        if not first_di:
+            dfn_string = '{},\n{}'.format(dfn_string, leading_spaces)
+            line_length = len(leading_spaces)
+        else:
+            first_di = False
+        dfn_string = '{}{}'.format(dfn_string, '[')
+        first_line = True
+        # process each line in a data item
+        for line in data_item:
+            line = line.strip()
+            # do not include the description of longname
+            if not line.lower().startswith('description') and \
+                not line.lower().startswith('longname'):
+                line = line.replace('"', "'")
+                line_length += len(line) + 4
+                if not first_line:
+                    dfn_string = '{}, '.format(dfn_string)
+                else:
+                    first_line = False
+                if line_length < 77:
+                    # added text fits on the current line
+                    dfn_string = '{}"{}"'.format(dfn_string, line)
+                else:
+                    # added text does not fit on the current line
+                    line_length = len(line) + len(leading_spaces) + 2
+                    if line_length > 79:
+                        # added text too long to fit on a single line, wrap
+                        # text as needed
+                        line = '"{}"'.format(line)
+                        lines = textwrap.wrap(line, 75 - len(leading_spaces))
+                        lines[0] = '{} {}'.format(leading_spaces, lines[0])
+                        line_join = ' " \n{} "'.format(leading_spaces)
+                        dfn_string = '{}\n{}'.format(dfn_string,
+                                                     line_join.join(lines))
+                    else:
+                        dfn_string = '{}\n{} "{}"'.format(dfn_string,
+                                                          leading_spaces, line)
+        dfn_string = '{}{}'.format(dfn_string, ']')
+    dfn_string = '{}{}'.format(dfn_string, ']')
+    return dfn_string
 
 
 def create_init_var(clean_ds_name, data_structure_name):
-    return '        self.{} = self.build_mfdata("{}", {})\n'.format(
-        clean_ds_name, data_structure_name, clean_ds_name)
+    init_var = '        self.{} = self.build_mfdata('.format(clean_ds_name)
+    leading_spaces = ' ' * len(init_var)
+    if len(init_var) + len(data_structure_name) + 2 > 79:
+        second_line = '\n            "{}", '.format(data_structure_name)
+        if len(second_line) + len(clean_ds_name) + 2 > 79:
+            init_var = '{}{}\n            {})'.format(init_var, second_line,
+                                                      clean_ds_name)
+        else:
+            init_var = '{}{} {})'.format(init_var, second_line, clean_ds_name)
+    else:
+        init_var = '{}"{}", '.format(init_var, data_structure_name)
+        if len(init_var) + len(clean_ds_name) + 2 > 79:
+            init_var = '{}\n{}{})'.format(init_var, leading_spaces,
+                                          clean_ds_name)
+        else:
+            init_var = '{} {})'.format(init_var, clean_ds_name)
+    return init_var
 
 
 def create_basic_init(clean_ds_name):
@@ -91,6 +136,41 @@ def create_property(clean_ds_name):
            ")".format(clean_ds_name,
                       clean_ds_name,
                       clean_ds_name)
+
+
+def format_var_list(base_string, var_list, is_tuple=False):
+    if is_tuple:
+        base_string = '{}('.format(base_string)
+        extra_chars = 4
+    else:
+        extra_chars = 2
+    line_length = len(base_string)
+    leading_spaces = ' ' * line_length
+    # determine if any variable name is too long to fit
+    for item in var_list:
+        if line_length + len(item) + extra_chars  > 80:
+            leading_spaces = '        '
+            base_string = '{}\n{}'.format(base_string, leading_spaces)
+            line_length = len(leading_spaces)
+            break
+
+    for index, item in enumerate(var_list):
+        if is_tuple:
+            item = "'{}'".format(item)
+        if index == len(var_list) - 1:
+            next_var_str = item
+        else:
+            next_var_str = '{}, '.format(item)
+        line_length += len(item) + extra_chars
+        if line_length > 80:
+            base_string = '{}\n{}{}'.format(base_string, leading_spaces,
+                                            next_var_str)
+        else:
+            base_string = '{}{}'.format(base_string, next_var_str)
+    if is_tuple:
+        return '{}))'.format(base_string)
+    else:
+        return '{})'.format(base_string)
 
 
 def add_var(init_vars, class_vars, init_param_list, package_properties,
@@ -111,34 +191,41 @@ def add_var(init_vars, class_vars, init_param_list, package_properties,
     if class_vars is not None:
         gen_type = generator_type(data_type)
         if gen_type != 'ScalarTemplateGenerator':
-            class_vars.append(
-                '    {} = mfdatautil.{}({})'.format(clean_ds_name, gen_type,
-                                                    path))
+            new_class_var = '    {} = {}('.format(clean_ds_name,
+                                                  gen_type)
+            class_vars.append(format_var_list(new_class_var, path, True))
 
 
 def create_packages():
     init_string_def = '    def __init__(self'
 
     # load JSON file
-    file_structure = mfstructure.MFStructure()
+    file_structure = mfstructure.MFStructure(load_from_dfn_files=True)
     sim_struct = file_structure.sim_struct
-    # package_plot_dictionary = file_structure.package_plot_dictionary
 
     # assemble package list of buildable packages
     package_list = []
     package_list.append(
-        (sim_struct.name_file_struct_obj, PackageLevel.sim_level, ''))
+        (sim_struct.name_file_struct_obj, PackageLevel.sim_level, '',
+         sim_struct.name_file_struct_obj.dfn_list,
+         sim_struct.name_file_struct_obj.file_type))
     for key, package in sim_struct.package_struct_objs.items():
         # add simulation level package to list
-        package_list.append((package, PackageLevel.sim_level, ''))
+        package_list.append((package, PackageLevel.sim_level, '',
+                             package.dfn_list, package.file_type))
     for key, package in sim_struct.utl_struct_objs.items():
         # add utility packages to list
-        package_list.append((package, PackageLevel.model_level, 'utl'))
+        package_list.append((package, PackageLevel.model_level, 'utl',
+                             package.dfn_list, package.file_type))
     for model_key, model in sim_struct.model_struct_objs.items():
         package_list.append(
-            (model.name_file_struct_obj, PackageLevel.model_level, model_key))
+            (model.name_file_struct_obj, PackageLevel.model_level, model_key,
+             model.name_file_struct_obj.dfn_list,
+             model.name_file_struct_obj.file_type))
         for key, package in model.package_struct_objs.items():
-            package_list.append((package, PackageLevel.model_level, model_key))
+            package_list.append((package, PackageLevel.model_level,
+                                 model_key, package.dfn_list,
+                                 package.file_type))
 
     util_path, tail = os.path.split(os.path.realpath(__file__))
     init_file = open(os.path.join(util_path, '..', 'modflow', '__init__.py'),
@@ -148,12 +235,11 @@ def create_packages():
     # loop through packages list
     for package in package_list:
         data_structure_dict = {}
-        plotters = []
-        plotter_defs = []
         package_properties = []
         init_vars = []
         init_param_list = []
         class_vars = []
+        dfn_string = build_dfn_string(package[3])
         package_name = clean_class_string(
             '{}{}'.format(clean_class_string(package[2]),
                           package[0].file_type)).lower()
@@ -170,7 +256,8 @@ def create_packages():
                 '{}.'.format(package_name.title(),
                              package[0].file_type,
                              package_container_text))
-        import_string = 'from .. import mfpackage\nfrom ..data import mfdatautil'
+        import_string = 'from .. import mfpackage\nfrom ..data.mfdatautil ' \
+                        'import ListTemplateGenerator, ArrayTemplateGenerator'
 
         if package[0].dfn_type == mfstructure.DfnType.exch_file:
             add_var(init_vars, None, init_param_list, package_properties,
@@ -181,13 +268,13 @@ def create_packages():
             add_var(init_vars, None, init_param_list, package_properties,
                     doc_string, data_structure_dict,
                     'exgmnamea', 'exgmnamea', '<string>',
-                    'is the name of the first model that is part of this exchange.',
-                    None, None, True)
+                    'is the name of the first model that is part of this '
+                    'exchange.', None, None, True)
             add_var(init_vars, None, init_param_list, package_properties,
                     doc_string, data_structure_dict,
                     'exgmnameb', 'exgmnameb', '<string>',
-                    'is the name of the second model that is part of this exchange.',
-                    None, None, True)
+                    'is the name of the second model that is part of this '
+                    'exchange.', None, None, True)
             init_vars.append(
                 '        simulation.register_exchange_file(self)\n')
 
@@ -207,32 +294,34 @@ def create_packages():
 
         # build package builder class string
         init_vars = '\n'.join(init_vars)
-        plotters_string = ''.join(plotters)
-        plotters_def_string = '\n'.join(plotter_defs)
         package_short_name = clean_class_string(package[0].file_type).lower()
         class_def_string = 'class Modflow{}(mfpackage.MFPackage):\n'.format(
             package_name.title())
         class_def_string = class_def_string.replace('-', '_')
-        class_var_string = '{}\n    package_abbr = "{}"'.format(
-            '\n'.join(class_vars), package_name)
-        line_chars = len(init_string_def)
+        class_var_string = '{}\n    package_abbr = "{}"\n    package_type = ' \
+                           '"{}"'.format('\n'.join(class_vars), package_name,
+                                         package[4])
         init_string_full = init_string_def
         # add variables to init string
         if package[1] == PackageLevel.sim_level:
-            init_string_full = '{}, simulation, add_to_package_list=True'.format(
-                init_string_full)
+            init_string_full = '{}, simulation, add_to_package_list=' \
+                               'True'.format(init_string_full)
         else:
             init_string_full = '{}, model, add_to_package_list=True'.format(
                 init_string_full)
+        line_chars = len(init_string_full)
         init_param_list.append('fname=None')
         init_param_list.append('pname=None')
         init_param_list.append('parent_file=None')
-        for param in init_param_list:
-            line_chars += len(param) + 1
-            if line_chars > 80:
+        for index, param in enumerate(init_param_list):
+            if index + 1 < len(init_param_list):
+                line_chars += len(param) + 2
+            else:
+                line_chars += len(param) + 3
+            if line_chars > 79:
                 init_string_full = '{},\n                 {}'.format(
                     init_string_full, param)
-                line_chars = len(param) + 1
+                line_chars = len(param) + len('                 ') + 1
             else:
                 init_string_full = '{}, {}'.format(init_string_full, param)
         init_string_full = '{}):\n'.format(init_string_full)
@@ -242,17 +331,20 @@ def create_packages():
             init_var = 'simulation'
         else:
             init_var = 'model'
-        parent_init_string = '        super(Modflow{}, self).__init__({}, "{}", fname, pname, add_to_package_list,' \
-                             ' parent_file)        \n\n' \
+        parent_init_string = '        super(Modflow{}, self)' \
+                             '.__init__('.format(package_name.title())
+        spaces = ' ' * len(parent_init_string)
+        parent_init_string = '{}{}, "{}", fname, pname,\n{}' \
+                             'add_to_package_list, parent_file)        \n\n' \
                              '        # set up variables'.format(
-            package_name.title(), init_var, package_short_name)
-
+            parent_init_string, init_var, package_short_name, spaces)
+        comment_string = '# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE ' \
+                         'MUST BE CREATED BY\n# mf6/utils/createpackages.py'
         # assemble full package string
-        package_string = '{}\n\n\n{}{}\n{}\n\n{}{}{}\n{}\n\n{}'.format(
-            import_string, class_def_string,
-            doc_string.get_doc_string(), class_var_string,
-            init_string_full, parent_init_string,
-            plotters_string, init_vars, plotters_def_string)
+        package_string = '{}\n{}\n\n\n{}{}\n{}\n{}\n\n{}{}\n{}\n'.format(
+            comment_string, import_string, class_def_string,
+            doc_string.get_doc_string(), class_var_string, dfn_string,
+            init_string_full, parent_init_string, init_vars)
 
         # open new Packages file
         pb_file = open(os.path.join(util_path, '..', 'modflow',
@@ -260,8 +352,9 @@ def create_packages():
         pb_file.write(package_string)
         pb_file.close()
 
-        init_file.write('from .mf{} import Modflow{}\n'.format(package_name,
-                                                              package_name.title()))
+        init_file.write('from .mf{} import '
+                        'Modflow{}\n'.format(package_name,
+                                             package_name.title()))
     init_file.close()
 
 
