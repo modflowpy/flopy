@@ -445,36 +445,6 @@ class ModflowUzf1(Package):
                                     extdp, name='extdp')
             self.extwc = Transient2d(model, (nrow, ncol), np.int,
                                     extwc, name='extwc')
-        '''
-        self.finf = []
-        for i, a in enumerate(self._2list(finf)):
-            b = Util2d(model, (nrow, ncol), np.float32, a,
-                       name='finf_' + str(i + 1))
-            self.finf.append(b)
-        if ietflg > 0:
-            # Data Set 12
-            # [PET (NCOL, NROW)] – U2DREL
-            self.pet = []
-            for i, a in enumerate(self._2list(pet)):
-                b = Util2d(model, (nrow, ncol), np.float32, a,
-                           name='pet_' + str(i + 1))
-                self.pet.append(b)
-            # Data Set 14
-            # [EXTDP (NCOL, NROW)] – U2DREL
-            self.extdp = []
-            for i, a in enumerate(self._2list(extdp)):
-                b = Util2d(model, (nrow, ncol), np.float32, a,
-                           name='extdp_' + str(i + 1))
-                self.extdp.append(b)
-            # Data Set 16
-            # [EXTWC (NCOL, NROW)] – U2DREL
-            if iuzfopt > 0:
-                self.extwc = []
-                for i, a in enumerate(self._2list(extwc)):
-                    b = Util2d(model, (nrow, ncol), np.float32, a,
-                               name='extwc_' + str(i + 1))
-                    self.extwc.append(b)
-        '''
         self.parent.add_package(self)
 
     def _2list(self, arg):
@@ -618,44 +588,6 @@ class ModflowUzf1(Package):
                 write_transient('extdp')
                 if self.iuzfopt > 0:
                     write_transient('extwc')
-
-        '''
-        for n in range(nper):
-            comment = ' #NUZF1 for stress period ' + str(n + 1)
-            if n < len(self.finf):
-                nuzf1 = 1
-            else:
-                nuzf1 = -1
-            f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf1, comment))
-            if n < len(self.finf):
-                f_uzf.write(self.finf[n].get_file_entry())
-            comment = ' #NUZF2 for stress period ' + str(n + 1)
-            if self.ietflg > 0:
-                if n < len(self.pet):
-                    nuzf2 = 1
-                else:
-                    nuzf2 = -1
-                f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf2, comment))
-                if n < len(self.pet):
-                    f_uzf.write(self.pet[n].get_file_entry())
-                comment = ' #NUZF3 for stress period ' + str(n + 1)
-                if n < len(self.extdp):
-                    nuzf3 = 1
-                else:
-                    nuzf3 = -1
-                f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf3, comment))
-                if n < len(self.extdp):
-                    f_uzf.write(self.extdp[n].get_file_entry())
-                comment = ' #NUZF4 for stress period ' + str(n + 1)
-                if self.iuzfopt > 0:
-                    if n < len(self.extwc):
-                        nuzf4 = 1
-                    else:
-                        nuzf4 = -1
-                    f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf4, comment))
-                    if n < len(self.extwc):
-                        f_uzf.write(self.extwc[n].get_file_entry())
-        '''
         f_uzf.close()
 
     @staticmethod
