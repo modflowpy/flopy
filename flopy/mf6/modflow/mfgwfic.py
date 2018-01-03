@@ -8,19 +8,19 @@ class ModflowGwfic(mfpackage.MFPackage):
     """
     ModflowGwfic defines a ic package within a gwf6 model.
 
-    Attributes
+    Parameters
     ----------
-    strt : [(strt : double)]
-        strt : is the initial (starting) head---that is, head at the beginning
-          of the GWF Model simulation. strt must be specified for all
-          simulations, including steady-state simulations. One value is read
-          for every model cell. For simulations in which the first stress
-          period is steady state, the values used for STRT generally do not
-          affect the simulation (exceptions may occur if cells go dry and (or)
-          rewet). The execution time, however, will be less if STRT includes
-          hydraulic heads that are close to the steady-state solution. A head
-          value lower than the cell bottom can be provided if a cell should
-          start as dry.
+    strt : [double]
+        * strt (double) is the initial (starting) head---that is, head at the
+        beginning of the GWF Model simulation. strt must be specified
+        for all simulations, including steady-state simulations. One value is
+        read for every model cell. For simulations in which the first stress
+        period is steady state, the values used for STRT generally do not
+        affect the simulation (exceptions may occur if cells go dry and (or)
+        rewet). The execution time, however, will be less if STRT includes
+        hydraulic heads that are close to the steady-state solution. A head
+        value lower than the cell bottom can be provided if a cell should start
+        as dry.
 
     """
     strt = ArrayTemplateGenerator(('gwf6', 'ic', 'griddata', 'strt'))
