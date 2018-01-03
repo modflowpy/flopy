@@ -785,6 +785,24 @@ class MFDataItemStructure(object):
                     self.description = self._resolve_common(arr_line, common)
                 elif len(arr_line) > 1 and arr_line[1].strip():
                     self.description = ' '.join(arr_line[1:])
+
+                # clean self.description
+                self.description = self.description.replace('``', '"')
+                self.description = self.description.replace("''", '"')
+
+                # massage latex equations
+                if '$' in self.description:
+                    descsplit = self.description.split('$')
+                    mylist = [i.replace('\\', '') + ':math:`' +
+                              j.replace('\\', '\\\\') + '`' for i, j in
+                              zip(descsplit[::2], descsplit[1::2])]
+                    mylist.append(descsplit[-1])
+                    self.description = ''.join(mylist)
+                    print(self.description)
+                else:
+                    self.description = self.description.replace('\\', '')
+
+
             elif arr_line[0] == 'block_variable':
                 if len(arr_line) > 1:
                     self.block_variable = bool(arr_line[1])

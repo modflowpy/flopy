@@ -790,8 +790,8 @@ class MFDocString(object):
         return doc_string
 
     def _resolve_string(self, doc_string):
-        doc_string = doc_string.replace('\\texttt{', '')
-        doc_string = doc_string.replace('}', '')
-        doc_string = doc_string.replace('~\\ref{table:', '')
-        doc_string = doc_string.replace('\\reftable:', '')
+        #doc_string = doc_string.replace('\\texttt{', '')
+        #doc_string = doc_string.replace('}', '')
+        #doc_string = doc_string.replace('~\\ref{table:', '')
+        #doc_string = doc_string.replace('\\reftable:', '')
         return doc_string
