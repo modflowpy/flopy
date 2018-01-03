@@ -12,7 +12,7 @@ class ModflowGwfoc(mfpackage.MFPackage):
     ----------
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the output file to write budget
-        information.
+          information.
     head_filerecord : [headfile]
         * headfile (string) name of the output file to write head information.
     headprintrecord : [columns, width, digits, format]
@@ -20,17 +20,17 @@ class ModflowGwfoc(mfpackage.MFPackage):
         * width (integer) width for writing each number.
         * digits (integer) number of digits to use for writing a number.
         * format (string) write format can be EXPONENTIAL, FIXED, GENERAL, or
-        SCIENTIFIC.
+          SCIENTIFIC.
     saverecord : [rtype, ocsetting]
         * rtype (string) type of information to save or print. Can be BUDGET or
-        HEAD.
+          HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
-        saved.
+          saved.
     printrecord : [rtype, ocsetting]
         * rtype (string) type of information to save or print. Can be BUDGET or
-        HEAD.
+          HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
-        saved.
+          saved.
 
     """
     budget_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options', 

@@ -766,7 +766,7 @@ class MFDocString(object):
         else:
             param_descr_array = ['\n']
         twr = TextWrapper(width=79, initial_indent=self.indent * 2,
-                          subsequent_indent='{}'.format(self.indent * 2))
+                          subsequent_indent='  {}'.format(self.indent * 2))
         for index in range(0, len(param_descr_array)):
             param_descr_array[index] = '\n'.join(twr.wrap(param_descr_array[
                                                               index]))

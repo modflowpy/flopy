@@ -12,26 +12,28 @@ class ModflowUtlts(mfpackage.MFPackage):
     ----------
     time_series_namerecord : [time_series_names]
         * time_series_names (string) Name by which a package references a
-        particular time-array series. The name must be unique among all time-
-        array series used in a package.
+          particular time-array series. The name must be unique among all time-
+          array series used in a package.
     interpolation_methodrecord : [interpolation_method]
         * interpolation_method (string) Interpolation method, which is either
-        STEPWISE or LINEAR.
+          STEPWISE or LINEAR.
     interpolation_methodrecord_single : [interpolation_method_single]
         * interpolation_method_single (string) Interpolation method, which is
-        either STEPWISE or LINEAR.
+          either STEPWISE or LINEAR.
     sfacrecord : [sfacval]
         * sfacval (double) Scale factor, which will multiply all array values
-        in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
+          in time series. SFAC is an optional attribute; if omitted, SFAC =
+          1.0.
     sfacrecord_single : [sfacval]
         * sfacval (double) Scale factor, which will multiply all array values
-        in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
+          in time series. SFAC is an optional attribute; if omitted, SFAC =
+          1.0.
     time_seriesrecarray : [tas_time, tas_array]
         * tas_time (double) A numeric time relative to the start of the
-        simulation, in the time unit used in the simulation. Times must be
-        strictly increasing.
+          simulation, in the time unit used in the simulation. Times must be
+          strictly increasing.
         * tas_array (double) A 2-D array of numeric, floating-point values, or
-        a constant value, readable by the U2DREL array-reading utility.
+          a constant value, readable by the U2DREL array-reading utility.
 
     """
     time_series_namerecord = ListTemplateGenerator(('ts', 'attributes', 

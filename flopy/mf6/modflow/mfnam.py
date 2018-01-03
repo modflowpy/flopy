@@ -12,46 +12,46 @@ class ModflowNam(mfpackage.MFPackage):
     ----------
     continue_ : boolean
         * continue (boolean) keyword flag to indicate that the simulation
-        should continue even if one or more solutions do not converge.
+          should continue even if one or more solutions do not converge.
     nocheck : boolean
         * nocheck (boolean) keyword flag to indicate that the model input check
-        routines should not be called prior to each time step. Checks are
-        performed by default.
+          routines should not be called prior to each time step. Checks are
+          performed by default.
     memory_print_option : string
         * memory_print_option (string) is a flag that controls printing of
-        detailed memory manager usage to the end of the simulation list file.
-        NONE means do not print detailed information. SUMMARY
-        means print only the total memory for each simulation component.
-        ALL means print information for each variable stored in the
-        memory manager. NONE is default if
-        memory\_print\_option is not specified.
+          detailed memory manager usage to the end of the simulation list file.
+          texttt{NONE} means do not print detailed information. texttt{SUMMARY}
+          means print only the total memory for each simulation component.
+          texttt{ALL} means print information for each variable stored in the
+          memory manager. texttt{NONE} is default if
+          texttt{memory_print_option} is not specified.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
-        Input File.
+          Input File.
     modelrecarray : [mtype, mfname, mname]
         * mtype (string) is the type of model to add to simulation.
         * mfname (string) is the file name of the model name file.
         * mname (string) is the user-assigned name of the model. The model name
-        cannot exceed 16 characters and must not have blanks within the name.
-        The model name is case insensitive; any lowercase letters are converted
-        and stored as upper case letters.
+          cannot exceed 16 characters and must not have blanks within the name.
+          The model name is case insensitive; any lowercase letters are
+          converted and stored as upper case letters.
     exchangerecarray : [exgtype, exgfile, exgmnamea, exgmnameb]
         * exgtype (string) is the exchange type.
         * exgfile (string) is the input file for the exchange.
         * exgmnamea (string) is the name of the first model that is part of
-        this exchange.
+          this exchange.
         * exgmnameb (string) is the name of the second model that is part of
-        this exchange.
+          this exchange.
     mxiter : integer
         * mxiter (integer) is the maximum number of outer iterations for this
-        solution group. The default value is 1. If there is only one solution
-        in the solution group, then MXITER must be 1.
+          solution group. The default value is 1. If there is only one solution
+          in the solution group, then MXITER must be 1.
     solutionrecarray : [slntype, slnfname, slnmnames]
         * slntype (string) is the type of solution. The Integrated Model
-        Solution (IMS6) is the only supported option in this version.
+          Solution (IMS6) is the only supported option in this version.
         * slnfname (string) name of file containing solution input.
         * slnmnames (string) is the array of model names to add to this
-        solution.
+          solution.
 
     """
     modelrecarray = ListTemplateGenerator(('nam', 'models', 

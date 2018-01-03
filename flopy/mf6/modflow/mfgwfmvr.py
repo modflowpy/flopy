@@ -12,58 +12,56 @@ class ModflowGwfmvr(mfpackage.MFPackage):
     ----------
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of MVR
-        information will be written to the listing file immediately after it is
-        read.
+          information will be written to the listing file immediately after it
+          is read.
     print_flows : boolean
         * print_flows (boolean) keyword to indicate that the list of MVR flow
-        rates will be printed to the listing file for every stress period time
-        step in which ``BUDGET PRINT'' is specified in Output Control. If there
-        is no Output Control option and PRINT\_FLOWS is specified, then flow
-        rates are printed for the last time step of each stress period.
+          rates will be printed to the listing file for every stress period
+          time step in which "BUDGET PRINT" is specified in Output Control. If
+          there is no Output Control option and PRINT_FLOWS is specified, then
+          flow rates are printed for the last time step of each stress period.
     modelnames : boolean
         * modelnames (boolean) keyword to indicate that all package names will
-        be preceded by the model name for the package. Model names are required
-        when the Mover Package is used with a GWF-GWF Exchange. The MODELNAME
-        keyword should not be used for a Mover Package that is for a single GWF
-        Model.
+          be preceded by the model name for the package. Model names are
+          required when the Mover Package is used with a GWF-GWF Exchange. The
+          MODELNAME keyword should not be used for a Mover Package that is for
+          a single GWF Model.
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the output file to write budget
-        information.
+          information.
     maxmvr : integer
         * maxmvr (integer) integer value specifying the maximum number of water
-        mover entries that will specified for any stress period.
+          mover entries that will specified for any stress period.
     maxpackages : integer
         * maxpackages (integer) integer value specifying the number of unique
-        packages that are included in this water mover input file.
+          packages that are included in this water mover input file.
     packagesrecarray : [mname, pname]
         * mname (string) name of model containing the package.
         * pname (string) is the name of a package that may be included in a
-        subsequent stress period block.
+          subsequent stress period block.
     periodrecarray : [mname1, pname1, id1, mname2, pname2, id2, mvrtype, value]
-        * mname1 (string) name of model containing the package,
-        pname1.
+        * mname1 (string) name of model containing the package, texttt{pname1}.
         * pname1 (string) is the package name for the provider. The package
-        pname1 must be designated to provide water through the MVR
-        Package by specifying the keyword ``MOVER'' in its OPTIONS block.
+          texttt{pname1} must be designated to provide water through the MVR
+          Package by specifying the keyword "MOVER" in its OPTIONS block.
         * id1 (integer) is the identifier for the provider. This is the well
-        number, reach number, lake number, etc.
-        * mname2 (string) name of model containing the package,
-        pname2.
+          number, reach number, lake number, etc.
+        * mname2 (string) name of model containing the package, texttt{pname2}.
         * pname2 (string) is the package name for the receiver. The package
-        pname2 must be designated to receive water from the MVR
-        Package by specifying the keyword ``MOVER'' in its OPTIONS block.
+          texttt{pname2} must be designated to receive water from the MVR
+          Package by specifying the keyword "MOVER" in its OPTIONS block.
         * id2 (integer) is the identifier for the receiver. This is the well
-        number, reach number, lake number, etc.
+          number, reach number, lake number, etc.
         * mvrtype (string) is the character string signifying the method for
-        determining how much water will be moved. Supported values are
-        ``FACTOR'' ``EXCESS'' ``THRESHOLD'' and ``UPTO''. These four options
-        determine how the receiver flow rate, $Q_R$, is calculated. These
-        options are based the options available in the SFR2 Package for
-        diverting stream flow.
+          determining how much water will be moved. Supported values are
+          "FACTOR" "EXCESS" "THRESHOLD" and "UPTO". These four options
+          determine how the receiver flow rate, :math:`Q_R`, is calculated.
+          These options are based the options available in the SFR2 Package for
+          diverting stream flow.
         * value (double) is the value to be used in the equation for
-        calculating the amount of water to move. For the ``FACTOR'' option,
-        value is the $\alpha$ factor. For the remaining options,
-        value is the specified flow rate, $Q_S$.
+          calculating the amount of water to move. For the "FACTOR" option,
+          texttt{value} is the :math:`\\alpha` factor. For the remaining
+          options, texttt{value} is the specified flow rate, :math:`Q_S`.
 
     """
     budget_filerecord = ListTemplateGenerator(('gwf6', 'mvr', 'options', 

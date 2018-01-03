@@ -12,26 +12,26 @@ class ModflowUtltab(mfpackage.MFPackage):
     ----------
     nrow : integer
         * nrow (integer) integer value specifying the number of rows in the
-        lake table. There must be nrow rows of data in the
-        TABLE block.
+          lake table. There must be texttt{nrow} rows of data in the
+          texttt{TABLE} block.
     ncol : integer
         * ncol (integer) integer value specifying the number of colums in the
-        lake table. There must be ncol columns of data in the
-        TABLE block. For lakes with HORIZONTAL and/or
-        VERTICAL ctype connections, NROW must be
-        equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV
-        ctype connections, NROW must be equal to 4.
+          lake table. There must be texttt{ncol} columns of data in the
+          texttt{TABLE} block. For lakes with texttt{HORIZONTAL} and/or
+          texttt{VERTICAL} texttt{ctype} connections, texttt{NROW} must be
+          equal to 3. For lakes with texttt{EMBEDDEDH} or texttt{EMBEDDEDV}
+          texttt{ctype} connections, texttt{NROW} must be equal to 4.
     laktabrecarray : [stage, volume, sarea, barea]
         * stage (double) real value that defines the stage corresponding to the
-        remaining data on the line.
+          remaining data on the line.
         * volume (double) real value that defines the lake volume corresponding
-        to the stage specified on the line.
+          to the stage specified on the line.
         * sarea (double) real value that defines the lake surface area
-        corresponding to the stage specified on the line.
-        * barea (double) real value that defines the lake-GWF exchange
-        area corresponding to the stage specified on the line. barea
-        is only specified if the claktype for the lake is
-        EMBEDDEDH or EMBEDDEDV.
+          corresponding to the stage specified on the line.
+        * barea (double) real value that defines the lake-texttt{GWF} exchange
+          area corresponding to the stage specified on the line. texttt{barea}
+          is only specified if the texttt{claktype} for the lake is
+          texttt{EMBEDDEDH} or texttt{EMBEDDEDV}.
 
     """
     laktabrecarray = ListTemplateGenerator(('tab', 'table', 
