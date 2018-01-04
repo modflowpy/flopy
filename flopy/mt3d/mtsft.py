@@ -255,7 +255,7 @@ class Mt3dSft(Package):
                              name='dispsf', locat=self.unit_number[0],
                              array_free_format=model.free_format)]
         ncomp = model.ncomp
-        # handle the multi species case
+        # handle the miult
         if ncomp > 1:
             for icomp in range(2,ncomp + 1):
                 for base_name,attr in zip(["coldsf","dispsf"],[self.coldsf,self.dispsf]):
@@ -300,7 +300,7 @@ class Mt3dSft(Package):
         type_list = [("node", np.int), ("isfbctyp", np.int), \
                      ("cbcsf0", np.float32)]
         if ncomp > 1:
-            for icomp in range(1, ncomp + 1):
+            for icomp in range(1, ncomp):
                 comp_name = "cbcsf{0:d}".format(icomp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
