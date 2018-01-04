@@ -11,11 +11,11 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     Parameters
     ----------
     exgtype : <string>
-        is the exchange type (GWF-GWF or GWF-GWT).
+        * is the exchange type (GWF-GWF or GWF-GWT).
     exgmnamea : <string>
-        is the name of the first model that is part of this exchange.
+        * is the name of the first model that is part of this exchange.
     exgmnameb : <string>
-        is the name of the second model that is part of this exchange.
+        * is the name of the second model that is part of this exchange.
     auxiliary : [string]
         * auxiliary (string) an array of auxiliary variable names. There is no
           limit on the number of auxiliary variables that can be provided. Most
