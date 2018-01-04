@@ -755,7 +755,7 @@ class MFDocString(object):
     def __init__(self, description):
         self.indent = '    '
         self.description = self._resolve_string(description)
-        self.parameter_header = '{}Attributes\n{}' \
+        self.parameter_header = '{}Parameters\n{}' \
                                 '----------'.format(self.indent, self.indent)
         self.parameters = []
 
@@ -790,8 +790,8 @@ class MFDocString(object):
         return doc_string
 
     def _resolve_string(self, doc_string):
-        doc_string = doc_string.replace('\\texttt{', '')
-        doc_string = doc_string.replace('}', '')
-        doc_string = doc_string.replace('~\\ref{table:', '')
-        doc_string = doc_string.replace('\\reftable:', '')
+        #doc_string = doc_string.replace('\\texttt{', '')
+        #doc_string = doc_string.replace('}', '')
+        #doc_string = doc_string.replace('~\\ref{table:', '')
+        #doc_string = doc_string.replace('\\reftable:', '')
         return doc_string

@@ -8,25 +8,29 @@ class ModflowGwfoc(mfpackage.MFPackage):
     """
     ModflowGwfoc defines a oc package within a gwf6 model.
 
-    Attributes
+    Parameters
     ----------
-    budget_filerecord : [(budgetfile : string)]
-        budgetfile : name of the output file to write budget information.
-    head_filerecord : [(headfile : string)]
-        headfile : name of the output file to write head information.
-    headprintrecord : [(columns : integer), (width : integer), (digits : integer),
-      (format : string)]
-        columns : number of columns for writing data.
-        width : width for writing each number.
-        digits : number of digits to use for writing a number.
-        format : write format can be EXPONENTIAL, FIXED, GENERAL, or
+    budget_filerecord : [budgetfile]
+        * budgetfile (string) name of the output file to write budget
+          information.
+    head_filerecord : [headfile]
+        * headfile (string) name of the output file to write head information.
+    headprintrecord : [columns, width, digits, format]
+        * columns (integer) number of columns for writing data.
+        * width (integer) width for writing each number.
+        * digits (integer) number of digits to use for writing a number.
+        * format (string) write format can be EXPONENTIAL, FIXED, GENERAL, or
           SCIENTIFIC.
-    saverecord : [(rtype : string), (ocsetting : keystring)]
-        rtype : type of information to save or print. Can be BUDGET or HEAD.
-        ocsetting : specifies the steps for which the data will be saved.
-    printrecord : [(rtype : string), (ocsetting : keystring)]
-        rtype : type of information to save or print. Can be BUDGET or HEAD.
-        ocsetting : specifies the steps for which the data will be saved.
+    saverecord : [rtype, ocsetting]
+        * rtype (string) type of information to save or print. Can be BUDGET or
+          HEAD.
+        * ocsetting (keystring) specifies the steps for which the data will be
+          saved.
+    printrecord : [rtype, ocsetting]
+        * rtype (string) type of information to save or print. Can be BUDGET or
+          HEAD.
+        * ocsetting (keystring) specifies the steps for which the data will be
+          saved.
 
     """
     budget_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options', 

@@ -8,29 +8,30 @@ class ModflowTdis(mfpackage.MFPackage):
     """
     ModflowTdis defines a tdis package.
 
-    Attributes
+    Parameters
     ----------
-    time_units : (time_units : string)
-        time_units : is the time units of the simulation. This is a text string
-          that is used as a label within model output files. Values for
-          time\_units may be ``unknown'', ``seconds'', ``minutes'', ``hours'',
-          ``days'', or ``years''. The default time unit is ``unknown''.
-    start_date_time : (start_date_time : string)
-        start_date_time : is the starting date and time of the simulation. This
-          is a text string that is used as a label within the simulation list
-          file. The value has no affect on the simulation. The recommended
-          format for the starting date and time is described at
+    time_units : string
+        * time_units (string) is the time units of the simulation. This is a
+          text string that is used as a label within model output files. Values
+          for time_units may be "unknown", "seconds", "minutes", "hours",
+          "days", or "years". The default time unit is "unknown".
+    start_date_time : string
+        * start_date_time (string) is the starting date and time of the
+          simulation. This is a text string that is used as a label within the
+          simulation list file. The value has no affect on the simulation. The
+          recommended format for the starting date and time is described at
           https://www.w3.org/TR/NOTE-datetime.
-    nper : (nper : integer)
-        nper : is the number of stress periods for the simulation.
-    tdisrecarray : [(perlen : double), (nstp : integer), (tsmult : double)]
-        perlen : is the length of a stress period.
-        nstp : is the number of time steps in a stress period.
-        tsmult : is the multiplier for the length of successive time steps. The
-          length of a time step is calculated by multiplying the length of the
-          previous time step by TSMULT. The length of the first time step,
-          $\Delta t_1$, is related to PERLEN, NSTP, and TSMULT by the relation
-          $\Delta t_1= perlen \frac{tsmult - 1{tsmult^{nstp-1$.
+    nper : integer
+        * nper (integer) is the number of stress periods for the simulation.
+    tdisrecarray : [perlen, nstp, tsmult]
+        * perlen (double) is the length of a stress period.
+        * nstp (integer) is the number of time steps in a stress period.
+        * tsmult (double) is the multiplier for the length of successive time
+          steps. The length of a time step is calculated by multiplying the
+          length of the previous time step by TSMULT. The length of the first
+          time step, :math:`\\Delta t_1`, is related to PERLEN, NSTP, and
+          TSMULT by the relation :math:`\\Delta t_1= perlen \\frac{tsmult -
+          1}{tsmult^{nstp}-1}`.
 
     """
     tdisrecarray = ListTemplateGenerator(('tdis', 'perioddata', 

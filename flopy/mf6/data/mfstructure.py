@@ -785,6 +785,24 @@ class MFDataItemStructure(object):
                     self.description = self._resolve_common(arr_line, common)
                 elif len(arr_line) > 1 and arr_line[1].strip():
                     self.description = ' '.join(arr_line[1:])
+
+                # clean self.description
+                self.description = self.description.replace('``', '"')
+                self.description = self.description.replace("''", '"')
+
+                # massage latex equations
+                if '$' in self.description:
+                    descsplit = self.description.split('$')
+                    mylist = [i.replace('\\', '') + ':math:`' +
+                              j.replace('\\', '\\\\') + '`' for i, j in
+                              zip(descsplit[::2], descsplit[1::2])]
+                    mylist.append(descsplit[-1])
+                    self.description = ''.join(mylist)
+                    print(self.description)
+                else:
+                    self.description = self.description.replace('\\', '')
+
+
             elif arr_line[0] == 'block_variable':
                 if len(arr_line) > 1:
                     self.block_variable = bool(arr_line[1])
@@ -1207,7 +1225,7 @@ class MFDataStructure(object):
 
     def get_type_string(self):
         type_array = []
-        self.get_type_array(type_array)
+        self.get_docstring_type_array(type_array)
         type_string = ', '.join(type_array)
         type_header = ''
         type_footer = ''
@@ -1221,22 +1239,39 @@ class MFDataStructure(object):
 
         return '{}{}{}'.format(type_header, type_string, type_footer)
 
-    def get_description(self):
-        description = ''
+    def get_docstring_type_array(self, type_array):
         for index, item in enumerate(self.data_item_structures):
+            if item.type == 'record':
+                item.get_docstring_type_array(type_array)
+            else:
+                if self.display_item(index):
+                    if self.type == 'recarray' or self.type == 'record' or \
+                       self.type == 'repeating_record':
+                        type_array.append('{}'.format(item.name))
+                    else:
+                        type_array.append('{}'.format(
+                            self._resolve_item_type(item)))
+
+    def get_description(self):
+        type_array = []
+        self.get_type_array(type_array)
+        description = ''
+        for datastr, index, itype in type_array:
+            item = datastr.data_item_structures[index]
             if item is None:
                 continue
             if item.type == 'record':
                 description = '{}\n{}'.format(description,
                                               item.get_description())
-            elif self.display_item(index):
+            elif datastr.display_item(index):
                 if len(description.strip()) > 0:
-                    description = '{}\n{} : {}'.format(description,
-                                                       item.name,
-                                                       item.description)
+                    description = '{}\n* {} ({}) {}'.format(description,
+                                                            item.name,
+                                                            itype,
+                                                            item.description)
                 else:
-                    description = '{} : {}'.format(item.name,
-                                                   item.description)
+                    description = '* {} ({}) {}'.format(item.name, itype,
+                                                        item.description)
         return description.strip()
 
     def get_type_array(self, type_array):
@@ -1244,21 +1279,25 @@ class MFDataStructure(object):
             if item.type == 'record':
                 item.get_type_array(type_array)
             else:
-                item_type = item.type
-                first_nk_idx = self.first_non_keyword_index()
                 if self.display_item(index):
-                    # single keyword is type boolean
-                    if item_type == 'keyword' and \
-                      len(self.data_item_structures) == 1:
-                        item_type = 'boolean'
-                    if item.is_cellid:
-                        item_type = '(integer, ...)'
-                    # two keywords
-                    if len(self.data_item_structures) == 2 and \
-                            first_nk_idx is None:
-                        # keyword type is string
-                        item_type = 'string'
-                    type_array.append('({} : {})'.format(item.name, item_type))
+                    type_array.append((self, index,'{}'.format(
+                        self._resolve_item_type(item))))
+
+    def _resolve_item_type(self, item):
+        item_type = item.type
+        first_nk_idx = self.first_non_keyword_index()
+        # single keyword is type boolean
+        if item_type == 'keyword' and \
+                        len(self.data_item_structures) == 1:
+            item_type = 'boolean'
+        if item.is_cellid:
+            item_type = '(integer, ...)'
+        # two keywords
+        if len(self.data_item_structures) == 2 and \
+                        first_nk_idx is None:
+            # keyword type is string
+            item_type = 'string'
+        return item_type
 
     def display_item(self, item_num):
         item = self.data_item_structures[item_num]
