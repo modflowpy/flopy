@@ -7,6 +7,7 @@ import os
 import ast
 import keyword
 from enum import Enum
+from textwrap import TextWrapper
 from collections import OrderedDict
 import numpy as np
 from ..mfbase import PackageContainer
@@ -166,7 +167,6 @@ class DfnPackage(Dfn):
             new_data_item_struct = MFDataItemStructure()
             for next_line in dfn_entry:
                 new_data_item_struct.set_value(next_line, common)
-
             # if block does not exist
             if current_block is None or \
                     current_block.name != new_data_item_struct.block_name:
@@ -232,6 +232,13 @@ class DfnPackage(Dfn):
                     new_data_item_struct.set_path(
                         keystring_items_needed_dict[
                             new_data_item_struct.name].path)
+                    if new_data_item_struct.type == 'record':
+                        # record within a keystring - create a data set in
+                        # place of the data item
+                        new_data_item_struct = self._new_dataset(
+                            new_data_item_struct, current_block,
+                            dataset_items_in_block, path,
+                            model_file, False)
                     keystring_items_needed_dict[
                         new_data_item_struct.name].keystring_dict[
                         new_data_item_struct.name] \
@@ -424,6 +431,13 @@ class DfnFile(Dfn):
                         new_data_item_struct.set_path(
                             keystring_items_needed_dict[
                                 new_data_item_struct.name].path)
+                        if new_data_item_struct.type == 'record':
+                            # record within a keystring - create a data set in
+                            # place of the data item
+                            new_data_item_struct = self._new_dataset(
+                                new_data_item_struct, current_block,
+                                dataset_items_in_block, path,
+                                model_file, False)
                         keystring_items_needed_dict[
                             new_data_item_struct.name].keystring_dict[
                             new_data_item_struct.name] \
@@ -798,11 +812,8 @@ class MFDataItemStructure(object):
                               zip(descsplit[::2], descsplit[1::2])]
                     mylist.append(descsplit[-1])
                     self.description = ''.join(mylist)
-                    print(self.description)
                 else:
                     self.description = self.description.replace('\\', '')
-
-
             elif arr_line[0] == 'block_variable':
                 if len(arr_line) > 1:
                     self.block_variable = bool(arr_line[1])
@@ -811,6 +822,45 @@ class MFDataItemStructure(object):
                     self.ucase = bool(arr_line[1])
             elif arr_line[0] == 'preserve_case':
                 self.preserve_case = self._get_boolean_val(arr_line)
+
+    def get_type_string(self):
+        return '[{}]'.format(self.type)
+
+    def get_description(self, line_size, initial_indent, level_indent):
+        item_desc = '* {} ({}) {}'.format(self.name, self.type,
+                                          self.description)
+        twr = TextWrapper(width=line_size, initial_indent=initial_indent,
+                          subsequent_indent='  {}'.format(
+                              initial_indent))
+        item_desc = '\n'.join(twr.wrap(item_desc))
+        return item_desc
+
+    def get_doc_string(self, line_size, initial_indent, level_indent):
+        description = self.get_description(line_size,
+                                           initial_indent + level_indent,
+                                           level_indent)
+        param_doc_string = '{} : {}'.format(self.python_name,
+                                            self.get_type_string())
+        twr = TextWrapper(width=line_size, initial_indent=initial_indent,
+                          subsequent_indent='  {}'.format(initial_indent))
+        param_doc_string = '\n'.join(twr.wrap(param_doc_string))
+        param_doc_string = '{}\n{}'.format(param_doc_string, description)
+        return param_doc_string
+
+
+    def get_keystring_desc(self, line_size, initial_indent, level_indent):
+        assert(self.type == 'keystring')
+
+        # get description of keystring elements
+        description = ''
+        for key, item in self.keystring_dict.items():
+            if description:
+                description = '{}\n'.format(description)
+            description = '{}{}'.format(description,
+                                        item.get_doc_string(line_size,
+                                                            initial_indent,
+                                                            level_indent))
+        return description
 
     @staticmethod
     def remove_cellid(resolved_shape, cellid_size):
@@ -1252,7 +1302,8 @@ class MFDataStructure(object):
                         type_array.append('{}'.format(
                             self._resolve_item_type(item)))
 
-    def get_description(self):
+    def get_description(self, line_size=79, initial_indent='        ',
+                        level_indent='    '):
         type_array = []
         self.get_type_array(type_array)
         description = ''
@@ -1261,18 +1312,42 @@ class MFDataStructure(object):
             if item is None:
                 continue
             if item.type == 'record':
-                description = '{}\n{}'.format(description,
-                                              item.get_description())
+                item_desc = item.get_description(line_size,
+                                                 initial_indent + level_indent,
+                                                 level_indent)
+                description = '{}\n{}'.format(description, item_desc)
             elif datastr.display_item(index):
                 if len(description.strip()) > 0:
-                    description = '{}\n* {} ({}) {}'.format(description,
-                                                            item.name,
-                                                            itype,
-                                                            item.description)
-                else:
-                    description = '* {} ({}) {}'.format(item.name, itype,
-                                                        item.description)
-        return description.strip()
+                    description = '{}\n'.format(description)
+                item_desc = '* {} ({}) {}'.format(item.name, itype,
+                                                  item.description)
+                twr = TextWrapper(width=line_size,
+                                  initial_indent=initial_indent,
+                                  subsequent_indent='  {}'.format(
+                                  initial_indent))
+                item_desc = '\n'.join(twr.wrap(item_desc))
+                description = '{}{}'.format(description, item_desc)
+                if item.type == 'keystring':
+                    keystr_desc = item.get_keystring_desc(line_size,
+                                                          initial_indent +
+                                                          level_indent,
+                                                          level_indent)
+                    description = '{}\n{}'.format(description,
+                                                  keystr_desc)
+        return description
+
+    def get_doc_string(self, line_size=79, initial_indent='    ',
+                        level_indent='    '):
+        description = self.get_description(line_size,
+                                           initial_indent + level_indent,
+                                           level_indent)
+        param_doc_string = '{} : {}'.format(self.python_name,
+                                            self.get_type_string())
+        twr = TextWrapper(width=line_size, initial_indent=initial_indent,
+                          subsequent_indent='  {}'.format(initial_indent))
+        param_doc_string = '\n'.join(twr.wrap(param_doc_string))
+        param_doc_string = '{}\n{}'.format(param_doc_string, description)
+        return param_doc_string
 
     def get_type_array(self, type_array):
         for index, item in enumerate(self.data_item_structures):

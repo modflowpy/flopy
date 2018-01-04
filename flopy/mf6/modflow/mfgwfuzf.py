@@ -142,7 +142,8 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           character variable that can contain as many as 40 characters. If
           boundname contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    uzfperiodrecarray : [iuzno, finf, pet, extdp, extwc, ha, hroot, rootact, aux]
+    uzfperiodrecarray : [iuzno, finf, pet, extdp, extwc, ha, hroot, rootact,
+      aux]
         * iuzno (integer) integer value that defines the UZF cell number
           associated with the specified PERIOD data on the line.
         * finf (string) real or character value that defines the applied

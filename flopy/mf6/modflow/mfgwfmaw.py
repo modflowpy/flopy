@@ -150,8 +150,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           an ASCII character variable that can contain as many as 40
           characters. If boundname contains spaces in it, then the entire name
           must be enclosed within single quotes.
-    wellconnectionsrecarray : [wellno, icon, cellid, scrn_top, scrn_bot, hk_skin,
-      radius_skin]
+    wellconnectionsrecarray : [wellno, icon, cellid, scrn_top, scrn_bot,
+      hk_skin, radius_skin]
         * wellno (integer) integer value that defines the well number
           associated with the specified CONNECTIONDATA data on the line.
           texttt{wellno} must be greater than zero and less than or equal to
@@ -204,76 +204,90 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           texttt{FLOWING_WELL}, texttt{RATE}, texttt{WELL_HEAD},
           texttt{HEAD_LIMIT}, texttt{SHUT_OFF}, texttt{RATE_SCALING}, and
           texttt{AUXILIARY}.
-    flowing_well : boolean
-        * flowing_well (boolean) keyword to indicate the well is a flowing
-          well. The texttt{flowing_well} option can be used to simulate flowing
-          wells when the simulated well head exceeds the specified drainage
-          elevation.
-    fwelev : double
-        * fwelev (double) elevation used to determine whether or not the well
-          is flowing.
-    fwcond : double
-        * fwcond (double) conductance used to calculate the discharge of a free
-          flowing well. Flow occurs when the head in the well is above the well
-          top elevation (texttt{fwelev}).
-    shut_off : boolean
-        * shut_off (boolean) keyword for activating well shut off capability.
-          Subsequent values define the minimum and maximum pumping rate that a
-          well must exceed to shutoff or reactivate a well, respectively,
-          during a stress period. texttt{shut_off} is only applied to
-          discharging wells (texttt{rate}:math:`<0`) and if
-          \texttt{head\_limit} is specified (not set to `\texttt{off}'). If
-          \texttt{head\_limit} is specified, \texttt{shut\_off} can be
-          deactivated by specifying a minimum value equal to zero. The
-          \texttt{shut\_off} option is based on the \texttt{shut\_off}
-          functionality available in the MNW2~\citep{konikow2009} package for
-          MODFLOW-2005. The \texttt{shut\_off} option has been included to
-          facilitate backward compatibility with previous versions of MODFLOW
-          but use of the \texttt{rate\_scaling} option instead of the
-          \texttt{shut\_off} option is recommended. By default,
-          \texttt{shut\_off} is not used.
-    minrate : double
-        * minrate (double) is the minimum rate that a well must exceed to
-          shutoff a well during a stress period. The well will shut down during
-          a time step if the flow rate to the well from the aquifer is less
-          than texttt{minrate}. If a well is shut down during a time step,
-          reactivation of the well cannot occur until the next time step to
-          reduce oscillations. texttt{minrate} must be less than
-          texttt{maxrate}.
-    maxrate : double
-        * maxrate (double) is the maximum rate that a well must exceed to
-          reactivate a well during a stress period. The well will reactivate
-          during a timestep if the well was shutdown during the previous time
-          step and the flow rate to the well from the aquifer exceeds
-          texttt{maxrate}. Reactivation of the well cannot occur until the next
-          time step if a well is shutdown to reduce oscillations.
-          texttt{maxrate} must be greater than texttt{minrate}.
-    rate_scaling : boolean
-        * rate_scaling (boolean) activate rate scaling. If texttt{rate_scaling}
-          is specified, both texttt{pump_elevation} and texttt{scaling_length}
-          must be specified. texttt{rate_scaling} cannot be used with
-          texttt{head_limit}.
-    pump_elevation : double
-        * pump_elevation (double) is the elevation of the multi-aquifer well
-          pump (texttt{pump_elevation}). texttt{pump_elevation} cannot be less
-          than the bottom elevation (texttt{bottom}) of the multi-aquifer well.
-          By default, texttt{pump_elevation} is set equal to the bottom of the
-          largest texttt{GWF} node number connected to a MAW well.
-    scaling_length : double
-        * scaling_length (double) height above the pump elevation
-          (texttt{scaling_length}) below which the pumping rate is reduced. The
-          default value for texttt{scaling_length} is the well radius.
-    auxname : string
-        * auxname (string) name for the auxiliary variable to be assigned
-          texttt{auxval}. texttt{auxname} must match one of the auxiliary
-          variable names defined in the texttt{OPTIONS} block. If
-          texttt{auxname} does not match one of the auxiliary variable names
-          defined in the texttt{OPTIONS} block the data are ignored.
-    auxval : double
-        * auxval (double) value for the auxiliary variable. If the Options
-          block includes a texttt{TIMESERIESFILE} entry (see the "Time-Variable
-          Input" section), values can be obtained from a time series by
-          entering the time-series name in place of a numeric value.
+            rate : [double]
+                * rate (double) is the volumetric pumping rate for the multi-
+                  aquifer well. A positive value indicates recharge and a
+                  negative value indicates discharge (pumping). texttt{rate}
+                  only applies to active (texttt{IBOUND}:math:`>0`) multi-
+                  aquifer wells. If the Options block includes a
+                  \texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
+                  section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, the \texttt{rate} for each multi-aquifer well is
+                  zero.
+            status : [string]
+                * status (string) keyword option to define well status.
+                  texttt{status} can be texttt{ACTIVE}, texttt{INACTIVE}, or
+                  texttt{CONSTANT}. By default, texttt{status} is
+                  texttt{ACTIVE}.
+            well_head : [double]
+                * well_head (double) is the head in the multi-aquifer well.
+                  texttt{well_head} is only applied to constant head
+                  (texttt{STATUS} is texttt{CONSTANT}) and inactive
+                  (texttt{STATUS} is texttt{INACTIVE}) multi-aquifer wells. If
+                  the Options block includes a texttt{TIMESERIESFILE} entry
+                  (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            rate_scalingrecord : [pump_elevation, scaling_length]
+                * pump_elevation (double) is the elevation of the multi-aquifer
+                  well pump (texttt{pump_elevation}). texttt{pump_elevation}
+                  cannot be less than the bottom elevation (texttt{bottom}) of
+                  the multi-aquifer well. By default, texttt{pump_elevation} is
+                  set equal to the bottom of the largest texttt{GWF} node
+                  number connected to a MAW well.
+                * scaling_length (double) height above the pump elevation
+                  (texttt{scaling_length}) below which the pumping rate is
+                  reduced. The default value for texttt{scaling_length} is the
+                  well radius.
+            flowing_wellrecord : [fwelev, fwcond]
+                * fwelev (double) elevation used to determine whether or not
+                  the well is flowing.
+                * fwcond (double) conductance used to calculate the discharge
+                  of a free flowing well. Flow occurs when the head in the well
+                  is above the well top elevation (texttt{fwelev}).
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned texttt{auxval}. texttt{auxname} must match one of
+                  the auxiliary variable names defined in the texttt{OPTIONS}
+                  block. If texttt{auxname} does not match one of the auxiliary
+                  variable names defined in the texttt{OPTIONS} block the data
+                  are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a texttt{TIMESERIESFILE} entry (see
+                  the "Time-Variable Input" section), values can be obtained
+                  from a time series by entering the time-series name in place
+                  of a numeric value.
+            shutoffrecord : [minrate, maxrate]
+                * minrate (double) is the minimum rate that a well must exceed
+                  to shutoff a well during a stress period. The well will shut
+                  down during a time step if the flow rate to the well from the
+                  aquifer is less than texttt{minrate}. If a well is shut down
+                  during a time step, reactivation of the well cannot occur
+                  until the next time step to reduce oscillations.
+                  texttt{minrate} must be less than texttt{maxrate}.
+                * maxrate (double) is the maximum rate that a well must exceed
+                  to reactivate a well during a stress period. The well will
+                  reactivate during a timestep if the well was shutdown during
+                  the previous time step and the flow rate to the well from the
+                  aquifer exceeds texttt{maxrate}. Reactivation of the well
+                  cannot occur until the next time step if a well is shutdown
+                  to reduce oscillations. texttt{maxrate} must be greater than
+                  texttt{minrate}.
+            head_limit : [string]
+                * head_limit (string) is the limiting water level (head) in the
+                  well, which is the minimum of the well texttt{rate} or the
+                  well inflow rate from the aquifer. texttt{head_limit} is only
+                  applied to discharging wells (texttt{rate}:math:`<0`).
+                  \texttt{head\_limit} can be deactivated by specifying the
+                  text string `\texttt{off}'. The \texttt{head\_limit} option
+                  is based on the \texttt{head\_limit} functionality available
+                  in the MNW2~\citep{konikow2009} package for MODFLOW-2005. The
+                  \texttt{head\_limit} option has been included to facilitate
+                  backward compatibility with previous versions of MODFLOW but
+                  use of the \texttt{rate\_scaling} option instead of the
+                  \texttt{head\_limit} option is recommended. By default,
+                  \texttt{head\_limit} is `\texttt{off}'.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'maw', 'options', 
@@ -472,10 +486,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                  ts_filerecord=None, obs_filerecord=None, mover=None,
                  nmawwells=None, wellrecarray=None,
                  wellconnectionsrecarray=None, wellperiodrecarray=None,
-                 flowing_well=None, fwelev=None, fwcond=None, shut_off=None,
-                 minrate=None, maxrate=None, rate_scaling=None,
-                 pump_elevation=None, scaling_length=None, auxname=None,
-                 auxval=None, fname=None, pname=None, parent_file=None):
+                 fname=None, pname=None, parent_file=None):
         super(ModflowGwfmaw, self).__init__(model, "maw", fname, pname,
                                             add_to_package_list, parent_file)        
 
@@ -507,16 +518,3 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "wellconnectionsrecarray",  wellconnectionsrecarray)
         self.wellperiodrecarray = self.build_mfdata("wellperiodrecarray", 
                                                     wellperiodrecarray)
-        self.flowing_well = self.build_mfdata("flowing_well",  flowing_well)
-        self.fwelev = self.build_mfdata("fwelev",  fwelev)
-        self.fwcond = self.build_mfdata("fwcond",  fwcond)
-        self.shut_off = self.build_mfdata("shut_off",  shut_off)
-        self.minrate = self.build_mfdata("minrate",  minrate)
-        self.maxrate = self.build_mfdata("maxrate",  maxrate)
-        self.rate_scaling = self.build_mfdata("rate_scaling",  rate_scaling)
-        self.pump_elevation = self.build_mfdata("pump_elevation", 
-                                                pump_elevation)
-        self.scaling_length = self.build_mfdata("scaling_length", 
-                                                scaling_length)
-        self.auxname = self.build_mfdata("auxname",  auxname)
-        self.auxval = self.build_mfdata("auxval",  auxval)

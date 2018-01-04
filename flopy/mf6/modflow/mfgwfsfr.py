@@ -86,8 +86,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         * nreaches (integer) integer value specifying the number of stream
           reaches. There must be texttt{nreaches} entries in the PACKAGEDATA
           block.
-    sfrrecarray : [rno, cellid, rlen, rwid, rgrd, rtp, rbth, rhk, man, ncon, ustrf,
-      ndv, aux, boundname]
+    sfrrecarray : [rno, cellid, rlen, rwid, rgrd, rtp, rbth, rhk, man, ncon,
+      ustrf, ndv, aux, boundname]
         * rno (integer) integer value that defines the reach number associated
           with the specified PACKAGEDATA data on the line. texttt{rno} must be
           greater than zero and less than or equal to texttt{nreaches}. Reach
@@ -215,27 +215,101 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           texttt{STAGE}, texttt{INFLOW}, texttt{RAINFALL}, texttt{EVAPORATION},
           texttt{RUNOFF}, texttt{DIVERSION}, texttt{UPSTREAM_FRACTION}, and
           texttt{AUXILIARY}.
-    diversion : boolean
-        * diversion (boolean) keyword to indicate diversion record.
-    idv : integer
-        * idv (integer) diversion number.
-    divrate : double
-        * divrate (double) real or character value that defines the volumetric
-          diversion (texttt{divflow}) rate for the streamflow routing reach. If
-          the Options block includes a TIMESERIESFILE entry (see the "Time-
-          Variable Input" section), values can be obtained from a time series
-          by entering the time-series name in place of a numeric value.
-    auxname : string
-        * auxname (string) name for the auxiliary variable to be assigned
-          texttt{auxval}. texttt{auxname} must match one of the auxiliary
-          variable names defined in the texttt{OPTIONS} block. If
-          texttt{auxname} does not match one of the auxiliary variable names
-          defined in the texttt{OPTIONS} block the data are ignored.
-    auxval : double
-        * auxval (double) value for the auxiliary variable. If the Options
-          block includes a TIMESERIESFILE entry (see the "Time-Variable Input"
-          section), values can be obtained from a time series by entering the
-          time-series name in place of a numeric value.
+            upstream_fraction : [double]
+                * upstream_fraction (double) real value that defines the
+                  fraction of upstream flow (texttt{ustrf}) from each upstream
+                  reach that is applied as upstream inflow to the reach. The
+                  sum of all texttt{ustrf} values for all reaches connected to
+                  the same upstream reach must be equal to one.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  volumetric rate of diffuse overland runoff that enters the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value. By default,
+                  runoff rates are zero for each reach.
+            evaporation : [string]
+                * evaporation (string) real or character value that defines the
+                  volumetric rate per unit area of water subtracted by
+                  evaporation from the streamflow routing reach. A positive
+                  evaporation rate should be provided. If the Options block
+                  includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, evaporation rates are zero for each reach.
+            rainfall : [string]
+                * rainfall (string) real or character value that defines the
+                  volumetric rate per unit area of water added by precipitation
+                  directly on the streamflow routing reach. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, rainfall rates are zero for each reach.
+            status : [string]
+                * status (string) keyword option to define stream reach status.
+                  texttt{status} can be texttt{ACTIVE}, texttt{INACTIVE}, or
+                  texttt{SIMPLE}. The texttt{SIMPLE} texttt{status} option
+                  simulates streamflow using a user-specified stage for a reach
+                  or a stage set to the top of the reach (depth = 0). In cases
+                  where the simulated leakage calculated using the specified
+                  stage exceeds the sum of inflows to the reach, the stage is
+                  set to the top of the reach and leakage is set equal to the
+                  sum of inflows. Upstream factions should be changed using the
+                  texttt{UPSTREAM_FRACTION} texttt{sfrsetting} if the status
+                  for one or more reaches is changed to texttt{ACTIVE} or
+                  texttt{INACTIVE}. For example, if one of two downstream
+                  connections for a reach is inactivated, the upstream fraction
+                  for the active and inactive downstream reach should be
+                  changed to 1.0 and 0.0, respectively, to ensure that the
+                  active reach receives all of the downstream outflow from the
+                  upstream reach. By default, texttt{status} is texttt{ACTIVE}.
+            manning : [string]
+                * manning (string) real or character value that defines the
+                  Manning's roughness coefficient for the reach.
+                  texttt{manning} must be greater than zero. If the Options
+                  block includes a texttt{TIMESERIESFILE} entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            inflow : [string]
+                * inflow (string) real or character value that defines the
+                  volumetric inflow rate for the streamflow routing reach. If
+                  the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, inflow rates are zero for each
+                  reach.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned texttt{auxval}. texttt{auxname} must match one of
+                  the auxiliary variable names defined in the texttt{OPTIONS}
+                  block. If texttt{auxname} does not match one of the auxiliary
+                  variable names defined in the texttt{OPTIONS} block the data
+                  are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            stage : [string]
+                * stage (string) real or character value that defines the stage
+                  for the reach. The specified texttt{stage} is only applied if
+                  the reach uses the simple routing option. If texttt{STAGE} is
+                  not specified for reaches that use the simple routing option,
+                  the specified stage is set to the top of the reach. If the
+                  Options block includes a texttt{TIMESERIESFILE} entry (see
+                  the "Time-Variable Input" section), values can be obtained
+                  from a time series by entering the time-series name in place
+                  of a numeric value.
+            diversionrecord : [idv, divrate]
+                * idv (integer) diversion number.
+                * divrate (double) real or character value that defines the
+                  volumetric diversion (texttt{divflow}) rate for the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'sfr', 'options', 
@@ -440,8 +514,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                  nreaches=None, sfrrecarray=None,
                  reach_connectivityrecarray=None,
                  reach_diversionsrecarray=None, reachperiodrecarray=None,
-                 diversion=None, idv=None, divrate=None, auxname=None,
-                 auxval=None, fname=None, pname=None, parent_file=None):
+                 fname=None, pname=None, parent_file=None):
         super(ModflowGwfsfr, self).__init__(model, "sfr", fname, pname,
                                             add_to_package_list, parent_file)        
 
@@ -474,8 +547,3 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "reach_diversionsrecarray",  reach_diversionsrecarray)
         self.reachperiodrecarray = self.build_mfdata("reachperiodrecarray", 
                                                      reachperiodrecarray)
-        self.diversion = self.build_mfdata("diversion",  diversion)
-        self.idv = self.build_mfdata("idv",  idv)
-        self.divrate = self.build_mfdata("divrate",  divrate)
-        self.auxname = self.build_mfdata("auxname",  auxname)
-        self.auxval = self.build_mfdata("auxval",  auxval)

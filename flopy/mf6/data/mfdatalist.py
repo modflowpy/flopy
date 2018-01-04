@@ -3,6 +3,7 @@ import math
 from copy import deepcopy
 from ..data import mfstructure, mfdatautil, mfdata
 from ..mfbase import ExtFileAction
+from .mfstructure import MFDataException
 
 
 class MFList(mfdata.MFMultiDimVar):
@@ -609,6 +610,14 @@ class MFList(mfdata.MFMultiDimVar):
                                             data_item.keystring_dict[
                                             name_data]
                                         assert(data_item_ks != 0)
+                                        if isinstance(data_item_ks,
+                                                mfstructure.MFDataStructure):
+                                            data_item_kw = \
+                                                    data_item_ks.\
+                                                    data_item_structures[0]
+                                        else:
+                                            data_item_kw = data_item_ks
+
                                         # keyword is always implied in a
                                         # keystring and should be stored,
                                         # add a string data_item for the
@@ -624,24 +633,60 @@ class MFList(mfdata.MFMultiDimVar):
                                                     data_index,
                                                     var_index,
                                                     repeat_count)
-                                    if data_item_ks.type != 'keyword':
-                                        # data item contains additional
-                                        # information
-                                        data_index, more_data_expected, \
-                                            unknown_repeats = \
-                                            self._append_data(data_item_ks,
-                                                              arr_line,
-                                                              arr_line_len,
-                                                              data_index,
-                                                              var_index,
-                                                              repeat_count)
+                                    if isinstance(data_item_ks,
+                                        mfstructure.MFDataStructure):
+                                        dis = \
+                                        data_item_ks.data_item_structures
+                                        for ks_data_item in dis:
+                                            if ks_data_item.type != 'keyword'\
+                                                    and data_index < \
+                                                            arr_line_len:
+                                                # data item contains additional
+                                                # information
+                                                data_index,\
+                                                more_data_expected, \
+                                                unknown_repeats = \
+                                                    self._append_data(
+                                                        ks_data_item,
+                                                        arr_line,
+                                                        arr_line_len,
+                                                        data_index,
+                                                        var_index,
+                                                        repeat_count)
+                                        while data_index < arr_line_len:
+                                            try:
+                                                # append remaining data
+                                                # (temporary fix)
+                                                data_index, \
+                                                more_data_expected, \
+                                                unknown_repeats = \
+                                                    self._append_data(
+                                                        ks_data_item,
+                                                        arr_line,
+                                                        arr_line_len,
+                                                        data_index,
+                                                        var_index,
+                                                        repeat_count)
+                                            except MFDataException:
+                                                break
                                     else:
-                                        # append empty data as a placeholder.
-                                        # this is necessarily to keep the
-                                        # recarray a consistent shape
-                                        self._data_line = self._data_line + \
-                                                          (None,)
-                                        data_index += 1
+                                        if data_item_ks.type != 'keyword':
+                                                data_index, \
+                                                more_data_expected, \
+                                                unknown_repeats = \
+                                                self._append_data(data_item_ks,
+                                                                  arr_line,
+                                                                  arr_line_len,
+                                                                  data_index,
+                                                                  var_index,
+                                                                  repeat_count)
+                                        else:
+                                            # append empty data as a placeholder.
+                                            # this is necessarily to keep the
+                                            # recarray a consistent shape
+                                            self._data_line = \
+                                                self._data_line + (None,)
+                                            data_index += 1
                                 else:
                                     if data_item.tagged and repeat_count == 1:
                                         # data item tagged, include data item

@@ -129,8 +129,8 @@ class ModflowGwflak(mfpackage.MFPackage):
           character variable that can contain as many as 40 characters. If
           boundname contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    lakrecarray : [lakeno, iconn, cellid, claktype, bedleak, belev, telev, connlen,
-      connwidth]
+    lakrecarray : [lakeno, iconn, cellid, claktype, bedleak, belev, telev,
+      connlen, connwidth]
         * lakeno (integer) integer value that defines the lake number
           associated with the specified CONNECTIONDATA data on the line.
           texttt{lakeno} must be greater than zero and less than or equal to
@@ -224,8 +224,8 @@ class ModflowGwflak(mfpackage.MFPackage):
           texttt{GWF} exchange area data for each entry in the file. Input
           instructions for the texttt{ctabname} file is included at the LAK
           package lake table file input instructions section.
-    outletsrecarray : [outletno, lakein, lakeout, couttype, invert, width, rough,
-      slope]
+    outletsrecarray : [outletno, lakein, lakeout, couttype, invert, width,
+      rough, slope]
         * outletno (integer) integer value that defines the outlet number
           associated with the specified OUTLETS data on the line.
           texttt{outletno} must be greater than zero and less than or equal to
@@ -281,6 +281,59 @@ class ModflowGwflak(mfpackage.MFPackage):
           texttt{laksetting} string include: texttt{STATUS}, texttt{STAGE},
           texttt{RAINFALL}, texttt{EVAPORATION}, texttt{RUNOFF},
           texttt{WITHDRAWAL}, and texttt{AUXILIARY}.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  runoff rate for the lake. texttt{value} must be greater than
+                  or equal to zero. If the Options block includes a
+                  texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
+                  section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value.
+            evaporation : [string]
+                * evaporation (string) real or character value that defines the
+                  maximum evaporation rate for the lake. texttt{value} must be
+                  greater than or equal to zero. If the Options block includes
+                  a texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
+                  section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value.
+            rainfall : [string]
+                * rainfall (string) real or character value that defines the
+                  rainfall rate for the lake. texttt{value} must be greater
+                  than or equal to zero. If the Options block includes a
+                  texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
+                  section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value.
+            status : [string]
+                * status (string) keyword option to define lake status.
+                  texttt{status} can be texttt{ACTIVE}, texttt{INACTIVE}, or
+                  texttt{CONSTANT}. By default, texttt{status} is
+                  texttt{ACTIVE}.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned texttt{auxval}. texttt{auxname} must match one of
+                  the auxiliary variable names defined in the texttt{OPTIONS}
+                  block. If texttt{auxname} does not match one of the auxiliary
+                  variable names defined in the texttt{OPTIONS} block the data
+                  are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a texttt{TIMESERIESFILE} entry (see
+                  the "Time-Variable Input" section), values can be obtained
+                  from a time series by entering the time-series name in place
+                  of a numeric value.
+            stage : [string]
+                * stage (string) real or character value that defines the stage
+                  for the lake. The specified texttt{stage} is only applied if
+                  the lake is a constant stage lake. If the Options block
+                  includes a texttt{TIMESERIESFILE} entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            withdrawal : [string]
+                * withdrawal (string) real or character value that defines the
+                  maximum withdrawal rate for the lake. texttt{value} must be
+                  greater than or equal to zero. If the Options block includes
+                  a texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
+                  section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value.
     rate : string
         * rate (string) real or character value that defines the extraction
           rate for the lake outflow. A positive value indicates inflow and a
@@ -293,17 +346,6 @@ class ModflowGwflak(mfpackage.MFPackage):
           entering the time-series name in place of a numeric value. By
           default, the \texttt{rate} for each \texttt{SPECIFIED} lake outlet is
           zero.
-    auxname : string
-        * auxname (string) name for the auxiliary variable to be assigned
-          texttt{auxval}. texttt{auxname} must match one of the auxiliary
-          variable names defined in the texttt{OPTIONS} block. If
-          texttt{auxname} does not match one of the auxiliary variable names
-          defined in the texttt{OPTIONS} block the data are ignored.
-    auxval : double
-        * auxval (double) value for the auxiliary variable. If the Options
-          block includes a texttt{TIMESERIESFILE} entry (see the "Time-Variable
-          Input" section), values can be obtained from a time series by
-          entering the time-series name in place of a numeric value.
     outletperiodrecarray : [outletno, outletsetting]
         * outletno (integer) integer value that defines the outlet number
           associated with the specified PERIOD data on the line.
@@ -313,6 +355,55 @@ class ModflowGwflak(mfpackage.MFPackage):
           keyword and values. Keyword values that can be used to start the
           texttt{outletsetting} string include: texttt{RATE}, texttt{INVERT},
           texttt{WIDTH}, texttt{SLOPE}, and texttt{ROUGH}.
+            rate : [string]
+                * rate (string) real or character value that defines the
+                  extraction rate for the lake outflow. A positive value
+                  indicates inflow and a negative value indicates outflow from
+                  the lake. texttt{rate} only applies to active
+                  (texttt{IBOUND}:math:`>0`) lakes. A specified \texttt{rate}
+                  is only applied if \texttt{couttype} for the
+                  \texttt{outletno} is \texttt{SPECIFIED}. If the Options block
+                  includes a \texttt{TIMESERIESFILE} entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value. By default, the \texttt{rate} for each
+                  \texttt{SPECIFIED} lake outlet is zero.
+            invert : [string]
+                * invert (string) real or character value that defines the
+                  invert elevation for the lake outlet. A specified
+                  texttt{invert} value is only used for active lakes if
+                  texttt{couttype} for lake outlet texttt{outletno} is not
+                  texttt{SPECIFIED}. If the Options block includes a
+                  texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
+                  section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value.
+            width : [string]
+                * width (string) real or character value that defines the width
+                  of the lake outlet. A specified texttt{width} value is only
+                  used for active lakes if texttt{couttype} for lake outlet
+                  texttt{outletno} is not texttt{SPECIFIED}. If the Options
+                  block includes a texttt{TIMESERIESFILE} entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            slope : [string]
+                * slope (string) real or character value that defines the bed
+                  slope for the lake outlet. A specified texttt{slope} value is
+                  only used for active lakes if texttt{couttype} for lake
+                  outlet texttt{outletno} is texttt{MANNING}. If the Options
+                  block includes a texttt{TIMESERIESFILE} entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            rough : [string]
+                * rough (string) real or character value that defines the width
+                  of the lake outlet. A specified texttt{width} value is only
+                  used for active lakes if texttt{couttype} for lake outlet
+                  texttt{outletno} is not texttt{SPECIFIED}. If the Options
+                  block includes a texttt{TIMESERIESFILE} entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'lak', 'options', 
@@ -559,8 +650,8 @@ class ModflowGwflak(mfpackage.MFPackage):
                  noutlets=None, ntables=None, lakrecarray_package=None,
                  lakrecarray=None, lake_tablesrecarray=None,
                  outletsrecarray=None, lakeperiodrecarray=None, rate=None,
-                 auxname=None, auxval=None, outletperiodrecarray=None,
-                 fname=None, pname=None, parent_file=None):
+                 outletperiodrecarray=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowGwflak, self).__init__(model, "lak", fname, pname,
                                             add_to_package_list, parent_file)        
 
@@ -597,7 +688,5 @@ class ModflowGwflak(mfpackage.MFPackage):
         self.lakeperiodrecarray = self.build_mfdata("lakeperiodrecarray", 
                                                     lakeperiodrecarray)
         self.rate = self.build_mfdata("rate",  rate)
-        self.auxname = self.build_mfdata("auxname",  auxname)
-        self.auxval = self.build_mfdata("auxval",  auxval)
         self.outletperiodrecarray = self.build_mfdata("outletperiodrecarray", 
                                                       outletperiodrecarray)
