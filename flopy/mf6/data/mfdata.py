@@ -723,7 +723,8 @@ class DataStorage(object):
                 success = True
                 for layer_num, layer_data in enumerate(data):
                     if not isinstance(layer_data, list) and \
-                            not isinstance(layer_data, dict):
+                            not isinstance(layer_data, dict) and \
+                            not isinstance(layer_data, np.ndarray):
                         layer_data = [layer_data]
                     success = success and self._set_array_layer(layer_data,
                                                                 layer_num,
