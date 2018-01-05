@@ -1,3 +1,4 @@
 include flopy/export/longnames.json
 include flopy/export/unitsformat.json
 include flopy/mf6/data/dfn/*.dfn
+include flopy/mf6/utils/createpackages.py
