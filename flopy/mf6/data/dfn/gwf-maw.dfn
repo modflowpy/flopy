@@ -485,7 +485,7 @@ description keyword option to define well status.  \texttt{status} can be \textt
 
 block period
 name flowing_wellrecord
-type record flowing_well fwelev fwcond
+type record flowing_well fwelev fwcond fwrlen
 shape
 tagged
 in_record true
@@ -521,6 +521,16 @@ in_record true
 reader urword
 longname well flowing well conductance
 description conductance used to calculate the discharge of a free flowing well.  Flow occurs when the head in the well is above the well top elevation (\texttt{fwelev}).
+
+block period
+name fwrlen
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+longname flowing well reduction length
+description length used to reduce the conductance of the flowing well.  When the head in the well drops below the well top plus the reduction length, then the conductance is reduced.  This reduction length can be used to improve the stability of simulations with flowing wells so that there is not an abrupt change in flowing well rates.
 
 block period
 name rate

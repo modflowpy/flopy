@@ -71,7 +71,6 @@ block packages
 name ftype
 in_record true
 type string
-ucase true
 tagged false
 reader urword
 longname package type

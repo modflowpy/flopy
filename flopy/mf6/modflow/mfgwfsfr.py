@@ -215,6 +215,40 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           texttt{STAGE}, texttt{INFLOW}, texttt{RAINFALL}, texttt{EVAPORATION},
           texttt{RUNOFF}, texttt{DIVERSION}, texttt{UPSTREAM_FRACTION}, and
           texttt{AUXILIARY}.
+            stage : [string]
+                * stage (string) real or character value that defines the stage
+                  for the reach. The specified texttt{stage} is only applied if
+                  the reach uses the simple routing option. If texttt{STAGE} is
+                  not specified for reaches that use the simple routing option,
+                  the specified stage is set to the top of the reach. If the
+                  Options block includes a texttt{TIMESERIESFILE} entry (see
+                  the "Time-Variable Input" section), values can be obtained
+                  from a time series by entering the time-series name in place
+                  of a numeric value.
+            diversionrecord : [idv, divrate]
+                * idv (integer) diversion number.
+                * divrate (double) real or character value that defines the
+                  volumetric diversion (texttt{divflow}) rate for the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value.
+            manning : [string]
+                * manning (string) real or character value that defines the
+                  Manning's roughness coefficient for the reach.
+                  texttt{manning} must be greater than zero. If the Options
+                  block includes a texttt{TIMESERIESFILE} entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            rainfall : [string]
+                * rainfall (string) real or character value that defines the
+                  volumetric rate per unit area of water added by precipitation
+                  directly on the streamflow routing reach. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, rainfall rates are zero for each reach.
             upstream_fraction : [double]
                 * upstream_fraction (double) real value that defines the
                   fraction of upstream flow (texttt{ustrf}) from each upstream
@@ -229,23 +263,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   values can be obtained from a time series by entering the
                   time-series name in place of a numeric value. By default,
                   runoff rates are zero for each reach.
-            evaporation : [string]
-                * evaporation (string) real or character value that defines the
-                  volumetric rate per unit area of water subtracted by
-                  evaporation from the streamflow routing reach. A positive
-                  evaporation rate should be provided. If the Options block
-                  includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, evaporation rates are zero for each reach.
-            rainfall : [string]
-                * rainfall (string) real or character value that defines the
-                  volumetric rate per unit area of water added by precipitation
-                  directly on the streamflow routing reach. If the Options
-                  block includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, rainfall rates are zero for each reach.
             status : [string]
                 * status (string) keyword option to define stream reach status.
                   texttt{status} can be texttt{ACTIVE}, texttt{INACTIVE}, or
@@ -264,14 +281,15 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   changed to 1.0 and 0.0, respectively, to ensure that the
                   active reach receives all of the downstream outflow from the
                   upstream reach. By default, texttt{status} is texttt{ACTIVE}.
-            manning : [string]
-                * manning (string) real or character value that defines the
-                  Manning's roughness coefficient for the reach.
-                  texttt{manning} must be greater than zero. If the Options
-                  block includes a texttt{TIMESERIESFILE} entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
+            evaporation : [string]
+                * evaporation (string) real or character value that defines the
+                  volumetric rate per unit area of water subtracted by
+                  evaporation from the streamflow routing reach. A positive
+                  evaporation rate should be provided. If the Options block
+                  includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, evaporation rates are zero for each reach.
             inflow : [string]
                 * inflow (string) real or character value that defines the
                   volumetric inflow rate for the streamflow routing reach. If
@@ -292,24 +310,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   Variable Input" section), values can be obtained from a time
                   series by entering the time-series name in place of a numeric
                   value.
-            stage : [string]
-                * stage (string) real or character value that defines the stage
-                  for the reach. The specified texttt{stage} is only applied if
-                  the reach uses the simple routing option. If texttt{STAGE} is
-                  not specified for reaches that use the simple routing option,
-                  the specified stage is set to the top of the reach. If the
-                  Options block includes a texttt{TIMESERIESFILE} entry (see
-                  the "Time-Variable Input" section), values can be obtained
-                  from a time series by entering the time-series name in place
-                  of a numeric value.
-            diversionrecord : [idv, divrate]
-                * idv (integer) diversion number.
-                * divrate (double) real or character value that defines the
-                  volumetric diversion (texttt{divflow}) rate for the
-                  streamflow routing reach. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'sfr', 'options', 

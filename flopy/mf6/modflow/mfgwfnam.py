@@ -78,7 +78,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
             "type recarray ftype fname pname", "reader urword", 
             "optional false"],
            ["block packages", "name ftype", "in_record true", "type string", 
-            "ucase true", "tagged false", "reader urword"],
+            "tagged false", "reader urword"],
            ["block packages", "name fname", "in_record true", "type string", 
             "preserve_case true", "tagged false", "reader urword"],
            ["block packages", "name pname", "in_record true", "type string", 

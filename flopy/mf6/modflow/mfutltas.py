@@ -60,7 +60,7 @@ class ModflowUtltas(mfpackage.MFPackage):
             "optional false"],
            ["block time", "name time_from_model_start", 
             "type double precision", "block_variable True", "in_record true", 
-            "tagged false", "shape", "tagged false", "valid", "reader urword", 
+            "shape", "tagged false", "valid", "reader urword", 
             "optional false"],
            ["block time", "name tas_array", "type double precision", 
             "tagged false", "just_data true", "shape (unknown)", 

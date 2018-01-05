@@ -28,12 +28,12 @@ class ModflowUtlts(mfpackage.MFPackage):
         * sfacval (double) Scale factor, which will multiply all array values
           in time series. SFAC is an optional attribute; if omitted, SFAC =
           1.0.
-    time_seriesrecarray : [tas_time, tas_array]
-        * tas_time (double) A numeric time relative to the start of the
+    time_seriesrecarray : [ts_time, ts_array]
+        * ts_time (double) A numeric time relative to the start of the
           simulation, in the time unit used in the simulation. Times must be
           strictly increasing.
-        * tas_array (double) A 2-D array of numeric, floating-point values, or
-          a constant value, readable by the U2DREL array-reading utility.
+        * ts_array (double) A 2-D array of numeric, floating-point values, or a
+          constant value, readable by the U2DREL array-reading utility.
 
     """
     time_series_namerecord = ListTemplateGenerator(('ts', 'attributes', 
@@ -86,12 +86,12 @@ class ModflowUtlts(mfpackage.MFPackage):
            ["block attributes", "name sfac", "type keyword", "shape", 
             "tagged false", "reader urword", "optional false"],
            ["block timeseries", "name time_seriesrecarray", 
-            "type recarray tas_time tas_array", "shape", "reader urword", 
+            "type recarray ts_time ts_array", "shape", "reader urword", 
             "tagged true", "optional false"],
-           ["block timeseries", "name tas_time", "type double precision", 
+           ["block timeseries", "name ts_time", "type double precision", 
             "shape", "tagged false", "reader urword", "optional false", 
             "repeating false"],
-           ["block timeseries", "name tas_array", "type double precision", 
+           ["block timeseries", "name ts_array", "type double precision", 
             "shape time_series_names", "tagged false", "reader urword", 
             "optional false"]]
 
