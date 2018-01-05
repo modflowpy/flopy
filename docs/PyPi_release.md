@@ -25,7 +25,7 @@ How to Cite
 
 *Software/Code citation for FloPy:*
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2017, FloPy v3.2.8 &mdash; develop: U.S. Geological Survey Software Release, 18 December 2017, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.8 &mdash; develop: U.S. Geological Survey Software Release, 05 January 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Installation
