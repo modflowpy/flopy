@@ -232,9 +232,13 @@ def create_packages():
         init_param_list = []
         class_vars = []
         dfn_string = build_dfn_string(package[3])
-        package_name = clean_class_string(
+        package_abbr = clean_class_string(
             '{}{}'.format(clean_class_string(package[2]),
-                          package[0].file_type)).lower()
+                            package[0].file_type)).lower()
+        package_name = clean_class_string(
+            '{}{}{}'.format(clean_class_string(package[2]),
+                            package[0].file_prefix,
+                            package[0].file_type)).lower()
         if package[0].description:
             doc_string = mfdatautil.MFDocString(package[0].description)
         else:
@@ -295,7 +299,7 @@ def create_packages():
             package_name.title())
         class_def_string = class_def_string.replace('-', '_')
         class_var_string = '{}\n    package_abbr = "{}"\n    package_type = ' \
-                           '"{}"'.format('\n'.join(class_vars), package_name,
+                           '"{}"'.format('\n'.join(class_vars), package_abbr,
                                          package[4])
         init_string_full = init_string_def
         # add variables to init string

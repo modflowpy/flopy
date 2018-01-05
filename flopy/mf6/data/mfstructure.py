@@ -149,6 +149,14 @@ class DfnPackage(Dfn):
         super(DfnPackage, self).__init__()
         self.package = package
         self.package_type = package.package_type
+        # the package type is always the text after the last -
+        package_name = self.package_type.split('-')
+        self.package_type = package_name[-1]
+        if not isinstance(package_name, str) and \
+           len(package_name) > 1:
+            self.package_prefix = ''.join(package_name[:-1])
+        else:
+            self.package_prefix = ''
         self.dfn_type = self._file_type(package.package_abbr)
         self.dfn_list = package.dfn
 
@@ -321,6 +329,14 @@ class DfnFile(Dfn):
         self._file_path = os.path.join(dfn_path, file)
         self.dfn_type = self._file_type(file.replace('-', ''))
         self.package_type = os.path.splitext(file[4:])[0]
+        # the package type is always the text after the last -
+        package_name = self.package_type.split('-')
+        self.package_type = package_name[-1]
+        if not isinstance(package_name, str) and \
+           len(package_name) > 1:
+            self.package_prefix = ''.join(package_name[:-1])
+        else:
+            self.package_prefix = ''
         self.file = file
         self.dataset_items_needed_dict = {}
         self.dfn_list = []
@@ -1583,6 +1599,7 @@ class MFInputFileStructure(object):
         # initialize
         self.valid = True
         self.file_type = dfn_file.package_type
+        self.file_prefix = dfn_file.package_prefix
         self.dfn_type = dfn_file.dfn_type
         self.package_plot_dictionary = {}
         self.path = path + (self.file_type,)

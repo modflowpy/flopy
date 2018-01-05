@@ -8,7 +8,7 @@ from .mfgnc import ModflowGnc
 from .mfutlobs import ModflowUtlobs
 from .mfutlts import ModflowUtlts
 from .mfutltas import ModflowUtltas
-from .mfutllak_tab import ModflowUtllak_Tab
+from .mfutllaktab import ModflowUtllaktab
 from .mfgwfnam import ModflowGwfnam
 from .mfgwfdis import ModflowGwfdis
 from .mfgwfdisv import ModflowGwfdisv
