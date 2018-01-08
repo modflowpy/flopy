@@ -41,7 +41,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of recharge
           flow rates will be printed to the listing file for every stress
           period time step in which "BUDGET PRINT" is specified in Output
-          Control. If there is no Output Control option and PRINT_FLOWS is
+          Control. If there is no Output Control option and "PRINT_FLOWS" is
           specified, then flow rates are printed for the last time step of each
           stress period.
     save_flows : boolean
@@ -60,11 +60,10 @@ class ModflowGwfrcha(mfpackage.MFPackage):
           reftable:obstype lists observation type(s) supported by the Recharge
           package.
     irch : [integer]
-        * irch (integer) texttt{irch} is the layer number that defines the
-          layer in each vertical column where recharge is applied. If
-          texttt{irch} is omitted, recharge by default is applied to cells in
-          layer 1. texttt{irch} can only be used if READASARRAYS is specified
-          in the OPTIONS block.
+        * irch (integer) IRCH is the layer number that defines the layer in
+          each vertical column where recharge is applied. If IRCH is omitted,
+          recharge by default is applied to cells in layer 1. IRCH can only be
+          used if READASARRAYS is specified in the OPTIONS block.
     recharge : [double]
         * recharge (double) is the recharge flux rate (:math:`LT^{-1}`). This
           rate is multiplied inside the program by the surface area of the cell

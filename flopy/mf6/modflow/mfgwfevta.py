@@ -41,9 +41,9 @@ class ModflowGwfevta(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of
           evapotranspiration flow rates will be printed to the listing file for
           every stress period time step in which "BUDGET PRINT" is specified in
-          Output Control. If there is no Output Control option and PRINT_FLOWS
-          is specified, then flow rates are printed for the last time step of
-          each stress period.
+          Output Control. If there is no Output Control option and
+          "PRINT_FLOWS" is specified, then flow rates are printed for the last
+          time step of each stress period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that evapotranspiration flow
           terms will be written to the file specified with "BUDGET FILEOUT" in
@@ -60,10 +60,10 @@ class ModflowGwfevta(mfpackage.MFPackage):
           reftable:obstype lists observation type(s) supported by the
           Evapotranspiration package.
     ievt : [integer]
-        * ievt (integer) texttt{ievt} is the layer number that defines the
-          layer in each vertical column where evapotranspiration is applied. If
-          texttt{ievt} is omitted, evapotranspiration by default is applied to
-          cells in layer 1.
+        * ievt (integer) IEVT is the layer number that defines the layer in
+          each vertical column where evapotranspiration is applied. If IEVT is
+          omitted, evapotranspiration by default is applied to cells in layer
+          1.
     surface : [double]
         * surface (double) is the elevation of the ET surface (:math:`L`).
     rate : [double]
@@ -72,7 +72,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
         * depth (double) is the ET extinction depth (:math:`L`).
     aux(iaux) : [double]
         * aux(iaux) (double) is an array of values for auxiliary variable
-          aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must
+          AUX(IAUX), where iaux is a value from 1 to NAUX, and AUX(IAUX) must
           be listed as part of the auxiliary variables. A separate array can be
           specified for each auxiliary variable. If an array is not specified
           for an auxiliary variable, then a value of zero is assigned. If the

@@ -40,9 +40,9 @@ class ModflowGwfevt(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of
           evapotranspiration flow rates will be printed to the listing file for
           every stress period time step in which "BUDGET PRINT" is specified in
-          Output Control. If there is no Output Control option and PRINT_FLOWS
-          is specified, then flow rates are printed for the last time step of
-          each stress period.
+          Output Control. If there is no Output Control option and
+          "PRINT_FLOWS" is specified, then flow rates are printed for the last
+          time step of each stress period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that evapotranspiration flow
           terms will be written to the file specified with "BUDGET FILEOUT" in
@@ -66,20 +66,20 @@ class ModflowGwfevt(mfpackage.MFPackage):
           evapotranspiration cells cells that will be specified for use during
           any stress period.
     nseg : integer
-        * nseg (integer) number of ET segments. Default is one. When
-          texttt{nseg} is greater than 1, texttt{pxdp} and texttt{petm} arrays
-          must be specified texttt{nseg}-1 times each, in order from the
-          uppermost segment down. texttt{pxdp} defines the extinction-depth
-          proportion at the bottom of a segment. texttt{petm} defines the
-          proportion of the maximum ET flux rate at the bottom of a segment.
+        * nseg (integer) number of ET segments. Default is one. When NSEG is
+          greater than 1, PXDP and PETM arrays must be specified NSEG - 1 times
+          each, in order from the uppermost segment down. PXDP defines the
+          extinction-depth proportion at the bottom of a segment. PETM defines
+          the proportion of the maximum ET flux rate at the bottom of a
+          segment.
     periodrecarray : [cellid, surface, rate, depth, pxdp, petm, petm0, aux,
       boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
-          that uses the DIS input file, cellid is the layer, row, and column.
-          For a grid that uses the DISV input file, cellid is the layer and
-          cell2d number. If the model uses the unstructured discretization
-          (DISU) input file, then cellid is the node number for the cell.
+          that uses the DIS input file, CELLID is the layer, row, and column.
+          For a grid that uses the DISV input file, CELLID is the layer and
+          CELL2D number. If the model uses the unstructured discretization
+          (DISU) input file, CELLID is the node number for the cell.
         * surface (double) is the elevation of the ET surface (:math:`L`). A
           time-series name may be specified.
         * rate (double) is the maximum ET flux rate (:math:`LT^{-1}`). A time-
@@ -104,9 +104,9 @@ class ModflowGwfevt(mfpackage.MFPackage):
           TIMESERIESFILE entry (see the "Time-Variable Input" section), values
           can be obtained from a time series by entering the time-series name
           in place of a numeric value.
-        * boundname (string) name of the evapotranspiration cell. boundname is
+        * boundname (string) name of the evapotranspiration cell. BOUNDNAME is
           an ASCII character variable that can contain as many as 40
-          characters. If boundname contains spaces in it, then the entire name
+          characters. If BOUNDNAME contains spaces in it, then the entire name
           must be enclosed within single quotes.
 
     """

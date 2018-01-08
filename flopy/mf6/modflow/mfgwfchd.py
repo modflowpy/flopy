@@ -36,7 +36,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of constant-
           head flow rates will be printed to the listing file for every stress
           period time step in which "BUDGET PRINT" is specified in Output
-          Control. If there is no Output Control option and PRINT_FLOWS is
+          Control. If there is no Output Control option and "PRINT_FLOWS" is
           specified, then flow rates are printed for the last time step of each
           stress period.
     save_flows : boolean
@@ -61,10 +61,10 @@ class ModflowGwfchd(mfpackage.MFPackage):
     periodrecarray : [cellid, head, aux, boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
-          that uses the DIS input file, cellid is the layer, row, and column.
-          For a grid that uses the DISV input file, cellid is the layer and
-          cell2d number. If the model uses the unstructured discretization
-          (DISU) input file, then cellid is the node number for the cell.
+          that uses the DIS input file, CELLID is the layer, row, and column.
+          For a grid that uses the DISV input file, CELLID is the layer and
+          CELL2D number. If the model uses the unstructured discretization
+          (DISU) input file, CELLID is the node number for the cell.
         * head (double) is the head at the boundary.
         * aux (double) represents the values of the auxiliary variables for
           each constant head. The values of auxiliary variables must be present
@@ -74,9 +74,9 @@ class ModflowGwfchd(mfpackage.MFPackage):
           TIMESERIESFILE entry (see the "Time-Variable Input" section), values
           can be obtained from a time series by entering the time-series name
           in place of a numeric value.
-        * boundname (string) name of the constant head boundary cell. boundname
+        * boundname (string) name of the constant head boundary cell. BOUNDNAME
           is an ASCII character variable that can contain as many as 40
-          characters. If boundname contains spaces in it, then the entire name
+          characters. If BOUNDNAME contains spaces in it, then the entire name
           must be enclosed within single quotes.
 
     """

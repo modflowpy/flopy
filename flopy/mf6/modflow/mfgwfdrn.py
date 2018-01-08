@@ -36,8 +36,9 @@ class ModflowGwfdrn(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of drain flow
           rates will be printed to the listing file for every stress period
           time step in which "BUDGET PRINT" is specified in Output Control. If
-          there is no Output Control option and PRINT_FLOWS is specified, then
-          flow rates are printed for the last time step of each stress period.
+          there is no Output Control option and "PRINT_FLOWS" is specified,
+          then flow rates are printed for the last time step of each stress
+          period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that drain flow terms will
           be written to the file specified with "BUDGET FILEOUT" in Output
@@ -64,10 +65,10 @@ class ModflowGwfdrn(mfpackage.MFPackage):
     periodrecarray : [cellid, elev, cond, aux, boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
-          that uses the DIS input file, cellid is the layer, row, and column.
-          For a grid that uses the DISV input file, cellid is the layer and
-          cell2d number. If the model uses the unstructured discretization
-          (DISU) input file, then cellid is the node number for the cell.
+          that uses the DIS input file, CELLID is the layer, row, and column.
+          For a grid that uses the DISV input file, CELLID is the layer and
+          CELL2D number. If the model uses the unstructured discretization
+          (DISU) input file, CELLID is the node number for the cell.
         * elev (double) is the elevation of the drain. If the Options block
           includes a TIMESERIESFILE entry (see the "Time-Variable Input"
           section), values can be obtained from a time series by entering the
@@ -85,9 +86,9 @@ class ModflowGwfdrn(mfpackage.MFPackage):
           entry (see the "Time-Variable Input" section), values can be obtained
           from a time series by entering the time-series name in place of a
           numeric value.
-        * boundname (string) name of the drain cell. boundname is an ASCII
+        * boundname (string) name of the drain cell. BOUNDNAME is an ASCII
           character variable that can contain as many as 40 characters. If
-          boundname contains spaces in it, then the entire name must be
+          BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
 
     """

@@ -20,11 +20,10 @@ class ModflowNam(mfpackage.MFPackage):
     memory_print_option : string
         * memory_print_option (string) is a flag that controls printing of
           detailed memory manager usage to the end of the simulation list file.
-          texttt{NONE} means do not print detailed information. texttt{SUMMARY}
-          means print only the total memory for each simulation component.
-          texttt{ALL} means print information for each variable stored in the
-          memory manager. texttt{NONE} is default if
-          texttt{memory_print_option} is not specified.
+          NONE means do not print detailed information. SUMMARY means print
+          only the total memory for each simulation component. ALL means print
+          information for each variable stored in the memory manager. NONE is
+          default if MEMORY_PRINT_OPTION is not specified.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.

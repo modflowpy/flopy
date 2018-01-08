@@ -26,11 +26,6 @@ class ModflowGwfoc(mfpackage.MFPackage):
           HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
           saved.
-            steps : [integer]
-                * steps (integer) save for each step specified in
-                  texttt{steps}. This keyword may be used in conjunction with
-                  other keywords to print or save results for multiple time
-                  steps.
             first : [keyword]
                 * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
@@ -39,6 +34,10 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
+            steps : [integer]
+                * steps (integer) save for each step specified in STEPS. This
+                  keyword may be used in conjunction with other keywords to
+                  print or save results for multiple time steps.
             last : [keyword]
                 * last (keyword) keyword to indicate save for last step in
                   period. This keyword may be used in conjunction with other
@@ -51,11 +50,6 @@ class ModflowGwfoc(mfpackage.MFPackage):
           HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
           saved.
-            steps : [integer]
-                * steps (integer) save for each step specified in
-                  texttt{steps}. This keyword may be used in conjunction with
-                  other keywords to print or save results for multiple time
-                  steps.
             first : [keyword]
                 * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
@@ -64,6 +58,10 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
+            steps : [integer]
+                * steps (integer) save for each step specified in STEPS. This
+                  keyword may be used in conjunction with other keywords to
+                  print or save results for multiple time steps.
             last : [keyword]
                 * last (keyword) keyword to indicate save for last step in
                   period. This keyword may be used in conjunction with other

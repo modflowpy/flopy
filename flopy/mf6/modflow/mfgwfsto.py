@@ -15,8 +15,8 @@ class ModflowGwfsto(mfpackage.MFPackage):
           will be written to the file specified with "BUDGET SAVE FILE" in
           Output Control.
     storagecoefficient : boolean
-        * storagecoefficient (boolean) keyword to indicate that the texttt{ss}
-          array is read as storage coefficient rather than specific storage.
+        * storagecoefficient (boolean) keyword to indicate that the SS array is
+          read as storage coefficient rather than specific storage.
     iconvert : [integer]
         * iconvert (integer) is a flag for each cell that specifies whether or
           not a cell is convertible for the storage calculation. 0 indicates
@@ -31,15 +31,13 @@ class ModflowGwfsto(mfpackage.MFPackage):
     sy : [double]
         * sy (double) is specific yield.
     steady_state : boolean
-        * steady-state (boolean) keyword to indicate that stress-period
-          texttt{iper} is steady-state. Steady-state conditions will apply
-          until the texttt{TRANSIENT} keyword is specified in a subsequent
-          texttt{BEGIN PERIOD} block.
+        * steady-state (boolean) keyword to indicate that stress-period IPER is
+          steady-state. Steady-state conditions will apply until the TRANSIENT
+          keyword is specified in a subsequent BEGIN PERIOD block.
     transient : boolean
-        * transient (boolean) keyword to indicate that stress-period
-          texttt{iper} is transient. Transient conditions will apply until the
-          texttt{STEADY-STATE} keyword is specified in a subsequent
-          texttt{BEGIN PERIOD} block.
+        * transient (boolean) keyword to indicate that stress-period IPER is
+          transient. Transient conditions will apply until the STEADY-STATE
+          keyword is specified in a subsequent BEGIN PERIOD block.
 
     """
     iconvert = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 

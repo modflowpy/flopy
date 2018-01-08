@@ -24,9 +24,9 @@ class ModflowGwfnam(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of all model
           package flow rates will be printed to the listing file for every
           stress period time step in which "BUDGET PRINT" is specified in
-          Output Control. If there is no Output Control option and PRINT_FLOWS
-          is specified, then flow rates are printed for the last time step of
-          each stress period.
+          Output Control. If there is no Output Control option and
+          "PRINT_FLOWS" is specified, then flow rates are printed for the last
+          time step of each stress period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that all model package flow
           terms will be written to the file specified with "BUDGET FILEOUT" in
@@ -35,7 +35,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
         * under_relaxation (string) keyword that indicates whether the
           groundwater head in a cell will be under-relaxed when water levels
           fall below the bottom of the model below any given cell. By default,
-          Newton-Raphson texttt{UNDER_RELAXATION} is not applied.
+          Newton-Raphson UNDER_RELAXATION is not applied.
     packagerecarray : [ftype, fname, pname]
         * ftype (string) is the file type, which must be one of the following
           character values shown in table~ref{table:ftype}. Ftype may be
@@ -43,16 +43,15 @@ class ModflowGwfnam(mfpackage.MFPackage):
         * fname (string) is the name of the file containing the package input.
           The path to the file should be included if the file is not located in
           the folder where the program was run.
-        * pname (string) is the user-defined name for the package.
-          texttt{Pname} is restricted to 16 characters. No spaces are allowed
-          in texttt{Pname}. texttt{Pname} character values are read and stored
-          by the program for stress packages only. These names may be useful
-          for labeling purposes when multiple stress packages of the same type
-          are located within a single GWF Model. If texttt{Pname} is specified
-          for a stress package, then texttt{Pname} will be used in the flow
-          budget table in the listing file; it will also be used for the text
-          entry in the cell-by-cell budget file. texttt{Pname} is case
-          insensitive and is stored in all upper case letters.
+        * pname (string) is the user-defined name for the package. PNAME is
+          restricted to 16 characters. No spaces are allowed in PNAME. PNAME
+          character values are read and stored by the program for stress
+          packages only. These names may be useful for labeling purposes when
+          multiple stress packages of the same type are located within a single
+          GWF Model. If PNAME is specified for a stress package, then PNAME
+          will be used in the flow budget table in the listing file; it will
+          also be used for the text entry in the cell-by-cell budget file.
+          PNAME is case insensitive and is stored in all upper case letters.
 
     """
     packagerecarray = ListTemplateGenerator(('gwf6', 'nam', 'packages', 

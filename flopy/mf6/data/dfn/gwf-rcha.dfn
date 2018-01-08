@@ -158,7 +158,7 @@ shape (ncol*nrow; ncpl)
 reader readarray
 optional true
 longname layer number for recharge
-description \texttt{irch} is the layer number that defines the layer in each vertical column where recharge is applied. If \texttt{irch} is omitted, recharge by default is applied to cells in layer 1.  \texttt{irch} can only be used if READASARRAYS is specified in the OPTIONS block.
+description IRCH is the layer number that defines the layer in each vertical column where recharge is applied. If IRCH is omitted, recharge by default is applied to cells in layer 1.  IRCH can only be used if READASARRAYS is specified in the OPTIONS block.
 
 block period
 name recharge

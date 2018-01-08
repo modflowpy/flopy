@@ -159,7 +159,7 @@ type integer
 reader urword
 optional false
 longname number of ET segments
-description number of ET segments.  Default is one.  When \texttt{nseg} is greater than 1, \texttt{pxdp} and \texttt{petm} arrays must be specified \texttt{nseg}-1 times each, in order from the uppermost segment down. \texttt{pxdp} defines the extinction-depth proportion at the bottom of a segment. \texttt{petm} defines the proportion of the maximum ET flux rate at the bottom of a segment.
+description number of ET segments.  Default is one.  When NSEG is greater than 1, PXDP and PETM arrays must be specified NSEG - 1 times each, in order from the uppermost segment down. PXDP defines the extinction-depth proportion at the bottom of a segment. PETM defines the proportion of the maximum ET flux rate at the bottom of a segment.
 
 # --------------------- gwf evt period ---------------------
 

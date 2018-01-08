@@ -12,15 +12,13 @@ class ModflowUtllaktab(mfpackage.MFPackage):
     ----------
     nrow : integer
         * nrow (integer) integer value specifying the number of rows in the
-          lake table. There must be texttt{nrow} rows of data in the
-          texttt{TABLE} block.
+          lake table. There must be NROW rows of data in the TABLE block.
     ncol : integer
         * ncol (integer) integer value specifying the number of colums in the
-          lake table. There must be texttt{ncol} columns of data in the
-          texttt{TABLE} block. For lakes with texttt{HORIZONTAL} and/or
-          texttt{VERTICAL} texttt{ctype} connections, texttt{NROW} must be
-          equal to 3. For lakes with texttt{EMBEDDEDH} or texttt{EMBEDDEDV}
-          texttt{ctype} connections, texttt{NROW} must be equal to 4.
+          lake table. There must be NCOL columns of data in the TABLE block.
+          For lakes with HORIZONTAL and/or VERTICAL CTYPE connections, NROW
+          must be equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV CTYPE
+          connections, NROW must be equal to 4.
     laktabrecarray : [stage, volume, sarea, barea]
         * stage (double) real value that defines the stage corresponding to the
           remaining data on the line.
@@ -28,10 +26,9 @@ class ModflowUtllaktab(mfpackage.MFPackage):
           to the stage specified on the line.
         * sarea (double) real value that defines the lake surface area
           corresponding to the stage specified on the line.
-        * barea (double) real value that defines the lake-texttt{GWF} exchange
-          area corresponding to the stage specified on the line. texttt{barea}
-          is only specified if the texttt{claktype} for the lake is
-          texttt{EMBEDDEDH} or texttt{EMBEDDEDV}.
+        * barea (double) real value that defines the lake-GWF exchange area
+          corresponding to the stage specified on the line. BAREA is only
+          specified if the CLAKTYPE for the lake is EMBEDDEDH or EMBEDDEDV.
 
     """
     laktabrecarray = ListTemplateGenerator(('tab', 'table', 

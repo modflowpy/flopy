@@ -55,7 +55,7 @@ type keyword
 reader urword
 optional true
 longname keyword to activate Newton-Raphson UNDER_RELAXATION option
-description keyword that indicates whether the groundwater head in a cell will be under-relaxed when water levels fall below the bottom of the model below any given cell. By default, Newton-Raphson \texttt{UNDER\_RELAXATION} is not applied.
+description keyword that indicates whether the groundwater head in a cell will be under-relaxed when water levels fall below the bottom of the model below any given cell. By default, Newton-Raphson UNDER\_RELAXATION is not applied.
 
 # --------------------- gwf nam packages ---------------------
 
@@ -94,5 +94,5 @@ tagged false
 reader urword
 optional true
 longname user name for package
-description is the user-defined name for the package.  \texttt{Pname} is restricted to 16 characters.  No spaces are allowed in \texttt{Pname}.  \texttt{Pname} character values are read and stored by the program for stress packages only.  These names may be useful for labeling purposes when multiple stress packages of the same type are located within a single GWF Model.  If \texttt{Pname} is specified for a stress package, then \texttt{Pname} will be used in the flow budget table in the listing file; it will also be used for the text entry in the cell-by-cell budget file.  \texttt{Pname} is case insensitive and is stored in all upper case letters.
+description is the user-defined name for the package. PNAME is restricted to 16 characters.  No spaces are allowed in PNAME.  PNAME character values are read and stored by the program for stress packages only.  These names may be useful for labeling purposes when multiple stress packages of the same type are located within a single GWF Model.  If PNAME is specified for a stress package, then PNAME will be used in the flow budget table in the listing file; it will also be used for the text entry in the cell-by-cell budget file.  PNAME is case insensitive and is stored in all upper case letters.
 

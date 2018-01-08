@@ -12,9 +12,9 @@ class ModflowGwfic(mfpackage.MFPackage):
     ----------
     strt : [double]
         * strt (double) is the initial (starting) head---that is, head at the
-          beginning of the GWF Model simulation. texttt{strt} must be specified
-          for all simulations, including steady-state simulations. One value is
-          read for every model cell. For simulations in which the first stress
+          beginning of the GWF Model simulation. STRT must be specified for all
+          simulations, including steady-state simulations. One value is read
+          for every model cell. For simulations in which the first stress
           period is steady state, the values used for STRT generally do not
           affect the simulation (exceptions may occur if cells go dry and (or)
           rewet). The execution time, however, will be less if STRT includes
