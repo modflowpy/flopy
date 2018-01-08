@@ -131,8 +131,6 @@ class MFFileMgmt(object):
                         new_path = leaf
             return new_path
 
-
-
     @staticmethod
     def string_to_file_path(fp_string):
         file_delimitiers = ['/','\\']

@@ -1689,6 +1689,16 @@ class MFTransient(object):
         if isinstance(transient_key, int):
             assert(self._verify_sp(transient_key))
 
+    def update_transient_key(self, old_transient_key, new_transient_key):
+        if old_transient_key in self._data_storage:
+            # replace dictionary key
+            self._data_storage[new_transient_key] = \
+                self._data_storage[old_transient_key]
+            del self._data_storage[old_transient_key]
+            if self._current_key == old_transient_key:
+                # update current key
+                self._current_key = new_transient_key
+
     def _transient_setup(self, data_storage, data_struct_type):
         self._data_storage = data_storage
         self._data_struct_type = data_struct_type

@@ -719,6 +719,8 @@ class MFDataItemStructure(object):
     """
 
     def __init__(self):
+        self.file_name_keywords = {'filein':False, 'fileout':False}
+        self.contained_keywords = {'file_name':True}
         self.block_name = None
         self.name = None
         self.name_list = []
@@ -877,6 +879,23 @@ class MFDataItemStructure(object):
                                                             initial_indent,
                                                             level_indent))
         return description
+
+    def indicates_file_name(self):
+        if self.name.lower() in self.file_name_keywords:
+            return True
+        for key, item in self.contained_keywords.items():
+            if self.name.lower().find(key) != -1:
+                return True
+        return False
+
+    def is_file_name(self):
+        if self.name.lower() in self.file_name_keywords and \
+                self.file_name_keywords[self.name.lower()] == True:
+            return True
+        for key, item in self.contained_keywords.items():
+            if self.name.lower().find(key) != -1 and item == True:
+                return True
+        return False
 
     @staticmethod
     def remove_cellid(resolved_shape, cellid_size):
@@ -1100,6 +1119,7 @@ class MFDataStructure(object):
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
+        self.file_line = 0
         self.block_type = data_item.block_type
         self.block_variable = data_item.block_variable
         self.model_data = model_data
@@ -1192,9 +1212,11 @@ class MFDataStructure(object):
                 if self.data_item_structures[location] is None:
                     # verify that this is not a placeholder value
                     assert (self.data_item_structures[location] is None)
-                    self.file_data = self.file_data or (
-                    item.name.lower() == 'filein' or
-                    item.name.lower() == 'fileout')
+                    if isinstance(item, MFDataItemStructure):
+                        self.file_data = self.file_data or \
+                                         item.indicates_file_name()
+                        if item.is_file_name():
+                            self.file_line = location
                     # replace placeholder value
                     self.data_item_structures[location] = item
                     item_added = True
@@ -1203,9 +1225,11 @@ class MFDataStructure(object):
                                    location - len(self.data_item_structures)):
                     # insert placeholder in array
                     self.data_item_structures.append(None)
-                self.file_data = self.file_data or (
-                item.name.lower() == 'filein' or
-                item.name.lower() == 'fileout')
+                if isinstance(item, MFDataItemStructure):
+                    self.file_data = self.file_data or \
+                                     item.indicates_file_name()
+                    if item.is_file_name():
+                        self.file_line = location
                 self.data_item_structures.append(item)
                 item_added = True
             self.optional = self.optional and item.optional
