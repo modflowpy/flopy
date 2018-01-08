@@ -596,6 +596,9 @@ class MFSimulation(PackageContainer):
             self.simulation_data.mfpath.copy_files(copy_relative_only=False)
         self.simulation_data.mfpath.set_last_accessed_path()
 
+    def set_sim_path(self, path):
+        self.simulation_data.mfpath.set_sim_path(path)
+
     def run_simulation(self):
         """
         Run the simulation.

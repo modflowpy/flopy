@@ -76,6 +76,11 @@ class MFModel(PackageContainer):
                  exe_name='mf6.exe', add_to_simulation = True,
                  structure = None, model_rel_path='.', **kwargs):
         super(MFModel, self).__init__(simulation.simulation_data, model_name)
+        self.simulation = simulation
+        self.simulation_data = simulation.simulation_data
+        self.name = model_name
+        self.name_file = None
+
         self.set_model_relative_path(model_rel_path)
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
@@ -83,9 +88,6 @@ class MFModel(PackageContainer):
                                                        model_nam_file)
         else:
             self.structure = structure
-        self.simulation = simulation
-        self.simulation_data = simulation.simulation_data
-        self.name = model_name
         self.exe_name = exe_name
         self.dimensions = modeldimensions.ModelDimensions(self.name,
                                                           self.simulation_data)
@@ -206,6 +208,12 @@ class MFModel(PackageContainer):
             ftype = ftype[0:-1].lower()
             if ftype in structure.package_struct_objs or ftype in \
               sim_struct.utl_struct_objs:
+                if model_rel_path and model_rel_path != '.':
+                    # strip off model relative path from the file path
+                    filemgr = simulation.simulation_data.mfpath
+                    fname = filemgr.strip_model_relative_path(model_name,
+                                                              fname)
+                # load package
                 instance.load_package(ftype, fname, pname, strict, None)
 
         # load referenced packages
@@ -304,9 +312,9 @@ class MFModel(PackageContainer):
         file_mgr.model_relative_path[self.name] = path
         file_mgr.set_last_accessed_path()
 
-        if model_ws and model_ws != '.':
+        if model_ws and model_ws != '.' and self.simulation.name_file is not \
+                None:
             # update model name file location in simulation name file
-            model_nam_path = os.path.join(path, self.name)
             models = self.simulation.name_file.modelrecarray
             models_data = models.get_data()
             for index, entry in enumerate(models_data):
@@ -318,23 +326,24 @@ class MFModel(PackageContainer):
                     break
             models.set_data(models_data)
 
-            # update listing file location in model name file
-            list_file = self.name_file.list.get_data()
-            if list_file:
-                path, list_file_name = os.path.split(list_file)
-                self.name_file.list.set_data(os.path.join(path, list_file_name))
+            if self.name_file is not None:
+                # update listing file location in model name file
+                list_file = self.name_file.list.get_data()
+                if list_file:
+                    path, list_file_name = os.path.split(list_file)
+                    self.name_file.list.set_data(os.path.join(path, list_file_name))
 
-            # update package file locations in model name file
-            packages = self.name_file.packagerecarray
-            packages_data = packages.get_data()
-            for index, entry in enumerate(packages_data):
-                old_package_path, old_package_name = os.path.split(entry[1])
-                packages_data[index][1] = os.path.join(path, old_package_name)
-            packages.set_data(packages_data)
+                # update package file locations in model name file
+                packages = self.name_file.packagerecarray
+                packages_data = packages.get_data()
+                for index, entry in enumerate(packages_data):
+                    old_package_path, old_package_name = os.path.split(entry[1])
+                    packages_data[index][1] = os.path.join(path, old_package_name)
+                packages.set_data(packages_data)
 
-            # update files referenced from within packages
-            for package in self.packages:
-                package.set_model_relative_path(model_ws)
+                # update files referenced from within packages
+                for package in self.packages:
+                    package.set_model_relative_path(model_ws)
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):
