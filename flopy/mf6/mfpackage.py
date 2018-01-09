@@ -1150,7 +1150,7 @@ class MFPackage(PackageContainer):
             # this is a simulation file that does not correspond to a specific
             # model.  figure out which model to use and return a dimensions
             # object for that model
-            if self.structure.file_type == 'gwfgwf':
+            if self.dfn_file_name[0:3] == 'exg':
                 exchange_rec_array = self._simulation_data.mfdata[
                     ('nam', 'exchanges', 'exchangerecarray')].get_data()
                 if exchange_rec_array is None:
