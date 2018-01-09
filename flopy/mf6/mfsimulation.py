@@ -52,6 +52,8 @@ class SimulationDict(collections.OrderedDict):
         # check if the key refers to a binary output file, or an observation
         # output file, if so override the dictionary request and call output
         #  requester classes
+
+        # FIX: Transport - Include transport output files
         if key[1] in ('CBC', 'HDS', 'DDN', 'UCN'):
             val = binaryfile_utils.MFOutput(self, self._path, key)
             return val.data
@@ -294,7 +296,7 @@ class MFSimulation(PackageContainer):
         self._other_files = []
         self.structure = fpdata.sim_struct
 
-        self._exg_file_num = 0
+        self._exg_file_num = {}
         self._gnc_file_num = 0
         self._mvr_file_num = 0
 
@@ -384,17 +386,36 @@ class MFSimulation(PackageContainer):
         exchange_recarray = instance.name_file.exchangerecarray
         if exchange_recarray.has_data():
             for exgfile in exchange_recarray.get_data():
-                exchange_name = 'GWF-GWF_EXG_{}'.format(instance._exg_file_num)
-                exchange_file = mfgwfgwf.ModflowGwfgwf(instance,
-                                                       exgtype=exgfile[0],
-                                                       exgmnamea=exgfile[2],
-                                                       exgmnameb=exgfile[3],
-                                                       fname=exgfile[1],
-                                                       pname=exchange_name)
+                # get exchange type by removing numbers from exgtype
+                exchange_type = ''.join([char for char in exgfile[0] if
+                                         not char.isdigit()]).upper()
+                # get exchange number for this type
+                if not exchange_type in instance._exg_file_num:
+                    exchange_file_num = 0
+                    instance._exg_file_num[exchange_type] = 1
+                else:
+                    exchange_file_num = instance._exg_file_num[exchange_type]
+                    instance._exg_file_num[exchange_type] += 1
+
+                exchange_name = '{}_EXG_{}'.format(exchange_type,
+                                                   exchange_file_num)
+                # find package class the corresponds to this exchange type
+                package_obj = instance.package_factory(
+                    exchange_type.replace('-', '').lower(), '')
+                if not package_obj:
+                    excpt_str = 'Exchange type {} could not be found' \
+                                '.'.format(exchange_type)
+                    print(excpt_str)
+                    raise mfstructure.MFFileParseException(excpt_str)
+
+                # build and load exchange package object
+                exchange_file = package_obj(instance, exgtype=exgfile[0],
+                                            exgmnamea=exgfile[2],
+                                            exgmnameb=exgfile[3],
+                                            fname=exgfile[1],
+                                            pname=exchange_name)
                 exchange_file.load(strict)
                 instance._exchange_files[exgfile[1]] = exchange_file
-                instance._exg_file_num += 1
-                #instance._load_gnc_mvr(exchange_file, strict)
 
         # load simulation packages
         file_num = 1
@@ -439,7 +460,13 @@ class MFSimulation(PackageContainer):
         """
         if ftype == 'gnc':
             if fname not in self._ghost_node_files:
-                gnc_name = 'GWF-GNC_{}'.format(self._gnc_file_num)
+                # get package type from parent package
+                if parent_package:
+                    package_abbr = parent_package.package_abbr[0:3]
+                else:
+                    package_abbr = 'GWF'
+                # build package name and package
+                gnc_name = '{}-GNC_{}'.format(package_abbr, self._gnc_file_num)
                 ghost_node_file = mfgwfgnc.ModflowGwfgnc(self, fname=fname,
                                                          pname=gnc_name,
                                                          parent_file=
@@ -449,7 +476,13 @@ class MFSimulation(PackageContainer):
                 self._gnc_file_num += 1
         elif ftype == 'mvr':
             if fname not in self._mover_files:
-                mvr_name = 'GWF-MVR_{}'.format(self._gnc_file_num)
+                # Get package type from parent package
+                if parent_package:
+                    package_abbr = parent_package.package_abbr[0:3]
+                else:
+                    package_abbr = 'GWF'
+                # build package name and package
+                mvr_name = '{}-MVR_{}'.format(package_abbr, self._gnc_file_num)
                 mover_file = mfgwfmvr.ModflowGwfmvr(self, fname=fname,
                                                     pname=mvr_name,
                                                     parent_file=parent_package)
@@ -728,7 +761,7 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
-        if package not in self._exchange_files:
+        if package.filename not in self._exchange_files:
             exgtype = package.exgtype
             exgmnamea = package.exgmnamea
             exgmnameb = package.exgmnameb
@@ -861,7 +894,6 @@ class MFSimulation(PackageContainer):
         # add model
         self._models[model_name] = model
 
-        # TODO: include exchanges
         # update simulation name file
         self.name_file.modelrecarray.append_list_as_record([model_type,
                                                             model_namefile,

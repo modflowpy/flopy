@@ -92,7 +92,6 @@ class MFModel(PackageContainer):
         self.dimensions = modeldimensions.ModelDimensions(self.name,
                                                           self.simulation_data)
         self.simulation_data.model_dimensions[model_name] = self.dimensions
-        self.type = 'Model'
         self._ftype_num_dict = {}
         self._package_paths = {}
 
@@ -110,9 +109,16 @@ class MFModel(PackageContainer):
                                    proj4_str=proj4_str)
 
         # build model name file
-        self.name_file = mfgwfnam.ModflowGwfnam(self,
-                                                fname=self.model_nam_file,
-                                                pname=self.name)
+        # create name file based on model type - support different model types
+        package_obj = self.package_factory('nam', model_type[0:3])
+        if not package_obj:
+            excpt_str = 'Name file could not be found for model' \
+                        '{}.'.format(model_type[0:3])
+            print(excpt_str)
+            raise mfstructure.StructException(excpt_str)
+
+        self.name_file = package_obj(self, fname=self.model_nam_file,
+                                     pname=self.name)
         self.verbose = simulation.verbose
 
     def __getattr__(self, item):
@@ -189,6 +195,7 @@ class MFModel(PackageContainer):
 
         # order packages
         vnum = mfstructure.MFStructure().get_version_string()
+        # FIX: Transport - Priority packages maybe should not be hard coded
         priority_packages = {'dis{}'.format(vnum): 1,'disv{}'.format(vnum): 1,
                              'disu{}'.format(vnum): 1}
         packages_ordered = []
@@ -414,6 +421,8 @@ class MFModel(PackageContainer):
                 pkg_type = package.package_type.upper()
                 if len(pkg_type) > 3 and pkg_type[-1] == 'A':
                     pkg_type = pkg_type[0:-1]
+                # Model Assumption - assuming all name files have a package
+                # rec array
                 self.name_file.packagerecarray.\
                   update_record(['{}6'.format(pkg_type), package.filename,
                   package.package_name], 0)
