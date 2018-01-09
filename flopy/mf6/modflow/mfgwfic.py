@@ -26,6 +26,8 @@ class ModflowGwfic(mfpackage.MFPackage):
     strt = ArrayTemplateGenerator(('gwf6', 'ic', 'griddata', 'strt'))
     package_abbr = "gwfic"
     package_type = "ic"
+    dfn_file_name = "gwf-ic.dfn"
+
     dfn = [["block griddata", "name strt", "type double precision", 
             "shape (nodes)", "reader readarray"]]
 

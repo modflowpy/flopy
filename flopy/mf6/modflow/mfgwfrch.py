@@ -97,6 +97,8 @@ class ModflowGwfrch(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfrch"
     package_type = "rch"
+    dfn_file_name = "gwf-rch.dfn"
+
     dfn = [["block options", "name fixed_cell", "type keyword", "shape", 
             "reader urword", "optional true"],
            ["block options", "name auxiliary", "type string", 

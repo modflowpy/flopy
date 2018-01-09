@@ -35,6 +35,8 @@ class ModflowUtltas(mfpackage.MFPackage):
     tas_array = ArrayTemplateGenerator(('tas', 'time', 'tas_array'))
     package_abbr = "utltas"
     package_type = "tas"
+    dfn_file_name = "utl-tas.dfn"
+
     dfn = [["block attributes", "name time_series_namerecord", 
             "type record name time_series_name", "shape", "reader urword", 
             "tagged false", "optional false"],

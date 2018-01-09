@@ -58,6 +58,8 @@ class ModflowGwfnam(mfpackage.MFPackage):
                                              'packagerecarray'))
     package_abbr = "gwfnam"
     package_type = "nam"
+    dfn_file_name = "gwf-nam.dfn"
+
     dfn = [["block options", "name list", "type string", "reader urword", 
             "optional true"],
            ["block options", "name print_input", "type keyword", 

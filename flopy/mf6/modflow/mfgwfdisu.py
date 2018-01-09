@@ -153,6 +153,8 @@ class ModflowGwfdisu(mfpackage.MFPackage):
                                             'cell2drecarray'))
     package_abbr = "gwfdisu"
     package_type = "disu"
+    dfn_file_name = "gwf-disu.dfn"
+
     dfn = [["block options", "name length_units", "type string", 
             "reader urword", "optional true"],
            ["block options", "name nogrb", "type keyword", "reader urword", 

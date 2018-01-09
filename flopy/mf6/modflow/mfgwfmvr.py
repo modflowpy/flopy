@@ -73,6 +73,8 @@ class ModflowGwfmvr(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfmvr"
     package_type = "mvr"
+    dfn_file_name = "gwf-mvr.dfn"
+
     dfn = [["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name print_flows", "type keyword", 

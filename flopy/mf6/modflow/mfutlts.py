@@ -49,6 +49,8 @@ class ModflowUtlts(mfpackage.MFPackage):
                                                  'time_seriesrecarray'))
     package_abbr = "utlts"
     package_type = "ts"
+    dfn_file_name = "utl-ts.dfn"
+
     dfn = [["block attributes", "name time_series_namerecord", 
             "type record names time_series_names", "shape", "reader urword", 
             "tagged false", "optional false"],

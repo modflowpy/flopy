@@ -105,6 +105,8 @@ class ModflowGwfriv(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfriv"
     package_type = "riv"
+    dfn_file_name = "gwf-riv.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

@@ -92,6 +92,8 @@ class ModflowGwfrcha(mfpackage.MFPackage):
     aux = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'aux'))
     package_abbr = "gwfrcha"
     package_type = "rcha"
+    dfn_file_name = "gwf-rcha.dfn"
+
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 
             "reader urword", "optional false"],
            ["block options", "name fixed_cell", "type keyword", "shape", 

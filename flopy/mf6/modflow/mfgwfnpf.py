@@ -171,6 +171,8 @@ class ModflowGwfnpf(mfpackage.MFPackage):
                                      'wetdry'))
     package_abbr = "gwfnpf"
     package_type = "npf"
+    dfn_file_name = "gwf-npf.dfn"
+
     dfn = [["block options", "name save_flows", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name alternative_cell_averaging", 

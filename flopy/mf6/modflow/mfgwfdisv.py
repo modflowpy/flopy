@@ -91,6 +91,8 @@ class ModflowGwfdisv(mfpackage.MFPackage):
                                             'cell2drecarray'))
     package_abbr = "gwfdisv"
     package_type = "disv"
+    dfn_file_name = "gwf-disv.dfn"
+
     dfn = [["block options", "name length_units", "type string", 
             "reader urword", "optional true"],
            ["block options", "name nogrb", "type keyword", "reader urword", 

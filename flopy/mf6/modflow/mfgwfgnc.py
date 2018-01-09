@@ -72,6 +72,8 @@ class ModflowGwfgnc(mfpackage.MFPackage):
                                              'gncdatarecarray'))
     package_abbr = "gwfgnc"
     package_type = "gnc"
+    dfn_file_name = "gwf-gnc.dfn"
+
     dfn = [["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name print_flows", "type keyword", 

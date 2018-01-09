@@ -90,6 +90,8 @@ class ModflowGwfchd(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfchd"
     package_type = "chd"
+    dfn_file_name = "gwf-chd.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

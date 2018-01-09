@@ -96,6 +96,8 @@ class ModflowGwfevta(mfpackage.MFPackage):
                                   'aux(iaux)'))
     package_abbr = "gwfevta"
     package_type = "evta"
+    dfn_file_name = "gwf-evta.dfn"
+
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 
             "reader urword", "optional false"],
            ["block options", "name fixed_cell", "type keyword", "shape", 

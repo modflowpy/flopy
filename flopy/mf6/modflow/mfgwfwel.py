@@ -109,6 +109,8 @@ class ModflowGwfwel(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfwel"
     package_type = "wel"
+    dfn_file_name = "gwf-wel.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

@@ -102,6 +102,8 @@ class ModflowGwfdrn(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfdrn"
     package_type = "drn"
+    dfn_file_name = "gwf-drn.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

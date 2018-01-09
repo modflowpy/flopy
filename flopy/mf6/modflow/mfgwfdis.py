@@ -72,6 +72,8 @@ class ModflowGwfdis(mfpackage.MFPackage):
                                       'idomain'))
     package_abbr = "gwfdis"
     package_type = "dis"
+    dfn_file_name = "gwf-dis.dfn"
+
     dfn = [["block options", "name length_units", "type string", 
             "reader urword", "optional true"],
            ["block options", "name nogrb", "type keyword", "reader urword", 

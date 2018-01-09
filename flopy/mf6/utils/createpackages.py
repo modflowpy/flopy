@@ -299,8 +299,9 @@ def create_packages():
             package_name.title())
         class_def_string = class_def_string.replace('-', '_')
         class_var_string = '{}\n    package_abbr = "{}"\n    package_type = ' \
-                           '"{}"'.format('\n'.join(class_vars), package_abbr,
-                                         package[4])
+                           '"{}"\n    dfn_file_name = "{}"' \
+                           '\n'.format('\n'.join(class_vars), package_abbr,
+                                       package[4], package[0].dfn_file_name)
         init_string_full = init_string_def
         # add variables to init string
         if package[1] == PackageLevel.sim_level:

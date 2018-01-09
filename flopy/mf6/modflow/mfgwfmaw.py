@@ -193,6 +193,19 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           keyword and values. Keyword values that can be used to start the
           MAWSETTING string include: STATUS, FLOWING_WELL, RATE, WELL_HEAD,
           HEAD_LIMIT, SHUT_OFF, RATE_SCALING, and AUXILIARY.
+            head_limit : [string]
+                * head_limit (string) is the limiting water level (head) in the
+                  well, which is the minimum of the well RATE or the well
+                  inflow rate from the aquifer. HEAD_LIMIT is only applied to
+                  discharging wells (RATE :math:`<` 0). HEAD\_LIMIT can be
+                  deactivated by specifying the text string `OFF'. The
+                  HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality
+                  available in the MNW2~\citep{konikow2009} package for
+                  MODFLOW-2005. The HEAD\_LIMIT option has been included to
+                  facilitate backward compatibility with previous versions of
+                  MODFLOW but use of the RATE\_SCALING option instead of the
+                  HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
+                  `OFF'.
             well_head : [double]
                 * well_head (double) is the head in the multi-aquifer well.
                   WELL_HEAD is only applied to constant head (STATUS is
@@ -201,10 +214,18 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   (see the "Time-Variable Input" section), values can be
                   obtained from a time series by entering the time-series name
                   in place of a numeric value.
-            status : [string]
-                * status (string) keyword option to define well status. STATUS
-                  can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
-                  ACTIVE.
+            flowing_wellrecord : [fwelev, fwcond, fwrlen]
+                * fwelev (double) elevation used to determine whether or not
+                  the well is flowing.
+                * fwcond (double) conductance used to calculate the discharge
+                  of a free flowing well. Flow occurs when the head in the well
+                  is above the well top elevation (FWELEV).
+                * fwrlen (double) length used to reduce the conductance of the
+                  flowing well. When the head in the well drops below the well
+                  top plus the reduction length, then the conductance is
+                  reduced. This reduction length can be used to improve the
+                  stability of simulations with flowing wells so that there is
+                  not an abrupt change in flowing well rates.
             auxiliaryrecord : [auxname, auxval]
                 * auxname (string) name for the auxiliary variable to be
                   assigned AUXVAL. AUXNAME must match one of the auxiliary
@@ -226,31 +247,15 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   time series by entering the time-series name in place of a
                   numeric value. By default, the RATE for each multi-aquifer
                   well is zero.
-            head_limit : [string]
-                * head_limit (string) is the limiting water level (head) in the
-                  well, which is the minimum of the well RATE or the well
-                  inflow rate from the aquifer. HEAD_LIMIT is only applied to
-                  discharging wells (RATE :math:`<` 0). HEAD\_LIMIT can be
-                  deactivated by specifying the text string `OFF'. The
-                  HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality
-                  available in the MNW2~\citep{konikow2009} package for
-                  MODFLOW-2005. The HEAD\_LIMIT option has been included to
-                  facilitate backward compatibility with previous versions of
-                  MODFLOW but use of the RATE\_SCALING option instead of the
-                  HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
-                  `OFF'.
-            flowing_wellrecord : [fwelev, fwcond, fwrlen]
-                * fwelev (double) elevation used to determine whether or not
-                  the well is flowing.
-                * fwcond (double) conductance used to calculate the discharge
-                  of a free flowing well. Flow occurs when the head in the well
-                  is above the well top elevation (FWELEV).
-                * fwrlen (double) length used to reduce the conductance of the
-                  flowing well. When the head in the well drops below the well
-                  top plus the reduction length, then the conductance is
-                  reduced. This reduction length can be used to improve the
-                  stability of simulations with flowing wells so that there is
-                  not an abrupt change in flowing well rates.
+            rate_scalingrecord : [pump_elevation, scaling_length]
+                * pump_elevation (double) is the elevation of the multi-aquifer
+                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
+                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
+                  By default, PUMP_ELEVATION is set equal to the bottom of the
+                  largest GWF node number connected to a MAW well.
+                * scaling_length (double) height above the pump elevation
+                  (SCALING_LENGTH) below which the pumping rate is reduced. The
+                  default value for SCALING_LENGTH is the well radius.
             shutoffrecord : [minrate, maxrate]
                 * minrate (double) is the minimum rate that a well must exceed
                   to shutoff a well during a stress period. The well will shut
@@ -266,15 +271,10 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   aquifer exceeds maxrate. Reactivation of the well cannot
                   occur until the next time step if a well is shutdown to
                   reduce oscillations. maxrate must be greater than MINRATE.
-            rate_scalingrecord : [pump_elevation, scaling_length]
-                * pump_elevation (double) is the elevation of the multi-aquifer
-                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
-                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
-                  By default, PUMP_ELEVATION is set equal to the bottom of the
-                  largest GWF node number connected to a MAW well.
-                * scaling_length (double) height above the pump elevation
-                  (SCALING_LENGTH) below which the pumping rate is reduced. The
-                  default value for SCALING_LENGTH is the well radius.
+            status : [string]
+                * status (string) keyword option to define well status. STATUS
+                  can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
+                  ACTIVE.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'maw', 'options', 
@@ -296,6 +296,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                                                 'wellperiodrecarray'))
     package_abbr = "gwfmaw"
     package_type = "maw"
+    dfn_file_name = "gwf-maw.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name boundnames", "type keyword", "shape", 

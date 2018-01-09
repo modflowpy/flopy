@@ -222,6 +222,8 @@ class ModflowGwfuzf(mfpackage.MFPackage):
                                                'uzfperiodrecarray'))
     package_abbr = "gwfuzf"
     package_type = "uzf"
+    dfn_file_name = "gwf-uzf.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

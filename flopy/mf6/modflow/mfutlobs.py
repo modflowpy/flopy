@@ -56,6 +56,8 @@ class ModflowUtlobs(mfpackage.MFPackage):
                                                 'continuousrecarray'))
     package_abbr = "utlobs"
     package_type = "obs"
+    dfn_file_name = "utl-obs.dfn"
+
     dfn = [["block options", "name precision", "type double precision", 
             "shape", "reader urword", "optional true"],
            ["block options", "name digits", "type integer", "shape", 

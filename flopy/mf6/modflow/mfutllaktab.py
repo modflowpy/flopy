@@ -35,6 +35,8 @@ class ModflowUtllaktab(mfpackage.MFPackage):
                                             'laktabrecarray'))
     package_abbr = "utltab"
     package_type = "tab"
+    dfn_file_name = "utl-lak-tab.dfn"
+
     dfn = [["block dimensions", "name nrow", "type integer", 
             "reader urword", "optional false"],
            ["block dimensions", "name ncol", "type integer", 

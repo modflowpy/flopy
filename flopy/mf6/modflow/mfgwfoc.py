@@ -26,6 +26,13 @@ class ModflowGwfoc(mfpackage.MFPackage):
           HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
           saved.
+            steps : [integer]
+                * steps (integer) save for each step specified in STEPS. This
+                  keyword may be used in conjunction with other keywords to
+                  print or save results for multiple time steps.
+            all : [keyword]
+                * all (keyword) keyword to indicate save for all time steps in
+                  period.
             first : [keyword]
                 * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
@@ -34,22 +41,22 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
-            steps : [integer]
-                * steps (integer) save for each step specified in STEPS. This
-                  keyword may be used in conjunction with other keywords to
-                  print or save results for multiple time steps.
             last : [keyword]
                 * last (keyword) keyword to indicate save for last step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
-            all : [keyword]
-                * all (keyword) keyword to indicate save for all time steps in
-                  period.
     printrecord : [rtype, ocsetting]
         * rtype (string) type of information to save or print. Can be BUDGET or
           HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
           saved.
+            steps : [integer]
+                * steps (integer) save for each step specified in STEPS. This
+                  keyword may be used in conjunction with other keywords to
+                  print or save results for multiple time steps.
+            all : [keyword]
+                * all (keyword) keyword to indicate save for all time steps in
+                  period.
             first : [keyword]
                 * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
@@ -58,17 +65,10 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
-            steps : [integer]
-                * steps (integer) save for each step specified in STEPS. This
-                  keyword may be used in conjunction with other keywords to
-                  print or save results for multiple time steps.
             last : [keyword]
                 * last (keyword) keyword to indicate save for last step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
-            all : [keyword]
-                * all (keyword) keyword to indicate save for all time steps in
-                  period.
 
     """
     budget_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options', 
@@ -83,6 +83,8 @@ class ModflowGwfoc(mfpackage.MFPackage):
                                          'printrecord'))
     package_abbr = "gwfoc"
     package_type = "oc"
+    dfn_file_name = "gwf-oc.dfn"
+
     dfn = [["block options", "name budget_filerecord", 
             "type record budget fileout budgetfile", "shape", "reader urword", 
             "tagged true", "optional true"],

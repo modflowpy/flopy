@@ -38,6 +38,8 @@ class ModflowTdis(mfpackage.MFPackage):
                                           'tdisrecarray'))
     package_abbr = "tdis"
     package_type = "tdis"
+    dfn_file_name = "sim-tdis.dfn"
+
     dfn = [["block options", "name time_units", "type string", 
             "reader urword", "optional true"],
            ["block options", "name start_date_time", "type string", 

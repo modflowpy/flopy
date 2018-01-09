@@ -104,6 +104,8 @@ class ModflowGwfghb(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfghb"
     package_type = "ghb"
+    dfn_file_name = "gwf-ghb.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

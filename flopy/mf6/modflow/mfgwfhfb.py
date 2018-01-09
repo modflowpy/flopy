@@ -46,6 +46,8 @@ class ModflowGwfhfb(mfpackage.MFPackage):
                                          'hfbrecarray'))
     package_abbr = "gwfhfb"
     package_type = "hfb"
+    dfn_file_name = "gwf-hfb.dfn"
+
     dfn = [["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
            ["block dimensions", "name maxhfb", "type integer", 

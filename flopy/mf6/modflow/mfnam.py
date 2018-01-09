@@ -61,6 +61,8 @@ class ModflowNam(mfpackage.MFPackage):
                                               'solutionrecarray'))
     package_abbr = "nam"
     package_type = "nam"
+    dfn_file_name = "sim-nam.dfn"
+
     dfn = [["block options", "name continue", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name nocheck", "type keyword", 

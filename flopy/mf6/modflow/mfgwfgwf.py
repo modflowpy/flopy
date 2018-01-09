@@ -133,6 +133,8 @@ class ModflowGwfgwf(mfpackage.MFPackage):
                                             'gwfgwfrecarray'))
     package_abbr = "gwfgwf"
     package_type = "gwfgwf"
+    dfn_file_name = "exg-gwfgwf.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name print_input", "type keyword", 

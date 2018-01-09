@@ -120,6 +120,8 @@ class ModflowGwfevt(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfevt"
     package_type = "evt"
+    dfn_file_name = "gwf-evt.dfn"
+
     dfn = [["block options", "name fixed_cell", "type keyword", "shape", 
             "reader urword", "optional true"],
            ["block options", "name auxiliary", "type string", 
