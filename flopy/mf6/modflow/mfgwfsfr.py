@@ -10,6 +10,12 @@ class ModflowGwfsfr(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         * auxiliary (string) defines an array of one or more auxiliary variable
           names. There is no limit on the number of auxiliary variables that
@@ -203,46 +209,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           keyword and values. Keyword values that can be used to start the
           SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL,
           EVAPORATION, RUNOFF, DIVERSION, UPSTREAM_FRACTION, and AUXILIARY.
-            runoff : [string]
-                * runoff (string) real or character value that defines the
-                  volumetric rate of diffuse overland runoff that enters the
-                  streamflow routing reach. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value. By default,
-                  runoff rates are zero for each reach.
-            diversionrecord : [idv, divrate]
-                * idv (integer) diversion number.
-                * divrate (double) real or character value that defines the
-                  volumetric diversion (DIVFLOW) rate for the streamflow
-                  routing reach. If the Options block includes a TIMESERIESFILE
-                  entry (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
-            inflow : [string]
-                * inflow (string) real or character value that defines the
-                  volumetric inflow rate for the streamflow routing reach. If
-                  the Options block includes a TIMESERIESFILE entry (see the
-                  "Time-Variable Input" section), values can be obtained from a
-                  time series by entering the time-series name in place of a
-                  numeric value. By default, inflow rates are zero for each
-                  reach.
-            manning : [string]
-                * manning (string) real or character value that defines the
-                  Manning's roughness coefficient for the reach. MANNING must
-                  be greater than zero. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value.
-            evaporation : [string]
-                * evaporation (string) real or character value that defines the
-                  volumetric rate per unit area of water subtracted by
-                  evaporation from the streamflow routing reach. A positive
-                  evaporation rate should be provided. If the Options block
-                  includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, evaporation rates are zero for each reach.
             status : [string]
                 * status (string) keyword option to define stream reach status.
                   STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS
@@ -260,6 +226,33 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   respectively, to ensure that the active reach receives all of
                   the downstream outflow from the upstream reach. By default,
                   STATUS is ACTIVE.
+            stage : [string]
+                * stage (string) real or character value that defines the stage
+                  for the reach. The specified STAGE is only applied if the
+                  reach uses the simple routing option. If STAGE is not
+                  specified for reaches that use the simple routing option, the
+                  specified stage is set to the top of the reach. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            evaporation : [string]
+                * evaporation (string) real or character value that defines the
+                  volumetric rate per unit area of water subtracted by
+                  evaporation from the streamflow routing reach. A positive
+                  evaporation rate should be provided. If the Options block
+                  includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, evaporation rates are zero for each reach.
+            diversionrecord : [idv, divrate]
+                * idv (integer) diversion number.
+                * divrate (double) real or character value that defines the
+                  volumetric diversion (DIVFLOW) rate for the streamflow
+                  routing reach. If the Options block includes a TIMESERIESFILE
+                  entry (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
             auxiliaryrecord : [auxname, auxval]
                 * auxname (string) name for the auxiliary variable to be
                   assigned AUXVAL. AUXNAME must match one of the auxiliary
@@ -277,16 +270,29 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   that is applied as upstream inflow to the reach. The sum of
                   all USTRF values for all reaches connected to the same
                   upstream reach must be equal to one.
-            stage : [string]
-                * stage (string) real or character value that defines the stage
-                  for the reach. The specified STAGE is only applied if the
-                  reach uses the simple routing option. If STAGE is not
-                  specified for reaches that use the simple routing option, the
-                  specified stage is set to the top of the reach. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
+            inflow : [string]
+                * inflow (string) real or character value that defines the
+                  volumetric inflow rate for the streamflow routing reach. If
+                  the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, inflow rates are zero for each
+                  reach.
+            manning : [string]
+                * manning (string) real or character value that defines the
+                  Manning's roughness coefficient for the reach. MANNING must
+                  be greater than zero. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  volumetric rate of diffuse overland runoff that enters the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value. By default,
+                  runoff rates are zero for each reach.
             rainfall : [string]
                 * rainfall (string) real or character value that defines the
                   volumetric rate per unit area of water added by precipitation
@@ -295,6 +301,14 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   Input" section), values can be obtained from a time series by
                   entering the time-series name in place of a numeric value. By
                   default, rainfall rates are zero for each reach.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'sfr', 'options', 

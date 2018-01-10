@@ -10,6 +10,12 @@ class ModflowGwfnam(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     list : string
         * list (string) is name of the listing file to create for this GWF
           model. If not specified, then the name of the list file will be the
@@ -52,6 +58,14 @@ class ModflowGwfnam(mfpackage.MFPackage):
           will be used in the flow budget table in the listing file; it will
           also be used for the text entry in the cell-by-cell budget file.
           PNAME is case insensitive and is stored in all upper case letters.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     packagerecarray = ListTemplateGenerator(('gwf6', 'nam', 'packages', 

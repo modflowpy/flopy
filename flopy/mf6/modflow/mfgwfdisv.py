@@ -10,6 +10,12 @@ class ModflowGwfdisv(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     length_units : string
         * length_units (string) is the length units used for this model. Values
           can be "FEET", "METERS", or "CENTIMETERS". If not specified, the
@@ -79,6 +85,14 @@ class ModflowGwfdisv(mfpackage.MFPackage):
           numbers (in the VERTICES block) used to define the cell. Vertices
           must be listed in clockwise order. Cells that are connected must
           share vertices.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     top = ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'top'))

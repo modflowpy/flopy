@@ -10,6 +10,12 @@ class ModflowGwfhfb(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of horizontal
           flow barriers will be written to the listing file immediately after
@@ -40,6 +46,14 @@ class ModflowGwfhfb(mfpackage.MFPackage):
           barrier. For example, if the value for HYDCHR was specified as 1.5,
           the conductance calculated for the two cells would be multiplied by
           1.5.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     hfbrecarray = ListTemplateGenerator(('gwf6', 'hfb', 'period', 

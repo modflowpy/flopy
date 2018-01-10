@@ -10,6 +10,12 @@ class ModflowUtllaktab(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     nrow : integer
         * nrow (integer) integer value specifying the number of rows in the
           lake table. There must be NROW rows of data in the TABLE block.
@@ -29,6 +35,14 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         * barea (double) real value that defines the lake-GWF exchange area
           corresponding to the stage specified on the line. BAREA is only
           specified if the CLAKTYPE for the lake is EMBEDDEDH or EMBEDDEDV.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     laktabrecarray = ListTemplateGenerator(('tab', 'table', 

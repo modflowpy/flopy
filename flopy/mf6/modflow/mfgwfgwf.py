@@ -10,6 +10,12 @@ class ModflowGwfgwf(mfpackage.MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     exgtype : <string>
         * is the exchange type (GWF-GWF or GWF-GWT).
     exgmnamea : <string>
@@ -120,6 +126,14 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           each GWFGWF Exchange. The values of auxiliary variables must be
           present for each exchange. The values must be specified in the order
           of the auxiliary variables specified in the OPTIONS block.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwfgwf', 'options', 'auxiliary'))

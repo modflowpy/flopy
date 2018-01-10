@@ -10,6 +10,12 @@ class ModflowIms(mfpackage.MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_option : string
         * print_option (string) is a flag that controls printing of convergence
           information from the solver. NONE means print nothing. SUMMARY means
@@ -247,6 +253,14 @@ class ModflowIms(mfpackage.MFPackage):
           matrix reordering approach used. By default, matrix reordering is not
           applied. NONE - original ordering. RCM - reverse Cuthill McKee
           ordering. MD - minimum degree ordering.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     csv_output_filerecord = ListTemplateGenerator(('ims', 'options', 

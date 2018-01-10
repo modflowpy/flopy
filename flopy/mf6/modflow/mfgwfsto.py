@@ -10,6 +10,12 @@ class ModflowGwfsto(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that cell-by-cell flow terms
           will be written to the file specified with "BUDGET SAVE FILE" in
@@ -38,6 +44,14 @@ class ModflowGwfsto(mfpackage.MFPackage):
         * transient (boolean) keyword to indicate that stress-period IPER is
           transient. Transient conditions will apply until the STEADY-STATE
           keyword is specified in a subsequent BEGIN PERIOD block.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     iconvert = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 

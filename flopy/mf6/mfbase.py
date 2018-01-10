@@ -132,6 +132,21 @@ class MFFileMgmt(object):
             return new_path
 
     @staticmethod
+    def unique_file_name(file_name, lookup):
+        num = 0
+        while MFFileMgmt._build_file(file_name, num) in lookup:
+            num += 1
+        return MFFileMgmt._build_file(file_name, num)
+
+    @staticmethod
+    def _build_file(self, file_name, num):
+        file, ext = os.path.splitext(file_name)
+        if ext:
+            return '{}_{}.{}'.format(file, num, ext)
+        else:
+            return '{}_{}'.format(file, num)
+
+    @staticmethod
     def string_to_file_path(fp_string):
         file_delimitiers = ['/','\\']
         new_string = fp_string

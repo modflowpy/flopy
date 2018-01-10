@@ -10,6 +10,12 @@ class ModflowGwfic(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     strt : [double]
         * strt (double) is the initial (starting) head---that is, head at the
           beginning of the GWF Model simulation. STRT must be specified for all
@@ -21,6 +27,14 @@ class ModflowGwfic(mfpackage.MFPackage):
           hydraulic heads that are close to the steady-state solution. A head
           value lower than the cell bottom can be provided if a cell should
           start as dry.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     strt = ArrayTemplateGenerator(('gwf6', 'ic', 'griddata', 'strt'))

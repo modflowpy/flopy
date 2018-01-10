@@ -10,6 +10,12 @@ class ModflowGwfmvr(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of MVR
           information will be written to the listing file immediately after it
@@ -63,6 +69,14 @@ class ModflowGwfmvr(mfpackage.MFPackage):
           calculating the amount of water to move. For the "FACTOR" option,
           VALUE is the :math:`\\alpha` factor. For the remaining options, VALUE
           is the specified flow rate, :math:`Q_S`.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     budget_filerecord = ListTemplateGenerator(('gwf6', 'mvr', 'options', 

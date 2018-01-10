@@ -10,6 +10,12 @@ class ModflowGwfoc(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the output file to write budget
           information.
@@ -30,13 +36,13 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * steps (integer) save for each step specified in STEPS. This
                   keyword may be used in conjunction with other keywords to
                   print or save results for multiple time steps.
-            all : [keyword]
-                * all (keyword) keyword to indicate save for all time steps in
-                  period.
             first : [keyword]
                 * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
+            all : [keyword]
+                * all (keyword) keyword to indicate save for all time steps in
+                  period.
             frequency : [integer]
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
@@ -54,13 +60,13 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * steps (integer) save for each step specified in STEPS. This
                   keyword may be used in conjunction with other keywords to
                   print or save results for multiple time steps.
-            all : [keyword]
-                * all (keyword) keyword to indicate save for all time steps in
-                  period.
             first : [keyword]
                 * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
+            all : [keyword]
+                * all (keyword) keyword to indicate save for all time steps in
+                  period.
             frequency : [integer]
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
@@ -69,6 +75,14 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * last (keyword) keyword to indicate save for last step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     budget_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options', 

@@ -10,6 +10,12 @@ class ModflowGwfnpf(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that cell-by-cell flow terms
           will be written to the file specified with "BUDGET SAVE FILE" in
@@ -152,6 +158,14 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           "REWET" is specified in the OPTIONS block. If "REWET" is not
           specified in the options block, then WETDRY can be entered, and
           memory will be allocated for it, even though it is not used.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     rewet_record = ListTemplateGenerator(('gwf6', 'npf', 'options', 

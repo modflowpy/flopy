@@ -10,6 +10,12 @@ class ModflowTdis(mfpackage.MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     time_units : string
         * time_units (string) is the time units of the simulation. This is a
           text string that is used as a label within model output files. Values
@@ -32,6 +38,14 @@ class ModflowTdis(mfpackage.MFPackage):
           time step, :math:`\\Delta t_1`, is related to PERLEN, NSTP, and
           TSMULT by the relation :math:`\\Delta t_1= perlen \\frac{tsmult -
           1}{tsmult^{nstp}-1}`.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     tdisrecarray = ListTemplateGenerator(('tdis', 'perioddata', 

@@ -839,6 +839,12 @@ class MFSimulation(PackageContainer):
             if package.filename not in self._ghost_node_files:
                 self._ghost_node_files[package.filename] = package
                 self._gnc_file_num += 1
+            elif self._ghost_node_files[package.filename] != package:
+                # auto generate a unique file name and register it
+                file_name = MFFileMgmt.unique_file_name(package.filename,
+                                                        self._ghost_node_files)
+                package.filename = file_name
+                self._ghost_node_files[file_name] = package
         elif package.package_type.lower() == 'ims':
             # default behavior is to register the ims package with the first
             # unregistered model
