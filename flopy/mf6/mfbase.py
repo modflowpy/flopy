@@ -139,10 +139,10 @@ class MFFileMgmt(object):
         return MFFileMgmt._build_file(file_name, num)
 
     @staticmethod
-    def _build_file(self, file_name, num):
+    def _build_file(file_name, num):
         file, ext = os.path.splitext(file_name)
         if ext:
-            return '{}_{}.{}'.format(file, num, ext)
+            return '{}_{}{}'.format(file, num, ext)
         else:
             return '{}_{}'.format(file, num)
 

@@ -290,7 +290,7 @@ class MFSimulation(PackageContainer):
         self._models = collections.OrderedDict()
         self._tdis_file = None
         self._exchange_files = collections.OrderedDict()
-        self._ims_files = []
+        self._ims_files = collections.OrderedDict()
         self._ghost_node_files = {}
         self._mover_files = {}
         self._other_files = []
@@ -418,7 +418,6 @@ class MFSimulation(PackageContainer):
                 instance._exchange_files[exgfile[1]] = exchange_file
 
         # load simulation packages
-        file_num = 1
         solution_recarray = instance.simulation_data.mfdata[('nam',
                                                              'solutiongroup',
                                                              'solutionrecarray'
@@ -427,8 +426,6 @@ class MFSimulation(PackageContainer):
             ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
                                         pname=solution_info[2])
             ims_file.load(strict)
-            instance._ims_files.append(ims_file)
-            file_num += 1
 
         instance.simulation_data.mfpath.set_last_accessed_path()
         return instance
@@ -528,19 +525,20 @@ class MFSimulation(PackageContainer):
 
         solution_group_num = None
         in_simulation = False
-        for file in self._ims_files:
+        for index, file in self._ims_files.items():
             if file is ims_file:
                 in_simulation = True
         # do not allow an ims package to be registered twice with the
         # same simulation
         if not in_simulation:
-            # add ims package to simulation
-            self._ims_files.append(ims_file)
-
             # created unique file/package name
             file_num = len(self._ims_files) - 1
             ims_file.package_name = 'ims_{}'.format(file_num)
-            ims_file.package_file_name = '{}.ims'.format(ims_file.package_name)
+            if ims_file.filename in self._ims_files:
+                ims_file.filename = MFFileMgmt.unique_file_name(
+                    ims_file.filename, self._ims_files)
+            # add ims package to simulation
+            self._ims_files[ims_file.filename] = ims_file
 
         # only allow an ims package to be registerd to one solution group
         if not self._is_in_solution_group(ims_file.filename, 1) \
@@ -587,7 +585,7 @@ class MFSimulation(PackageContainer):
         self._tdis_file.write(ext_file_action=ext_file_action)
 
         # write ims files
-        for ims_file in self._ims_files:
+        for index, ims_file in self._ims_files.items():
             ims_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
@@ -907,7 +905,9 @@ class MFSimulation(PackageContainer):
 
         if len(self._ims_files) > 0:
             # register model with first ims file found
-            self.register_ims_package(self._ims_files[0], model_name)
+            first_ims_key = next(iter(self._ims_files))
+            self.register_ims_package(self._ims_files[first_ims_key],
+                                      model_name)
 
         return self.structure.model_struct_objs[model_type]
 
@@ -957,7 +957,7 @@ class MFSimulation(PackageContainer):
                 return False
 
         # ims files valid
-        for imsfile in self._ims_files:
+        for index, imsfile in self._ims_files.items():
             if not imsfile.is_valid():
                 return False
 
