@@ -10,6 +10,12 @@ class ModflowNam(mfpackage.MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     continue_ : boolean
         * continue (boolean) keyword flag to indicate that the simulation
           should continue even if one or more solutions do not converge.
@@ -20,11 +26,10 @@ class ModflowNam(mfpackage.MFPackage):
     memory_print_option : string
         * memory_print_option (string) is a flag that controls printing of
           detailed memory manager usage to the end of the simulation list file.
-          texttt{NONE} means do not print detailed information. texttt{SUMMARY}
-          means print only the total memory for each simulation component.
-          texttt{ALL} means print information for each variable stored in the
-          memory manager. texttt{NONE} is default if
-          texttt{memory_print_option} is not specified.
+          NONE means do not print detailed information. SUMMARY means print
+          only the total memory for each simulation component. ALL means print
+          information for each variable stored in the memory manager. NONE is
+          default if MEMORY_PRINT_OPTION is not specified.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -52,6 +57,14 @@ class ModflowNam(mfpackage.MFPackage):
         * slnfname (string) name of file containing solution input.
         * slnmnames (string) is the array of model names to add to this
           solution.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     modelrecarray = ListTemplateGenerator(('nam', 'models', 
@@ -62,6 +75,8 @@ class ModflowNam(mfpackage.MFPackage):
                                               'solutionrecarray'))
     package_abbr = "nam"
     package_type = "nam"
+    dfn_file_name = "sim-nam.dfn"
+
     dfn = [["block options", "name continue", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name nocheck", "type keyword", 

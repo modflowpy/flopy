@@ -10,6 +10,12 @@ class ModflowGwfgwf(mfpackage.MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     exgtype : <string>
         * is the exchange type (GWF-GWF or GWF-GWT).
     exgmnamea : <string>
@@ -45,11 +51,11 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     cell_averaging : string
         * cell_averaging (string) is a keyword and text keyword to indicate the
           method that will be used for calculating the conductance for
-          horizontal cell connections. The text value for
-          texttt{cell_averaging} can be "HARMONIC", "LOGARITHMIC", or "AMT-
-          LMK", which means "arithmetic-mean thickness and logarithmic-mean
-          hydraulic conductivity". If the user does not specify a value for
-          texttt{cell_averaging}, then the harmonic-mean method will be used.
+          horizontal cell connections. The text value for CELL_AVERAGING can be
+          "HARMONIC", "LOGARITHMIC", or "AMT-LMK", which means "arithmetic-mean
+          thickness and logarithmic-mean hydraulic conductivity". If the user
+          does not specify a value for CELL_AVERAGING, then the harmonic-mean
+          method will be used.
     cvoptions : [dewatered]
         * dewatered (string) If the DEWATERED keyword is specified, then the
           vertical conductance is calculated using only the saturated thickness
@@ -77,7 +83,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           the Water Mover (MVR) Package of the GWF Model, with two exceptions.
           First, in the PACKAGES block, the model name must be included as a
           separate string before each package. Second, the appropriate model
-          name must be included before texttt{pname1} and texttt{pname2} in the
+          name must be included before package name 1 and package name 2 in the
           BEGIN PERIOD block. This allows providers and receivers to be located
           in both models listed as part of this exchange.
     obs_filerecord : [obs6_filename]
@@ -92,35 +98,42 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     gwfgwfrecarray : [cellidm1, cellidm2, ihc, cl1, cl2, hwva, aux]
         * cellidm1 ((integer, ...)) is the cellid of the cell in model 1 as
           specified in the simulation name file. For a structured grid that
-          uses the DIS input file, texttt{cellidm1} is the layer, row, and
-          column numbers of the cell. For a grid that uses the DISV input file,
-          texttt{cellidm1} is the layer number and cell2d number for the two
-          cells. If the model uses the unstructured discretization (DISU) input
-          file, then texttt{cellidm1} is the node number for the cell.
+          uses the DIS input file, CELLIDM1 is the layer, row, and column
+          numbers of the cell. For a grid that uses the DISV input file,
+          CELLIDM1 is the layer number and CELL2D number for the two cells. If
+          the model uses the unstructured discretization (DISU) input file,
+          then CELLIDM1 is the node number for the cell.
         * cellidm2 ((integer, ...)) is the cellid of the cell in model 2 as
           specified in the simulation name file. For a structured grid that
-          uses the DIS input file, texttt{cellidm2} is the layer, row, and
-          column numbers of the cell. For a grid that uses the DISV input file,
-          texttt{cellidm2} is the layer number and cell2d number for the two
-          cells. If the model uses the unstructured discretization (DISU) input
-          file, then texttt{cellidm2} is the node number for the cell.
+          uses the DIS input file, CELLIDM2 is the layer, row, and column
+          numbers of the cell. For a grid that uses the DISV input file,
+          CELLIDM2 is the layer number and CELL2D number for the two cells. If
+          the model uses the unstructured discretization (DISU) input file,
+          then CELLIDM2 is the node number for the cell.
         * ihc (integer) is an integer flag indicating the direction between
-          node n and all of its m connections. If :math:`ihc=0` then the
-          connection is vertical. If :math:`ihc=1` then the connection is
-          horizontal. If :math:`ihc=2` then the connection is horizontal for a
-          vertically staggered grid.
-        * cl1 (double) is the distance between the center of cell nodem1 and
-          the its shared face with nodem2.
-        * cl2 (double) is the distance between the center of cell nodem2 and
-          the its shared face with nodem1.
+          node n and all of its m connections. If IHC = 0 then the connection
+          is vertical. If IHC = 1 then the connection is horizontal. If IHC = 2
+          then the connection is horizontal for a vertically staggered grid.
+        * cl1 (double) is the distance between the center of cell 1 and the its
+          shared face with cell 2.
+        * cl2 (double) is the distance between the center of cell 1 and the its
+          shared face with cell 2.
         * hwva (double) is the horizontal width of the flow connection between
-          texttt{nodem1} and texttt{nodem2} if :math:`\\texttt{ihc} > 0`, or it
-          is the area of the vertical connection between texttt{nodem1} and
-          texttt{nodem2} if :math:`\\texttt{ihc} = 0`.
+          cell 1 and cell 2 if IHC :math:`>` 0, or it is the area perpendicular
+          to flow of the vertical connection between cell 1 and cell 2 if IHC =
+          0.
         * aux (double) represents the values of the auxiliary variables for
           each GWFGWF Exchange. The values of auxiliary variables must be
           present for each exchange. The values must be specified in the order
           of the auxiliary variables specified in the OPTIONS block.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwfgwf', 'options', 'auxiliary'))
@@ -134,6 +147,8 @@ class ModflowGwfgwf(mfpackage.MFPackage):
                                             'gwfgwfrecarray'))
     package_abbr = "gwfgwf"
     package_type = "gwfgwf"
+    dfn_file_name = "exg-gwfgwf.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name print_input", "type keyword", 

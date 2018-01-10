@@ -10,6 +10,12 @@ class ModflowGwfuzf(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         * auxiliary (string) defines an array of one or more auxiliary variable
           names. There is no limit on the number of auxiliary variables that
@@ -36,8 +42,9 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of UZF flow
           rates will be printed to the listing file for every stress period
           time step in which "BUDGET PRINT" is specified in Output Control. If
-          there is no Output Control option and PRINT_FLOWS is specified, then
-          flow rates are printed for the last time step of each stress period.
+          there is no Output Control option and "PRINT_FLOWS" is specified,
+          then flow rates are printed for the last time step of each stress
+          period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that UZF flow terms will be
           written to the file specified with "BUDGET FILEOUT" in Output
@@ -65,27 +72,26 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         * simulate_et (boolean) keyword specifying that ET in the unsaturated
           (UZF) and saturated zones (GWF) will be simulated. ET can be
           simulated in the UZF cell and not the GWF cell by emitting keywords
-          texttt{LINEAR_GWET} and texttt{SQUARE_GWET}.
+          LINEAR_GWET and SQUARE_GWET.
     linear_gwet : boolean
         * linear_gwet (boolean) keyword specifying that groundwater ET will be
           simulated using the original ET formulation of MODFLOW-2005.
     square_gwet : boolean
         * square_gwet (boolean) keyword specifying that groundwater ET will be
           simulated by assuming a constant ET rate for groundwater levels
-          between land surface (texttt{TOP}) and land surface minus the ET
-          extinction depth (texttt{TOP-EXTDP}). Groundwater ET is smoothly
-          reduced from the texttt{PET} rate to zero over a nominal interval at
-          texttt{TOP-EXTDP}.
+          between land surface (TOP) and land surface minus the ET extinction
+          depth (TOP-EXTDP). Groundwater ET is smoothly reduced from the PET
+          rate to zero over a nominal interval at TOP-EXTDP.
     simulate_gwseep : boolean
         * simulate_gwseep (boolean) keyword specifying that groundwater
-          discharge (texttt{GWSEEP}) to land surface will be simulated.
-          Groundwater discharge is nonzero when groundwater head is greater
-          than land surface.
+          discharge (GWSEEP) to land surface will be simulated. Groundwater
+          discharge is nonzero when groundwater head is greater than land
+          surface.
     unsat_etwc : boolean
         * unsat_etwc (boolean) keyword specifying that ET in the unsaturated
           zone will be simulated as a function of the specified PET rate while
-          the water content (texttt{THETA}) is greater than the ET extinction
-          water content (texttt{extwc}).
+          the water content (THETA) is greater than the ET extinction water
+          content (EXTWC).
     unsat_etae : boolean
         * unsat_etae (boolean) keyword specifying that ET in the unsaturated
           zone will be simulated simulated using a capillary pressure based
@@ -109,18 +115,17 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     uzfrecarray : [iuzno, cellid, landflag, ivertcon, surfdep, vks, thtr, thts,
       thti, eps, boundname]
         * iuzno (integer) integer value that defines the UZF cell number
-          associated with the specified PACKAGEDATA data on the line.
-          texttt{iuzno} must be greater than zero and less than or equal to
-          texttt{nuzfcells}. UZF information must be specified for every UZF
-          cell or the program will terminate with an error. The program will
-          also terminate with an error if information for a UZF cell is
-          specified more than once.
+          associated with the specified PACKAGEDATA data on the line. IUZNO
+          must be greater than zero and less than or equal to NUZFCELLS. UZF
+          information must be specified for every UZF cell or the program will
+          terminate with an error. The program will also terminate with an
+          error if information for a UZF cell is specified more than once.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
-          that uses the DIS input file, cellid is the layer, row, and column.
-          For a grid that uses the DISV input file, cellid is the layer and
-          cell2d number. If the model uses the unstructured discretization
-          (DISU) input file, then cellid is the node number for the cell.
+          that uses the DIS input file, CELLID is the layer, row, and column.
+          For a grid that uses the DISV input file, CELLID is the layer and
+          CELL2D number. If the model uses the unstructured discretization
+          (DISU) input file, CELLID is the node number for the cell.
         * landflag (integer) integer value set to one for land surface cells
           indicating that boundary conditions can be applied and data can be
           specified in the PERIOD block. A value of 0 specifies a non-land
@@ -138,9 +143,9 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         * thts (double) is the saturated water content of the UZF cell.
         * thti (double) is the initial water content of the UZF cell.
         * eps (double) is the epsilon exponent of the UZF cell.
-        * boundname (string) name of the UZF cell cell. boundname is an ASCII
+        * boundname (string) name of the UZF cell cell. BOUNDNAME is an ASCII
           character variable that can contain as many as 40 characters. If
-          boundname contains spaces in it, then the entire name must be
+          BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
     uzfperiodrecarray : [iuzno, finf, pet, extdp, extwc, ha, hroot, rootact,
       aux]
@@ -148,63 +153,57 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           associated with the specified PERIOD data on the line.
         * finf (string) real or character value that defines the applied
           infiltration rate of the UZF cell (:math:`LT^{-1}`). If the Options
-          block includes a \texttt{TIMESERIESFILE} entry (see the "Time-
-          Variable Input" section), values can be obtained from a time series
-          by entering the time-series name in place of a numeric value.
+          block includes a TIMESERIESFILE entry (see the "Time-Variable Input"
+          section), values can be obtained from a time series by entering the
+          time-series name in place of a numeric value.
         * pet (string) real or character value that defines the potential
           evapotranspiration rate of the UZF cell and specified GWF cell.
           Evapotranspiration is first removed from the unsaturated zone and any
           remaining potential evapotranspiration is applied to the saturated
-          zone. If texttt{ivertcon} is greater than zero then residual
-          potential evapotranspiration not satisfied in the UZF cell is applied
-          to the underlying UZF and GWF cells. texttt{pet} is always specified,
-          but is only used if texttt{SIMULATE_ET} is specified in the OPTIONS
-          block. If the Options block includes a texttt{TIMESERIESFILE} entry
-          (see the "Time-Variable Input" section), values can be obtained from
-          a time series by entering the time-series name in place of a numeric
-          value.
-        * extdp (string) real or character value that defines the
-          evapotranspiration extinction depth of the UZF cell. If
-          texttt{ivertcon} is greater than zero and texttt{extdp} extends below
-          the GWF cell bottom then remaining potential evapotranspiration is
-          applied to the underlying UZF and GWF cells. texttt{extdp} is always
-          specified, but is only used if texttt{SIMULATE_ET} is specified in
-          the OPTIONS block. If the Options block includes a
-          texttt{TIMESERIESFILE} entry (see the "Time-Variable Input" section),
-          values can be obtained from a time series by entering the time-series
-          name in place of a numeric value.
-        * extwc (string) real or character value that defines the
-          evapotranspiration extinction water content of the UZF cell.
-          texttt{extwc} is always specified, but is only used if
-          texttt{SIMULATE_ET} and texttt{UNSAT_ETWC} are specified in the
-          OPTIONS block. If the Options block includes a texttt{TIMESERIESFILE}
-          entry (see the "Time-Variable Input" section), values can be obtained
-          from a time series by entering the time-series name in place of a
-          numeric value.
-        * ha (string) real or character value that defines the air entry
-          potential (head) of the UZF cell. texttt{ha} is always specified, but
-          is only used if texttt{SIMULATE_ET} and texttt{UNSAT_ETAE} are
-          specified in the OPTIONS block. If the Options block includes a
-          texttt{TIMESERIESFILE} entry (see the "Time-Variable Input" section),
-          values can be obtained from a time series by entering the time-series
-          name in place of a numeric value.
-        * hroot (string) real or character value that defines the root
-          potential (head) of the UZF cell. texttt{hroot} is always specified,
-          but is only used if texttt{SIMULATE_ET} and texttt{UNSAT_ETAE} are
-          specified in the OPTIONS block. If the Options block includes a
-          texttt{TIMESERIESFILE} entry (see the "Time-Variable Input" section),
-          values can be obtained from a time series by entering the time-series
-          name in place of a numeric value.
-        * rootact (string) real or character value that defines the root
-          activity function of the UZF cell. texttt{rootact} is the length of
-          roots in a given volume of soil divided by that volume. Values range
-          from 0 to about 3 :math:`cm^{-2}`, depending on the plant community
-          and its stage of development. \texttt{rootact} is always specified,
-          but is only used if \texttt{SIMULATE\_ET} and \texttt{UNSAT\_ETAE}
-          are specified in the OPTIONS block. If the Options block includes a
-          \texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
+          zone. If IVERTCON is greater than zero then residual potential
+          evapotranspiration not satisfied in the UZF cell is applied to the
+          underlying UZF and GWF cells. PET is always specified, but is only
+          used if SIMULATE_ET is specified in the OPTIONS block. If the Options
+          block includes a TIMESERIESFILE entry (see the "Time-Variable Input"
           section), values can be obtained from a time series by entering the
           time-series name in place of a numeric value.
+        * extdp (string) real or character value that defines the
+          evapotranspiration extinction depth of the UZF cell. If IVERTCON is
+          greater than zero and EXTDP extends below the GWF cell bottom then
+          remaining potential evapotranspiration is applied to the underlying
+          UZF and GWF cells. EXTDP is always specified, but is only used if
+          SIMULATE_ET is specified in the OPTIONS block. If the Options block
+          includes a TIMESERIESFILE entry (see the "Time-Variable Input"
+          section), values can be obtained from a time series by entering the
+          time-series name in place of a numeric value.
+        * extwc (string) real or character value that defines the
+          evapotranspiration extinction water content of the UZF cell. EXTWC is
+          always specified, but is only used if SIMULATE_ET and UNSAT_ETWC are
+          specified in the OPTIONS block. If the Options block includes a
+          TIMESERIESFILE entry (see the "Time-Variable Input" section), values
+          can be obtained from a time series by entering the time-series name
+          in place of a numeric value.
+        * ha (string) real or character value that defines the air entry
+          potential (head) of the UZF cell. HA is always specified, but is only
+          used if SIMULATE_ET and UNSAT_ETAE are specified in the OPTIONS
+          block. If the Options block includes a TIMESERIESFILE entry (see the
+          "Time-Variable Input" section), values can be obtained from a time
+          series by entering the time-series name in place of a numeric value.
+        * hroot (string) real or character value that defines the root
+          potential (head) of the UZF cell. HROOT is always specified, but is
+          only used if SIMULATE_ET and UNSAT_ETAE are specified in the OPTIONS
+          block. If the Options block includes a TIMESERIESFILE entry (see the
+          "Time-Variable Input" section), values can be obtained from a time
+          series by entering the time-series name in place of a numeric value.
+        * rootact (string) real or character value that defines the root
+          activity function of the UZF cell. ROOTACT is the length of roots in
+          a given volume of soil divided by that volume. Values range from 0 to
+          about 3 :math:`cm^{-2}`, depending on the plant community and its
+          stage of development. ROOTACT is always specified, but is only used
+          if SIMULATE\_ET and UNSAT\_ETAE are specified in the OPTIONS block.
+          If the Options block includes a TIMESERIESFILE entry (see the "Time-
+          Variable Input" section), values can be obtained from a time series
+          by entering the time-series name in place of a numeric value.
         * aux (double) represents the values of the auxiliary variables for
           each UZF. The values of auxiliary variables must be present for each
           UZF. The values must be specified in the order of the auxiliary
@@ -213,6 +212,14 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           (see the "Time-Variable Input" section), values can be obtained from
           a time series by entering the time-series name in place of a numeric
           value.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'uzf', 'options', 
@@ -229,6 +236,8 @@ class ModflowGwfuzf(mfpackage.MFPackage):
                                                'uzfperiodrecarray'))
     package_abbr = "gwfuzf"
     package_type = "uzf"
+    dfn_file_name = "gwf-uzf.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

@@ -158,7 +158,7 @@ shape (ncol*nrow; ncpl)
 reader readarray
 optional true
 longname layer number for evapotranspiration
-description \texttt{ievt} is the layer number that defines the layer in each vertical column where evapotranspiration is applied. If \texttt{ievt} is omitted, evapotranspiration by default is applied to cells in layer 1.
+description IEVT is the layer number that defines the layer in each vertical column where evapotranspiration is applied. If IEVT is omitted, evapotranspiration by default is applied to cells in layer 1.
 
 block period
 name surface
@@ -190,4 +190,4 @@ type double precision
 shape (ncol*nrow; ncpl)
 reader readarray
 longname auxiliary variable iaux
-description is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  A separate array can be specified for each auxiliary variable.  If an array is not specified for an auxiliary variable, then a value of zero is assigned.  If the value specified here for the auxiliary variable is the same as auxmultname, then the evapotranspiration rate will be multiplied by this array.
+description is an array of values for auxiliary variable AUX(IAUX), where iaux is a value from 1 to NAUX, and AUX(IAUX) must be listed as part of the auxiliary variables.  A separate array can be specified for each auxiliary variable.  If an array is not specified for an auxiliary variable, then a value of zero is assigned.  If the value specified here for the auxiliary variable is the same as auxmultname, then the evapotranspiration rate will be multiplied by this array.

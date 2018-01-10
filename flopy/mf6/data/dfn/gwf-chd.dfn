@@ -203,5 +203,4 @@ in_record true
 reader urword
 optional true
 longname constant head boundary name
-#description name of the constant head boundary.  \texttt{boundname} is an ASCII character variable that can contain as many as 40 characters.  If \texttt{boundname} contains spaces in it, then the entire name must be enclosed within single quotes.
 description REPLACE boundname {'{#1}': 'constant head boundary'}

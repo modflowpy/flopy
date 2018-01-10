@@ -10,6 +10,12 @@ class ModflowGwfdis(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     length_units : string
         * length_units (string) is the length units used for this model. Values
           can be "FEET", "METERS", or "CENTIMETERS". If not specified, the
@@ -20,21 +26,21 @@ class ModflowGwfdis(mfpackage.MFPackage):
     xorigin : double
         * xorigin (double) x-position of the lower-left corner of the model
           grid. A default value of zero is assigned if not specified. The value
-          for texttt{xorigin} does not affect the model simulation, but it is
-          written to the binary grid file so that postprocessors can locate the
-          grid in space.
+          for XORIGIN does not affect the model simulation, but it is written
+          to the binary grid file so that postprocessors can locate the grid in
+          space.
     yorigin : double
         * yorigin (double) y-position of the lower-left corner of the model
           grid. If not specified, then a default value equal to zero is used.
-          The value for texttt{yorigin} does not affect the model simulation,
-          but it is written to the binary grid file so that postprocessors can
-          locate the grid in space.
+          The value for YORIGIN does not affect the model simulation, but it is
+          written to the binary grid file so that postprocessors can locate the
+          grid in space.
     angrot : double
         * angrot (double) counter-clockwise rotation angle (in degrees) of the
           lower-left corner of the model grid. If not specified, then a default
-          value of 0.0 is assigned. The value for texttt{angrot} does not
-          affect the model simulation, but it is written to the binary grid
-          file so that postprocessors can locate the grid in space.
+          value of 0.0 is assigned. The value for ANGROT does not affect the
+          model simulation, but it is written to the binary grid file so that
+          postprocessors can locate the grid in space.
     nlay : integer
         * nlay (integer) is the number of layers in the model grid.
     nrow : integer
@@ -52,17 +58,24 @@ class ModflowGwfdis(mfpackage.MFPackage):
         * botm (double) is the bottom elevation for each cell.
     idomain : [integer]
         * idomain (integer) is an optional array that characterizes the
-          existence status of a cell. If the texttt{idomain} array is not
-          specified, then all model cells exist within the solution. If the
-          texttt{idomain} value for a cell is 0, the cell does not exist in the
-          simulation. Input and output values will be read and written for the
-          cell, but internal to the program, the cell is excluded from the
-          solution. If the texttt{idomain} value for a cell is 1, the cell
-          exists in the simulation. If the texttt{idomain} value for a cell is
-          -1, the cell does not exist in the simulation. Furthermore, the first
-          existing cell above will be connected to the first existing cell
-          below. This type of cell is referred to as a "vertical pass through"
-          cell.
+          existence status of a cell. If the IDOMAIN array is not specified,
+          then all model cells exist within the solution. If the IDOMAIN value
+          for a cell is 0, the cell does not exist in the simulation. Input and
+          output values will be read and written for the cell, but internal to
+          the program, the cell is excluded from the solution. If the IDOMAIN
+          value for a cell is 1, the cell exists in the simulation. If the
+          IDOMAIN value for a cell is -1, the cell does not exist in the
+          simulation. Furthermore, the first existing cell above will be
+          connected to the first existing cell below. This type of cell is
+          referred to as a "vertical pass through" cell.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     delr = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delr'))
@@ -73,6 +86,8 @@ class ModflowGwfdis(mfpackage.MFPackage):
                                       'idomain'))
     package_abbr = "gwfdis"
     package_type = "dis"
+    dfn_file_name = "gwf-dis.dfn"
+
     dfn = [["block options", "name length_units", "type string", 
             "reader urword", "optional true"],
            ["block options", "name nogrb", "type keyword", "reader urword", 

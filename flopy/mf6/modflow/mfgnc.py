@@ -10,6 +10,12 @@ class ModflowGnc(mfpackage.MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of GNC
           information will be written to the listing file immediately after it
@@ -18,8 +24,9 @@ class ModflowGnc(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of GNC flow
           rates will be printed to the listing file for every stress period
           time step in which "BUDGET PRINT" is specified in Output Control. If
-          there is no Output Control option and PRINT_FLOWS is specified, then
-          flow rates are printed for the last time step of each stress period.
+          there is no Output Control option and "PRINT_FLOWS" is specified,
+          then flow rates are printed for the last time step of each stress
+          period.
     explicit : boolean
         * explicit (boolean) keyword to indicate that the ghost node correction
           is applied in an explicit manner on the right-hand side of the
@@ -27,9 +34,9 @@ class ModflowGnc(mfpackage.MFPackage):
           iterations. If the keyword is not specified, then the correction will
           be applied in an implicit manner on the left-hand side. The implicit
           approach will likely converge better, but may require additional
-          memory. If the texttt{EXPLICIT} keyword is not specified, then the
-          BICGSTAB linear acceleration option should be specified within the
-          LINEAR block of the Sparse Matrix Solver.
+          memory. If the EXPLICIT keyword is not specified, then the BICGSTAB
+          linear acceleration option should be specified within the LINEAR
+          block of the Sparse Matrix Solver.
     numgnc : integer
         * numgnc (integer) is the number of GNC entries.
     numalphaj : integer
@@ -37,43 +44,50 @@ class ModflowGnc(mfpackage.MFPackage):
     gncdatarecarray : [cellidn, cellidm, cellidsj, alphasj]
         * cellidn ((integer, ...)) is the cellid of the cell, :math:`n`, in
           which the ghost node is located. For a structured grid that uses the
-          DIS input file, \texttt{cellidn} is the layer, row, and column
-          numbers of the cell. For a grid that uses the DISV input file,
-          \texttt{cellidn} is the layer number and cell2d number for the two
-          cells. If the model uses the unstructured discretization (DISU) input
-          file, then \texttt{cellidn} is the node number for the cell.
+          DIS input file, CELLIDN is the layer, row, and column numbers of the
+          cell. For a grid that uses the DISV input file, CELLIDN is the layer
+          number and CELL2D number for the two cells. If the model uses the
+          unstructured discretization (DISU) input file, then CELLIDN is the
+          node number for the cell.
         * cellidm ((integer, ...)) is the cellid of the connecting cell,
           :math:`m`, to which flow occurs from the ghost node. For a structured
-          grid that uses the DIS input file, \texttt{cellidm} is the layer,
-          row, and column numbers of the cell. For a grid that uses the DISV
-          input file, \texttt{cellidm} is the layer number and cell2d number
-          for the two cells. If the model uses the unstructured discretization
-          (DISU) input file, then \texttt{cellidm} is the node number for the
-          cell.
-        * cellidsj ((integer, ...)) is the array of cellids for the
-          contributing :math:`j` cells, which contribute to the interpolated
-          head value at the ghost node. This item contains one cellid for each
-          of the contributing cells of the ghost node. Note that if the number
-          of actual contributing cells needed by the user is less than
-          \texttt{numalphaj} for any ghost node, then a dummy cellid of zero(s)
-          should be inserted with an associated contributing factor of zero.
-          For a structured grid that uses the DIS input file, \texttt{cellid}
-          is the layer, row, and column numbers of the cell. For a grid that
-          uses the DISV input file, \texttt{cellid} is the layer number and
-          cell2d number for the two cells. If the model uses the unstructured
-          discretization (DISU) input file, then \texttt{cellid} is the node
-          number for the cell.
+          grid that uses the DIS input file, CELLIDM is the layer, row, and
+          column numbers of the cell. For a grid that uses the DISV input file,
+          CELLIDM is the layer number and CELL2D number for the two cells. If
+          the model uses the unstructured discretization (DISU) input file,
+          then CELLIDM is the node number for the cell.
+        * cellidsj ((integer, ...)) is the array of CELLIDS for the
+          contributing j cells, which contribute to the interpolated head value
+          at the ghost node. This item contains one CELLID for each of the
+          contributing cells of the ghost node. Note that if the number of
+          actual contributing cells needed by the user is less than NUMALPHAJ
+          for any ghost node, then a dummy CELLID of zero(s) should be inserted
+          with an associated contributing factor of zero. For a structured grid
+          that uses the DIS input file, CELLID is the layer, row, and column
+          numbers of the cell. For a grid that uses the DISV input file, CELLID
+          is the layer number and cell2d number for the two cells. If the model
+          uses the unstructured discretization (DISU) input file, then CELLID
+          is the node number for the cell.
         * alphasj (double) is the contributing factors for each contributing
-          node in texttt{cellidsj}. Note that if the number of actual
-          contributing cells is less than texttt{numalphaj} for any ghost node,
-          then dummy cellids should be inserted with an associated contributing
-          factor of zero.
+          node in CELLIDSJ. Note that if the number of actual contributing
+          cells is less than NUMALPHAJ for any ghost node, then dummy CELLIDS
+          should be inserted with an associated contributing factor of zero.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     gncdatarecarray = ListTemplateGenerator(('gnc', 'gncdata', 
                                              'gncdatarecarray'))
     package_abbr = "gnc"
     package_type = "gnc"
+    dfn_file_name = "gwf-gnc.dfn"
+
     dfn = [["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name print_flows", "type keyword", 

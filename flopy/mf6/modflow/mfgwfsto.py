@@ -10,13 +10,19 @@ class ModflowGwfsto(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that cell-by-cell flow terms
           will be written to the file specified with "BUDGET SAVE FILE" in
           Output Control.
     storagecoefficient : boolean
-        * storagecoefficient (boolean) keyword to indicate that the texttt{ss}
-          array is read as storage coefficient rather than specific storage.
+        * storagecoefficient (boolean) keyword to indicate that the SS array is
+          read as storage coefficient rather than specific storage.
     iconvert : [integer]
         * iconvert (integer) is a flag for each cell that specifies whether or
           not a cell is convertible for the storage calculation. 0 indicates
@@ -31,15 +37,21 @@ class ModflowGwfsto(mfpackage.MFPackage):
     sy : [double]
         * sy (double) is specific yield.
     steady_state : boolean
-        * steady-state (boolean) keyword to indicate that stress-period
-          texttt{iper} is steady-state. Steady-state conditions will apply
-          until the texttt{TRANSIENT} keyword is specified in a subsequent
-          texttt{BEGIN PERIOD} block.
+        * steady-state (boolean) keyword to indicate that stress-period IPER is
+          steady-state. Steady-state conditions will apply until the TRANSIENT
+          keyword is specified in a subsequent BEGIN PERIOD block.
     transient : boolean
-        * transient (boolean) keyword to indicate that stress-period
-          texttt{iper} is transient. Transient conditions will apply until the
-          texttt{STEADY-STATE} keyword is specified in a subsequent
-          texttt{BEGIN PERIOD} block.
+        * transient (boolean) keyword to indicate that stress-period IPER is
+          transient. Transient conditions will apply until the STEADY-STATE
+          keyword is specified in a subsequent BEGIN PERIOD block.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     iconvert = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 
@@ -48,6 +60,8 @@ class ModflowGwfsto(mfpackage.MFPackage):
     sy = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
     package_abbr = "gwfsto"
     package_type = "sto"
+    dfn_file_name = "gwf-sto.dfn"
+
     dfn = [["block options", "name save_flows", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name storagecoefficient", "type keyword", 

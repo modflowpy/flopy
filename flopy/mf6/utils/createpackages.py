@@ -232,9 +232,13 @@ def create_packages():
         init_param_list = []
         class_vars = []
         dfn_string = build_dfn_string(package[3])
-        package_name = clean_class_string(
+        package_abbr = clean_class_string(
             '{}{}'.format(clean_class_string(package[2]),
-                          package[0].file_type)).lower()
+                            package[0].file_type)).lower()
+        package_name = clean_class_string(
+            '{}{}{}'.format(clean_class_string(package[2]),
+                            package[0].file_prefix,
+                            package[0].file_type)).lower()
         if package[0].description:
             doc_string = mfdatautil.MFDocString(package[0].description)
         else:
@@ -288,6 +292,19 @@ def create_packages():
                             data_structure.path,
                             data_structure.get_datatype())
 
+
+        # add extra docstrings for additional variables
+        doc_string.add_parameter('    fname : String\n        '
+                                 'File name for this package.')
+        doc_string.add_parameter('    pname : String\n        '
+                                 'Package name for this package.')
+        doc_string.add_parameter('    parent_file : MFPackage\n        '
+                                 'Parent package file that references this '
+                                 'package. Only needed for\n        utility '
+                                 'packages (mfutl*). For example, mfutllaktab '
+                                 'package must have \n        a mfgwflak '
+                                 'package parent_file.')
+
         # build package builder class string
         init_vars = '\n'.join(init_vars)
         package_short_name = clean_class_string(package[0].file_type).lower()
@@ -295,14 +312,30 @@ def create_packages():
             package_name.title())
         class_def_string = class_def_string.replace('-', '_')
         class_var_string = '{}\n    package_abbr = "{}"\n    package_type = ' \
-                           '"{}"'.format('\n'.join(class_vars), package_name,
-                                         package[4])
+                           '"{}"\n    dfn_file_name = "{}"' \
+                           '\n'.format('\n'.join(class_vars), package_abbr,
+                                       package[4], package[0].dfn_file_name)
         init_string_full = init_string_def
         # add variables to init string
+        doc_string.add_parameter('    add_to_package_list : bool\n        '
+                                 'Do not set this parameter. It is intended '
+                                 'for debugging and internal\n        '
+                                 'processing purposes only.',
+                                 beginning_of_list=True)
         if package[1] == PackageLevel.sim_level:
+            doc_string.add_parameter('    simulation : MFSimulation\n        '
+                                     'Simulation that this package is a part '
+                                     'of. Package is automatically\n        '
+                                     'added to simulation when it is '
+                                     'initialized.', beginning_of_list=True)
             init_string_full = '{}, simulation, add_to_package_list=' \
                                'True'.format(init_string_full)
         else:
+            doc_string.add_parameter('    model : MFModel\n        '
+                                     'Model that this package is a part of.  '
+                                     'Package is automatically\n        added '
+                                     'to model when it is initialized.',
+                                     beginning_of_list=True)
             init_string_full = '{}, model, add_to_package_list=True'.format(
                 init_string_full)
         line_chars = len(init_string_full)

@@ -723,7 +723,8 @@ class DataStorage(object):
                 success = True
                 for layer_num, layer_data in enumerate(data):
                     if not isinstance(layer_data, list) and \
-                            not isinstance(layer_data, dict):
+                            not isinstance(layer_data, dict) and \
+                            not isinstance(layer_data, np.ndarray):
                         layer_data = [layer_data]
                     success = success and self._set_array_layer(layer_data,
                                                                 layer_num,
@@ -1687,6 +1688,16 @@ class MFTransient(object):
     def add_transient_key(self, transient_key):
         if isinstance(transient_key, int):
             assert(self._verify_sp(transient_key))
+
+    def update_transient_key(self, old_transient_key, new_transient_key):
+        if old_transient_key in self._data_storage:
+            # replace dictionary key
+            self._data_storage[new_transient_key] = \
+                self._data_storage[old_transient_key]
+            del self._data_storage[old_transient_key]
+            if self._current_key == old_transient_key:
+                # update current key
+                self._current_key = new_transient_key
 
     def _transient_setup(self, data_storage, data_struct_type):
         self._data_storage = data_storage

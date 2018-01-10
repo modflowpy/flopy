@@ -757,10 +757,9 @@ class MFDocString(object):
 
     Methods
     -------
-    add_parameter : (param_name : string, param_type : string,
-                     param_descr : string)
-        adds doc string for a parameter with name 'param_name', type
-        'param_type' and description 'param_descr'
+    add_parameter : (param_descr : string, beginning_of_list : bool)
+        adds doc string for a parameter with description 'param_descr' to the
+        end of the list unless beginning_of_list is True
     get_doc_string : () : string
         builds and returns the docstring for the class
     """
@@ -771,8 +770,11 @@ class MFDocString(object):
                                 '----------'.format(self.indent, self.indent)
         self.parameters = []
 
-    def add_parameter(self, param_descr):
-        self.parameters.append(param_descr)
+    def add_parameter(self, param_descr, beginning_of_list=False):
+        if beginning_of_list:
+            self.parameters.insert(0, param_descr)
+        else:
+            self.parameters.append(param_descr)
 
     def get_doc_string(self):
         doc_string = '{}"""\n{}{}\n\n{}\n'.format(self.indent, self.indent,

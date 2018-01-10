@@ -10,6 +10,12 @@ class ModflowMvr(mfpackage.MFPackage):
 
     Parameters
     ----------
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of MVR
           information will be written to the listing file immediately after it
@@ -18,8 +24,9 @@ class ModflowMvr(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of MVR flow
           rates will be printed to the listing file for every stress period
           time step in which "BUDGET PRINT" is specified in Output Control. If
-          there is no Output Control option and PRINT_FLOWS is specified, then
-          flow rates are printed for the last time step of each stress period.
+          there is no Output Control option and "PRINT_FLOWS" is specified,
+          then flow rates are printed for the last time step of each stress
+          period.
     modelnames : boolean
         * modelnames (boolean) keyword to indicate that all package names will
           be preceded by the model name for the package. Model names are
@@ -62,6 +69,14 @@ class ModflowMvr(mfpackage.MFPackage):
           calculating the amount of water to move. For the "FACTOR" option,
           texttt{value} is the :math:`\\alpha` factor. For the remaining
           options, texttt{value} is the specified flow rate, :math:`Q_S`.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     budget_filerecord = ListTemplateGenerator(('mvr', 'options', 
@@ -72,6 +87,8 @@ class ModflowMvr(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "mvr"
     package_type = "mvr"
+    dfn_file_name = "gwt-mvr.dfn"
+
     dfn = [["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name print_flows", "type keyword", 

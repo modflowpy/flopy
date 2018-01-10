@@ -10,6 +10,12 @@ class ModflowGwfrcha(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     readasarrays : boolean
         * readasarrays (boolean) indicates that array-based input will be used
           for the Recharge Package. This keyword must be specified to use
@@ -41,7 +47,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of recharge
           flow rates will be printed to the listing file for every stress
           period time step in which "BUDGET PRINT" is specified in Output
-          Control. If there is no Output Control option and PRINT_FLOWS is
+          Control. If there is no Output Control option and "PRINT_FLOWS" is
           specified, then flow rates are printed for the last time step of each
           stress period.
     save_flows : boolean
@@ -60,11 +66,10 @@ class ModflowGwfrcha(mfpackage.MFPackage):
           reftable:obstype lists observation type(s) supported by the Recharge
           package.
     irch : [integer]
-        * irch (integer) texttt{irch} is the layer number that defines the
-          layer in each vertical column where recharge is applied. If
-          texttt{irch} is omitted, recharge by default is applied to cells in
-          layer 1. texttt{irch} can only be used if READASARRAYS is specified
-          in the OPTIONS block.
+        * irch (integer) IRCH is the layer number that defines the layer in
+          each vertical column where recharge is applied. If IRCH is omitted,
+          recharge by default is applied to cells in layer 1. IRCH can only be
+          used if READASARRAYS is specified in the OPTIONS block.
     recharge : [double]
         * recharge (double) is the recharge flux rate (:math:`LT^{-1}`). This
           rate is multiplied inside the program by the surface area of the cell
@@ -79,6 +84,14 @@ class ModflowGwfrcha(mfpackage.MFPackage):
           auxiliary variable, then a value of zero is assigned. If the value
           specified here for the auxiliary variable is the same as auxmultname,
           then the recharge array will be multiplied by this array.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'rcha', 'options', 
@@ -93,6 +106,8 @@ class ModflowGwfrcha(mfpackage.MFPackage):
     aux = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'aux'))
     package_abbr = "gwfrcha"
     package_type = "rcha"
+    dfn_file_name = "gwf-rcha.dfn"
+
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 
             "reader urword", "optional false"],
            ["block options", "name fixed_cell", "type keyword", "shape", 

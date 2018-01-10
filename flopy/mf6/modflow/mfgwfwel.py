@@ -10,6 +10,12 @@ class ModflowGwfwel(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         * auxiliary (string) defines an array of one or more auxiliary variable
           names. There is no limit on the number of auxiliary variables that
@@ -36,8 +42,9 @@ class ModflowGwfwel(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of well flow
           rates will be printed to the listing file for every stress period
           time step in which "BUDGET PRINT" is specified in Output Control. If
-          there is no Output Control option and PRINT_FLOWS is specified, then
-          flow rates are printed for the last time step of each stress period.
+          there is no Output Control option and "PRINT_FLOWS" is specified,
+          then flow rates are printed for the last time step of each stress
+          period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that well flow terms will be
           written to the file specified with "BUDGET FILEOUT" in Output
@@ -49,9 +56,9 @@ class ModflowGwfwel(mfpackage.MFPackage):
           than or equal to the bottom of the cell. Negative pumping rates are
           adjusted to 0 or a smaller negative value when the head in the cell
           is equal to or less than the calculated interval above the cell
-          bottom. texttt{auto_flow_reduce} is set to 0.1 if the specified value
-          is less than or equal to zero. By default, negative pumping rates are
-          not reduced during a simulation.
+          bottom. AUTO_FLOW_REDUCE is set to 0.1 if the specified value is less
+          than or equal to zero. By default, negative pumping rates are not
+          reduced during a simulation.
     ts_filerecord : [ts6_filename]
         * ts6_filename (string) defines a time-series file defining time series
           that can be used to assign time-varying values. See the "Time-
@@ -74,10 +81,10 @@ class ModflowGwfwel(mfpackage.MFPackage):
     periodrecarray : [cellid, q, aux, boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
-          that uses the DIS input file, cellid is the layer, row, and column.
-          For a grid that uses the DISV input file, cellid is the layer and
-          cell2d number. If the model uses the unstructured discretization
-          (DISU) input file, then cellid is the node number for the cell.
+          that uses the DIS input file, CELLID is the layer, row, and column.
+          For a grid that uses the DISV input file, CELLID is the layer and
+          CELL2D number. If the model uses the unstructured discretization
+          (DISU) input file, CELLID is the node number for the cell.
         * q (double) is the volumetric well rate. A positive value indicates
           recharge (injection) and a negative value indicates discharge
           (extraction). If the Options block includes a TIMESERIESFILE entry
@@ -92,10 +99,18 @@ class ModflowGwfwel(mfpackage.MFPackage):
           (see the "Time-Variable Input" section), values can be obtained from
           a time series by entering the time-series name in place of a numeric
           value.
-        * boundname (string) name of the well cell. boundname is an ASCII
+        * boundname (string) name of the well cell. BOUNDNAME is an ASCII
           character variable that can contain as many as 40 characters. If
-          boundname contains spaces in it, then the entire name must be
+          BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'wel', 'options', 
@@ -108,6 +123,8 @@ class ModflowGwfwel(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfwel"
     package_type = "wel"
+    dfn_file_name = "gwf-wel.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape", 

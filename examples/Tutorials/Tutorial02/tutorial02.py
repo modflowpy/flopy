@@ -85,12 +85,14 @@ stress_period_data = {0: wel_sp1, 1: wel_sp2, 2: wel_sp3}
 wel = flopy.modflow.ModflowWel(mf, stress_period_data=stress_period_data)
 
 # Output control
-stress_period_data = {(0, 0): ['save head',
-                               'save drawdown',
-                               'save budget',
-                               'print head',
-                               'print budget']}
-save_head_every = 1
+stress_period_data = {}
+for kper in range(nper):
+    for kstp in range(nstp[kper]):
+        stress_period_data[(kper, kstp)] = ['save head',
+                                            'save drawdown',
+                                            'save budget',
+                                            'print head',
+                                            'print budget']
 oc = flopy.modflow.ModflowOc(mf, stress_period_data=stress_period_data,
                              compact=True)
 
@@ -159,17 +161,16 @@ for iplot, time in enumerate(mytimes):
              markeredgewidth=0.5,
              markeredgecolor='black', markerfacecolor=mfc, zorder=9)
     plt.text(wpt[0]+25, wpt[1]-25, 'well', size=12, zorder=12)
-    plt.show()
+    plt.savefig('tutorial2-{}.png'.format(iplot))
 
-plt.show()
 
 # Plot the head versus time
-idx = (0, nrow/2 - 1, ncol/2 - 1)
+idx = (0, int(nrow/2) - 1, int(ncol/2) - 1)
 ts = headobj.get_ts(idx)
 plt.subplot(1, 1, 1)
 ttl = 'Head at cell ({0},{1},{2})'.format(idx[0] + 1, idx[1] + 1, idx[2] + 1)
 plt.title(ttl)
 plt.xlabel('time')
 plt.ylabel('head')
-plt.plot(ts[:, 0], ts[:, 1])
-plt.show()
+plt.plot(ts[:, 0], ts[:, 1], 'bo-')
+plt.savefig('tutorial2-ts.png')

@@ -118,6 +118,34 @@ class MFFileMgmt(object):
         current_abs_path = self.resolve_path('', model_name, False)
         return os.path.relpath(old_abs_path, current_abs_path)
 
+    def strip_model_relative_path(self, model_name, path):
+        if model_name in self.model_relative_path:
+            model_rel_path = self.model_relative_path[model_name]
+            new_path = None
+            while path:
+                path, leaf = os.path.split(path)
+                if leaf != model_rel_path:
+                    if new_path:
+                        new_path = os.path.join(leaf, new_path)
+                    else:
+                        new_path = leaf
+            return new_path
+
+    @staticmethod
+    def unique_file_name(file_name, lookup):
+        num = 0
+        while MFFileMgmt._build_file(file_name, num) in lookup:
+            num += 1
+        return MFFileMgmt._build_file(file_name, num)
+
+    @staticmethod
+    def _build_file(file_name, num):
+        file, ext = os.path.splitext(file_name)
+        if ext:
+            return '{}_{}{}'.format(file, num, ext)
+        else:
+            return '{}_{}'.format(file, num)
+
     @staticmethod
     def string_to_file_path(fp_string):
         file_delimitiers = ['/','\\']

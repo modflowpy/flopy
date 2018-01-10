@@ -10,6 +10,12 @@ class ModflowGwfmaw(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         * auxiliary (string) defines an array of one or more auxiliary variable
           names. There is no limit on the number of auxiliary variables that
@@ -39,9 +45,9 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of multi-
           aquifer well flow rates will be printed to the listing file for every
           stress period time step in which "BUDGET PRINT" is specified in
-          Output Control. If there is no Output Control option and PRINT_FLOWS
-          is specified, then flow rates are printed for the last time step of
-          each stress period.
+          Output Control. If there is no Output Control option and
+          "PRINT_FLOWS" is specified, then flow rates are printed for the last
+          time step of each stress period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that multi-aquifer well flow
           terms will be written to the file specified with "BUDGET FILEOUT" in
@@ -62,29 +68,27 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     shutdown_theta : double
         * shutdown_theta (double) value that defines the weight applied to
           discharge rate for wells that limit the water level in a discharging
-          well (defined using the texttt{HEAD_LIMIT} keyword in the stress
-          period data). texttt{SHUTDOWN_THETA} is used to control discharge
-          rate oscillations when the flow rate from the aquifer is less than
-          the specified flow rate from the aquifer to the well. Values range
-          between 0.0 and 1.0, and larger values increase the weight (decrease
-          under-relaxation) applied to the well discharge rate. The
-          texttt{head_limit} option has been included to facilitate backward
-          compatibility with previous versions of MODFLOW but use of the
-          texttt{rate_scaling} option instead of the texttt{head_limit} option
-          is recommended. By default, texttt{SHUTDOWN_THETA} is 0.7.
+          well (defined using the HEAD_LIMIT keyword in the stress period
+          data). SHUTDOWN_THETA is used to control discharge rate oscillations
+          when the flow rate from the aquifer is less than the specified flow
+          rate from the aquifer to the well. Values range between 0.0 and 1.0,
+          and larger values increase the weight (decrease under-relaxation)
+          applied to the well discharge rate. The HEAD_LIMIT option has been
+          included to facilitate backward compatibility with previous versions
+          of MODFLOW but use of the RATE_SCALING option instead of the
+          HEAD_LIMIT option is recommended. By default, SHUTDOWN_THETA is 0.7.
     shutdown_kappa : double
         * shutdown_kappa (double) value that defines the weight applied to
           discharge rate for wells that limit the water level in a discharging
-          well (defined using the texttt{HEAD_LIMIT} keyword in the stress
-          period data). texttt{SHUTDOWN_KAPPA} is used to control discharge
-          rate oscillations when the flow rate from the aquifer is less than
-          the specified flow rate from the aquifer to the well. Values range
-          between 0.0 and 1.0, and larger values increase the weight applied to
-          the well discharge rate. The texttt{head_limit} option has been
-          included to facilitate backward compatibility with previous versions
-          of MODFLOW but use of the texttt{rate_scaling} option instead of the
-          texttt{head_limit} option is recommended. By default,
-          texttt{SHUTDOWN_KAPPA} is 0.0001.
+          well (defined using the HEAD_LIMIT keyword in the stress period
+          data). SHUTDOWN_KAPPA is used to control discharge rate oscillations
+          when the flow rate from the aquifer is less than the specified flow
+          rate from the aquifer to the well. Values range between 0.0 and 1.0,
+          and larger values increase the weight applied to the well discharge
+          rate. The HEAD_LIMIT option has been included to facilitate backward
+          compatibility with previous versions of MODFLOW but use of the
+          RATE_SCALING option instead of the HEAD_LIMIT option is recommended.
+          By default, SHUTDOWN_KAPPA is 0.0001.
     ts_filerecord : [ts6_filename]
         * ts6_filename (string) defines a time-series file defining time series
           that can be used to assign time-varying values. See the "Time-
@@ -107,37 +111,36 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     wellrecarray : [wellno, radius, bottom, strt, condeqn, ngwfnodes, aux,
       boundname]
         * wellno (integer) integer value that defines the well number
-          associated with the specified PACKAGEDATA data on the line.
-          texttt{wellno} must be greater than zero and less than or equal to
-          texttt{nmawwells}. Multi-aquifer well information must be specified
-          for every multi-aquifer well or the program will terminate with an
-          error. The program will also terminate with an error if information
-          for a multi-aquifer well is specified more than once.
+          associated with the specified PACKAGEDATA data on the line. WELLNO
+          must be greater than zero and less than or equal to NMAWWELLS. Multi-
+          aquifer well information must be specified for every multi-aquifer
+          well or the program will terminate with an error. The program will
+          also terminate with an error if information for a multi-aquifer well
+          is specified more than once.
         * radius (double) radius for the multi-aquifer well.
         * bottom (double) bottom elevation of the multi-aquifer well.
         * strt (double) starting head for the multi-aquifer well.
         * condeqn (string) character string that defines the conductance
           equation that is used to calculate the saturated conductance for the
-          multi-aquifer well. Possible multi-aquifer well texttt{condeqn}
-          strings include: texttt{SPECIFIED}--character keyword to indicate the
-          multi-aquifer well saturated conductance will be specified.
-          texttt{THEIM}--character keyword to indicate the multi-aquifer well
-          saturated conductance will be calculated using the Theim equation.
-          texttt{SKIN}--character keyword to indicate that the multi-aquifer
-          well saturated conductance will be calculated using the screen top
-          and bottom, screen hydraulic conductivity, and skin radius.
-          texttt{CUMULATIVE}--character keyword to indicate that the multi-
-          aquifer well saturated conductance will be calculated using a
-          combination of the Theim equation and the screen top and bottom,
-          screen hydraulic conductivity, and skin radius.
-          texttt{MEAN}--character keyword to indicate the multi-aquifer well
-          saturated conductance will be calculated using using the aquifer and
-          screen top and bottom, aquifer and screen hydraulic conductivity, and
-          well and skin radius.
-        * ngwfnodes (integer) integer value that defines the number of
-          texttt{GWF} nodes connected to this (texttt{wellno}) multi-aquifer
-          well. One or more screened intervals can be connected to the same
-          texttt{GWF} node. texttt{ngwfnodes} must be greater than zero.
+          multi-aquifer well. Possible multi-aquifer well CONDEQN strings
+          include: SPECIFIED--character keyword to indicate the multi-aquifer
+          well saturated conductance will be specified. THEIM--character
+          keyword to indicate the multi-aquifer well saturated conductance will
+          be calculated using the Theim equation. SKIN--character keyword to
+          indicate that the multi-aquifer well saturated conductance will be
+          calculated using the screen top and bottom, screen hydraulic
+          conductivity, and skin radius. CUMULATIVE--character keyword to
+          indicate that the multi-aquifer well saturated conductance will be
+          calculated using a combination of the Theim equation and the screen
+          top and bottom, screen hydraulic conductivity, and skin radius. MEAN
+          --character keyword to indicate the multi-aquifer well saturated
+          conductance will be calculated using using the aquifer and screen top
+          and bottom, aquifer and screen hydraulic conductivity, and well and
+          skin radius.
+        * ngwfnodes (integer) integer value that defines the number of GWF
+          nodes connected to this (WELLNO) multi-aquifer well. One or more
+          screened intervals can be connected to the same GWF node. NGWFNODES
+          must be greater than zero.
         * aux (double) represents the values of the auxiliary variables for
           each multi-aquifer well. The values of auxiliary variables must be
           present for each multi-aquifer well. The values must be specified in
@@ -146,148 +149,146 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           TIMESERIESFILE entry (see the "Time-Variable Input" section), values
           can be obtained from a time series by entering the time-series name
           in place of a numeric value.
-        * boundname (string) name of the multi-aquifer well cell. boundname is
+        * boundname (string) name of the multi-aquifer well cell. BOUNDNAME is
           an ASCII character variable that can contain as many as 40
-          characters. If boundname contains spaces in it, then the entire name
+          characters. If BOUNDNAME contains spaces in it, then the entire name
           must be enclosed within single quotes.
     wellconnectionsrecarray : [wellno, icon, cellid, scrn_top, scrn_bot,
       hk_skin, radius_skin]
         * wellno (integer) integer value that defines the well number
-          associated with the specified CONNECTIONDATA data on the line.
-          texttt{wellno} must be greater than zero and less than or equal to
-          texttt{nmawwells}. Multi-aquifer well connection information must be
-          specified for every multi-aquifer well connection to the GWF model
-          (texttt{ngwfnodes}) or the program will terminate with an error. The
-          program will also terminate with an error if connection information
-          for a multi-aquifer well connection to the GWF model is specified
-          more than once.
-        * icon (integer) integer value that defines the texttt{GWF} connection
-          number for this multi-aquifer well connection entry. texttt{iconn}
-          must be greater than zero and less than or equal to texttt{ngwfnodes}
-          for multi-aquifer well texttt{wellno}.
+          associated with the specified CONNECTIONDATA data on the line. WELLNO
+          must be greater than zero and less than or equal to NMAWWELLS. Multi-
+          aquifer well connection information must be specified for every
+          multi-aquifer well connection to the GWF model (NGWFNODES) or the
+          program will terminate with an error. The program will also terminate
+          with an error if connection information for a multi-aquifer well
+          connection to the GWF model is specified more than once.
+        * icon (integer) integer value that defines the GWF connection number
+          for this multi-aquifer well connection entry. ICONN must be greater
+          than zero and less than or equal to NGWFNODES for multi-aquifer well
+          WELLNO.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
-          that uses the DIS input file, cellid is the layer, row, and column.
-          For a grid that uses the DISV input file, cellid is the layer and
-          cell2d number. If the model uses the unstructured discretization
-          (DISU) input file, then cellid is the node number for the cell.
+          that uses the DIS input file, CELLID is the layer, row, and column.
+          For a grid that uses the DISV input file, CELLID is the layer and
+          CELL2D number. If the model uses the unstructured discretization
+          (DISU) input file, CELLID is the node number for the cell.
         * scrn_top (double) value that defines the top elevation of the screen
-          for the multi-aquifer well connection. texttt{scrn_top} can be any
-          value if texttt{condeqn} is texttt{SPECIFIED} or texttt{THEIM}. If
-          the specified texttt{scrn_top} is greater than the top of the
-          texttt{GWF} cell it is set equal to the top of the cell.
+          for the multi-aquifer well connection. SCRN_TOP can be any value if
+          CONDEQN is SPECIFIED or THEIM. If the specified SCRN_TOP is greater
+          than the top of the GWF cell it is set equal to the top of the cell.
         * scrn_bot (double) value that defines the bottom elevation of the
-          screen for the multi-aquifer well connection. texttt{scrn_bot} can be
-          any value if texttt{condeqn} is texttt{SPECIFIED} or texttt{THEIM}.
-          If the specified texttt{scrn_bot} is less than the bottom of the
-          texttt{GWF} cell it is set equal to the bottom of the cell.
+          screen for the multi-aquifer well connection. SCRN_BOT can be any
+          value if CONDEQN is SPECIFIED or THEIM. If the specified SCRN_BOT is
+          less than the bottom of the GWF cell it is set equal to the bottom of
+          the cell.
         * hk_skin (double) value that defines the skin (filter pack) hydraulic
-          conductivity (if texttt{condeqn} for the multi-aquifer well is
-          texttt{SKIN}, texttt{CUMULATIVE}, or texttt{MEAN}) or conductance (if
-          texttt{condeqn} for the multi-aquifer well is texttt{SPECIFIED}) for
-          each texttt{GWF} node connected to the multi-aquifer well
-          (texttt{ngwfnodes}). texttt{hk_skin} can be any value if
-          texttt{condeqn} is texttt{THEIM}.
+          conductivity (if CONDEQN for the multi-aquifer well is SKIN,
+          CUMULATIVE, or MEAN) or conductance (if CONDEQN for the multi-aquifer
+          well is SPECIFIED) for each GWF node connected to the multi-aquifer
+          well (NGWFNODES). HK_SKIN can be any value if CONDEQN is THEIM.
         * radius_skin (double) real value that defines the skin radius (filter
-          pack radius) for the multi-aquifer well. texttt{radius_skin} can be
-          any value if texttt{condeqn} is texttt{SPECIFIED} or texttt{THEIM}.
-          Otherwise, texttt{radius_skin} must be greater than texttt{radius}
-          for the multi-aquifer well.
+          pack radius) for the multi-aquifer well. RADIUS_SKIN can be any value
+          if CONDEQN is SPECIFIED or THEIM. Otherwise, RADIUS_SKIN must be
+          greater than RADIUS for the multi-aquifer well.
     wellperiodrecarray : [wellno, mawsetting]
         * wellno (integer) integer value that defines the well number
-          associated with the specified PERIOD data on the line. texttt{wellno}
-          must be greater than zero and less than or equal to
-          texttt{nmawwells}.
+          associated with the specified PERIOD data on the line. WELLNO must be
+          greater than zero and less than or equal to NMAWWELLS.
         * mawsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
-          texttt{mawsetting} string include: texttt{STATUS},
-          texttt{FLOWING_WELL}, texttt{RATE}, texttt{WELL_HEAD},
-          texttt{HEAD_LIMIT}, texttt{SHUT_OFF}, texttt{RATE_SCALING}, and
-          texttt{AUXILIARY}.
+          MAWSETTING string include: STATUS, FLOWING_WELL, RATE, WELL_HEAD,
+          HEAD_LIMIT, SHUT_OFF, RATE_SCALING, and AUXILIARY.
+            status : [string]
+                * status (string) keyword option to define well status. STATUS
+                  can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
+                  ACTIVE.
+            rate_scalingrecord : [pump_elevation, scaling_length]
+                * pump_elevation (double) is the elevation of the multi-aquifer
+                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
+                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
+                  By default, PUMP_ELEVATION is set equal to the bottom of the
+                  largest GWF node number connected to a MAW well.
+                * scaling_length (double) height above the pump elevation
+                  (SCALING_LENGTH) below which the pumping rate is reduced. The
+                  default value for SCALING_LENGTH is the well radius.
             rate : [double]
                 * rate (double) is the volumetric pumping rate for the multi-
                   aquifer well. A positive value indicates recharge and a
-                  negative value indicates discharge (pumping). texttt{rate}
-                  only applies to active (texttt{IBOUND}:math:`>0`) multi-
-                  aquifer wells. If the Options block includes a
-                  \texttt{TIMESERIESFILE} entry (see the "Time-Variable Input"
-                  section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, the \texttt{rate} for each multi-aquifer well is
-                  zero.
-            status : [string]
-                * status (string) keyword option to define well status.
-                  texttt{status} can be texttt{ACTIVE}, texttt{INACTIVE}, or
-                  texttt{CONSTANT}. By default, texttt{status} is
-                  texttt{ACTIVE}.
+                  negative value indicates discharge (pumping). RATE only
+                  applies to active (IBOUND :math:`>` 0) multi-aquifer wells.
+                  If the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, the RATE for each multi-aquifer
+                  well is zero.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
             well_head : [double]
                 * well_head (double) is the head in the multi-aquifer well.
-                  texttt{well_head} is only applied to constant head
-                  (texttt{STATUS} is texttt{CONSTANT}) and inactive
-                  (texttt{STATUS} is texttt{INACTIVE}) multi-aquifer wells. If
-                  the Options block includes a texttt{TIMESERIESFILE} entry
+                  WELL_HEAD is only applied to constant head (STATUS is
+                  CONSTANT) and inactive (STATUS is INACTIVE) multi-aquifer
+                  wells. If the Options block includes a TIMESERIESFILE entry
                   (see the "Time-Variable Input" section), values can be
                   obtained from a time series by entering the time-series name
                   in place of a numeric value.
-            rate_scalingrecord : [pump_elevation, scaling_length]
-                * pump_elevation (double) is the elevation of the multi-aquifer
-                  well pump (texttt{pump_elevation}). texttt{pump_elevation}
-                  cannot be less than the bottom elevation (texttt{bottom}) of
-                  the multi-aquifer well. By default, texttt{pump_elevation} is
-                  set equal to the bottom of the largest texttt{GWF} node
-                  number connected to a MAW well.
-                * scaling_length (double) height above the pump elevation
-                  (texttt{scaling_length}) below which the pumping rate is
-                  reduced. The default value for texttt{scaling_length} is the
-                  well radius.
-            flowing_wellrecord : [fwelev, fwcond]
+            flowing_wellrecord : [fwelev, fwcond, fwrlen]
                 * fwelev (double) elevation used to determine whether or not
                   the well is flowing.
                 * fwcond (double) conductance used to calculate the discharge
                   of a free flowing well. Flow occurs when the head in the well
-                  is above the well top elevation (texttt{fwelev}).
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned texttt{auxval}. texttt{auxname} must match one of
-                  the auxiliary variable names defined in the texttt{OPTIONS}
-                  block. If texttt{auxname} does not match one of the auxiliary
-                  variable names defined in the texttt{OPTIONS} block the data
-                  are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a texttt{TIMESERIESFILE} entry (see
-                  the "Time-Variable Input" section), values can be obtained
-                  from a time series by entering the time-series name in place
-                  of a numeric value.
+                  is above the well top elevation (FWELEV).
+                * fwrlen (double) length used to reduce the conductance of the
+                  flowing well. When the head in the well drops below the well
+                  top plus the reduction length, then the conductance is
+                  reduced. This reduction length can be used to improve the
+                  stability of simulations with flowing wells so that there is
+                  not an abrupt change in flowing well rates.
             shutoffrecord : [minrate, maxrate]
                 * minrate (double) is the minimum rate that a well must exceed
                   to shutoff a well during a stress period. The well will shut
                   down during a time step if the flow rate to the well from the
-                  aquifer is less than texttt{minrate}. If a well is shut down
-                  during a time step, reactivation of the well cannot occur
-                  until the next time step to reduce oscillations.
-                  texttt{minrate} must be less than texttt{maxrate}.
+                  aquifer is less than MINRATE. If a well is shut down during a
+                  time step, reactivation of the well cannot occur until the
+                  next time step to reduce oscillations. MINRATE must be less
+                  than maxrate.
                 * maxrate (double) is the maximum rate that a well must exceed
                   to reactivate a well during a stress period. The well will
                   reactivate during a timestep if the well was shutdown during
                   the previous time step and the flow rate to the well from the
-                  aquifer exceeds texttt{maxrate}. Reactivation of the well
-                  cannot occur until the next time step if a well is shutdown
-                  to reduce oscillations. texttt{maxrate} must be greater than
-                  texttt{minrate}.
+                  aquifer exceeds maxrate. Reactivation of the well cannot
+                  occur until the next time step if a well is shutdown to
+                  reduce oscillations. maxrate must be greater than MINRATE.
             head_limit : [string]
                 * head_limit (string) is the limiting water level (head) in the
-                  well, which is the minimum of the well texttt{rate} or the
-                  well inflow rate from the aquifer. texttt{head_limit} is only
-                  applied to discharging wells (texttt{rate}:math:`<0`).
-                  \texttt{head\_limit} can be deactivated by specifying the
-                  text string `\texttt{off}'. The \texttt{head\_limit} option
-                  is based on the \texttt{head\_limit} functionality available
-                  in the MNW2~\citep{konikow2009} package for MODFLOW-2005. The
-                  \texttt{head\_limit} option has been included to facilitate
-                  backward compatibility with previous versions of MODFLOW but
-                  use of the \texttt{rate\_scaling} option instead of the
-                  \texttt{head\_limit} option is recommended. By default,
-                  \texttt{head\_limit} is `\texttt{off}'.
+                  well, which is the minimum of the well RATE or the well
+                  inflow rate from the aquifer. HEAD_LIMIT is only applied to
+                  discharging wells (RATE :math:`<` 0). HEAD\_LIMIT can be
+                  deactivated by specifying the text string `OFF'. The
+                  HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality
+                  available in the MNW2~\citep{konikow2009} package for
+                  MODFLOW-2005. The HEAD\_LIMIT option has been included to
+                  facilitate backward compatibility with previous versions of
+                  MODFLOW but use of the RATE\_SCALING option instead of the
+                  HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
+                  `OFF'.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'maw', 'options', 
@@ -309,6 +310,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                                                 'wellperiodrecarray'))
     package_abbr = "gwfmaw"
     package_type = "maw"
+    dfn_file_name = "gwf-maw.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name boundnames", "type keyword", "shape", 
@@ -433,13 +436,15 @@ class ModflowGwfmaw(mfpackage.MFPackage):
            ["block period", "name status", "type string", "shape", 
             "tagged true", "in_record true", "reader urword"],
            ["block period", "name flowing_wellrecord", 
-            "type record flowing_well fwelev fwcond", "shape", "tagged", 
-            "in_record true", "reader urword"],
+            "type record flowing_well fwelev fwcond fwrlen", "shape", 
+            "tagged", "in_record true", "reader urword"],
            ["block period", "name flowing_well", "type keyword", "shape", 
             "in_record true", "reader urword"],
            ["block period", "name fwelev", "type double precision", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block period", "name fwcond", "type double precision", "shape", 
+            "tagged false", "in_record true", "reader urword"],
+           ["block period", "name fwrlen", "type double precision", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block period", "name rate", "type double precision", "shape", 
             "tagged true", "in_record true", "reader urword", 

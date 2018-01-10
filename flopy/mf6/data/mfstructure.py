@@ -19,8 +19,8 @@ class DfnType(Enum):
     sim_tdis_file = 3
     ims_file = 4
     exch_file = 5
-    gwf_name_file = 6
-    gwf_model_file = 7
+    model_name_file = 6
+    model_file = 7
     gnc_file = 8
     mvr_file = 9
     utl = 10
@@ -53,6 +53,7 @@ class Dfn(object):
         self.texdir = os.path.join('.', 'tex')
         self.mddir = os.path.join('.', 'md')
         self.common = os.path.join(self.dfndir, 'common.dfn')
+        # FIX: Transport - multi packages are hard coded
         self.multi_package = {'gwfmvr': 0, 'exggwfgwf': 0, 'gwfchd': 0,
                               'gwfrch': 0,
                               'gwfdrn': 0, 'gwfriv': 0, 'utlobs': 0,
@@ -109,39 +110,34 @@ class Dfn(object):
     def _file_type(self, file_name):
         # determine file type
         if len(file_name) >= 6 and file_name[0:6] == 'common':
-            return DfnType.common
+            return DfnType.common, None
         elif file_name[0:3] == 'sim':
             if file_name[3:6] == 'nam':
-                return DfnType.sim_name_file
+                return DfnType.sim_name_file, None
             elif file_name[3:7] == 'tdis':
-                return DfnType.sim_tdis_file
+                return DfnType.sim_tdis_file, None
             else:
-                return DfnType.unknown
+                return DfnType.unknown, None
         elif file_name[0:3] == 'nam':
-            return DfnType.sim_name_file
+            return DfnType.sim_name_file, None
         elif file_name[0:4] == 'tdis':
-            return DfnType.sim_tdis_file
+            return DfnType.sim_tdis_file, None
         elif file_name[0:3] == 'sln' or file_name[0:3] == 'ims':
-            return DfnType.ims_file
+            return DfnType.ims_file, None
         elif file_name[0:3] == 'exg':
-            return DfnType.exch_file
-        elif file_name[0:3] == 'gnc':
-            return DfnType.gnc_file
-        elif file_name[0:3] == 'gwf':
-            if file_name[3:6] == 'nam':
-                return DfnType.gwf_name_file
-            elif file_name[3:6] == 'gwf':
-                return DfnType.exch_file
-            elif file_name[3:6] == 'gnc':
-                return DfnType.gnc_file
-            elif file_name[3:6] == 'mvr':
-                return DfnType.mvr_file
-            else:
-                return DfnType.gwf_model_file
+            return DfnType.exch_file, file_name[3:6]
         elif file_name[0:3] == 'utl':
-            return DfnType.utl
+            return DfnType.utl, None
         else:
-            return DfnType.unknown
+            model_type =  file_name[0:3]
+            if file_name[3:6] == 'nam':
+                return DfnType.model_name_file, model_type
+            elif file_name[3:6] == 'gnc':
+                return DfnType.gnc_file, model_type
+            elif file_name[3:6] == 'mvr':
+                return DfnType.mvr_file, model_type
+            else:
+                return DfnType.model_file, model_type
 
 
 class DfnPackage(Dfn):
@@ -149,7 +145,17 @@ class DfnPackage(Dfn):
         super(DfnPackage, self).__init__()
         self.package = package
         self.package_type = package.package_type
-        self.dfn_type = self._file_type(package.package_abbr)
+        self.dfn_file_name = package.dfn_file_name
+        # the package type is always the text after the last -
+        package_name = self.package_type.split('-')
+        self.package_type = package_name[-1]
+        if not isinstance(package_name, str) and \
+           len(package_name) > 1:
+            self.package_prefix = ''.join(package_name[:-1])
+        else:
+            self.package_prefix = ''
+        self.dfn_type, \
+        self.model_type = self._file_type(self.dfn_file_name.replace('-', ''))
         self.dfn_list = package.dfn
 
     def multi_package_support(self):
@@ -319,8 +325,18 @@ class DfnFile(Dfn):
         dfn_path, tail = os.path.split(os.path.realpath(__file__))
         dfn_path = os.path.join(dfn_path, 'dfn')
         self._file_path = os.path.join(dfn_path, file)
-        self.dfn_type = self._file_type(file.replace('-', ''))
+        self.dfn_file_name = file
+        self.dfn_type, \
+        self.model_type = self._file_type(self.dfn_file_name.replace('-', ''))
         self.package_type = os.path.splitext(file[4:])[0]
+        # the package type is always the text after the last -
+        package_name = self.package_type.split('-')
+        self.package_type = package_name[-1]
+        if not isinstance(package_name, str) and \
+           len(package_name) > 1:
+            self.package_prefix = ''.join(package_name[:-1])
+        else:
+            self.package_prefix = ''
         self.file = file
         self.dataset_items_needed_dict = {}
         self.dfn_list = []
@@ -703,6 +719,8 @@ class MFDataItemStructure(object):
     """
 
     def __init__(self):
+        self.file_name_keywords = {'filein':False, 'fileout':False}
+        self.contained_keywords = {'file_name':True}
         self.block_name = None
         self.name = None
         self.name_list = []
@@ -861,6 +879,23 @@ class MFDataItemStructure(object):
                                                             initial_indent,
                                                             level_indent))
         return description
+
+    def indicates_file_name(self):
+        if self.name.lower() in self.file_name_keywords:
+            return True
+        for key, item in self.contained_keywords.items():
+            if self.name.lower().find(key) != -1:
+                return True
+        return False
+
+    def is_file_name(self):
+        if self.name.lower() in self.file_name_keywords and \
+                self.file_name_keywords[self.name.lower()] == True:
+            return True
+        for key, item in self.contained_keywords.items():
+            if self.name.lower().find(key) != -1 and item == True:
+                return True
+        return False
 
     @staticmethod
     def remove_cellid(resolved_shape, cellid_size):
@@ -1084,6 +1119,7 @@ class MFDataStructure(object):
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
+        self.file_line = 0
         self.block_type = data_item.block_type
         self.block_variable = data_item.block_variable
         self.model_data = model_data
@@ -1176,9 +1212,11 @@ class MFDataStructure(object):
                 if self.data_item_structures[location] is None:
                     # verify that this is not a placeholder value
                     assert (self.data_item_structures[location] is None)
-                    self.file_data = self.file_data or (
-                    item.name.lower() == 'filein' or
-                    item.name.lower() == 'fileout')
+                    if isinstance(item, MFDataItemStructure):
+                        self.file_data = self.file_data or \
+                                         item.indicates_file_name()
+                        if item.is_file_name():
+                            self.file_line = location
                     # replace placeholder value
                     self.data_item_structures[location] = item
                     item_added = True
@@ -1187,9 +1225,11 @@ class MFDataStructure(object):
                                    location - len(self.data_item_structures)):
                     # insert placeholder in array
                     self.data_item_structures.append(None)
-                self.file_data = self.file_data or (
-                item.name.lower() == 'filein' or
-                item.name.lower() == 'fileout')
+                if isinstance(item, MFDataItemStructure):
+                    self.file_data = self.file_data or \
+                                     item.indicates_file_name()
+                    if item.is_file_name():
+                        self.file_line = location
                 self.data_item_structures.append(item)
                 item_added = True
             self.optional = self.optional and item.optional
@@ -1583,16 +1623,16 @@ class MFInputFileStructure(object):
         # initialize
         self.valid = True
         self.file_type = dfn_file.package_type
+        self.file_prefix = dfn_file.package_prefix
         self.dfn_type = dfn_file.dfn_type
+        self.dfn_file_name = dfn_file.dfn_file_name
+        self.description = ''
         self.package_plot_dictionary = {}
         self.path = path + (self.file_type,)
-        # TODO: Get package description from somewhere (tex file?)
-        self.description = ''
         self.model_file = model_file  # file belongs to a specific model
         self.read_as_arrays = False
 
         self.multi_package_support = dfn_file.multi_package_support()
-        # self.description = dfn_file.description
         self.blocks = dfn_file.get_block_structure_dict(self.path, common,
                                                         model_file)
         self.dfn_list = dfn_file.dfn_list
@@ -1782,26 +1822,27 @@ class MFSimulationStructure(object):
             self.add_package(dfn_file, False)
         elif dfn_file.dfn_type == DfnType.utl:
             self.add_util(dfn_file)
-        elif dfn_file.dfn_type == DfnType.gwf_model_file or \
-                dfn_file.dfn_type == DfnType.gwf_name_file or \
+        elif dfn_file.dfn_type == DfnType.model_file or \
+                dfn_file.dfn_type == DfnType.model_name_file or \
                 dfn_file.dfn_type == DfnType.gnc_file or \
                 dfn_file.dfn_type == DfnType.mvr_file:
-            gwf_ver = 'gwf{}'.format(MFStructure(True).get_version_string())
-            if gwf_ver not in self.model_struct_objs:
-                self.add_model(gwf_ver)
-            if dfn_file.dfn_type == DfnType.gwf_model_file:
-                self.model_struct_objs[gwf_ver].add_package(dfn_file,
-                                                            self.common)
+            model_ver = '{}{}'.format(dfn_file.model_type,
+                                      MFStructure(True).get_version_string())
+            if model_ver not in self.model_struct_objs:
+                self.add_model(model_ver)
+            if dfn_file.dfn_type == DfnType.model_file:
+                self.model_struct_objs[model_ver].add_package(dfn_file,
+                                                              self.common)
             elif dfn_file.dfn_type == DfnType.gnc_file or \
                     dfn_file.dfn_type == DfnType.mvr_file:
                 # gnc and mvr files belong both on the simulation and model
                 # level
-                self.model_struct_objs[gwf_ver].add_package(dfn_file,
-                                                            self.common)
+                self.model_struct_objs[model_ver].add_package(dfn_file,
+                                                              self.common)
                 self.add_package(dfn_file, False)
             else:
-                self.model_struct_objs[gwf_ver].add_namefile(dfn_file,
-                                                             self.common)
+                self.model_struct_objs[model_ver].add_namefile(dfn_file,
+                                                               self.common)
 
     def add_namefile(self, dfn_file, model_file=True):
         self.name_file_struct_obj = MFInputFileStructure(dfn_file, (),

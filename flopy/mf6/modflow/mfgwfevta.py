@@ -10,6 +10,12 @@ class ModflowGwfevta(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     readasarrays : boolean
         * readasarrays (boolean) indicates that array-based input will be used
           for the Evapotranspiration Package. This keyword must be specified to
@@ -41,9 +47,9 @@ class ModflowGwfevta(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of
           evapotranspiration flow rates will be printed to the listing file for
           every stress period time step in which "BUDGET PRINT" is specified in
-          Output Control. If there is no Output Control option and PRINT_FLOWS
-          is specified, then flow rates are printed for the last time step of
-          each stress period.
+          Output Control. If there is no Output Control option and
+          "PRINT_FLOWS" is specified, then flow rates are printed for the last
+          time step of each stress period.
     save_flows : boolean
         * save_flows (boolean) keyword to indicate that evapotranspiration flow
           terms will be written to the file specified with "BUDGET FILEOUT" in
@@ -60,10 +66,10 @@ class ModflowGwfevta(mfpackage.MFPackage):
           reftable:obstype lists observation type(s) supported by the
           Evapotranspiration package.
     ievt : [integer]
-        * ievt (integer) texttt{ievt} is the layer number that defines the
-          layer in each vertical column where evapotranspiration is applied. If
-          texttt{ievt} is omitted, evapotranspiration by default is applied to
-          cells in layer 1.
+        * ievt (integer) IEVT is the layer number that defines the layer in
+          each vertical column where evapotranspiration is applied. If IEVT is
+          omitted, evapotranspiration by default is applied to cells in layer
+          1.
     surface : [double]
         * surface (double) is the elevation of the ET surface (:math:`L`).
     rate : [double]
@@ -72,13 +78,21 @@ class ModflowGwfevta(mfpackage.MFPackage):
         * depth (double) is the ET extinction depth (:math:`L`).
     aux(iaux) : [double]
         * aux(iaux) (double) is an array of values for auxiliary variable
-          aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must
+          AUX(IAUX), where iaux is a value from 1 to NAUX, and AUX(IAUX) must
           be listed as part of the auxiliary variables. A separate array can be
           specified for each auxiliary variable. If an array is not specified
           for an auxiliary variable, then a value of zero is assigned. If the
           value specified here for the auxiliary variable is the same as
           auxmultname, then the evapotranspiration rate will be multiplied by
           this array.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'evta', 'options', 
@@ -96,6 +110,8 @@ class ModflowGwfevta(mfpackage.MFPackage):
                                   'aux(iaux)'))
     package_abbr = "gwfevta"
     package_type = "evta"
+    dfn_file_name = "gwf-evta.dfn"
+
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 
             "reader urword", "optional false"],
            ["block options", "name fixed_cell", "type keyword", "shape", 

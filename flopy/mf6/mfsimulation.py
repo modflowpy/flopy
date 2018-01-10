@@ -52,6 +52,8 @@ class SimulationDict(collections.OrderedDict):
         # check if the key refers to a binary output file, or an observation
         # output file, if so override the dictionary request and call output
         #  requester classes
+
+        # FIX: Transport - Include transport output files
         if key[1] in ('CBC', 'HDS', 'DDN', 'UCN'):
             val = binaryfile_utils.MFOutput(self, self._path, key)
             return val.data
@@ -288,13 +290,13 @@ class MFSimulation(PackageContainer):
         self._models = collections.OrderedDict()
         self._tdis_file = None
         self._exchange_files = collections.OrderedDict()
-        self._ims_files = []
+        self._ims_files = collections.OrderedDict()
         self._ghost_node_files = {}
         self._mover_files = {}
         self._other_files = []
         self.structure = fpdata.sim_struct
 
-        self._exg_file_num = 0
+        self._exg_file_num = {}
         self._gnc_file_num = 0
         self._mvr_file_num = 0
 
@@ -384,20 +386,38 @@ class MFSimulation(PackageContainer):
         exchange_recarray = instance.name_file.exchangerecarray
         if exchange_recarray.has_data():
             for exgfile in exchange_recarray.get_data():
-                exchange_name = 'GWF-GWF_EXG_{}'.format(instance._exg_file_num)
-                exchange_file = mfgwfgwf.ModflowGwfgwf(instance,
-                                                       exgtype=exgfile[0],
-                                                       exgmnamea=exgfile[2],
-                                                       exgmnameb=exgfile[3],
-                                                       fname=exgfile[1],
-                                                       pname=exchange_name)
+                # get exchange type by removing numbers from exgtype
+                exchange_type = ''.join([char for char in exgfile[0] if
+                                         not char.isdigit()]).upper()
+                # get exchange number for this type
+                if not exchange_type in instance._exg_file_num:
+                    exchange_file_num = 0
+                    instance._exg_file_num[exchange_type] = 1
+                else:
+                    exchange_file_num = instance._exg_file_num[exchange_type]
+                    instance._exg_file_num[exchange_type] += 1
+
+                exchange_name = '{}_EXG_{}'.format(exchange_type,
+                                                   exchange_file_num)
+                # find package class the corresponds to this exchange type
+                package_obj = instance.package_factory(
+                    exchange_type.replace('-', '').lower(), '')
+                if not package_obj:
+                    excpt_str = 'Exchange type {} could not be found' \
+                                '.'.format(exchange_type)
+                    print(excpt_str)
+                    raise mfstructure.MFFileParseException(excpt_str)
+
+                # build and load exchange package object
+                exchange_file = package_obj(instance, exgtype=exgfile[0],
+                                            exgmnamea=exgfile[2],
+                                            exgmnameb=exgfile[3],
+                                            fname=exgfile[1],
+                                            pname=exchange_name)
                 exchange_file.load(strict)
                 instance._exchange_files[exgfile[1]] = exchange_file
-                instance._exg_file_num += 1
-                #instance._load_gnc_mvr(exchange_file, strict)
 
         # load simulation packages
-        file_num = 1
         solution_recarray = instance.simulation_data.mfdata[('nam',
                                                              'solutiongroup',
                                                              'solutionrecarray'
@@ -406,8 +426,6 @@ class MFSimulation(PackageContainer):
             ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
                                         pname=solution_info[2])
             ims_file.load(strict)
-            instance._ims_files.append(ims_file)
-            file_num += 1
 
         instance.simulation_data.mfpath.set_last_accessed_path()
         return instance
@@ -439,7 +457,13 @@ class MFSimulation(PackageContainer):
         """
         if ftype == 'gnc':
             if fname not in self._ghost_node_files:
-                gnc_name = 'GWF-GNC_{}'.format(self._gnc_file_num)
+                # get package type from parent package
+                if parent_package:
+                    package_abbr = parent_package.package_abbr[0:3]
+                else:
+                    package_abbr = 'GWF'
+                # build package name and package
+                gnc_name = '{}-GNC_{}'.format(package_abbr, self._gnc_file_num)
                 ghost_node_file = mfgwfgnc.ModflowGwfgnc(self, fname=fname,
                                                          pname=gnc_name,
                                                          parent_file=
@@ -449,7 +473,13 @@ class MFSimulation(PackageContainer):
                 self._gnc_file_num += 1
         elif ftype == 'mvr':
             if fname not in self._mover_files:
-                mvr_name = 'GWF-MVR_{}'.format(self._gnc_file_num)
+                # Get package type from parent package
+                if parent_package:
+                    package_abbr = parent_package.package_abbr[0:3]
+                else:
+                    package_abbr = 'GWF'
+                # build package name and package
+                mvr_name = '{}-MVR_{}'.format(package_abbr, self._gnc_file_num)
                 mover_file = mfgwfmvr.ModflowGwfmvr(self, fname=fname,
                                                     pname=mvr_name,
                                                     parent_file=parent_package)
@@ -495,19 +525,20 @@ class MFSimulation(PackageContainer):
 
         solution_group_num = None
         in_simulation = False
-        for file in self._ims_files:
+        for index, file in self._ims_files.items():
             if file is ims_file:
                 in_simulation = True
         # do not allow an ims package to be registered twice with the
         # same simulation
         if not in_simulation:
-            # add ims package to simulation
-            self._ims_files.append(ims_file)
-
             # created unique file/package name
             file_num = len(self._ims_files) - 1
             ims_file.package_name = 'ims_{}'.format(file_num)
-            ims_file.package_file_name = '{}.ims'.format(ims_file.package_name)
+            if ims_file.filename in self._ims_files:
+                ims_file.filename = MFFileMgmt.unique_file_name(
+                    ims_file.filename, self._ims_files)
+            # add ims package to simulation
+            self._ims_files[ims_file.filename] = ims_file
 
         # only allow an ims package to be registerd to one solution group
         if not self._is_in_solution_group(ims_file.filename, 1) \
@@ -554,7 +585,7 @@ class MFSimulation(PackageContainer):
         self._tdis_file.write(ext_file_action=ext_file_action)
 
         # write ims files
-        for ims_file in self._ims_files:
+        for index, ims_file in self._ims_files.items():
             ims_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
@@ -595,6 +626,9 @@ class MFSimulation(PackageContainer):
             # move all external files
             self.simulation_data.mfpath.copy_files(copy_relative_only=False)
         self.simulation_data.mfpath.set_last_accessed_path()
+
+    def set_sim_path(self, path):
+        self.simulation_data.mfpath.set_sim_path(path)
 
     def run_simulation(self):
         """
@@ -725,7 +759,7 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
-        if package not in self._exchange_files:
+        if package.filename not in self._exchange_files:
             exgtype = package.exgtype
             exgmnamea = package.exgmnamea
             exgmnameb = package.exgmnameb
@@ -803,6 +837,12 @@ class MFSimulation(PackageContainer):
             if package.filename not in self._ghost_node_files:
                 self._ghost_node_files[package.filename] = package
                 self._gnc_file_num += 1
+            elif self._ghost_node_files[package.filename] != package:
+                # auto generate a unique file name and register it
+                file_name = MFFileMgmt.unique_file_name(package.filename,
+                                                        self._ghost_node_files)
+                package.filename = file_name
+                self._ghost_node_files[file_name] = package
         elif package.package_type.lower() == 'ims':
             # default behavior is to register the ims package with the first
             # unregistered model
@@ -858,7 +898,6 @@ class MFSimulation(PackageContainer):
         # add model
         self._models[model_name] = model
 
-        # TODO: include exchanges
         # update simulation name file
         self.name_file.modelrecarray.append_list_as_record([model_type,
                                                             model_namefile,
@@ -866,7 +905,9 @@ class MFSimulation(PackageContainer):
 
         if len(self._ims_files) > 0:
             # register model with first ims file found
-            self.register_ims_package(self._ims_files[0], model_name)
+            first_ims_key = next(iter(self._ims_files))
+            self.register_ims_package(self._ims_files[first_ims_key],
+                                      model_name)
 
         return self.structure.model_struct_objs[model_type]
 
@@ -916,7 +957,7 @@ class MFSimulation(PackageContainer):
                 return False
 
         # ims files valid
-        for imsfile in self._ims_files:
+        for index, imsfile in self._ims_files.items():
             if not imsfile.is_valid():
                 return False
 

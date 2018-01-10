@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import MFFileMgmt
+from .data.mfstructure import DataType
 from .data import mfstructure, mfdatautil, mfdata
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
@@ -314,6 +315,7 @@ class MFBlock(object):
                 dataitem.new_simulation(self._simulation_data)
 
     def set_model_relative_path(self, model_ws):
+        # update datasets
         for key, dataset in self.datasets.items():
             if dataset.structure.file_data:
                 file_data = dataset.get_data()
@@ -323,6 +325,7 @@ class MFBlock(object):
                         old_file_path, old_file_name = \
                                 os.path.split(file_line[0])
                         file_line[0] = os.path.join(model_ws, old_file_name)
+        # update block headers
         for block_header in self.block_headers:
             for dataset in block_header.data_items:
                 if dataset.structure.file_data:
@@ -332,6 +335,14 @@ class MFBlock(object):
                         for file_line in file_data:
                             old_file_path, old_file_name = \
                                 os.path.split(file_line[1])
+                            new_file_path = os.path.join(model_ws,
+                                                         old_file_name)
+                            # update transient keys of datasets within the
+                            # block
+                            for key, idataset in self.datasets.items():
+                                if isinstance(idataset, mfdata.MFTransient):
+                                    idataset.update_transient_key(file_line[1],
+                                                                 new_file_path)
                             file_line[1] = os.path.join(model_ws,
                                                         old_file_name)
 
@@ -974,8 +985,12 @@ class MFPackage(PackageContainer):
         raise mfstructure.MFDataException(except_message)
 
     def set_model_relative_path(self, model_ws):
+        # update blocks
         for key, block in self.blocks.items():
             block.set_model_relative_path(model_ws)
+        # update sub-packages
+        for package in self.packages:
+            package.set_model_relative_path(model_ws)
 
     def load(self, strict=True):
         # open file
@@ -1135,7 +1150,7 @@ class MFPackage(PackageContainer):
             # this is a simulation file that does not correspond to a specific
             # model.  figure out which model to use and return a dimensions
             # object for that model
-            if self.structure.file_type == 'gwfgwf':
+            if self.dfn_file_name[0:3] == 'exg':
                 exchange_rec_array = self._simulation_data.mfdata[
                     ('nam', 'exchanges', 'exchangerecarray')].get_data()
                 if exchange_rec_array is None:

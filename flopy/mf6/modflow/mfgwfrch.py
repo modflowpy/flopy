@@ -10,6 +10,12 @@ class ModflowGwfrch(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     fixed_cell : boolean
         * fixed_cell (boolean) indicates that recharge will not be reassigned
           to a cell underlying the cell specified in the list if the specified
@@ -40,7 +46,7 @@ class ModflowGwfrch(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of recharge
           flow rates will be printed to the listing file for every stress
           period time step in which "BUDGET PRINT" is specified in Output
-          Control. If there is no Output Control option and PRINT_FLOWS is
+          Control. If there is no Output Control option and "PRINT_FLOWS" is
           specified, then flow rates are printed for the last time step of each
           stress period.
     save_flows : boolean
@@ -65,10 +71,10 @@ class ModflowGwfrch(mfpackage.MFPackage):
     periodrecarray : [cellid, recharge, aux, boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
-          that uses the DIS input file, cellid is the layer, row, and column.
-          For a grid that uses the DISV input file, cellid is the layer and
-          cell2d number. If the model uses the unstructured discretization
-          (DISU) input file, then cellid is the node number for the cell.
+          that uses the DIS input file, CELLID is the layer, row, and column.
+          For a grid that uses the DISV input file, CELLID is the layer and
+          CELL2D number. If the model uses the unstructured discretization
+          (DISU) input file, CELLID is the node number for the cell.
         * recharge (double) is the recharge flux rate (:math:`LT^{-1}`). This
           rate is multiplied inside the program by the surface area of the cell
           to calculate the volumetric recharge rate. A time-series name may be
@@ -81,10 +87,18 @@ class ModflowGwfrch(mfpackage.MFPackage):
           entry (see the "Time-Variable Input" section), values can be obtained
           from a time series by entering the time-series name in place of a
           numeric value.
-        * boundname (string) name of the recharge cell. boundname is an ASCII
+        * boundname (string) name of the recharge cell. BOUNDNAME is an ASCII
           character variable that can contain as many as 40 characters. If
-          boundname contains spaces in it, then the entire name must be
+          BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'rch', 'options', 
@@ -97,6 +111,8 @@ class ModflowGwfrch(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfrch"
     package_type = "rch"
+    dfn_file_name = "gwf-rch.dfn"
+
     dfn = [["block options", "name fixed_cell", "type keyword", "shape", 
             "reader urword", "optional true"],
            ["block options", "name auxiliary", "type string", 

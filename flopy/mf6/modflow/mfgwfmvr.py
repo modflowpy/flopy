@@ -10,6 +10,12 @@ class ModflowGwfmvr(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of MVR
           information will be written to the listing file immediately after it
@@ -18,8 +24,9 @@ class ModflowGwfmvr(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of MVR flow
           rates will be printed to the listing file for every stress period
           time step in which "BUDGET PRINT" is specified in Output Control. If
-          there is no Output Control option and PRINT_FLOWS is specified, then
-          flow rates are printed for the last time step of each stress period.
+          there is no Output Control option and "PRINT_FLOWS" is specified,
+          then flow rates are printed for the last time step of each stress
+          period.
     modelnames : boolean
         * modelnames (boolean) keyword to indicate that all package names will
           be preceded by the model name for the package. Model names are
@@ -40,16 +47,16 @@ class ModflowGwfmvr(mfpackage.MFPackage):
         * pname (string) is the name of a package that may be included in a
           subsequent stress period block.
     periodrecarray : [mname1, pname1, id1, mname2, pname2, id2, mvrtype, value]
-        * mname1 (string) name of model containing the package, texttt{pname1}.
+        * mname1 (string) name of model containing the package, PNAME1.
         * pname1 (string) is the package name for the provider. The package
-          texttt{pname1} must be designated to provide water through the MVR
-          Package by specifying the keyword "MOVER" in its OPTIONS block.
+          PNAME1 must be designated to provide water through the MVR Package by
+          specifying the keyword "MOVER" in its OPTIONS block.
         * id1 (integer) is the identifier for the provider. This is the well
           number, reach number, lake number, etc.
-        * mname2 (string) name of model containing the package, texttt{pname2}.
+        * mname2 (string) name of model containing the package, PNAME2.
         * pname2 (string) is the package name for the receiver. The package
-          texttt{pname2} must be designated to receive water from the MVR
-          Package by specifying the keyword "MOVER" in its OPTIONS block.
+          PNAME2 must be designated to receive water from the MVR Package by
+          specifying the keyword "MOVER" in its OPTIONS block.
         * id2 (integer) is the identifier for the receiver. This is the well
           number, reach number, lake number, etc.
         * mvrtype (string) is the character string signifying the method for
@@ -60,8 +67,16 @@ class ModflowGwfmvr(mfpackage.MFPackage):
           diverting stream flow.
         * value (double) is the value to be used in the equation for
           calculating the amount of water to move. For the "FACTOR" option,
-          texttt{value} is the :math:`\\alpha` factor. For the remaining
-          options, texttt{value} is the specified flow rate, :math:`Q_S`.
+          VALUE is the :math:`\\alpha` factor. For the remaining options, VALUE
+          is the specified flow rate, :math:`Q_S`.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     budget_filerecord = ListTemplateGenerator(('gwf6', 'mvr', 'options', 
@@ -72,6 +87,8 @@ class ModflowGwfmvr(mfpackage.MFPackage):
                                             'periodrecarray'))
     package_abbr = "gwfmvr"
     package_type = "mvr"
+    dfn_file_name = "gwf-mvr.dfn"
+
     dfn = [["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name print_flows", "type keyword", 

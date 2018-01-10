@@ -10,6 +10,12 @@ class ModflowUtlobs(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     precision : double
         * precision (double) Keyword and precision specifier for output of
           binary data, which can be either SINGLE or DOUBLE. The default is
@@ -50,12 +56,22 @@ class ModflowUtlobs(mfpackage.MFPackage):
           flow observations of a GWF model, for three observation types of the
           LAK Package, for two observation types of the MAW Package, and one
           observation type of the UZF Package.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     continuousrecarray = ListTemplateGenerator(('obs', 'continuous', 
                                                 'continuousrecarray'))
     package_abbr = "utlobs"
     package_type = "obs"
+    dfn_file_name = "utl-obs.dfn"
+
     dfn = [["block options", "name precision", "type double precision", 
             "shape", "reader urword", "optional true"],
            ["block options", "name digits", "type integer", "shape", 

@@ -199,7 +199,7 @@ class ModflowSub(Package):
                  nndb=1, ndb=1, nmz=1, nn=20, ac1=0., ac2=1.0, itmin=5,
                  ln=0, ldn=0, rnb=1,
                  hc=100000., sfe=1.e-4, sfv=1.e-3, com=0.,
-                 dp=[1.e-6, 6.e-6, 6.e-4],
+                 dp=[[1.e-6, 6.e-6, 6.e-4]],
                  dstart=1., dhc=100000., dcom=0., dz=1., nz=1,
                  ids15=None, ids16=None,
                  extension='sub', unitnumber=None,

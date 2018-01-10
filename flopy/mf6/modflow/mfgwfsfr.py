@@ -10,6 +10,12 @@ class ModflowGwfsfr(mfpackage.MFPackage):
 
     Parameters
     ----------
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
     auxiliary : [string]
         * auxiliary (string) defines an array of one or more auxiliary variable
           names. There is no limit on the number of auxiliary variables that
@@ -39,7 +45,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         * print_flows (boolean) keyword to indicate that the list of stream
           reach flow rates will be printed to the listing file for every stress
           period time step in which "BUDGET PRINT" is specified in Output
-          Control. If there is no Output Control option and PRINT_FLOWS is
+          Control. If there is no Output Control option and "PRINT_FLOWS" is
           specified, then flow rates are printed for the last time step of each
           stress period.
     save_flows : boolean
@@ -71,11 +77,10 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     maximum_iterations : double
         * maximum_iterations (double) value that defines an maximum number of
           Streamflow Routing Newton-Raphson iterations allowed for a reach. By
-          default, texttt{maxsfrit} is equal to 100.
+          default, MAXSFRIT is equal to 100.
     maximum_depth_change : double
         * maximum_depth_change (double) value that defines the depth closure
-          tolerance. By default, texttt{dmaxchg} is equal to :math:`1 \\times
-          10^{-5}`.
+          tolerance. By default, DMAXCHG is equal to :math:`1 \\times 10^{-5}`.
     unit_conversion : double
         * unit_conversion (double) value (or conversion factor) that is used in
           calculating stream depth for stream reach. A constant of 1.486 is
@@ -84,50 +89,47 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           multiplied by 86,400 when using time units of days in the simulation.
     nreaches : integer
         * nreaches (integer) integer value specifying the number of stream
-          reaches. There must be texttt{nreaches} entries in the PACKAGEDATA
-          block.
+          reaches. There must be NREACHES entries in the PACKAGEDATA block.
     sfrrecarray : [rno, cellid, rlen, rwid, rgrd, rtp, rbth, rhk, man, ncon,
       ustrf, ndv, aux, boundname]
         * rno (integer) integer value that defines the reach number associated
-          with the specified PACKAGEDATA data on the line. texttt{rno} must be
-          greater than zero and less than or equal to texttt{nreaches}. Reach
-          information must be specified for every reach or the program will
-          terminate with an error. The program will also terminate with an
-          error if information for a reach is specified more than once.
-        * cellid ((integer, ...)) The keyword texttt{`none'} must be specified
-          for reaches that are not connected to an underlying GWF cell. The
-          keyword texttt{`none'} is used for reaches that are in cells that
-          have texttt{IDOMAIN} values less than one or are in areas not covered
-          by the GWF model grid. Reach-aquifer flow is not calculated if the
-          keyword texttt{`none'} is specified.
-        * rlen (double) real value that defines the reach length. texttt{rlen}
-          must be greater than zero.
-        * rwid (double) real value that defines the reach width. texttt{rwid}
-          must be greater than zero.
+          with the specified PACKAGEDATA data on the line. RNO must be greater
+          than zero and less than or equal to NREACHES. Reach information must
+          be specified for every reach or the program will terminate with an
+          error. The program will also terminate with an error if information
+          for a reach is specified more than once.
+        * cellid ((integer, ...)) The keyword `NONE' must be specified for
+          reaches that are not connected to an underlying GWF cell. The keyword
+          `NONE' is used for reaches that are in cells that have IDOMAIN values
+          less than one or are in areas not covered by the GWF model grid.
+          Reach-aquifer flow is not calculated if the keyword `NONE' is
+          specified.
+        * rlen (double) real value that defines the reach length. RLEN must be
+          greater than zero.
+        * rwid (double) real value that defines the reach width. RWID must be
+          greater than zero.
         * rgrd (double) real value that defines the stream gradient (slope)
-          across the reach. texttt{rgrd} must be greater than zero.
+          across the reach. RGRD must be greater than zero.
         * rtp (double) real value that defines the top elevation of the reach
           streambed.
         * rbth (double) real value that defines the thickness of the reach
-          streambed. texttt{rbth} can be any value if texttt{cellid} is
-          texttt{`none'}. Otherwise, texttt{rbth} must be greater than zero.
+          streambed. RBTH can be any value if CELLID is `NONE'. Otherwise, RBTH
+          must be greater than zero.
         * rhk (double) real value that defines the hydraulic conductivity of
-          the reach streambed. texttt{rhk} can be any positive value if
-          texttt{cellid} is texttt{`none'}. Otherwise, texttt{rhk} must be
-          greater than zero.
+          the reach streambed. RHK can be any positive value if CELLID is
+          `NONE'. Otherwise, RHK must be greater than zero.
         * man (string) real or character value that defines the Manning's
-          roughness coefficient for the reach. texttt{man} must be greater than
-          zero. If the Options block includes a texttt{TIMESERIESFILE} entry
-          (see the "Time-Variable Input" section), values can be obtained from
-          a time series by entering the time-series name in place of a numeric
-          value.
+          roughness coefficient for the reach. MAN must be greater than zero.
+          If the Options block includes a TIMESERIESFILE entry (see the "Time-
+          Variable Input" section), values can be obtained from a time series
+          by entering the time-series name in place of a numeric value.
         * ncon (integer) integer value that defines the number of reaches
           connected to the reach.
         * ustrf (double) real value that defines the fraction of upstream flow
           from each upstream reach that is applied as upstream inflow to the
-          reach. The sum of all texttt{ustrf} values for all reaches connected
-          to the same upstream reach must be equal to one and texttt{ustrf}
-          must be greater than or equal to zero.
+          reach. The sum of all USTRF values for all reaches connected to the
+          same upstream reach must be equal to one and USTRF must be greater
+          than or equal to zero.
         * ndv (integer) integer value that defines the number of downstream
           diversions for the reach.
         * aux (double) represents the values of the auxiliary variables for
@@ -138,97 +140,102 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           TIMESERIESFILE entry (see the "Time-Variable Input" section), values
           can be obtained from a time series by entering the time-series name
           in place of a numeric value.
-        * boundname (string) name of the stream reach cell. boundname is an
+        * boundname (string) name of the stream reach cell. BOUNDNAME is an
           ASCII character variable that can contain as many as 40 characters.
-          If boundname contains spaces in it, then the entire name must be
+          If BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
     reach_connectivityrecarray : [rno, ic]
         * rno (integer) integer value that defines the reach number associated
-          with the specified CONNECTIONDATA data on the line. texttt{rno} must
-          be greater than zero and less than or equal to texttt{NREACHES}.
-          Reach connection information must be specified for every reach or the
+          with the specified CONNECTIONDATA data on the line. RNO must be
+          greater than zero and less than or equal to NREACHES. Reach
+          connection information must be specified for every reach or the
           program will terminate with an error. The program will also terminate
           with an error if connection information for a reach is specified more
           than once.
         * ic (integer) integer value that defines the reach number of the reach
           connected to the current reach and whether it is connected to the
-          upstream or downstream end of the reach. Negative texttt{ic} numbers
-          indicate connected reaches are connected to the downstream end of the
-          current reach. Positive texttt{ic} numbers indicate connected reaches
-          are connected to the upstream end of the current reach. The absolute
-          value of texttt{ic} must be greater than zero and less than or equal
-          to texttt{NREACHES}.
+          upstream or downstream end of the reach. Negative IC numbers indicate
+          connected reaches are connected to the downstream end of the current
+          reach. Positive IC numbers indicate connected reaches are connected
+          to the upstream end of the current reach. The absolute value of IC
+          must be greater than zero and less than or equal to NREACHES.
     reach_diversionsrecarray : [rno, idv, iconr, cprior]
         * rno (integer) integer value that defines the reach number associated
-          with the specified DIVERSIONS data on the line. texttt{rno} must be
-          greater than zero and less than or equal to texttt{NREACHES}. Reach
-          diversion information must be specified for every reach with a
-          texttt{ndv} value greater than 0 or the program will terminate with
-          an error. The program will also terminate with an error if diversion
-          information for a given reach diversion is specified more than once.
+          with the specified DIVERSIONS data on the line. RNO must be greater
+          than zero and less than or equal to NREACHES. Reach diversion
+          information must be specified for every reach with a NDV value
+          greater than 0 or the program will terminate with an error. The
+          program will also terminate with an error if diversion information
+          for a given reach diversion is specified more than once.
         * idv (integer) integer value that defines the downstream diversion
-          number for the diversion for reach texttt{rno}. texttt{idv} must be
-          greater than zero and less than or equal to texttt{ndv} for reach
-          texttt{rno}.
+          number for the diversion for reach RNO. IDV must be greater than zero
+          and less than or equal to NDV for reach RNO.
         * iconr (integer) integer value that defines the downstream reach that
-          will receive the diverted water. texttt{idv} must be greater than
-          zero and less than or equal to texttt{NREACHES}. Furthermore, reach
-          texttt{iconr} must be a downstream connection for reach texttt{rno}.
+          will receive the diverted water. IDV must be greater than zero and
+          less than or equal to NREACHES. Furthermore, reach ICONR must be a
+          downstream connection for reach RNO.
         * cprior (string) character string value that defines the the
           prioritization system for the diversion, such as when insufficient
           water is available to meet all diversion stipulations, and is used in
-          conjunction with the value of texttt{flow} value specified in the
-          texttt{STRESS_PERIOD_DATA} section. Available diversion options
-          include: (1) texttt{cprior} = `FRACTION', then the amount of the
-          diversion is computed as a fraction of the streamflow leaving reach
-          texttt{rno} (:math:`Q_{DS}`); in this case, 0.0 :math:`\\le`
-          texttt{divflow} :math:`\\le` 1.0. (2) texttt{cprior} = `EXCESS', a
-          diversion is made only if :math:`Q_{DS}` for reach texttt{rno}
-          exceeds the value of texttt{divflow}. If this occurs, then the
-          quantity of water diverted is the excess flow (:math:`Q_{DS} -`
-          texttt{divflow}) and :math:`Q_{DS}` from reach texttt{rno} is set
-          equal to texttt{divflow}. This represents a flood-control type of
-          diversion, as described by Danskin and Hanson (2002). (3)
-          texttt{cprior} = `THRESHOLD', then if :math:`Q_{DS}` in reach
-          texttt{rno} is less than the specified diversion flow
-          (texttt{divflow}), no water is diverted from reach texttt{rno}. If
-          :math:`Q_{DS}` in reach texttt{rno} is greater than or equal to
-          (texttt{divflow}), (texttt{divflow}) is diverted and :math:`Q_{DS}`
-          is set to the remainder (:math:`Q_{DS} -` texttt{divflow})). This
-          approach assumes that once flow in the stream is sufficiently low,
-          diversions from the stream cease, and is the `priority' algorithm
-          that originally was programmed into the STR1 Package (Prudic, 1989).
-          (4) texttt{cprior} = `UPTO' -- if :math:`Q_{DS}` in reach texttt{rno}
-          is greater than or equal to the specified diversion flow
-          (texttt{divflow}), :math:`Q_{DS}` is reduced by texttt{divflow}. If
-          :math:`Q_{DS}` in reach texttt{rno} is less than (texttt{divflow}),
-          texttt{divflow} is set to :math:`Q_{DS}` and there will be no flow
-          available for reaches connected to downstream end of reach
-          \texttt{rno}.
+          conjunction with the value of FLOW value specified in the
+          STRESS_PERIOD_DATA section. Available diversion options include: (1)
+          CPRIOR = `FRACTION', then the amount of the diversion is computed as
+          a fraction of the streamflow leaving reach RNO (:math:`Q_{DS}`); in
+          this case, 0.0 :math:`\\le` DIVFLOW :math:`\\le` 1.0. (2) CPRIOR =
+          `EXCESS', a diversion is made only if :math:`Q_{DS}` for reach RNO
+          exceeds the value of DIVFLOW. If this occurs, then the quantity of
+          water diverted is the excess flow (:math:`Q_{DS} -` DIVFLOW) and
+          :math:`Q_{DS}` from reach RNO is set equal to DIVFLOW. This
+          represents a flood-control type of diversion, as described by Danskin
+          and Hanson (2002). (3) CPRIOR = `THRESHOLD', then if :math:`Q_{DS}`
+          in reach RNO is less than the specified diversion flow (DIVFLOW), no
+          water is diverted from reach RNO. If :math:`Q_{DS}` in reach RNO is
+          greater than or equal to (DIVFLOW), (DIVFLOW) is diverted and
+          :math:`Q_{DS}` is set to the remainder (:math:`Q_{DS} -` DIVFLOW)).
+          This approach assumes that once flow in the stream is sufficiently
+          low, diversions from the stream cease, and is the `priority'
+          algorithm that originally was programmed into the STR1 Package
+          (Prudic, 1989). (4) CPRIOR = `UPTO' -- if :math:`Q_{DS}` in reach RNO
+          is greater than or equal to the specified diversion flow (DIVFLOW),
+          :math:`Q_{DS}` is reduced by DIVFLOW. If :math:`Q_{DS}` in reach RNO
+          is less than (DIVFLOW), DIVFLOW is set to :math:`Q_{DS}` and there
+          will be no flow available for reaches connected to downstream end of
+          reach RNO.
     reachperiodrecarray : [rno, sfrsetting]
         * rno (integer) integer value that defines the reach number associated
-          with the specified PERIOD data on the line. texttt{rno} must be
-          greater than zero and less than or equal to texttt{NREACHES}.
+          with the specified PERIOD data on the line. RNO must be greater than
+          zero and less than or equal to NREACHES.
         * sfrsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
-          texttt{sfrsetting} string include: texttt{STATUS}, texttt{MANNING},
-          texttt{STAGE}, texttt{INFLOW}, texttt{RAINFALL}, texttt{EVAPORATION},
-          texttt{RUNOFF}, texttt{DIVERSION}, texttt{UPSTREAM_FRACTION}, and
-          texttt{AUXILIARY}.
-            upstream_fraction : [double]
-                * upstream_fraction (double) real value that defines the
-                  fraction of upstream flow (texttt{ustrf}) from each upstream
-                  reach that is applied as upstream inflow to the reach. The
-                  sum of all texttt{ustrf} values for all reaches connected to
-                  the same upstream reach must be equal to one.
-            runoff : [string]
-                * runoff (string) real or character value that defines the
-                  volumetric rate of diffuse overland runoff that enters the
-                  streamflow routing reach. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value. By default,
-                  runoff rates are zero for each reach.
+          SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL,
+          EVAPORATION, RUNOFF, DIVERSION, UPSTREAM_FRACTION, and AUXILIARY.
+            status : [string]
+                * status (string) keyword option to define stream reach status.
+                  STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS
+                  option simulates streamflow using a user-specified stage for
+                  a reach or a stage set to the top of the reach (depth = 0).
+                  In cases where the simulated leakage calculated using the
+                  specified stage exceeds the sum of inflows to the reach, the
+                  stage is set to the top of the reach and leakage is set equal
+                  to the sum of inflows. Upstream factions should be changed
+                  using the UPSTREAM_FRACTION SFRSETTING if the status for one
+                  or more reaches is changed to ACTIVE or INACTIVE. For
+                  example, if one of two downstream connections for a reach is
+                  inactivated, the upstream fraction for the active and
+                  inactive downstream reach should be changed to 1.0 and 0.0,
+                  respectively, to ensure that the active reach receives all of
+                  the downstream outflow from the upstream reach. By default,
+                  STATUS is ACTIVE.
+            stage : [string]
+                * stage (string) real or character value that defines the stage
+                  for the reach. The specified STAGE is only applied if the
+                  reach uses the simple routing option. If STAGE is not
+                  specified for reaches that use the simple routing option, the
+                  specified stage is set to the top of the reach. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
             evaporation : [string]
                 * evaporation (string) real or character value that defines the
                   volumetric rate per unit area of water subtracted by
@@ -238,40 +245,31 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   Input" section), values can be obtained from a time series by
                   entering the time-series name in place of a numeric value. By
                   default, evaporation rates are zero for each reach.
-            rainfall : [string]
-                * rainfall (string) real or character value that defines the
-                  volumetric rate per unit area of water added by precipitation
-                  directly on the streamflow routing reach. If the Options
-                  block includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, rainfall rates are zero for each reach.
-            status : [string]
-                * status (string) keyword option to define stream reach status.
-                  texttt{status} can be texttt{ACTIVE}, texttt{INACTIVE}, or
-                  texttt{SIMPLE}. The texttt{SIMPLE} texttt{status} option
-                  simulates streamflow using a user-specified stage for a reach
-                  or a stage set to the top of the reach (depth = 0). In cases
-                  where the simulated leakage calculated using the specified
-                  stage exceeds the sum of inflows to the reach, the stage is
-                  set to the top of the reach and leakage is set equal to the
-                  sum of inflows. Upstream factions should be changed using the
-                  texttt{UPSTREAM_FRACTION} texttt{sfrsetting} if the status
-                  for one or more reaches is changed to texttt{ACTIVE} or
-                  texttt{INACTIVE}. For example, if one of two downstream
-                  connections for a reach is inactivated, the upstream fraction
-                  for the active and inactive downstream reach should be
-                  changed to 1.0 and 0.0, respectively, to ensure that the
-                  active reach receives all of the downstream outflow from the
-                  upstream reach. By default, texttt{status} is texttt{ACTIVE}.
-            manning : [string]
-                * manning (string) real or character value that defines the
-                  Manning's roughness coefficient for the reach.
-                  texttt{manning} must be greater than zero. If the Options
-                  block includes a texttt{TIMESERIESFILE} entry (see the "Time-
+            diversionrecord : [idv, divrate]
+                * idv (integer) diversion number.
+                * divrate (double) real or character value that defines the
+                  volumetric diversion (DIVFLOW) rate for the streamflow
+                  routing reach. If the Options block includes a TIMESERIESFILE
+                  entry (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
                   Variable Input" section), values can be obtained from a time
                   series by entering the time-series name in place of a numeric
                   value.
+            upstream_fraction : [double]
+                * upstream_fraction (double) real value that defines the
+                  fraction of upstream flow (USTRF) from each upstream reach
+                  that is applied as upstream inflow to the reach. The sum of
+                  all USTRF values for all reaches connected to the same
+                  upstream reach must be equal to one.
             inflow : [string]
                 * inflow (string) real or character value that defines the
                   volumetric inflow rate for the streamflow routing reach. If
@@ -280,36 +278,37 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   time series by entering the time-series name in place of a
                   numeric value. By default, inflow rates are zero for each
                   reach.
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned texttt{auxval}. texttt{auxname} must match one of
-                  the auxiliary variable names defined in the texttt{OPTIONS}
-                  block. If texttt{auxname} does not match one of the auxiliary
-                  variable names defined in the texttt{OPTIONS} block the data
-                  are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
-            stage : [string]
-                * stage (string) real or character value that defines the stage
-                  for the reach. The specified texttt{stage} is only applied if
-                  the reach uses the simple routing option. If texttt{STAGE} is
-                  not specified for reaches that use the simple routing option,
-                  the specified stage is set to the top of the reach. If the
-                  Options block includes a texttt{TIMESERIESFILE} entry (see
-                  the "Time-Variable Input" section), values can be obtained
-                  from a time series by entering the time-series name in place
-                  of a numeric value.
-            diversionrecord : [idv, divrate]
-                * idv (integer) diversion number.
-                * divrate (double) real or character value that defines the
-                  volumetric diversion (texttt{divflow}) rate for the
-                  streamflow routing reach. If the Options block includes a
+            manning : [string]
+                * manning (string) real or character value that defines the
+                  Manning's roughness coefficient for the reach. MANNING must
+                  be greater than zero. If the Options block includes a
                   TIMESERIESFILE entry (see the "Time-Variable Input" section),
                   values can be obtained from a time series by entering the
                   time-series name in place of a numeric value.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  volumetric rate of diffuse overland runoff that enters the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value. By default,
+                  runoff rates are zero for each reach.
+            rainfall : [string]
+                * rainfall (string) real or character value that defines the
+                  volumetric rate per unit area of water added by precipitation
+                  directly on the streamflow routing reach. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, rainfall rates are zero for each reach.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'sfr', 'options', 
@@ -332,6 +331,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                                                  'reachperiodrecarray'))
     package_abbr = "gwfsfr"
     package_type = "sfr"
+    dfn_file_name = "gwf-sfr.dfn"
+
     dfn = [["block options", "name auxiliary", "type string", 
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name boundnames", "type keyword", "shape", 
