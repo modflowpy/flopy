@@ -206,7 +206,8 @@ class check:
                               ('desc', np.object)
                               ])
         if array is None:
-            array = np.empty((0, len(dtype)), dtype=dtype)
+            #array = np.empty((0, len(dtype)), dtype=dtype)
+            array = np.empty((0, len(dtype)), dtype=np.float32)
         return np.core.records.fromarrays(array.transpose(), dtype=dtype)
 
     def _txt_footer(self, headertxt, txt, testname, passed=False, warning=True):
