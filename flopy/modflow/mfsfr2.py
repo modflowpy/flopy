@@ -352,8 +352,8 @@ class ModflowSfr2(Package):
         if np.diff(self.reach_data.node).max() == 0 and self.parent.has_package('DIS'):
             # first make kij list
             lrc = self.reach_data[['k', 'i', 'j']].copy()
-            lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
-
+            #lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
+            lrc = lrc.tolist()
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
         self.reach_data.sort(order=['iseg', 'ireach'])
@@ -2547,6 +2547,8 @@ def _fmt_string(array, float_format='{}'):
     fmt_string = ''
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
+        if vtype == 'v':
+            continue
         if (vtype == 'i'):
             fmt_string += '{:.0f} '
         elif (vtype == 'f'):
@@ -2567,6 +2569,8 @@ def _fmt_string_list(array, float_format='{}'):
     fmt_string = []
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
+        if vtype == 'v':
+            continue
         if (vtype == 'i'):
             fmt_string += ['{:.0f}']
         elif (vtype == 'f'):
