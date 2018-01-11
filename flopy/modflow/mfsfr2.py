@@ -516,7 +516,7 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_reach_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nreaches, len(dtype)), dtype=dtype)
+        d = np.zeros((nreaches, len(dtype)))
         d[:, :] = default_value
         d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
         d['reachID'] = np.arange(1, nreaches + 1)
@@ -528,7 +528,7 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_segment_dtype()
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nsegments, len(dtype)), dtype=dtype)
+        d = np.zeros((nsegments, len(dtype)))
         d[:, :] = default_value
         return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
