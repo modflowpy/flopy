@@ -991,7 +991,7 @@ class MFPackage(PackageContainer):
                             for key in dataset.get_active_key_list():
                                 try:
                                     data = dataset.get_data(key=key[0])
-                                except (FileNotFoundError,
+                                except (OSError,
                                         MFDataFileException):
                                     # TODO: Handle case where external file
                                     # path has been moved
@@ -1005,7 +1005,8 @@ class MFPackage(PackageContainer):
                             new_size = -1
                             try:
                                 data = dataset.get_data()
-                            except FileNotFoundError:
+                            except (OSError,
+                                    MFDataFileException):
                                 # TODO: Handle case where external file
                                 # path has been moved
                                 data = None
