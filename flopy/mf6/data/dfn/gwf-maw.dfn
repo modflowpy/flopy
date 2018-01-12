@@ -354,7 +354,6 @@ description REPLACE boundname {'{#1}': 'multi-aquifer well'}
 block connectiondata
 name wellconnectionsrecarray
 type recarray wellno icon cellid scrn_top scrn_bot hk_skin radius_skin
-shape (nmawwells)
 reader urword
 longname
 description

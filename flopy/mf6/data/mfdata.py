@@ -6,7 +6,7 @@ from collections import OrderedDict
 from enum import Enum
 from ..data.mfstructure import MFDataException, MFFileParseException, \
                                MFInvalidTransientBlockHeaderException, \
-                               MFDataItemStructure
+                                MFDataFileException, MFDataItemStructure
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
                               ConstIter, ArrayIndexIter
 from ..coordinates.modeldimensions import DataDimensions
@@ -967,8 +967,14 @@ class DataStorage(object):
 
     def external_to_internal(self, layer_num=None, store_internal=False):
         # currently only support files containing ndarrays
-        assert(self.data_structure_type == DataStructureType.ndarray)
-
+        if self.data_structure_type != DataStructureType.ndarray:
+            path = self.data_dimensions.structure.path
+            except_str = 'ERROR: Can not convert {} to internal data. ' \
+                         'Exernal to internal file operations' \
+                         'currently only supported for ndarrays. ' \
+                         '{}'.format(path[-1], path,)
+            print(except_str)
+            raise MFDataFileException(except_str)
         if layer_num is None:
             data_out = self._build_full_data(store_internal)
         else:
@@ -2044,6 +2050,7 @@ class MFMultiDimVar(MFData):
         ext_file_path = file_mgmt.get_updated_path(layer_storage.fname,
                                                    model_name,
                                                    ext_file_action)
+        layer_storage.fname = ext_file_path
         ext_format = ['OPEN/CLOSE', "'{}'".format(ext_file_path)]
         ext_format.append('FACTOR')
         if layer_storage.factor is not None:

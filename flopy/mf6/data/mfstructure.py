@@ -573,6 +573,15 @@ class StructException(Exception):
         self.location = location
 
 
+class MFDataFileException(Exception):
+    """
+    Exception related to parsing MODFLOW data files
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self, "MFDataFileException: {}".format(error))
+
+
 class MFFileParseException(Exception):
     """
     Exception related to parsing MODFLOW input files
@@ -1288,6 +1297,15 @@ class MFDataStructure(object):
                 return DataType.scalar_transient
             else:
                 return DataType.scalar
+
+    def is_mult_or_trans(self):
+        data_type = self.get_datatype()
+        if data_type == DataType.scalar_keyword_transient or \
+                data_type == DataType.array_transient or \
+                data_type == DataType.list_transient or \
+                data_type == DataType.list_multiple:
+            return True
+        return False
 
     def get_record_size(self):
         count = 0
