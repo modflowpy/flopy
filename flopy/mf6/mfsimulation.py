@@ -167,6 +167,7 @@ class MFSimulationData(object):
         self.scientific_notation_lower_threshold = 0.001
         self.verify_external_data = True
         self.comments_on = False
+        self.auto_set_sizes = True
 
         # --- file path ---
         self.mfpath = MFFileMgmt(path)
@@ -591,7 +592,8 @@ class MFSimulation(PackageContainer):
         # write exchange files
         for key, exchange_file in self._exchange_files.items():
             exchange_file.write()
-            if exchange_file.gnc_filerecord.has_data():
+            if hasattr(exchange_file, 'gnc_filerecord') and \
+                    exchange_file.gnc_filerecord.has_data():
                 gnc_file = exchange_file.gnc_filerecord.get_data()[0][0]
                 if gnc_file in self._ghost_node_files:
                     self._ghost_node_files[gnc_file].write(ext_file_action=
@@ -600,7 +602,8 @@ class MFSimulation(PackageContainer):
                     print('WARNING: Ghost node file {} not loaded prior to '
                           'writing. File will not be written.'.format(gnc_file)
                           )
-            if exchange_file.mvr_filerecord.has_data():
+            if hasattr(exchange_file, 'mvr_filerecord') and \
+                    exchange_file.mvr_filerecord.has_data():
                 mvr_file = exchange_file.mvr_filerecord.get_data()[0][0]
                 if mvr_file in self._mover_files:
                     self._mover_files[mvr_file].write(ext_file_action=
