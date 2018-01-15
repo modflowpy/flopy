@@ -8,11 +8,17 @@ class ModflowGwfic(mfpackage.MFPackage):
     """
     ModflowGwfic defines a ic package within a gwf6 model.
 
-    Attributes
+    Parameters
     ----------
-    strt : [(strt : double)]
-        strt : is the initial (starting) head---that is, head at the beginning
-          of the GWF Model simulation. strt must be specified for all
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    strt : [double]
+        * strt (double) is the initial (starting) head---that is, head at the
+          beginning of the GWF Model simulation. STRT must be specified for all
           simulations, including steady-state simulations. One value is read
           for every model cell. For simulations in which the first stress
           period is steady state, the values used for STRT generally do not
@@ -21,11 +27,21 @@ class ModflowGwfic(mfpackage.MFPackage):
           hydraulic heads that are close to the steady-state solution. A head
           value lower than the cell bottom can be provided if a cell should
           start as dry.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     strt = ArrayTemplateGenerator(('gwf6', 'ic', 'griddata', 'strt'))
     package_abbr = "gwfic"
     package_type = "ic"
+    dfn_file_name = "gwf-ic.dfn"
+
     dfn = [["block griddata", "name strt", "type double precision", 
             "shape (nodes)", "reader readarray"]]
 

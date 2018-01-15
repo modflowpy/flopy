@@ -8,30 +8,46 @@ class ModflowUtlts(mfpackage.MFPackage):
     """
     ModflowUtlts defines a ts package within a utl model.
 
-    Attributes
+    Parameters
     ----------
-    time_series_namerecord : [(time_series_names : string)]
-        time_series_names : Name by which a package references a particular
-          time-array series. The name must be unique among all time-array
-          series used in a package.
-    interpolation_methodrecord : [(interpolation_method : string)]
-        interpolation_method : Interpolation method, which is either STEPWISE
-          or LINEAR.
-    interpolation_methodrecord_single : [(interpolation_method_single : string)]
-        interpolation_method_single : Interpolation method, which is either
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    time_series_namerecord : [time_series_names]
+        * time_series_names (string) Name by which a package references a
+          particular time-array series. The name must be unique among all time-
+          array series used in a package.
+    interpolation_methodrecord : [interpolation_method]
+        * interpolation_method (string) Interpolation method, which is either
           STEPWISE or LINEAR.
-    sfacrecord : [(sfacval : double)]
-        sfacval : Scale factor, which will multiply all array values in time
-          series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
-    sfacrecord_single : [(sfacval : double)]
-        sfacval : Scale factor, which will multiply all array values in time
-          series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
-    time_seriesrecarray : [(tas_time : double), (tas_array : double)]
-        tas_time : A numeric time relative to the start of the simulation, in
-          the time unit used in the simulation. Times must be strictly
-          increasing.
-        tas_array : A 2-D array of numeric, floating-point values, or a
+    interpolation_methodrecord_single : [interpolation_method_single]
+        * interpolation_method_single (string) Interpolation method, which is
+          either STEPWISE or LINEAR.
+    sfacrecord : [sfacval]
+        * sfacval (double) Scale factor, which will multiply all array values
+          in time series. SFAC is an optional attribute; if omitted, SFAC =
+          1.0.
+    sfacrecord_single : [sfacval]
+        * sfacval (double) Scale factor, which will multiply all array values
+          in time series. SFAC is an optional attribute; if omitted, SFAC =
+          1.0.
+    time_seriesrecarray : [ts_time, ts_array]
+        * ts_time (double) A numeric time relative to the start of the
+          simulation, in the time unit used in the simulation. Times must be
+          strictly increasing.
+        * ts_array (double) A 2-D array of numeric, floating-point values, or a
           constant value, readable by the U2DREL array-reading utility.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     time_series_namerecord = ListTemplateGenerator(('ts', 'attributes', 
@@ -47,6 +63,8 @@ class ModflowUtlts(mfpackage.MFPackage):
                                                  'time_seriesrecarray'))
     package_abbr = "utlts"
     package_type = "ts"
+    dfn_file_name = "utl-ts.dfn"
+
     dfn = [["block attributes", "name time_series_namerecord", 
             "type record names time_series_names", "shape", "reader urword", 
             "tagged false", "optional false"],
@@ -84,12 +102,12 @@ class ModflowUtlts(mfpackage.MFPackage):
            ["block attributes", "name sfac", "type keyword", "shape", 
             "tagged false", "reader urword", "optional false"],
            ["block timeseries", "name time_seriesrecarray", 
-            "type recarray tas_time tas_array", "shape", "reader urword", 
+            "type recarray ts_time ts_array", "shape", "reader urword", 
             "tagged true", "optional false"],
-           ["block timeseries", "name tas_time", "type double precision", 
+           ["block timeseries", "name ts_time", "type double precision", 
             "shape", "tagged false", "reader urword", "optional false", 
             "repeating false"],
-           ["block timeseries", "name tas_array", "type double precision", 
+           ["block timeseries", "name ts_array", "type double precision", 
             "shape time_series_names", "tagged false", "reader urword", 
             "optional false"]]
 

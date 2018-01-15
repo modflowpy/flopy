@@ -4,6 +4,18 @@ from textwrap import TextWrapper
 from copy import deepcopy
 
 
+def clean_name(name):
+    # remove bad characters
+    clean_string = name.replace(' ', '_')
+    clean_string = clean_string.replace('-', '_')
+    # remove anything after a parenthesis
+    index = clean_string.find('(')
+    if index != -1:
+        clean_string = clean_string[0:index]
+
+    return clean_string
+
+
 def find_keyword(arr_line, keyword_dict):
     # convert to lower case
     arr_line_lower = []
@@ -745,53 +757,30 @@ class MFDocString(object):
 
     Methods
     -------
-    add_parameter : (param_name : string, param_type : string,
-                     param_descr : string)
-        adds doc string for a parameter with name 'param_name', type
-        'param_type' and description 'param_descr'
+    add_parameter : (param_descr : string, beginning_of_list : bool)
+        adds doc string for a parameter with description 'param_descr' to the
+        end of the list unless beginning_of_list is True
     get_doc_string : () : string
         builds and returns the docstring for the class
     """
     def __init__(self, description):
         self.indent = '    '
-        self.description = self._resolve_string(description)
-        self.parameter_header = '{}Attributes\n{}' \
+        self.description = description
+        self.parameter_header = '{}Parameters\n{}' \
                                 '----------'.format(self.indent, self.indent)
         self.parameters = []
 
-    def add_parameter(self, param_name, param_type, param_descr):
-        # add tabs to all new lines in the parameter description
-        if param_descr:
-            param_descr_array = param_descr.split('\n')
+    def add_parameter(self, param_descr, beginning_of_list=False):
+        if beginning_of_list:
+            self.parameters.insert(0, param_descr)
         else:
-            param_descr_array = ['\n']
-        twr = TextWrapper(width=79, initial_indent=self.indent * 2,
-                          subsequent_indent='  {}'.format(self.indent * 2))
-        for index in range(0, len(param_descr_array)):
-            param_descr_array[index] = '\n'.join(twr.wrap(param_descr_array[
-                                                              index]))
-        param_descr = '\n'.join(param_descr_array)
-        # build doc string
-        param_doc_string = '{} : {}'.format(param_name, param_type)
-        twr = TextWrapper(width=79, initial_indent='',
-                          subsequent_indent='  {}'.format(self.indent))
-        param_doc_string = '\n'.join(twr.wrap(param_doc_string))
-        new_string = '{}\n{}'.format(param_doc_string, param_descr)
-        param_doc_string = self._resolve_string((new_string))
-        self.parameters.append(param_doc_string)
+            self.parameters.append(param_descr)
 
     def get_doc_string(self):
         doc_string = '{}"""\n{}{}\n\n{}\n'.format(self.indent, self.indent,
                                                   self.description,
                                                   self.parameter_header)
         for parameter in self.parameters:
-            doc_string += '{}{}\n'.format(self.indent, parameter)
+            doc_string += '{}\n'.format(parameter)
         doc_string += '\n{}"""'.format(self.indent)
-        return doc_string
-
-    def _resolve_string(self, doc_string):
-        doc_string = doc_string.replace('\\texttt{', '')
-        doc_string = doc_string.replace('}', '')
-        doc_string = doc_string.replace('~\\ref{table:', '')
-        doc_string = doc_string.replace('\\reftable:', '')
         return doc_string

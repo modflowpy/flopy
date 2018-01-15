@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import MFFileMgmt
+from .data.mfstructure import MFDataFileException
 from .data import mfstructure, mfdatautil, mfdata
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
@@ -314,6 +315,7 @@ class MFBlock(object):
                 dataitem.new_simulation(self._simulation_data)
 
     def set_model_relative_path(self, model_ws):
+        # update datasets
         for key, dataset in self.datasets.items():
             if dataset.structure.file_data:
                 file_data = dataset.get_data()
@@ -323,6 +325,7 @@ class MFBlock(object):
                         old_file_path, old_file_name = \
                                 os.path.split(file_line[0])
                         file_line[0] = os.path.join(model_ws, old_file_name)
+        # update block headers
         for block_header in self.block_headers:
             for dataset in block_header.data_items:
                 if dataset.structure.file_data:
@@ -332,6 +335,14 @@ class MFBlock(object):
                         for file_line in file_data:
                             old_file_path, old_file_name = \
                                 os.path.split(file_line[1])
+                            new_file_path = os.path.join(model_ws,
+                                                         old_file_name)
+                            # update transient keys of datasets within the
+                            # block
+                            for key, idataset in self.datasets.items():
+                                if isinstance(idataset, mfdata.MFTransient):
+                                    idataset.update_transient_key(file_line[1],
+                                                                 new_file_path)
                             file_line[1] = os.path.join(model_ws,
                                                         old_file_name)
 
@@ -956,6 +967,64 @@ class MFPackage(PackageContainer):
             return MFBlockHeader(arr_clean_line[1], header_variable_strs,
                                  header_comment)
 
+    def _update_size_defs(self):
+        # build temporary data lookup by name
+        data_lookup = {}
+        for name, block in self.blocks.items():
+            for ds_index, dataset in block.datasets.items():
+                data_lookup[dataset.structure.name] = dataset
+
+        # loop through all data
+        for name, block in self.blocks.items():
+            for ds_index, dataset in block.datasets.items():
+                # if data shape is 1-D
+                if dataset.structure.shape and \
+                        len(dataset.structure.shape) == 1:
+                    # if shape name is data in this package
+                    if dataset.structure.shape[0] in data_lookup:
+                        size_def = data_lookup[dataset.structure.shape[0]]
+                        size_def_name = size_def.structure.name
+
+                        if isinstance(dataset, mfdata.MFTransient):
+                            # for transient data always use the maximum size
+                            new_size = -1
+                            for key in dataset.get_active_key_list():
+                                try:
+                                    data = dataset.get_data(key=key[0])
+                                except (IOError,
+                                        OSError,
+                                        MFDataFileException):
+                                    # TODO: Handle case where external file
+                                    # path has been moved
+                                    data = None
+                                if data is not None:
+                                    data_len = len(data)
+                                    if data_len > new_size:
+                                        new_size = data_len
+                        else:
+                            # for all other data set max to size
+                            new_size = -1
+                            try:
+                                data = dataset.get_data()
+                            except (IOError,
+                                    OSError,
+                                    MFDataFileException):
+                                # TODO: Handle case where external file
+                                # path has been moved
+                                data = None
+                            if data is not None:
+                                new_size = len(dataset.get_data())
+                        if size_def.get_data() != new_size >= 0:
+                            # store current size
+                            size_def.set_data(new_size)
+                            # informational message to the user
+                            print('INFORMATION: {} in {} changed to {} based '
+                                  'on size of '
+                                  '{}'.format(size_def_name,
+                                              size_def.structure.path[:-1],
+                                              new_size,
+                                              dataset.structure.name))
+
     def build_mfdata(self, var_name, data=None):
         for key, block in self.structure.blocks.items():
             if var_name in block.data_structures:
@@ -974,8 +1043,12 @@ class MFPackage(PackageContainer):
         raise mfstructure.MFDataException(except_message)
 
     def set_model_relative_path(self, model_ws):
+        # update blocks
         for key, block in self.blocks.items():
             block.set_model_relative_path(model_ws)
+        # update sub-packages
+        for package in self.packages:
+            package.set_model_relative_path(model_ws)
 
     def load(self, strict=True):
         # open file
@@ -996,6 +1069,9 @@ class MFPackage(PackageContainer):
             raise mfstructure.ReadAsArraysException(err)
         # close file
         fd_input_file.close()
+
+        if self.simulation_data.auto_set_sizes:
+            self._update_size_defs()
 
         # return validity of file
         return self.is_valid()
@@ -1112,6 +1188,9 @@ class MFPackage(PackageContainer):
                     self._store_comment(line, found_first_block)
 
     def write(self, ext_file_action=ExtFileAction.copy_relative_paths):
+        if self.simulation_data.auto_set_sizes:
+            self._update_size_defs()
+
         # create any folders in path
         package_file_path = self.get_file_path()
         package_folder = os.path.split(package_file_path)[0]
@@ -1135,7 +1214,7 @@ class MFPackage(PackageContainer):
             # this is a simulation file that does not correspond to a specific
             # model.  figure out which model to use and return a dimensions
             # object for that model
-            if self.structure.file_type == 'gwfgwf':
+            if self.dfn_file_name[0:3] == 'exg':
                 exchange_rec_array = self._simulation_data.mfdata[
                     ('nam', 'exchanges', 'exchangerecarray')].get_data()
                 if exchange_rec_array is None:

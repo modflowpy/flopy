@@ -153,7 +153,7 @@ tagged false
 in_record true
 optional true
 longname
-description name of model containing the package, \texttt{pname1}.
+description name of model containing the package, PNAME1.
 
 block period
 name pname1
@@ -163,7 +163,7 @@ tagged false
 in_record true
 reader urword
 longname provider package name
-description is the package name for the provider.  The package \texttt{pname1} must be designated to provide water through the MVR Package by specifying the keyword ``MOVER'' in its OPTIONS block.
+description is the package name for the provider.  The package PNAME1 must be designated to provide water through the MVR Package by specifying the keyword ``MOVER'' in its OPTIONS block.
 
 block period
 name id1
@@ -184,7 +184,7 @@ tagged false
 in_record true
 optional true
 longname
-description name of model containing the package, \texttt{pname2}.
+description name of model containing the package, PNAME2.
 
 block period
 name pname2
@@ -194,7 +194,7 @@ tagged false
 in_record true
 reader urword
 longname receiver package name
-description is the package name for the receiver.  The package \texttt{pname2} must be designated to receive water from the MVR Package by specifying the keyword ``MOVER'' in its OPTIONS block.
+description is the package name for the receiver.  The package PNAME2 must be designated to receive water from the MVR Package by specifying the keyword ``MOVER'' in its OPTIONS block.
 
 block period
 name id2
@@ -224,5 +224,5 @@ tagged false
 in_record true
 reader urword
 longname mover value
-description is the value to be used in the equation for calculating the amount of water to move.  For the ``FACTOR'' option, \texttt{value} is the $\alpha$ factor.  For the remaining options, \texttt{value} is the specified flow rate, $Q_S$.
+description is the value to be used in the equation for calculating the amount of water to move.  For the ``FACTOR'' option, VALUE is the $\alpha$ factor.  For the remaining options, VALUE is the specified flow rate, $Q_S$.
 

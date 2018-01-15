@@ -8,130 +8,142 @@ class ModflowGwfdisu(mfpackage.MFPackage):
     """
     ModflowGwfdisu defines a disu package within a gwf6 model.
 
-    Attributes
+    Parameters
     ----------
-    length_units : (length_units : string)
-        length_units : is the length units used for this model. Values can be
-          ``FEET'', ``METERS'', or ``CENTIMETERS''. If not specified, the
-          default is ``UNKNOWN''.
-    nogrb : (nogrb : boolean)
-        nogrb : keyword to deactivate writing of the binary grid file.
-    xorigin : (xorigin : double)
-        xorigin : x-position of the origin used for model grid vertices. This
-          value should be provided in a real-world coordinate system. A default
-          value of zero is assigned if not specified. The value for
-          xorigin does not affect the model simulation, but it is
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    length_units : string
+        * length_units (string) is the length units used for this model. Values
+          can be "FEET", "METERS", or "CENTIMETERS". If not specified, the
+          default is "UNKNOWN".
+    nogrb : boolean
+        * nogrb (boolean) keyword to deactivate writing of the binary grid
+          file.
+    xorigin : double
+        * xorigin (double) x-position of the origin used for model grid
+          vertices. This value should be provided in a real-world coordinate
+          system. A default value of zero is assigned if not specified. The
+          value for XORIGIN does not affect the model simulation, but it is
           written to the binary grid file so that postprocessors can locate the
           grid in space.
-    yorigin : (yorigin : double)
-        yorigin : y-position of the origin used for model grid vertices. This
-          value should be provided in a real-world coordinate system. If not
-          specified, then a default value equal to zero is used. The value for
-          yorigin does not affect the model simulation, but it is
+    yorigin : double
+        * yorigin (double) y-position of the origin used for model grid
+          vertices. This value should be provided in a real-world coordinate
+          system. If not specified, then a default value equal to zero is used.
+          The value for YORIGIN does not affect the model simulation, but it is
           written to the binary grid file so that postprocessors can locate the
           grid in space.
-    angrot : (angrot : double)
-        angrot : counter-clockwise rotation angle (in degrees) of the model
-          grid coordinate system relative to a real-world coordinate system. If
-          not specified, then a default value of 0.0 is assigned. The value for
-          angrot does not affect the model simulation, but it is
+    angrot : double
+        * angrot (double) counter-clockwise rotation angle (in degrees) of the
+          model grid coordinate system relative to a real-world coordinate
+          system. If not specified, then a default value of 0.0 is assigned.
+          The value for ANGROT does not affect the model simulation, but it is
           written to the binary grid file so that postprocessors can locate the
           grid in space.
-    nodes : (nodes : integer)
-        nodes : is the number of cells in the model grid.
-    nja : (nja : integer)
-        nja : is the sum of the number of connections and nodes. When
+    nodes : integer
+        * nodes (integer) is the number of cells in the model grid.
+    nja : integer
+        * nja (integer) is the sum of the number of connections and NODES. When
           calculating the total number of connections, the connection between
-          cell $n$ and cell $m$ is considered to be different from the
-          connection between cell $m$ and cell $n$. Thus, nja is equal
-          to the total number of connections, including $n$ to $m$ and $m$ to
-          $n$, and the total number of cells.
-    nvert : (nvert : integer)
-        nvert : is the total number of (x, y) vertex pairs used to define the
-          plan-view shape of each cell in the model grid. If nvert is
-          not specified or is specified as zero, then the VERTICES and CELL2D
-          blocks below are not read.
-    top : [(top : double)]
-        top : is the top elevation for each cell in the model grid.
-    bot : [(bot : double)]
-        bot : is the bottom elevation for each cell.
-    area : [(area : double)]
-        area : is the cell surface area (in plan view).
-    iac : [(iac : integer)]
-        iac : is the number of connections (plus 1) for each cell. The sum of
-          iac must be equal to nja.
-    ja : [(ja : integer)]
-        ja : is a list of cell number (n) followed by its connecting cell
-          numbers (m) for each of the m cells connected to cell n. The number
-          of values to provide for cell n is iac(n). This list is
+          cell n and cell m is considered to be different from the connection
+          between cell m and cell n. Thus, NJA is equal to the total number of
+          connections, including n to m and m to n, and the total number of
+          cells.
+    nvert : integer
+        * nvert (integer) is the total number of (x, y) vertex pairs used to
+          define the plan-view shape of each cell in the model grid. If NVERT
+          is not specified or is specified as zero, then the VERTICES and
+          CELL2D blocks below are not read.
+    top : [double]
+        * top (double) is the top elevation for each cell in the model grid.
+    bot : [double]
+        * bot (double) is the bottom elevation for each cell.
+    area : [double]
+        * area (double) is the cell surface area (in plan view).
+    iac : [integer]
+        * iac (integer) is the number of connections (plus 1) for each cell.
+          The sum of all the entries in IAC must be equal to NJA.
+    ja : [integer]
+        * ja (integer) is a list of cell number (n) followed by its connecting
+          cell numbers (m) for each of the m cells connected to cell n. The
+          number of values to provide for cell n is IAC(n). This list is
           sequentially provided for the first to the last cell. The first value
           in the list must be cell n itself, and the remaining cells must be
           listed in an increasing order (sorted from lowest number to highest).
           Note that the cell and its connections are only supplied for the GWF
           cells and their connections to the other GWF cells. Also note that
-          the JA list input may be chopped up to have every node number and its
-          connectivity list on a separate line for ease in readability of the
-          file. To further ease readability of the file, the node number of the
-          cell whose connectivity is subsequently listed, may be expressed as a
-          negative number the sign of which is subsequently corrected by the
-          code.
-    ihc : [(ihc : integer)]
-        ihc : is an index array indicating the direction between node n and all
-          of its m connections. If $ihc=0$ -- cell $n$ and cell $m$ are
-          connected in the vertical direction. Cell $n$ overlies cell $m$ if
-          the cell number for $n$ is less than $m$; cell $m$ overlies cell $n$
-          if the cell number for $m$ is less than $n$. If $ihc=1$ -- cell $n$
-          and cell $m$ are connected in the horizontal direction. If $ihc=2$ --
-          cell $n$ and cell $m$ are connected in the horizontal direction, and
-          the connection is vertically staggered. A vertically staggered
-          connection is one in which a cell is horizontally connected to more
-          than one cell in a horizontal connection.
-    cl12 : [(cl12 : double)]
-        cl12 : is the array containing connection lengths between the center of
-          cell $n$ and the shared face with each adjacent $m$ cell.
-    hwva : [(hwva : double)]
-        hwva : is a symmetric array of size nja. For horizontal
-          connections, entries in hwva are the horizontal width
-          perpendicular to flow. For vertical connections, entries in
-          hwva are the vertical area for flow. Thus, values in the
-          hwva array contain dimensions of both length and area.
-          Entries in the hwva array have a one-to-one correspondence
-          with the connections specified in the ja array. Likewise,
-          there is a one-to-one correspondence between entries in the
-          hwva array and entries in the ihc array, which
-          specifies the connection type (horizontal or vertical). Entries in
-          the hwva array must be symmetric; the program will terminate
-          with an error if the value for hwva for an $n-m$ connection
-          does not equal the value for hwva for the corresponding
-          $m-n$ connection.
-    angldegx : [(angldegx : double)]
-        angldegx : is the angle (in degrees) between the horizontal x-axis and
-          the outward normal to the face between a cell and its connecting
-          cells (see figure 8 in the MODFLOW-USG documentation). The angle
-          varies between zero and 360.0 degrees. angldegx is only
-          needed if horizontal anisotropy is specified in the NPF Package or if
-          the XT3D option is used in the NPF Package. angldegx does
-          not need to be specified if horizontal anisotropy or the XT3D option
-          is not used. angldegx is of size nja; values specified for
-          vertical connections and for the diagonal position are not used. Note
-          that angldegx is read in degrees, which is different from
-          MODFLOW-USG, which reads a similar variable (anglex) in radians.
-    verticesrecarray : [(iv : integer), (xv : double), (yv : double)]
-        iv : is the vertex number. Records in the VERTICES block must be listed
-          in consecutive order from 1 to nvert.
-        xv : is the x-coordinate for the vertex.
-        yv : is the y-coordinate for the vertex.
-    cell2drecarray : [(icell2d : integer), (xc : double), (yc : double), (ncvert :
-      integer), (icvert : integer)]
-        icell2d : is the cell2d number. Records in the CELL2D block must be
-          listed in consecutive order from 1 to nodes.
-        xc : is the x-coordinate for the cell center.
-        yc : is the y-coordinate for the cell center.
-        ncvert : is the number of vertices required to define the cell. There
-          may be a different number of vertices for each cell.
-        icvert : is an array of integer values containing vertex numbers (in
-          the VERTICES block) used to define the cell. Vertices must be listed
-          in clockwise order.
+          the JA list input may be divided such that every node and its
+          connectivity list can be on a separate line for ease in readability
+          of the file. To further ease readability of the file, the node number
+          of the cell whose connectivity is subsequently listed, may be
+          expressed as a negative number, the sign of which is subsequently
+          converted to positive by the code.
+    ihc : [integer]
+        * ihc (integer) is an index array indicating the direction between node
+          n and all of its m connections. If IHC = 0 then cell n and cell m are
+          connected in the vertical direction. Cell n overlies cell m if the
+          cell number for n is less than m; cell m overlies cell n if the cell
+          number for m is less than n. If IHC = 1 then cell n and cell m are
+          connected in the horizontal direction. If IHC = 2 then cell n and
+          cell m are connected in the horizontal direction, and the connection
+          is vertically staggered. A vertically staggered connection is one in
+          which a cell is horizontally connected to more than one cell in a
+          horizontal connection.
+    cl12 : [double]
+        * cl12 (double) is the array containing connection lengths between the
+          center of cell n and the shared face with each adjacent m cell.
+    hwva : [double]
+        * hwva (double) is a symmetric array of size NJA. For horizontal
+          connections, entries in HWVA are the horizontal width perpendicular
+          to flow. For vertical connections, entries in HWVA are the vertical
+          area for flow. Thus, values in the HWVA array contain dimensions of
+          both length and area. Entries in the HWVA array have a one-to-one
+          correspondence with the connections specified in the JA array.
+          Likewise, there is a one-to-one correspondence between entries in the
+          HWVA array and entries in the IHC array, which specifies the
+          connection type (horizontal or vertical). Entries in the HWVA array
+          must be symmetric; the program will terminate with an error if the
+          value for HWVA for an n to m connection does not equal the value for
+          HWVA for the corresponding n to m connection.
+    angldegx : [double]
+        * angldegx (double) is the angle (in degrees) between the horizontal
+          x-axis and the outward normal to the face between a cell and its
+          connecting cells (see figure 8 in the MODFLOW-USG documentation). The
+          angle varies between zero and 360.0 degrees. ANGLDEGX is only needed
+          if horizontal anisotropy is specified in the NPF Package or if the
+          XT3D option is used in the NPF Package. ANGLDEGX does not need to be
+          specified if horizontal anisotropy or the XT3D option is not used.
+          ANGLDEGX is of size NJA; values specified for vertical connections
+          and for the diagonal position are not used. Note that ANGLDEGX is
+          read in degrees, which is different from MODFLOW-USG, which reads a
+          similar variable (ANGLEX) in radians.
+    verticesrecarray : [iv, xv, yv]
+        * iv (integer) is the vertex number. Records in the VERTICES block must
+          be listed in consecutive order from 1 to NVERT.
+        * xv (double) is the x-coordinate for the vertex.
+        * yv (double) is the y-coordinate for the vertex.
+    cell2drecarray : [icell2d, xc, yc, ncvert, icvert]
+        * icell2d (integer) is the cell2d number. Records in the CELL2D block
+          must be listed in consecutive order from 1 to NODES.
+        * xc (double) is the x-coordinate for the cell center.
+        * yc (double) is the y-coordinate for the cell center.
+        * ncvert (integer) is the number of vertices required to define the
+          cell. There may be a different number of vertices for each cell.
+        * icvert (integer) is an array of integer values containing vertex
+          numbers (in the VERTICES block) used to define the cell. Vertices
+          must be listed in clockwise order.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     top = ArrayTemplateGenerator(('gwf6', 'disu', 'griddata', 'top'))
@@ -155,6 +167,8 @@ class ModflowGwfdisu(mfpackage.MFPackage):
                                             'cell2drecarray'))
     package_abbr = "gwfdisu"
     package_type = "disu"
+    dfn_file_name = "gwf-disu.dfn"
+
     dfn = [["block options", "name length_units", "type string", 
             "reader urword", "optional true"],
            ["block options", "name nogrb", "type keyword", "reader urword", 

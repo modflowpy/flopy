@@ -6,7 +6,7 @@ from collections import OrderedDict
 from enum import Enum
 from ..data.mfstructure import MFDataException, MFFileParseException, \
                                MFInvalidTransientBlockHeaderException, \
-                               MFDataItemStructure
+                                MFDataFileException, MFDataItemStructure
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
                               ConstIter, ArrayIndexIter
 from ..coordinates.modeldimensions import DataDimensions
@@ -723,7 +723,8 @@ class DataStorage(object):
                 success = True
                 for layer_num, layer_data in enumerate(data):
                     if not isinstance(layer_data, list) and \
-                            not isinstance(layer_data, dict):
+                            not isinstance(layer_data, dict) and \
+                            not isinstance(layer_data, np.ndarray):
                         layer_data = [layer_data]
                     success = success and self._set_array_layer(layer_data,
                                                                 layer_num,
@@ -966,8 +967,14 @@ class DataStorage(object):
 
     def external_to_internal(self, layer_num=None, store_internal=False):
         # currently only support files containing ndarrays
-        assert(self.data_structure_type == DataStructureType.ndarray)
-
+        if self.data_structure_type != DataStructureType.ndarray:
+            path = self.data_dimensions.structure.path
+            except_str = 'ERROR: Can not convert {} to internal data. ' \
+                         'Exernal to internal file operations' \
+                         'currently only supported for ndarrays. ' \
+                         '{}'.format(path[-1], path,)
+            print(except_str)
+            raise MFDataFileException(except_str)
         if layer_num is None:
             data_out = self._build_full_data(store_internal)
         else:
@@ -1688,6 +1695,16 @@ class MFTransient(object):
         if isinstance(transient_key, int):
             assert(self._verify_sp(transient_key))
 
+    def update_transient_key(self, old_transient_key, new_transient_key):
+        if old_transient_key in self._data_storage:
+            # replace dictionary key
+            self._data_storage[new_transient_key] = \
+                self._data_storage[old_transient_key]
+            del self._data_storage[old_transient_key]
+            if self._current_key == old_transient_key:
+                # update current key
+                self._current_key = new_transient_key
+
     def _transient_setup(self, data_storage, data_struct_type):
         self._data_storage = data_storage
         self._data_struct_type = data_struct_type
@@ -2033,6 +2050,7 @@ class MFMultiDimVar(MFData):
         ext_file_path = file_mgmt.get_updated_path(layer_storage.fname,
                                                    model_name,
                                                    ext_file_action)
+        layer_storage.fname = ext_file_path
         ext_format = ['OPEN/CLOSE', "'{}'".format(ext_file_path)]
         ext_format.append('FACTOR')
         if layer_storage.factor is not None:

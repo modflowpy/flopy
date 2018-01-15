@@ -8,50 +8,63 @@ class ModflowNam(mfpackage.MFPackage):
     """
     ModflowNam defines a nam package.
 
-    Attributes
+    Parameters
     ----------
-    continue_ : (continue : boolean)
-        continue : keyword flag to indicate that the simulation should continue
-          even if one or more solutions do not converge.
-    nocheck : (nocheck : boolean)
-        nocheck : keyword flag to indicate that the model input check routines
-          should not be called prior to each time step. Checks are performed by
-          default.
-    memory_print_option : (memory_print_option : string)
-        memory_print_option : is a flag that controls printing of detailed
-          memory manager usage to the end of the simulation list file.
-          NONE means do not print detailed information.
-          SUMMARY means print only the total memory for each
-          simulation component. ALL means print information for each
-          variable stored in the memory manager. NONE is default if
-          memory\_print\_option is not specified.
-    tdis6 : (tdis6 : string)
-        tdis6 : is the name of the Temporal Discretization (TDIS) Input File.
-    modelrecarray : [(mtype : string), (mfname : string), (mname : string)]
-        mtype : is the type of model to add to simulation.
-        mfname : is the file name of the model name file.
-        mname : is the user-assigned name of the model. The model name cannot
-          exceed 16 characters and must not have blanks within the name. The
-          model name is case insensitive; any lowercase letters are converted
-          and stored as upper case letters.
-    exchangerecarray : [(exgtype : string), (exgfile : string), (exgmnamea :
-      string), (exgmnameb : string)]
-        exgtype : is the exchange type.
-        exgfile : is the input file for the exchange.
-        exgmnamea : is the name of the first model that is part of this
-          exchange.
-        exgmnameb : is the name of the second model that is part of this
-          exchange.
-    mxiter : (mxiter : integer)
-        mxiter : is the maximum number of outer iterations for this solution
-          group. The default value is 1. If there is only one solution in the
-          solution group, then MXITER must be 1.
-    solutionrecarray : [(slntype : string), (slnfname : string), (slnmnames :
-      string)]
-        slntype : is the type of solution. The Integrated Model Solution (IMS6)
-          is the only supported option in this version.
-        slnfname : name of file containing solution input.
-        slnmnames : is the array of model names to add to this solution.
+    simulation : MFSimulation
+        Simulation that this package is a part of. Package is automatically
+        added to simulation when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    continue_ : boolean
+        * continue (boolean) keyword flag to indicate that the simulation
+          should continue even if one or more solutions do not converge.
+    nocheck : boolean
+        * nocheck (boolean) keyword flag to indicate that the model input check
+          routines should not be called prior to each time step. Checks are
+          performed by default.
+    memory_print_option : string
+        * memory_print_option (string) is a flag that controls printing of
+          detailed memory manager usage to the end of the simulation list file.
+          NONE means do not print detailed information. SUMMARY means print
+          only the total memory for each simulation component. ALL means print
+          information for each variable stored in the memory manager. NONE is
+          default if MEMORY_PRINT_OPTION is not specified.
+    tdis6 : string
+        * tdis6 (string) is the name of the Temporal Discretization (TDIS)
+          Input File.
+    modelrecarray : [mtype, mfname, mname]
+        * mtype (string) is the type of model to add to simulation.
+        * mfname (string) is the file name of the model name file.
+        * mname (string) is the user-assigned name of the model. The model name
+          cannot exceed 16 characters and must not have blanks within the name.
+          The model name is case insensitive; any lowercase letters are
+          converted and stored as upper case letters.
+    exchangerecarray : [exgtype, exgfile, exgmnamea, exgmnameb]
+        * exgtype (string) is the exchange type.
+        * exgfile (string) is the input file for the exchange.
+        * exgmnamea (string) is the name of the first model that is part of
+          this exchange.
+        * exgmnameb (string) is the name of the second model that is part of
+          this exchange.
+    mxiter : integer
+        * mxiter (integer) is the maximum number of outer iterations for this
+          solution group. The default value is 1. If there is only one solution
+          in the solution group, then MXITER must be 1.
+    solutionrecarray : [slntype, slnfname, slnmnames]
+        * slntype (string) is the type of solution. The Integrated Model
+          Solution (IMS6) is the only supported option in this version.
+        * slnfname (string) name of file containing solution input.
+        * slnmnames (string) is the array of model names to add to this
+          solution.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     modelrecarray = ListTemplateGenerator(('nam', 'models', 
@@ -62,6 +75,8 @@ class ModflowNam(mfpackage.MFPackage):
                                               'solutionrecarray'))
     package_abbr = "nam"
     package_type = "nam"
+    dfn_file_name = "sim-nam.dfn"
+
     dfn = [["block options", "name continue", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name nocheck", "type keyword", 

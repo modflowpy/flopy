@@ -477,7 +477,7 @@ class ModflowStr(Package):
                 else:
                     itmp = tdata.shape[0]
             line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0,
-                                                                     0, iper)
+                                                                     0, iper+1)
             f_str.write(line)
             if itmp > 0:
                 # dataset 6

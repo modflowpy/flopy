@@ -8,21 +8,27 @@ class ModflowGwfevta(mfpackage.MFPackage):
     """
     ModflowGwfevta defines a evta package within a gwf6 model.
 
-    Attributes
+    Parameters
     ----------
-    readasarrays : (readasarrays : boolean)
-        readasarrays : indicates that array-based input will be used for the
-          Evapotranspiration Package. This keyword must be specified to use
-          array-based input.
-    fixed_cell : (fixed_cell : boolean)
-        fixed_cell : indicates that evapotranspiration will not be reassigned
-          to a cell underlying the cell specified in the list if the specified
-          cell is inactive.
-    auxiliary : [(auxiliary : string)]
-        auxiliary : defines an array of one or more auxiliary variable names.
-          There is no limit on the number of auxiliary variables that can be
-          provided on this line; however, lists of information provided in
-          subsequent blocks must have a column of data for each auxiliary
+    model : MFModel
+        Model that this package is a part of.  Package is automatically
+        added to model when it is initialized.
+    add_to_package_list : bool
+        Do not set this parameter. It is intended for debugging and internal
+        processing purposes only.
+    readasarrays : boolean
+        * readasarrays (boolean) indicates that array-based input will be used
+          for the Evapotranspiration Package. This keyword must be specified to
+          use array-based input.
+    fixed_cell : boolean
+        * fixed_cell (boolean) indicates that evapotranspiration will not be
+          reassigned to a cell underlying the cell specified in the list if the
+          specified cell is inactive.
+    auxiliary : [string]
+        * auxiliary (string) defines an array of one or more auxiliary variable
+          names. There is no limit on the number of auxiliary variables that
+          can be provided on this line; however, lists of information provided
+          in subsequent blocks must have a column of data for each auxiliary
           variable name defined here. The number of auxiliary variables
           detected on this line determines the value for naux. Comments cannot
           be provided anywhere on this line as they will be interpreted as
@@ -30,54 +36,63 @@ class ModflowGwfevta(mfpackage.MFPackage):
           package, but they will be available for use by other parts of the
           program. The program will terminate with an error if auxiliary
           variables are specified on more than one line in the options block.
-    auxmultname : (auxmultname : string)
-        auxmultname : name of auxiliary variable to be used as multiplier of
-          evapotranspiration rate.
-    print_input : (print_input : boolean)
-        print_input : keyword to indicate that the list of evapotranspiration
-          information will be written to the listing file immediately after it
-          is read.
-    print_flows : (print_flows : boolean)
-        print_flows : keyword to indicate that the list of evapotranspiration
-          flow rates will be printed to the listing file for every stress
-          period time step in which ``BUDGET PRINT'' is specified in Output
-          Control. If there is no Output Control option and PRINT\_FLOWS is
-          specified, then flow rates are printed for the last time step of each
-          stress period.
-    save_flows : (save_flows : boolean)
-        save_flows : keyword to indicate that evapotranspiration flow terms
-          will be written to the file specified with ``BUDGET FILEOUT'' in
+    auxmultname : string
+        * auxmultname (string) name of auxiliary variable to be used as
+          multiplier of evapotranspiration rate.
+    print_input : boolean
+        * print_input (boolean) keyword to indicate that the list of
+          evapotranspiration information will be written to the listing file
+          immediately after it is read.
+    print_flows : boolean
+        * print_flows (boolean) keyword to indicate that the list of
+          evapotranspiration flow rates will be printed to the listing file for
+          every stress period time step in which "BUDGET PRINT" is specified in
+          Output Control. If there is no Output Control option and
+          "PRINT_FLOWS" is specified, then flow rates are printed for the last
+          time step of each stress period.
+    save_flows : boolean
+        * save_flows (boolean) keyword to indicate that evapotranspiration flow
+          terms will be written to the file specified with "BUDGET FILEOUT" in
           Output Control.
-    tas_filerecord : [(tas6_filename : string)]
-        tas6_filename : defines a time-array-series file defining a time-array
-          series that can be used to assign time-varying values. See the Time-
-          Variable Input section for instructions on using the time-array
-          series capability.
-    obs_filerecord : [(obs6_filename : string)]
-        obs6_filename : name of input file to define observations for the
-          Evapotranspiration package. See the ``Observation utility'' section
+    tas_filerecord : [tas6_filename]
+        * tas6_filename (string) defines a time-array-series file defining a
+          time-array series that can be used to assign time-varying values. See
+          the Time-Variable Input section for instructions on using the time-
+          array series capability.
+    obs_filerecord : [obs6_filename]
+        * obs6_filename (string) name of input file to define observations for
+          the Evapotranspiration package. See the "Observation utility" section
           for instructions for preparing observation input files. Table
-          obstype lists observation type(s) supported by the
+          reftable:obstype lists observation type(s) supported by the
           Evapotranspiration package.
-    ievt : [(ievt : integer)]
-        ievt : ievt is the layer number that defines the layer in each
-          vertical column where evapotranspiration is applied. If ievt
-          is omitted, evapotranspiration by default is applied to cells in
-          layer 1.
-    surface : [(surface : double)]
-        surface : is the elevation of the ET surface ($L$).
-    rate : [(rate : double)]
-        rate : is the maximum ET flux rate ($LT^{-1$).
-    depth : [(depth : double)]
-        depth : is the ET extinction depth ($L$).
-    aux(iaux) : [(aux(iaux) : double)]
-        aux(iaux) : is an array of values for auxiliary variable aux(iaux),
-          where iaux is a value from 1 to naux, and aux(iaux) must be listed as
-          part of the auxiliary variables. A separate array can be specified
-          for each auxiliary variable. If an array is not specified for an
-          auxiliary variable, then a value of zero is assigned. If the value
-          specified here for the auxiliary variable is the same as auxmultname,
-          then the evapotranspiration rate will be multiplied by this array.
+    ievt : [integer]
+        * ievt (integer) IEVT is the layer number that defines the layer in
+          each vertical column where evapotranspiration is applied. If IEVT is
+          omitted, evapotranspiration by default is applied to cells in layer
+          1.
+    surface : [double]
+        * surface (double) is the elevation of the ET surface (:math:`L`).
+    rate : [double]
+        * rate (double) is the maximum ET flux rate (:math:`LT^{-1}`).
+    depth : [double]
+        * depth (double) is the ET extinction depth (:math:`L`).
+    aux(iaux) : [double]
+        * aux(iaux) (double) is an array of values for auxiliary variable
+          AUX(IAUX), where iaux is a value from 1 to NAUX, and AUX(IAUX) must
+          be listed as part of the auxiliary variables. A separate array can be
+          specified for each auxiliary variable. If an array is not specified
+          for an auxiliary variable, then a value of zero is assigned. If the
+          value specified here for the auxiliary variable is the same as
+          auxmultname, then the evapotranspiration rate will be multiplied by
+          this array.
+    fname : String
+        File name for this package.
+    pname : String
+        Package name for this package.
+    parent_file : MFPackage
+        Parent package file that references this package. Only needed for
+        utility packages (mfutl*). For example, mfutllaktab package must have 
+        a mfgwflak package parent_file.
 
     """
     auxiliary = ListTemplateGenerator(('gwf6', 'evta', 'options', 
@@ -95,6 +110,8 @@ class ModflowGwfevta(mfpackage.MFPackage):
                                   'aux(iaux)'))
     package_abbr = "gwfevta"
     package_type = "evta"
+    dfn_file_name = "gwf-evta.dfn"
+
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 
             "reader urword", "optional false"],
            ["block options", "name fixed_cell", "type keyword", "shape", 
