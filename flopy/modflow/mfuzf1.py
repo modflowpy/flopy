@@ -85,11 +85,6 @@ class ModflowUzf1(Package):
         waves allowed within an unsaturated zone cell is equal to
         NTRAIL2*NSETS2. An error will occur if the number of waves in a cell
         exceeds this value. (default is 20)
-    nuzgag : integer
-        equal to the number of cells (one per vertical column) that will be
-        specified for printing detailed information on the unsaturated zone
-        water budget and water content. A gage also may be used to print
-        the budget summed over all model cells.  (default is 0)
     surfdep : float
         The average height of undulations, D (Figure 1 in UZF documentation),
         in the land surface altitude. (default is 1.0)
@@ -178,6 +173,10 @@ class ModflowUzf1(Package):
         *   h < CELTOP-EXTDP, ET is zero;
         *   CELTOP-EXTDP < h < CELTOP-EXTDP+SMOOTHINT, ET is smoothed;
         CELTOP-EXTDP+SMOOTHINT < h, ET is equal to potential ET.
+    uzgage : dict of lists
+        Dataset 8 in UZF Package documentation. Each entry in the dict
+        is keyed by iftunit. If iftunit is negative, the list is empty.
+        If iftunit is positive, the list includes [IUZROW, IUZCOL, IUZOPT]
     netflux : list of [Unitrech (int), Unitdis (int)]
         (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
         An optional character variable. When NETFLUX is specified, 
@@ -243,6 +242,11 @@ class ModflowUzf1(Package):
 
     Attributes
     ----------
+    nuzgag : integer
+        equal to the number of cells (one per vertical column) that will be
+        specified for printing detailed information on the unsaturated zone
+        water budget and water content. A gage also may be used to print
+        the budget summed over all model cells.  (default is 0)
 
     Methods
     -------
@@ -265,7 +269,7 @@ class ModflowUzf1(Package):
 
     def __init__(self, model,
                  nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, ipakcb=None,
-                 iuzfcb2=None, ntrail2=10, nsets=20, nuzgag=0,
+                 iuzfcb2=None, ntrail2=10, nsets=20,
                  surfdep=1.0,
                  iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35,
                  thtr=0.15, thti=0.20,
@@ -383,7 +387,6 @@ class ModflowUzf1(Package):
         if iuzfopt > 0:
             self.ntrail2 = ntrail2
             self.nsets = nsets
-        self.nuzgag = nuzgag
         self.surfdep = surfdep
 
         # Data Set 2
@@ -422,16 +425,8 @@ class ModflowUzf1(Package):
                                name='thti')
 
         # Data Set 8
-        # [IUZROW] [IUZCOL] IFTUNIT [IUZOPT]
+        # {IFTUNIT: [IUZROW, IUZCOL, IUZOPT]}
         self.uzgag = uzgag
-        if uzgag is not None:
-            if len(uzgag) != nuzgag:
-                print(
-                    "WARNING!\nItem 8 doesn't correspond with NUZGAG.\nNUZGAG set to 0")
-                self.nuzgag = 0
-                self.uzgag = []
-            else:
-                self.uzgag = uzgag
 
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
@@ -446,6 +441,13 @@ class ModflowUzf1(Package):
             self.extwc = Transient2d(model, (nrow, ncol), np.int,
                                     extwc, name='extwc')
         self.parent.add_package(self)
+
+    @property
+    def nuzgage(self):
+        if self.uzgag is None:
+            return 0
+        else:
+            return len(self.uzgag)
 
     def _2list(self, arg):
         # input as a 3D array
@@ -566,7 +568,8 @@ class ModflowUzf1(Package):
                     for v in values:
                         f_uzf.write('{:10d}'.format(v))
                     f_uzf.write('{}\n'.format(comment))
-                else:
+                else: fix logic to conform with uzgag structure
+                allow for list entry of uzgag
                     comment = ' #IFTUNIT'
                     for v in values:
                         f_uzf.write('{:10d}'.format(v))
