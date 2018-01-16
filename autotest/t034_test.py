@@ -59,7 +59,7 @@ def test_create():
                                     ipakcb=0,
                                     iuzfcb2=61,
                                     # binary output of recharge and groundwater discharge
-                                    ntrail2=25, nsets=20, nuzgag=4,
+                                    ntrail2=25, nsets=20,
                                     surfdep=1.0, uzgag=uzgag,
                                     iuzfbnd=m.bas6.ibound.array,
                                     irunbnd=irunbnd,

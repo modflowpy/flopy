@@ -173,10 +173,14 @@ class ModflowUzf1(Package):
         *   h < CELTOP-EXTDP, ET is zero;
         *   CELTOP-EXTDP < h < CELTOP-EXTDP+SMOOTHINT, ET is smoothed;
         CELTOP-EXTDP+SMOOTHINT < h, ET is equal to potential ET.
-    uzgage : dict of lists
+    uzgage : dict of lists or list of lists
         Dataset 8 in UZF Package documentation. Each entry in the dict
-        is keyed by iftunit. If iftunit is negative, the list is empty.
-        If iftunit is positive, the list includes [IUZROW, IUZCOL, IUZOPT]
+        is keyed by iftunit.
+            Dict of lists: If iftunit is negative, the list is empty.
+            If iftunit is positive, the list includes [IUZROW, IUZCOL, IUZOPT]
+            List of lists:
+            Lists follow the format described in the documentation:
+            [[IUZROW, IUZCOL, IFTUNIT, IUZOPT]] or [[IFTUNIT]]
     netflux : list of [Unitrech (int), Unitdis (int)]
         (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
         An optional character variable. When NETFLUX is specified, 
@@ -315,6 +319,9 @@ class ModflowUzf1(Package):
 
         ipos = 3
         if uzgag is not None:
+            # convert to dict
+            if isinstance(uzgag, list):
+                uzgag = {l[2]: [l[0], l[1], l[3]] for l in uzgag}
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
@@ -443,7 +450,7 @@ class ModflowUzf1(Package):
         self.parent.add_package(self)
 
     @property
-    def nuzgage(self):
+    def nuzgag(self):
         if self.uzgag is None:
             return 0
         else:
@@ -565,16 +572,14 @@ class ModflowUzf1(Package):
                     values[0] += 1
                     values[1] += 1
                     comment = ' #IUZROW IUZCOL IFTUNIT IUZOPT'
+                    values.insert(2, iftunit)
                     for v in values:
                         f_uzf.write('{:10d}'.format(v))
                     f_uzf.write('{}\n'.format(comment))
-                else: fix logic to conform with uzgag structure
-                allow for list entry of uzgag
+                else:
                     comment = ' #IFTUNIT'
-                    for v in values:
-                        f_uzf.write('{:10d}'.format(v))
+                    f_uzf.write('{:10d}'.format(iftunit))
                     f_uzf.write('{}\n'.format(comment))
-
 
         def write_transient(name):
             invar, var = self.__dict__[name].get_kper_entry(n)
@@ -764,7 +769,7 @@ class ModflowUzf1(Package):
                            nuztop=nuztop, iuzfopt=iuzfopt, irunflg=irunflg,
                            ietflg=ietflg,
                            ipakcb=ipakcb, iuzfcb2=iuzfcb2,
-                           ntrail2=ntrail2, nsets=nsets2, nuzgag=nuzgag,
+                           ntrail2=ntrail2, nsets=nsets2,
                            surfdep=surfdep, uzgag=uzgag,
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, unitnumber=unitnumber,
