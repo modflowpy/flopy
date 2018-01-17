@@ -42,10 +42,6 @@ class MFBlockHeader(object):
         writes block header to file object 'fd'
     write_footer : (fd : file object)
         writes block footer to file object 'fd'
-    set_number_of_variables : (num_variables : int)
-        sets the number of expected block header variables.  any text found in
-        the block header not associated with a block header variable will be
-        assumed to be a comment
     """
     def __init__(self, name, variable_strings, comment, simulation_data=None,
                  path=None):
@@ -146,13 +142,6 @@ class MFBlockHeader(object):
                 entry = self.data_items[0].get_file_entry()
             fd.write('{}'.format(entry.rstrip()))
         fd.write('\n')
-
-    def set_number_of_variables(self, num_var):
-        # sets a number of variables, moving the rest to the comments section
-        comment = self.get_comment()
-        comment.text = '{}{}'.format(' '.join(self.variable_strings[num_var:]),
-                                     self.get_comment().text)
-        self.variable_strings = self.variable_strings[:num_var]
 
     def get_transient_key(self):
         transient_key = None
@@ -306,13 +295,6 @@ class MFBlock(object):
         # load block header data items into dictionary
         for dataset in self.structure.block_header_structure:
             self._new_dataset(dataset.name, dataset, True, None)
-
-    def _structure_clear(self):
-        for key, dataset in self.datasets.items():
-            dataset.new_simulation(self._simulation_data)
-        for block_header in self.block_headers:
-            for key, dataitem in block_header.data_items:
-                dataitem.new_simulation(self._simulation_data)
 
     def set_model_relative_path(self, model_ws):
         # update datasets
@@ -886,14 +868,11 @@ class MFPackage(PackageContainer):
     """
     def __init__(self, model_or_sim, package_type, filename=None, pname=None,
                  add_to_package_list=True, parent_file=None):
-        self._init_in_progress = True
         self._model_or_sim = model_or_sim
         self.package_type = package_type
         if model_or_sim.type == 'Model' and package_type.lower() != 'nam':
-            self._sr = model_or_sim.sr
             self.model_name = model_or_sim.name
         else:
-            self._sr = None
             self.model_name = None
         super(MFPackage, self).__init__(model_or_sim.simulation_data,
                                         self.model_name)
@@ -925,7 +904,6 @@ class MFPackage(PackageContainer):
         if parent_file is not None:
             self.container_type.append(PackageContainerType.package)
         # init variables that may be used later
-        self._unresolved_text = None
         self.post_block_comments = None
         self.last_error = None
 
@@ -1095,7 +1073,6 @@ class MFPackage(PackageContainer):
 
     def _load_blocks(self, fd_input_file, strict=True, max_blocks=sys.maxsize):
         # init
-        self._unresolved_text = []
         self._simulation_data.mfdata[self.path + ('pkg_hdr_comments',)] = \
           mfdata.MFComment('', self.path, self._simulation_data)
         self.post_block_comments = mfdata.MFComment('', self.path,

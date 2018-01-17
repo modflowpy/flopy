@@ -14,7 +14,7 @@ from .mfpackage import MFPackage
 from .data import mfstructure, mfdata
 from .utils import binaryfile_utils
 from .utils import mfobservation
-from .modflow import mfnam, mfims, mftdis, mfgwfgwf, mfgwfgnc, mfgwfmvr
+from .modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
 
 
 class SimulationDict(collections.OrderedDict):
@@ -182,10 +182,6 @@ class MFSimulationData(object):
         # --- temporary variables ---
         # other external files referenced
         self.referenced_files = collections.OrderedDict()
-        # structure of model files
-        self.mfdata_structure = collections.OrderedDict()
-        # bound names by package
-        self.bound_names = collections.OrderedDict()
 
 
 class MFSimulation(PackageContainer):
@@ -299,7 +295,6 @@ class MFSimulation(PackageContainer):
 
         self._exg_file_num = {}
         self._gnc_file_num = 0
-        self._mvr_file_num = 0
 
         self.simulation_data.mfpath.set_last_accessed_path()
 
@@ -486,7 +481,6 @@ class MFSimulation(PackageContainer):
                                                     parent_file=parent_package)
                 mover_file.load(strict)
                 self._mover_files[fname] = mover_file
-                self._mvr_file_num += 1
         else:
             # create package
             package_obj = self.package_factory(ftype, '')

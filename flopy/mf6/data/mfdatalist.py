@@ -92,7 +92,6 @@ class MFList(mfdata.MFMultiDimVar):
                                      dimensions)
         self._data_storage = self._new_storage()
         self._last_line_info = []
-        self._aux_vars = []
         self._data_line = None
         if data is not None:
             self.set_data(data, True)
@@ -100,7 +99,6 @@ class MFList(mfdata.MFMultiDimVar):
     def new_simulation(self, sim_data):
         super(MFList, self).new_simulation(sim_data)
         self._data_storage = self._new_storage()
-        self._aux_vars = []
         self._data_line = None
 
     def data_exists(self):
@@ -121,8 +119,10 @@ class MFList(mfdata.MFMultiDimVar):
     def set_data(self, data, autofill=False):
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage()
-        # error check data shape
-
+        #size_definition = self._data_dimensions.get_data_size_definition()
+        #if size_definition is not None:
+            # update size definition based on size of data being set
+        #    size_definition.set_data(len(data))
         # store data
         self._get_storage_obj().set_data(data, autofill=autofill)
 
@@ -345,7 +345,6 @@ class MFList(mfdata.MFMultiDimVar):
 
         self._data_dimensions.lock()
         self._last_line_info = []
-        self._aux_vars = []
         simple_line = False
         data_loaded = []
         storage = self._get_storage_obj()
@@ -498,8 +497,6 @@ class MFList(mfdata.MFMultiDimVar):
         # only initialize if we are at the start of a new line
         if data_index_start == 0:
             data_set = self.structure
-            if build_type_list:
-                self._data_item_struct_list = []
             # new line of data
             self._data_line = ()
             # determine if at end of block
@@ -610,13 +607,6 @@ class MFList(mfdata.MFMultiDimVar):
                                             data_item.keystring_dict[
                                             name_data]
                                         assert(data_item_ks != 0)
-                                        if isinstance(data_item_ks,
-                                                mfstructure.MFDataStructure):
-                                            data_item_kw = \
-                                                    data_item_ks.\
-                                                    data_item_structures[0]
-                                        else:
-                                            data_item_kw = data_item_ks
 
                                         # keyword is always implied in a
                                         # keystring and should be stored,
@@ -968,8 +958,7 @@ class MFTransientList(MFList, mfdata.MFTransient):
                                               enable=enable,
                                               path=path,
                                               dimensions=dimensions)
-        self._transient_setup(self._data_storage,
-                              mfdata.DataStructureType.recarray)
+        self._transient_setup(self._data_storage)
         self.repeating = True
 
     def add_transient_key(self, transient_key):

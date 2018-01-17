@@ -5,7 +5,6 @@ mfmodel module.  Contains the MFModel class
 import os
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfpackage import MFPackage
-from .modflow import mfgwfnam
 from .coordinates import modeldimensions
 from .utils.reference import SpatialReference, StructuredSpatialReference, \
                              VertexSpatialReference
@@ -72,9 +71,9 @@ class MFModel(PackageContainer):
 
     """
     def __init__(self, simulation, model_type='gwf', model_name='modflowtest',
-                 model_nam_file=None, ims_file_name=None, version='mf6',
-                 exe_name='mf6.exe', add_to_simulation = True,
-                 structure = None, model_rel_path='.', **kwargs):
+                 model_nam_file=None, version='mf6', exe_name='mf6.exe',
+                 add_to_simulation = True, structure = None,
+                 model_rel_path='.', **kwargs):
         super(MFModel, self).__init__(simulation.simulation_data, model_name)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
@@ -186,7 +185,7 @@ class MFModel(PackageContainer):
         """
 
         instance = cls(simulation, type, model_name,
-                       model_nam_file=model_nam_file, ims_file_name=None,
+                       model_nam_file=model_nam_file,
                        version=version, exe_name=exe_name,
                        add_to_simulation=False, structure=structure,
                        model_rel_path=model_rel_path)

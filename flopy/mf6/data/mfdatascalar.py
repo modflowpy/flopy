@@ -284,8 +284,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                                                 enable=enable,
                                                 path=path,
                                                 dimensions=dimensions)
-        self._transient_setup(self._data_storage,
-                              mfdata.DataStructureType.scalar)
+        self._transient_setup(self._data_storage)
         self.repeating = True
 
     def add_transient_key(self, key):

@@ -206,7 +206,6 @@ class DataStorageType(Enum):
     internal_array = 1
     internal_constant = 2
     external_file = 3
-    open_close = 4
 
 
 class DataStructureType(Enum):
@@ -220,13 +219,11 @@ class DataStructureType(Enum):
 
 class LayerStorage(object):
     def __init__(self, data_storage, lay_num,
-                 data_storage_type=DataStorageType.internal_array,
-                 data_structure_type=DataStructureType.ndarray):
+                 data_storage_type=DataStorageType.internal_array):
         self._data_storage_parent = data_storage
         self._lay_num = lay_num
         self._internal_data = None
         self._data_const_value = None
-        self._data_structure_type = data_structure_type
         self.data_storage_type = data_storage_type
         self.fname = None
         self.factor = 1.0
@@ -405,7 +402,6 @@ class DataStorage(object):
 
         # initialize comments
         self.pre_data_comments = None
-        self.post_data_comments = None
         self.comments = OrderedDict()
 
     def __repr__(self):
@@ -456,7 +452,6 @@ class DataStorage(object):
             self.num_layers = len(self.layer_storage)
 
     def get_data_str(self, formal):
-        layer_strs= []
         data_str = ''
         # Assemble strings for internal array data
         for index, storage in enumerate(self.layer_storage):
@@ -1415,8 +1410,8 @@ class DataStorage(object):
                 return forward_index - index
         return len(internal_data.dtype.names) - index
 
-    def build_type_list(self, data_set=None, record_with_record=False,
-                        data=None, resolve_data_shape=True, key=None,
+    def build_type_list(self, data_set=None, data=None,
+                        resolve_data_shape=True, key=None,
                         nseg=None):
         if data_set is None:
             self._recarray_type_list = []
@@ -1643,8 +1638,6 @@ class MFTransient(object):
         current key defining specific transient dataset to be accessed
     _data_storage : dict
         dictionary of DataStorage objects
-    _data_struct_type : str
-        type of storage (numpy array type in most cases) used to store data
 
     Methods
     -------
@@ -1689,7 +1682,6 @@ class MFTransient(object):
     def __init__(self, *args, **kwargs):
         self._current_key = None
         self._data_storage = None
-        self._data_struct_type = None
 
     def add_transient_key(self, transient_key):
         if isinstance(transient_key, int):
@@ -1705,9 +1697,8 @@ class MFTransient(object):
                 # update current key
                 self._current_key = new_transient_key
 
-    def _transient_setup(self, data_storage, data_struct_type):
+    def _transient_setup(self, data_storage):
         self._data_storage = data_storage
-        self._data_struct_type = data_struct_type
 
     def get_data_prep(self, transient_key=0):
         if isinstance(transient_key, int):
@@ -1821,7 +1812,6 @@ class MFData(object):
         self._data_name = structure.name
         self._data_storage = None
         self._data_type = structure.type
-        self._indent_level = 1
         self._internal_data = None
         self._keyword = ''
         if self._simulation_data is not None:
@@ -1888,10 +1878,6 @@ class MFData(object):
     def _structure_init(self, data_set=None):
         if data_set is None:
             # Initialize variables
-            self._num_optional = 0
-            self._num_required = 0
-            self._num_heading_required = 0
-            self._num_loads = 0
             data_set = self.structure
         for data_item_struct in data_set.data_item_structures:
             if data_item_struct.type == 'record':
@@ -1901,12 +1887,6 @@ class MFData(object):
                 if len(self.structure.data_item_structures) == 1:
                     # data item name is a keyword to look for
                     self._keyword = data_item_struct.name
-                if data_item_struct.optional:
-                    self._num_optional += 1
-                else:
-                    self._num_required += 1
-                    if data_item_struct.reader == 'readarray':
-                        self._num_heading_required += 1
 
     def _get_constant_formatting_string(self, const_val, layer, data_type,
                                         suffix='\n'):
@@ -1995,21 +1975,6 @@ class MFData(object):
                                                    self._path,
                                                    self._simulation_data,
                                                    line_num)
-
-    def _build_type_array(self, axis_list, var_type):
-        # calculate size
-        data_size = 1
-        for axis in axis_list:
-            data_size = data_size * axis
-        self._min_data_length += data_size
-
-        # build flat array
-        type_array = []
-        for index in range(0, data_size):
-            type_array.append((var_type, True))
-
-        # reshape
-        return np.reshape(type_array, (2,) + axis_list)
 
     def _get_storage_obj(self):
         return self._data_storage

@@ -398,10 +398,6 @@ class ModelDimensions(object):
 
         return shape_dimensions, shape_rule
 
-    # Reshapes data into an N-dimensional array based on the axes requested
-    def shape_data(self, data, modflowdataaxes):
-        self.test = 1
-
     def _resolve_data_item_shape(self, data_item_struct, data_set_struct=None,
                                  data=None, path=None,
                                  deconstruct_axis=True, repeating_key=None):
@@ -594,9 +590,6 @@ class ModelDimensions(object):
             if entry not in order:
                 new_shape_array.append(entry)
         return new_shape_array
-
-    def get_ts_length(self, timestep):
-        self.test = 1
 
     def model_subspace_size(self, subspace_string):
         axis_found = False

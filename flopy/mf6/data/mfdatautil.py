@@ -335,8 +335,8 @@ class ArrayUtil(object):
     con_convert : (data : string, data_type : type that has conversion
                    operation) : boolean
         returns true if data can be converted into data_type
-    multi_dim_list_size : (current_list : list) : boolean
-        determines the number of items in a multi-dimensional list
+    max_multi_dim_list_size : (current_list : list) : boolean
+        determines the max number of items in a multi-dimensional list
         'current_list'
     first_item : (current_list : list) : variable
         returns the first item in the list 'current_list'
@@ -363,30 +363,6 @@ class ArrayUtil(object):
             self.path = path
         else:
             self.path = os.getcwd()
-
-    @ staticmethod
-    def build_layered_array(dimensions, layer_vals):
-        assert len(dimensions) <= 3
-        assert dimensions[0] == len(layer_vals)
-        dim_tuple = ()
-        for dimension in dimensions:
-            dim_tuple += (dimension,)
-        if type(layer_vals[0]) == float:
-            new_array = np.empty(dim_tuple, np.float)
-        else:
-            new_array = np.empty(dim_tuple, np.int)
-
-        for layer in range(0, len(layer_vals)):
-            if len(dimensions) == 3:
-                for row in range(0, dimensions[1]):
-                    for col in range(0, dimensions[2]):
-                        new_array[layer,row,col] = layer_vals[layer]
-            elif len(dimensions) == 2:
-                for row in range(0, dimensions[1]):
-                    new_array[layer,row] = layer_vals[layer]
-            else:
-                new_array[layer] = layer_vals[layer]
-        return new_array
 
     @ staticmethod
     def has_one_item(current_list):
@@ -417,33 +393,12 @@ class ArrayUtil(object):
         return True
 
     @ staticmethod
-    def can_convert(data, data_type):
-        try:
-            data_type(data)
-            return True
-        except TypeError:
-            return False
-        except ValueError:
-            return False
-
-    @ staticmethod
     def max_multi_dim_list_size(current_list):
         max_length = -1
         for item in current_list:
             if len(item) > max_length:
                 max_length = len(item)
         return max_length
-
-    @ staticmethod
-    def multi_dim_list_size(current_list):
-        if current_list is None:
-            return 0
-        if not isinstance(current_list, list):
-            return 1
-        item_num = 0
-        for item, last_item in ArrayUtil.next_item(current_list):
-            item_num += 1
-        return item_num
 
     @ staticmethod
     def first_item(current_list):

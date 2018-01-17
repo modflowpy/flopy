@@ -100,7 +100,6 @@ class MFArray(mfdata.MFMultiDimVar):
                     self._number_of_layers = 1
         else:
             self._number_of_layers = 1
-        self._array_shape = None
         self._data_type = structure.data_item_structures[0].type
         self._data_storage = self._new_storage(self._number_of_layers != 1)
         if self.structure.type == 'integer':
@@ -170,7 +169,6 @@ class MFArray(mfdata.MFMultiDimVar):
         super(MFArray, self).new_simulation(sim_data)
         self._data_storage = self._new_storage(False)
         self._number_of_layers = 1
-        self._array_shape = None
 
     def supports_layered(self):
         model_grid = self._data_dimensions.get_model_grid()
@@ -659,8 +657,7 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
                                               enable=enable,
                                               path=path,
                                               dimensions=dimensions)
-        self._transient_setup(self._data_storage,
-                              mfdata.DataStructureType.ndarray)
+        self._transient_setup(self._data_storage)
         self.repeating = True
 
     def add_transient_key(self, transient_key):

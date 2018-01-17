@@ -51,23 +51,17 @@ class MFFileMgmt(object):
         sets the simulation working path
     """
     def __init__(self, path):
-        self._python_path = os.getcwd()
         self._sim_path = ''
         self.set_sim_path(path)
 
         # keys:fully pathed filenames, vals:FilePath instances
         self.existing_file_dict = {}
         # keys:filenames,vals:instance name
-        self.distributed_file_dict = {}
 
         self.model_relative_path = collections.OrderedDict()
 
         self._last_loaded_sim_path = None
         self._last_loaded_model_relative_path = collections.OrderedDict()
-
-    @property
-    def python_path(self):
-        return self._python_path
 
     def copy_files(self, copy_relative_only=True):
         num_files_copied = 0
@@ -158,13 +152,6 @@ class MFFileMgmt(object):
                     for path_piece in arr_string[2:]:
                         new_string = os.path.join(new_string, path_piece)
         return new_string
-
-    @staticmethod
-    def convert_to_absolute(self, path):
-        if path.isabs():
-            return path
-        else:
-            return os.path.join(os.getcwd(), path)
 
     def set_last_accessed_path(self):
         self._last_loaded_sim_path = self._sim_path

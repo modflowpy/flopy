@@ -27,31 +27,10 @@ class DfnType(Enum):
     unknown = 999
 
 
-class ReaderType(Enum):
-    urword = 1
-    readarray = 2
-    u1ddbl = 3
-    u2ddbl = 4
-
-
-class ItemType(Enum):
-    recarray = 1
-    integer = 2
-
-
-class BlockType(Enum):
-    scalers = 1
-    single_data_list = 2
-    single_data_array = 3
-    multi_data_array = 4
-
-
 class Dfn(object):
     def __init__(self):
         # directories
         self.dfndir = os.path.join('.', 'dfn')
-        self.texdir = os.path.join('.', 'tex')
-        self.mddir = os.path.join('.', 'md')
         self.common = os.path.join(self.dfndir, 'common.dfn')
         # FIX: Transport - multi packages are hard coded
         self.multi_package = {'gwfmvr': 0, 'exggwfgwf': 0, 'gwfchd': 0,
@@ -207,7 +186,7 @@ class DfnPackage(Dfn):
                 block_dataset_struct.set_path(
                     path + (new_data_item_struct.block_name,))
                 block_dataset_struct.add_item(new_data_item_struct)
-                current_block.add_dataset(block_dataset_struct, True)
+                current_block.add_dataset(block_dataset_struct)
             else:
                 new_data_item_struct.block_type = block_type
                 dataset_items_in_block[
@@ -281,8 +260,7 @@ class DfnPackage(Dfn):
                             path + (new_data_item_struct.block_name,))
                         block_dataset_struct.add_item(
                             block_data_item_struct)
-                        current_block.add_dataset(block_dataset_struct,
-                                                  True)
+                        current_block.add_dataset(block_dataset_struct)
         return block_dict
 
     def _new_dataset(self, new_data_item_struct, current_block,
@@ -416,7 +394,7 @@ class DfnFile(Dfn):
                     block_dataset_struct.set_path(
                         path + (new_data_item_struct.block_name,))
                     block_dataset_struct.add_item(new_data_item_struct)
-                    current_block.add_dataset(block_dataset_struct, True)
+                    current_block.add_dataset(block_dataset_struct)
                 else:
                     new_data_item_struct.block_type = block_type
                     dataset_items_in_block[
@@ -490,8 +468,7 @@ class DfnFile(Dfn):
                                 path + (new_data_item_struct.block_name,))
                             block_dataset_struct.add_item(
                                 block_data_item_struct)
-                            current_block.add_dataset(block_dataset_struct,
-                                                      True)
+                            current_block.add_dataset(block_dataset_struct)
         dfn_fp.close()
         return block_dict
 
@@ -570,7 +547,6 @@ class StructException(Exception):
     def __init__(self, error, location):
         Exception.__init__(self,
                            "StructException: {} ({})".format(error, location))
-        self.location = location
 
 
 class MFDataFileException(Exception):
@@ -706,16 +682,11 @@ class MFDataItemStructure(object):
     -------
     remove_cellid : (resolved_shape : list, cellid_size : int)
         removes the cellid size from the shape of a data item
-    resolve_shape : (simulation_data : SimulationData)
-        resolves the shape of this data item based on the simulation data
-        contained in simulation_data
     set_path : (path : tuple)
         sets the path to this data item to path
     get_rec_type : () : object type
         gets the type of object of this data item to be used in a numpy
         recarray
-    valid_type : (value : any)
-        returns true of value is an acceptable type for this data item
 
     See Also
     --------
@@ -915,26 +886,6 @@ class MFDataItemStructure(object):
                 resolved_shape[index] = 1
                 break
 
-    def resolve_shape(self, simulation_data):
-        shape_dimensions = []
-        parent_path = self.path[:-2]
-        for item in self.shape:
-            if item == 'naux':
-                # shape is number of aux variables
-                result = simulation_data.mfdata.find_in_path(parent_path,
-                                                             'auxnames')
-                if result[0]:
-                    shape_dimensions.append(len(result[0].get_data()))
-                else:
-                    shape_dimensions.append(0)
-            else:
-                result = simulation_data.mfdata.find_in_path(parent_path, item)
-                if result[0]:
-                    shape_dimensions.append(int(result[0].get_data()))
-                else:
-                    shape_dimensions.append(item)
-        return shape_dimensions
-
     @staticmethod
     def _get_boolean_val(bool_option_line):
         if len(bool_option_line) <= 1:
@@ -988,24 +939,6 @@ class MFDataItemStructure(object):
         if item_type == str or self.is_cellid:
             return object
         return item_type
-
-    def valid_type(self, value):
-        if self.type == 'float':
-            if not isinstance(value, float):
-                return False
-        elif self.type == 'int' or self.type == 'integer':
-            if not isinstance(value, int):
-                return False
-        elif self.type == 'constant':
-            if not isinstance(value, bool):
-                return False
-        elif self.type == 'string':
-            if not isinstance(value, str):
-                return False
-        elif self.type == 'list-defined':
-            if not isinstance(value, list):
-                return False
-        return True
 
 
 class MFDataStructure(object):
@@ -1128,7 +1061,6 @@ class MFDataStructure(object):
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
-        self.file_line = 0
         self.block_type = data_item.block_type
         self.block_variable = data_item.block_variable
         self.model_data = model_data
@@ -1224,8 +1156,6 @@ class MFDataStructure(object):
                     if isinstance(item, MFDataItemStructure):
                         self.file_data = self.file_data or \
                                          item.indicates_file_name()
-                        if item.is_file_name():
-                            self.file_line = location
                     # replace placeholder value
                     self.data_item_structures[location] = item
                     item_added = True
@@ -1237,8 +1167,6 @@ class MFDataStructure(object):
                 if isinstance(item, MFDataItemStructure):
                     self.file_data = self.file_data or \
                                      item.indicates_file_name()
-                    if item.is_file_name():
-                        self.file_line = location
                 self.data_item_structures.append(item)
                 item_added = True
             self.optional = self.optional and item.optional
@@ -1554,7 +1482,7 @@ class MFBlockStructure(object):
             return True
         return False
 
-    def add_dataset(self, dataset, block_header_dataset=False):
+    def add_dataset(self, dataset):
         dataset.set_path(self.path)
         if dataset.block_variable:
             self.block_header_structure.append(dataset)
@@ -1645,7 +1573,6 @@ class MFInputFileStructure(object):
         self.dfn_type = dfn_file.dfn_type
         self.dfn_file_name = dfn_file.dfn_file_name
         self.description = ''
-        self.package_plot_dictionary = {}
         self.path = path + (self.file_type,)
         self.model_file = model_file  # file belongs to a specific model
         self.read_as_arrays = False
@@ -1722,7 +1649,6 @@ class MFModelStructure(object):
         self.name_file_struct_obj = None
         self.package_struct_objs = OrderedDict()
         self.utl_struct_objs = utl_struct_objs
-        self.package_plot_dictionary = {}
 
     def add_namefile(self, dfn_file, common):
         self.name_file_struct_obj = MFInputFileStructure(dfn_file,
@@ -1890,23 +1816,6 @@ class MFSimulationStructure(object):
         for model_struct in self.model_struct_objs:
             valid = valid and model_struct.is_valid()
         return valid
-
-    def get_data_struct_mpd(self, model_type, package_type, data_name):
-        package_struct = None
-        if model_type in self.model_struct_objs:
-            model_struct = self.model_struct_objs[model_type]
-            if package_type in model_struct.package_struct_objs:
-                package_struct = model_struct.package_struct_objs[package_type]
-            elif package_type in model_struct.utl_struct_objs:
-                package_struct = model_struct.package_struct_objs[package_type]
-        elif package_type in self.package_struct_objs:
-            package_struct = self.package_struct_objs[package_type]
-        elif package_type in self.utl_struct_objs:
-            package_struct = self.utl_struct_objs[package_type]
-        if package_struct:
-            return package_struct.get_data_structure(data_name)
-        else:
-            return None
 
     def get_data_structure(self, path):
         if path[0] in self.package_struct_objs:
