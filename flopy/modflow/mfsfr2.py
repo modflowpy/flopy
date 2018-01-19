@@ -375,7 +375,8 @@ class ModflowSfr2(Package):
         self.segment_data = {0: self.get_empty_segment_data(nss)}
         if segment_data is not None:
             for i in segment_data.keys():
-                self.segment_data[i] = self.get_empty_segment_data(nss)
+                nseg = len(segment_data[i])
+                self.segment_data[i] = self.get_empty_segment_data(nseg)
                 for n in segment_data[i].dtype.names:
                     #inds = (segment_data[i]['nseg'] -1).astype(int)
                     self.segment_data[i][n] = segment_data[i][n]
@@ -1122,14 +1123,14 @@ class ModflowSfr2(Package):
     def get_variable_by_stress_period(self, varname):
 
         import numpy.lib.recfunctions as rfn
-        var = []
         dtype = []
+        all_data = np.zeros((self.nss, self.nper), dtype=float)
         for per in range(self.nper):
-            var.append(self.segment_data[per][varname].copy())
+            inds = self.segment_data[per].nseg - 1
+            all_data[inds, per] = self.segment_data[per][varname]
             dtype.append(('{}{}'.format(varname, per), float))
-        ra = np.array(var).transpose()
-        isvar = ra.sum(axis=1) != 0
-        ra = np.core.records.fromarrays(ra[isvar].transpose().copy(), dtype=dtype)
+        isvar = all_data.sum(axis=1) != 0
+        ra = np.core.records.fromarrays(all_data[isvar].transpose().copy(), dtype=dtype)
         segs = self.segment_data[0].nseg[isvar]
         isseg = np.array([True if s in segs else False for s in self.reach_data.iseg])
         isinlet = isseg & (self.reach_data.ireach == 1)
