@@ -93,6 +93,7 @@ class MFList(mfdata.MFMultiDimVar):
         self._data_storage = self._new_storage()
         self._last_line_info = []
         self._data_line = None
+        self._temp_dict = {}
         if data is not None:
             self.set_data(data, True)
 
@@ -344,6 +345,7 @@ class MFList(mfdata.MFMultiDimVar):
                                  pre_data_comments=None)
 
         self._data_dimensions.lock()
+        self._temp_dict = {}
         self._last_line_info = []
         simple_line = False
         data_loaded = []
@@ -612,8 +614,18 @@ class MFList(mfdata.MFMultiDimVar):
                                         # keystring and should be stored,
                                         # add a string data_item for the
                                         # keyword
-                                        keyword_data_item = deepcopy(data_item)
-                                        keyword_data_item.type = 'string'
+                                        if data_item.name in \
+                                                self._temp_dict:
+                                            # used cached data item for
+                                            # performance
+                                            keyword_data_item = \
+                                                self._temp_dict[data_item.name]
+                                        else:
+                                            keyword_data_item = \
+                                                deepcopy(data_item)
+                                            keyword_data_item.type = 'string'
+                                            self._temp_dict[data_item.name] \
+                                                = keyword_data_item
                                         data_index, more_data_expected, \
                                             unknown_repeats = \
                                             self._append_data(
