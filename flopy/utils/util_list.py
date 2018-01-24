@@ -389,30 +389,39 @@ class MfList(object):
 
         # make a dataframe of all data for all stress periods
         names = ['k', 'i', 'j']
+
+        # find relevant variable names
+        # may have to iterate over the first stress period
         for per in range(self.model.nper):
             if hasattr(self.data[per], 'dtype'):
-                bndnames = list([n for n in self.data[per].dtype.names
+                varnames = list([n for n in self.data[per].dtype.names
                                  if n not in names])
                 break
+
+        # create list of dataframes for each stress period
+        # each with index of k, i, j
         dfs = []
         for per in range(self.model.nper):
             recs = self.data[per]
             if recs is None or recs is 0:
-                columns = names + list(['{}{}'.format(c, per) for c in bndnames])
+                # add an empty dataframe if a stress period is
+                # set to 0 (e.g. no pumping during a predevelopment
+                # period)
+                columns = names + list(['{}{}'.format(c, per) for c in varnames])
                 dfi = pd.DataFrame(data=None, columns=columns)
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
                 dfi = dfi.set_index(names)
-                dfi.columns = list(['{}{}'.format(c, per) for c in bndnames])
+                dfi.columns = list(['{}{}'.format(c, per) for c in varnames])
             dfs.append(dfi)
         df = pd.concat(dfs, axis=1)
         if squeeze:
             keep = []
-            for c in bndnames:
-                diffcols = list([n for n in df.columns if c in n])
+            for var in varnames:
+                diffcols = list([n for n in df.columns if var in n])
                 diff = df[diffcols].diff(axis=1)
-                diff['{}0'.format(c)] = 1  # always return the first stress period
+                diff['{}0'.format(var)] = 1  # always return the first stress period
                 changed = diff.sum(axis=0) != 0
                 keep.append(df.loc[:, changed.index[changed]])
             df = pd.concat(keep, axis=1)
