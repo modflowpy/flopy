@@ -346,7 +346,8 @@ class ArrayUtil(object):
         compares two lists, returns true if they are identical (with max_error)
     spilt_data_line : (line : string) : list
         splits a string apart (using split) and then cleans up the results
-        dealing with various MODFLOW input file releated delimiters
+        dealing with various MODFLOW input file releated delimiters.  returns
+        the delimiter type used.
     clean_numeric : (text : string) : string
         returns a cleaned up version of 'text' with only numeric characters
     save_array_diff : (first_array : list, second_array : list,
@@ -357,6 +358,14 @@ class ArrayUtil(object):
     save_array(filename : string, multi_array : list)
         saves 'multi_array' to the file 'filename'
     """
+    numeric_chars = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0,
+                     '6': 0, '7': 0, '8': 0, '9': 0, '.': 0, '-': 0}
+    quote_list = {"'", '"'}
+    delimiter_list = {',': 0, '\t': 0, ' ': 0}
+    delimiter_used = None
+    line_num = 0
+    consistent_delim = False
+
     def __init__(self, path=None, max_error=0.01):
         self.max_error = max_error
         if path:
@@ -447,32 +456,50 @@ class ArrayUtil(object):
         return True
 
     @staticmethod
-    def split_data_line(line, external_file=False):
-        quote_list = {"'", '"'}
-        delimiter_list = {',': 0, '\t': 0, ' ': 0}
-        clean_line = line.strip().split()
-        if external_file:
-            # try lots of different delimitiers for external files and use the
-            # one the breaks the data apart the most
-            max_split_size = len(clean_line)
-            max_split_type = None
-            for delimiter in delimiter_list:
-                alt_split = line.strip().split(delimiter)
-                if len(alt_split) > max_split_size:
-                    max_split_size = len(alt_split)
-                    max_split_type = delimiter
-            if max_split_type is not None:
-                clean_line = line.strip().split(max_split_type)
+    def reset_delimiter_used():
+        ArrayUtil.delimiter_used = None
+        ArrayUtil.line_num = 0
+        ArrayUtil.consistent_delim = True
+
+    @staticmethod
+    def split_data_line(line, external_file=False, delimiter_conf_length=15):
+        if ArrayUtil.line_num > delimiter_conf_length and \
+                ArrayUtil.consistent_delim:
+            # consistent delimiter has been found.  continue using that
+            # delimiter without doing further checks
+            if ArrayUtil.delimiter_used == None:
+                clean_line = line.strip().split()
+            else:
+                clean_line = line.strip().split(ArrayUtil.delimiter_used)
+        else:
+            clean_line = line.strip().split()
+            if external_file:
+                # try lots of different delimitiers for external files and use the
+                # one the breaks the data apart the most
+                max_split_size = len(clean_line)
+                max_split_type = None
+                for delimiter in ArrayUtil.delimiter_list:
+                    alt_split = line.strip().split(delimiter)
+                    if len(alt_split) > max_split_size:
+                        max_split_size = len(alt_split)
+                        max_split_type = delimiter
+                if max_split_type is not None:
+                    clean_line = line.strip().split(max_split_type)
+                    if ArrayUtil.line_num == 0:
+                        ArrayUtil.delimiter_used = max_split_type
+                    elif ArrayUtil.delimiter_used != max_split_type:
+                        ArrayUtil.consistent_delim = False
+        ArrayUtil.line_num += 1
 
         arr_fixed_line = []
         index = 0
         # loop through line to fix quotes and delimiters
         while index < len(clean_line):
             item = clean_line[index]
-            if item not in delimiter_list:
-                if item and item[0] in quote_list:
+            if item and item not in ArrayUtil.delimiter_list:
+                if item and item[0] in ArrayUtil.quote_list:
                     # starts with a quote, handle quoted text
-                    if item[-1] in quote_list:
+                    if item[-1] in ArrayUtil.quote_list:
                         arr_fixed_line.append(item[1:-1])
                     else:
                         arr_fixed_line.append(item[1:])
@@ -481,7 +508,7 @@ class ArrayUtil(object):
                             index += 1
                             if index < len(clean_line):
                                 item = clean_line[index]
-                                if item[-1] in quote_list:
+                                if item[-1] in ArrayUtil.quote_list:
                                     arr_fixed_line[-1] = \
                                         '{} {}'.format(arr_fixed_line[-1],
                                                        item[:-1])
@@ -500,16 +527,14 @@ class ArrayUtil(object):
     @staticmethod
     def clean_numeric(text):
         if isinstance(text, str):
-            numeric_chars = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0,
-                             '6': 0, '7': 0, '8': 0, '9': 0, '.': 0, '-': 0}
             # remove all non-numeric text from leading and trailing positions
             # of text
             if text:
-                while text and (text[0] not in numeric_chars or text[-1]
-                                not in numeric_chars):
-                    if text[0] not in numeric_chars:
+                while text and (text[0] not in ArrayUtil.numeric_chars or text[-1]
+                                not in ArrayUtil.numeric_chars):
+                    if text[0] not in ArrayUtil.numeric_chars:
                         text = text[1:]
-                    if text and text[-1] not in numeric_chars:
+                    if text and text[-1] not in ArrayUtil.numeric_chars:
                         text = text[:-1]
         return text
 

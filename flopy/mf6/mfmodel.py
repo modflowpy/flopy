@@ -219,6 +219,7 @@ class MFModel(PackageContainer):
                     filemgr = simulation.simulation_data.mfpath
                     fname = filemgr.strip_model_relative_path(model_name,
                                                               fname)
+                print('loading {}...'.format(fname))
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
 

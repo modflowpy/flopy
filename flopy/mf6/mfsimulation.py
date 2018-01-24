@@ -11,6 +11,7 @@ from .mfbase import PackageContainer, MFFileMgmt, ExtFileAction
 from .mfbase import PackageContainerType
 from .mfmodel import MFModel
 from .mfpackage import MFPackage
+from .data.mfstructure import DatumType
 from .data import mfstructure, mfdata
 from .utils import binaryfile_utils
 from .utils import mfobservation
@@ -83,7 +84,7 @@ class SimulationDict(collections.OrderedDict):
                             # found key_leaf as a data item name in the data in
                             # the dictionary
                             return item, data_item_index
-                        if data_item_struct.type != 'keyword':
+                        if data_item_struct.type != DatumType.keyword:
                             data_item_index += 1
         return None, None
 
@@ -161,8 +162,8 @@ class MFSimulationData(object):
         self.constant_formatting = ['constant', '']
         self.max_columns_of_data = 20
         self.wrap_multidim_arrays = True
-        self.float_precision = 5
-        self.float_characters = 12
+        self.float_precision = 8
+        self.float_characters = 15
         self.scientific_notation_upper_threshold = 100000
         self.scientific_notation_lower_threshold = 0.001
         self.verify_external_data = True

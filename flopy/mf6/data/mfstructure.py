@@ -170,7 +170,7 @@ class DfnPackage(Dfn):
                            0].data_item_structures) > 0 and \
                                 current_block.block_header_structure[
                                     0].data_item_structures[
-                                    0].type.lower() == 'integer':
+                                    0].type == DatumType.integer:
                     block_type = BlockType.transient
                 else:
                     block_type = BlockType.multiple
@@ -196,7 +196,7 @@ class DfnPackage(Dfn):
                 item_location_found = False
                 if new_data_item_struct.name in \
                         self.dataset_items_needed_dict:
-                    if new_data_item_struct.type == 'record':
+                    if new_data_item_struct.type == DatumType.record:
                         # record within a record - create a data set in
                         # place of the data item
                         new_data_item_struct = self._new_dataset(
@@ -217,7 +217,7 @@ class DfnPackage(Dfn):
                     new_data_item_struct.set_path(
                         keystring_items_needed_dict[
                             new_data_item_struct.name].path)
-                    if new_data_item_struct.type == 'record':
+                    if new_data_item_struct.type == DatumType.record:
                         # record within a keystring - create a data set in
                         # place of the data item
                         new_data_item_struct = self._new_dataset(
@@ -230,7 +230,7 @@ class DfnPackage(Dfn):
                         = new_data_item_struct
                     item_location_found = True
 
-                if new_data_item_struct.type == 'keystring':
+                if new_data_item_struct.type == DatumType.keystring:
                     # add keystrings to search list
                     for key, val in \
                             new_data_item_struct.keystring_dict.items():
@@ -248,7 +248,7 @@ class DfnPackage(Dfn):
                         block_data_item_struct = MFDataItemStructure()
                         block_data_item_struct.name = 'order_num'
                         block_data_item_struct.data_items = ['order_num']
-                        block_data_item_struct.type = 'integer'
+                        block_data_item_struct.type = DatumType.integer
                         block_data_item_struct.longname = 'order_num'
                         block_data_item_struct.description = \
                             'internal variable to keep track of ' \
@@ -375,10 +375,10 @@ class DfnFile(Dfn):
                 # resolve block type
                 if len(current_block.block_header_structure) > 0:
                     if len(current_block.block_header_structure[
-                               0].data_item_structures) > 0 and \
-                                    current_block.block_header_structure[
-                                        0].data_item_structures[
-                                        0].type.lower() == 'integer':
+                                0].data_item_structures) > 0 and \
+                                current_block.block_header_structure[
+                                0].data_item_structures[0].type == \
+                                DatumType.integer:
                         block_type = BlockType.transient
                     else:
                         block_type = BlockType.multiple
@@ -404,7 +404,7 @@ class DfnFile(Dfn):
                     item_location_found = False
                     if new_data_item_struct.name in \
                             self.dataset_items_needed_dict:
-                        if new_data_item_struct.type == 'record':
+                        if new_data_item_struct.type == DatumType.record:
                             # record within a record - create a data set in
                             # place of the data item
                             new_data_item_struct = self._new_dataset(
@@ -425,7 +425,7 @@ class DfnFile(Dfn):
                         new_data_item_struct.set_path(
                             keystring_items_needed_dict[
                                 new_data_item_struct.name].path)
-                        if new_data_item_struct.type == 'record':
+                        if new_data_item_struct.type == DatumType.record:
                             # record within a keystring - create a data set in
                             # place of the data item
                             new_data_item_struct = self._new_dataset(
@@ -438,7 +438,7 @@ class DfnFile(Dfn):
                             = new_data_item_struct
                         item_location_found = True
 
-                    if new_data_item_struct.type == 'keystring':
+                    if new_data_item_struct.type == DatumType.keystring:
                         # add keystrings to search list
                         for key, val in \
                                 new_data_item_struct.keystring_dict.items():
@@ -456,7 +456,7 @@ class DfnFile(Dfn):
                             block_data_item_struct = MFDataItemStructure()
                             block_data_item_struct.name = 'order_num'
                             block_data_item_struct.data_items = ['order_num']
-                            block_data_item_struct.type = 'integer'
+                            block_data_item_struct.type = DatumType.integer
                             block_data_item_struct.longname = 'order_num'
                             block_data_item_struct.description = \
                                 'internal variable to keep track of ' \
@@ -528,6 +528,19 @@ class DataType(Enum):
     list_multiple = 7
     scalar_transient = 8
     scalar_keyword_transient = 9
+
+
+class DatumType(Enum):
+    keyword = 1
+    integer = 2
+    double_precision = 3
+    string = 4
+    constant = 5
+    list_defined = 6
+    keystring = 7
+    record = 8
+    repeating_record = 9
+    recarray = 10
 
 
 class BlockType(Enum):
@@ -706,6 +719,7 @@ class MFDataItemStructure(object):
         self.name_list = []
         self.python_name = None
         self.type = None
+        self.type_string = None
         self.type_obj = None
         self.valid_values = []
         self.data_items = None
@@ -750,12 +764,14 @@ class MFDataItemStructure(object):
             elif arr_line[0] == 'type':
                 type_line = arr_line[1:]
                 assert (len(type_line) > 0)
-                self.type = type_line[0].lower()
-                if self.type == 'recarray' or self.type == 'record' or \
-                        self.type == 'repeating_record' \
-                        or self.type == 'keystring':
+                self.type_string = type_line[0].lower()
+                self.type = self._str_to_enum_type(type_line[0])
+                if self.type == DatumType.recarray or \
+                        self.type == DatumType.record or \
+                        self.type == DatumType.repeating_record or \
+                        self.type == DatumType.keystring:
                     self.data_items = type_line[1:]
-                    if self.type == 'keystring':
+                    if self.type == DatumType.keystring:
                         for item in self.data_items:
                             self.keystring_dict[item.lower()] = 0
                 else:
@@ -822,10 +838,10 @@ class MFDataItemStructure(object):
                 self.preserve_case = self._get_boolean_val(arr_line)
 
     def get_type_string(self):
-        return '[{}]'.format(self.type)
+        return '[{}]'.format(self.type_string)
 
     def get_description(self, line_size, initial_indent, level_indent):
-        item_desc = '* {} ({}) {}'.format(self.name, self.type,
+        item_desc = '* {} ({}) {}'.format(self.name, self.type_string,
                                           self.description)
         twr = TextWrapper(width=line_size, initial_indent=initial_indent,
                           subsequent_indent='  {}'.format(
@@ -847,7 +863,7 @@ class MFDataItemStructure(object):
 
 
     def get_keystring_desc(self, line_size, initial_indent, level_indent):
-        assert(self.type == 'keystring')
+        assert(self.type == DatumType.keystring)
 
         # get description of keystring elements
         description = ''
@@ -922,17 +938,44 @@ class MFDataItemStructure(object):
                 mfstruct.dimension_dict[dim_path] = [self]
 
     def _get_type(self):
-        if self.type == 'float' or self.type == 'double':
+        if self.type == DatumType.double_precision:
             return float
-        elif self.type == 'int' or self.type == 'integer':
+        elif self.type == DatumType.integer:
             return int
-        elif self.type == 'constant':
+        elif self.type == DatumType.constant:
             return bool
-        elif self.type == 'string':
+        elif self.type == DatumType.string:
             return str
-        elif self.type == 'list-defined':
+        elif self.type == DatumType.list_defined:
             return str
         return str
+
+    def _str_to_enum_type(self, type_string):
+        if type_string.lower() == 'keyword':
+            return DatumType.keyword
+        elif type_string.lower() == 'integer':
+            return DatumType.integer
+        elif type_string.lower() == 'double_precision' or \
+            type_string.lower() == 'double':
+            return DatumType.double_precision
+        elif type_string.lower() == 'string':
+            return DatumType.string
+        elif type_string.lower() == 'constant':
+            return DatumType.constant
+        elif type_string.lower() == 'list-defined':
+            return DatumType.list_defined
+        elif type_string.lower() == 'keystring':
+            return DatumType.keystring
+        elif type_string.lower() == 'record':
+            return DatumType.record
+        elif type_string.lower() == 'recarray':
+            return DatumType.recarray
+        elif type_string.lower() == 'repeating_record':
+            return DatumType.repeating_record
+        else:
+            exc_text = 'Data item type "{}" not supported.'.format(type_string)
+            print(exc_text)
+            raise StructException(exc_text, self.path)
 
     def get_rec_type(self):
         item_type = self.type_obj
@@ -1071,8 +1114,8 @@ class MFDataStructure(object):
         self.data_item_structures = []
         self.expected_data_items = OrderedDict()
         self.shape = data_item.shape
-        if self.type == 'recarray' or self.type == 'record' or \
-                self.type == 'repeating_record':
+        if self.type == DatumType.recarray or self.type == DatumType.record \
+                or self.type == DatumType.repeating_record:
             # record expected data for later error checking
             for data_item_name in data_item.data_items:
                 self.expected_data_items[data_item_name] = len(
@@ -1089,10 +1132,10 @@ class MFDataStructure(object):
 
     def get_keywords(self):
         keywords = []
-        if self.type == 'recarray' or self.type == 'record' or \
-                self.type == 'repeating_record':
+        if self.type == DatumType.recarray or self.type == DatumType.record \
+                or self.type == DatumType.repeating_record:
             for data_item_struct in self.data_item_structures:
-                if data_item_struct.type == 'keyword':
+                if data_item_struct.type == DatumType.keyword:
                     if len(keywords) == 0:
                         # create first keyword tuple
                         for name in data_item_struct.name_list:
@@ -1107,7 +1150,7 @@ class MFDataStructure(object):
                             keywords = keywords + new_keywords
                         else:
                             keywords = new_keywords
-                elif data_item_struct.type == 'keystring':
+                elif data_item_struct.type == DatumType.keystring:
                     for keyword_item in data_item_struct.data_items:
                         keywords.append((keyword_item,))
                 elif len(keywords) == 0:
@@ -1139,9 +1182,10 @@ class MFDataStructure(object):
 
     def add_item(self, item, record=False):
         item_added = False
-        if item.type != 'recarray' and ((item.type != 'record' and
-                                         item.type != 'repeating_record') or
-           record == True):
+        if item.type != DatumType.recarray and \
+                ((item.type != DatumType.record and
+                item.type != DatumType.repeating_record) or
+                record == True):
             assert (item.name in self.expected_data_items)
             item.set_path(self.path)
             if len(self.data_item_structures) == 0:
@@ -1179,7 +1223,7 @@ class MFDataStructure(object):
         self.path = path + (self.name,)
 
     def get_datatype(self):
-        if self.type == 'recarray':
+        if self.type == DatumType.recarray:
             if self.block_type != BlockType.single and not self.block_variable:
                 if self.block_type == BlockType.transient:
                     return DataType.list_transient
@@ -1187,7 +1231,8 @@ class MFDataStructure(object):
                     return DataType.list_multiple
             else:
                 return DataType.list
-        if self.type == 'record' or self.type == 'repeating_record':
+        if self.type == DatumType.record or self.type == \
+                DatumType.repeating_record:
             record_size, repeating_data_item = self.get_record_size()
             if (record_size >= 1 and not self.all_keywords()) or \
                     repeating_data_item:
@@ -1207,7 +1252,7 @@ class MFDataStructure(object):
                     return DataType.scalar
         elif len(self.data_item_structures) > 0 and \
                 self.data_item_structures[0].repeating:
-            if self.data_item_structures[0].type.lower() == 'string':
+            if self.data_item_structures[0].type == DatumType.string:
                 return DataType.list
             else:
                 if self.block_type == BlockType.single:
@@ -1215,7 +1260,7 @@ class MFDataStructure(object):
                 else:
                     return DataType.array_transient
         elif len(self.data_item_structures) > 0 and \
-                self.data_item_structures[0].type.lower() == 'keyword':
+                self.data_item_structures[0].type == DatumType.keyword:
             if self.block_type != BlockType.single and not self.block_variable:
                 return DataType.scalar_keyword_transient
             else:
@@ -1239,10 +1284,11 @@ class MFDataStructure(object):
         count = 0
         repeating = False
         for data_item_structure in self.data_item_structures:
-            if data_item_structure.type == 'record':
+            if data_item_structure.type == DatumType.record:
                 count += data_item_structure.get_record_size()[0]
             else:
-                if data_item_structure.type != 'keyword' or count > 0:
+                if data_item_structure.type != DatumType.keyword or \
+                        count > 0:
                     if data_item_structure.repeating:
                         # count repeats as one extra record
                         repeating = True
@@ -1251,11 +1297,11 @@ class MFDataStructure(object):
 
     def all_keywords(self):
         for data_item_structure in self.data_item_structures:
-            if data_item_structure.type == 'record':
+            if data_item_structure.type == DatumType.record:
                 if not data_item_structure.all_keywords():
                     return False
             else:
-                if data_item_structure.type != 'keyword':
+                if data_item_structure.type != DatumType.keyword:
                     return False
         return True
 
@@ -1277,12 +1323,13 @@ class MFDataStructure(object):
 
     def get_docstring_type_array(self, type_array):
         for index, item in enumerate(self.data_item_structures):
-            if item.type == 'record':
+            if item.type == DatumType.record:
                 item.get_docstring_type_array(type_array)
             else:
                 if self.display_item(index):
-                    if self.type == 'recarray' or self.type == 'record' or \
-                       self.type == 'repeating_record':
+                    if self.type == DatumType.recarray or self.type == \
+                            DatumType.record or \
+                            self.type == DatumType.repeating_record:
                         type_array.append('{}'.format(item.name))
                     else:
                         type_array.append('{}'.format(
@@ -1297,7 +1344,7 @@ class MFDataStructure(object):
             item = datastr.data_item_structures[index]
             if item is None:
                 continue
-            if item.type == 'record':
+            if item.type == DatumType.record:
                 item_desc = item.get_description(line_size,
                                                  initial_indent + level_indent,
                                                  level_indent)
@@ -1313,7 +1360,7 @@ class MFDataStructure(object):
                                   initial_indent))
                 item_desc = '\n'.join(twr.wrap(item_desc))
                 description = '{}{}'.format(description, item_desc)
-                if item.type == 'keystring':
+                if item.type == DatumType.keystring:
                     keystr_desc = item.get_keystring_desc(line_size,
                                                           initial_indent +
                                                           level_indent,
@@ -1337,7 +1384,7 @@ class MFDataStructure(object):
 
     def get_type_array(self, type_array):
         for index, item in enumerate(self.data_item_structures):
-            if item.type == 'record':
+            if item.type == DatumType.record:
                 item.get_type_array(type_array)
             else:
                 if self.display_item(index):
@@ -1345,7 +1392,7 @@ class MFDataStructure(object):
                         self._resolve_item_type(item))))
 
     def _resolve_item_type(self, item):
-        item_type = item.type
+        item_type = item.type_string
         first_nk_idx = self.first_non_keyword_index()
         # single keyword is type boolean
         if item_type == 'keyword' and \
@@ -1364,7 +1411,7 @@ class MFDataStructure(object):
         item = self.data_item_structures[item_num]
         first_nk_idx = self.first_non_keyword_index()
         # all keywords excluded if there is a non-keyword
-        if not (item.type == 'keyword' and first_nk_idx is not None):
+        if not (item.type == DatumType.keyword and first_nk_idx is not None):
             # ignore first keyword if there are two keywords
             if len(self.data_item_structures) == 2 and first_nk_idx is None \
               and item_num == 0:
@@ -1372,36 +1419,41 @@ class MFDataStructure(object):
             return True
         return False
 
-    def get_datum_type(self, numpy_type=False):
+    def get_datum_type(self, numpy_type=False, return_enum_type=False):
         data_item_types = self.get_data_item_types()
         for var_type in data_item_types:
-            if var_type == 'float' or var_type == 'double' or var_type == \
-              'int' or var_type == 'integer' or var_type == 'string':
-                if numpy_type:
-                    if var_type == 'float' or var_type == 'double':
-                        return np.float
-                    elif var_type == 'int' or var_type == 'integer':
-                        return np.int
-                    else:
-                        return np.object
+            if var_type[0] == DatumType.double_precision or var_type[0] == \
+              DatumType.integer or var_type[0] == DatumType.string:
+                if return_enum_type:
+                    return var_type[0]
                 else:
-                    return var_type
+                    if numpy_type:
+                        if var_type[0] == DatumType.double_precision:
+                            return np.float
+                        elif var_type[0] == DatumType.integer:
+                            return np.int
+                        else:
+                            return np.object
+                    else:
+                        return var_type[2]
         return None
 
     def get_data_item_types(self):
         data_item_types = []
         for data_item in self.data_item_structures:
-            if data_item.type == 'record':
+            if data_item.type == DatumType.record:
                 # record within a record
                 data_item_types += data_item.get_data_item_types()
             else:
-                data_item_types.append(data_item.type)
+                data_item_types.append([data_item.type,
+                                        data_item.type_string,
+                                        data_item.type_obj])
         return data_item_types
 
     def first_non_keyword_index(self):
         for data_item, index in zip(self.data_item_structures,
                                     range(0, len(self.data_item_structures))):
-            if data_item.type != 'keyword':
+            if data_item.type != DatumType.keyword:
                 return index
         return None
 
@@ -1512,7 +1564,7 @@ class MFBlockStructure(object):
     def get_all_recarrays(self):
         recarray_list = []
         for ds_key, item in self.data_structures.items():
-            if item.type == 'recarray':
+            if item.type == DatumType.recarray:
                 recarray_list.append(item)
         return recarray_list
 
