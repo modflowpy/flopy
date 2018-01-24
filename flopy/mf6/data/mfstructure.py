@@ -716,6 +716,10 @@ class MFDataItemStructure(object):
         self.contained_keywords = {'file_name':True}
         self.block_name = None
         self.name = None
+        self.name_length = None
+        self.is_aux = False
+        self.is_boundname = False
+        self.is_mname = False
         self.name_list = []
         self.python_name = None
         self.type = None
@@ -757,6 +761,14 @@ class MFDataItemStructure(object):
                 # don't allow name to be a python keyword
                 if keyword.iskeyword(self.name):
                     self.python_name = '{}_'.format(self.python_name)
+                # performance optimizations
+                if self.name == 'aux':
+                    self.is_aux = True
+                if self.name == 'boundname':
+                    self.is_boundname = True
+                if self.name[0:5] == 'mname':
+                    self.is_mname = True
+                self.name_length = len(self.name)
             elif arr_line[0] == 'other_names':
                 arr_names = ' '.join(arr_line[1:]).lower().split(',')
                 for name in arr_names:
@@ -1095,6 +1107,10 @@ class MFDataStructure(object):
         self.path = None
         self.optional = data_item.optional
         self.name = data_item.name
+        self.name_length = len(self.name)
+        self.is_aux = data_item.is_aux
+        self.is_boundname = data_item.is_boundname
+        self.is_mname = data_item.is_mname
         self.name_list = data_item.name_list
         self.python_name = data_item.python_name
         self.longname = data_item.longname

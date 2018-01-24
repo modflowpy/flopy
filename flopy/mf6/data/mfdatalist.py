@@ -164,20 +164,21 @@ class MFList(mfdata.MFMultiDimVar):
         self._data_dimensions.lock()
         # init
         indent = self._simulation_data.indent_string
-        file_entry = ''
+        file_entry = []
         storage = self._get_storage_obj()
         if storage is None or not storage.has_data():
-            return file_entry
+            return ''
 
         # write out initial comments
         if storage.pre_data_comments:
-            file_entry = storage.pre_data_comments.get_file_entry()
+            file_entry.append(storage.pre_data_comments.get_file_entry())
 
         if storage.layer_storage[0].data_storage_type == \
                 mfdata.DataStorageType.external_file:
             ext_string = self._get_external_formatting_string(0,
                                                               ext_file_action)
-            file_entry = '{}{}{}'.format(indent, indent, ext_string.upper())
+            file_entry.append('{}{}{}'.format(indent, indent,
+                                             ext_string.upper()))
         else:
             data_complete = storage.get_data()
             if storage.layer_storage[0].data_storage_type == \
@@ -191,28 +192,23 @@ class MFList(mfdata.MFMultiDimVar):
                 text_line = []
                 index = 0
                 self._get_file_entry_record(data_complete, mflist_line,
-                                            text_line, index, self.structure)
+                                            text_line, index, self.structure,
+                                            storage, indent)
 
                 # include comments
                 if mflist_line in storage.comments and \
                         storage.comments[mflist_line].text:
                     text_line.append(storage.comments[mflist_line].text)
 
-                if len(file_entry) > 0:
-                    file_entry = '{}{}{}\n'.format(file_entry, indent,
-                                                   indent.join(text_line))
-                else:
-                    file_entry = '{}{}\n'.format(indent,
-                                                 indent.join(text_line))
+                file_entry.append('{}{}\n'.format(indent, indent.
+                                                  join(text_line)))
 
         # unfreeze model grid
         self._data_dimensions.unlock()
-        return file_entry
+        return ''.join(file_entry)
 
     def _get_file_entry_record(self, data_complete, mflist_line, text_line,
-                               index, data_set):
-        indent = self._simulation_data.indent_string
-        storage = self._get_storage_obj()
+                               index, data_set, storage, indent):
         if storage.layer_storage[0].data_storage_type == \
                 mfdata.DataStorageType.internal_constant:
             #  constant data
@@ -224,7 +220,7 @@ class MFList(mfdata.MFMultiDimVar):
         else:
             data_dim = self._data_dimensions
             for data_item in data_set.data_item_structures:
-                if data_item.name == 'aux':
+                if data_item.is_aux:
                     aux_var_names = data_dim.package_dim.get_aux_variables()
                     if aux_var_names is not None:
                         for aux_var_name in aux_var_names[0]:
@@ -239,12 +235,12 @@ class MFList(mfdata.MFMultiDimVar):
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
                     self._get_file_entry_record(data_complete, mflist_line,
-                                                text_line, index, data_item)
-                elif (data_item.name != 'boundname' or
+                                                text_line, index, data_item,
+                                                storage, indent)
+                elif (not data_item.is_boundname or
                         data_dim.package_dim.boundnames()) and \
-                        (not data_item.optional or len(data_item.name) < 5 or
-                        data_item.name[0:5] != 'mname'
-                  or not storage.in_model):
+                        (not data_item.optional or data_item.name_length < 5
+                        or not data_item.is_mname or not storage.in_model):
                     if len(data_complete[mflist_line]) <= index:
                         if data_item.optional == False:
                             except_str = 'ERROR: Not enough data provided ' \
