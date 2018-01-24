@@ -1271,7 +1271,7 @@ class DataStorage(object):
             if self.layer_storage[layer].factor is not None and \
                     apply_multiplier:
                 mult = self.layer_storage[layer].factor
-            elif self._data_type == 'integer':
+            elif self._data_type == DatumType.integer:
                 mult = 1
             else:
                 mult = 1.0
