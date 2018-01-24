@@ -1132,13 +1132,3 @@ class MfList(object):
                 spd[n] = v
             sp_data[kper] = spd
         return sp_data
-
-
-if __name__ == '__main__':
-    import flopy.modflow as fpm
-    f = 'base.nam'
-    ws = r'E:\modflow\fasgwmod\model\mf'
-    mf = fpm.Modflow.load(f, model_ws=ws, load_only=['dis', 'wel'])
-    wel = mf.get_package('WEL')
-    df = wel.stress_period_data.df.copy()
-    print(df.head())
