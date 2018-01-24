@@ -133,7 +133,7 @@ class HeadObservation(object):
 
         #find indices of time series data that are valid
         tmax = model.dis.get_final_totim()
-        keep_idx = time_series_data[:,0] < tmax
+        keep_idx = time_series_data[:,0] <= tmax
         time_series_data = time_series_data[keep_idx,:]
 
         # set the number of observations in this time series
