@@ -3,6 +3,7 @@ mfmodel module.  Contains the MFModel class
 
 """
 import os
+import numpy as np
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfpackage import MFPackage
 from .coordinates import modeldimensions
@@ -55,6 +56,8 @@ class MFModel(PackageContainer):
         a class method that loads a model from files
     write
         writes the simulation to files
+    remove_package : (package : MFPackage)
+        removes package from the model
     set_model_relative_path : (path : string)
         sets the file path to the model folder and updates all model file paths
     is_valid : () : boolean
@@ -351,6 +354,72 @@ class MFModel(PackageContainer):
                 # update files referenced from within packages
                 for package in self.packages:
                     package.set_model_relative_path(model_ws)
+
+    def _remove_package_from_dictionaries(self, package):
+        # remove package from local dictionaries and lists
+        del self._package_paths[package.path]
+        self.packages.remove(package)
+        if package.package_name is not None and \
+                package.package_name.lower() in self.package_name_dict:
+            del self.package_name_dict[package.package_name.lower()]
+        del self.package_key_dict[package.path[-1].lower()]
+        package_list = self.package_type_dict[package.package_type.lower()]
+        package_list.remove(package)
+        if len(package_list) == 0:
+            del self.package_type_dict[package.package_type.lower()]
+
+        # collect keys of items to be removed from main dictionary
+        item_to_remove = []
+        for key, data in self.simulation_data.mfdata.items():
+            is_subkey = True
+            for pitem, ditem in zip(package.path, key):
+                if pitem != ditem:
+                    is_subkey = False
+                    break
+            if is_subkey:
+                item_to_remove.append(key)
+
+        # remove items from main dictionary
+        for key in item_to_remove:
+            del self.simulation_data.mfdata[key]
+
+    def remove_package(self, package):
+        """
+        removes a package and all child packages from the model
+
+        Parameters
+        ----------
+        package : MFPackage
+            package to be removed from the model
+
+        Returns
+        -------
+
+        Examples
+        --------
+        """
+        self._remove_package_from_dictionaries(package)
+
+        # remove package from name file
+        package_data = self.name_file.packagerecarray.get_data()
+        new_rec_array = None
+        for item in package_data:
+            if item[1] != package.filename:
+                if new_rec_array is None:
+                    new_rec_array = np.rec.array(item, package_data.dtype)
+                else:
+                    new_rec_array = np.hstack((item, new_rec_array))
+        self.name_file.packagerecarray.set_data(new_rec_array)
+
+        # build list of child packages
+        child_package_list = []
+        for pkg in self.packages:
+            if pkg.parent_file is not None and pkg.parent_file.path == \
+                    package.path:
+                child_package_list.append(pkg)
+        # remove child packages
+        for child_package in child_package_list:
+            self._remove_package_from_dictionaries(child_package)
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):
