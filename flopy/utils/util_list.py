@@ -389,6 +389,8 @@ class MfList(object):
 
         # make a dataframe of all data for all stress periods
         names = ['k', 'i', 'j']
+        if 'MNW2' in self.package.name:
+            names += ['wellid']
 
         # find relevant variable names
         # may have to iterate over the first stress period
