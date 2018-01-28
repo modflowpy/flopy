@@ -227,7 +227,7 @@ class Package(object):
 
                     if spd_inds_valid:
                         # next check for BCs in inactive cells
-                        chk._stress_period_data_inactivecells(spd)
+                        #chk._stress_period_data_inactivecells(spd)
 
                         # More specific BC checks
                         # check elevations in the ghb, drain, and riv packages
@@ -771,8 +771,10 @@ class Package(object):
                                                 count=itmp)
                                 current = np.array(d, dtype=current.dtype)
                             else:
-                                current = np.genfromtxt(oc_filename,
-                                                        dtype=current.dtype)
+                                # current = np.genfromtxt(oc_filename,
+                                #                         dtype=current.dtype)
+                                current = np.atleast_2d(np.loadtxt(oc_filename,dtype=current.dtype))
+
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(

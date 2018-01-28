@@ -584,7 +584,7 @@ def test_util3d_reset():
     arr = np.ones((ml.nlay, ml.nrow, ml.ncol))
     ml.bas6.strt = arr
 
-def single_mflist_entry_load_issue():
+def test_single_mflist_entry_load():
 
     import os
     import numpy as np
@@ -594,14 +594,13 @@ def single_mflist_entry_load_issue():
     m = flopy.modflow.Modflow.load("freyberg.nam",model_ws=model_ws,load_only=["WEL"],check=False)
     w = m.wel
     spd = w.stress_period_data
-    print(spd[0])
     flopy.modflow.ModflowWel(m,stress_period_data={0:[0,0,0,0.0]})
     m.external_path = "."
     m.change_model_ws("temp",reset_external=True)
     m.write_input()
 
     mm = flopy.modflow.Modflow.load("freyberg.nam", model_ws="temp",forgive=False)
-    print(mm.wel.stess_period_data[0])
+    assert mm.wel.stress_period_data
 
 if __name__ == '__main__':
     # test_util3d_reset()
@@ -618,7 +617,7 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_path_nomodelws()
     # test_transient2d()
     #test_transient3d()
-    single_mflist_entry_load_issue()
+    test_single_mflist_entry_load()
     # test_util2d()
     # test_util3d()
     # test_how()
