@@ -587,7 +587,7 @@ def test_util3d_reset():
 
 
 if __name__ == '__main__':
-    # test_util3d_reset()
+    test_util3d_reset()
     # test_mflist()
     # test_new_get_file_entry()
     # test_arrayformat()
