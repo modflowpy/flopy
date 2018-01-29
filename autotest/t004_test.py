@@ -587,13 +587,13 @@ def test_util3d_reset():
 
 
 if __name__ == '__main__':
-    test_util3d_reset()
+    # test_util3d_reset()
     # test_mflist()
     # test_new_get_file_entry()
     # test_arrayformat()
     # test_util2d_external_free_nomodelws()
     # test_util2d_external_free_path_nomodelws()
-    # test_util2d_external_free()
+    test_util2d_external_free()
     # test_util2d_external_free_path()
     # test_util2d_external_fixed()
     # test_util2d_external_fixed_path()
