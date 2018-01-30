@@ -1,4 +1,5 @@
 import numpy as np
+from ..data.mfstructure import DatumType
 from ..data import mfstructure, mfdatautil, mfdata
 from collections import OrderedDict
 from ..mfbase import ExtFileAction
@@ -87,8 +88,8 @@ class MFScalar(mfdata.MFData):
         storge.set_data(converted_data, key=self._current_key)
 
     def add_one(self):
-        if self.structure.get_datum_type() == 'int' or \
-                self.structure.get_datum_type() == 'integer':
+        datum_type = self.structure.get_datum_type()
+        if datum_type == int or datum_type == np.int:
             if self._get_storage_obj().get_data() is None:
                 self._get_storage_obj().set_data(1)
             else:
@@ -107,15 +108,15 @@ class MFScalar(mfdata.MFData):
         if storage is None or \
                 self._get_storage_obj().get_data() is None:
             return ''
-        if self.structure.type == 'keyword':
+        if self.structure.type == DatumType.keyword:
             # keyword appears alone
             return '{}{}\n'.format(self._simulation_data.indent_string,
                                    self.structure.name.upper())
-        elif self.structure.type == 'record':
+        elif self.structure.type == DatumType.record:
             text_line = []
             for data_item in self.structure.data_item_structures:
                 force_upper_case = data_item.ucase
-                if data_item.type.lower() == 'keyword' and \
+                if data_item.type == DatumType.keyword and \
                         data_item.optional == False:
                     text_line.append(data_item.name.upper())
                 else:
@@ -132,8 +133,7 @@ class MFScalar(mfdata.MFData):
         else:
             force_upper_case = self.structure.data_item_structures[0].ucase
             if one_based:
-                assert(self.structure.type == 'integer' or
-                       self.structure.type == 'int')
+                assert(self.structure.type == DatumType.integer)
                 data = self._get_storage_obj().get_data() + 1
             else:
                 data = self._get_storage_obj().get_data()
@@ -161,21 +161,23 @@ class MFScalar(mfdata.MFData):
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
 
-        arr_line = mfdatautil.ArrayUtil.split_data_line(current_line)
+        mfdatautil.ArrayUtil.reset_delimiter_used()
+        arr_line = mfdatautil.ArrayUtil.\
+            split_data_line(current_line)
         # verify keyword
         index_num, aux_var_index = self._load_keyword(arr_line, 0)
 
         # store data
         storage = self._get_storage_obj()
         datatype = self.structure.get_datatype()
-        if self.structure.type == 'record':
+        if self.structure.type == DatumType.record:
             index = 0
 
             for data_item_type in self.structure.get_data_item_types():
                 optional = self.structure.data_item_structures[index].optional
                 if len(arr_line) <= index + 1 or \
-                        data_item_type != 'keyword' or (index > 0 and
-                                                        optional == True):
+                        data_item_type[0] != DatumType.keyword or (index > 0
+                        and optional == True):
                     break
                 index += 1
 
@@ -284,8 +286,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                                                 enable=enable,
                                                 path=path,
                                                 dimensions=dimensions)
-        self._transient_setup(self._data_storage,
-                              mfdata.DataStructureType.scalar)
+        self._transient_setup(self._data_storage)
         self.repeating = True
 
     def add_transient_key(self, key):

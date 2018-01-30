@@ -771,8 +771,10 @@ class Package(object):
                                                 count=itmp)
                                 current = np.array(d, dtype=current.dtype)
                             else:
-                                current = np.genfromtxt(oc_filename,
-                                                        dtype=current.dtype)
+                                # current = np.genfromtxt(oc_filename,
+                                #                         dtype=current.dtype)
+                                current = np.atleast_2d(np.loadtxt(oc_filename,dtype=current.dtype)).transpose()
+
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(

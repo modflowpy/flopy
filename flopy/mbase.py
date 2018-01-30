@@ -718,6 +718,30 @@ class BaseModel(object):
                      '{:s} {:s}\n'.format(p.file_name[i], p.extra[i])
         return s
 
+    def has_package(self, name):
+        """
+        Check if package name is in package list.
+
+        Parameters
+        ----------
+        name : str
+            Name of the package, 'DIS', 'BAS6', etc. (case-insensitive).
+
+        Returns
+        -------
+        bool
+            True if package name exists, otherwise False if not found.
+
+        """
+        if not name:
+            raise ValueError('invalid package name')
+        name = name.upper()
+        for p in self.packagelist:
+            for pn in p.name:
+                if pn.upper() == name:
+                    return True
+        return False
+
     def get_package(self, name):
         """
         Get a package.
@@ -725,7 +749,7 @@ class BaseModel(object):
         Parameters
         ----------
         name : str
-            Name of the package, 'RIV', 'LPF', etc.
+            Name of the package, 'RIV', 'LPF', etc. (case-insensitive).
 
         Returns
         -------
@@ -733,8 +757,11 @@ class BaseModel(object):
             Package object of type :class:`flopy.pakbase.Package`
 
         """
+        if not name:
+            raise ValueError('invalid package name')
+        name = name.upper()
         for pp in (self.packagelist):
-            if (pp.name[0].upper() == name.upper()):
+            if pp.name[0].upper() == name:
                 return pp
         return None
 

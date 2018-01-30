@@ -40,7 +40,7 @@ valid harmonic logarithmic amt-lmk
 reader urword
 optional true
 longname conductance weighting option
-description is a keyword and text keyword to indicate the method that will be used for calculating the conductance for horizontal cell connections.  The text value for \texttt{cell\_averaging} can be ``HARMONIC'', ``LOGARITHMIC'', or ``AMT-LMK'', which means ``arithmetic-mean thickness and logarithmic-mean hydraulic conductivity''. If the user does not specify a value for \texttt{cell\_averaging}, then the harmonic-mean method will be used.
+description is a keyword and text keyword to indicate the method that will be used for calculating the conductance for horizontal cell connections.  The text value for CELL\_AVERAGING can be ``HARMONIC'', ``LOGARITHMIC'', or ``AMT-LMK'', which means ``arithmetic-mean thickness and logarithmic-mean hydraulic conductivity''. If the user does not specify a value for CELL\_AVERAGING, then the harmonic-mean method will be used.
 
 block options
 name cvoptions
@@ -74,8 +74,6 @@ reader urword
 optional true
 longname keyword to activate Newton-Raphson
 description keyword that activates the Newton-Raphson formulation for groundwater flow between connected, convertible groundwater cells. Cells will not dry when this option is used.
-
-
 
 block options
 name gnc_filerecord
@@ -150,7 +148,7 @@ tagged false
 reader urword
 optional false
 longname mvr6 input filename
-description is the file name of the water mover input file to apply to this exchange.  Information for the water mover are provided in the file provided with these keywords.  The format for specifying the water mover information is the same as described for the Water Mover (MVR) Package of the GWF Model, with two exceptions.  First, in the PACKAGES block, the model name must be included as a separate string before each package.  Second, the appropriate model name must be included before \texttt{pname1} and \texttt{pname2} in the BEGIN PERIOD block.  This allows providers and receivers to be located in both models listed as part of this exchange.
+description is the file name of the water mover input file to apply to this exchange.  Information for the water mover are provided in the file provided with these keywords.  The format for specifying the water mover information is the same as described for the Water Mover (MVR) Package of the GWF Model, with two exceptions.  First, in the PACKAGES block, the model name must be included as a separate string before each package.  Second, the appropriate model name must be included before package name 1 and package name 2 in the BEGIN PERIOD block.  This allows providers and receivers to be located in both models listed as part of this exchange.
 
 block options
 name obs_filerecord
@@ -214,7 +212,7 @@ tagged false
 reader urword
 optional false
 longname cellid of first cell
-description is the cellid of the cell in model 1 as specified in the simulation name file. For a structured grid that uses the DIS input file, \texttt{cellidm1} is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, \texttt{cellidm1} is the layer number and cell2d number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then \texttt{cellidm1} is the node number for the cell.
+description is the cellid of the cell in model 1 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM1 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM1 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM1 is the node number for the cell.
 
 block exchangedata
 name cellidm2
@@ -224,7 +222,7 @@ tagged false
 reader urword
 optional false
 longname cellid of second cell
-description is the cellid of the cell in model 2 as specified in the simulation name file. For a structured grid that uses the DIS input file, \texttt{cellidm2} is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, \texttt{cellidm2} is the layer number and cell2d number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then \texttt{cellidm2} is the node number for the cell.
+description is the cellid of the cell in model 2 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM2 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM2 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM2 is the node number for the cell.
 
 block exchangedata
 name ihc
@@ -234,7 +232,7 @@ tagged false
 reader urword
 optional false
 longname integer flag for connection type
-description is an integer flag indicating the direction between node n and all of its m connections. If $ihc=0$ then the connection is vertical.  If $ihc=1$ then the connection is horizontal. If $ihc=2$ then the connection is horizontal for a vertically staggered grid.
+description is an integer flag indicating the direction between node n and all of its m connections. If IHC = 0 then the connection is vertical.  If IHC = 1 then the connection is horizontal. If IHC = 2 then the connection is horizontal for a vertically staggered grid.
 
 block exchangedata
 name cl1
@@ -244,7 +242,7 @@ tagged false
 reader urword
 optional false
 longname connection distance
-description is the distance between the center of cell nodem1 and the its shared face with nodem2.
+description is the distance between the center of cell 1 and the its shared face with cell 2.
 
 block exchangedata
 name cl2
@@ -254,7 +252,7 @@ tagged false
 reader urword
 optional false
 longname connection distance
-description is the distance between the center of cell nodem2 and the its shared face with nodem1.
+description is the distance between the center of cell 1 and the its shared face with cell 2.
 
 block exchangedata
 name hwva
@@ -264,7 +262,7 @@ tagged false
 reader urword
 optional false
 longname horizontal cell width or area for vertical flow
-description is the horizontal width of the flow connection between \texttt{nodem1} and \texttt{nodem2} if $\texttt{ihc} > 0$, or it is the area of the vertical connection between \texttt{nodem1} and \texttt{nodem2} if $\texttt{ihc} = 0$.
+description is the horizontal width of the flow connection between cell 1 and cell 2 if IHC $>$ 0, or it is the area perpendicular to flow of the vertical connection between cell 1 and cell 2 if IHC = 0.
 
 block exchangedata
 name aux

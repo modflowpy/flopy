@@ -206,7 +206,9 @@ class check:
                               ('desc', np.object)
                               ])
         if array is None:
-            array = np.empty((0, len(dtype)), dtype=dtype)
+            #array = np.empty((0, len(dtype)), dtype=dtype)
+            array = np.empty((0, len(dtype)), dtype=np.float32)
+            #return np.recarray((0,len(dtype)),dtype=dtype)
         return np.core.records.fromarrays(array.transpose(), dtype=dtype)
 
     def _txt_footer(self, headertxt, txt, testname, passed=False, warning=True):
@@ -226,12 +228,12 @@ class check:
     def _stress_period_data_valid_indices(self, stress_period_data):
         """Check that stress period data inds are valid for model grid."""
         spd_inds_valid = True
-        if 'DIS' in self.model.get_package_list() and\
+        if self.model.has_package('DIS') and \
                 {'k', 'i', 'j'}.intersection(set(stress_period_data.dtype.names)) != {'k', 'i', 'j'}:
             self._add_to_summary(type='Error',
                                 desc='\r    Stress period data missing k, i, j for structured grid.')
             spd_inds_valid = False
-        elif 'DISU' in self.model.get_package_list() and \
+        elif self.model.has_package('DISU') and \
                         'node' not in stress_period_data.dtype.names:
             self._add_to_summary(type='Error',
                                 desc='\r    Stress period data missing node number for unstructured grid.')

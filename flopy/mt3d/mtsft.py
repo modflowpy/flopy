@@ -247,13 +247,30 @@ class Mt3dSft(Package):
         self.iprtxmd = iprtxmd
 
         # Set 1D array values
-        self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
+        self.coldsf = [Util2d(model, (nsfinit,), np.float32, coldsf,
                              name='coldsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)
+                             array_free_format=model.free_format)]
 
-        self.dispsf = Util2d(model, (nsfinit,), np.float32, dispsf,
+        self.dispsf = [Util2d(model, (nsfinit,), np.float32, dispsf,
                              name='dispsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)
+                             array_free_format=model.free_format)]
+        ncomp = model.ncomp
+        # handle the miult
+        if ncomp > 1:
+            for icomp in range(2,ncomp + 1):
+                for base_name,attr in zip(["coldsf","dispsf"],[self.coldsf,self.dispsf]):
+                    name = "{0}{1}".format(base_name,icomp)
+                    if name in kwargs:
+                        val = kwargs.pop(name)
+                    else:
+                        print("SFT: setting {0} for component {1} to zero, kwarg name {2}".
+                              format(base_name,icomp,name))
+                        val = 0.0
+                    u2d = Util2d(model, (nsfinit,), np.float32, val,
+                           name=name, locat=self.unit_number[0],
+                           array_free_format=model.free_format)
+                    attr.append(u2d)
+
 
         # Set streamflow observation locations
         self.nobssf = nobssf
@@ -283,7 +300,7 @@ class Mt3dSft(Package):
         type_list = [("node", np.int), ("isfbctyp", np.int), \
                      ("cbcsf0", np.float32)]
         if ncomp > 1:
-            for icomp in range(1, ncomp + 1):
+            for icomp in range(1, ncomp):
                 comp_name = "cbcsf{0:d}".format(icomp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
@@ -329,10 +346,12 @@ class Mt3dSft(Package):
                 'iprtxmd\n')
 
         # Item 3
-        f.write(self.coldsf.get_file_entry())
+        for coldsf in self.coldsf:
+            f.write(coldsf.get_file_entry())
 
         # Item 4
-        f.write(self.dispsf.get_file_entry())
+        for dispsf in self.dispsf:
+            f.write(dispsf.get_file_entry())
 
         # Item 5
         f.write('{0:10d}                 # nobssf\n'.format(self.nobssf))

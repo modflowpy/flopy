@@ -349,11 +349,11 @@ class ModflowSfr2(Package):
                 self.reach_data[n] = reach_data[n]
 
         # assign node numbers if there are none (structured grid)
-        if np.diff(
-                self.reach_data.node).max() == 0 and 'DIS' in self.parent.get_package_list():
+        if np.diff(self.reach_data.node).max() == 0 and self.parent.has_package('DIS'):
             # first make kij list
             lrc = self.reach_data[['k', 'i', 'j']].copy()
-            lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
+            #lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
+            lrc = lrc.tolist()
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
         self.reach_data.sort(order=['iseg', 'ireach'])
@@ -516,7 +516,7 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_reach_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nreaches, len(dtype)), dtype=dtype)
+        d = np.zeros((nreaches, len(dtype)))
         d[:, :] = default_value
         d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
         d['reachID'] = np.arange(1, nreaches + 1)
@@ -528,7 +528,7 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_segment_dtype()
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nsegments, len(dtype)), dtype=dtype)
+        d = np.zeros((nsegments, len(dtype)))
         d[:, :] = default_value
         return np.core.records.fromarrays(d.transpose(), dtype=dtype)
 
@@ -2547,6 +2547,8 @@ def _fmt_string(array, float_format='{}'):
     fmt_string = ''
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
+        if vtype == 'v':
+            continue
         if (vtype == 'i'):
             fmt_string += '{:.0f} '
         elif (vtype == 'f'):
@@ -2567,6 +2569,8 @@ def _fmt_string_list(array, float_format='{}'):
     fmt_string = []
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
+        if vtype == 'v':
+            continue
         if (vtype == 'i'):
             fmt_string += ['{:.0f}']
         elif (vtype == 'f'):

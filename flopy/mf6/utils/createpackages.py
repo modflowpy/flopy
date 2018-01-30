@@ -1,5 +1,5 @@
 import os
-import keyword
+import textwrap
 from enum import Enum
 from flopy.mf6.data import mfstructure, mfdatautil
 
@@ -7,6 +7,11 @@ from flopy.mf6.data import mfstructure, mfdatautil
 class PackageLevel(Enum):
     sim_level = 0
     model_level = 1
+
+
+def build_doc_string(param_name, param_type, param_desc, indent):
+    return '{}{} : {}\n{}* {}'.format(indent, param_name, param_type, indent*2,
+                                      param_desc)
 
 
 def generator_type(data_type):
@@ -33,18 +38,6 @@ def generator_type(data_type):
         return 'ListTemplateGenerator'
 
 
-def clean_name(name):
-    # remove bad characters
-    clean_string = name.replace(' ', '_')
-    clean_string = clean_string.replace('-', '_')
-    # remove anything after a parenthesis
-    index = clean_string.find('(')
-    if index != -1:
-        clean_string = clean_string[0:index]
-
-    return clean_string
-
-
 def clean_class_string(name):
     if len(name) > 0:
         clean_string = name.replace(' ', '_')
@@ -55,6 +48,56 @@ def clean_class_string(name):
             clean_string = clean_string[:-1]
         return clean_string
     return name
+
+
+def build_dfn_string(dfn_list):
+    dfn_string = '    dfn = ['
+    line_length = len(dfn_string)
+    leading_spaces = ' ' * line_length
+    first_di = True
+    # process all data items
+    for data_item in dfn_list:
+        line_length += 1
+        if not first_di:
+            dfn_string = '{},\n{}'.format(dfn_string, leading_spaces)
+            line_length = len(leading_spaces)
+        else:
+            first_di = False
+        dfn_string = '{}{}'.format(dfn_string, '[')
+        first_line = True
+        # process each line in a data item
+        for line in data_item:
+            line = line.strip()
+            # do not include the description of longname
+            if not line.lower().startswith('description') and \
+                not line.lower().startswith('longname'):
+                line = line.replace('"', "'")
+                line_length += len(line) + 4
+                if not first_line:
+                    dfn_string = '{}, '.format(dfn_string)
+                else:
+                    first_line = False
+                if line_length < 77:
+                    # added text fits on the current line
+                    dfn_string = '{}"{}"'.format(dfn_string, line)
+                else:
+                    # added text does not fit on the current line
+                    line_length = len(line) + len(leading_spaces) + 2
+                    if line_length > 79:
+                        # added text too long to fit on a single line, wrap
+                        # text as needed
+                        line = '"{}"'.format(line)
+                        lines = textwrap.wrap(line, 75 - len(leading_spaces))
+                        lines[0] = '{} {}'.format(leading_spaces, lines[0])
+                        line_join = ' " \n{} "'.format(leading_spaces)
+                        dfn_string = '{}\n{}'.format(dfn_string,
+                                                     line_join.join(lines))
+                    else:
+                        dfn_string = '{}\n{} "{}"'.format(dfn_string,
+                                                          leading_spaces, line)
+        dfn_string = '{}{}'.format(dfn_string, ']')
+    dfn_string = '{}{}'.format(dfn_string, ']')
+    return dfn_string
 
 
 def create_init_var(clean_ds_name, data_structure_name):
@@ -122,20 +165,19 @@ def format_var_list(base_string, var_list, is_tuple=False):
     else:
         return '{})'.format(base_string)
 
+
 def add_var(init_vars, class_vars, init_param_list, package_properties,
             doc_string, data_structure_dict, name,
-            python_name, type_string, description, path, data_type,
+            python_name, description, path, data_type,
             basic_init=False):
-    clean_ds_name = clean_name(python_name)
+    clean_ds_name = mfdatautil.clean_name(python_name)
     if basic_init:
         init_vars.append(create_basic_init(clean_ds_name))
     else:
         init_vars.append(create_init_var(clean_ds_name, name))
     init_param_list.append('{}=None'.format(clean_ds_name))
     package_properties.append(create_property(clean_ds_name))
-    doc_string.add_parameter(python_name,
-                             type_string,
-                             description)
+    doc_string.add_parameter(description)
     data_structure_dict[python_name] = 0
     if class_vars is not None:
         gen_type = generator_type(data_type)
@@ -146,27 +188,36 @@ def add_var(init_vars, class_vars, init_param_list, package_properties,
 
 
 def create_packages():
+    indent = '    '
     init_string_def = '    def __init__(self'
 
     # load JSON file
-    file_structure = mfstructure.MFStructure()
+    file_structure = mfstructure.MFStructure(load_from_dfn_files=True)
     sim_struct = file_structure.sim_struct
 
     # assemble package list of buildable packages
     package_list = []
     package_list.append(
-        (sim_struct.name_file_struct_obj, PackageLevel.sim_level, ''))
+        (sim_struct.name_file_struct_obj, PackageLevel.sim_level, '',
+         sim_struct.name_file_struct_obj.dfn_list,
+         sim_struct.name_file_struct_obj.file_type))
     for key, package in sim_struct.package_struct_objs.items():
         # add simulation level package to list
-        package_list.append((package, PackageLevel.sim_level, ''))
+        package_list.append((package, PackageLevel.sim_level, '',
+                             package.dfn_list, package.file_type))
     for key, package in sim_struct.utl_struct_objs.items():
         # add utility packages to list
-        package_list.append((package, PackageLevel.model_level, 'utl'))
+        package_list.append((package, PackageLevel.model_level, 'utl',
+                             package.dfn_list, package.file_type))
     for model_key, model in sim_struct.model_struct_objs.items():
         package_list.append(
-            (model.name_file_struct_obj, PackageLevel.model_level, model_key))
+            (model.name_file_struct_obj, PackageLevel.model_level, model_key,
+             model.name_file_struct_obj.dfn_list,
+             model.name_file_struct_obj.file_type))
         for key, package in model.package_struct_objs.items():
-            package_list.append((package, PackageLevel.model_level, model_key))
+            package_list.append((package, PackageLevel.model_level,
+                                 model_key, package.dfn_list,
+                                 package.file_type))
 
     util_path, tail = os.path.split(os.path.realpath(__file__))
     init_file = open(os.path.join(util_path, '..', 'modflow', '__init__.py'),
@@ -180,9 +231,14 @@ def create_packages():
         init_vars = []
         init_param_list = []
         class_vars = []
-        package_name = clean_class_string(
+        dfn_string = build_dfn_string(package[3])
+        package_abbr = clean_class_string(
             '{}{}'.format(clean_class_string(package[2]),
-                          package[0].file_type)).lower()
+                            package[0].file_type)).lower()
+        package_name = clean_class_string(
+            '{}{}{}'.format(clean_class_string(package[2]),
+                            package[0].file_prefix,
+                            package[0].file_type)).lower()
         if package[0].description:
             doc_string = mfdatautil.MFDocString(package[0].description)
         else:
@@ -202,19 +258,24 @@ def create_packages():
         if package[0].dfn_type == mfstructure.DfnType.exch_file:
             add_var(init_vars, None, init_param_list, package_properties,
                     doc_string, data_structure_dict,
-                    'exgtype', 'exgtype', '<string>',
-                    'is the exchange type (GWF-GWF or GWF-GWT).', None, None,
-                    True)
+                    'exgtype', 'exgtype',
+                    build_doc_string('exgtype', '<string>',
+                                     'is the exchange type (GWF-GWF or '
+                                     'GWF-GWT).', indent), None, None, True)
             add_var(init_vars, None, init_param_list, package_properties,
                     doc_string, data_structure_dict,
-                    'exgmnamea', 'exgmnamea', '<string>',
-                    'is the name of the first model that is part of this '
-                    'exchange.', None, None, True)
+                    'exgmnamea', 'exgmnamea',
+                    build_doc_string('exgmnamea', '<string>',
+                                     'is the name of the first model that is '
+                                     'part of this exchange.', indent),
+                    None, None, True)
             add_var(init_vars, None, init_param_list, package_properties,
                     doc_string, data_structure_dict,
-                    'exgmnameb', 'exgmnameb', '<string>',
-                    'is the name of the second model that is part of this '
-                    'exchange.', None, None, True)
+                    'exgmnameb', 'exgmnameb',
+                    build_doc_string('exgmnameb', '<string>',
+                                     'is the name of the second model that is '
+                                     'part of this exchange.', indent),
+                    None, None, True)
             init_vars.append(
                 '        simulation.register_exchange_file(self)\n')
 
@@ -227,10 +288,22 @@ def create_packages():
                             package_properties, doc_string,
                             data_structure_dict,
                             data_structure.name, data_structure.python_name,
-                            data_structure.get_type_string(),
-                            data_structure.get_description(),
+                            data_structure.get_doc_string(79, indent, indent),
                             data_structure.path,
                             data_structure.get_datatype())
+
+
+        # add extra docstrings for additional variables
+        doc_string.add_parameter('    fname : String\n        '
+                                 'File name for this package.')
+        doc_string.add_parameter('    pname : String\n        '
+                                 'Package name for this package.')
+        doc_string.add_parameter('    parent_file : MFPackage\n        '
+                                 'Parent package file that references this '
+                                 'package. Only needed for\n        utility '
+                                 'packages (mfutl*). For example, mfutllaktab '
+                                 'package must have \n        a mfgwflak '
+                                 'package parent_file.')
 
         # build package builder class string
         init_vars = '\n'.join(init_vars)
@@ -238,14 +311,31 @@ def create_packages():
         class_def_string = 'class Modflow{}(mfpackage.MFPackage):\n'.format(
             package_name.title())
         class_def_string = class_def_string.replace('-', '_')
-        class_var_string = '{}\n    package_abbr = "{}"'.format(
-            '\n'.join(class_vars), package_name)
+        class_var_string = '{}\n    package_abbr = "{}"\n    package_type = ' \
+                           '"{}"\n    dfn_file_name = "{}"' \
+                           '\n'.format('\n'.join(class_vars), package_abbr,
+                                       package[4], package[0].dfn_file_name)
         init_string_full = init_string_def
         # add variables to init string
+        doc_string.add_parameter('    add_to_package_list : bool\n        '
+                                 'Do not set this parameter. It is intended '
+                                 'for debugging and internal\n        '
+                                 'processing purposes only.',
+                                 beginning_of_list=True)
         if package[1] == PackageLevel.sim_level:
+            doc_string.add_parameter('    simulation : MFSimulation\n        '
+                                     'Simulation that this package is a part '
+                                     'of. Package is automatically\n        '
+                                     'added to simulation when it is '
+                                     'initialized.', beginning_of_list=True)
             init_string_full = '{}, simulation, add_to_package_list=' \
                                'True'.format(init_string_full)
         else:
+            doc_string.add_parameter('    model : MFModel\n        '
+                                     'Model that this package is a part of.  '
+                                     'Package is automatically\n        added '
+                                     'to model when it is initialized.',
+                                     beginning_of_list=True)
             init_string_full = '{}, model, add_to_package_list=True'.format(
                 init_string_full)
         line_chars = len(init_string_full)
@@ -277,11 +367,12 @@ def create_packages():
                              'add_to_package_list, parent_file)        \n\n' \
                              '        # set up variables'.format(
             parent_init_string, init_var, package_short_name, spaces)
-
+        comment_string = '# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE ' \
+                         'MUST BE CREATED BY\n# mf6/utils/createpackages.py'
         # assemble full package string
-        package_string = '{}\n\n\n{}{}\n{}\n\n{}{}\n{}\n'.format(
-            import_string, class_def_string,
-            doc_string.get_doc_string(), class_var_string,
+        package_string = '{}\n{}\n\n\n{}{}\n{}\n{}\n\n{}{}\n{}\n'.format(
+            comment_string, import_string, class_def_string,
+            doc_string.get_doc_string(), class_var_string, dfn_string,
             init_string_full, parent_init_string, init_vars)
 
         # open new Packages file

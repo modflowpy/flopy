@@ -1,5 +1,6 @@
 import numpy as np
 from collections import OrderedDict
+from ..data.mfstructure import DatumType
 from ..data import mfstructure, mfdatautil, mfdata
 from ..mfbase import ExtFileAction
 from ..utils.mfenums import DiscretizationType
@@ -100,10 +101,9 @@ class MFArray(mfdata.MFMultiDimVar):
                     self._number_of_layers = 1
         else:
             self._number_of_layers = 1
-        self._array_shape = None
         self._data_type = structure.data_item_structures[0].type
         self._data_storage = self._new_storage(self._number_of_layers != 1)
-        if self.structure.type == 'integer':
+        if self.structure.type == DatumType.integer:
             multiplier = [1]
         else:
             multiplier = [1.0]
@@ -170,7 +170,6 @@ class MFArray(mfdata.MFMultiDimVar):
         super(MFArray, self).new_simulation(sim_data)
         self._data_storage = self._new_storage(False)
         self._number_of_layers = 1
-        self._array_shape = None
 
     def supports_layered(self):
         model_grid = self._data_dimensions.get_model_grid()
@@ -250,6 +249,7 @@ class MFArray(mfdata.MFMultiDimVar):
              pre_data_comments=None):
         super(MFArray, self).load(first_line, file_handle, block_header,
                                   pre_data_comments=None)
+
         if self.structure.layered and self._number_of_layers != \
                 self._data_dimensions.get_model_grid().num_layers():
             model_grid = self._data_dimensions.get_model_grid()
@@ -264,8 +264,9 @@ class MFArray(mfdata.MFMultiDimVar):
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
-
-        arr_line = mfdatautil.ArrayUtil.split_data_line(current_line)
+        mfdatautil.ArrayUtil.reset_delimiter_used()
+        arr_line = mfdatautil.ArrayUtil.\
+            split_data_line(current_line)
         package_dim = self._data_dimensions.package_dim
         if len(arr_line) > 2:
             # check for time array series
@@ -332,8 +333,8 @@ class MFArray(mfdata.MFMultiDimVar):
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
         if not self.structure.data_item_structures[0].just_data or layer > 0:
             arr_line = \
-                    mfdatautil.ArrayUtil.split_data_line(file_handle.readline()
-                                                         )
+                    mfdatautil.ArrayUtil.\
+                        split_data_line(file_handle.readline())
         layer_storage = storage.layer_storage[layer]
         # if constant
         if arr_line[0].upper() == 'CONSTANT':
@@ -547,15 +548,16 @@ class MFArray(mfdata.MFMultiDimVar):
             layer_data_string[-1] = '{}{}{}'.format(layer_data_string[-1],
                                                     indent_str,
                                                     data_lyr)
-            if line_data_count == self._simulation_data.max_columns_of_data or\
-                    (last_item and self._simulation_data.wrap_multidim_arrays):
+            if self._simulation_data.wrap_multidim_arrays and \
+                    (line_data_count == self._simulation_data.
+                        max_columns_of_data or last_item):
                 layer_data_string.append('{}'.format(data_indent))
                 line_data_count = 0
         if len(layer_data_string) > 0:
             # clean up the text at the end of the array
             layer_data_string[-1] = layer_data_string[-1].strip()
         if len(layer_data_string) == 1:
-            return '{}\n'.format(layer_data_string[0].rstrip())
+            return '{}{}\n'.format(data_indent, layer_data_string[0].rstrip())
         else:
             return '\n'.join(layer_data_string)
 
@@ -659,8 +661,7 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
                                               enable=enable,
                                               path=path,
                                               dimensions=dimensions)
-        self._transient_setup(self._data_storage,
-                              mfdata.DataStructureType.ndarray)
+        self._transient_setup(self._data_storage)
         self.repeating = True
 
     def add_transient_key(self, transient_key):

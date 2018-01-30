@@ -243,7 +243,15 @@ class Mt3dSsm(Package):
             self.mxss = mxss
 
         # Note: list is used for multi-species, NOT for stress periods!
+        self.crch = None
+        try:
+            if crch is None and model.mf.rch is not None:
+                print("found 'rch' in modflow model, resetting crch to 0.0")
+                crch = 0.0
+        except:
+            pass
         if crch is not None:
+
             self.crch = []
             t2d = Transient2d(model, (nrow, ncol), np.float32,
                               crch, name='crch1',
@@ -265,20 +273,27 @@ class Mt3dSsm(Package):
                                       locat=self.unit_number[0],
                                       array_free_format=False)
                     self.crch.append(t2d)
-        else:
-            try:
-                if model.mf.rch is not None:
-                    print("found 'rch' in modflow model, resetting crch to 0.0")
-                    self.crch = [Transient2d(model, (nrow, ncol), np.float32,
-                                  0, name='crch1',
-                                  locat=self.unit_number[0],
-                                  array_free_format=False)]
+        # else:
+        #     try:
+        #         if model.mf.rch is not None:
+        #             print("found 'rch' in modflow model, resetting crch to 0.0")
+        #             self.crch = [Transient2d(model, (nrow, ncol), np.float32,
+        #                           0, name='crch1',
+        #                           locat=self.unit_number[0],
+        #                           array_free_format=False)]
+        #
+        #         else:
+        #             self.crch = None
+        #     except:
+        #         self.crch = None
 
-                else:
-                    self.crch = None
-            except:
-                self.crch = None
-
+        self.cevt = None
+        try:
+            if cevt is None and (model.mf.evt is not None or model.mf.ets is not None):
+                print("found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
+                cevt = 0.0
+        except:
+            pass
         if cevt is not None:
             self.cevt = []
             t2d = Transient2d(model, (nrow, ncol), np.float32,
@@ -303,19 +318,19 @@ class Mt3dSsm(Package):
                                       array_free_format=False)
                     self.cevt.append(t2d)
 
-        else:
-            try:
-                if model.mf.evt is not None or model.mf.ets is not None:
-                    print("found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
-                    self.cevt = [Transient2d(model, (nrow, ncol), np.float32,
-                                            0, name='cevt1',
-                                            locat=self.unit_number[0],
-                                            array_free_format=False)]
-
-                else:
-                    self.cevt = None
-            except:
-                self.cevt = None
+        # else:
+        #     try:
+        #         if model.mf.evt is not None or model.mf.ets is not None:
+        #             print("found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
+        #             self.cevt = [Transient2d(model, (nrow, ncol), np.float32,
+        #                                     0, name='cevt1',
+        #                                     locat=self.unit_number[0],
+        #                                     array_free_format=False)]
+        #
+        #         else:
+        #             self.cevt = None
+        #     except:
+        #         self.cevt = None
 
         if len(list(kwargs.keys())) > 0:
             raise Exception("SSM error: unrecognized kwargs: " +
@@ -672,7 +687,6 @@ class Mt3dSsm(Package):
                         tt = line[istop:].strip().split()
                         for ivar in range(ncssms):
                             t.append(tt[ivar])
-                    print(ibnd,line)
                     current[ibnd] = tuple(t[:len(current.dtype.names)])
                 # convert indices to zero-based
                 current['k'] -= 1

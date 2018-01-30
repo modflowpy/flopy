@@ -69,8 +69,9 @@ class ModflowOc(Package):
         (default is None)
     stress_period_data : dictionary of of lists
         Dictionary key is a tuple with the zero-based period and step 
-        (IPEROC, ITSOC) for each print/save option list. 
-        (default is {(0,0):['save head']})
+        (IPEROC, ITSOC) for each print/save option list. If stress_period_data
+        is None, then heads are saved for the last time step of each stress
+        period. (default is None)
         
         The list can have any valid MODFLOW OC print/save option:
             PRINT HEAD
@@ -85,10 +86,10 @@ class ModflowOc(Package):
             drawdown reference to the period and step and (2) a list of layers 
             for PRINT HEAD, SAVE HEAD, PRINT DRAWDOWN, SAVE DRAWDOWN, and
             SAVE IBOUND.
-        
-        The list is used for every stress period and time step after the 
-        (IPEROC, ITSOC) tuple until a (IPEROC, ITSOC) tuple is entered with
-        an empty list.
+
+        stress_period_data = {(0,1):['save head']}) would save the head for
+        the second timestep in the first stress period.
+
     compact : boolean
         Save results in compact budget form. (default is True).
     extension : list of strings
@@ -145,7 +146,7 @@ class ModflowOc(Package):
                  cboufm=None, compact=True,
                  stress_period_data={(0, 0): ['save head']},
                  extension=['oc', 'hds', 'ddn', 'cbc', 'ibo'],
-                 unitnumber=None, filenames=None, label="LABEL", **kwargs):
+                 unitnumber=None, filenames=None, label='LABEL', **kwargs):
 
         """
         Package constructor.
@@ -172,6 +173,11 @@ class ModflowOc(Package):
         dis = model.get_package('DIS')
         if dis is None:
             dis = model.get_package('DISU')
+
+        if stress_period_data is None:
+            stress_period_data = {
+            (kper, dis.nstp.array[kper] - 1): ['save head'] for
+            kper in range(dis.nper)}
 
         # process kwargs
         if 'save_every' in kwargs:

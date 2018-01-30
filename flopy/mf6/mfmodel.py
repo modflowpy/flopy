@@ -2,10 +2,10 @@
 mfmodel module.  Contains the MFModel class
 
 """
-
+import os
+import numpy as np
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfpackage import MFPackage
-from .modflow import mfgwfnam
 from .coordinates import modeldimensions
 from .utils.reference import SpatialReference, StructuredSpatialReference, \
                              VertexSpatialReference
@@ -56,7 +56,9 @@ class MFModel(PackageContainer):
         a class method that loads a model from files
     write
         writes the simulation to files
-    set_model_path : (path : string)
+    remove_package : (package : MFPackage)
+        removes package from the model
+    set_model_relative_path : (path : string)
         sets the file path to the model folder and updates all model file paths
     is_valid : () : boolean
         checks the validity of the model and all of its packages
@@ -72,24 +74,26 @@ class MFModel(PackageContainer):
 
     """
     def __init__(self, simulation, model_type='gwf', model_name='modflowtest',
-                 model_nam_file=None, ims_file_name=None, version='mf6',
-                 exe_name='mf6.exe', add_to_simulation = True,
-                 structure = None, model_rel_path='.', **kwargs):
+                 model_nam_file=None, version='mf6', exe_name='mf6.exe',
+                 add_to_simulation = True, structure = None,
+                 model_rel_path='.', **kwargs):
         super(MFModel, self).__init__(simulation.simulation_data, model_name)
-        self.set_model_path(model_rel_path)
+        self.simulation = simulation
+        self.simulation_data = simulation.simulation_data
+        self.name = model_name
+        self.name_file = None
+
+        self.set_model_relative_path(model_rel_path)
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
                                                        model_name,
                                                        model_nam_file)
         else:
             self.structure = structure
-        self.simulation_data = simulation.simulation_data
-        self.name = model_name
         self.exe_name = exe_name
         self.dimensions = modeldimensions.ModelDimensions(self.name,
                                                           self.simulation_data)
         self.simulation_data.model_dimensions[model_name] = self.dimensions
-        self.type = 'Model'
         self._ftype_num_dict = {}
         self._package_paths = {}
 
@@ -107,9 +111,16 @@ class MFModel(PackageContainer):
                                    proj4_str=proj4_str)
 
         # build model name file
-        self.name_file = mfgwfnam.ModflowGwfnam(self,
-                                                fname=self.model_nam_file,
-                                                pname=self.name)
+        # create name file based on model type - support different model types
+        package_obj = self.package_factory('nam', model_type[0:3])
+        if not package_obj:
+            excpt_str = 'Name file could not be found for model' \
+                        '{}.'.format(model_type[0:3])
+            print(excpt_str)
+            raise mfstructure.StructException(excpt_str)
+
+        self.name_file = package_obj(self, fname=self.model_nam_file,
+                                     pname=self.name)
         self.verbose = simulation.verbose
 
     def __getattr__(self, item):
@@ -177,7 +188,7 @@ class MFModel(PackageContainer):
         """
 
         instance = cls(simulation, type, model_name,
-                       model_nam_file=model_nam_file, ims_file_name=None,
+                       model_nam_file=model_nam_file,
                        version=version, exe_name=exe_name,
                        add_to_simulation=False, structure=structure,
                        model_rel_path=model_rel_path)
@@ -186,6 +197,7 @@ class MFModel(PackageContainer):
 
         # order packages
         vnum = mfstructure.MFStructure().get_version_string()
+        # FIX: Transport - Priority packages maybe should not be hard coded
         priority_packages = {'dis{}'.format(vnum): 1,'disv{}'.format(vnum): 1,
                              'disu{}'.format(vnum): 1}
         packages_ordered = []
@@ -205,6 +217,13 @@ class MFModel(PackageContainer):
             ftype = ftype[0:-1].lower()
             if ftype in structure.package_struct_objs or ftype in \
               sim_struct.utl_struct_objs:
+                if model_rel_path and model_rel_path != '.':
+                    # strip off model relative path from the file path
+                    filemgr = simulation.simulation_data.mfpath
+                    fname = filemgr.strip_model_relative_path(model_name,
+                                                              fname)
+                print('loading {}...'.format(fname))
+                # load package
                 instance.load_package(ftype, fname, pname, strict, None)
 
         # load referenced packages
@@ -280,9 +299,11 @@ class MFModel(PackageContainer):
 
         return True
 
-    def set_model_path(self, model_ws):
+    def set_model_relative_path(self, model_ws):
         """
-        sets the file path to the model folder and updates all model file paths
+        sets the file path to the model folder relative to the simulation
+        folder and updates all model file paths, placing them in the model
+        folder
 
         Parameters
         ----------
@@ -295,25 +316,110 @@ class MFModel(PackageContainer):
         Examples
         --------
         """
+        # update path in the file manager
+        file_mgr = self.simulation_data.mfpath
+        path = file_mgr.string_to_file_path(model_ws)
+        file_mgr.model_relative_path[self.name] = path
+        file_mgr.set_last_accessed_path()
 
-        self.simulation_data.mfpath.set_model_relative_path(self.name,
-                                                            model_ws)
+        if model_ws and model_ws != '.' and self.simulation.name_file is not \
+                None:
+            # update model name file location in simulation name file
+            models = self.simulation.name_file.modelrecarray
+            models_data = models.get_data()
+            for index, entry in enumerate(models_data):
+                old_model_path, old_model_file_name = os.path.split(entry[1])
+                old_model_base_name = os.path.splitext(old_model_file_name)[0]
+                if old_model_base_name.lower() == self.name.lower() or \
+                        self.name == entry[2]:
+                    models_data[index][1] = os.path.join(path, old_model_file_name)
+                    break
+            models.set_data(models_data)
 
-    def set_model_grid(self, model_grid):
+            if self.name_file is not None:
+                # update listing file location in model name file
+                list_file = self.name_file.list.get_data()
+                if list_file:
+                    path, list_file_name = os.path.split(list_file)
+                    self.name_file.list.set_data(os.path.join(path, list_file_name))
+
+                # update package file locations in model name file
+                packages = self.name_file.packagerecarray
+                packages_data = packages.get_data()
+                for index, entry in enumerate(packages_data):
+                    old_package_path, old_package_name = os.path.split(entry[1])
+                    packages_data[index][1] = os.path.join(path, old_package_name)
+                packages.set_data(packages_data)
+
+                # update files referenced from within packages
+                for package in self.packages:
+                    package.set_model_relative_path(model_ws)
+
+    def _remove_package_from_dictionaries(self, package):
+        # remove package from local dictionaries and lists
+        del self._package_paths[package.path]
+        self.packages.remove(package)
+        if package.package_name is not None and \
+                package.package_name.lower() in self.package_name_dict:
+            del self.package_name_dict[package.package_name.lower()]
+        del self.package_key_dict[package.path[-1].lower()]
+        package_list = self.package_type_dict[package.package_type.lower()]
+        package_list.remove(package)
+        if len(package_list) == 0:
+            del self.package_type_dict[package.package_type.lower()]
+
+        # collect keys of items to be removed from main dictionary
+        item_to_remove = []
+        for key, data in self.simulation_data.mfdata.items():
+            is_subkey = True
+            for pitem, ditem in zip(package.path, key):
+                if pitem != ditem:
+                    is_subkey = False
+                    break
+            if is_subkey:
+                item_to_remove.append(key)
+
+        # remove items from main dictionary
+        for key in item_to_remove:
+            del self.simulation_data.mfdata[key]
+
+    def remove_package(self, package):
         """
-        sets the model grid to model_grid and creates the appropriate
-        dis package
+        removes a package and all child packages from the model
 
         Parameters
         ----------
-        model_grid : ModelGrid
-            a model grid
+        package : MFPackage
+            package to be removed from the model
+
+        Returns
+        -------
+
+        Examples
+        --------
         """
-        # check for conflicts
+        self._remove_package_from_dictionaries(package)
 
-        # build dis package
+        # remove package from name file
+        package_data = self.name_file.packagerecarray.get_data()
+        new_rec_array = None
+        for item in package_data:
+            if item[1] != package.filename:
+                if new_rec_array is None:
+                    new_rec_array = np.rec.array(item, package_data.dtype)
+                else:
+                    new_rec_array = np.hstack((item, new_rec_array))
+        self.name_file.packagerecarray.set_data(new_rec_array)
 
-        # add dis package
+        # build list of child packages
+        child_package_list = []
+        for pkg in self.packages:
+            if pkg.parent_file is not None and pkg.parent_file.path == \
+                    package.path:
+                child_package_list.append(pkg)
+        # remove child packages
+        for child_package in child_package_list:
+            self._remove_package_from_dictionaries(child_package)
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):
@@ -384,6 +490,8 @@ class MFModel(PackageContainer):
                 pkg_type = package.package_type.upper()
                 if len(pkg_type) > 3 and pkg_type[-1] == 'A':
                     pkg_type = pkg_type[0:-1]
+                # Model Assumption - assuming all name files have a package
+                # rec array
                 self.name_file.packagerecarray.\
                   update_record(['{}6'.format(pkg_type), package.filename,
                   package.package_name], 0)

@@ -6,7 +6,7 @@ modeldimensions module.  Contains the model dimension information
 
 from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
-from ..data.mfstructure import StructException
+from ..data.mfstructure import StructException, DatumType
 from ..data.mfdatautil import DatumUtil, NameIter
 from ..utils.mfenums import DiscretizationType
 
@@ -350,8 +350,9 @@ class ModelDimensions(object):
         shape_rule = None
         shape_consistent = True
         if data_item is None:
-            if structure.type == 'recarray' or structure.type == 'record':
-                if structure.type == 'record':
+            if structure.type == DatumType.recarray or \
+                    structure.type == DatumType.record:
+                if structure.type == DatumType.record:
                     num_rows = 1
                 else:
                     num_rows, consistent_shape = \
@@ -359,7 +360,7 @@ class ModelDimensions(object):
                     shape_consistent = shape_consistent and consistent_shape
                 num_cols = 0
                 for data_item_struct in structure.data_item_structures:
-                    if data_item_struct.type != 'keyword':
+                    if data_item_struct.type != DatumType.keyword:
                         num, shape_rule, consistent_shape = \
                         self._resolve_data_item_shape(data_item_struct,
                                                       path=path,
@@ -398,13 +399,11 @@ class ModelDimensions(object):
 
         return shape_dimensions, shape_rule
 
-    # Reshapes data into an N-dimensional array based on the axes requested
-    def shape_data(self, data, modflowdataaxes):
-        self.test = 1
-
     def _resolve_data_item_shape(self, data_item_struct, data_set_struct=None,
                                  data=None, path=None,
                                  deconstruct_axis=True, repeating_key=None):
+        if isinstance(data, tuple):
+            data = [data]
         shape_rule = None
         consistent_shape = True
         if path is None:
@@ -501,8 +500,8 @@ class ModelDimensions(object):
                                 shape_dimensions.append(-9999)
                                 consistent_shape = False
         else:
-            if data_item_struct.type == 'recarray' or \
-              data_item_struct.type == 'record':
+            if data_item_struct.type == DatumType.recarray or \
+              data_item_struct.type == DatumType.record:
                 # shape is unknown
                 shape_dimensions.append(-9999)
                 consistent_shape = False
@@ -594,9 +593,6 @@ class ModelDimensions(object):
             if entry not in order:
                 new_shape_array.append(entry)
         return new_shape_array
-
-    def get_ts_length(self, timestep):
-        self.test = 1
 
     def model_subspace_size(self, subspace_string):
         axis_found = False

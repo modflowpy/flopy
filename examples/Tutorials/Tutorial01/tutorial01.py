@@ -51,6 +51,15 @@ success, buff = mf.run_model()
 # Post process the results
 import matplotlib.pyplot as plt
 import flopy.utils.binaryfile as bf
+
+plt.subplot(1, 1, 1, aspect='equal')
+hds = bf.HeadFile(modelname + '.hds')
+head = hds.get_data(totim=1.0)
+levels = np.arange(1, 10, 1)
+extent = (delr / 2., Lx - delr / 2., Ly - delc / 2., delc / 2.)
+plt.contour(head[0, :, :], levels=levels, extent=extent)
+plt.savefig('tutorial1a.png')
+
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(1, 1, 1, aspect='equal')
 
@@ -69,7 +78,7 @@ qm = modelmap.plot_ibound()
 lc = modelmap.plot_grid()
 cs = modelmap.contour_array(head, levels=levels)
 quiver = modelmap.plot_discharge(frf, fff, head=head)
-plt.show()
+plt.savefig('tutorial1b.png')
 
 
 

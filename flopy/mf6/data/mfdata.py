@@ -6,7 +6,8 @@ from collections import OrderedDict
 from enum import Enum
 from ..data.mfstructure import MFDataException, MFFileParseException, \
                                MFInvalidTransientBlockHeaderException, \
-                               MFDataItemStructure
+                               MFDataFileException, MFDataItemStructure, \
+                               DatumType
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
                               ConstIter, ArrayIndexIter
 from ..coordinates.modeldimensions import DataDimensions
@@ -206,7 +207,6 @@ class DataStorageType(Enum):
     internal_array = 1
     internal_constant = 2
     external_file = 3
-    open_close = 4
 
 
 class DataStructureType(Enum):
@@ -220,13 +220,11 @@ class DataStructureType(Enum):
 
 class LayerStorage(object):
     def __init__(self, data_storage, lay_num,
-                 data_storage_type=DataStorageType.internal_array,
-                 data_structure_type=DataStructureType.ndarray):
+                 data_storage_type=DataStorageType.internal_array):
         self._data_storage_parent = data_storage
         self._lay_num = lay_num
         self._internal_data = None
         self._data_const_value = None
-        self._data_structure_type = data_structure_type
         self.data_storage_type = data_storage_type
         self.fname = None
         self.factor = 1.0
@@ -245,10 +243,10 @@ class LayerStorage(object):
         else:
             return str(self.get_data())
 
-    def __getattribute__(self, name):
-        if name == 'array':
+    def __getattr__(self, attr):
+        if attr == 'array':
             return self._data_storage_parent.get_data(self._lay_num, True)
-        return object.__getattribute__(self, name)
+        #return object.__getattribute__(self, attr)
 
     def set_data(self, data):
         self._data_storage_parent.set_data(data, self._lay_num, [self.factor])
@@ -400,12 +398,12 @@ class DataStorage(object):
             self.build_type_list(resolve_data_shape=False)
             self._data_type = None
         else:
-            self._data_type = self.data_dimensions.structure.get_datum_type()
+            self._data_type = self.data_dimensions.structure.\
+                get_datum_type(return_enum_type=True)
         self.layered = layered
 
         # initialize comments
         self.pre_data_comments = None
-        self.post_data_comments = None
         self.comments = OrderedDict()
 
     def __repr__(self):
@@ -456,7 +454,6 @@ class DataStorage(object):
             self.num_layers = len(self.layer_storage)
 
     def get_data_str(self, formal):
-        layer_strs= []
         data_str = ''
         # Assemble strings for internal array data
         for index, storage in enumerate(self.layer_storage):
@@ -723,7 +720,8 @@ class DataStorage(object):
                 success = True
                 for layer_num, layer_data in enumerate(data):
                     if not isinstance(layer_data, list) and \
-                            not isinstance(layer_data, dict):
+                            not isinstance(layer_data, dict) and \
+                            not isinstance(layer_data, np.ndarray):
                         layer_data = [layer_data]
                     success = success and self._set_array_layer(layer_data,
                                                                 layer_num,
@@ -743,7 +741,8 @@ class DataStorage(object):
 
     def _set_array_layer(self, data, layer, multiplier, key):
         # look for a single constant value
-        data_type = self.data_dimensions.structure.get_datum_type()
+        data_type = self.data_dimensions.structure.\
+            get_datum_type(return_enum_type=True)
         if len(data) == 1 and self._is_type(data[0], data_type):
             # store data as const
             self.store_internal(data, layer, True, multiplier, key=key)
@@ -848,9 +847,10 @@ class DataStorage(object):
                         structure = self.data_dimensions.structure
                         data_item_structs = structure.data_item_structures
                         if data_item_structs[0].tagged and not \
-                                data_item_structs[0].type == 'keyword':
+                                data_item_structs[0].type == DatumType.keyword:
                             for data_index, data_entry in enumerate(data):
-                                if (data_item_structs[0].type == 'string' and
+                                if (data_item_structs[0].type ==
+                                        DatumType.string and
                                         data_entry[0].lower() ==
                                         data_item_structs[0].name.lower()):
                                     break
@@ -966,8 +966,14 @@ class DataStorage(object):
 
     def external_to_internal(self, layer_num=None, store_internal=False):
         # currently only support files containing ndarrays
-        assert(self.data_structure_type == DataStructureType.ndarray)
-
+        if self.data_structure_type != DataStructureType.ndarray:
+            path = self.data_dimensions.structure.path
+            except_str = 'ERROR: Can not convert {} to internal data. ' \
+                         'Exernal to internal file operations' \
+                         'currently only supported for ndarrays. ' \
+                         '{}'.format(path[-1], path,)
+            print(except_str)
+            raise MFDataFileException(except_str)
         if layer_num is None:
             data_out = self._build_full_data(store_internal)
         else:
@@ -1011,6 +1017,7 @@ class DataStorage(object):
                     self.layer_storage[layer].fname, model_dim.model_name),
                     'r')
         line = ' '
+        ArrayUtil.reset_delimiter_used()
         while line != '':
             line = fd.readline()
             arr_line = ArrayUtil.split_data_line(line, True)
@@ -1060,7 +1067,7 @@ class DataStorage(object):
             for item in val:
                 string_val.append(str(item+1))
             return ' '.join(string_val)
-        elif type == 'float':
+        elif type == DatumType.double_precision:
             upper = self._simulation_data.scientific_notation_upper_threshold
             lower = self._simulation_data.scientific_notation_lower_threshold
             if (abs(val) > upper or abs(val) < lower) and val != 0:
@@ -1071,9 +1078,9 @@ class DataStorage(object):
                                         self._simulation_data.float_precision)
 
             return format_str.format(val)
-        elif type == 'int' or type == 'integer':
+        elif type == DatumType.integer:
             return str(val)
-        elif type == 'string':
+        elif type == DatumType.string:
             arr_val = val.split()
             if len(arr_val) > 1:
                 # quote any string with spaces
@@ -1089,7 +1096,7 @@ class DataStorage(object):
 
     def process_internal_line(self, arr_line):
         internal_modifiers_found = False
-        if self._data_type == 'integer':
+        if self._data_type == DatumType.integer:
             multiplier = 1
         else:
             multiplier = 1.0
@@ -1134,7 +1141,7 @@ class DataStorage(object):
     def process_open_close_line(self, arr_line, layer, store=True):
         # process open/close line
         index = 2
-        if self._data_type == 'integer':
+        if self._data_type == DatumType.integer:
             multiplier = 1
         else:
             multiplier = 1.0
@@ -1264,7 +1271,7 @@ class DataStorage(object):
             if self.layer_storage[layer].factor is not None and \
                     apply_multiplier:
                 mult = self.layer_storage[layer].factor
-            elif self._data_type == 'integer':
+            elif self._data_type == DatumType.integer:
                 mult = 1
             else:
                 mult = 1.0
@@ -1302,18 +1309,19 @@ class DataStorage(object):
         # get expected size
         data_dimensions = self.get_data_dimensions(layer)
         # get expected data types
-        if self.data_dimensions.structure.type == 'recarray' or \
-                self.data_dimensions.structure.type == 'record':
-            data_types = self.data_dimensions.structure.get_data_item_types()
+        if self.data_dimensions.structure.type == DatumType.recarray or \
+                self.data_dimensions.structure.type == DatumType.record:
+            data_types = self.data_dimensions.structure.\
+                get_data_item_types(return_enum_type=True)
             # check to see if data contains the correct types and is a possibly
             # correct size
             record_loc = 0
             actual_data_size = 0
             rows_of_data = 0
             for data_item in data_iter:
-                if self._is_type(data_item, data_types[record_loc]):
+                if self._is_type(data_item, data_types[2][record_loc]):
                     actual_data_size += 1
-                if record_loc == len(data_types) - 1:
+                if record_loc == len(data_types[0]) - 1:
                     record_loc = 0
                     rows_of_data += 1
                 else:
@@ -1324,7 +1332,8 @@ class DataStorage(object):
             expected_data_size = 1
             for dimension in data_dimensions:
                 expected_data_size = expected_data_size * dimension
-            data_type = self.data_dimensions.structure.get_datum_type()
+            data_type = self.data_dimensions.structure.\
+                get_datum_type(return_enum_type=True)
             # check to see if data can fit dimensions
             actual_data_size = 0
             for data_item in data_iter:
@@ -1343,13 +1352,13 @@ class DataStorage(object):
             return self._fill_dimensions(data_iter, data_dimensions)
 
     def _is_type(self, data_item, data_type):
-        if data_type == 'string' or data_type == 'keyword':
+        if data_type == DatumType.string or data_type == DatumType.keyword:
             return True
-        elif data_type == 'integer':
+        elif data_type == DatumType.integer:
             return DatumUtil.is_int(data_item)
-        elif data_type == 'float' or data_type == 'double':
+        elif data_type == DatumType.double_precision:
             return DatumUtil.is_float(data_item)
-        elif data_type == 'keystring':
+        elif data_type == DatumType.keystring:
             # TODO: support keystring type
             print('Keystring type currently not supported.')
             return True
@@ -1408,8 +1417,8 @@ class DataStorage(object):
                 return forward_index - index
         return len(internal_data.dtype.names) - index
 
-    def build_type_list(self, data_set=None, record_with_record=False,
-                        data=None, resolve_data_shape=True, key=None,
+    def build_type_list(self, data_set=None, data=None,
+                        resolve_data_shape=True, key=None,
                         nseg=None):
         if data_set is None:
             self._recarray_type_list = []
@@ -1438,15 +1447,15 @@ class DataStorage(object):
                                 self._recarray_type_list.append((aux_var_name,
                                                                  data_type))
 
-                elif data_item.type == 'record':
+                elif data_item.type == DatumType.record:
                     # record within a record, recurse
                     self.build_type_list(data_item, True, data)
-                elif data_item.type == 'keystring':
+                elif data_item.type == DatumType.keystring:
                     self._recarray_type_list.append((data_item.name,
                                                      data_type))
                     # add potential data after keystring to type list
                     ks_data_item = deepcopy(data_item)
-                    ks_data_item.type = 'string'
+                    ks_data_item.type = DatumType.string
                     ks_data_item.name = '{}_data'.format(ks_data_item.name)
                     ks_rec_type = ks_data_item.get_rec_type()
                     self._recarray_type_list.append((ks_data_item.name,
@@ -1469,12 +1478,14 @@ class DataStorage(object):
                 elif data_item.name != 'boundname' or \
                         self.data_dimensions.package_dim.boundnames():
                     # don't include initial keywords
-                    if data_item.type != 'keyword' or initial_keyword == False:
+                    if data_item.type != DatumType.keyword or \
+                            initial_keyword == \
+                            False:
                         initial_keyword = False
                         shape_rule = None
                         if data_item.tagged:
-                            if data_item.type != 'string' and \
-                                    data_item.type != 'keyword':
+                            if data_item.type != DatumType.string and \
+                                    data_item.type != DatumType.keyword:
                                 self._recarray_type_list.append(
                                         ('{}_label'.format(data_item.name),
                                                            object))
@@ -1587,33 +1598,38 @@ class DataStorage(object):
         return data_size
 
     def convert_data(self, data, type, data_item=None):
-        if type == 'float' or type == 'double':
+        if type == DatumType.double_precision:
             try:
                 if isinstance(data, str):
                     # fix any scientific formatting that python can't handle
                     data = data.replace('d', 'e')
-
-                return float(ArrayUtil.clean_numeric(data))
+                return float(data)
             except ValueError:
-                except_str = 'Variable "{}" with value "{}" can ' \
-                             'not be converted to float. ' \
-                             '{}'.format(self.data_dimensions.structure.name,
-                                         data,
-                                         self.data_dimensions.structure.path)
-                print(except_str)
-                raise MFDataException(except_str)
-        elif type == 'int' or type == 'integer':
+                try:
+                    return float(ArrayUtil.clean_numeric(data))
+                except ValueError:
+                    except_str = 'Variable "{}" with value "{}" can ' \
+                                 'not be converted to float. ' \
+                                 '{}'.format(self.data_dimensions.structure.name,
+                                             data,
+                                             self.data_dimensions.structure.path)
+                    print(except_str)
+                    raise MFDataException(except_str)
+        elif type == DatumType.integer:
             try:
-                return int(ArrayUtil.clean_numeric(data))
+                return int(data)
             except ValueError:
-                except_str = 'Variable "{}" with value "{}" can ' \
-                             'not be converted to int. ' \
-                             '{}'.format(self.data_dimensions.structure.name,
-                                         data,
-                                         self.data_dimensions.structure.path)
-                print(except_str)
-                raise MFDataException(except_str)
-        elif type == 'string' and data is not None:
+                try:
+                    return int(ArrayUtil.clean_numeric(data))
+                except ValueError:
+                    except_str = 'Variable "{}" with value "{}" can ' \
+                                 'not be converted to int. ' \
+                                 '{}'.format(self.data_dimensions.structure.name,
+                                             data,
+                                             self.data_dimensions.structure.path)
+                    print(except_str)
+                    raise MFDataException(except_str)
+        elif type == DatumType.string and data is not None:
             if data_item is None or not data_item.preserve_case:
                 # keep strings lower case
                 return data.lower()
@@ -1636,8 +1652,6 @@ class MFTransient(object):
         current key defining specific transient dataset to be accessed
     _data_storage : dict
         dictionary of DataStorage objects
-    _data_struct_type : str
-        type of storage (numpy array type in most cases) used to store data
 
     Methods
     -------
@@ -1682,15 +1696,23 @@ class MFTransient(object):
     def __init__(self, *args, **kwargs):
         self._current_key = None
         self._data_storage = None
-        self._data_struct_type = None
 
     def add_transient_key(self, transient_key):
         if isinstance(transient_key, int):
             assert(self._verify_sp(transient_key))
 
-    def _transient_setup(self, data_storage, data_struct_type):
+    def update_transient_key(self, old_transient_key, new_transient_key):
+        if old_transient_key in self._data_storage:
+            # replace dictionary key
+            self._data_storage[new_transient_key] = \
+                self._data_storage[old_transient_key]
+            del self._data_storage[old_transient_key]
+            if self._current_key == old_transient_key:
+                # update current key
+                self._current_key = new_transient_key
+
+    def _transient_setup(self, data_storage):
         self._data_storage = data_storage
-        self._data_struct_type = data_struct_type
 
     def get_data_prep(self, transient_key=0):
         if isinstance(transient_key, int):
@@ -1804,7 +1826,6 @@ class MFData(object):
         self._data_name = structure.name
         self._data_storage = None
         self._data_type = structure.type
-        self._indent_level = 1
         self._internal_data = None
         self._keyword = ''
         if self._simulation_data is not None:
@@ -1820,10 +1841,10 @@ class MFData(object):
         # tie this to the simulation dictionary
         sim_data.mfdata[self._path] = self
 
-    def __getattribute__(self, name):
-        if name == 'array':
+    def __getattr__(self, name):
+         if name == 'array':
             return self.get_data(apply_mult=True)
-        return object.__getattribute__(self, name)
+         #return object.__getattribute__(self, name)
 
     def __repr__(self):
         return repr(self._get_storage_obj())
@@ -1848,7 +1869,7 @@ class MFData(object):
         if data_set is None:
             data_set = self.structure
         for index, data_item in data_set.data_items.items():
-            if data_item.type == 'record':
+            if data_item.type == DatumType.record:
                 # record within a record, recurse
                 description = self.get_description(description, data_item)
             else:
@@ -1871,25 +1892,15 @@ class MFData(object):
     def _structure_init(self, data_set=None):
         if data_set is None:
             # Initialize variables
-            self._num_optional = 0
-            self._num_required = 0
-            self._num_heading_required = 0
-            self._num_loads = 0
             data_set = self.structure
         for data_item_struct in data_set.data_item_structures:
-            if data_item_struct.type == 'record':
+            if data_item_struct.type == DatumType.record:
                 # this is a record within a record, recurse
                 self._structure_init(data_item_struct)
             else:
                 if len(self.structure.data_item_structures) == 1:
                     # data item name is a keyword to look for
                     self._keyword = data_item_struct.name
-                if data_item_struct.optional:
-                    self._num_optional += 1
-                else:
-                    self._num_required += 1
-                    if data_item_struct.reader == 'readarray':
-                        self._num_heading_required += 1
 
     def _get_constant_formatting_string(self, const_val, layer, data_type,
                                         suffix='\n'):
@@ -1979,21 +1990,6 @@ class MFData(object):
                                                    self._simulation_data,
                                                    line_num)
 
-    def _build_type_array(self, axis_list, var_type):
-        # calculate size
-        data_size = 1
-        for axis in axis_list:
-            data_size = data_size * axis
-        self._min_data_length += data_size
-
-        # build flat array
-        type_array = []
-        for index in range(0, data_size):
-            type_array.append((var_type, True))
-
-        # reshape
-        return np.reshape(type_array, (2,) + axis_list)
-
     def _get_storage_obj(self):
         return self._data_storage
 
@@ -2008,13 +2004,12 @@ class MFMultiDimVar(MFData):
         if layer is None:
             layer = 0
         int_format = ['INTERNAL', 'FACTOR']
-        data_type = self.structure.get_datum_type()
+        data_type = self.structure.get_datum_type(return_enum_type=True)
         layer_storage = self._get_storage_obj().layer_storage[layer]
         if layer_storage.factor is not None:
             int_format.append(str(layer_storage.factor))
         else:
-            if data_type == 'float' or data_type == 'double' or \
-                    data_type == 'double precision':
+            if data_type == DatumType.double_precision:
                 int_format.append('1.0')
             else:
                 int_format.append('1')
@@ -2033,13 +2028,14 @@ class MFMultiDimVar(MFData):
         ext_file_path = file_mgmt.get_updated_path(layer_storage.fname,
                                                    model_name,
                                                    ext_file_action)
+        layer_storage.fname = ext_file_path
         ext_format = ['OPEN/CLOSE', "'{}'".format(ext_file_path)]
         ext_format.append('FACTOR')
         if layer_storage.factor is not None:
             ext_format.append(str(layer_storage.factor))
         else:
-            if self.structure.type.lower() == 'float' \
-                    or self.structure.type.lower() == 'double':
+            if self.structure.get_datum_type(return_enum_type=True) == \
+                    DatumType.double_precision:
                 ext_format.append('1.0')
             else:
                 ext_format.append('1')

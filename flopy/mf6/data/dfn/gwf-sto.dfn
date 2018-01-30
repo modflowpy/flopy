@@ -14,7 +14,7 @@ type keyword
 reader urword
 optional true
 longname keyword to indicate SS is read as storage coefficient
-description keyword to indicate that the \texttt{ss} array is read as storage coefficient rather than specific storage.
+description keyword to indicate that the SS array is read as storage coefficient rather than specific storage.
 
 # --------------------- gwf sto griddata ---------------------
 
@@ -72,7 +72,7 @@ valid
 reader urword
 optional true
 longname steady state indicator
-description keyword to indicate that stress-period \texttt{iper} is steady-state. Steady-state conditions will apply until the \texttt{TRANSIENT} keyword is specified in a subsequent \texttt{BEGIN PERIOD} block.
+description keyword to indicate that stress-period IPER is steady-state. Steady-state conditions will apply until the TRANSIENT keyword is specified in a subsequent BEGIN PERIOD block.
 
 block period
 name transient
@@ -82,5 +82,5 @@ valid
 reader urword
 optional true
 longname transient indicator
-description keyword to indicate that stress-period \texttt{iper} is transient. Transient conditions will apply until the \texttt{STEADY-STATE} keyword is specified in a subsequent \texttt{BEGIN PERIOD} block.
+description keyword to indicate that stress-period IPER is transient. Transient conditions will apply until the STEADY-STATE keyword is specified in a subsequent BEGIN PERIOD block.
 

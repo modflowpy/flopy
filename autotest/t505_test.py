@@ -88,6 +88,13 @@ def np001():
     npf_package = ModflowGwfnpf(model, save_flows=True, alternative_cell_averaging='logarithmic',
                                 icelltype=1, k=5.0)
 
+    # remove package test
+    assert(model.get_package(npf_package.package_name) is not None)
+    model.remove_package(npf_package)
+    assert(model.get_package(npf_package.package_name) is None)
+    npf_package = ModflowGwfnpf(model, save_flows=True, alternative_cell_averaging='logarithmic',
+                                icelltype=1, k=5.0)
+
     oc_package = ModflowGwfoc(model, budget_filerecord=[('np001_mod.cbc',)],
                               head_filerecord=[('np001_mod.hds',)],
                               saverecord={0:[('HEAD', 'ALL'), ('BUDGET', 'ALL')],1:[('HEAD', 'ALL'), ('BUDGET', 'ALL')]},
@@ -412,6 +419,16 @@ def test005_advgw_tidal():
                   (11.0, -1800.0, -500.0, -200.0),
                   (21.0, -200.0, -400.0, -300.0),
                   (31.0, 0.0, -600.0, -400.0)]
+    well_ts_package = ModflowUtlts(model, fname='well-rates.ts', parent_file=wel_package,
+                                   time_seriesrecarray=ts_recarray,
+                                   time_series_namerecord=[('well_1_rate', 'well_2_rate', 'well_3_rate')],
+                                   interpolation_methodrecord=[('stepwise', 'stepwise', 'stepwise')])
+    # test removing package with child packages
+    model.remove_package(wel_package)
+    wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
+                                auxiliary=[('var1', 'var2', 'var3')], maxbound=5,
+                                periodrecarray=periodrecarray, boundnames=True, save_flows=True,
+                                ts_filerecord='well-rates.ts')
     well_ts_package = ModflowUtlts(model, fname='well-rates.ts', parent_file=wel_package,
                                    time_seriesrecarray=ts_recarray,
                                    time_series_namerecord=[('well_1_rate', 'well_2_rate', 'well_3_rate')],
@@ -1167,12 +1184,12 @@ def test028_sfr():
 
 if __name__ == '__main__':
     np001()
+    test005_advgw_tidal()
+    test006_2models_gnc()
     test028_sfr()
     test050_circle_island()
-    test006_2models_gnc()
     test006_gwf3_disv()
     test035_fhb()
     test004_bcfss()
     np002()
-    test005_advgw_tidal()
     test021_twri()

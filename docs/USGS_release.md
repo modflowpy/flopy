@@ -17,9 +17,9 @@ header-includes:
     - \fancyhf{{}}
     - \fancyhead[LE, LO, RE, RO]{}
     - \fancyhead[CE, CO]{FloPy Release Notes}
-    - \fancyfoot[LE, RO]{FloPy version 3.2.7 &mdash; develop}
+    - \fancyfoot[LE, RO]{FloPy version 3.2.8 &mdash; develop}
     - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{12/06/2017}
+    - \fancyfoot[RE, LO]{01/12/2018}
 geometry: margin=0.75in
 ---
 
@@ -50,17 +50,17 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2017, FloPy v3.2.7 &mdash; develop: U.S. Geological Survey Software Release, 06 December 2017, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.8 &mdash; develop: U.S. Geological Survey Software Release, 12 January 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.2.7 &mdash; develop from the USGS FloPy website:
+To install FloPy version 3.2.8 &mdash; develop from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.7.zip
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.8.zip
 ```
 
-To update to FloPy version 3.2.7 &mdash; develop from the USGS FloPy website:
+To update to FloPy version 3.2.8 &mdash; develop from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.7.zip --upgrade
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.8.zip --upgrade
 ```

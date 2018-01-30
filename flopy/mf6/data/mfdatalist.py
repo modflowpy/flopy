@@ -3,6 +3,7 @@ import math
 from copy import deepcopy
 from ..data import mfstructure, mfdatautil, mfdata
 from ..mfbase import ExtFileAction
+from .mfstructure import MFDataException, DatumType
 
 
 class MFList(mfdata.MFMultiDimVar):
@@ -91,15 +92,14 @@ class MFList(mfdata.MFMultiDimVar):
                                      dimensions)
         self._data_storage = self._new_storage()
         self._last_line_info = []
-        self._aux_vars = []
         self._data_line = None
+        self._temp_dict = {}
         if data is not None:
             self.set_data(data, True)
 
     def new_simulation(self, sim_data):
         super(MFList, self).new_simulation(sim_data)
         self._data_storage = self._new_storage()
-        self._aux_vars = []
         self._data_line = None
 
     def data_exists(self):
@@ -120,8 +120,10 @@ class MFList(mfdata.MFMultiDimVar):
     def set_data(self, data, autofill=False):
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage()
-        # error check data shape
-
+        #size_definition = self._data_dimensions.get_data_size_definition()
+        #if size_definition is not None:
+            # update size definition based on size of data being set
+        #    size_definition.set_data(len(data))
         # store data
         self._get_storage_obj().set_data(data, autofill=autofill)
 
@@ -162,20 +164,21 @@ class MFList(mfdata.MFMultiDimVar):
         self._data_dimensions.lock()
         # init
         indent = self._simulation_data.indent_string
-        file_entry = ''
+        file_entry = []
         storage = self._get_storage_obj()
         if storage is None or not storage.has_data():
-            return file_entry
+            return ''
 
         # write out initial comments
         if storage.pre_data_comments:
-            file_entry = storage.pre_data_comments.get_file_entry()
+            file_entry.append(storage.pre_data_comments.get_file_entry())
 
         if storage.layer_storage[0].data_storage_type == \
                 mfdata.DataStorageType.external_file:
             ext_string = self._get_external_formatting_string(0,
                                                               ext_file_action)
-            file_entry = '{}{}{}'.format(indent, indent, ext_string.upper())
+            file_entry.append('{}{}{}'.format(indent, indent,
+                                             ext_string.upper()))
         else:
             data_complete = storage.get_data()
             if storage.layer_storage[0].data_storage_type == \
@@ -189,29 +192,23 @@ class MFList(mfdata.MFMultiDimVar):
                 text_line = []
                 index = 0
                 self._get_file_entry_record(data_complete, mflist_line,
-                                            text_line, index, self.structure)
+                                            text_line, index, self.structure,
+                                            storage, indent)
 
                 # include comments
                 if mflist_line in storage.comments and \
                         storage.comments[mflist_line].text:
                     text_line.append(storage.comments[mflist_line].text)
 
-                if len(file_entry) > 0:
-                    file_entry = '{}{}{}\n'.format(file_entry, indent,
-                                                   indent.join(text_line))
-                else:
-                    file_entry = '{}{}\n'.format(indent,
-                                                 indent.join(text_line))
+                file_entry.append('{}{}\n'.format(indent, indent.
+                                                  join(text_line)))
 
         # unfreeze model grid
         self._data_dimensions.unlock()
-
-        return file_entry
+        return ''.join(file_entry)
 
     def _get_file_entry_record(self, data_complete, mflist_line, text_line,
-                               index, data_set):
-        indent = self._simulation_data.indent_string
-        storage = self._get_storage_obj()
+                               index, data_set, storage, indent):
         if storage.layer_storage[0].data_storage_type == \
                 mfdata.DataStorageType.internal_constant:
             #  constant data
@@ -223,7 +220,7 @@ class MFList(mfdata.MFMultiDimVar):
         else:
             data_dim = self._data_dimensions
             for data_item in data_set.data_item_structures:
-                if data_item.name == 'aux':
+                if data_item.is_aux:
                     aux_var_names = data_dim.package_dim.get_aux_variables()
                     if aux_var_names is not None:
                         for aux_var_name in aux_var_names[0]:
@@ -235,15 +232,15 @@ class MFList(mfdata.MFMultiDimVar):
                                         data_item.possible_cellid,
                                         data_item.ucase))
                                 index += 1
-                elif data_item.type == 'record':
+                elif data_item.type == DatumType.record:
                     # record within a record, recurse
                     self._get_file_entry_record(data_complete, mflist_line,
-                                                text_line, index, data_item)
-                elif (data_item.name != 'boundname' or
+                                                text_line, index, data_item,
+                                                storage, indent)
+                elif (not data_item.is_boundname or
                         data_dim.package_dim.boundnames()) and \
-                        (not data_item.optional or len(data_item.name) < 5 or
-                        data_item.name[0:5] != 'mname'
-                  or not storage.in_model):
+                        (not data_item.optional or data_item.name_length < 5
+                        or not data_item.is_mname or not storage.in_model):
                     if len(data_complete[mflist_line]) <= index:
                         if data_item.optional == False:
                             except_str = 'ERROR: Not enough data provided ' \
@@ -283,7 +280,7 @@ class MFList(mfdata.MFMultiDimVar):
                     for data_index in range(0, data_size):
                         if data_complete_len > index:
                             data_val = data_complete[mflist_line][index]
-                            if data_item.type == 'keyword':
+                            if data_item.type == DatumType.keyword:
                                 text_line.append(data_item.name.upper())
                                 if self.structure.block_variable:
                                     # block variables behave differently for
@@ -313,7 +310,7 @@ class MFList(mfdata.MFMultiDimVar):
                                                           possible_cellid,
                                                           data_item.ucase))
                                 index += 1
-                            if data_item.type == 'keystring':
+                            if data_item.type == DatumType.keystring:
                                 # keystring must be at the end of the line so
                                 # everything else is part of the keystring data
                                 for data_index in range(index,
@@ -342,9 +339,11 @@ class MFList(mfdata.MFMultiDimVar):
         super(MFList, self).load(first_line, file_handle, block_header,
                                  pre_data_comments=None)
 
+        # lock things to maximize performance
         self._data_dimensions.lock()
+
+        self._temp_dict = {}
         self._last_line_info = []
-        self._aux_vars = []
         simple_line = False
         data_loaded = []
         storage = self._get_storage_obj()
@@ -353,6 +352,7 @@ class MFList(mfdata.MFMultiDimVar):
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
 
+        mfdatautil.ArrayUtil.reset_delimiter_used()
         arr_line = mfdatautil.ArrayUtil.split_data_line(current_line)
         if arr_line and (len(arr_line[0]) >= 2 and
                 arr_line[0][:3].upper() == 'END'):
@@ -360,18 +360,19 @@ class MFList(mfdata.MFMultiDimVar):
         store_data = False
         if len(arr_line) >= 2 and arr_line[0].upper() == 'OPEN/CLOSE':
             line_num = 0
-            self._get_storage_obj().process_open_close_line(arr_line, 0)
+            storage.process_open_close_line(arr_line, 0)
         else:
             try:
                 line_num = 0
                 simple_line = self._load_line(arr_line, line_num, data_loaded,
-                                              True)[1]
+                                              True, storage)[1]
                 line_num += 1
                 store_data = True
             except mfstructure.MFFileParseException as err:
                 # this could possibly be a constant line.
                 line = file_handle.readline()
-                arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                arr_line = mfdatautil.ArrayUtil.\
+                    split_data_line(line)
                 if len(arr_line) >= 2 and arr_line[0].upper() == 'CONSTANT' \
                         and len(self.structure.data_item_structures) >= 2 and \
                         self.structure.data_item_structures[0].name.upper() \
@@ -384,7 +385,6 @@ class MFList(mfdata.MFMultiDimVar):
                     else:
                         storage.pre_data_comments.add_text(current_line)
                     # store constant value for all cellids
-                    storage = self._get_storage_obj()
                     storage.layer_storage[0].data_storage_type = \
                             mfdata.DataStorageType.internal_constant
                     storage.store_internal(
@@ -395,7 +395,8 @@ class MFList(mfdata.MFMultiDimVar):
                     line = ' '
                     while line != '':
                         line = file_handle.readline()
-                        arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                        arr_line = mfdatautil.ArrayUtil.\
+                            split_data_line(line)
                         if arr_line and (len(arr_line[0]) >= 2 and
                                 arr_line[0][:3].upper() == 'END'):
                             return [False, line]
@@ -403,7 +404,8 @@ class MFList(mfdata.MFMultiDimVar):
                     # not a constant or open/close line, exception is valid
                     raise err
 
-        if self.structure.type == 'record' or self.structure.type == 'string':
+        if self.structure.type == DatumType.record or self.structure.type == \
+        DatumType.string:
             # records only contain a single line
             storage.append_data(data_loaded)
             self._data_dimensions.unlock()
@@ -420,7 +422,8 @@ class MFList(mfdata.MFMultiDimVar):
         line = ' '
         while line != '':
             line = file_handle.readline()
-            arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+            arr_line = mfdatautil.ArrayUtil.\
+                split_data_line(line)
             if arr_line and (len(arr_line[0]) >= 2 and
                     arr_line[0][:3].upper() == 'END'):
                 # end of block
@@ -471,7 +474,8 @@ class MFList(mfdata.MFMultiDimVar):
                 data_loaded.append(self._data_line)
 
             else:
-                self._load_line(arr_line, line_num, data_loaded, False)
+                self._load_line(arr_line, line_num, data_loaded, False,
+                                storage)
             line_num += 1
         if store_data:
             # store as rec array
@@ -489,16 +493,13 @@ class MFList(mfdata.MFMultiDimVar):
         return self._data_storage
 
     def _load_line(self, arr_line, line_num, data_loaded, build_type_list,
-                   data_index_start=0, data_set=None,
+                   storage, data_index_start=0, data_set=None,
                    ignore_optional_vars=False):
         org_data_line = self._data_line
-        storage = self._get_storage_obj()
         simple_line = True
         # only initialize if we are at the start of a new line
         if data_index_start == 0:
             data_set = self.structure
-            if build_type_list:
-                self._data_item_struct_list = []
             # new line of data
             self._data_line = ()
             # determine if at end of block
@@ -527,15 +528,16 @@ class MFList(mfdata.MFMultiDimVar):
                     elif not data_item.optional or \
                             data_item.name[0:5] != 'mname' or \
                             not storage.in_model:
-                        if data_item.type == 'keyword':
+                        if data_item.type == DatumType.keyword:
                             data_index += 1
                             simple_line = False
-                        elif data_item.type == 'record':
+                        elif data_item.type == DatumType.record:
                             # this is a record within a record, recurse into
                             # _load_line to load it
                             data_index = self._load_line(arr_line, line_num,
                                                          data_loaded,
                                                          build_type_list,
+                                                         storage,
                                                          data_index,
                                                          data_item)[0]
                             simple_line = False
@@ -566,6 +568,7 @@ class MFList(mfdata.MFMultiDimVar):
                                                                line_num,
                                                                data_loaded,
                                                                build_type_list,
+                                                               storage,
                                                                data_index_start,
                                                                data_set, True)
                                     else:
@@ -582,7 +585,7 @@ class MFList(mfdata.MFMultiDimVar):
 
                                 data = arr_line[data_index]
                                 repeat_count += 1
-                                if data_item.type == 'keystring':
+                                if data_item.type == DatumType.keystring:
                                     simple_line = False
                                     if repeat_count <= 1:  # only process the
                                         # keyword on the first repeat find
@@ -609,12 +612,24 @@ class MFList(mfdata.MFMultiDimVar):
                                             data_item.keystring_dict[
                                             name_data]
                                         assert(data_item_ks != 0)
+
                                         # keyword is always implied in a
                                         # keystring and should be stored,
                                         # add a string data_item for the
                                         # keyword
-                                        keyword_data_item = deepcopy(data_item)
-                                        keyword_data_item.type = 'string'
+                                        if data_item.name in \
+                                                self._temp_dict:
+                                            # used cached data item for
+                                            # performance
+                                            keyword_data_item = \
+                                                self._temp_dict[data_item.name]
+                                        else:
+                                            keyword_data_item = \
+                                                deepcopy(data_item)
+                                            keyword_data_item.type = \
+                                                DatumType.string
+                                            self._temp_dict[data_item.name] \
+                                                = keyword_data_item
                                         data_index, more_data_expected, \
                                             unknown_repeats = \
                                             self._append_data(
@@ -624,10 +639,48 @@ class MFList(mfdata.MFMultiDimVar):
                                                     data_index,
                                                     var_index,
                                                     repeat_count)
-                                    if data_item_ks.type != 'keyword':
-                                        # data item contains additional
-                                        # information
-                                        data_index, more_data_expected, \
+                                    if isinstance(data_item_ks,
+                                        mfstructure.MFDataStructure):
+                                        dis = \
+                                        data_item_ks.data_item_structures
+                                        for ks_data_item in dis:
+                                            if ks_data_item.type != \
+                                                    DatumType.keyword \
+                                                    and data_index < \
+                                                            arr_line_len:
+                                                # data item contains additional
+                                                # information
+                                                data_index,\
+                                                more_data_expected, \
+                                                unknown_repeats = \
+                                                    self._append_data(
+                                                        ks_data_item,
+                                                        arr_line,
+                                                        arr_line_len,
+                                                        data_index,
+                                                        var_index,
+                                                        repeat_count)
+                                        while data_index < arr_line_len:
+                                            try:
+                                                # append remaining data
+                                                # (temporary fix)
+                                                data_index, \
+                                                more_data_expected, \
+                                                unknown_repeats = \
+                                                    self._append_data(
+                                                        ks_data_item,
+                                                        arr_line,
+                                                        arr_line_len,
+                                                        data_index,
+                                                        var_index,
+                                                        repeat_count)
+                                            except MFDataException:
+                                                break
+                                    else:
+                                        if data_item_ks.type != \
+                                                DatumType.keyword:
+                                            data_index, \
+                                            more_data_expected, \
                                             unknown_repeats = \
                                             self._append_data(data_item_ks,
                                                               arr_line,
@@ -635,19 +688,19 @@ class MFList(mfdata.MFMultiDimVar):
                                                               data_index,
                                                               var_index,
                                                               repeat_count)
-                                    else:
-                                        # append empty data as a placeholder.
-                                        # this is necessarily to keep the
-                                        # recarray a consistent shape
-                                        self._data_line = self._data_line + \
-                                                          (None,)
-                                        data_index += 1
+                                        else:
+                                            # append empty data as a placeholder.
+                                            # this is necessarily to keep the
+                                            # recarray a consistent shape
+                                            self._data_line = \
+                                                self._data_line + (None,)
+                                            data_index += 1
                                 else:
                                     if data_item.tagged and repeat_count == 1:
                                         # data item tagged, include data item
                                         # name as a keyword
                                         di_type = data_item.type
-                                        data_item.type = 'keyword'
+                                        data_item.type = DatumType.keyword
                                         data_index, more_data_expected, \
                                             unknown_repeats = \
                                             self._append_data(data_item,
@@ -818,21 +871,18 @@ class MFList(mfdata.MFMultiDimVar):
     def _resolve_shape(self, data_item, repeat_count, cellid_size=None):
         resolved_shape, shape_rule = \
             self._data_dimensions.get_data_shape(data_item, self.structure,
-                                                 [self._data_line],
+                                                 self._data_line,
                                                  repeating_key=
                                                  self._current_key)
         if cellid_size is not None:
             data_item.remove_cellid(resolved_shape, cellid_size)
 
         if len(resolved_shape) == 1:
-            if mfdatautil.DatumUtil.is_int(resolved_shape[0]):
-                if repeat_count < int(resolved_shape[0]):
-                    return True, shape_rule is not None
-                elif int(resolved_shape[0]) == -9999:
-                    # repeating unknown number of times in 1-D array
-                    return False, True
-            else:
-                return False, False
+            if repeat_count < resolved_shape[0]:
+                return True, shape_rule is not None
+            elif resolved_shape[0] == -9999:
+                # repeating unknown number of times in 1-D array
+                return False, True
         return False, False
 
     def _validate_cellid(self, arr_line, data_index):
@@ -923,8 +973,7 @@ class MFTransientList(MFList, mfdata.MFTransient):
                                               enable=enable,
                                               path=path,
                                               dimensions=dimensions)
-        self._transient_setup(self._data_storage,
-                              mfdata.DataStructureType.recarray)
+        self._transient_setup(self._data_storage)
         self.repeating = True
 
     def add_transient_key(self, transient_key):
