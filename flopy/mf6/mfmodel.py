@@ -357,31 +357,9 @@ class MFModel(PackageContainer):
 
     def _remove_package_from_dictionaries(self, package):
         # remove package from local dictionaries and lists
-        del self._package_paths[package.path]
-        self.packages.remove(package)
-        if package.package_name is not None and \
-                package.package_name.lower() in self.package_name_dict:
-            del self.package_name_dict[package.package_name.lower()]
-        del self.package_key_dict[package.path[-1].lower()]
-        package_list = self.package_type_dict[package.package_type.lower()]
-        package_list.remove(package)
-        if len(package_list) == 0:
-            del self.package_type_dict[package.package_type.lower()]
-
-        # collect keys of items to be removed from main dictionary
-        item_to_remove = []
-        for key, data in self.simulation_data.mfdata.items():
-            is_subkey = True
-            for pitem, ditem in zip(package.path, key):
-                if pitem != ditem:
-                    is_subkey = False
-                    break
-            if is_subkey:
-                item_to_remove.append(key)
-
-        # remove items from main dictionary
-        for key in item_to_remove:
-            del self.simulation_data.mfdata[key]
+        if package.path in self._package_paths:
+            del self._package_paths[package.path]
+        self._remove_package(package)
 
     def remove_package(self, package):
         """
@@ -398,6 +376,13 @@ class MFModel(PackageContainer):
         Examples
         --------
         """
+        if package._model_or_sim.name != self.name:
+            except_text = 'ERROR: Package can not be removed from model {} ' \
+                          'since it is ' \
+                          'not part of '
+            print(except_text)
+            raise mfstructure.FlopyException(except_text)
+
         self._remove_package_from_dictionaries(package)
 
         # remove package from name file

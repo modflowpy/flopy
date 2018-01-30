@@ -332,6 +332,32 @@ class PackageContainer(object):
             self.package_type_dict[package.package_type.lower()] = []
         self.package_type_dict[package.package_type.lower()].append(package)
 
+    def _remove_package(self, package):
+        self.packages.remove(package)
+        if package.package_name is not None and \
+                package.package_name.lower() in self.package_name_dict:
+            del self.package_name_dict[package.package_name.lower()]
+        del self.package_key_dict[package.path[-1].lower()]
+        package_list = self.package_type_dict[package.package_type.lower()]
+        package_list.remove(package)
+        if len(package_list) == 0:
+            del self.package_type_dict[package.package_type.lower()]
+
+        # collect keys of items to be removed from main dictionary
+        items_to_remove = []
+        for key, data in self.simulation_data.mfdata.items():
+            is_subkey = True
+            for pitem, ditem in zip(package.path, key):
+                if pitem != ditem:
+                    is_subkey = False
+                    break
+            if is_subkey:
+                items_to_remove.append(key)
+
+        # remove items from main dictionary
+        for key in items_to_remove:
+            del self.simulation_data.mfdata[key]
+
     def get_package(self, name=None):
         """
         Get a package.
