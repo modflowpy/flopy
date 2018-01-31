@@ -135,6 +135,15 @@ def test_util2d():
     a7 = u2d.load_txt((10, 10), fname, u2d.dtype, "(FREE)")
     assert np.array_equal(u2d.array, a7)
 
+    # test binary integer file
+    fname = os.path.join(out_dir, 'test.int')
+    e8 = np.arange(3 * 4).reshape((3, 4)) - 1
+    with open(fname, 'wb') as fp:
+        fp.write(e8.tobytes())
+    h8, a8 = Util2d.load_bin((3, 4), fname, np.int)
+    assert h8 is None  # no header_dtype
+    np.testing.assert_equal(a8, e8)
+
     return
 
 

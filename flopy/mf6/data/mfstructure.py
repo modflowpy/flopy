@@ -552,6 +552,16 @@ class BlockType(Enum):
     transient = 3
 
 
+class FlopyException(Exception):
+    """
+    General Flopy Exception
+    """
+
+    def __init__(self, error, location):
+        Exception.__init__(self,
+                           "FlopyException: {} ({})".format(error, location))
+
+
 class StructException(Exception):
     """
     Exception related to the package file structure
