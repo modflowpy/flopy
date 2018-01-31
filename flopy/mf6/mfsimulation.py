@@ -164,11 +164,14 @@ class MFSimulationData(object):
         self.wrap_multidim_arrays = True
         self.float_precision = 8
         self.float_characters = 15
-        self.sci_note_upper_thres = 100000
-        self.sci_note_lower_thres = 0.001
+        self._sci_note_upper_thres = 100000
+        self._sci_note_lower_thres = 0.001
+        self.fast_write = True
         self.verify_external_data = True
         self.comments_on = False
         self.auto_set_sizes = True
+
+        self._update_str_format()
 
         # --- file path ---
         self.mfpath = MFFileMgmt(path)
@@ -184,6 +187,20 @@ class MFSimulationData(object):
         # other external files referenced
         self.referenced_files = collections.OrderedDict()
 
+    def set_sci_note_upper_thres(self, value):
+        self._sci_note_upper_thres = value
+        self._update_str_format()
+
+    def set_sci_note_lower_thres(self, value):
+        self._sci_note_lower_thres = value
+        self._update_str_format()
+
+    def _update_str_format(self):
+        self.reg_format_str = '{:.%dE}' % \
+                               self.float_precision
+        self.sci_format_str = '{:%d.%df' \
+                              '}' % (self.float_characters,
+                                     self.float_precision)
 
 class MFSimulation(PackageContainer):
     """

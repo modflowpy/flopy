@@ -228,7 +228,7 @@ class MFList(mfdata.MFMultiDimVar):
                             if aux_var_name.lower() != 'auxiliary':
                                 data_val = data_line[index]
                                 text_line.append(storage.to_string(
-                                        data_val, data_item.type_obj,
+                                        data_val, data_item.type,
                                         data_item.is_cellid,
                                         data_item.possible_cellid,
                                         data_item.ucase))
@@ -281,12 +281,29 @@ class MFList(mfdata.MFMultiDimVar):
                         if data_complete_len > index:
                             data_val = data_line[index]
                             if data_item.type == DatumType.keyword:
-                                text_line.append(data_item.name.upper())
+                                text_line.append(data_item.display_name)
                                 if self.structure.block_variable:
                                     # block variables behave differently for
                                     # now.  this needs to be resolved
                                     # more consistently at some point
                                     index += 1
+                            elif data_item.type == DatumType.keystring:
+                                text_line.append(data_val)
+                                index += 1
+
+                                # keystring must be at the end of the line so
+                                # everything else is part of the keystring data
+                                for data_index in range(index,
+                                                        data_complete_len):
+                                    if data_line[data_index] is not None:
+                                        text_line.append(
+                                                storage.to_string(
+                                                data_line[data_index],
+                                                data_item.type,
+                                                data_item.is_cellid,
+                                                data_item.possible_cellid,
+                                                data_item.ucase))
+                                index = data_index
                             elif data_val is not None and (not isinstance(
                                     data_val, float) or
                                     not math.isnan(data_val)):
@@ -295,36 +312,20 @@ class MFList(mfdata.MFMultiDimVar):
                                     # as a keyword
                                     text_line.append(
                                             storage.to_string(data_val,
-                                                              'string',
+                                                              DatumType.string,
                                                               False,
                                                               force_upper_case=
                                                               data_item.ucase))
                                     index += 1
-                                    data_val = \
-                                            data_line[index]
+                                    data_val = data_line[index]
                                 text_line.append(
                                         storage.to_string(data_val,
-                                                          data_item.type_obj,
+                                                          data_item.type,
                                                           data_item.is_cellid,
                                                           data_item.
                                                           possible_cellid,
                                                           data_item.ucase))
                                 index += 1
-                            if data_item.type == DatumType.keystring:
-                                # keystring must be at the end of the line so
-                                # everything else is part of the keystring data
-                                for data_index in range(index,
-                                                        data_complete_len):
-                                    data_val = \
-                                        data_line[data_index]
-                                    if data_val is not None:
-                                        text_line.append(
-                                                storage.to_string(data_val,
-                                                data_item.type_obj,
-                                                data_item.is_cellid,
-                                                data_item.possible_cellid,
-                                                data_item.ucase))
-                                index = data_index
                         elif not data_item.optional and shape_rule is None:
                             except_str = 'ERROR: Not enough data provided ' \
                                          'for {}. Data for required data ' \
