@@ -145,9 +145,9 @@ class MFSimulationData(object):
         number of decimal points to write for a floating point number
     float_characters : int
         number of characters a floating point number takes up
-    scientific_notation_upper_threshold : float
+    sci_note_upper_thres : float
         numbers greater than this threshold are written in scientific notation
-    scientific_notation_lower_threshold : float
+    sci_note_lower_thres : float
         numbers less than this threshold are written in scientific notation
     mfpath : MFFileMgmt
         file path location information for the simulation
@@ -164,8 +164,8 @@ class MFSimulationData(object):
         self.wrap_multidim_arrays = True
         self.float_precision = 8
         self.float_characters = 15
-        self.scientific_notation_upper_threshold = 100000
-        self.scientific_notation_lower_threshold = 0.001
+        self.sci_note_upper_thres = 100000
+        self.sci_note_lower_thres = 0.001
         self.verify_external_data = True
         self.comments_on = False
         self.auto_set_sizes = True
