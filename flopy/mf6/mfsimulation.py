@@ -11,10 +11,11 @@ from .mfbase import PackageContainer, MFFileMgmt, ExtFileAction
 from .mfbase import PackageContainerType
 from .mfmodel import MFModel
 from .mfpackage import MFPackage
+from .data.mfstructure import DatumType
 from .data import mfstructure, mfdata
 from .utils import binaryfile_utils
 from .utils import mfobservation
-from .modflow import mfnam, mfims, mftdis, mfgwfgwf, mfgwfgnc, mfgwfmvr
+from .modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
 
 
 class SimulationDict(collections.OrderedDict):
@@ -83,7 +84,7 @@ class SimulationDict(collections.OrderedDict):
                             # found key_leaf as a data item name in the data in
                             # the dictionary
                             return item, data_item_index
-                        if data_item_struct.type != 'keyword':
+                        if data_item_struct.type != DatumType.keyword:
                             data_item_index += 1
         return None, None
 
@@ -144,9 +145,9 @@ class MFSimulationData(object):
         number of decimal points to write for a floating point number
     float_characters : int
         number of characters a floating point number takes up
-    scientific_notation_upper_threshold : float
+    sci_note_upper_thres : float
         numbers greater than this threshold are written in scientific notation
-    scientific_notation_lower_threshold : float
+    sci_note_lower_thres : float
         numbers less than this threshold are written in scientific notation
     mfpath : MFFileMgmt
         file path location information for the simulation
@@ -161,10 +162,10 @@ class MFSimulationData(object):
         self.constant_formatting = ['constant', '']
         self.max_columns_of_data = 20
         self.wrap_multidim_arrays = True
-        self.float_precision = 5
-        self.float_characters = 12
-        self.scientific_notation_upper_threshold = 100000
-        self.scientific_notation_lower_threshold = 0.001
+        self.float_precision = 8
+        self.float_characters = 15
+        self.sci_note_upper_thres = 100000
+        self.sci_note_lower_thres = 0.001
         self.verify_external_data = True
         self.comments_on = False
         self.auto_set_sizes = True
@@ -182,10 +183,6 @@ class MFSimulationData(object):
         # --- temporary variables ---
         # other external files referenced
         self.referenced_files = collections.OrderedDict()
-        # structure of model files
-        self.mfdata_structure = collections.OrderedDict()
-        # bound names by package
-        self.bound_names = collections.OrderedDict()
 
 
 class MFSimulation(PackageContainer):
@@ -294,12 +291,11 @@ class MFSimulation(PackageContainer):
         self._ims_files = collections.OrderedDict()
         self._ghost_node_files = {}
         self._mover_files = {}
-        self._other_files = []
+        self._other_files = collections.OrderedDict()
         self.structure = fpdata.sim_struct
 
         self._exg_file_num = {}
         self._gnc_file_num = 0
-        self._mvr_file_num = 0
 
         self.simulation_data.mfpath.set_last_accessed_path()
 
@@ -486,7 +482,6 @@ class MFSimulation(PackageContainer):
                                                     parent_file=parent_package)
                 mover_file.load(strict)
                 self._mover_files[fname] = mover_file
-                self._mvr_file_num += 1
         else:
             # create package
             package_obj = self.package_factory(ftype, '')
@@ -497,7 +492,7 @@ class MFSimulation(PackageContainer):
             utl_struct = mfstructure.MFStructure().sim_struct.utl_struct_objs
             if package.package_type in utl_struct:
                 package.load(strict)
-                self._other_files.append(package)
+                self._other_files[package.filename] = package
                 # register child package with the simulation
                 self._add_package(package, package.path)
                 if parent_package is not None:
@@ -613,7 +608,7 @@ class MFSimulation(PackageContainer):
                           '  File will not be written.'.format(mvr_file))
 
         # write other packages
-        for pp in self._other_files:
+        for index, pp in self._other_files.items():
             pp.write(ext_file_action=ext_file_action)
 
         # FIX: model working folder should be model name file folder
@@ -651,6 +646,23 @@ class MFSimulation(PackageContainer):
         for key, path in output_file_keys.binarypathdict.items():
             if os.path.isfile(path):
                 os.remove(path)
+
+    def remove_package(self, package):
+        if self._tdis_file is not None and \
+                package.path == self._tdis_file.path:
+            self._tdis_file = None
+        if package.filename in self._exchange_files:
+            del self._exchange_files[package.filename]
+        if package.filename in self._ims_files:
+            del self._ims_files[package.filename]
+        if package.filename in self._ghost_node_files:
+            del self._ghost_node_files[package.filename]
+        if package.filename in self._mover_files:
+            del self._mover_files[package.filename]
+        if package.filename in self._other_files :
+            del self._other_files[package.filename]
+
+        self._remove_package(package)
 
     def get_model(self, model_name='', name_file='', model_type=''):
         """

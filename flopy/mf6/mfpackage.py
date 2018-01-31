@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import MFFileMgmt
-from .data.mfstructure import MFDataFileException
+from .data.mfstructure import MFDataFileException, DatumType
 from .data import mfstructure, mfdatautil, mfdata
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
@@ -42,10 +42,6 @@ class MFBlockHeader(object):
         writes block header to file object 'fd'
     write_footer : (fd : file object)
         writes block footer to file object 'fd'
-    set_number_of_variables : (num_variables : int)
-        sets the number of expected block header variables.  any text found in
-        the block header not associated with a block header variable will be
-        assumed to be a comment
     """
     def __init__(self, name, variable_strings, comment, simulation_data=None,
                  path=None):
@@ -70,7 +66,8 @@ class MFBlockHeader(object):
 
         # fix up data
         fixed_data = []
-        if block_header_structure[0].data_item_structures[0].type == 'keyword':
+        if block_header_structure[0].data_item_structures[0].type == \
+                DatumType.keyword:
             data_item = block_header_structure[0].data_item_structures[0]
             fixed_data.append(data_item.name)
         if type(data) == tuple:
@@ -120,7 +117,8 @@ class MFBlockHeader(object):
         fd.write('BEGIN {}'.format(self.name))
         if len(self.data_items) > 0:
             if isinstance(self.data_items[0], mfdatascalar.MFScalar):
-                one_based = self.data_items[0].structure.type == 'integer'
+                one_based = self.data_items[0].structure.type == \
+                            DatumType.integer
                 entry = self.data_items[0].get_file_entry(values_only=True,
                                                           one_based=one_based)
             else:
@@ -138,7 +136,8 @@ class MFBlockHeader(object):
     def write_footer(self, fd):
         fd.write('END {}'.format(self.name))
         if len(self.data_items) > 0:
-            one_based = self.data_items[0].structure.type == 'integer'
+            one_based = self.data_items[0].structure.type == \
+                        DatumType.integer
             if isinstance(self.data_items[0], mfdatascalar.MFScalar):
                 entry = self.data_items[0].get_file_entry(values_only=True,
                                                           one_based=one_based)
@@ -147,17 +146,10 @@ class MFBlockHeader(object):
             fd.write('{}'.format(entry.rstrip()))
         fd.write('\n')
 
-    def set_number_of_variables(self, num_var):
-        # sets a number of variables, moving the rest to the comments section
-        comment = self.get_comment()
-        comment.text = '{}{}'.format(' '.join(self.variable_strings[num_var:]),
-                                     self.get_comment().text)
-        self.variable_strings = self.variable_strings[:num_var]
-
     def get_transient_key(self):
         transient_key = None
         for index in range(0, len(self.data_items)):
-            if self.data_items[index].structure.type != 'keyword':
+            if self.data_items[index].structure.type != DatumType.keyword:
                 transient_key = self.data_items[index].get_data()
                 if isinstance(transient_key, np.recarray):
                     item_struct = self.data_items[index].structure
@@ -307,13 +299,6 @@ class MFBlock(object):
         for dataset in self.structure.block_header_structure:
             self._new_dataset(dataset.name, dataset, True, None)
 
-    def _structure_clear(self):
-        for key, dataset in self.datasets.items():
-            dataset.new_simulation(self._simulation_data)
-        for block_header in self.block_headers:
-            for key, dataitem in block_header.data_items:
-                dataitem.new_simulation(self._simulation_data)
-
     def set_model_relative_path(self, model_ws):
         # update datasets
         for key, dataset in self.datasets.items():
@@ -396,7 +381,8 @@ class MFBlock(object):
                      initial_val=None):
         dataset_path = self.path + (key,)
         if block_header:
-            if dataset_struct.type == 'integer' and initial_val is not None \
+            if dataset_struct.type == DatumType.integer and \
+              initial_val is not None \
               and len(initial_val) >= 1 and \
               dataset_struct.get_record_size()[0] == 1:
                 # stress periods are stored 0 based
@@ -469,6 +455,7 @@ class MFBlock(object):
         initial_comment = mfdata.MFComment('', '', 0)
         fd_block = fd
         line = fd_block.readline()
+        mfdatautil.ArrayUtil.reset_delimiter_used()
         arr_line = mfdatautil.ArrayUtil.split_data_line(line)
         while mfdata.MFComment.is_comment(line, True):
             initial_comment.add_text(line)
@@ -542,7 +529,8 @@ class MFBlock(object):
                     line = ' '
                     while line != '':
                         line = fd_block.readline()
-                        arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                        arr_line = mfdatautil.ArrayUtil.\
+                            split_data_line(line)
                         if arr_line:
                             # determine if at end of block
                             if len(arr_line[0]) > 2 and \
@@ -570,7 +558,8 @@ class MFBlock(object):
         nothing_found = False
         next_line = [True, line]
         while next_line[0] and not nothing_found:
-            arr_line = mfdatautil.ArrayUtil.split_data_line(next_line[1])
+            arr_line = mfdatautil.ArrayUtil.\
+                split_data_line(next_line[1])
             key = mfdatautil.find_keyword(arr_line, self.datasets_keyword)
             if key is not None:
                 ds_name = self.datasets_keyword[key].name
@@ -632,7 +621,8 @@ class MFBlock(object):
             return None
         for index in range(0, len(dataset.structure.data_item_structures)):
             data_item = dataset.structure.data_item_structures[index]
-            if data_item.type == 'keyword' or data_item.type == 'string':
+            if data_item.type == DatumType.keyword or data_item.type == \
+                    DatumType.string:
                 item_name = data_item.name
                 package_type = item_name[:-1]
                 model_type = self._model_or_sim.structure.model_type
@@ -886,14 +876,11 @@ class MFPackage(PackageContainer):
     """
     def __init__(self, model_or_sim, package_type, filename=None, pname=None,
                  add_to_package_list=True, parent_file=None):
-        self._init_in_progress = True
         self._model_or_sim = model_or_sim
         self.package_type = package_type
         if model_or_sim.type == 'Model' and package_type.lower() != 'nam':
-            self._sr = model_or_sim.sr
             self.model_name = model_or_sim.name
         else:
-            self._sr = None
             self.model_name = None
         super(MFPackage, self).__init__(model_or_sim.simulation_data,
                                         self.model_name)
@@ -925,7 +912,6 @@ class MFPackage(PackageContainer):
         if parent_file is not None:
             self.container_type.append(PackageContainerType.package)
         # init variables that may be used later
-        self._unresolved_text = None
         self.post_block_comments = None
         self.last_error = None
 
@@ -1095,7 +1081,6 @@ class MFPackage(PackageContainer):
 
     def _load_blocks(self, fd_input_file, strict=True, max_blocks=sys.maxsize):
         # init
-        self._unresolved_text = []
         self._simulation_data.mfdata[self.path + ('pkg_hdr_comments',)] = \
           mfdata.MFComment('', self.path, self._simulation_data)
         self.post_block_comments = mfdata.MFComment('', self.path,

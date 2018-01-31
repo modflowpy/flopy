@@ -70,7 +70,6 @@ class MFOutputRequester:
      """
 
     def __init__(self, mfdict, path, key):
-        self.simpath = path.get_sim_path()
         self.path = path
         self.mfdict = mfdict
         self.dataDict = {}
