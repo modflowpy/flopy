@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.6 develop &mdash; build 398
+### Version 3.2.8 develop &mdash; build 39
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
@@ -14,9 +14,9 @@ FloPy includes support for MODFLOW-2000, MODFLOW-2005, MODFLOW-NWT, and MODFLOW-
 
 FloPy now includes beta support for MODFLOW 6.  Click [here](docs/mf6.md) for more information.
 
-For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users  Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
+For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
-If you think you have found a bug in FloPy, or if you would like to suggest an improvement or enhancement, please submit a new Issue through the Github Issue tracker toward the upper-right corner of this page. Pull requests will only be accepted on the develop branch of the repository.
+If you think you have found a bug in FloPy, or if you would like to suggest an improvement or enhancement, please submit a new issue through the [Github Issue tracker](https://github.com/modflowpy/flopy/issues). Pull requests will only be accepted on the develop branch of the repository.
 
 
 Documentation
@@ -34,10 +34,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2017, FloPy v3.2.6 &mdash; develop: U.S. Geological Survey Software Release, 30 November 2017, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
-
-
-
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.8 &mdash; develop: U.S. Geological Survey Software Release, 12 January 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Examples
@@ -95,15 +92,15 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 
 To install FloPy type:
 
-pip install flopy
+    pip install flopy
 
 To update FloPy type:
 
-pip install flopy --upgrade
+    pip install flopy --upgrade
 
 To uninstall FloPy type:
 
-pip uninstall flopy
+    pip uninstall flopy
 
 **Installing from the git repository:**
 
@@ -111,21 +108,21 @@ pip uninstall flopy
 
 To install the current version of FloPy from the git repository type:
 
-pip install https://github.com/modflowpy/flopy/zipball/master
+    pip install https://github.com/modflowpy/flopy/zipball/master
 
 To update your version of FloPy with the current version from the git repository type:
 
-pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
+    pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
 
 ***Development version of FloPy:***
 
 To install the bleeding edge version of FloPy from the git repository type:
 
-pip install https://github.com/modflowpy/flopy/zipball/develop
+    pip install https://github.com/modflowpy/flopy/zipball/develop
 
 To update your version of FloPy with the bleeding edge code from the git repository type:
 
-pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
+    pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
 FloPy Supported Packages

@@ -276,5 +276,5 @@ tagged true
 in_record true
 reader urword
 longname
-description save for each step specified in \texttt{steps}. This keyword may be used in conjunction with other keywords to print or save results for multiple time steps.
+description save for each step specified in STEPS. This keyword may be used in conjunction with other keywords to print or save results for multiple time steps.
 

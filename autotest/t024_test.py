@@ -106,5 +106,5 @@ def test_properties_check():
 if __name__ == '__main__':
     # for mfnam in testmodels:
     #    checker_on_load(mfnam)
-    # test_bcs_check()
-    test_properties_check()
+    test_bcs_check()
+    #test_properties_check()

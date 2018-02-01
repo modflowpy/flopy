@@ -1,48 +1,53 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.8
+* Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
+* Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.
+* Bug fixes:
+    * Installation: Added dfn files required by MODFLOW 6 functionality to MANIFEST.in so that they are included in the distribution.
+    * SFR2 package: Fixed issue reading transient data when `ISFOPT` is 4 or 5 for the first stress period.
 
-### Version 3.2.7 pre-release
-
+### Version 3.2.7
 * Added beta support for MODFLOW 6 See [here](./mf6.md) for more information.
 * Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.
 * Added support for FORTRAN free format array data using n*value where n is the number of times value is repeated.
 * Added support for comma separators in 1D data in LPF and UPF files
 * Added support for comma separators on non array data lines in DIS, BCF, LPF, UPW, HFB, and RCH Packages.
-* Added `reset_budgetunit()` method to OC package to faciltate saving cell-by-cell binary output to a single file for all packages that can save cell-by-cell output.
-* Added a `get_residual` method to the `CellBudgetFile` class.
+* Added `.reset_budgetunit()` method to OC package to faciltate saving cell-by-cell binary output to a single file for all packages that can save cell-by-cell output.
+* Added a `.get_residual()` method to the `CellBudgetFile` class.
 * Added support for binary stress period files (`OPEN/CLOSE filename (BINARY)`) in `wel` stress packages on load and instantiation. Will extend to other list-based MODFLOW stress packages.
-* Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
+* Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `.get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
 * Added metadata.acdd class to fetch model metadata from ScienceBase.gov and manage CF/ACDD-complient metadata for NetCDF export
-* Added sparse export option for boundary condition stress period data, where only cells for that B.C. are exported: e.g. `package.stress_period_data.export('stuff.shp', sparse=True)`
-* SFR package support. 
-	* `export_linkages` and `export_outlets` methods to export routing linkages and outlets
-	* sparse shapefile export, where only cells with SFR reaches are included
-	* `plot_path` method to plot streambed elevation profile along sequence of segments
-	* `assign_layers` method
+* Added sparse export option for boundary condition stress period data, where only cells for that B.C. are exported (for example, `package.stress_period_data.export('stuff.shp', sparse=True)`)
+* Added additional SFR2 package functionality: 
+	*  `.export_linkages()` and `.export_outlets()` methods to export routing linkages and outlets
+	*  sparse shapefile export, where only cells with SFR reaches are included
+	*  `.plot_path()` method to plot streambed elevation profile along sequence of segments
+	*  `.assign_layers()` method
 	* additional error checks and bug fixes
-* `SpatialReference` / GIS export
-	* GeoTiff export option to `SpatialReference.export_array`   
-	* `SpatialReference.export_array_contours`: contours an array and then exports contours to shapefile 
-	* inverse option added to `SpatialReference.transform`
-	* automatic reading of spatial reference info from .nam or usgs.model.reference files
-* Node numbers in SFR package and `ModflowDis.get_node()` now zero-based. 
-* DIS package: 
-	* added `get_layer` method
+* Added `SpatialReference` / GIS export functionality:
+	*  GeoTiff export option to `SpatialReference.export_array`   
+	*  `SpatialReference.export_array_contours`: contours an array and then exports contours to shapefile 
+	*  inverse option added to `SpatialReference.transform`
+	*  automatic reading of spatial reference info from .nam or usgs.model.reference files
+* Modified node numbers in SFR package and `ModflowDis.get_node()` from one- to zero-based. 
+* Modified HYDMOD package `klay` variable from one- to zero-based. 
+* Added `.get_layer()` method to DIS package. 
+* Added `.get_saturated_thickness()` and `.get_gradients()` methods
 * Bug fixes:
-    1. Fixed bug in OC when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
-    2. Fixed bug in SUB if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load).
-    3. Fixed bugs in SUB and SUBWT load to pop original unit number.
-    4. Fixed bug in MT3D BTN obs.
-    5. Fixed bug in LPF regarding when HANI is read and written.
-    6. UZF package: added support for MODFLOW NWT options block; fixed issue with loading files with thti/thtr options
-    7. SFR package: fixed bug with segment renumbering, issues with reading transient text file output, 
-    8. Fixed issues with dynamic setting of `SpatialReference` parameters
-    9. NWT solver: forgive missing value for MXITERXMD
-    10. MNW2: fix bug where ztop and zbotm were written incorrectly in `get_allnode_data()`. This was not affecting writing of these variables, only their values in this summary array.
-
+    * OC package: Fixed bug when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
+    * SUB package: Fixed bug if data set 15 is passed to preserved unit numbers (i.e., use unit numbers passed on load).
+    * SUB and SUB-WT packages: Fixed bugs `.load()` to pop original unit number.
+    * BTN package: Fixed bug in obs.
+    * LPF package: Fixed bug regarding when HANI is read and written.
+    * UZF package: added support for MODFLOW NWT options block; fixed issue with loading files with thti/thtr options
+    * SFR package: fixed bug with segment renumbering, issues with reading transient text file output, 
+    * Fixed issues with dynamic setting of `SpatialReference` parameters
+    * NWT package: forgive missing value for MXITERXMD
+    * MNW2 package: fix bug where ztop and zbotm were written incorrectly in `get_allnode_data()`. This was not affecting writing of these variables, only their values in this summary array.
+    * PCGN package: fixed bug writing package.
+    * Fixed issue in `Util2d` when non-integer `cnstnt` passed.
     
-* `flopy.utils.postprocessing`: change `get_transmissivities` so that open intervals above or below model have transmissivity of closest layer
-* added `get_saturated_thickness` and `get_gradients` methods
 
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.
@@ -86,13 +91,13 @@ FloPy Changes
   * write_file() will will now insert PACKAGE_FLOWS line based on user input
 
 * Bug fixes:
-  1. Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
-  2. Fixed bug in check routine when THICKSTRT is specified as an option in the LPF and UPW packages.
-  3. Fixed bug in BinaryHeader.set_values method that prevented setting of entries based on passed kwargs.
-  4. Fixed bugs in reading and writing SEAWAT Viscosity package.
-  5. The DENSE and VISC arrays are now Transient3d objects, so they may change by stress period.
-  6. MNW2: fixed bug with k, i, j node input option and issues with loading at model level
-  7. Fixed bug in ModflowDis.get_cell_volumes().
+  * Fixed bug in parsenamefile when file path in namefile is surrounded with quotes.
+  * Fixed bug in check routine when THICKSTRT is specified as an option in the LPF and UPW packages.
+  * Fixed bug in BinaryHeader.set_values method that prevented setting of entries based on passed kwargs.
+  * Fixed bugs in reading and writing SEAWAT Viscosity package.
+  * The DENSE and VISC arrays are now Transient3d objects, so they may change by stress period.
+  * MNW2: fixed bug with k, i, j node input option and issues with loading at model level
+  * Fixed bug in ModflowDis.get_cell_volumes().
 
 
 ### Version 3.2.5
@@ -107,13 +112,13 @@ FloPy Changes
 * Added method to flopy.modpath.Modpath to create modpath simulation file from modflow model instance boundary conditions. Also added examples of creating modpath files and post-processing modpath pathline and endpoint files to the flopy3_MapExample notebook.
 
 * Bug fixes:
-  1. Fixed issue with VK parameters for LPF and UPW packages.
-  2. Fixed issue with MT3D ADV load in cases where empty fields were present in the first line of the file.
-  3. Fixed cross-section array plotting issues.
-  4. BTN observation locations must now be entered in zero-based indices (a 1 is now added to the index values written to btn file)
-  5. Uploaded supporting files for SFR example notebook; fixed issue with segment_data submitted as array (instead of dict) and as 0d array(s).
-  6. Fixed CHD Package so that it now supports options, and therefore, auxiliary variables can be specified.
-  7. Fixed loading BTN save times when numbers are touching. 
+  * Fixed issue with VK parameters for LPF and UPW packages.
+  * Fixed issue with MT3D ADV load in cases where empty fields were present in the first line of the file.
+  * Fixed cross-section array plotting issues.
+  * BTN observation locations must now be entered in zero-based indices (a 1 is now added to the index values written to btn file)
+  * Uploaded supporting files for SFR example notebook; fixed issue with segment_data submitted as array (instead of dict) and as 0d array(s).
+  * Fixed CHD Package so that it now supports options, and therefore, auxiliary variables can be specified.
+  * Fixed loading BTN save times when numbers are touching. 
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).
@@ -133,10 +138,10 @@ FloPy Changes
 * Added shapefile as optional output format to `.export()` method and deprecated `.to_shapefile()` method.
 
 * Bug fixes:
-  1. Fixed issue with right justified format statement for array control record for MT3DMS.
-  2. Fixed bug writing PHIRAMP for MODFLOW-NWT well files.
-  3. Fixed bugs in NETCDF export methods.
-  4. Fixed bugs in LMT and BTN classes.
+  * Fixed issue with right justified format statement for array control record for MT3DMS.
+  * Fixed bug writing PHIRAMP for MODFLOW-NWT well files.
+  * Fixed bugs in NETCDF export methods.
+  * Fixed bugs in LMT and BTN classes.
 
 ### Version 3.2.3
 * Added template creation support for several packages for used with PEST (and UCODE).
@@ -167,8 +172,8 @@ FloPy Changes
 * Added `load()` method for MODFLOW GMG solver.
 
 * Bug fixes:
-  1. Multiplier in array control record was not being applied to arrays
-  2. vani parameter was not supported
+  * Multiplier in array control record was not being applied to arrays
+  * vani parameter was not supported
 
 ### Version 3.2.1
 * FloPy can now be used with **Python 3.x**

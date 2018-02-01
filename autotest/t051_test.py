@@ -11,6 +11,26 @@ if os.path.isdir(cpth):
 os.makedirs(cpth)
 
 
+def test_default_oc_stress_period_data():
+    m = flopy.modflow.Modflow(verbose=True)
+    dis = flopy.modflow.ModflowDis(m,nper=10,perlen=10.0,nstp=5)
+    bas = flopy.modflow.ModflowBas(m)
+    lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)
+    wel_data = {0: [[0, 0, 0, -1000.]]}
+    wel = flopy.modflow.ModflowWel(m, ipakcb=101,
+                                   stress_period_data=wel_data)
+    #spd = {(0, 0): ['save head', 'save budget']}
+    oc = flopy.modflow.ModflowOc(m, stress_period_data=None)
+    spd_oc = oc.stress_period_data
+    tups = list(spd_oc.keys())
+    kpers = [t[0] for t in tups]
+    assert len(kpers) == m.nper
+    kstps = [t[1] for t in tups]
+    assert max(kstps) == 4
+    assert min(kstps) == 4
+    m.write_input()
+
+
 def test_mfcbc():
     m = flopy.modflow.Modflow(verbose=True)
     dis = flopy.modflow.ModflowDis(m)
@@ -49,4 +69,5 @@ def test_mfcbc():
 
 
 if __name__ == '__main__':
-    test_mfcbc()
+    #test_mfcbc()
+    test_default_oc_stress_period_data()

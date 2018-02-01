@@ -595,7 +595,7 @@ class MfList(object):
                 kper_vtype = int
 
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
-                    .format(itmp, 0, kper))
+                    .format(itmp, 0, kper+1))
 
             isExternal = False
             if self.model.array_free_format and \

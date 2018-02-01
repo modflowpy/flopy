@@ -1,11 +1,11 @@
 # flopy version file automatically created using...pre-commit.py
-# created on...November 30, 2017 16:01:42
+# created on...January 12, 2018 18:32:17
 
 major = 3
 minor = 2
-micro = 6
-build = 398
-commit = 2470
+micro = 8
+build = 39
+commit = 2558
 
 __version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)
 __build__ = '{:d}.{:d}.{:d}.{:d}'.format(major, minor, micro, build)

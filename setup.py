@@ -18,8 +18,8 @@ long_description = ''
 
 try:
     import pypandoc
-
-    long_description = pypandoc.convert('README.md', 'rst')
+    fpth = os.path.join('docs', 'PyPi_release.md')
+    long_description = pypandoc.convert(fpth, 'rst')
 except:
     pass
 
@@ -30,15 +30,17 @@ setup(name=__name__,
       author_email='mark.bakker@tudelft.nl, vincent.post@flinders.edu.au, ' +
                    'langevin@usgs.gov, jdhughes@usgs.gov, jwhite@usgs.gov, ' +
                    'aleaf@usgs.gov, spaulinski@usgs.gov, jjstarn@usgs.gov, ' +
-                   'mnfienen@usgs.gov, frances.alain@gmail.com',
+                   'mnfienen@usgs.gov',
       url='https://github.com/modflowpy/flopy/',
       license='New BSD',
-      platforms='Windows, Mac OS-X',
+      platforms='Windows, Mac OS-X, Linux',
       install_requires=['enum34;python_version<"3.4"',
                         'numpy>=1.9'],
       packages=['flopy', 'flopy.modflow', 'flopy.modflowlgr', 'flopy.modpath',
                 'flopy.mt3d', 'flopy.seawat', 'flopy.utils', 'flopy.plot',
-                'flopy.pest', 'flopy.export'],
+                'flopy.pest', 'flopy.export',
+                'flopy.mf6', 'flopy.mf6.coordinates', 'flopy.mf6.data',
+                'flopy.mf6.modflow', 'flopy.mf6.utils'],
       include_package_data=True, # includes files listed in MANIFEST.in
       # use this version ID if .svn data cannot be found
       version=__version__)

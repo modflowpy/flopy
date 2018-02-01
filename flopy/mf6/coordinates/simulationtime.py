@@ -49,20 +49,15 @@ class StressPeriod(object):
     def get_mult(self):
         return self._tsmult
 
-    def get_ts_start_time(self, timestep):
-        self.test = 1
+    #def get_ts_start_time(self, timestep):
 
-    def get_sp_start_time(self, timestep):
-        self.test = 1
+    #def get_sp_start_time(self, timestep):
 
-    def get_ts_end_time(self, timestep):
-        self.test = 1
+    #def get_ts_end_time(self, timestep):
 
-    def get_sp_end_time(self, timestep):
-        self.test = 1
+    #def get_sp_end_time(self, timestep):
 
-    def get_ts_length(self, timestep):
-        self.test = 1
+    #def get_ts_length(self, timestep):
 
 
 class SimulationTime(object):
@@ -112,14 +107,10 @@ class SimulationTime(object):
         assert (len(tdisrecarray) > sp_num)
         return tdisrecarray[sp_num][1]
 
-    def get_stress_period(self, sp_num):
-        print('1')
+    #def get_stress_period(self, sp_num):
 
-    def remove_stress_period(self, num_stress_period):
-        print('1')
+    #def remove_stress_period(self, num_stress_period):
 
-    def copy_append_stress_period(self, sp_num):
-        print('1')
+    #def copy_append_stress_period(self, sp_num):
 
-    def split_stress_period(self, sp_num):
-        print('1')
+    #def split_stress_period(self, sp_num):
