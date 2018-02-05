@@ -143,39 +143,44 @@ def test_export_output():
 def test_write_shapefile():
     from flopy.utils.reference import SpatialReference
     from flopy.export.shapefile_utils import shp2recarray
+    from flopy.export.shapefile_utils import write_grid_shapefile, write_grid_shapefile2
+
     sr = SpatialReference(delr=np.ones(10) *1.1,  # cell spacing along model rows
                           delc=np.ones(10) *1.1,  # cell spacing along model columns
                           epsg=26715,
                           lenuni=1  # MODFLOW length units
                           )
-    outshp = os.path.join(tpth, 'junk.shp')
-    sr.write_shapefile(outshp)
+    outshp1 = os.path.join(tpth, 'junk.shp')
+    outshp2 = os.path.join(tpth, 'junk2.shp')
+    write_grid_shapefile(outshp1, sr, array_dict={})
+    write_grid_shapefile2(outshp2, sr, array_dict={})
 
-    # check that pyshp reads integers
-    # this only check that row/column were recorded as "N"
-    # not how they will be cast by python or numpy
-    import shapefile as sf
-    sfobj = sf.Reader(outshp)
-    for f in sfobj.fields:
-        if f[0] == 'row' or f[0] == 'column':
-            assert f[1] == 'N'
-    recs = list(sfobj.records())
-    for r in recs[0]:
-        assert isinstance(r, int)
+    for outshp in [outshp1, outshp2]:
+        # check that pyshp reads integers
+        # this only check that row/column were recorded as "N"
+        # not how they will be cast by python or numpy
+        import shapefile as sf
+        sfobj = sf.Reader(outshp)
+        for f in sfobj.fields:
+            if f[0] == 'row' or f[0] == 'column':
+                assert f[1] == 'N'
+        recs = list(sfobj.records())
+        for r in recs[0]:
+            assert isinstance(r, int)
 
-    # check that row and column appear as integers in recarray
-    ra = shp2recarray(outshp)
-    assert np.issubdtype(ra.dtype['row'], np.integer)
-    assert np.issubdtype(ra.dtype['column'], np.integer)
+        # check that row and column appear as integers in recarray
+        ra = shp2recarray(outshp)
+        assert np.issubdtype(ra.dtype['row'], np.integer)
+        assert np.issubdtype(ra.dtype['column'], np.integer)
 
-    try: # check that fiona reads integers
-        import fiona
-        with fiona.open(outshp) as src:
-            meta = src.meta
-            assert 'int' in meta['schema']['properties']['row']
-            assert 'int' in meta['schema']['properties']['column']
-    except:
-        pass
+        try: # check that fiona reads integers
+            import fiona
+            with fiona.open(outshp) as src:
+                meta = src.meta
+                assert 'int' in meta['schema']['properties']['row']
+                assert 'int' in meta['schema']['properties']['column']
+        except:
+            pass
 
 
 def test_export_array():
