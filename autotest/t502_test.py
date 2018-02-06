@@ -37,7 +37,7 @@ def test_create_and_run_model():
 
     # create model instance
     model = MFModel(sim, model_type='gwf6',
-                    model_name=model_name,
+                    modelname=model_name,
                     model_nam_file='{}.nam'.format(model_name),
                     sms_file_name='{}.sms'.format(model_name))
 

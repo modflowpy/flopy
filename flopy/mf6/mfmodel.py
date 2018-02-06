@@ -73,32 +73,36 @@ class MFModel(PackageContainer):
     --------
 
     """
-    def __init__(self, simulation, model_type='gwf', model_name='modflowtest',
-                 model_nam_file=None, version='mf6', exe_name='mf6.exe',
-                 add_to_simulation = True, structure = None,
-                 model_rel_path='.', **kwargs):
-        super(MFModel, self).__init__(simulation.simulation_data, model_name)
+    def __init__(self, simulation, model_type='gwf6', modelname='modflowtest',
+                 model_nam_file=None, version='mf6',
+                 exe_name='mf6.exe', add_to_simulation=True,
+                 structure=None, model_rel_path='.', **kwargs):
+        super(MFModel, self).__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
-        self.name = model_name
+        self.name = modelname
         self.name_file = None
+        self.version = version
+
+        if model_nam_file is None:
+            model_nam_file = '{}.nam'.format(modelname)
 
         self.set_model_relative_path(model_rel_path)
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
-                                                       model_name,
+                                                       modelname,
                                                        model_nam_file)
         else:
             self.structure = structure
         self.exe_name = exe_name
         self.dimensions = modeldimensions.ModelDimensions(self.name,
                                                           self.simulation_data)
-        self.simulation_data.model_dimensions[model_name] = self.dimensions
+        self.simulation_data.model_dimensions[modelname] = self.dimensions
         self._ftype_num_dict = {}
         self._package_paths = {}
 
         if model_nam_file is None:
-            self.model_nam_file = '{}.nam'.format(model_name)
+            self.model_nam_file = '{}.nam'.format(modelname)
         else:
             self.model_nam_file = model_nam_file
 
@@ -151,7 +155,7 @@ class MFModel(PackageContainer):
 
     @classmethod
     def load(cls, simulation, simulation_data, structure,
-             model_name='NewModel', model_nam_file='modflowtest.nam',
+             modelname='NewModel', model_nam_file='modflowtest.nam',
              type='gwf', version='mf6', exe_name='mf6.exe', strict=True,
              model_rel_path='.'):
         """
@@ -187,7 +191,7 @@ class MFModel(PackageContainer):
         --------
         """
 
-        instance = cls(simulation, type, model_name,
+        instance = cls(simulation, type, modelname,
                        model_nam_file=model_nam_file,
                        version=version, exe_name=exe_name,
                        add_to_simulation=False, structure=structure,
@@ -201,7 +205,7 @@ class MFModel(PackageContainer):
         priority_packages = {'dis{}'.format(vnum): 1,'disv{}'.format(vnum): 1,
                              'disu{}'.format(vnum): 1}
         packages_ordered = []
-        package_recarray = instance.simulation_data.mfdata[(model_name, 'nam',
+        package_recarray = instance.simulation_data.mfdata[(modelname, 'nam',
                                                             'packages',
                                                             'packagerecarray')]
         for item in package_recarray.get_data():
@@ -220,16 +224,16 @@ class MFModel(PackageContainer):
                 if model_rel_path and model_rel_path != '.':
                     # strip off model relative path from the file path
                     filemgr = simulation.simulation_data.mfpath
-                    fname = filemgr.strip_model_relative_path(model_name,
+                    fname = filemgr.strip_model_relative_path(modelname,
                                                               fname)
                 print('loading {}...'.format(fname))
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
 
         # load referenced packages
-        if model_name in instance.simulation_data.referenced_files:
+        if modelname in instance.simulation_data.referenced_files:
             for index, ref_file in \
-              instance.simulation_data.referenced_files[model_name].items():
+              instance.simulation_data.referenced_files[modelname].items():
                 if (ref_file.file_type in structure.package_struct_objs or
                   ref_file.file_type in sim_struct.utl_struct_objs) and \
                   not ref_file.loaded:
