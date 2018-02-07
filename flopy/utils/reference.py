@@ -890,7 +890,8 @@ class SpatialReference(object):
         f = open(filename, 'w')
         f.write(
             "{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
-        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul,
+        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul * self.length_multiplier,
+                                                         self.yul * self.length_multiplier,
                                                          self.rotation))
 
         for r in self.delr:
