@@ -726,6 +726,7 @@ class MFDataItemStructure(object):
         self.contained_keywords = {'file_name':True}
         self.block_name = None
         self.name = None
+        self.display_name = None
         self.name_length = None
         self.is_aux = False
         self.is_boundname = False
@@ -761,6 +762,11 @@ class MFDataItemStructure(object):
             if arr_line[0] == 'block':
                 self.block_name = ' '.join(arr_line[1:])
             elif arr_line[0] == 'name':
+                if self.type == DatumType.keyword:
+                    # display keyword names in upper case
+                    self.display_name = ' '.join(arr_line[1:]).upper()
+                else:
+                    self.display_name = ' '.join(arr_line[1:]).lower()
                 self.name = ' '.join(arr_line[1:]).lower()
                 self.name_list.append(self.name)
                 if len(self.name) >= 6 and self.name[0:6] == 'cellid':
@@ -799,6 +805,10 @@ class MFDataItemStructure(object):
                 else:
                     self.data_items = [self.name]
                 self.type_obj = self._get_type()
+                if self.type == DatumType.keyword:
+                    # display keyword names in upper case
+                    if self.display_name is not None:
+                        self.display_name = self.display_name.upper()
             elif arr_line[0] == 'valid':
                 for value in arr_line[1:]:
                     self.valid_values.append(value)
