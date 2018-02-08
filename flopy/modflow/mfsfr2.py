@@ -375,8 +375,10 @@ class ModflowSfr2(Package):
         self.segment_data = {0: self.get_empty_segment_data(nss)}
         if segment_data is not None:
             for i in segment_data.keys():
-                self.segment_data[i] = self.get_empty_segment_data(nss)
+                nseg = len(segment_data[i])
+                self.segment_data[i] = self.get_empty_segment_data(nseg)
                 for n in segment_data[i].dtype.names:
+                    #inds = (segment_data[i]['nseg'] -1).astype(int)
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
         if len(self.segment_data[0]) == 1 or \
@@ -1118,6 +1120,24 @@ class ModflowSfr2(Package):
             all_upsegs[per] = {u: list(set(upsegs[u])) for u in outsegs}
         return all_upsegs
 
+    def get_variable_by_stress_period(self, varname):
+
+        import numpy.lib.recfunctions as rfn
+        dtype = []
+        all_data = np.zeros((self.nss, self.nper), dtype=float)
+        for per in range(self.nper):
+            inds = self.segment_data[per].nseg - 1
+            all_data[inds, per] = self.segment_data[per][varname]
+            dtype.append(('{}{}'.format(varname, per), float))
+        isvar = all_data.sum(axis=1) != 0
+        ra = np.core.records.fromarrays(all_data[isvar].transpose().copy(), dtype=dtype)
+        segs = self.segment_data[0].nseg[isvar]
+        isseg = np.array([True if s in segs else False for s in self.reach_data.iseg])
+        isinlet = isseg & (self.reach_data.ireach == 1)
+        rd = self.reach_data[isinlet][['k', 'i', 'j', 'iseg', 'ireach']].copy()
+        ra = rfn.merge_arrays([rd, ra], flatten=True, usemask=False)
+        return ra.view(np.recarray)
+
     def repair_outsegs(self):
         isasegment = np.in1d(self.segment_data[0].outseg,
                              self.segment_data[0].nseg)
@@ -1679,6 +1699,37 @@ class ModflowSfr2(Package):
         geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(rd, geoms, f, **kwargs)
 
+    def export_transient_variable(self, f, varname, **kwargs):
+        """Export point shapefile showing locations with
+        a given segment_data variable applied. For example, segments
+        where streamflow is entering or leaving the upstream end of a stream segment (FLOW)
+        or where RUNOFF is applied. Cell centroids of the first reach of segments with
+        non-zero terms of varname are exported; values of varname are exported by
+        stress period in the attribute fields (e.g. flow0, flow1, flow2... for FLOW
+        in stress periods 0, 1, 2...
+
+        Parameters
+        ----------
+        f : str, filename
+        varname : str
+            Variable in SFR Package dataset 6a (see SFR package documentation)
+
+        """
+        from flopy.utils.geometry import Point
+        from flopy.export.shapefile_utils import recarray2shp
+
+        rd = self.reach_data
+        if np.min(rd.outreach) == np.max(rd.outreach):
+            self.set_outreaches()
+        ra = self.get_variable_by_stress_period(varname.lower())
+
+        # get the cell centers for each reach
+        m = self.parent
+        x0 = m.sr.xcentergrid[ra.i, ra.j]
+        y0 = m.sr.ycentergrid[ra.i, ra.j]
+        geoms = [Point(x, y) for x, y in zip(x0, y0)]
+        recarray2shp(ra, geoms, f, **kwargs)
+
     @staticmethod
     def ftype():
         return 'SFR'
@@ -1776,7 +1827,7 @@ class check:
         http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
         """
         txt = ''
-        array = array.copy()
+        array = array.view(np.recarray).copy()
         if isinstance(col1, np.ndarray):
             array = recfunctions.append_fields(array, names='tmp1', data=col1,
                                                asrecarray=True)

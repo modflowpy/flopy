@@ -147,7 +147,11 @@ class MFFileMgmt(object):
         for delimiter in file_delimitiers:
             arr_string = new_string.split(delimiter)
             if len(arr_string) > 1:
-                new_string = os.path.join(arr_string[0], arr_string[1])
+                if os.path.isabs(fp_string):
+                    new_string = '{}{}{}'.format(arr_string[0], delimiter,
+                                                 arr_string[1])
+                else:
+                    new_string = os.path.join(arr_string[0], arr_string[1])
                 if len(arr_string) > 2:
                     for path_piece in arr_string[2:]:
                         new_string = os.path.join(new_string, path_piece)

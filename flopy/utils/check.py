@@ -295,8 +295,9 @@ class check:
         values, and description of error for each row in stress_period_data where criteria=True.
         """
         inds_col = ['k', 'i', 'j'] if self.structured else ['node']
-        inds = stress_period_data[criteria][inds_col].view(int)\
+        inds = stress_period_data[criteria][inds_col]\
             .reshape(stress_period_data[criteria].shape + (-1,))
+        inds = np.atleast_2d(np.squeeze(inds.tolist()))
         if col is not None:
             v = stress_period_data[criteria][col]
         else:
