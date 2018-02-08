@@ -180,7 +180,7 @@ class ModflowUzf1(Package):
             If iftunit is positive, the list includes [IUZROW, IUZCOL, IUZOPT]
             List of lists:
             Lists follow the format described in the documentation:
-            [[IUZROW, IUZCOL, IFTUNIT, IUZOPT]] or [[IFTUNIT]]
+            [[IUZROW, IUZCOL, IFTUNIT, IUZOPT]] or [[-IFTUNIT]]
     netflux : list of [Unitrech (int), Unitdis (int)]
         (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
         An optional character variable. When NETFLUX is specified, 
@@ -321,7 +321,13 @@ class ModflowUzf1(Package):
         if uzgag is not None:
             # convert to dict
             if isinstance(uzgag, list):
-                uzgag = {l[2]: [l[0], l[1], l[3]] for l in uzgag}
+                d = {}
+                for l in uzgag:
+                    if len(l) > 1:
+                        d[l[2]] = [l[0], l[1], l[3]]
+                    else:
+                        d[-np.abs(l[0])] = []
+                uzgag = d
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
@@ -331,6 +337,12 @@ class ModflowUzf1(Package):
                                       extension=uzgagext,
                                       package=ModflowUzf1.ftype())
                 ipos += 1
+                # handle case where iftunit is listed in the values
+                # (otherwise, iftunit will be written instead of iuzopt)
+                if len(value) == 4:
+                    uzgag[key] = value[:2] + value[-1:]
+                elif len(value) == 1:
+                    uzgag[-np.abs(key)] = []
 
         # Fill namefile items
         name = [ModflowUzf1.ftype()]
@@ -433,7 +445,7 @@ class ModflowUzf1(Package):
 
         # Data Set 8
         # {IFTUNIT: [IUZROW, IUZCOL, IUZOPT]}
-        self.uzgag = uzgag
+        self._uzgag = uzgag
 
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
@@ -449,12 +461,23 @@ class ModflowUzf1(Package):
                                     extwc, name='extwc')
         self.parent.add_package(self)
 
+    def __setattr__(self, key, value):
+        if key == "uzgag":
+            print('Uzgag must be set by the constructor; \
+            modifying this attribute requires creating a new ModflowUzf1 instance')
+        else:
+            super(ModflowUzf1, self).__setattr__(key, value)
+
     @property
     def nuzgag(self):
         if self.uzgag is None:
             return 0
         else:
             return len(self.uzgag)
+
+    @property
+    def uzgag(self):
+        return self._uzgag
 
     def _2list(self, arg):
         # input as a 3D array

@@ -49,11 +49,10 @@ def test_create():
 
     extwc = np.loadtxt(os.path.join(datpth, 'extwc.dat'))
 
-    uzgag = {-68: [-68],
-             65: [3, 6, 65, 1],
-             66: [6, 3, 66, 2],
-             67: [10, 5, 67, 3]}
-
+    uzgag = {-68: [],
+              65: [3, 6, 1],
+              66: [6, 3, 2],
+              67: [10, 5, 3]}
     uzf = flopy.modflow.ModflowUzf1(m,
                                     nuztop=1, iuzfopt=1, irunflg=1, ietflg=1,
                                     ipakcb=0,
@@ -71,13 +70,59 @@ def test_create():
                                     extdp=15.,
                                     extwc=extwc
                                     )
-    m.write_input()
+    assert uzf.uzgag == uzgag
+    uzgag2 = {-68: [-68],
+             65: [3, 6, 65, 1],
+             66: [6, 3, 66, 2],
+             67: [10, 5, 67, 3]}
 
+    uzf = flopy.modflow.ModflowUzf1(m,
+                                    nuztop=1, iuzfopt=1, irunflg=1, ietflg=1,
+                                    ipakcb=0,
+                                    iuzfcb2=61,
+                                    # binary output of recharge and groundwater discharge
+                                    ntrail2=25, nsets=20,
+                                    surfdep=1.0, uzgag=uzgag2,
+                                    iuzfbnd=m.bas6.ibound.array,
+                                    irunbnd=irunbnd,
+                                    vks=vks,
+                                    finf=finf,
+                                    eps=3.5,
+                                    thts=0.3,
+                                    pet=5.000000E-08,
+                                    extdp=15.,
+                                    extwc=extwc
+                                    )
+    assert uzf.uzgag == uzgag
+    uzgaglist = [[-68],
+                 [3, 6, 65, 1],
+                 [6, 3, 66, 2],
+                 [10, 5, 67, 3]]
+    uzf = flopy.modflow.ModflowUzf1(m,
+                                    nuztop=1, iuzfopt=1, irunflg=1, ietflg=1,
+                                    ipakcb=0,
+                                    iuzfcb2=61,
+                                    # binary output of recharge and groundwater discharge
+                                    ntrail2=25, nsets=20,
+                                    surfdep=1.0, uzgag=uzgaglist,
+                                    iuzfbnd=m.bas6.ibound.array,
+                                    irunbnd=irunbnd,
+                                    vks=vks,
+                                    finf=finf,
+                                    eps=3.5,
+                                    thts=0.3,
+                                    pet=5.000000E-08,
+                                    extdp=15.,
+                                    extwc=extwc
+                                    )
+    assert uzf.uzgag == uzgag
+    m.write_input()
+    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(cpth, uzf.file_name[0]), m)
+    assert uzf2.uzgag == uzgag
     m2 = flopy.modflow.Modflow.load('UZFtest2.nam', version='mf2005',
                                     exe_name='mf2005',
                                     verbose=True,
                                     model_ws=os.path.split(gpth)[0], forgive=False)
-
     # verify that all of the arrays in the created UZF package are the same
     # as those in the loaded example
     attrs = [attr for attr in dir(uzf)
