@@ -31,6 +31,7 @@ from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.data.mfdatautil import ArrayUtil
 from flopy.mf6.data.mfdata import DataStorageType
 from flopy.mf6.utils import testutils
+from flopy.mf6.data.mfstructure import FlopyException
 import flopy.utils.binaryfile as bf
 
 try:
@@ -53,6 +54,7 @@ cpth = os.path.join('temp', 't505')
 if not os.path.isdir(cpth):
     os.makedirs(cpth)
 
+
 def np001():
     # init paths
     test_ex_name = 'np001'
@@ -67,8 +69,31 @@ def np001():
     expected_head_file = os.path.join(expected_output_folder, 'np001_mod.hds')
     expected_cbc_file = os.path.join(expected_output_folder, 'np001_mod.cbc')
 
+    # model tests
+    test_sim = MFSimulation(sim_name=test_ex_name, version='mf6',
+                            exe_name=exe_name, sim_ws=pth,
+                            sim_tdis_file='{}.tdis'.format(test_ex_name))
+    kwargs = {}
+    kwargs['bad_kwarg'] = 20
+    try:
+        ex = False
+        bad_model = MFModel(test_sim, model_type='gwf6', modelname=model_name,
+                            model_nam_file='{}.nam'.format(model_name),
+                            **kwargs)
+    except FlopyException:
+        ex = True
+    assert(ex == True)
+
+    kwargs = {}
+    kwargs['xul'] = 20.5
+    good_model = MFModel(test_sim, model_type='gwf6',
+                         modelname=model_name,
+                         model_nam_file='{}.nam'.format(model_name),
+                         **kwargs)
+
     # create simulation
-    sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
+    sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
+                       sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
@@ -78,9 +103,9 @@ def np001():
                              inner_hclose=0.00001, linear_acceleration='CG',
                              preconditioner_levels=7, preconditioner_drop_tolerance=0.01,
                              number_orthogonalizations=2)
+
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
 
     dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1, nrow=1, ncol=10, delr=500.0, delc=500.0,
                                           top=100.0, botm=50.0, fname='{}.dis'.format(model_name), pname='mydispkg')
@@ -180,8 +205,7 @@ def np002():
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2, tdisrecarray=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='ALL', complexity='SIMPLE',outer_hclose=0.00001,
                              outer_maximum=50, under_relaxation='NONE', inner_maximum=30,
                              inner_hclose=0.00001, linear_acceleration='CG',
@@ -272,8 +296,7 @@ def test021_twri():
     tdis_rc = [(86400.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=1, tdisrecarray=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.0001,
                              outer_maximum=500, under_relaxation='NONE', inner_maximum=100,
                              inner_hclose=0.0001, rcloserecord=0.001, linear_acceleration='CG',
@@ -361,8 +384,7 @@ def test005_advgw_tidal():
     tdis_rc = [(1.0, 1, 1.0), (10.0, 120, 1.0), (10.0, 120, 1.0), (10.0, 120, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=4, tdisrecarray=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', complexity='SIMPLE', outer_hclose=0.0001,
                              outer_maximum=500, under_relaxation='NONE', inner_maximum=100,
                              inner_hclose=0.0001, rcloserecord=0.001, linear_acceleration='CG',
@@ -634,8 +656,7 @@ def test004_bcfss():
     tdis_rc = [(1.0, 1, 1.0), (1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2, tdisrecarray=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='ALL', csv_output_filerecord='bcf2ss.ims.csv', complexity='SIMPLE',
                              outer_hclose=0.000001, outer_maximum=500, under_relaxation='NONE', inner_maximum=100,
                              inner_hclose=0.000001, rcloserecord=0.001, linear_acceleration='CG',
@@ -722,8 +743,7 @@ def test035_fhb():
     tdis_rc = [(400.0, 10, 1.0), (200.0, 4, 1.0), (400.0, 6, 1.1)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=3, tdisrecarray=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', complexity='SIMPLE', outer_hclose=0.001,
                              outer_maximum=120, under_relaxation='NONE', inner_maximum=100, inner_hclose=0.0001,
                              rcloserecord=0.1, linear_acceleration='CG', preconditioner_levels=7,
@@ -799,8 +819,7 @@ def test006_gwf3_disv():
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, tdisrecarray=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.00000001,
                              outer_maximum=1000, under_relaxation='NONE', inner_maximum=1000,
                              inner_hclose=0.00000001, rcloserecord=0.01, linear_acceleration='BICGSTAB',
@@ -913,11 +932,9 @@ def test006_2models_gnc():
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, tdisrecarray=tdis_rc)
     model_1 = MFModel(sim, model_type='gwf6', modelname=model_name_1,
-                      model_nam_file='{}.nam'.format(model_name_1),
-                      ims_file_name='{}.ims'.format(test_ex_name))
+                      model_nam_file='{}.nam'.format(model_name_1))
     model_2 = MFModel(sim, model_type='gwf6', modelname=model_name_2,
-                      model_nam_file='{}.nam'.format(model_name_2),
-                      ims_file_name='{}.ims'.format(test_ex_name))
+                      model_nam_file='{}.nam'.format(model_name_2))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.00000001,
                              outer_maximum=1000, under_relaxation='NONE', inner_maximum=1000,
                              inner_hclose=0.00000001, rcloserecord=0.01, linear_acceleration='BICGSTAB',
@@ -1041,8 +1058,7 @@ def test050_circle_island():
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, tdisrecarray=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.000001,
                              outer_maximum=500, under_relaxation='NONE', inner_maximum=1000,
                              inner_hclose=0.000001, rcloserecord=0.000001, linear_acceleration='BICGSTAB',
@@ -1108,8 +1124,7 @@ def test028_sfr():
     tdis_rc = [(1577889000, 50, 1.1), (1577889000, 50, 1.1)]
     tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=2, tdisrecarray=tdis_rc, fname='simulation.tdis')
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='model.ims')
+                    model_nam_file='{}.nam'.format(model_name))
     model.name_file.save_flows.set_data(True)
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.00001,
                              outer_maximum=100, under_relaxation='DBD', under_relaxation_theta=0.85,
@@ -1206,8 +1221,8 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
-    test028_sfr()
     np001()
+    test028_sfr()
     test005_advgw_tidal()
     test006_2models_gnc()
     test050_circle_island()
