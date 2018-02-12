@@ -557,7 +557,7 @@ class FlopyException(Exception):
     General Flopy Exception
     """
 
-    def __init__(self, error, location):
+    def __init__(self, error, location=''):
         Exception.__init__(self,
                            "FlopyException: {} ({})".format(error, location))
 
@@ -755,6 +755,7 @@ class MFDataItemStructure(object):
         self.possible_cellid = False
         self.ucase = False
         self.preserve_case = False
+        self.default_value = None
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -868,6 +869,8 @@ class MFDataItemStructure(object):
                     self.ucase = bool(arr_line[1])
             elif arr_line[0] == 'preserve_case':
                 self.preserve_case = self._get_boolean_val(arr_line)
+            elif arr_line[0] == 'default_value':
+                self.default_value = ' '.join(arr_line[1:])
 
     def get_type_string(self):
         return '[{}]'.format(self.type_string)
@@ -1134,6 +1137,7 @@ class MFDataStructure(object):
         self.name_list = data_item.name_list
         self.python_name = data_item.python_name
         self.longname = data_item.longname
+        self.default_value = data_item.default_value
         self.repeating = False
         self.layered = ('nlay' in data_item.shape or
                         'nodes' in data_item.shape)

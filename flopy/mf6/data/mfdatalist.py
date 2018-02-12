@@ -406,7 +406,7 @@ class MFList(mfdata.MFMultiDimVar):
                     raise err
 
         if self.structure.type == DatumType.record or self.structure.type == \
-        DatumType.string:
+                DatumType.string:
             # records only contain a single line
             storage.append_data(data_loaded)
             self._data_dimensions.unlock()

@@ -1021,6 +1021,8 @@ class MFPackage(PackageContainer):
                                                       self._model_or_sim, self)
                 dataset_struct = block.data_structures[var_name]
                 var_path = self.path + (key, var_name)
+                if data is None and dataset_struct.default_value is not None:
+                    data = eval(dataset_struct.default_value)
                 return self.blocks[block.name].add_dataset(dataset_struct,
                                                            data, var_path)
 

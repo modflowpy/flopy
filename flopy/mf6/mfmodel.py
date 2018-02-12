@@ -114,6 +114,13 @@ class MFModel(PackageContainer):
         self.sr = SpatialReference(xul=xul, yul=yul, rotation=rotation,
                                    proj4_str=proj4_str)
 
+        # check for extraneous kwargs
+        if len(kwargs) > 0:
+            kwargs_str = ', '.join(kwargs.keys())
+            excpt_str = 'ERROR: Extraneous kwargs "{}" provided to ' \
+                        'MFModel.'.format(kwargs_str)
+            raise mfstructure.FlopyException(excpt_str)
+
         # build model name file
         # create name file based on model type - support different model types
         package_obj = self.package_factory('nam', model_type[0:3])
