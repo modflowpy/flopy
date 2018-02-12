@@ -22,7 +22,7 @@ class MFModel(PackageContainer):
         simulation data object
     structure : MFModelStructure
         structure of this type of model
-    model_name : string
+    modelname : string
         name of the model
     model_nam_file : string
         relative path to the model name file from model working folder
