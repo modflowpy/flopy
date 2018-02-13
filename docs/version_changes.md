@@ -1,5 +1,10 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.9
+* Modified MODFLOW 5 OC stress_period_data=None default behaviour. If MODFLOW 5 OC stress_period_data is not provided then binary head output is saved for the last time step of each stress period.
+* Bug fixes:
+    * Fixed issue with default settings for MODFLOW 5 SUB package `dp` dataset.
+
 ### Version 3.2.8
 * Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
 * Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.
