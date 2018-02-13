@@ -38,8 +38,7 @@ def test_create_and_run_model():
     # create model instance
     model = MFModel(sim, model_type='gwf6',
                     modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    sms_file_name='{}.sms'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
 
     # create solution and add the model
     ims_package = mfims.ModflowIms(sim, print_option='ALL',
