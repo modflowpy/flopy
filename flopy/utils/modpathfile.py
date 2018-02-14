@@ -563,8 +563,10 @@ class EndpointFile():
         ra = self.get_alldata()
         # find the intersection of endpoints and dest_cells
         # convert dest_cells to same dtype for comparison
-        raslice = ra[['k', 'i', 'j']]
-        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
+        raslice = ra_slice(ra, ['k', 'i', 'j'])
+        dest_cells = np.array(dest_cells, dtype=[('k', int),
+                                                 ('i', int),
+                                                 ('j', int)])
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
         return epdest
@@ -616,3 +618,9 @@ class EndpointFile():
         for n in self.kijnames:
             epd[n] += 1
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
+
+def ra_slice(ra, cols):
+    raslice = np.column_stack([ra[c] for c in cols])
+    dtype = [(str(d[0]), d[1]) for d in ra.dtype.descr if d[0] in cols]
+    return np.array([tuple(r) for r in raslice],
+                    dtype=dtype).view(np.recarray)
