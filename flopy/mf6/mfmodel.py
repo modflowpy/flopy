@@ -22,7 +22,7 @@ class MFModel(PackageContainer):
         simulation data object
     structure : MFModelStructure
         structure of this type of model
-    model_name : string
+    modelname : string
         name of the model
     model_nam_file : string
         relative path to the model name file from model working folder
@@ -73,32 +73,36 @@ class MFModel(PackageContainer):
     --------
 
     """
-    def __init__(self, simulation, model_type='gwf', model_name='modflowtest',
-                 model_nam_file=None, version='mf6', exe_name='mf6.exe',
-                 add_to_simulation = True, structure = None,
-                 model_rel_path='.', **kwargs):
-        super(MFModel, self).__init__(simulation.simulation_data, model_name)
+    def __init__(self, simulation, model_type='gwf6', modelname='modflowtest',
+                 model_nam_file=None, version='mf6',
+                 exe_name='mf6.exe', add_to_simulation=True,
+                 structure=None, model_rel_path='.', **kwargs):
+        super(MFModel, self).__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
-        self.name = model_name
+        self.name = modelname
         self.name_file = None
+        self.version = version
+
+        if model_nam_file is None:
+            model_nam_file = '{}.nam'.format(modelname)
 
         self.set_model_relative_path(model_rel_path)
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
-                                                       model_name,
+                                                       modelname,
                                                        model_nam_file)
         else:
             self.structure = structure
         self.exe_name = exe_name
         self.dimensions = modeldimensions.ModelDimensions(self.name,
                                                           self.simulation_data)
-        self.simulation_data.model_dimensions[model_name] = self.dimensions
+        self.simulation_data.model_dimensions[modelname] = self.dimensions
         self._ftype_num_dict = {}
         self._package_paths = {}
 
         if model_nam_file is None:
-            self.model_nam_file = '{}.nam'.format(model_name)
+            self.model_nam_file = '{}.nam'.format(modelname)
         else:
             self.model_nam_file = model_nam_file
 
@@ -109,6 +113,13 @@ class MFModel(PackageContainer):
         proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
         self.sr = SpatialReference(xul=xul, yul=yul, rotation=rotation,
                                    proj4_str=proj4_str)
+
+        # check for extraneous kwargs
+        if len(kwargs) > 0:
+            kwargs_str = ', '.join(kwargs.keys())
+            excpt_str = 'ERROR: Extraneous kwargs "{}" provided to ' \
+                        'MFModel.'.format(kwargs_str)
+            raise mfstructure.FlopyException(excpt_str)
 
         # build model name file
         # create name file based on model type - support different model types
@@ -151,7 +162,7 @@ class MFModel(PackageContainer):
 
     @classmethod
     def load(cls, simulation, simulation_data, structure,
-             model_name='NewModel', model_nam_file='modflowtest.nam',
+             modelname='NewModel', model_nam_file='modflowtest.nam',
              type='gwf', version='mf6', exe_name='mf6.exe', strict=True,
              model_rel_path='.'):
         """
@@ -187,7 +198,7 @@ class MFModel(PackageContainer):
         --------
         """
 
-        instance = cls(simulation, type, model_name,
+        instance = cls(simulation, type, modelname,
                        model_nam_file=model_nam_file,
                        version=version, exe_name=exe_name,
                        add_to_simulation=False, structure=structure,
@@ -201,7 +212,7 @@ class MFModel(PackageContainer):
         priority_packages = {'dis{}'.format(vnum): 1,'disv{}'.format(vnum): 1,
                              'disu{}'.format(vnum): 1}
         packages_ordered = []
-        package_recarray = instance.simulation_data.mfdata[(model_name, 'nam',
+        package_recarray = instance.simulation_data.mfdata[(modelname, 'nam',
                                                             'packages',
                                                             'packagerecarray')]
         for item in package_recarray.get_data():
@@ -220,16 +231,16 @@ class MFModel(PackageContainer):
                 if model_rel_path and model_rel_path != '.':
                     # strip off model relative path from the file path
                     filemgr = simulation.simulation_data.mfpath
-                    fname = filemgr.strip_model_relative_path(model_name,
+                    fname = filemgr.strip_model_relative_path(modelname,
                                                               fname)
                 print('loading {}...'.format(fname))
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
 
         # load referenced packages
-        if model_name in instance.simulation_data.referenced_files:
+        if modelname in instance.simulation_data.referenced_files:
             for index, ref_file in \
-              instance.simulation_data.referenced_files[model_name].items():
+              instance.simulation_data.referenced_files[modelname].items():
                 if (ref_file.file_type in structure.package_struct_objs or
                   ref_file.file_type in sim_struct.utl_struct_objs) and \
                   not ref_file.loaded:
@@ -357,31 +368,9 @@ class MFModel(PackageContainer):
 
     def _remove_package_from_dictionaries(self, package):
         # remove package from local dictionaries and lists
-        del self._package_paths[package.path]
-        self.packages.remove(package)
-        if package.package_name is not None and \
-                package.package_name.lower() in self.package_name_dict:
-            del self.package_name_dict[package.package_name.lower()]
-        del self.package_key_dict[package.path[-1].lower()]
-        package_list = self.package_type_dict[package.package_type.lower()]
-        package_list.remove(package)
-        if len(package_list) == 0:
-            del self.package_type_dict[package.package_type.lower()]
-
-        # collect keys of items to be removed from main dictionary
-        item_to_remove = []
-        for key, data in self.simulation_data.mfdata.items():
-            is_subkey = True
-            for pitem, ditem in zip(package.path, key):
-                if pitem != ditem:
-                    is_subkey = False
-                    break
-            if is_subkey:
-                item_to_remove.append(key)
-
-        # remove items from main dictionary
-        for key in item_to_remove:
-            del self.simulation_data.mfdata[key]
+        if package.path in self._package_paths:
+            del self._package_paths[package.path]
+        self._remove_package(package)
 
     def remove_package(self, package):
         """
@@ -398,6 +387,13 @@ class MFModel(PackageContainer):
         Examples
         --------
         """
+        if package._model_or_sim.name != self.name:
+            except_text = 'ERROR: Package can not be removed from model {} ' \
+                          'since it is ' \
+                          'not part of '
+            print(except_text)
+            raise mfstructure.FlopyException(except_text)
+
         self._remove_package_from_dictionaries(package)
 
         # remove package from name file

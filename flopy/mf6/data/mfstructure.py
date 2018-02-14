@@ -552,6 +552,16 @@ class BlockType(Enum):
     transient = 3
 
 
+class FlopyException(Exception):
+    """
+    General Flopy Exception
+    """
+
+    def __init__(self, error, location=''):
+        Exception.__init__(self,
+                           "FlopyException: {} ({})".format(error, location))
+
+
 class StructException(Exception):
     """
     Exception related to the package file structure
@@ -716,6 +726,7 @@ class MFDataItemStructure(object):
         self.contained_keywords = {'file_name':True}
         self.block_name = None
         self.name = None
+        self.display_name = None
         self.name_length = None
         self.is_aux = False
         self.is_boundname = False
@@ -744,6 +755,7 @@ class MFDataItemStructure(object):
         self.possible_cellid = False
         self.ucase = False
         self.preserve_case = False
+        self.default_value = None
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -751,6 +763,11 @@ class MFDataItemStructure(object):
             if arr_line[0] == 'block':
                 self.block_name = ' '.join(arr_line[1:])
             elif arr_line[0] == 'name':
+                if self.type == DatumType.keyword:
+                    # display keyword names in upper case
+                    self.display_name = ' '.join(arr_line[1:]).upper()
+                else:
+                    self.display_name = ' '.join(arr_line[1:]).lower()
                 self.name = ' '.join(arr_line[1:]).lower()
                 self.name_list.append(self.name)
                 if len(self.name) >= 6 and self.name[0:6] == 'cellid':
@@ -789,6 +806,10 @@ class MFDataItemStructure(object):
                 else:
                     self.data_items = [self.name]
                 self.type_obj = self._get_type()
+                if self.type == DatumType.keyword:
+                    # display keyword names in upper case
+                    if self.display_name is not None:
+                        self.display_name = self.display_name.upper()
             elif arr_line[0] == 'valid':
                 for value in arr_line[1:]:
                     self.valid_values.append(value)
@@ -848,6 +869,8 @@ class MFDataItemStructure(object):
                     self.ucase = bool(arr_line[1])
             elif arr_line[0] == 'preserve_case':
                 self.preserve_case = self._get_boolean_val(arr_line)
+            elif arr_line[0] == 'default_value':
+                self.default_value = ' '.join(arr_line[1:])
 
     def get_type_string(self):
         return '[{}]'.format(self.type_string)
@@ -1114,6 +1137,7 @@ class MFDataStructure(object):
         self.name_list = data_item.name_list
         self.python_name = data_item.python_name
         self.longname = data_item.longname
+        self.default_value = data_item.default_value
         self.repeating = False
         self.layered = ('nlay' in data_item.shape or
                         'nodes' in data_item.shape)

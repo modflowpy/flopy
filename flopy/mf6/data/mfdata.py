@@ -254,7 +254,7 @@ class LayerStorage(object):
     def get_data(self):
         return self._data_storage_parent.get_data(self._lay_num, False)
 
-    def _get_data_const_val(self):
+    def get_data_const_val(self):
         if isinstance(self._data_const_value, list):
             return self._data_const_value[0]
         else:
@@ -519,12 +519,12 @@ class DataStorage(object):
             assert(len(self.layer_storage) >= 1)
             assert(self.layer_storage[0].data_storage_type ==
                    DataStorageType.internal_constant)
-            return self.layer_storage[0]._data_const_value
+            return self.layer_storage[0].get_data_const_val()
         else:
             assert(len(self.layer_storage) > layer)
             assert(self.layer_storage[layer].data_storage_type ==
                    DataStorageType.internal_constant)
-            return self.layer_storage[layer]._data_const_value
+            return self.layer_storage[layer].get_data_const_val()
 
     def has_data(self, layer=None):
         ret_val = self._access_data(layer, False)
@@ -1054,34 +1054,32 @@ class DataStorage(object):
 
     def to_string(self, val, type, is_cellid=False, possible_cellid=False,
                   force_upper_case=False):
-        while isinstance(val, list) or isinstance(val, np.ndarray):
-            # extract item from list
-            assert(len(val) == 1)
-            val = val[0]
-
-        if is_cellid or (possible_cellid and isinstance(val, tuple)):
+        if type == DatumType.double_precision:
+            try:
+                abs_val = abs(val)
+            except TypeError:
+                return str(val)
+            if (abs_val > self._simulation_data._sci_note_upper_thres or
+                    abs_val < self._simulation_data._sci_note_lower_thres) \
+                    and abs_val != 0:
+                return self._simulation_data.reg_format_str.format(val)
+            else:
+                return self._simulation_data.sci_format_str.format(val)
+        elif is_cellid or (possible_cellid and isinstance(val, tuple)):
             if len(val) > 0 and val[0] == 'none':
                 # handle case that cellid is 'none'
                 return val[0]
             string_val = []
             for item in val:
-                string_val.append(str(item+1))
+                string_val.append(str(item + 1))
             return ' '.join(string_val)
-        elif type == DatumType.double_precision:
-            upper = self._simulation_data.scientific_notation_upper_threshold
-            lower = self._simulation_data.scientific_notation_lower_threshold
-            if (abs(val) > upper or abs(val) < lower) and val != 0:
-                format_str = '{:.%dE}' % self._simulation_data.float_precision
-            else:
-                format_str = '{:%d' \
-                             '.%df}' % (self._simulation_data.float_characters,
-                                        self._simulation_data.float_precision)
-
-            return format_str.format(val)
         elif type == DatumType.integer:
             return str(val)
         elif type == DatumType.string:
-            arr_val = val.split()
+            try:
+                arr_val = val.split()
+            except AttributeError:
+                return str(val)
             if len(arr_val) > 1:
                 # quote any string with spaces
                 string_val = "'{}'".format(val)

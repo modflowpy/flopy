@@ -145,9 +145,9 @@ class MFSimulationData(object):
         number of decimal points to write for a floating point number
     float_characters : int
         number of characters a floating point number takes up
-    scientific_notation_upper_threshold : float
+    sci_note_upper_thres : float
         numbers greater than this threshold are written in scientific notation
-    scientific_notation_lower_threshold : float
+    sci_note_lower_thres : float
         numbers less than this threshold are written in scientific notation
     mfpath : MFFileMgmt
         file path location information for the simulation
@@ -164,11 +164,14 @@ class MFSimulationData(object):
         self.wrap_multidim_arrays = True
         self.float_precision = 8
         self.float_characters = 15
-        self.scientific_notation_upper_threshold = 100000
-        self.scientific_notation_lower_threshold = 0.001
+        self._sci_note_upper_thres = 100000
+        self._sci_note_lower_thres = 0.001
+        self.fast_write = True
         self.verify_external_data = True
         self.comments_on = False
         self.auto_set_sizes = True
+
+        self._update_str_format()
 
         # --- file path ---
         self.mfpath = MFFileMgmt(path)
@@ -184,6 +187,20 @@ class MFSimulationData(object):
         # other external files referenced
         self.referenced_files = collections.OrderedDict()
 
+    def set_sci_note_upper_thres(self, value):
+        self._sci_note_upper_thres = value
+        self._update_str_format()
+
+    def set_sci_note_lower_thres(self, value):
+        self._sci_note_lower_thres = value
+        self._update_str_format()
+
+    def _update_str_format(self):
+        self.reg_format_str = '{:.%dE}' % \
+                               self.float_precision
+        self.sci_format_str = '{:%d.%df' \
+                              '}' % (self.float_characters,
+                                     self.float_precision)
 
 class MFSimulation(PackageContainer):
     """
@@ -291,7 +308,7 @@ class MFSimulation(PackageContainer):
         self._ims_files = collections.OrderedDict()
         self._ghost_node_files = {}
         self._mover_files = {}
-        self._other_files = []
+        self._other_files = collections.OrderedDict()
         self.structure = fpdata.sim_struct
 
         self._exg_file_num = {}
@@ -492,7 +509,7 @@ class MFSimulation(PackageContainer):
             utl_struct = mfstructure.MFStructure().sim_struct.utl_struct_objs
             if package.package_type in utl_struct:
                 package.load(strict)
-                self._other_files.append(package)
+                self._other_files[package.filename] = package
                 # register child package with the simulation
                 self._add_package(package, package.path)
                 if parent_package is not None:
@@ -608,7 +625,7 @@ class MFSimulation(PackageContainer):
                           '  File will not be written.'.format(mvr_file))
 
         # write other packages
-        for pp in self._other_files:
+        for index, pp in self._other_files.items():
             pp.write(ext_file_action=ext_file_action)
 
         # FIX: model working folder should be model name file folder
@@ -646,6 +663,23 @@ class MFSimulation(PackageContainer):
         for key, path in output_file_keys.binarypathdict.items():
             if os.path.isfile(path):
                 os.remove(path)
+
+    def remove_package(self, package):
+        if self._tdis_file is not None and \
+                package.path == self._tdis_file.path:
+            self._tdis_file = None
+        if package.filename in self._exchange_files:
+            del self._exchange_files[package.filename]
+        if package.filename in self._ims_files:
+            del self._ims_files[package.filename]
+        if package.filename in self._ghost_node_files:
+            del self._ghost_node_files[package.filename]
+        if package.filename in self._mover_files:
+            del self._mover_files[package.filename]
+        if package.filename in self._other_files :
+            del self._other_files[package.filename]
+
+        self._remove_package(package)
 
     def get_model(self, model_name='', name_file='', model_type=''):
         """

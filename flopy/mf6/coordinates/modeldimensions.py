@@ -542,6 +542,7 @@ class ModelDimensions(object):
     @staticmethod
     def _find_in_dataset(data_set_struct, item, data):
         if data is not None:
+            # find the current data item in data_set_struct
             for index, data_item in zip(
                     range(0, len(data_set_struct.data_item_structures)),
                     data_set_struct.data_item_structures):
