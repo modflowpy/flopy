@@ -1776,6 +1776,7 @@ class check:
         http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
         """
         txt = ''
+        return txt
         array = array.copy()
         if isinstance(col1, np.ndarray):
             array = recfunctions.append_fields(array, names='tmp1', data=col1,
