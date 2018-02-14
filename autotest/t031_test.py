@@ -10,7 +10,8 @@ import os
 import flopy
 import numpy as np
 from flopy.utils.reference import SpatialReference
-from flopy.utils.modpathfile import EndpointFile, PathlineFile, ra_slice
+from flopy.utils.modpathfile import EndpointFile, PathlineFile
+from flopy.utils.recarray_utils import ra_slice
 from flopy.modpath.mpsim import StartingLocationsFile
 
 mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
