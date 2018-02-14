@@ -13,7 +13,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     length_units : string
@@ -69,14 +69,14 @@ class ModflowGwfdisv(mfpackage.MFPackage):
           simulation. Furthermore, the first existing cell above will be
           connected to the first existing cell below. This type of cell is
           referred to as a "vertical pass through" cell.
-    verticesrecarray : [iv, xv, yv]
+    vertices : [iv, xv, yv]
         * iv (integer) is the vertex number. Records in the VERTICES block must
           be listed in consecutive order from 1 to NVERT.
         * xv (double) is the x-coordinate for the vertex.
         * yv (double) is the y-coordinate for the vertex.
-    cell2drecarray : [icell2d, xc, yc, ncvert, icvert]
+    cell2d : [icell2d, xc, yc, ncvert, icvert]
         * icell2d (integer) is the CELL2D number. Records in the CELL2D block
-          must be listed in consecutive order from 1 to NCPL.
+          must be listed in consecutive order from the first to the last.
         * xc (double) is the x-coordinate for the cell center.
         * yc (double) is the y-coordinate for the cell center.
         * ncvert (integer) is the number of vertices required to define the
@@ -99,10 +99,9 @@ class ModflowGwfdisv(mfpackage.MFPackage):
     botm = ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'botm'))
     idomain = ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 
                                       'idomain'))
-    verticesrecarray = ListTemplateGenerator(('gwf6', 'disv', 'vertices', 
-                                              'verticesrecarray'))
-    cell2drecarray = ListTemplateGenerator(('gwf6', 'disv', 'cell2d', 
-                                            'cell2drecarray'))
+    vertices = ListTemplateGenerator(('gwf6', 'disv', 'vertices', 
+                                      'vertices'))
+    cell2d = ListTemplateGenerator(('gwf6', 'disv', 'cell2d', 'cell2d'))
     package_abbr = "gwfdisv"
     package_type = "disv"
     dfn_file_name = "gwf-disv.dfn"
@@ -129,22 +128,23 @@ class ModflowGwfdisv(mfpackage.MFPackage):
             "shape (nlay, ncpl)", "reader readarray"],
            ["block griddata", "name idomain", "type integer", 
             "shape (nlay, ncpl)", "reader readarray", "optional true"],
-           ["block vertices", "name verticesrecarray", 
-            "type recarray iv xv yv", "reader urword", "optional false"],
+           ["block vertices", "name vertices", "type recarray iv xv yv", 
+            "reader urword", "optional false"],
            ["block vertices", "name iv", "type integer", "in_record true", 
-            "tagged false", "reader urword", "optional false"],
+            "tagged false", "reader urword", "optional false", 
+            "numeric_index true"],
            ["block vertices", "name xv", "type double precision", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
            ["block vertices", "name yv", "type double precision", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
-           ["block cell2d", "name cell2drecarray", 
+           ["block cell2d", "name cell2d", 
             "type recarray icell2d xc yc ncvert icvert", "reader urword", 
             "optional false"],
            ["block cell2d", "name icell2d", "type integer", 
             "in_record true", "tagged false", "reader urword", 
-            "optional false"],
+            "optional false", "numeric_index true"],
            ["block cell2d", "name xc", "type double precision", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
@@ -157,13 +157,13 @@ class ModflowGwfdisv(mfpackage.MFPackage):
             "in_record true", "tagged false", "reader urword", 
             "optional false"]]
 
-    def __init__(self, model, add_to_package_list=True, length_units=None,
+    def __init__(self, model, loading_package=False, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,
                  nlay=None, ncpl=None, nvert=None, top=None, botm=None,
-                 idomain=None, verticesrecarray=None, cell2drecarray=None,
-                 fname=None, pname=None, parent_file=None):
+                 idomain=None, vertices=None, cell2d=None, fname=None,
+                 pname=None, parent_file=None):
         super(ModflowGwfdisv, self).__init__(model, "disv", fname, pname,
-                                             add_to_package_list, parent_file)        
+                                             loading_package, parent_file)        
 
         # set up variables
         self.length_units = self.build_mfdata("length_units",  length_units)
@@ -177,7 +177,5 @@ class ModflowGwfdisv(mfpackage.MFPackage):
         self.top = self.build_mfdata("top",  top)
         self.botm = self.build_mfdata("botm",  botm)
         self.idomain = self.build_mfdata("idomain",  idomain)
-        self.verticesrecarray = self.build_mfdata("verticesrecarray", 
-                                                  verticesrecarray)
-        self.cell2drecarray = self.build_mfdata("cell2drecarray", 
-                                                cell2drecarray)
+        self.vertices = self.build_mfdata("vertices",  vertices)
+        self.cell2d = self.build_mfdata("cell2d",  cell2d)

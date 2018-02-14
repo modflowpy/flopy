@@ -13,7 +13,7 @@ class ModflowGwfhfb(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     print_input : boolean
@@ -25,7 +25,7 @@ class ModflowGwfhfb(mfpackage.MFPackage):
           horizontal flow barriers that will be entered in this input file. The
           value of MAXHFB is used to allocate memory for the horizontal flow
           barriers.
-    hfbrecarray : [cellid1, cellid2, hydchr]
+    stress_period_data : [cellid1, cellid2, hydchr]
         * cellid1 ((integer, ...)) identifier for the first cell. For a
           structured grid that uses the DIS input file, CELLID1 is the layer,
           row, and column numbers of the cell. For a grid that uses the DISV
@@ -41,11 +41,11 @@ class ModflowGwfhfb(mfpackage.MFPackage):
         * hydchr (double) is the hydraulic characteristic of the horizontal-
           flow barrier. The hydraulic characteristic is the barrier hydraulic
           conductivity divided by the width of the horizontal-flow barrier. If
-          hydraulic characteristic is negative, then it acts as a multiplier to
-          the conductance between the two model cells specified as containing a
-          barrier. For example, if the value for HYDCHR was specified as 1.5,
-          the conductance calculated for the two cells would be multiplied by
-          1.5.
+          the hydraulic characteristic is negative, then the absolute value of
+          HYDCHR acts as a multiplier to the conductance between the two model
+          cells specified as containing the barrier. For example, if the value
+          for HYDCHR was specified as -1.5, the conductance calculated for the
+          two cells would be multiplied by 1.5.
     fname : String
         File name for this package.
     pname : String
@@ -56,8 +56,8 @@ class ModflowGwfhfb(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    hfbrecarray = ListTemplateGenerator(('gwf6', 'hfb', 'period', 
-                                         'hfbrecarray'))
+    stress_period_data = ListTemplateGenerator(('gwf6', 'hfb', 'period', 
+                                                'stress_period_data'))
     package_abbr = "gwfhfb"
     package_type = "hfb"
     dfn_file_name = "gwf-hfb.dfn"
@@ -69,7 +69,7 @@ class ModflowGwfhfb(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name hfbrecarray", 
+           ["block period", "name stress_period_data", 
             "type recarray cellid1 cellid2 hydchr", "shape (maxhfb)", 
             "reader urword"],
            ["block period", "name cellid1", "type integer", 
@@ -81,13 +81,14 @@ class ModflowGwfhfb(mfpackage.MFPackage):
            ["block period", "name hydchr", "type double precision", "shape", 
             "tagged false", "in_record true", "reader urword"]]
 
-    def __init__(self, model, add_to_package_list=True, print_input=None,
-                 maxhfb=None, hfbrecarray=None, fname=None, pname=None,
+    def __init__(self, model, loading_package=False, print_input=None,
+                 maxhfb=None, stress_period_data=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfhfb, self).__init__(model, "hfb", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.print_input = self.build_mfdata("print_input",  print_input)
         self.maxhfb = self.build_mfdata("maxhfb",  maxhfb)
-        self.hfbrecarray = self.build_mfdata("hfbrecarray",  hfbrecarray)
+        self.stress_period_data = self.build_mfdata("stress_period_data", 
+                                                    stress_period_data)

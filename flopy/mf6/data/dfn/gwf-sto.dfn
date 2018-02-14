@@ -27,6 +27,7 @@ reader readarray
 optional false
 longname convertible indicator
 description is a flag for each cell that specifies whether or not a cell is convertible for the storage calculation.  0 indicates confined storage is used. $>$0 indicates confined storage is used when head is above cell top and unconfined storage is used when head is below cell top.  A mixed formulation is when when a cell converts from confined to unconfined (or vice versa) during a single time step.
+default_value 0
 
 block griddata
 name ss
@@ -37,6 +38,7 @@ reader readarray
 optional false
 longname specific storage
 description is specific storage (or the storage coefficient if STORAGECOEFFICIENT is specified as an option).
+default_value 1.e-5
 
 block griddata
 name sy
@@ -47,6 +49,7 @@ reader readarray
 optional false
 longname specific yield
 description is specific yield.
+default_value 0.15
 
 
 # --------------------- gwf sto period ---------------------

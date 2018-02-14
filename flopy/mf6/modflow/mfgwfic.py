@@ -13,7 +13,7 @@ class ModflowGwfic(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     strt : [double]
@@ -43,12 +43,12 @@ class ModflowGwfic(mfpackage.MFPackage):
     dfn_file_name = "gwf-ic.dfn"
 
     dfn = [["block griddata", "name strt", "type double precision", 
-            "shape (nodes)", "reader readarray"]]
+            "shape (nodes)", "reader readarray", "default_value 1.0"]]
 
-    def __init__(self, model, add_to_package_list=True, strt=None, fname=None,
+    def __init__(self, model, loading_package=False, strt=1.0, fname=None,
                  pname=None, parent_file=None):
         super(ModflowGwfic, self).__init__(model, "ic", fname, pname,
-                                           add_to_package_list, parent_file)        
+                                           loading_package, parent_file)        
 
         # set up variables
         self.strt = self.build_mfdata("strt",  strt)

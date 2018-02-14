@@ -4,6 +4,7 @@ import numpy as np
 from shutil import copyfile
 from collections import OrderedDict
 from enum import Enum
+import struct
 from ..data.mfstructure import MFDataException, MFFileParseException, \
                                MFInvalidTransientBlockHeaderException, \
                                MFDataFileException, MFDataItemStructure, \
@@ -840,6 +841,10 @@ class DataStorage(object):
                     self.layer_storage[0]._internal_data = data
                 else:
                     if autofill and data is not None:
+                        if isinstance(data, tuple) and isinstance(data[0],
+                                                                  tuple):
+                            # convert to list of tuples
+                            data = list(data)
                         if not isinstance(data, list):
                             # put data in a list format for recarray
                             data = [(data,)]
@@ -998,7 +1003,7 @@ class DataStorage(object):
                                 self.layer_storage[layer]._internal_data)
 
     def read_data_from_file(self, layer, fd=None, multiplier=None,
-                            print_format=None):
+                            print_format=None, data_item=None):
         if multiplier is not None:
             self.layer_storage[layer].factor = multiplier
         if print_format is not None:
@@ -1030,7 +1035,8 @@ class DataStorage(object):
                               '"{}".'.format(fd.name,
                                              path))
                         break
-                    data_out.append(self.convert_data(data, self._data_type))
+                    data_out.append(self.convert_data(data, self._data_type,
+                                                      data_item))
                     current_size += 1
             if current_size == data_size:
                 break
@@ -1053,18 +1059,32 @@ class DataStorage(object):
         return data_out, current_size
 
     def to_string(self, val, type, is_cellid=False, possible_cellid=False,
-                  force_upper_case=False):
+                  data_item=None):
         if type == DatumType.double_precision:
-            try:
-                abs_val = abs(val)
-            except TypeError:
-                return str(val)
-            if (abs_val > self._simulation_data._sci_note_upper_thres or
-                    abs_val < self._simulation_data._sci_note_lower_thres) \
-                    and abs_val != 0:
-                return self._simulation_data.reg_format_str.format(val)
+            if data_item is not None and data_item.support_negative_index:
+                if val > 0:
+                    return (str(int(val + 1)))
+                elif val == 0.0:
+                    if struct.pack('>d', val) == \
+                            b'\x80\x00\x00\x00\x00\x00\x00\x00':
+                        # value is negative zero
+                        return (str(int(val - 1)))
+                    else:
+                        # value is positive zero
+                        return (str(int(val + 1)))
+                else:
+                    return (str(int(val - 1)))
             else:
-                return self._simulation_data.sci_format_str.format(val)
+                try:
+                    abs_val = abs(val)
+                except TypeError:
+                    return str(val)
+                if (abs_val > self._simulation_data._sci_note_upper_thres or
+                        abs_val < self._simulation_data._sci_note_lower_thres) \
+                        and abs_val != 0:
+                    return self._simulation_data.reg_format_str.format(val)
+                else:
+                    return self._simulation_data.sci_format_str.format(val)
         elif is_cellid or (possible_cellid and isinstance(val, tuple)):
             if len(val) > 0 and val[0] == 'none':
                 # handle case that cellid is 'none'
@@ -1074,6 +1094,11 @@ class DataStorage(object):
                 string_val.append(str(item + 1))
             return ' '.join(string_val)
         elif type == DatumType.integer:
+            if data_item is not None and data_item.numeric_index:
+                if isinstance(val, str):
+                    return str(int(val) + 1)
+                else:
+                    return str(val+1)
             return str(val)
         elif type == DatumType.string:
             try:
@@ -1083,11 +1108,11 @@ class DataStorage(object):
             if len(arr_val) > 1:
                 # quote any string with spaces
                 string_val = "'{}'".format(val)
-                if force_upper_case:
+                if data_item is not None and data_item.ucase:
                     return string_val.upper()
                 else:
                     return string_val
-        if force_upper_case:
+        if data_item is not None and data_item.ucase:
             return str(val).upper()
         else:
             return str(val)
@@ -1597,23 +1622,37 @@ class DataStorage(object):
 
     def convert_data(self, data, type, data_item=None):
         if type == DatumType.double_precision:
-            try:
-                if isinstance(data, str):
-                    # fix any scientific formatting that python can't handle
-                    data = data.replace('d', 'e')
-                return float(data)
-            except ValueError:
+            if data_item is not None and data_item.support_negative_index:
+                val = int(ArrayUtil.clean_numeric(data))
+                if val == -1:
+                    return -0.0
+                elif val == 1:
+                    return 0.0
+                elif val < 0:
+                    val += 1
+                else:
+                    val -= 1
+                return float(val)
+            else:
                 try:
-                    return float(ArrayUtil.clean_numeric(data))
+                    if isinstance(data, str):
+                        # fix any scientific formatting that python can't handle
+                        data = data.replace('d', 'e')
+                    return float(data)
                 except ValueError:
-                    except_str = 'Variable "{}" with value "{}" can ' \
-                                 'not be converted to float. ' \
-                                 '{}'.format(self.data_dimensions.structure.name,
-                                             data,
-                                             self.data_dimensions.structure.path)
-                    print(except_str)
-                    raise MFDataException(except_str)
+                    try:
+                        return float(ArrayUtil.clean_numeric(data))
+                    except ValueError:
+                        except_str = 'Variable "{}" with value "{}" can ' \
+                                     'not be converted to float. ' \
+                                     '{}'.format(self.data_dimensions.structure.name,
+                                                 data,
+                                                 self.data_dimensions.structure.path)
+                        print(except_str)
+                        raise MFDataException(except_str)
         elif type == DatumType.integer:
+            if data_item is not None and data_item.numeric_index:
+                return int(ArrayUtil.clean_numeric(data)) - 1
             try:
                 return int(data)
             except ValueError:
@@ -1731,8 +1770,7 @@ class MFTransient(object):
             assert(self._verify_sp(transient_key))
         self._current_key = transient_key
 
-    def _load_prep(self, first_line, file_handle, block_header,
-                   pre_data_comments=None):
+    def _load_prep(self, block_header):
         # transient key is first non-keyword block variable
         transient_key = block_header.get_transient_key()
         if isinstance(transient_key, int):
@@ -1824,7 +1862,7 @@ class MFData(object):
         self._data_name = structure.name
         self._data_storage = None
         self._data_type = structure.type
-        self._internal_data = None
+        #self._internal_data = None
         self._keyword = ''
         if self._simulation_data is not None:
             self._data_dimensions = DataDimensions(dimensions, structure)

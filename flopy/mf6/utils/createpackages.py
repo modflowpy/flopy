@@ -167,7 +167,7 @@ def format_var_list(base_string, var_list, is_tuple=False):
 
 
 def add_var(init_vars, class_vars, init_param_list, package_properties,
-            doc_string, data_structure_dict, name,
+            doc_string, data_structure_dict, default_value, name,
             python_name, description, path, data_type,
             basic_init=False):
     clean_ds_name = mfdatautil.clean_name(python_name)
@@ -175,7 +175,10 @@ def add_var(init_vars, class_vars, init_param_list, package_properties,
         init_vars.append(create_basic_init(clean_ds_name))
     else:
         init_vars.append(create_init_var(clean_ds_name, name))
-    init_param_list.append('{}=None'.format(clean_ds_name))
+    # may implement default value here in the future
+    if default_value is None:
+        default_value = 'None'
+    init_param_list.append('{}={}'.format(clean_ds_name, default_value))
     package_properties.append(create_property(clean_ds_name))
     doc_string.add_parameter(description)
     data_structure_dict[python_name] = 0
@@ -257,20 +260,20 @@ def create_packages():
 
         if package[0].dfn_type == mfstructure.DfnType.exch_file:
             add_var(init_vars, None, init_param_list, package_properties,
-                    doc_string, data_structure_dict,
+                    doc_string, data_structure_dict, None,
                     'exgtype', 'exgtype',
                     build_doc_string('exgtype', '<string>',
                                      'is the exchange type (GWF-GWF or '
                                      'GWF-GWT).', indent), None, None, True)
             add_var(init_vars, None, init_param_list, package_properties,
-                    doc_string, data_structure_dict,
+                    doc_string, data_structure_dict, None,
                     'exgmnamea', 'exgmnamea',
                     build_doc_string('exgmnamea', '<string>',
                                      'is the name of the first model that is '
                                      'part of this exchange.', indent),
                     None, None, True)
             add_var(init_vars, None, init_param_list, package_properties,
-                    doc_string, data_structure_dict,
+                    doc_string, data_structure_dict, None,
                     'exgmnameb', 'exgmnameb',
                     build_doc_string('exgmnameb', '<string>',
                                      'is the name of the second model that is '
@@ -286,7 +289,7 @@ def create_packages():
                 if data_structure.name not in data_structure_dict:
                     add_var(init_vars, class_vars, init_param_list,
                             package_properties, doc_string,
-                            data_structure_dict,
+                            data_structure_dict, data_structure.default_value,
                             data_structure.name, data_structure.python_name,
                             data_structure.get_doc_string(79, indent, indent),
                             data_structure.path,
@@ -317,7 +320,7 @@ def create_packages():
                                        package[4], package[0].dfn_file_name)
         init_string_full = init_string_def
         # add variables to init string
-        doc_string.add_parameter('    add_to_package_list : bool\n        '
+        doc_string.add_parameter('    loading_package : bool\n        '
                                  'Do not set this parameter. It is intended '
                                  'for debugging and internal\n        '
                                  'processing purposes only.',
@@ -328,15 +331,15 @@ def create_packages():
                                      'of. Package is automatically\n        '
                                      'added to simulation when it is '
                                      'initialized.', beginning_of_list=True)
-            init_string_full = '{}, simulation, add_to_package_list=' \
-                               'True'.format(init_string_full)
+            init_string_full = '{}, simulation, loading_package=' \
+                               'False'.format(init_string_full)
         else:
             doc_string.add_parameter('    model : MFModel\n        '
                                      'Model that this package is a part of.  '
                                      'Package is automatically\n        added '
                                      'to model when it is initialized.',
                                      beginning_of_list=True)
-            init_string_full = '{}, model, add_to_package_list=True'.format(
+            init_string_full = '{}, model, loading_package=False'.format(
                 init_string_full)
         line_chars = len(init_string_full)
         init_param_list.append('fname=None')
@@ -364,7 +367,7 @@ def create_packages():
                              '.__init__('.format(package_name.title())
         spaces = ' ' * len(parent_init_string)
         parent_init_string = '{}{}, "{}", fname, pname,\n{}' \
-                             'add_to_package_list, parent_file)        \n\n' \
+                             'loading_package, parent_file)        \n\n' \
                              '        # set up variables'.format(
             parent_init_string, init_var, package_short_name, spaces)
         comment_string = '# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE ' \

@@ -13,7 +13,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     save_flows : boolean
@@ -223,9 +223,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
            ["block options", "name save_specific_discharge", "type keyword", 
             "reader urword", "optional true"],
            ["block griddata", "name icelltype", "type integer", 
-            "shape (nodes)", "valid", "reader readarray", "optional"],
+            "shape (nodes)", "valid", "reader readarray", "optional", 
+            "default_value 0"],
            ["block griddata", "name k", "type double precision", 
-            "shape (nodes)", "valid", "reader readarray", "optional"],
+            "shape (nodes)", "valid", "reader readarray", "optional", 
+            "default_value 1.0"],
            ["block griddata", "name k22", "type double precision", 
             "shape (nodes)", "valid", "reader readarray", "optional true"],
            ["block griddata", "name k33", "type double precision", 
@@ -239,15 +241,15 @@ class ModflowGwfnpf(mfpackage.MFPackage):
            ["block griddata", "name wetdry", "type double precision", 
             "shape (nodes)", "valid", "reader readarray", "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, save_flows=None,
+    def __init__(self, model, loading_package=False, save_flows=None,
                  alternative_cell_averaging=None, thickstrt=None,
                  cvoptions=None, perched=None, rewet_record=None,
-                 xt3doptions=None, save_specific_discharge=None,
-                 icelltype=None, k=None, k22=None, k33=None, angle1=None,
-                 angle2=None, angle3=None, wetdry=None, fname=None, pname=None,
+                 xt3doptions=None, save_specific_discharge=None, icelltype=0,
+                 k=1.0, k22=None, k33=None, angle1=None, angle2=None,
+                 angle3=None, wetdry=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfnpf, self).__init__(model, "npf", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows",  save_flows)

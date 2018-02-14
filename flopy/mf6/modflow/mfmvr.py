@@ -13,7 +13,7 @@ class ModflowMvr(mfpackage.MFPackage):
     simulation : MFSimulation
         Simulation that this package is a part of. Package is automatically
         added to simulation when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     print_input : boolean
@@ -42,21 +42,21 @@ class ModflowMvr(mfpackage.MFPackage):
     maxpackages : integer
         * maxpackages (integer) integer value specifying the number of unique
           packages that are included in this water mover input file.
-    packagesrecarray : [mname, pname]
+    packages : [mname, pname]
         * mname (string) name of model containing the package.
         * pname (string) is the name of a package that may be included in a
           subsequent stress period block.
-    periodrecarray : [mname1, pname1, id1, mname2, pname2, id2, mvrtype, value]
-        * mname1 (string) name of model containing the package, texttt{pname1}.
+    perioddata : [mname1, pname1, id1, mname2, pname2, id2, mvrtype, value]
+        * mname1 (string) name of model containing the package, PNAME1.
         * pname1 (string) is the package name for the provider. The package
-          texttt{pname1} must be designated to provide water through the MVR
-          Package by specifying the keyword "MOVER" in its OPTIONS block.
+          PNAME1 must be designated to provide water through the MVR Package by
+          specifying the keyword "MOVER" in its OPTIONS block.
         * id1 (integer) is the identifier for the provider. This is the well
           number, reach number, lake number, etc.
-        * mname2 (string) name of model containing the package, texttt{pname2}.
+        * mname2 (string) name of model containing the package, PNAME2.
         * pname2 (string) is the package name for the receiver. The package
-          texttt{pname2} must be designated to receive water from the MVR
-          Package by specifying the keyword "MOVER" in its OPTIONS block.
+          PNAME2 must be designated to receive water from the MVR Package by
+          specifying the keyword "MOVER" in its OPTIONS block.
         * id2 (integer) is the identifier for the receiver. This is the well
           number, reach number, lake number, etc.
         * mvrtype (string) is the character string signifying the method for
@@ -67,8 +67,8 @@ class ModflowMvr(mfpackage.MFPackage):
           diverting stream flow.
         * value (double) is the value to be used in the equation for
           calculating the amount of water to move. For the "FACTOR" option,
-          texttt{value} is the :math:`\\alpha` factor. For the remaining
-          options, texttt{value} is the specified flow rate, :math:`Q_S`.
+          VALUE is the :math:`\\alpha` factor. For the remaining options, VALUE
+          is the specified flow rate, :math:`Q_S`.
     fname : String
         File name for this package.
     pname : String
@@ -81,13 +81,11 @@ class ModflowMvr(mfpackage.MFPackage):
     """
     budget_filerecord = ListTemplateGenerator(('mvr', 'options', 
                                                'budget_filerecord'))
-    packagesrecarray = ListTemplateGenerator(('mvr', 'packages', 
-                                              'packagesrecarray'))
-    periodrecarray = ListTemplateGenerator(('mvr', 'period', 
-                                            'periodrecarray'))
+    packages = ListTemplateGenerator(('mvr', 'packages', 'packages'))
+    perioddata = ListTemplateGenerator(('mvr', 'period', 'perioddata'))
     package_abbr = "mvr"
     package_type = "mvr"
-    dfn_file_name = "gwt-mvr.dfn"
+    dfn_file_name = "gwf-mvr.dfn"
 
     dfn = [["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
@@ -111,9 +109,8 @@ class ModflowMvr(mfpackage.MFPackage):
             "reader urword", "optional false"],
            ["block dimensions", "name maxpackages", "type integer", 
             "reader urword", "optional false"],
-           ["block packages", "name packagesrecarray", 
-            "type recarray mname pname", "reader urword", "shape (npackages)", 
-            "optional false"],
+           ["block packages", "name packages", "type recarray mname pname", 
+            "reader urword", "shape (npackages)", "optional false"],
            ["block packages", "name mname", "type string", "reader urword", 
             "shape", "tagged false", "in_record true", "optional true"],
            ["block packages", "name pname", "type string", "reader urword", 
@@ -121,7 +118,7 @@ class ModflowMvr(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name periodrecarray", 
+           ["block period", "name perioddata", 
             "type recarray mname1 pname1 id1 mname2 pname2 id2 mvrtype value", 
             "shape (maxbound)", "reader urword"],
            ["block period", "name mname1", "type string", "reader urword", 
@@ -129,25 +126,26 @@ class ModflowMvr(mfpackage.MFPackage):
            ["block period", "name pname1", "type string", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block period", "name id1", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block period", "name mname2", "type string", "reader urword", 
             "shape", "tagged false", "in_record true", "optional true"],
            ["block period", "name pname2", "type string", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block period", "name id2", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block period", "name mvrtype", "type string", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block period", "name value", "type double precision", "shape", 
             "tagged false", "in_record true", "reader urword"]]
 
-    def __init__(self, simulation, add_to_package_list=True, print_input=None,
+    def __init__(self, simulation, loading_package=False, print_input=None,
                  print_flows=None, modelnames=None, budget_filerecord=None,
-                 maxmvr=None, maxpackages=None, packagesrecarray=None,
-                 periodrecarray=None, fname=None, pname=None,
-                 parent_file=None):
+                 maxmvr=None, maxpackages=None, packages=None, perioddata=None,
+                 fname=None, pname=None, parent_file=None):
         super(ModflowMvr, self).__init__(simulation, "mvr", fname, pname,
-                                         add_to_package_list, parent_file)        
+                                         loading_package, parent_file)        
 
         # set up variables
         self.print_input = self.build_mfdata("print_input",  print_input)
@@ -157,7 +155,5 @@ class ModflowMvr(mfpackage.MFPackage):
                                                    budget_filerecord)
         self.maxmvr = self.build_mfdata("maxmvr",  maxmvr)
         self.maxpackages = self.build_mfdata("maxpackages",  maxpackages)
-        self.packagesrecarray = self.build_mfdata("packagesrecarray", 
-                                                  packagesrecarray)
-        self.periodrecarray = self.build_mfdata("periodrecarray", 
-                                                periodrecarray)
+        self.packages = self.build_mfdata("packages",  packages)
+        self.perioddata = self.build_mfdata("perioddata",  perioddata)

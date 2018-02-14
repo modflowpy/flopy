@@ -13,7 +13,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     auxiliary : [string]
@@ -108,7 +108,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     nmawwells : integer
         * nmawwells (integer) integer value specifying the number of multi-
           aquifer wells that will be simulated for all stress periods.
-    wellrecarray : [wellno, radius, bottom, strt, condeqn, ngwfnodes, aux,
+    packagedata : [wellno, radius, bottom, strt, condeqn, ngwfnodes, aux,
       boundname]
         * wellno (integer) integer value that defines the well number
           associated with the specified PACKAGEDATA data on the line. WELLNO
@@ -153,8 +153,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           an ASCII character variable that can contain as many as 40
           characters. If BOUNDNAME contains spaces in it, then the entire name
           must be enclosed within single quotes.
-    wellconnectionsrecarray : [wellno, icon, cellid, scrn_top, scrn_bot,
-      hk_skin, radius_skin]
+    connectiondata : [wellno, icon, cellid, scrn_top, scrn_bot, hk_skin,
+      radius_skin]
         * wellno (integer) integer value that defines the well number
           associated with the specified CONNECTIONDATA data on the line. WELLNO
           must be greater than zero and less than or equal to NMAWWELLS. Multi-
@@ -191,7 +191,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           pack radius) for the multi-aquifer well. RADIUS_SKIN can be any value
           if CONDEQN is SPECIFIED or THEIM. Otherwise, RADIUS_SKIN must be
           greater than RADIUS for the multi-aquifer well.
-    wellperiodrecarray : [wellno, mawsetting]
+    perioddata : [wellno, mawsetting]
         * wellno (integer) integer value that defines the well number
           associated with the specified PERIOD data on the line. WELLNO must be
           greater than zero and less than or equal to NMAWWELLS.
@@ -199,23 +199,25 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           keyword and values. Keyword values that can be used to start the
           MAWSETTING string include: STATUS, FLOWING_WELL, RATE, WELL_HEAD,
           HEAD_LIMIT, SHUT_OFF, RATE_SCALING, and AUXILIARY.
-            head_limit : [string]
-                * head_limit (string) is the limiting water level (head) in the
-                  well, which is the minimum of the well RATE or the well
-                  inflow rate from the aquifer. HEAD_LIMIT is only applied to
-                  discharging wells (RATE :math:`<` 0). HEAD\_LIMIT can be
-                  deactivated by specifying the text string `OFF'. The
-                  HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality
-                  available in the MNW2~\citep{konikow2009} package for
-                  MODFLOW-2005. The HEAD\_LIMIT option has been included to
-                  facilitate backward compatibility with previous versions of
-                  MODFLOW but use of the RATE\_SCALING option instead of the
-                  HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
-                  `OFF'.
-            status : [string]
-                * status (string) keyword option to define well status. STATUS
-                  can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
-                  ACTIVE.
+            rate : [double]
+                * rate (double) is the volumetric pumping rate for the multi-
+                  aquifer well. A positive value indicates recharge and a
+                  negative value indicates discharge (pumping). RATE only
+                  applies to active (IBOUND :math:`>` 0) multi-aquifer wells.
+                  If the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, the RATE for each multi-aquifer
+                  well is zero.
+            rate_scalingrecord : [pump_elevation, scaling_length]
+                * pump_elevation (double) is the elevation of the multi-aquifer
+                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
+                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
+                  By default, PUMP_ELEVATION is set equal to the bottom of the
+                  largest GWF node number connected to a MAW well.
+                * scaling_length (double) height above the pump elevation
+                  (SCALING_LENGTH) below which the pumping rate is reduced. The
+                  default value for SCALING_LENGTH is the well radius.
             shutoffrecord : [minrate, maxrate]
                 * minrate (double) is the minimum rate that a well must exceed
                   to shutoff a well during a stress period. The well will shut
@@ -231,23 +233,6 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   aquifer exceeds maxrate. Reactivation of the well cannot
                   occur until the next time step if a well is shutdown to
                   reduce oscillations. maxrate must be greater than MINRATE.
-            well_head : [double]
-                * well_head (double) is the head in the multi-aquifer well.
-                  WELL_HEAD is only applied to constant head (STATUS is
-                  CONSTANT) and inactive (STATUS is INACTIVE) multi-aquifer
-                  wells. If the Options block includes a TIMESERIESFILE entry
-                  (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
-            rate_scalingrecord : [pump_elevation, scaling_length]
-                * pump_elevation (double) is the elevation of the multi-aquifer
-                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
-                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
-                  By default, PUMP_ELEVATION is set equal to the bottom of the
-                  largest GWF node number connected to a MAW well.
-                * scaling_length (double) height above the pump elevation
-                  (SCALING_LENGTH) below which the pumping rate is reduced. The
-                  default value for SCALING_LENGTH is the well radius.
             auxiliaryrecord : [auxname, auxval]
                 * auxname (string) name for the auxiliary variable to be
                   assigned AUXVAL. AUXNAME must match one of the auxiliary
@@ -259,16 +244,27 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   Variable Input" section), values can be obtained from a time
                   series by entering the time-series name in place of a numeric
                   value.
-            rate : [double]
-                * rate (double) is the volumetric pumping rate for the multi-
-                  aquifer well. A positive value indicates recharge and a
-                  negative value indicates discharge (pumping). RATE only
-                  applies to active (IBOUND :math:`>` 0) multi-aquifer wells.
-                  If the Options block includes a TIMESERIESFILE entry (see the
-                  "Time-Variable Input" section), values can be obtained from a
-                  time series by entering the time-series name in place of a
-                  numeric value. By default, the RATE for each multi-aquifer
-                  well is zero.
+            well_head : [double]
+                * well_head (double) is the head in the multi-aquifer well.
+                  WELL_HEAD is only applied to constant head (STATUS is
+                  CONSTANT) and inactive (STATUS is INACTIVE) multi-aquifer
+                  wells. If the Options block includes a TIMESERIESFILE entry
+                  (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            head_limit : [string]
+                * head_limit (string) is the limiting water level (head) in the
+                  well, which is the minimum of the well RATE or the well
+                  inflow rate from the aquifer. HEAD_LIMIT is only applied to
+                  discharging wells (RATE :math:`<` 0). HEAD\_LIMIT can be
+                  deactivated by specifying the text string `OFF'. The
+                  HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality
+                  available in the MNW2~\citep{konikow2009} package for
+                  MODFLOW-2005. The HEAD\_LIMIT option has been included to
+                  facilitate backward compatibility with previous versions of
+                  MODFLOW but use of the RATE\_SCALING option instead of the
+                  HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
+                  `OFF'.
             flowing_wellrecord : [fwelev, fwcond, fwrlen]
                 * fwelev (double) elevation used to determine whether or not
                   the well is flowing.
@@ -281,6 +277,10 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   reduced. This reduction length can be used to improve the
                   stability of simulations with flowing wells so that there is
                   not an abrupt change in flowing well rates.
+            status : [string]
+                * status (string) keyword option to define well status. STATUS
+                  can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
+                  ACTIVE.
     fname : String
         File name for this package.
     pname : String
@@ -301,13 +301,13 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'maw', 'options', 
                                             'obs_filerecord'))
-    wellrecarray = ListTemplateGenerator(('gwf6', 'maw', 'packagedata', 
-                                          'wellrecarray'))
-    wellconnectionsrecarray = ListTemplateGenerator(('gwf6', 'maw', 
-                                                     'connectiondata', 
-                                                     'wellconnectionsrecarray'))
-    wellperiodrecarray = ListTemplateGenerator(('gwf6', 'maw', 'period', 
-                                                'wellperiodrecarray'))
+    packagedata = ListTemplateGenerator(('gwf6', 'maw', 'packagedata', 
+                                         'packagedata'))
+    connectiondata = ListTemplateGenerator(('gwf6', 'maw', 
+                                            'connectiondata', 
+                                            'connectiondata'))
+    perioddata = ListTemplateGenerator(('gwf6', 'maw', 'period', 
+                                        'perioddata'))
     package_abbr = "gwfmaw"
     package_type = "maw"
     dfn_file_name = "gwf-maw.dfn"
@@ -378,12 +378,13 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block dimensions", "name nmawwells", "type integer", 
             "reader urword", "optional false"],
-           ["block packagedata", "name wellrecarray", 
+           ["block packagedata", "name packagedata", 
             "type recarray wellno radius bottom strt condeqn ngwfnodes aux " 
             "boundname", 
             "shape (nmawwells)", "reader urword"],
            ["block packagedata", "name wellno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block packagedata", "name radius", "type double precision", 
             "shape", "tagged false", "in_record true", "reader urword"],
            ["block packagedata", "name bottom", "type double precision", 
@@ -400,14 +401,16 @@ class ModflowGwfmaw(mfpackage.MFPackage):
            ["block packagedata", "name boundname", "type string", "shape", 
             "tagged false", "in_record true", "reader urword", 
             "optional true"],
-           ["block connectiondata", "name wellconnectionsrecarray", 
+           ["block connectiondata", "name connectiondata", 
             "type recarray wellno icon cellid scrn_top scrn_bot hk_skin " 
             "radius_skin", 
             "reader urword"],
            ["block connectiondata", "name wellno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block connectiondata", "name icon", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block connectiondata", "name cellid", "type integer", 
             "shape (ncelldim)", "tagged false", "in_record true", 
             "reader urword"],
@@ -425,10 +428,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name wellperiodrecarray", 
+           ["block period", "name perioddata", 
             "type recarray wellno mawsetting", "shape", "reader urword"],
            ["block period", "name wellno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block period", "name mawsetting", 
             "type keystring status flowing_wellrecord rate well_head " 
             "head_limit shutoffrecord rate_scalingrecord auxiliaryrecord", 
@@ -483,17 +487,16 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "time_series true"]]
 
-    def __init__(self, model, add_to_package_list=True, auxiliary=None,
+    def __init__(self, model, loading_package=False, auxiliary=None,
                  boundnames=None, print_input=None, print_head=None,
                  print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, no_well_storage=None,
                  flowing_wells=None, shutdown_theta=None, shutdown_kappa=None,
                  ts_filerecord=None, obs_filerecord=None, mover=None,
-                 nmawwells=None, wellrecarray=None,
-                 wellconnectionsrecarray=None, wellperiodrecarray=None,
-                 fname=None, pname=None, parent_file=None):
+                 nmawwells=None, packagedata=None, connectiondata=None,
+                 perioddata=None, fname=None, pname=None, parent_file=None):
         super(ModflowGwfmaw, self).__init__(model, "maw", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
@@ -518,8 +521,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                                                 obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.nmawwells = self.build_mfdata("nmawwells",  nmawwells)
-        self.wellrecarray = self.build_mfdata("wellrecarray",  wellrecarray)
-        self.wellconnectionsrecarray = self.build_mfdata(
-            "wellconnectionsrecarray",  wellconnectionsrecarray)
-        self.wellperiodrecarray = self.build_mfdata("wellperiodrecarray", 
-                                                    wellperiodrecarray)
+        self.packagedata = self.build_mfdata("packagedata",  packagedata)
+        self.connectiondata = self.build_mfdata("connectiondata", 
+                                                connectiondata)
+        self.perioddata = self.build_mfdata("perioddata",  perioddata)

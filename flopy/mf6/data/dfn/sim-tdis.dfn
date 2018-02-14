@@ -26,17 +26,18 @@ reader urword
 optional false
 longname number of stress periods
 description is the number of stress periods for the simulation.
-
+default_value 1
 
 # --------------------- sim tdis perioddata ---------------------
 
 block perioddata
-name tdisrecarray
+name perioddata
 type recarray perlen nstp tsmult
 reader urword
 optional false
 longname stress period time information
 description
+default_value ((1.0, 1, 1.0),)
 
 block perioddata
 name perlen

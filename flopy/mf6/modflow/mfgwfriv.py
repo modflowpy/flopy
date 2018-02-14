@@ -13,7 +13,7 @@ class ModflowGwfriv(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     auxiliary : [string]
@@ -68,7 +68,7 @@ class ModflowGwfriv(mfpackage.MFPackage):
     maxbound : integer
         * maxbound (integer) integer value specifying the maximum number of
           rivers cells that will be specified for use during any stress period.
-    periodrecarray : [cellid, stage, cond, rbot, aux, boundname]
+    stress_period_data : [cellid, stage, cond, rbot, aux, boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
@@ -115,8 +115,8 @@ class ModflowGwfriv(mfpackage.MFPackage):
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'riv', 'options', 
                                             'obs_filerecord'))
-    periodrecarray = ListTemplateGenerator(('gwf6', 'riv', 'period', 
-                                            'periodrecarray'))
+    stress_period_data = ListTemplateGenerator(('gwf6', 'riv', 'period', 
+                                                'stress_period_data'))
     package_abbr = "gwfriv"
     package_type = "riv"
     dfn_file_name = "gwf-riv.dfn"
@@ -161,7 +161,7 @@ class ModflowGwfriv(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name periodrecarray", 
+           ["block period", "name stress_period_data", 
             "type recarray cellid stage cond rbot aux boundname", 
             "shape (maxbound)", "reader urword"],
            ["block period", "name cellid", "type integer", 
@@ -183,14 +183,14 @@ class ModflowGwfriv(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, auxiliary=None,
+    def __init__(self, model, loading_package=False, auxiliary=None,
                  auxmultname=None, boundnames=None, print_input=None,
                  print_flows=None, save_flows=None, ts_filerecord=None,
                  obs_filerecord=None, mover=None, maxbound=None,
-                 periodrecarray=None, fname=None, pname=None,
+                 stress_period_data=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfriv, self).__init__(model, "riv", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
@@ -204,5 +204,5 @@ class ModflowGwfriv(mfpackage.MFPackage):
                                                 obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
-        self.periodrecarray = self.build_mfdata("periodrecarray", 
-                                                periodrecarray)
+        self.stress_period_data = self.build_mfdata("stress_period_data", 
+                                                    stress_period_data)

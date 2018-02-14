@@ -217,7 +217,7 @@ class ListTemplateGenerator(TemplateGenerator):
     empty: (maxbound: int, aux_vars: list, boundnames: boolean, nseg: int) :
             dictionary
         Builds a template for the data you need to specify for a specific data
-        type (ie. "periodrecarray") in a specific model.  The data type is
+        type (ie. "stress_period_data") in a specific model.  The data type is
         determined by "path" during initialization of this class.  If the data
         is transient a dictionary containing a single stress period will be
         returned.  The number of entries in the recarray are determined by

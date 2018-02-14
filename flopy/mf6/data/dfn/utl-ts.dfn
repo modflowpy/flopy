@@ -142,7 +142,7 @@ description  xxx
 # --------------------- gwf ts timeseries ---------------------
 
 block timeseries
-name time_seriesrecarray
+name timeseries
 type recarray ts_time ts_array
 shape
 reader urword
