@@ -285,8 +285,8 @@ class MfList(object):
                                         "to ndarray: " + str(e))
 
                 #super hack - sick of recarrays already
-                if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
-                    d = d.view(np.recarray)
+                #if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
+                #    d = d.view(np.recarray)
 
                 if isinstance(d, np.recarray):
                     self.__cast_recarray(kper, d)
