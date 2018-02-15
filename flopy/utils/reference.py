@@ -890,7 +890,8 @@ class SpatialReference(object):
         f = open(filename, 'w')
         f.write(
             "{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
-        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul,
+        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul * self.length_multiplier,
+                                                         self.yul * self.length_multiplier,
                                                          self.rotation))
 
         for r in self.delr:
@@ -984,7 +985,7 @@ class SpatialReference(object):
     def export_array(self, filename, a, nodata=-9999,
                      fieldname='value',
                      **kwargs):
-        """Write a numpy array to Arc Ascii grid 
+        """Write a numpy array to Arc Ascii grid
         or shapefile with the model reference.
 
         Parameters
@@ -1077,6 +1078,9 @@ class SpatialReference(object):
                     Affine.rotation(self.rotation) * \
                     Affine.scale(dxdy, -dxdy)
 
+            a = a.copy()
+            if a.dtype.name == 'int64':
+                a = a.astype('int32')
             meta = {'count': 1,
                     'width': a.shape[1],
                     'height': a.shape[0],

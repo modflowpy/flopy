@@ -133,6 +133,8 @@ def test_pathline_plot():
         run = False
         lpth = pth
 
+    nampath = os.path.join(lpth, mfnam)
+    assert os.path.exists(nampath), "namefile {} doesn't exist.".format(nampath)
     # load the modflow files for model map
     m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True, forgive=False,
                                    exe_name=mf2005_exe)

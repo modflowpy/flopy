@@ -296,21 +296,16 @@ class check:
         values, and description of error for each row in stress_period_data where criteria=True.
         """
         inds_col = ['k', 'i', 'j'] if self.structured else ['node']
-
+        #inds = stress_period_data[criteria][inds_col]\
+        #    .reshape(stress_period_data[criteria].shape + (-1,))
+        #inds = np.atleast_2d(np.squeeze(inds.tolist()))
         inds = stress_period_data[criteria]
         a = inds[inds_col[0]]
         if len(inds_col) > 1:
             for n in inds_col[1:]:
                 a = np.concatenate((a, inds[n]))
         inds = a.view(int)
-
-        #inds = stress_period_data[criteria]
-        #inds = inds[inds_col]
-        #inds = inds.copy()
-        #inds = inds.view(int)
         inds = inds.reshape(stress_period_data[criteria].shape + (-1,))
-        #inds = stress_period_data[criteria][inds_col].view(int)\
-        #    .reshape(stress_period_data[criteria].shape + (-1,))
 
         if col is not None:
             v = stress_period_data[criteria][col]

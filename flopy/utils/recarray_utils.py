@@ -2,8 +2,7 @@ import numpy as np
 
 def create_empty_recarray(length, dtype, default_value=0):
     r = np.zeros(length, dtype=dtype)
-    #if default_value != 0:
-    #    r[:] = default_value
+    assert isinstance(dtype, np.dtype), "dtype argument must be an instance of np.dtype, not list."
     for name in dtype.names:
         dt = dtype.fields[name][0]
         if 'float' in str(dt):

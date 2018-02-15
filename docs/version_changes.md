@@ -7,6 +7,8 @@ FloPy Changes
 * MODFLOW 6 identifiers are now zero based
 * Added remove_package method in MFSimulation and MFModel that removes MODFLOW 6 packages from the existing simulation/model
 * Flopy code for MODFLOW 6 generalized to support different model types
+* Added `ModflowSfr2.export_transient_variable` method to export shapefiles of segment data variables, with stress period data as attributes
+* Added support for UZF package gages
 
 * Bug fixes:
     * Fixed issue with default settings for MODFLOW 5 SUB package `dp` dataset.
@@ -17,6 +19,10 @@ FloPy Changes
 	* IMS file name conflicts now automatically resolved
 	* Fixed issue with passing in numpy ndarrays arrays as layered data
 	* Doc string formatting for MODFLOW 6 packages fixed to make doc strings easier to read
+	* UZF package: fixed issues with handling of finf, pet, extdp and extwc arrays.
+	* SFR package: fixed issue with reading stress period data where not all segments are listed for periods > 0.
+	* `SpatialReference.write_gridSpec` was not converting the model origin coordinates to model length units.
+	* shorted integer field lengths written to shapefiles to 18 characters; some readers may misinterpret longer field lengths as float dtypes.
 
 ### Version 3.2.8
 * Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
@@ -25,6 +31,11 @@ FloPy Changes
     * Installation: Added dfn files required by MODFLOW 6 functionality to MANIFEST.in so that they are included in the distribution.
     * SFR2 package: Fixed issue reading transient data when `ISFOPT` is 4 or 5 for the first stress period.
 
+### Version 3.2.7 - develop
+* Added SFR2 package functionarlity
+	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.  
+
+		
 ### Version 3.2.7
 * Added beta support for MODFLOW 6 See [here](./mf6.md) for more information.
 * Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.
