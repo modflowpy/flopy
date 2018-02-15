@@ -4,6 +4,8 @@ def create_empty_recarray(length, dtype, default_value=0):
     r = np.zeros(length, dtype=dtype)
     #if default_value != 0:
     #    r[:] = default_value
+    if isinstance(dtype, list):
+        dtype = np.dtype(dtype)
     for name in dtype.names:
         dt = dtype.fields[name][0]
         if 'float' in str(dt):
