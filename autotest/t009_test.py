@@ -398,7 +398,7 @@ if __name__ == '__main__':
     #test_sfr()
     #test_sfr_renumbering()
     #test_example()
-    #test_transient_example()
+    test_transient_example()
     test_sfr_plot()
     test_assign_layers()
     test_SfrFile()

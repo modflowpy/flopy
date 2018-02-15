@@ -14,7 +14,7 @@ import numpy as np
 
 from ..pakbase import Package
 from ..utils import read_fixed_var, write_fixed_var
-
+from ..utils.recarray_utils import create_empty_recarray
 
 class ModflowGage(Package):
     """
@@ -207,9 +207,7 @@ class ModflowGage(Package):
     def get_empty(ncells=0, aux_names=None, structured=True):
         # get an empty recaray that correponds to dtype
         dtype = ModflowGage.get_default_dtype()
-        d = np.zeros((ncells, len(dtype)), dtype=dtype)
-        d[:, :] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
 
     def ncells(self):
         # Return 0 for the gage package
