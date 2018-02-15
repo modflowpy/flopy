@@ -2,8 +2,12 @@ import numpy as np
 
 def create_empty_recarray(length, dtype, default_value=0):
     r = np.zeros(length, dtype=dtype)
-    if default_value != 0:
-        r[:] = default_value
+    #if default_value != 0:
+    #    r[:] = default_value
+    for name in dtype.names:
+        dt = dtype.fields[name][0]
+        if 'float' in str(dt):
+            r[name] = default_value
     return r.view(np.recarray)
 
 def ra_slice(ra, cols):
