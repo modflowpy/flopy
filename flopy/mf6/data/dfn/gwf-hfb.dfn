@@ -36,7 +36,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name hfbrecarray
+name stress_period_data
 type recarray cellid1 cellid2 hydchr
 shape (maxhfb)
 reader urword
@@ -71,5 +71,5 @@ tagged false
 in_record true
 reader urword
 longname barrier hydraulic characteristic
-description is the hydraulic characteristic of the horizontal-flow barrier. The hydraulic characteristic is the barrier hydraulic conductivity divided by the width of the horizontal-flow barrier. If hydraulic characteristic is negative, then it acts as a multiplier to the conductance between the two model cells specified as containing a barrier. For example, if the value for HYDCHR was specified as 1.5, the conductance calculated for the two cells would be multiplied by 1.5.
+description is the hydraulic characteristic of the horizontal-flow barrier. The hydraulic characteristic is the barrier hydraulic conductivity divided by the width of the horizontal-flow barrier. If the hydraulic characteristic is negative, then the absolute value of HYDCHR acts as a multiplier to the conductance between the two model cells specified as containing the barrier. For example, if the value for HYDCHR was specified as -1.5, the conductance calculated for the two cells would be multiplied by 1.5.
 

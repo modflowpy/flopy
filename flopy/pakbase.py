@@ -227,7 +227,7 @@ class Package(object):
 
                     if spd_inds_valid:
                         # next check for BCs in inactive cells
-                        #chk._stress_period_data_inactivecells(spd)
+                        chk._stress_period_data_inactivecells(spd)
 
                         # More specific BC checks
                         # check elevations in the ghb, drain, and riv packages

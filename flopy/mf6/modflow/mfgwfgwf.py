@@ -13,7 +13,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     simulation : MFSimulation
         Simulation that this package is a part of. Package is automatically
         added to simulation when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     exgtype : <string>
@@ -95,7 +95,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     nexg : integer
         * nexg (integer) keyword and integer value specifying the number of
           GWF-GWF exchanges.
-    gwfgwfrecarray : [cellidm1, cellidm2, ihc, cl1, cl2, hwva, aux]
+    exchangedata : [cellidm1, cellidm2, ihc, cl1, cl2, hwva, aux]
         * cellidm1 ((integer, ...)) is the cellid of the cell in model 1 as
           specified in the simulation name file. For a structured grid that
           uses the DIS input file, CELLIDM1 is the layer, row, and column
@@ -143,8 +143,8 @@ class ModflowGwfgwf(mfpackage.MFPackage):
                                             'mvr_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwfgwf', 'options', 
                                             'obs_filerecord'))
-    gwfgwfrecarray = ListTemplateGenerator(('gwfgwf', 'exchangedata', 
-                                            'gwfgwfrecarray'))
+    exchangedata = ListTemplateGenerator(('gwfgwf', 'exchangedata', 
+                                          'exchangedata'))
     package_abbr = "gwfgwf"
     package_type = "gwfgwf"
     dfn_file_name = "exg-gwfgwf.dfn"
@@ -201,15 +201,15 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "reader urword", "optional false"],
            ["block dimensions", "name nexg", "type integer", 
             "reader urword", "optional false"],
-           ["block exchangedata", "name gwfgwfrecarray", 
+           ["block exchangedata", "name exchangedata", 
             "type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux", 
             "reader urword", "optional false"],
            ["block exchangedata", "name cellidm1", "type integer", 
             "in_record true", "tagged false", "reader urword", 
-            "optional false"],
+            "optional false", "numeric_index true"],
            ["block exchangedata", "name cellidm2", "type integer", 
             "in_record true", "tagged false", "reader urword", 
-            "optional false"],
+            "optional false", "numeric_index true"],
            ["block exchangedata", "name ihc", "type integer", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
@@ -226,15 +226,15 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "in_record true", "tagged false", "shape (naux)", "reader urword", 
             "optional true"]]
 
-    def __init__(self, simulation, add_to_package_list=True, exgtype=None,
+    def __init__(self, simulation, loading_package=False, exgtype=None,
                  exgmnamea=None, exgmnameb=None, auxiliary=None,
                  print_input=None, print_flows=None, save_flows=None,
                  cell_averaging=None, cvoptions=None, newton=None,
                  gnc_filerecord=None, mvr_filerecord=None, obs_filerecord=None,
-                 nexg=None, gwfgwfrecarray=None, fname=None, pname=None,
+                 nexg=None, exchangedata=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfgwf, self).__init__(simulation, "gwfgwf", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.exgtype = exgtype
@@ -260,5 +260,4 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         self.obs_filerecord = self.build_mfdata("obs_filerecord", 
                                                 obs_filerecord)
         self.nexg = self.build_mfdata("nexg",  nexg)
-        self.gwfgwfrecarray = self.build_mfdata("gwfgwfrecarray", 
-                                                gwfgwfrecarray)
+        self.exchangedata = self.build_mfdata("exchangedata",  exchangedata)

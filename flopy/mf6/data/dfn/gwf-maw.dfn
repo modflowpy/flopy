@@ -258,7 +258,7 @@ description integer value specifying the number of multi-aquifer wells that will
 # --------------------- gwf maw packagedata ---------------------
 
 block packagedata
-name wellrecarray
+name packagedata
 type recarray wellno radius bottom strt condeqn ngwfnodes aux boundname
 shape (nmawwells)
 reader urword
@@ -274,6 +274,7 @@ in_record true
 reader urword
 longname well number for this entry
 description integer value that defines the well number associated with the specified PACKAGEDATA data on the line. WELLNO must be greater than zero and less than or equal to NMAWWELLS. Multi-aquifer well information must be specified for every multi-aquifer well or the program will terminate with an error.  The program will also terminate with an error if information for a multi-aquifer well is specified more than once.
+numeric_index true
 
 block packagedata
 name radius
@@ -352,7 +353,7 @@ description REPLACE boundname {'{#1}': 'multi-aquifer well'}
 # --------------------- gwf maw connectiondata ---------------------
 
 block connectiondata
-name wellconnectionsrecarray
+name connectiondata
 type recarray wellno icon cellid scrn_top scrn_bot hk_skin radius_skin
 reader urword
 longname
@@ -367,6 +368,7 @@ in_record true
 reader urword
 longname well number for this entry
 description integer value that defines the well number associated with the specified CONNECTIONDATA data on the line. WELLNO must be greater than zero and less than or equal to NMAWWELLS. Multi-aquifer well connection information must be specified for every multi-aquifer well connection to the GWF model (NGWFNODES) or the program will terminate with an error.  The program will also terminate with an error if connection information for a multi-aquifer well connection to the GWF model is specified more than once.
+numeric_index true
 
 block connectiondata
 name icon
@@ -377,6 +379,7 @@ in_record true
 reader urword
 longname connection number
 description integer value that defines the GWF connection number for this multi-aquifer well connection entry. ICONN must be greater than zero and less than or equal to NGWFNODES for multi-aquifer well WELLNO.
+numeric_index true
 
 block connectiondata
 name cellid
@@ -445,7 +448,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name wellperiodrecarray
+name perioddata
 type recarray wellno mawsetting
 shape
 reader urword
@@ -461,6 +464,7 @@ in_record true
 reader urword
 longname well number for this entry
 description integer value that defines the well number associated with the specified PERIOD data on the line. WELLNO must be greater than zero and less than or equal to NMAWWELLS.
+numeric_index true
 
 block period
 name mawsetting

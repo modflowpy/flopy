@@ -250,7 +250,7 @@ description integer value specifying the number of stream reaches.  There must b
 # --------------------- gwf sfr packagedata ---------------------
 
 block packagedata
-name sfrrecarray
+name packagedata
 type recarray rno cellid rlen rwid rgrd rtp rbth rhk man ncon ustrf ndv aux boundname
 shape (maxbound)
 reader urword
@@ -266,6 +266,7 @@ in_record true
 reader urword
 longname reach number for this entry
 description integer value that defines the reach number associated with the specified PACKAGEDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
+numeric_index true
 
 block packagedata
 name cellid
@@ -405,7 +406,7 @@ description REPLACE boundname {'{#1}': 'stream reach'}
 # --------------------- gwf sfr connectiondata ---------------------
 
 block connectiondata
-name reach_connectivityrecarray
+name connectiondata
 type recarray rno ic
 shape (maxbound)
 reader urword
@@ -421,6 +422,7 @@ in_record true
 reader urword
 longname reach number for this entry
 description integer value that defines the reach number associated with the specified CONNECTIONDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach connection information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if connection information for a reach is specified more than once.
+numeric_index true
 
 block connectiondata
 name ic
@@ -431,11 +433,13 @@ in_record true
 reader urword
 longname connected reach numbers
 description integer value that defines the reach number of the reach connected to the current reach and whether it is connected to the upstream or downstream end of the reach. Negative IC numbers indicate connected reaches are connected to the downstream end of the current reach. Positive IC numbers indicate connected reaches are connected to the upstream end of the current reach. The absolute value of IC must be greater than zero and less than or equal to NREACHES.
+numeric_index true
+support_negative_index true
 
 # --------------------- gwf sfr diversions ---------------------
 
 block diversions
-name reach_diversionsrecarray
+name diversions
 type recarray rno idv iconr cprior
 shape (maxbound)
 reader urword
@@ -451,6 +455,7 @@ in_record true
 reader urword
 longname reach number for this entry
 description integer value that defines the reach number associated with the specified DIVERSIONS data on the line. RNO must be greater than zero and less than or equal to NREACHES.  Reach diversion information must be specified for every reach with a NDV value greater than 0 or the program will terminate with an error.  The program will also terminate with an error if diversion information for a given reach diversion is specified more than once.
+numeric_index true
 
 block diversions
 name idv
@@ -461,6 +466,7 @@ in_record true
 reader urword
 longname downstream diversion number
 description integer value that defines the downstream diversion number for the diversion for reach RNO. IDV must be greater than zero and less than or equal to NDV for reach RNO.
+numeric_index true
 
 block diversions
 name iconr
@@ -471,6 +477,7 @@ in_record true
 reader urword
 longname downstream reach number for diversion
 description integer value that defines the downstream reach that will receive the diverted water. IDV must be greater than zero and less than or equal to NREACHES. Furthermore, reach  ICONR must be a downstream connection for reach RNO.
+numeric_index true
 
 block diversions
 name cprior
@@ -499,7 +506,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name reachperiodrecarray
+name perioddata
 type recarray rno sfrsetting
 shape
 reader urword
@@ -515,6 +522,7 @@ in_record true
 reader urword
 longname reach number for this entry
 description integer value that defines the reach number associated with the specified PERIOD data on the line. RNO must be greater than zero and less than or equal to NREACHES.
+numeric_index true
 
 block period
 name sfrsetting
@@ -630,6 +638,7 @@ in_record true
 reader urword
 longname diversion number
 description diversion number.
+numeric_index true
 
 block period
 name divrate

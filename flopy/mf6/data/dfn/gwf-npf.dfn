@@ -147,6 +147,7 @@ reader readarray
 optional
 longname confined or convertible indicator
 description flag for each cell that specifies how saturated thickness is treated.  0 means saturated thickness is held constant;  $>$0 means saturated thickness varies with computed head when head is below the cell top; $<$0 means saturated thickness varies with computed head unless the THICKSTRT option is in effect.  When THICKSTRT is in effect, a negative value of icelltype indicates that saturated thickness will be computed as STRT-BOT and held constant.
+default_value 0
 
 block griddata
 name k
@@ -157,6 +158,7 @@ reader readarray
 optional
 longname hydraulic conductivity (L/T)
 description is the hydraulic conductivity.  For the common case in which the user would like to specify the horizontal hydraulic conductivity and the vertical hydraulic conductivity, then K should be assigned as the horizontal hydraulic conductivity, K33 should be assigned as the vertical hydraulic conductivity, and texttt{K22} and the three rotation angles should not be specified.  When more sophisticated anisotropy is required, then K corresponds to the K11 hydraulic conductivity axis.  All included cells (IDOMAIN $>$ 0) must have a K value greater than zero.
+default_value 1.0
 
 block griddata
 name k22

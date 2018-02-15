@@ -83,7 +83,7 @@ class ModflowRch(Package):
     >>> rech = {}
     >>> rech[0] = 1.2e-4 #stress period 1 to 4
     >>> rech[4] = 0.0 #stress period 5 and 6
-    >>> rech[6] = 1.2e-3 #stress preiod 7 to the end
+    >>> rech[6] = 1.2e-3 #stress period 7 to the end
     >>> m = flopy.modflow.Modflow()
     >>> rch = flopy.modflow.ModflowRch(m, nrchop=3, rech=rech)
 

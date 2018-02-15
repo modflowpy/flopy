@@ -13,7 +13,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     auxiliary : [string]
@@ -112,7 +112,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           has a default value of 40 and can be increased if more waves are
           required to resolve variations in water content within the
           unsaturated zone.
-    uzfrecarray : [iuzno, cellid, landflag, ivertcon, surfdep, vks, thtr, thts,
+    packagedata : [iuzno, cellid, landflag, ivertcon, surfdep, vks, thtr, thts,
       thti, eps, boundname]
         * iuzno (integer) integer value that defines the UZF cell number
           associated with the specified PACKAGEDATA data on the line. IUZNO
@@ -147,8 +147,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           character variable that can contain as many as 40 characters. If
           BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    uzfperiodrecarray : [iuzno, finf, pet, extdp, extwc, ha, hroot, rootact,
-      aux]
+    perioddata : [iuzno, finf, pet, extdp, extwc, ha, hroot, rootact, aux]
         * iuzno (integer) integer value that defines the UZF cell number
           associated with the specified PERIOD data on the line.
         * finf (string) real or character value that defines the applied
@@ -230,10 +229,10 @@ class ModflowGwfuzf(mfpackage.MFPackage):
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'uzf', 'options', 
                                             'obs_filerecord'))
-    uzfrecarray = ListTemplateGenerator(('gwf6', 'uzf', 'packagedata', 
-                                         'uzfrecarray'))
-    uzfperiodrecarray = ListTemplateGenerator(('gwf6', 'uzf', 'period', 
-                                               'uzfperiodrecarray'))
+    packagedata = ListTemplateGenerator(('gwf6', 'uzf', 'packagedata', 
+                                         'packagedata'))
+    perioddata = ListTemplateGenerator(('gwf6', 'uzf', 'period', 
+                                        'perioddata'))
     package_abbr = "gwfuzf"
     package_type = "uzf"
     dfn_file_name = "gwf-uzf.dfn"
@@ -303,19 +302,21 @@ class ModflowGwfuzf(mfpackage.MFPackage):
             "reader urword", "optional false"],
            ["block dimensions", "name nwavesets", "type integer", 
             "reader urword", "optional false"],
-           ["block packagedata", "name uzfrecarray", 
+           ["block packagedata", "name packagedata", 
             "type recarray iuzno cellid landflag ivertcon surfdep vks thtr " 
             "thts thti eps boundname", 
             "shape (nuzfcells)", "reader urword"],
            ["block packagedata", "name iuzno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block packagedata", "name cellid", "type integer", 
             "shape (ncelldim)", "tagged false", "in_record true", 
             "reader urword"],
            ["block packagedata", "name landflag", "type integer", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block packagedata", "name ivertcon", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block packagedata", "name surfdep", "type double precision", 
             "shape", "tagged false", "in_record true", "reader urword"],
            ["block packagedata", "name vks", "type double precision", 
@@ -334,11 +335,12 @@ class ModflowGwfuzf(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name uzfperiodrecarray", 
+           ["block period", "name perioddata", 
             "type recarray iuzno finf pet extdp extwc ha hroot rootact aux", 
             "shape", "reader urword"],
            ["block period", "name iuzno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block period", "name finf", "type string", "shape", 
             "tagged false", "in_record true", "time_series true", 
             "reader urword"],
@@ -364,17 +366,17 @@ class ModflowGwfuzf(mfpackage.MFPackage):
             "in_record true", "tagged false", "shape (naux)", "reader urword", 
             "time_series true", "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, auxiliary=None,
+    def __init__(self, model, loading_package=False, auxiliary=None,
                  auxmultname=None, boundnames=None, print_input=None,
                  print_flows=None, save_flows=None, budget_filerecord=None,
                  ts_filerecord=None, obs_filerecord=None, mover=None,
                  simulate_et=None, linear_gwet=None, square_gwet=None,
                  simulate_gwseep=None, unsat_etwc=None, unsat_etae=None,
                  nuzfcells=None, ntrailwaves=None, nwavesets=None,
-                 uzfrecarray=None, uzfperiodrecarray=None, fname=None,
-                 pname=None, parent_file=None):
+                 packagedata=None, perioddata=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowGwfuzf, self).__init__(model, "uzf", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
@@ -399,6 +401,5 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         self.nuzfcells = self.build_mfdata("nuzfcells",  nuzfcells)
         self.ntrailwaves = self.build_mfdata("ntrailwaves",  ntrailwaves)
         self.nwavesets = self.build_mfdata("nwavesets",  nwavesets)
-        self.uzfrecarray = self.build_mfdata("uzfrecarray",  uzfrecarray)
-        self.uzfperiodrecarray = self.build_mfdata("uzfperiodrecarray", 
-                                                   uzfperiodrecarray)
+        self.packagedata = self.build_mfdata("packagedata",  packagedata)
+        self.perioddata = self.build_mfdata("perioddata",  perioddata)

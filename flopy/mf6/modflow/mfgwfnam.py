@@ -13,7 +13,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     list : string
@@ -42,7 +42,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
           groundwater head in a cell will be under-relaxed when water levels
           fall below the bottom of the model below any given cell. By default,
           Newton-Raphson UNDER_RELAXATION is not applied.
-    packagerecarray : [ftype, fname, pname]
+    packages : [ftype, fname, pname]
         * ftype (string) is the file type, which must be one of the following
           character values shown in table~ref{table:ftype}. Ftype may be
           entered in any combination of uppercase and lowercase.
@@ -68,8 +68,8 @@ class ModflowGwfnam(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    packagerecarray = ListTemplateGenerator(('gwf6', 'nam', 'packages', 
-                                             'packagerecarray'))
+    packages = ListTemplateGenerator(('gwf6', 'nam', 'packages', 
+                                      'packages'))
     package_abbr = "gwfnam"
     package_type = "nam"
     dfn_file_name = "gwf-nam.dfn"
@@ -89,7 +89,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
             "type keyword", "reader urword"],
            ["block options", "name under_relaxation", "in_record true", 
             "type keyword", "reader urword", "optional true"],
-           ["block packages", "name packagerecarray", 
+           ["block packages", "name packages", 
             "type recarray ftype fname pname", "reader urword", 
             "optional false"],
            ["block packages", "name ftype", "in_record true", "type string", 
@@ -99,12 +99,12 @@ class ModflowGwfnam(mfpackage.MFPackage):
            ["block packages", "name pname", "in_record true", "type string", 
             "tagged false", "reader urword", "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, list=None,
+    def __init__(self, model, loading_package=False, list=None,
                  print_input=None, print_flows=None, save_flows=None,
-                 newtonoptions=None, packagerecarray=None, fname=None,
-                 pname=None, parent_file=None):
+                 newtonoptions=None, packages=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowGwfnam, self).__init__(model, "nam", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.list = self.build_mfdata("list",  list)
@@ -112,5 +112,4 @@ class ModflowGwfnam(mfpackage.MFPackage):
         self.print_flows = self.build_mfdata("print_flows",  print_flows)
         self.save_flows = self.build_mfdata("save_flows",  save_flows)
         self.newtonoptions = self.build_mfdata("newtonoptions",  newtonoptions)
-        self.packagerecarray = self.build_mfdata("packagerecarray", 
-                                                 packagerecarray)
+        self.packages = self.build_mfdata("packages",  packages)

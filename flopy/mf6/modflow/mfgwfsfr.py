@@ -13,7 +13,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     auxiliary : [string]
@@ -90,7 +90,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     nreaches : integer
         * nreaches (integer) integer value specifying the number of stream
           reaches. There must be NREACHES entries in the PACKAGEDATA block.
-    sfrrecarray : [rno, cellid, rlen, rwid, rgrd, rtp, rbth, rhk, man, ncon,
+    packagedata : [rno, cellid, rlen, rwid, rgrd, rtp, rbth, rhk, man, ncon,
       ustrf, ndv, aux, boundname]
         * rno (integer) integer value that defines the reach number associated
           with the specified PACKAGEDATA data on the line. RNO must be greater
@@ -144,7 +144,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           ASCII character variable that can contain as many as 40 characters.
           If BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    reach_connectivityrecarray : [rno, ic]
+    connectiondata : [rno, ic]
         * rno (integer) integer value that defines the reach number associated
           with the specified CONNECTIONDATA data on the line. RNO must be
           greater than zero and less than or equal to NREACHES. Reach
@@ -152,14 +152,15 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           program will terminate with an error. The program will also terminate
           with an error if connection information for a reach is specified more
           than once.
-        * ic (integer) integer value that defines the reach number of the reach
-          connected to the current reach and whether it is connected to the
-          upstream or downstream end of the reach. Negative IC numbers indicate
-          connected reaches are connected to the downstream end of the current
-          reach. Positive IC numbers indicate connected reaches are connected
-          to the upstream end of the current reach. The absolute value of IC
-          must be greater than zero and less than or equal to NREACHES.
-    reach_diversionsrecarray : [rno, idv, iconr, cprior]
+        * ic (double_precision) integer value that defines the reach number of
+          the reach connected to the current reach and whether it is connected
+          to the upstream or downstream end of the reach. Negative IC numbers
+          indicate connected reaches are connected to the downstream end of the
+          current reach. Positive IC numbers indicate connected reaches are
+          connected to the upstream end of the current reach. The absolute
+          value of IC must be greater than zero and less than or equal to
+          NREACHES.
+    diversions : [rno, idv, iconr, cprior]
         * rno (integer) integer value that defines the reach number associated
           with the specified DIVERSIONS data on the line. RNO must be greater
           than zero and less than or equal to NREACHES. Reach diversion
@@ -201,7 +202,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           is less than (DIVFLOW), DIVFLOW is set to :math:`Q_{DS}` and there
           will be no flow available for reaches connected to downstream end of
           reach RNO.
-    reachperiodrecarray : [rno, sfrsetting]
+    perioddata : [rno, sfrsetting]
         * rno (integer) integer value that defines the reach number associated
           with the specified PERIOD data on the line. RNO must be greater than
           zero and less than or equal to NREACHES.
@@ -209,23 +210,62 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           keyword and values. Keyword values that can be used to start the
           SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL,
           EVAPORATION, RUNOFF, DIVERSION, UPSTREAM_FRACTION, and AUXILIARY.
-            status : [string]
-                * status (string) keyword option to define stream reach status.
-                  STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS
-                  option simulates streamflow using a user-specified stage for
-                  a reach or a stage set to the top of the reach (depth = 0).
-                  In cases where the simulated leakage calculated using the
-                  specified stage exceeds the sum of inflows to the reach, the
-                  stage is set to the top of the reach and leakage is set equal
-                  to the sum of inflows. Upstream factions should be changed
-                  using the UPSTREAM_FRACTION SFRSETTING if the status for one
-                  or more reaches is changed to ACTIVE or INACTIVE. For
-                  example, if one of two downstream connections for a reach is
-                  inactivated, the upstream fraction for the active and
-                  inactive downstream reach should be changed to 1.0 and 0.0,
-                  respectively, to ensure that the active reach receives all of
-                  the downstream outflow from the upstream reach. By default,
-                  STATUS is ACTIVE.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  volumetric rate of diffuse overland runoff that enters the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value. By default,
+                  runoff rates are zero for each reach.
+            diversionrecord : [idv, divrate]
+                * idv (integer) diversion number.
+                * divrate (double) real or character value that defines the
+                  volumetric diversion (DIVFLOW) rate for the streamflow
+                  routing reach. If the Options block includes a TIMESERIESFILE
+                  entry (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            inflow : [string]
+                * inflow (string) real or character value that defines the
+                  volumetric inflow rate for the streamflow routing reach. If
+                  the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, inflow rates are zero for each
+                  reach.
+            rainfall : [string]
+                * rainfall (string) real or character value that defines the
+                  volumetric rate per unit area of water added by precipitation
+                  directly on the streamflow routing reach. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, rainfall rates are zero for each reach.
+            upstream_fraction : [double]
+                * upstream_fraction (double) real value that defines the
+                  fraction of upstream flow (USTRF) from each upstream reach
+                  that is applied as upstream inflow to the reach. The sum of
+                  all USTRF values for all reaches connected to the same
+                  upstream reach must be equal to one.
+            manning : [string]
+                * manning (string) real or character value that defines the
+                  Manning's roughness coefficient for the reach. MANNING must
+                  be greater than zero. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
             stage : [string]
                 * stage (string) real or character value that defines the stage
                   for the reach. The specified STAGE is only applied if the
@@ -245,62 +285,23 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   Input" section), values can be obtained from a time series by
                   entering the time-series name in place of a numeric value. By
                   default, evaporation rates are zero for each reach.
-            diversionrecord : [idv, divrate]
-                * idv (integer) diversion number.
-                * divrate (double) real or character value that defines the
-                  volumetric diversion (DIVFLOW) rate for the streamflow
-                  routing reach. If the Options block includes a TIMESERIESFILE
-                  entry (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned AUXVAL. AUXNAME must match one of the auxiliary
-                  variable names defined in the OPTIONS block. If AUXNAME does
-                  not match one of the auxiliary variable names defined in the
-                  OPTIONS block the data are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
-            upstream_fraction : [double]
-                * upstream_fraction (double) real value that defines the
-                  fraction of upstream flow (USTRF) from each upstream reach
-                  that is applied as upstream inflow to the reach. The sum of
-                  all USTRF values for all reaches connected to the same
-                  upstream reach must be equal to one.
-            inflow : [string]
-                * inflow (string) real or character value that defines the
-                  volumetric inflow rate for the streamflow routing reach. If
-                  the Options block includes a TIMESERIESFILE entry (see the
-                  "Time-Variable Input" section), values can be obtained from a
-                  time series by entering the time-series name in place of a
-                  numeric value. By default, inflow rates are zero for each
-                  reach.
-            manning : [string]
-                * manning (string) real or character value that defines the
-                  Manning's roughness coefficient for the reach. MANNING must
-                  be greater than zero. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value.
-            runoff : [string]
-                * runoff (string) real or character value that defines the
-                  volumetric rate of diffuse overland runoff that enters the
-                  streamflow routing reach. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value. By default,
-                  runoff rates are zero for each reach.
-            rainfall : [string]
-                * rainfall (string) real or character value that defines the
-                  volumetric rate per unit area of water added by precipitation
-                  directly on the streamflow routing reach. If the Options
-                  block includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, rainfall rates are zero for each reach.
+            status : [string]
+                * status (string) keyword option to define stream reach status.
+                  STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS
+                  option simulates streamflow using a user-specified stage for
+                  a reach or a stage set to the top of the reach (depth = 0).
+                  In cases where the simulated leakage calculated using the
+                  specified stage exceeds the sum of inflows to the reach, the
+                  stage is set to the top of the reach and leakage is set equal
+                  to the sum of inflows. Upstream factions should be changed
+                  using the UPSTREAM_FRACTION SFRSETTING if the status for one
+                  or more reaches is changed to ACTIVE or INACTIVE. For
+                  example, if one of two downstream connections for a reach is
+                  inactivated, the upstream fraction for the active and
+                  inactive downstream reach should be changed to 1.0 and 0.0,
+                  respectively, to ensure that the active reach receives all of
+                  the downstream outflow from the upstream reach. By default,
+                  STATUS is ACTIVE.
     fname : String
         File name for this package.
     pname : String
@@ -321,14 +322,15 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'sfr', 'options', 
                                             'obs_filerecord'))
-    sfrrecarray = ListTemplateGenerator(('gwf6', 'sfr', 'packagedata', 
-                                         'sfrrecarray'))
-    reach_connectivityrecarray = ListTemplateGenerator((
-        'gwf6', 'sfr', 'connectiondata', 'reach_connectivityrecarray'))
-    reach_diversionsrecarray = ListTemplateGenerator((
-        'gwf6', 'sfr', 'diversions', 'reach_diversionsrecarray'))
-    reachperiodrecarray = ListTemplateGenerator(('gwf6', 'sfr', 'period', 
-                                                 'reachperiodrecarray'))
+    packagedata = ListTemplateGenerator(('gwf6', 'sfr', 'packagedata', 
+                                         'packagedata'))
+    connectiondata = ListTemplateGenerator(('gwf6', 'sfr', 
+                                            'connectiondata', 
+                                            'connectiondata'))
+    diversions = ListTemplateGenerator(('gwf6', 'sfr', 'diversions', 
+                                        'diversions'))
+    perioddata = ListTemplateGenerator(('gwf6', 'sfr', 'period', 
+                                        'perioddata'))
     package_abbr = "gwfsfr"
     package_type = "sfr"
     dfn_file_name = "gwf-sfr.dfn"
@@ -397,12 +399,13 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "type double precision", "reader urword", "optional true"],
            ["block dimensions", "name nreaches", "type integer", 
             "reader urword", "optional false"],
-           ["block packagedata", "name sfrrecarray", 
+           ["block packagedata", "name packagedata", 
             "type recarray rno cellid rlen rwid rgrd rtp rbth rhk man ncon " 
             "ustrf ndv aux boundname", 
             "shape (maxbound)", "reader urword"],
            ["block packagedata", "name rno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block packagedata", "name cellid", "type integer", 
             "shape (ncelldim)", "tagged false", "in_record true", 
             "reader urword"],
@@ -433,31 +436,37 @@ class ModflowGwfsfr(mfpackage.MFPackage):
            ["block packagedata", "name boundname", "type string", "shape", 
             "tagged false", "in_record true", "reader urword", 
             "optional true"],
-           ["block connectiondata", "name reach_connectivityrecarray", 
+           ["block connectiondata", "name connectiondata", 
             "type recarray rno ic", "shape (maxbound)", "reader urword"],
            ["block connectiondata", "name rno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block connectiondata", "name ic", "type integer", 
             "shape (ncon(rno))", "tagged false", "in_record true", 
-            "reader urword"],
-           ["block diversions", "name reach_diversionsrecarray", 
+            "reader urword", "numeric_index true", 
+            "support_negative_index true"],
+           ["block diversions", "name diversions", 
             "type recarray rno idv iconr cprior", "shape (maxbound)", 
             "reader urword"],
            ["block diversions", "name rno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block diversions", "name idv", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block diversions", "name iconr", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block diversions", "name cprior", "type string", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name reachperiodrecarray", 
+           ["block period", "name perioddata", 
             "type recarray rno sfrsetting", "shape", "reader urword"],
            ["block period", "name rno", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block period", "name sfrsetting", 
             "type keystring status manning stage inflow rainfall evaporation " 
             "runoff diversionrecord upstream_fraction auxiliaryrecord", 
@@ -488,7 +497,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
            ["block period", "name diversion", "type keyword", "shape", 
             "in_record true", "reader urword"],
            ["block period", "name idv", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block period", "name divrate", "type double precision", 
             "shape", "tagged false", "in_record true", "reader urword", 
             "time_series true"],
@@ -506,18 +516,17 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "time_series true"]]
 
-    def __init__(self, model, add_to_package_list=True, auxiliary=None,
+    def __init__(self, model, loading_package=False, auxiliary=None,
                  boundnames=None, print_input=None, print_stage=None,
                  print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, ts_filerecord=None,
                  obs_filerecord=None, mover=None, maximum_iterations=None,
                  maximum_depth_change=None, unit_conversion=None,
-                 nreaches=None, sfrrecarray=None,
-                 reach_connectivityrecarray=None,
-                 reach_diversionsrecarray=None, reachperiodrecarray=None,
-                 fname=None, pname=None, parent_file=None):
+                 nreaches=None, packagedata=None, connectiondata=None,
+                 diversions=None, perioddata=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowGwfsfr, self).__init__(model, "sfr", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
@@ -541,10 +550,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
         self.unit_conversion = self.build_mfdata("unit_conversion", 
                                                  unit_conversion)
         self.nreaches = self.build_mfdata("nreaches",  nreaches)
-        self.sfrrecarray = self.build_mfdata("sfrrecarray",  sfrrecarray)
-        self.reach_connectivityrecarray = self.build_mfdata(
-            "reach_connectivityrecarray",  reach_connectivityrecarray)
-        self.reach_diversionsrecarray = self.build_mfdata(
-            "reach_diversionsrecarray",  reach_diversionsrecarray)
-        self.reachperiodrecarray = self.build_mfdata("reachperiodrecarray", 
-                                                     reachperiodrecarray)
+        self.packagedata = self.build_mfdata("packagedata",  packagedata)
+        self.connectiondata = self.build_mfdata("connectiondata", 
+                                                connectiondata)
+        self.diversions = self.build_mfdata("diversions",  diversions)
+        self.perioddata = self.build_mfdata("perioddata",  perioddata)

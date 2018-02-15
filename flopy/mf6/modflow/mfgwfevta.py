@@ -13,7 +13,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     readasarrays : boolean
@@ -113,7 +113,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
     dfn_file_name = "gwf-evta.dfn"
 
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 
-            "reader urword", "optional false"],
+            "reader urword", "optional false", "default_value True"],
            ["block options", "name fixed_cell", "type keyword", "shape", 
             "reader urword", "optional true"],
            ["block options", "name auxiliary", "type string", 
@@ -153,22 +153,24 @@ class ModflowGwfevta(mfpackage.MFPackage):
            ["block period", "name ievt", "type integer", 
             "shape (ncol*nrow; ncpl)", "reader readarray", "optional true"],
            ["block period", "name surface", "type double precision", 
-            "shape (ncol*nrow; ncpl)", "reader readarray"],
+            "shape (ncol*nrow; ncpl)", "reader readarray", "default_value 0."],
            ["block period", "name rate", "type double precision", 
-            "shape (ncol*nrow; ncpl)", "reader readarray"],
+            "shape (ncol*nrow; ncpl)", "reader readarray", 
+            "default_value 1.e-3"],
            ["block period", "name depth", "type double precision", 
-            "shape (ncol*nrow; ncpl)", "reader readarray"],
+            "shape (ncol*nrow; ncpl)", "reader readarray", 
+            "default_value 1.0"],
            ["block period", "name aux(iaux)", "type double precision", 
             "shape (ncol*nrow; ncpl)", "reader readarray"]]
 
-    def __init__(self, model, add_to_package_list=True, readasarrays=None,
+    def __init__(self, model, loading_package=False, readasarrays=True,
                  fixed_cell=None, auxiliary=None, auxmultname=None,
                  print_input=None, print_flows=None, save_flows=None,
                  tas_filerecord=None, obs_filerecord=None, ievt=None,
-                 surface=None, rate=None, depth=None, aux=None, fname=None,
+                 surface=0., rate=1.e-3, depth=1.0, aux=None, fname=None,
                  pname=None, parent_file=None):
         super(ModflowGwfevta, self).__init__(model, "evta", fname, pname,
-                                             add_to_package_list, parent_file)        
+                                             loading_package, parent_file)        
 
         # set up variables
         self.readasarrays = self.build_mfdata("readasarrays",  readasarrays)

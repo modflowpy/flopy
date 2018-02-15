@@ -33,7 +33,7 @@ def test_create_and_run_model():
                        sim_tdis_file=tdis_name)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(sim, time_units='DAYS', nper=2,
-                                      tdisrecarray=tdis_rc)
+                              perioddata=tdis_rc)
 
     # create model instance
     model = MFModel(sim, model_type='gwf6',
@@ -71,20 +71,22 @@ def test_create_and_run_model():
     wel_package = mfgwfwel.ModflowGwfwel(model, print_input=True,
                                          print_flows=True, save_flows=True,
                                          maxbound=2,
-                                         periodrecarray=[((0, 0, 4), -2000.0),
-                                                         ((0, 0, 7), -2.0)])
-    wel_package.periodrecarray.add_transient_key(1)
-    wel_package.periodrecarray.set_data([((0, 0, 4), -200.0)], 1)
+                                         stress_period_data=[((0, 0, 4),
+                                                              -2000.0),
+                                                             ((0, 0, 7),
+                                                              -2.0)])
+    wel_package.stress_period_data.add_transient_key(1)
+    wel_package.stress_period_data.set_data([((0, 0, 4), -200.0)], 1)
 
     drn_package = mfgwfdrn.ModflowGwfdrn(model, print_input=True,
                                          print_flows=True, save_flows=True,
-                                         maxbound=1, periodrecarray=[
-            ((0, 0, 0), 80, 60.0)])
+                                         maxbound=1, stress_period_data=[
+                                         ((0, 0, 0), 80, 60.0)])
 
     riv_package = mfgwfriv.ModflowGwfriv(model, print_input=True,
                                          print_flows=True, save_flows=True,
-                                         maxbound=1, periodrecarray=[
-            ((0, 0, 9), 110, 90.0, 100.0)])
+                                         maxbound=1, stress_period_data=[
+                                         ((0, 0, 9), 110, 90.0, 100.0)])
     oc_package = mfgwfoc.ModflowGwfoc(model, budget_filerecord=[
         '{}.cbc'.format(model_name)],
                                       head_filerecord=[
