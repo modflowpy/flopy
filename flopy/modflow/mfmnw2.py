@@ -385,7 +385,7 @@ class Mnw(object):
         dtype = Mnw.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(ncells, dtype)
+        return create_empty_recarray(nper, dtype)
 
     @staticmethod
     def get_default_spd_dtype(structured=True):
