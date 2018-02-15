@@ -209,7 +209,7 @@ def test_sfr_renumbering():
     r['iseg'] *= 2
     r['ireach'] = [1, 2, 3] * 9
 
-    dtype = dtype([('nseg', int), ('outseg', int)])
+    dtype = np.dtype([('nseg', int), ('outseg', int)])
     d = create_empty_recarray(9, dtype)
     d['nseg'] = np.arange(1, 10) * 2
     d['outseg'] = np.array([4, 0, 6, 8, 3, 8, 1, 2, 8]) * 2
