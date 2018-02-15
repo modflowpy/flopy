@@ -8,6 +8,7 @@ reader urword
 optional false
 longname use array-based input
 description indicates that array-based input will be used for the Recharge Package.  This keyword must be specified to use array-based input.
+default_value True
 
 block options
 name fixed_cell
@@ -167,6 +168,7 @@ shape (ncol*nrow; ncpl)
 reader readarray
 longname recharge rate
 description is the recharge flux rate ($LT^{-1}$).  This rate is multiplied inside the program by the surface area of the cell to calculate the volumetric recharge rate. The recharge array may be defined by a time-array series (see the "Using Time-Array Series in a Package" section).
+default_value 1.e-3
 
 block period
 name aux

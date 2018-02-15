@@ -320,7 +320,7 @@ def test_mfnwt_LKT():
     pth = os.path.join(pthNWT, 'lkt')
     namefile = 'lkt_mf.nam'
     mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
-                                    version='mfnwt', verbose=True,
+                                    version='mfnwt', verbose=True, forgive=False,
                                     exe_name=mfnwt_exe)
 
     assert not mf.load_fail, 'MODFLOW model did not load'
@@ -398,5 +398,5 @@ if __name__ == '__main__':
     test_mf2000_tob()
     #test_mf2000_zeroth()
     #test_mfnwt_CrnkNic()
-    #test_mfnwt_LKT()
+    test_mfnwt_LKT()
     #test_mfnwt_keat_uzf()

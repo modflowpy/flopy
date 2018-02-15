@@ -1,5 +1,23 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.9
+* Modified MODFLOW 5 OC stress_period_data=None default behaviour. If MODFLOW 5 OC stress_period_data is not provided then binary head output is saved for the last time step of each stress period.
+* added multiple component support to ``mt3dusgs SFT`` module
+* Optimized loading and saving of MODFLOW 6 files
+* MODFLOW 6 identifiers are now zero based
+* Added remove_package method in MFSimulation and MFModel that removes MODFLOW 6 packages from the existing simulation/model
+* Flopy code for MODFLOW 6 generalized to support different model types
+
+* Bug fixes:
+    * Fixed issue with default settings for MODFLOW 5 SUB package `dp` dataset.
+    * Fixed issue if an external BC list file has only one entry
+    * Some patching for recarray issues with latest ``numpy`` release (there are more of these lurking...)
+	* Fixed setting model relative path for MODFLOW 6 simulations
+	* Python 2.7 compatibility issues fixed for MODFLOW 6 simulations
+	* IMS file name conflicts now automatically resolved
+	* Fixed issue with passing in numpy ndarrays arrays as layered data
+	* Doc string formatting for MODFLOW 6 packages fixed to make doc strings easier to read
+
 ### Version 3.2.8
 * Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
 * Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.

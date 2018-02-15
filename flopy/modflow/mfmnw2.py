@@ -8,6 +8,7 @@ from .mfdis import get_layer
 from ..utils import check
 from ..utils.flopy_io import line_parse, pop_item
 from ..utils import MfList
+from ..utils.recarray_utils import create_empty_recarray
 
 from ..pakbase import Package
 
@@ -384,9 +385,7 @@ class Mnw(object):
         dtype = Mnw.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros(nper, dtype=dtype)
-        d = d.view(np.recarray)
-        return d
+        return create_empty_recarray(nper, dtype)
 
     @staticmethod
     def get_default_spd_dtype(structured=True):
@@ -895,9 +894,7 @@ class ModflowMnw2(Package):
         dtype = ModflowMnw2.get_default_node_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros(maxnodes, dtype=dtype)
-        d = d.view(np.recarray)
-        return d
+        return create_empty_recarray(maxnodes, dtype)
 
     @staticmethod
     def get_default_node_dtype(structured=True):
@@ -945,12 +942,7 @@ class ModflowMnw2(Package):
         dtype = ModflowMnw2.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros(itmp, dtype=dtype)
-        # if len(d) > 0:
-        #    d[:] = default_value
-        # d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
-        d = d.view(np.recarray)
-        return d
+        return create_empty_recarray(itmp, dtype)
 
     @staticmethod
     def get_default_spd_dtype(structured=True):

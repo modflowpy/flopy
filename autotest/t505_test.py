@@ -31,6 +31,7 @@ from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.data.mfdatautil import ArrayUtil
 from flopy.mf6.data.mfdata import DataStorageType
 from flopy.mf6.utils import testutils
+from flopy.mf6.data.mfstructure import FlopyException
 import flopy.utils.binaryfile as bf
 
 try:
@@ -53,6 +54,7 @@ cpth = os.path.join('temp', 't505')
 if not os.path.isdir(cpth):
     os.makedirs(cpth)
 
+
 def np001():
     # init paths
     test_ex_name = 'np001'
@@ -67,20 +69,43 @@ def np001():
     expected_head_file = os.path.join(expected_output_folder, 'np001_mod.hds')
     expected_cbc_file = os.path.join(expected_output_folder, 'np001_mod.cbc')
 
+    # model tests
+    test_sim = MFSimulation(sim_name=test_ex_name, version='mf6',
+                            exe_name=exe_name, sim_ws=pth,
+                            sim_tdis_file='{}.tdis'.format(test_ex_name))
+    kwargs = {}
+    kwargs['bad_kwarg'] = 20
+    try:
+        ex = False
+        bad_model = MFModel(test_sim, model_type='gwf6', modelname=model_name,
+                            model_nam_file='{}.nam'.format(model_name),
+                            **kwargs)
+    except FlopyException:
+        ex = True
+    assert(ex == True)
+
+    kwargs = {}
+    kwargs['xul'] = 20.5
+    good_model = MFModel(test_sim, model_type='gwf6',
+                         modelname=model_name,
+                         model_nam_file='{}.nam'.format(model_name),
+                         **kwargs)
+
     # create simulation
-    sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
+    sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
+                       sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
-                               tdisrecarray=tdis_rc)
+                               perioddata=tdis_rc)
     ims_package = ModflowIms(sim, print_option='ALL', complexity='SIMPLE',outer_hclose=0.00001,
                              outer_maximum=50, under_relaxation='NONE', inner_maximum=30,
                              inner_hclose=0.00001, linear_acceleration='CG',
                              preconditioner_levels=7, preconditioner_drop_tolerance=0.01,
                              number_orthogonalizations=2)
+
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
 
     dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1, nrow=1, ncol=10, delr=500.0, delc=500.0,
                                           top=100.0, botm=50.0, fname='{}.dis'.format(model_name), pname='mydispkg')
@@ -97,23 +122,30 @@ def np001():
 
     oc_package = ModflowGwfoc(model, budget_filerecord=[('np001_mod.cbc',)],
                               head_filerecord=[('np001_mod.hds',)],
-                              saverecord={0:[('HEAD', 'ALL'), ('BUDGET', 'ALL')],1:[('HEAD', 'ALL'), ('BUDGET', 'ALL')]},
+                              saverecord={0:[('HEAD', 'ALL'),
+                                             ('BUDGET', 'ALL')],
+                                          1:[('HEAD', 'ALL'),
+                                             ('BUDGET', 'ALL')]},
                               printrecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
     oc_package.printrecord.add_transient_key(1)
     oc_package.printrecord.set_data([('HEAD', 'ALL'), ('BUDGET', 'ALL')], 1)
 
     sto_package = ModflowGwfsto(model, save_flows=True, iconvert=1, ss=0.000001, sy=0.15)
 
-    wel_package = ModflowGwfwel(model, print_input=True, print_flows=True, save_flows=True, maxbound=2,
-                                periodrecarray=[((0,0,4), -2000.0), ((0,0,7), -2.0)])
-    wel_package.periodrecarray.add_transient_key(1)
-    wel_package.periodrecarray.set_data({1:{'filename':'wel.txt', 'factor':1.0}})
+    wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=2,
+                                stress_period_data=[((0,0,4), -2000.0),
+                                                    ((0,0,7), -2.0)])
+    wel_package.stress_period_data.add_transient_key(1)
+    wel_package.stress_period_data.set_data({1:{'filename':'wel.txt', 'factor':1.0}})
 
-    drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True, save_flows=True, maxbound=1,
-                                periodrecarray=[((0,0,0), 80, 60.0)])
+    drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=1,
+                                stress_period_data=[((0,0,0), 80, 60.0)])
 
-    riv_package = ModflowGwfriv(model, print_input=True, print_flows=True, save_flows=True, maxbound=1,
-                                periodrecarray=[((0,0,9), 110, 90.0, 100.0)])
+    riv_package = ModflowGwfriv(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=1,
+                                stress_period_data=[((0,0,9), 110, 90.0, 100.0)])
 
     # verify package look-up
     pkgs = model.get_package()
@@ -178,10 +210,9 @@ def np002():
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2, perioddata=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='ALL', complexity='SIMPLE',outer_hclose=0.00001,
                              outer_maximum=50, under_relaxation='NONE', inner_maximum=30,
                              inner_hclose=0.00001, linear_acceleration='CG',
@@ -207,10 +238,19 @@ def np002():
 
     sto_package = ModflowGwfsto(model, save_flows=True, iconvert=1, ss=0.000001, sy=0.15)
 
-    hfb_package = ModflowGwfhfb(model, print_input=True, maxhfb=1, hfbrecarray=[((0,0,3), (0,0,4), 0.00001)])
-    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True, maxbound=1, periodrecarray=[((0,0,0), 65.0)])
-    ghb_package = ModflowGwfghb(model, print_input=True, print_flows=True, maxbound=1, periodrecarray=[((0,0,9), 125.0, 60.0)])
-    rch_package = ModflowGwfrch(model, print_input=True, print_flows=True, maxbound=2, periodrecarray=[((0,0,3), 0.02),((0,0,6), 0.1)])
+    hfb_package = ModflowGwfhfb(model, print_input=True, maxhfb=1,
+                                stress_period_data=[((0,0,3), (0,0,4),
+                                                     0.00001)])
+    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True,
+                                maxbound=1, stress_period_data=[((0,0,0),
+                                                                 65.0)])
+    ghb_package = ModflowGwfghb(model, print_input=True, print_flows=True,
+                                maxbound=1, stress_period_data=[((0,0,9),
+                                                                 125.0, 60.0)])
+    rch_package = ModflowGwfrch(model, print_input=True, print_flows=True,
+                                maxbound=2,
+                                stress_period_data=[((0,0,3), 0.02),
+                                                    ((0,0,6), 0.1)])
 
     # make folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -270,10 +310,9 @@ def test021_twri():
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(86400.0, 1, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=1, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=1, perioddata=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.0001,
                              outer_maximum=500, under_relaxation='NONE', inner_maximum=100,
                              inner_hclose=0.0001, rcloserecord=0.001, linear_acceleration='CG',
@@ -290,31 +329,33 @@ def test021_twri():
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],
                               printrecord=[('HEAD', 'ALL')])
 
-    # build periodrecarray for chd package
-    periodrecarray = []
+    # build stress_period_data for chd package
+    stress_period_data = []
     for layer in range(0, 2):
         for row in range(0, 15):
-            periodrecarray.append(((layer, row, 0), 0.0))
-    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True, save_flows=True, maxbound=100,
-                                periodrecarray=periodrecarray)
+            stress_period_data.append(((layer, row, 0), 0.0))
+    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=100,
+                                stress_period_data=stress_period_data)
 
-    # build periodrecarray for drn package
-    periodrecarray = []
+    # build stress_period_data for drn package
+    stress_period_data = []
     drn_heads = [0.0, 0.0, 10.0, 20.0, 30.0, 50.0, 70.0, 90.0, 100.0]
     for col, head in zip(range(1,10), drn_heads):
-        periodrecarray.append(((0, 7, col), head, 1.0))
-    drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True, save_flows=True, maxbound=9,
-                                periodrecarray=periodrecarray)
+        stress_period_data.append(((0, 7, col), head, 1.0))
+    drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=9,
+                                stress_period_data=stress_period_data)
     rch_package = ModflowGwfrcha(model, readasarrays=True, fixed_cell=True, recharge={0:0.00000003})
 
-    periodrecarray = []
+    stress_period_data = []
     layers = [2,1,1,0,0,0,0,0,0,0,0,0,0,0,0]
     rows = [4,3,5,8,8,8,8,10,10,10,10,12,12,12,12]
     cols = [10,5,11,7,9,11,13,7,9,11,13,7,9,11,13]
     for layer, row, col in zip(layers, rows, cols):
-        periodrecarray.append(((layer, row, col), -5.0))
+        stress_period_data.append(((layer, row, col), -5.0))
     wel_package = ModflowGwfwel(model, print_input=True, print_flows=True, save_flows=True, maxbound=15,
-                                periodrecarray=periodrecarray)
+                                stress_period_data=stress_period_data)
 
     # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -355,14 +396,13 @@ def test005_advgw_tidal():
                        sim_tdis_file='simulation.tdis'.format(test_ex_name))
     # test tdis package deletion
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
-                               tdisrecarray=[(2.0, 2, 1.0)])
+                               perioddata=[(2.0, 2, 1.0)])
     sim.remove_package(tdis_package)
 
     tdis_rc = [(1.0, 1, 1.0), (10.0, 120, 1.0), (10.0, 120, 1.0), (10.0, 120, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=4, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=4, perioddata=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', complexity='SIMPLE', outer_hclose=0.0001,
                              outer_maximum=500, under_relaxation='NONE', inner_maximum=100,
                              inner_hclose=0.0001, rcloserecord=0.001, linear_acceleration='CG',
@@ -394,29 +434,43 @@ def test005_advgw_tidal():
     # wel, evt, ghb, obs, riv, rch, ts
     # well package
     # test empty with aux vars, bound names, and time series
-    period_two = ModflowGwfwel.periodrecarray.empty(model, maxbound=3, aux_vars=['var1', 'var2', 'var3'],
-                                                             boundnames=True, timeseries=True)
+    period_two = ModflowGwfwel.stress_period_data.empty(model, maxbound=3,
+                                                        aux_vars=['var1',
+                                                                  'var2',
+                                                                  'var3'],
+                                                        boundnames=True,
+                                                        timeseries=True)
     period_two[0][0] = ((0,11,2), -50.0, -1, -2, -3, None)
     period_two[0][1] = ((2,4,7), 'well_1_rate', 1, 2, 3, 'well_1')
     period_two[0][2] = ((2,3,2), 'well_2_rate', 4, 5, 6, 'well_2')
-    period_three = ModflowGwfwel.periodrecarray.empty(model, maxbound=2, aux_vars=['var1', 'var2', 'var3'],
-                                                               boundnames=True, timeseries=True)
+    period_three = ModflowGwfwel.stress_period_data.empty(model, maxbound=2,
+                                                          aux_vars=['var1',
+                                                                    'var2',
+                                                                    'var3'],
+                                                          boundnames=True,
+                                                          timeseries=True)
     period_three[0][0] = ((2,3,2), 'well_2_rate', 1, 2, 3, 'well_2')
     period_three[0][1] = ((2,4,7), 'well_1_rate', 4, 5, 6, 'well_1')
-    period_four = ModflowGwfwel.periodrecarray.empty(model, maxbound=5, aux_vars=['var1', 'var2', 'var3'],
-                                                              boundnames=True, timeseries=True)
+    period_four = ModflowGwfwel.stress_period_data.empty(model, maxbound=5,
+                                                         aux_vars=['var1',
+                                                                   'var2',
+                                                                   'var3'],
+                                                         boundnames=True,
+                                                         timeseries=True)
     period_four[0][0] = ((2,4,7), 'well_1_rate', 1, 2, 3, 'well_1')
     period_four[0][1] = ((2,3,2), 'well_2_rate', 4, 5, 6, 'well_2')
     period_four[0][2] = ((0,11,2), -10.0, 7, 8, 9, None)
     period_four[0][3] = ((0,2,4), -20.0, 17, 18, 19, None)
     period_four[0][4] = ((0,13,5), -40.0, 27, 28, 29, None)
-    periodrecarray = {}
-    periodrecarray[1] = period_two[0]
-    periodrecarray[2] = period_three[0]
-    periodrecarray[3] = period_four[0]
+    stress_period_data = {}
+    stress_period_data[1] = period_two[0]
+    stress_period_data[2] = period_three[0]
+    stress_period_data[3] = period_four[0]
     wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
-                                auxiliary=[('var1', 'var2', 'var3')], maxbound=5,
-                                periodrecarray=periodrecarray, boundnames=True, save_flows=True,
+                                auxiliary=[('var1', 'var2', 'var3')],
+                                maxbound=5,
+                                stress_period_data=stress_period_data,
+                                boundnames=True, save_flows=True,
                                 ts_filerecord='well-rates.ts')
     # well ts package
     ts_recarray =[(0.0, 0.0, 0.0, 0.0),
@@ -425,27 +479,30 @@ def test005_advgw_tidal():
                   (21.0, -200.0, -400.0, -300.0),
                   (31.0, 0.0, -600.0, -400.0)]
     well_ts_package = ModflowUtlts(model, fname='well-rates.ts', parent_file=wel_package,
-                                   time_seriesrecarray=ts_recarray,
+                                   timeseries=ts_recarray,
                                    time_series_namerecord=[('well_1_rate', 'well_2_rate', 'well_3_rate')],
                                    interpolation_methodrecord=[('stepwise', 'stepwise', 'stepwise')])
     # test removing package with child packages
     model.remove_package(wel_package)
     wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
-                                auxiliary=[('var1', 'var2', 'var3')], maxbound=5,
-                                periodrecarray=periodrecarray, boundnames=True, save_flows=True,
+                                auxiliary=[('var1', 'var2', 'var3')],
+                                maxbound=5,
+                                stress_period_data=stress_period_data,
+                                boundnames=True, save_flows=True,
                                 ts_filerecord='well-rates.ts')
     well_ts_package = ModflowUtlts(model, fname='well-rates.ts', parent_file=wel_package,
-                                   time_seriesrecarray=ts_recarray,
+                                   timeseries=ts_recarray,
                                    time_series_namerecord=[('well_1_rate', 'well_2_rate', 'well_3_rate')],
                                    interpolation_methodrecord=[('stepwise', 'stepwise', 'stepwise')])
 
     # test empty
-    evt_period = ModflowGwfevt.periodrecarray.empty(model, 150, nseg=3)
+    evt_period = ModflowGwfevt.stress_period_data.empty(model, 150, nseg=3)
     for col in range(0, 10):
         for row in range(0, 15):
             evt_period[0][col*15+row] = (((0, row, col), 50.0, 0.0004, 10.0, 0.2, 0.5, 0.3, 0.1, None))
-    evt_package = ModflowGwfevt(model, print_input=True, print_flows=True, save_flows=True, maxbound=150,
-                                         nseg=3, periodrecarray=evt_period)
+    evt_package = ModflowGwfevt(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=150,
+                                nseg=3, stress_period_data=evt_period)
 
     ghb_period = {}
     ghb_period_array = []
@@ -453,22 +510,24 @@ def test005_advgw_tidal():
         for row in range(0, 15):
             ghb_period_array.append(((layer, row, 9), 'tides', cond, 'Estuary-L2'))
     ghb_period[0] = ghb_period_array
-    ghb_package = ModflowGwfghb(model, print_input=True, print_flows=True, save_flows=True, boundnames=True,
-                                ts_filerecord='tides.ts', obs_filerecord='AdvGW_tidal.ghb.obs',
-                                maxbound=30, periodrecarray=ghb_period)
+    ghb_package = ModflowGwfghb(model, print_input=True, print_flows=True,
+                                save_flows=True, boundnames=True,
+                                ts_filerecord='tides.ts',
+                                obs_filerecord='AdvGW_tidal.ghb.obs',
+                                maxbound=30, stress_period_data=ghb_period)
     ts_recarray=[]
     fd = open(os.path.join(pth, 'tides.txt'), 'r')
     for line in fd:
         line_list = line.strip().split(',')
         ts_recarray.append((float(line_list[0]), float(line_list[1])))
     ghb_ts_package = ModflowUtlts(model, fname='tides.ts', parent_file=ghb_package,
-                                  time_seriesrecarray=ts_recarray,
+                                  timeseries=ts_recarray,
                                   time_series_namerecord='tides',
                                   interpolation_methodrecord='linear')
     obs_recarray = {'ghb_obs.csv':[('ghb-2-6-10', 'GHB', (1, 5, 9)), ('ghb-3-6-10', 'GHB', (2, 5, 9))],
                     'ghb_flows.csv':[('Estuary2', 'GHB', 'Estuary-L2'), ('Estuary3', 'GHB', 'Estuary-L3')]}
     ghb_obs_package = ModflowUtlobs(model, fname='AdvGW_tidal.ghb.obs', parent_file=ghb_package,
-                                    digits=10, print_input=True, continuousrecarray=obs_recarray)
+                                    digits=10, print_input=True, continuous=obs_recarray)
 
     obs_recarray = {'head_obs.csv':[('h1_13_8', 'HEAD', (2, 12, 7))],
                     'intercell_flow_obs1.csv':[('ICF1_1.0', 'FLOW-JA-FACE', (0, 4, 5), (0, 5, 5))],
@@ -478,7 +537,7 @@ def test005_advgw_tidal():
                                             ('h1-12-3', 'HEAD', (0, 11, 2)),
                                             ('h1-13-9', 'HEAD', (0, 12, 8))]}
     obs_package = ModflowUtlobs(model, fname='AdvGW_tidal.obs', digits=10, print_input=True,
-                                continuousrecarray=obs_recarray)
+                                continuous=obs_recarray)
 
     riv_period = {}
     riv_period_array = [((0,2,0),'river_stage_1',1001.0,35.9,None),((0,3,1),'river_stage_1',1002.0,35.8,None),
@@ -493,13 +552,15 @@ def test005_advgw_tidal():
                         ((0,5,6),'river_stage_2',1007.0,36.3,'riv2_c7'),((0,6,7),'river_stage_2',1008.0,36.2,None),
                         ((0,6,8),'river_stage_2',1009.0,36.1),((0,6,9),'river_stage_2',1010.0,36.0)]
     riv_period[0] = riv_period_array
-    riv_package = ModflowGwfriv(model, print_input=True, print_flows=True, save_flows='AsvGW_tidal.cbc',
+    riv_package = ModflowGwfriv(model, print_input=True, print_flows=True,
+                                save_flows='AsvGW_tidal.cbc',
                                 boundnames=True, ts_filerecord='river_stages.ts',
-                                maxbound=20, periodrecarray=riv_period, obs_filerecord='AdvGW_tidal.riv.obs')
+                                maxbound=20, stress_period_data=riv_period,
+                                obs_filerecord='AdvGW_tidal.riv.obs')
     ts_recarray=[(0.0,40.0,41.0),(1.0,41.0,41.5),(2.0,43.0,42.0),(3.0,45.0,42.8),(4.0,44.0,43.0),
                  (6.0,43.0,43.1),(9.0,42.0,42.4),(11.0,41.0,41.5),(31.0,40.0,41.0)]
     riv_ts_package = ModflowUtlts(model, fname='river_stages.ts', parent_file=riv_package,
-                                  time_seriesrecarray=ts_recarray,
+                                  timeseries=ts_recarray,
                                   time_series_namerecord=[('river_stage_1',
                                                            'river_stage_2')],
                                   interpolation_methodrecord=[('linear', 'stepwise')])
@@ -514,7 +575,7 @@ def test005_advgw_tidal():
                     'riv_flowsB.csv':[('riv2-10-1', 'RIV', (0,9,0)), ('riv-2-9-2', 'RIV', (0,8,1)),
                                       ('riv2-8-3', 'RIV', (0,7,2))]}
     riv_obs_package = ModflowUtlobs(model, fname='AdvGW_tidal.riv.obs', parent_file=riv_package,
-                                    digits=10, print_input=True, continuousrecarray=obs_recarray)
+                                    digits=10, print_input=True, continuous=obs_recarray)
 
 
     rch1_period = {}
@@ -540,13 +601,17 @@ def test005_advgw_tidal():
                 bnd = None
             rch1_period_array.append(((0, row, col), 'rch_1', mult, bnd))
     rch1_period[0] = rch1_period_array
-    rch1_package = ModflowGwfrch(model, fname='AdvGW_tidal_1.rch', pname='rch_1', fixed_cell=True,
-                                 auxiliary='MULTIPLIER', auxmultname='MULTIPLIER',
-                                 print_input=True, print_flows=True, save_flows=True, boundnames=True,
-                                 ts_filerecord='recharge_rates_1.ts', maxbound=84, periodrecarray=rch1_period)
+    rch1_package = ModflowGwfrch(model, fname='AdvGW_tidal_1.rch',
+                                 pname='rch_1', fixed_cell=True,
+                                 auxiliary='MULTIPLIER',
+                                 auxmultname='MULTIPLIER',
+                                 print_input=True, print_flows=True,
+                                 save_flows=True, boundnames=True,
+                                 ts_filerecord='recharge_rates_1.ts',
+                                 maxbound=84, stress_period_data=rch1_period)
     ts_recarray=[(0.0, 0.0015),(1.0, 0.0010),(11.0, 0.0015),(21.0, 0.0025),(31.0, 0.0015)]
     rch1_ts_package = ModflowUtlts(model, fname='recharge_rates_1.ts', parent_file=rch1_package,
-                                   time_seriesrecarray=ts_recarray,
+                                   timeseries=ts_recarray,
                                    time_series_namerecord='rch_1',
                                    interpolation_methodrecord='stepwise')
 
@@ -559,13 +624,17 @@ def test005_advgw_tidal():
                          ((0,2,5), 'rch_2', 1.0),((0,2,6), 'rch_2', 1.0),((0,2,7), 'rch_2', 0.5),
                          ((0,3,5), 'rch_2', 0.5),((0,3,6), 'rch_2', 0.5)]
     rch2_period[0] = rch2_period_array
-    rch2_package = ModflowGwfrch(model, fname='AdvGW_tidal_2.rch', pname='rch_2', fixed_cell=True,
-                                 auxiliary='MULTIPLIER', auxmultname='MULTIPLIER',
-                                 print_input=True, print_flows=True, save_flows=True,
-                                 ts_filerecord='recharge_rates_2.ts', maxbound=20, periodrecarray=rch2_period)
+    rch2_package = ModflowGwfrch(model, fname='AdvGW_tidal_2.rch',
+                                 pname='rch_2', fixed_cell=True,
+                                 auxiliary='MULTIPLIER',
+                                 auxmultname='MULTIPLIER',
+                                 print_input=True, print_flows=True,
+                                 save_flows=True,
+                                 ts_filerecord='recharge_rates_2.ts',
+                                 maxbound=20, stress_period_data=rch2_period)
     ts_recarray=[(0.0, 0.0016),(1.0, 0.0018),(11.0, 0.0019),(21.0, 0.0016),(31.0, 0.0018)]
     rch2_ts_package = ModflowUtlts(model, fname='recharge_rates_2.ts', parent_file=rch2_package,
-                                   time_seriesrecarray=ts_recarray,
+                                   timeseries=ts_recarray,
                                    time_series_namerecord='rch_2',
                                    interpolation_methodrecord='linear')
 
@@ -587,10 +656,11 @@ def test005_advgw_tidal():
     rch3_package = ModflowGwfrch(model, fname='AdvGW_tidal_3.rch', pname='rch_3', fixed_cell=True,
                                  auxiliary='MULTIPLIER', auxmultname='MULTIPLIER',
                                  print_input=True, print_flows=True, save_flows=True,
-                                 ts_filerecord='recharge_rates_3.ts', maxbound=54, periodrecarray=rch3_period)
+                                 ts_filerecord='recharge_rates_3.ts', maxbound=54,
+                                 stress_period_data=rch3_period)
     ts_recarray=[(0.0, 0.0017),(1.0, 0.0020),(11.0, 0.0017),(21.0, 0.0018),(31.0, 0.0020)]
     rch3_ts_package = ModflowUtlts(model, fname='recharge_rates_3.ts', parent_file=rch3_package,
-                                   time_seriesrecarray=ts_recarray,
+                                   timeseries=ts_recarray,
                                    time_series_namerecord='rch_3',
                                    interpolation_methodrecord='linear')
 
@@ -632,10 +702,9 @@ def test004_bcfss():
     sim = MFSimulation(sim_name=model_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(model_name))
     tdis_rc = [(1.0, 1, 1.0), (1.0, 1, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2, perioddata=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='ALL', csv_output_filerecord='bcf2ss.ims.csv', complexity='SIMPLE',
                              outer_hclose=0.000001, outer_maximum=500, under_relaxation='NONE', inner_maximum=100,
                              inner_hclose=0.000001, rcloserecord=0.001, linear_acceleration='CG',
@@ -672,14 +741,17 @@ def test004_bcfss():
     for row in range(0,10):
         riv_period_array.append(((1, row, 14), 0.0, 10000.0, -5.0))
     riv_period[0] = riv_period_array
-    riv_package = ModflowGwfriv(model, save_flows='bcf2ss.cbb', maxbound=10, periodrecarray=riv_period)
+    riv_package = ModflowGwfriv(model, save_flows='bcf2ss.cbb', maxbound=10,
+                                stress_period_data=riv_period)
 
     wel_period = {}
-    periodrecarray = [((1, 2, 3), -35000.0, 1, 2, 3), ((1, 7, 3), -35000.0, 4, 5, 6)]
-    wel_period[1] = periodrecarray
-    wel_package = ModflowGwfwel(model, print_input=True, print_flows=True, save_flows=True,
-                                         auxiliary=[('var1', 'var2', 'var3')], maxbound=2,
-                                         periodrecarray=wel_period)#, obs_filerecord='bcf2ss-well.obs')
+    stress_period_data = [((1, 2, 3), -35000.0, 1, 2, 3), ((1, 7, 3), -35000.0, 4, 5, 6)]
+    wel_period[1] = stress_period_data
+    wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
+                                save_flows=True,
+                                auxiliary=[('var1', 'var2', 'var3')],
+                                maxbound=2,
+                                stress_period_data=wel_period)#, obs_filerecord='bcf2ss-well.obs')
 
 
     # charnge folder to save simulation
@@ -720,10 +792,9 @@ def test035_fhb():
     sim = MFSimulation(sim_name=model_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(model_name))
     tdis_rc = [(400.0, 10, 1.0), (200.0, 4, 1.0), (400.0, 6, 1.1)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=3, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=3, perioddata=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', complexity='SIMPLE', outer_hclose=0.001,
                              outer_maximum=120, under_relaxation='NONE', inner_maximum=100, inner_hclose=0.0001,
                              rcloserecord=0.1, linear_acceleration='CG', preconditioner_levels=7,
@@ -742,20 +813,23 @@ def test035_fhb():
     sto_package = ModflowGwfsto(model, storagecoefficient=True, iconvert=0, ss=0.01, sy=0.0)
 
     wel_period = {0:[((0,1,0), 'flow')]}
-    wel_package = ModflowGwfwel(model, print_input=True, print_flows=True, save_flows=True,
-                                ts_filerecord='fhb_flow.ts', maxbound=1, periodrecarray=wel_period)
+    wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
+                                save_flows=True,
+                                ts_filerecord='fhb_flow.ts',
+                                maxbound=1, stress_period_data=wel_period)
     well_ts = [(0.0, 2000.0), (307.0, 6000.0), (791.0, 5000.0), (1000.0, 9000.0)]
     well_ts_package = ModflowUtlts(model, fname='fhb_flow.ts', parent_file=wel_package,
-                                   time_seriesrecarray=well_ts,
+                                   timeseries=well_ts,
                                    time_series_namerecord='flow',
                                    interpolation_methodrecord='linear')
 
     chd_period = {0:[((0,0,9), 'head'), ((0,1,9), 'head'), ((0,2,9), 'head')]}
-    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True, save_flows=True,
-                                ts_filerecord='fhb_head.ts', maxbound=3, periodrecarray=chd_period)
+    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True,
+                                save_flows=True, ts_filerecord='fhb_head.ts',
+                                maxbound=3, stress_period_data=chd_period)
     chd_ts = [(0.0, 0.0), (307.0, 1.0), (791.0, 5.0), (1000.0, 2.0)]
     chd_ts_package = ModflowUtlts(model, fname='fhb_head.ts', parent_file=chd_package,
-                                  time_seriesrecarray=chd_ts,
+                                  timeseries=chd_ts,
                                   time_series_namerecord='head',
                                   interpolation_methodrecord='linearend')
 
@@ -797,19 +871,18 @@ def test006_gwf3_disv():
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(1.0, 1, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, perioddata=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.00000001,
                              outer_maximum=1000, under_relaxation='NONE', inner_maximum=1000,
                              inner_hclose=0.00000001, rcloserecord=0.01, linear_acceleration='BICGSTAB',
                              scaling_method='NONE', reordering_method='NONE', relaxation_factor=0.97)
     sim.register_ims_package(ims_package, [model.name])
-    vertrecarray = testutils.read_vertices(os.path.join(pth, 'vertices.txt'))
+    vertices = testutils.read_vertices(os.path.join(pth, 'vertices.txt'))
     c2drecarray = testutils.read_cell2d(os.path.join(pth, 'cell2d.txt'))
     disv_package = ModflowGwfdisv(model, ncpl=121, nlay=1, nvert=148, top=0.0, botm=-100.0, idomain=1,
-                                  verticesrecarray=vertrecarray, cell2drecarray=c2drecarray,
+                                  vertices=vertices, cell2d=c2drecarray,
                                   fname='{}.disv'.format(model_name))
     strt_list = [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,
                  0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,
@@ -826,23 +899,24 @@ def test006_gwf3_disv():
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],
                               printrecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
 
-    # build periodrecarray for chd package
+    # build stress_period_data for chd package
     set_1 = [0,7,14,18,22,26,33]
     set_2 = [6,13,17,21,25,32,39]
-    periodrecarray = []
+    stress_period_data = []
     for value in set_1:
-        periodrecarray.append(((0, value), 1.0))
+        stress_period_data.append(((0, value), 1.0))
     for value in set_2:
-        periodrecarray.append(((0, value), 0.0))
+        stress_period_data.append(((0, value), 0.0))
     chd_package = ModflowGwfchd(model, print_input=True, print_flows=True, save_flows=True, maxbound=14,
-                                periodrecarray=periodrecarray)
+                                stress_period_data=stress_period_data)
 
     period_rch = {}
     rch_array = []
     for val in range(0, 10):
         rch_array.append(((0, val), 0.0))
     period_rch[0] = rch_array
-    rch_package = ModflowGwfrch(model, fixed_cell=True, maxbound=10, periodrecarray=period_rch)
+    rch_package = ModflowGwfrch(model, fixed_cell=True, maxbound=10,
+                                stress_period_data=period_rch)
 
     gncrecarray = [ ((0, 9), (0, 40), (0, 8), 0.333333333333),
                     ((0, 9), (0, 42), (0, 10), 0.333333333333),
@@ -869,7 +943,7 @@ def test006_gwf3_disv():
                     ((0, 30), (0, 118), (0, 29), 0.333333333333),
                     ((0, 30), (0, 120), (0, 31), 0.333333333333)]
     gnc_package = ModflowGwfgnc(model, print_input=True, print_flows=True, numgnc=24, numalphaj=1,
-                                gncdatarecarray=gncrecarray)
+                                gncdata=gncrecarray)
 
     # charnge folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -911,13 +985,11 @@ def test006_2models_gnc():
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(1.0, 1, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, perioddata=tdis_rc)
     model_1 = MFModel(sim, model_type='gwf6', modelname=model_name_1,
-                      model_nam_file='{}.nam'.format(model_name_1),
-                      ims_file_name='{}.ims'.format(test_ex_name))
+                      model_nam_file='{}.nam'.format(model_name_1))
     model_2 = MFModel(sim, model_type='gwf6', modelname=model_name_2,
-                      model_nam_file='{}.nam'.format(model_name_2),
-                      ims_file_name='{}.ims'.format(test_ex_name))
+                      model_nam_file='{}.nam'.format(model_name_2))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.00000001,
                              outer_maximum=1000, under_relaxation='NONE', inner_maximum=1000,
                              inner_hclose=0.00000001, rcloserecord=0.01, linear_acceleration='BICGSTAB',
@@ -961,38 +1033,38 @@ def test006_2models_gnc():
     # build periodrecarray for chd package
     set_1 = [0,7,14,18,22,26,33]
     set_2 = [6,13,17,21,25,32,39]
-    periodrecarray = []
+    stress_period_data = []
     for value in range(0, 7):
-        periodrecarray.append(((0, value, 0), 1.0))
+        stress_period_data.append(((0, value, 0), 1.0))
     for value in range(0, 7):
-        periodrecarray.append(((0, value, 6), 0.0))
+        stress_period_data.append(((0, value, 6), 0.0))
     chd_package = ModflowGwfchd(model_1, print_input=True, print_flows=True, save_flows=True, maxbound=30,
-                                periodrecarray=periodrecarray)
+                                stress_period_data=stress_period_data)
 
     gncrecarray = testutils.read_gncrecarray(os.path.join(pth, 'gnc.txt'))
     # test gnc delete
     new_gncrecarray = gncrecarray[10:]
     gnc_package = ModflowGwfgnc(sim, print_input=True, print_flows=True,
                                 numgnc=26, numalphaj=1,
-                                gncdatarecarray=new_gncrecarray)
+                                gncdata=new_gncrecarray)
     sim.remove_package(gnc_package)
 
     gnc_package = ModflowGwfgnc(sim, print_input=True, print_flows=True, numgnc=36, numalphaj=1,
-                                gncdatarecarray=gncrecarray)
+                                gncdata=gncrecarray)
 
 
 
-    exgrecarray = testutils.read_gwfgwfrecarray(os.path.join(pth, 'exg.txt'))
+    exgrecarray = testutils.read_exchangedata(os.path.join(pth, 'exg.txt'))
     # test exg delete
     newexgrecarray = exgrecarray[10:]
     exg_package = ModflowGwfgwf(sim, print_input=True, print_flows=True, save_flows=True, auxiliary='testaux',
                                 gnc_filerecord='test006_2models_gnc.gnc',
-                                nexg=26, gwfgwfrecarray=newexgrecarray,
+                                nexg=26, exchangedata=newexgrecarray,
                                 exgtype='gwf6-gwf6', exgmnamea=model_name_1, exgmnameb=model_name_2)
     sim.remove_package(exg_package)
 
     exg_package = ModflowGwfgwf(sim, print_input=True, print_flows=True, save_flows=True, auxiliary='testaux',
-                                gnc_filerecord='test006_2models_gnc.gnc', nexg=36, gwfgwfrecarray=exgrecarray,
+                                gnc_filerecord='test006_2models_gnc.gnc', nexg=36, exchangedata=exgrecarray,
                                 exgtype='gwf6-gwf6', exgmnamea=model_name_1, exgmnameb=model_name_2)
 
     # change folder to save simulation
@@ -1039,19 +1111,18 @@ def test050_circle_island():
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name, sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(1.0, 1, 1.0)]
-    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, tdisrecarray=tdis_rc)
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1, perioddata=tdis_rc)
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='{}.ims'.format(model_name))
+                    model_nam_file='{}.nam'.format(model_name))
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.000001,
                              outer_maximum=500, under_relaxation='NONE', inner_maximum=1000,
                              inner_hclose=0.000001, rcloserecord=0.000001, linear_acceleration='BICGSTAB',
                              relaxation_factor=0.0)
     sim.register_ims_package(ims_package, [model.name])
-    vertrecarray = testutils.read_vertices(os.path.join(pth, 'vertices.txt'))
+    vertices = testutils.read_vertices(os.path.join(pth, 'vertices.txt'))
     c2drecarray = testutils.read_cell2d(os.path.join(pth, 'cell2d.txt'))
     disv_package = ModflowGwfdisv(model, ncpl=5240, nlay=2, nvert=2778, top=0.0, botm=[-20.0, -40.0],
-                                  idomain=1, verticesrecarray=vertrecarray, cell2drecarray=c2drecarray,
+                                  idomain=1, vertices=vertices, cell2d=c2drecarray,
                                   fname='{}.disv'.format(model_name))
     ic_package = ModflowGwfic(model, strt=0.0,
                               fname='{}.ic'.format(model_name))
@@ -1061,8 +1132,9 @@ def test050_circle_island():
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],
                               printrecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
 
-    periodrecarray = testutils.read_ghbrecarray(os.path.join(pth, 'ghb.txt'), 2)
-    ghb_package = ModflowGwfghb(model, maxbound=3173, periodrecarray=periodrecarray)
+    stress_period_data = testutils.read_ghbrecarray(os.path.join(pth, 'ghb.txt'), 2)
+    ghb_package = ModflowGwfghb(model, maxbound=3173,
+                                stress_period_data=stress_period_data)
 
     rch_data = ['OPEN/CLOSE', 'rech.dat', 'FACTOR', 1.0, 'IPRN', 0]
     rch_package = ModflowGwfrcha(model, readasarrays=True, save_flows=True, recharge=rch_data)
@@ -1106,10 +1178,9 @@ def test028_sfr():
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     sim.name_file.continue_.set_data(True)
     tdis_rc = [(1577889000, 50, 1.1), (1577889000, 50, 1.1)]
-    tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=2, tdisrecarray=tdis_rc, fname='simulation.tdis')
+    tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=2, perioddata=tdis_rc, fname='simulation.tdis')
     model = MFModel(sim, model_type='gwf6', modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name),
-                    ims_file_name='model.ims')
+                    model_nam_file='{}.nam'.format(model_name))
     model.name_file.save_flows.set_data(True)
     ims_package = ModflowIms(sim, print_option='SUMMARY', outer_hclose=0.00001,
                              outer_maximum=100, under_relaxation='DBD', under_relaxation_theta=0.85,
@@ -1150,10 +1221,11 @@ def test028_sfr():
     obs_data = testutils.read_obs(os.path.join(pth, 'evt_obs.txt'))
     obs_recarray = {'test1tr.evt.csv': obs_data}
     evt_obs_package = ModflowUtlobs(model, fname='test1tr.evt.obs', parent_file=evt_package,
-                                    print_input=True, continuousrecarray=obs_recarray)
+                                    print_input=True, continuous=obs_recarray)
 
-    periodrecarray = {0:[((0,12,0), 988.0, 0.038), ((0,13,8), 1045.0, 0.038)]}
-    ghb_package = ModflowGwfghb(model, maxbound=2, periodrecarray=periodrecarray)
+    stress_period_data = {0:[((0,12,0), 988.0, 0.038), ((0,13,8), 1045.0, 0.038)]}
+    ghb_package = ModflowGwfghb(model, maxbound=2,
+                                stress_period_data=stress_period_data)
 
     rch = testutils.read_std_array(os.path.join(pth, 'recharge.txt'), 'float')
     # test empty
@@ -1167,10 +1239,37 @@ def test028_sfr():
     reach_con_rec = testutils.read_reach_con_rec(os.path.join(pth, 'sfr_reach_con_rec.txt'))
     reach_div_rec = testutils.read_reach_div_rec(os.path.join(pth, 'sfr_reach_div_rec.txt'))
     reach_per_rec = testutils.read_reach_per_rec(os.path.join(pth, 'sfr_reach_per_rec.txt'))
+    # test zero based indexes
+    reach_con_rec[0] = (0, -0.0)
     sfr_package = ModflowGwfsfr(model, unit_conversion=1.486, obs_filerecord='test1tr.sfr.obs',
-                                stage_filerecord='test1tr.sfr.stage.bin', budget_filerecord='test1tr.sfr.cbc',
-                                nreaches=36, sfrrecarray=sfr_rec, reach_connectivityrecarray=reach_con_rec,
-                                reach_diversionsrecarray=reach_div_rec, reachperiodrecarray={0:reach_per_rec})
+                                stage_filerecord='test1tr.sfr.stage.bin',
+                                budget_filerecord='test1tr.sfr.cbc',
+                                nreaches=36, packagedata=sfr_rec,
+                                connectiondata=reach_con_rec,
+                                diversions=reach_div_rec, perioddata={0:reach_per_rec})
+    assert(sfr_package.connectiondata.get_data()[0][1] == -0.0)
+    assert(sfr_package.connectiondata.get_data()[1][1] == 0.0)
+    assert(sfr_package.connectiondata.get_data()[2][1] == 1.0)
+
+    sim.simulation_data.mfpath.set_sim_path(run_folder)
+    sim.write_simulation()
+    sim.load(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
+             sim_ws=run_folder)
+    model = sim.get_model(model_name)
+    sfr_package = model.get_package('sfr')
+    assert(sfr_package.connectiondata.get_data()[0][1] == -0.0)
+    assert(sfr_package.connectiondata.get_data()[1][1] == 0.0)
+    assert(sfr_package.connectiondata.get_data()[2][1] == 1.0)
+
+    # undo zero based test and move on
+    model.remove_package(sfr_package)
+    reach_con_rec = testutils.read_reach_con_rec(os.path.join(pth, 'sfr_reach_con_rec.txt'))
+    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486, obs_filerecord='test1tr.sfr.obs',
+                                stage_filerecord='test1tr.sfr.stage.bin',
+                                budget_filerecord='test1tr.sfr.cbc',
+                                nreaches=36, packagedata=sfr_rec,
+                                connectiondata=reach_con_rec,
+                                diversions=reach_div_rec, perioddata={0:reach_per_rec})
 
     obs_data_1 = testutils.read_obs(os.path.join(pth, 'sfr_obs_1.txt'))
     obs_data_2 = testutils.read_obs(os.path.join(pth, 'sfr_obs_2.txt'))
@@ -1179,13 +1278,12 @@ def test028_sfr():
                     'test1tr.sfr.qaq.csv': obs_data_2,
                     'test1tr.sfr.flow.csv': obs_data_3}
     rch_obs_package = ModflowUtlobs(model, fname='test1tr.sfr.obs', parent_file=sfr_package,
-                                    digits=10, print_input=True, continuousrecarray=obs_recarray)
+                                    digits=10, print_input=True, continuous=obs_recarray)
 
     wells = testutils.read_wells(os.path.join(pth, 'well.txt'))
-    wel_package = ModflowGwfwel(model, boundnames=True, maxbound=10, periodrecarray={0:wells, 1:[()]})
+    wel_package = ModflowGwfwel(model, boundnames=True, maxbound=10,
+                                stress_period_data={0:wells, 1:[()]})
 
-    # change folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.write_simulation()

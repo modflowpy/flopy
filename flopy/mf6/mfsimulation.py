@@ -383,7 +383,7 @@ class MFSimulation(PackageContainer):
 
         # load models
         model_recarray = instance.simulation_data.mfdata[('nam', 'models',
-                                                          'modelrecarray')]
+                                                          'models')]
         for item in model_recarray.get_data():
             # resolve model working folder and name file
             path, name_file = os.path.split(item[1])
@@ -397,7 +397,7 @@ class MFSimulation(PackageContainer):
                                                      exe_name, strict, path)
 
         # load exchange packages and dependent packages
-        exchange_recarray = instance.name_file.exchangerecarray
+        exchange_recarray = instance.name_file.exchanges
         if exchange_recarray.has_data():
             for exgfile in exchange_recarray.get_data():
                 # get exchange type by removing numbers from exgtype
@@ -427,14 +427,15 @@ class MFSimulation(PackageContainer):
                                             exgmnamea=exgfile[2],
                                             exgmnameb=exgfile[3],
                                             fname=exgfile[1],
-                                            pname=exchange_name)
+                                            pname=exchange_name,
+                                            loading_package=True)
                 exchange_file.load(strict)
                 instance._exchange_files[exgfile[1]] = exchange_file
 
         # load simulation packages
         solution_recarray = instance.simulation_data.mfdata[('nam',
                                                              'solutiongroup',
-                                                             'solutionrecarray'
+                                                             'solutiongroup'
                                                              )]
         for solution_info in solution_recarray.get_data():
             ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
@@ -481,7 +482,8 @@ class MFSimulation(PackageContainer):
                 ghost_node_file = mfgwfgnc.ModflowGwfgnc(self, fname=fname,
                                                          pname=gnc_name,
                                                          parent_file=
-                                                         parent_package)
+                                                         parent_package,
+                                                         loading_package=True)
                 ghost_node_file.load(strict)
                 self._ghost_node_files[fname] = ghost_node_file
                 self._gnc_file_num += 1
@@ -496,7 +498,8 @@ class MFSimulation(PackageContainer):
                 mvr_name = '{}-MVR_{}'.format(package_abbr, self._gnc_file_num)
                 mover_file = mfgwfmvr.ModflowGwfmvr(self, fname=fname,
                                                     pname=mvr_name,
-                                                    parent_file=parent_package)
+                                                    parent_file=parent_package,
+                                                    loading_package=True)
                 mover_file.load(strict)
                 self._mover_files[fname] = mover_file
         else:
@@ -504,7 +507,8 @@ class MFSimulation(PackageContainer):
             package_obj = self.package_factory(ftype, '')
             package = package_obj(self, fname=fname, pname=dict_package_name,
                                   add_to_package_list=False,
-                                  parent_file=parent_package)
+                                  parent_file=parent_package,
+                                  loading_package=True)
             # verify that this is a utility package
             utl_struct = mfstructure.MFStructure().sim_struct.utl_struct_objs
             if package.package_type in utl_struct:
@@ -557,7 +561,7 @@ class MFSimulation(PackageContainer):
         if not self._is_in_solution_group(ims_file.filename, 1) \
                 and model_list is not None:
             # add solution group to the simulation name file
-            solution_recarray = self.name_file.solutionrecarray
+            solution_recarray = self.name_file.solutiongroup
             solution_group_list = solution_recarray.get_active_key_list()
             if len(solution_group_list) == 0:
                 solution_group_num = 0
@@ -803,7 +807,7 @@ class MFSimulation(PackageContainer):
                 raise mfstructure.MFFileParseException(excpt_str)
 
             self._exchange_files[package.filename] = package
-            exchange_recarray_data = self.name_file.exchangerecarray.get_data()
+            exchange_recarray_data = self.name_file.exchanges.get_data()
             if exchange_recarray_data is not None:
                 for index, exchange in zip(range(0,
                                                  len(exchange_recarray_data)),
@@ -813,14 +817,14 @@ class MFSimulation(PackageContainer):
                         exchange_recarray_data[index][0] = exgtype
                         exchange_recarray_data[index][2] = exgmnamea
                         exchange_recarray_data[index][3] = exgmnameb
-                        ex_recarray = self.name_file.exchangerecarray
+                        ex_recarray = self.name_file.exchanges
                         ex_recarray.set_data(exchange_recarray_data)
                         return
             # add new exchange
-            self.name_file.exchangerecarray.append_data([(exgtype,
-                                                          package.filename,
-                                                          exgmnamea,
-                                                          exgmnameb)])
+            self.name_file.exchanges.append_data([(exgtype,
+                                                   package.filename,
+                                                   exgmnamea,
+                                                   exgmnameb)])
             if package.dimensions is None:
                 # resolve exchange package dimensions object
                 package.dimensions = package.create_package_dimensions()
@@ -931,7 +935,7 @@ class MFSimulation(PackageContainer):
         self._models[model_name] = model
 
         # update simulation name file
-        self.name_file.modelrecarray.append_list_as_record([model_type,
+        self.name_file.models.append_list_as_record([model_type,
                                                             model_namefile,
                                                             model_name])
 
@@ -1007,7 +1011,7 @@ class MFSimulation(PackageContainer):
         return True
 
     def _is_in_solution_group(self, item, index):
-        solution_recarray = self.name_file.solutionrecarray
+        solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
             rec_array = solution_recarray.get_data(solution_group_num[0])
             if rec_array is not None:

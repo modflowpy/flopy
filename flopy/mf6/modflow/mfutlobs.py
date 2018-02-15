@@ -13,7 +13,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     precision : double
@@ -37,7 +37,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
         * print_input (boolean) keyword to indicate that the list of
           observation information will be written to the listing file
           immediately after it is read.
-    continuousrecarray : [obsname, obstype, id, id2]
+    continuous : [obsname, obstype, id, id2]
         * obsname (string) string of 1 to 40 nonblank characters used to
           identify the observation. The identifier need not be unique; however,
           identification and post-processing of observations in the output
@@ -66,8 +66,8 @@ class ModflowUtlobs(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    continuousrecarray = ListTemplateGenerator(('obs', 'continuous', 
-                                                'continuousrecarray'))
+    continuous = ListTemplateGenerator(('obs', 'continuous', 
+                                        'continuous'))
     package_abbr = "utlobs"
     package_type = "obs"
     dfn_file_name = "utl-obs.dfn"
@@ -78,7 +78,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
-           ["block continuous", "name obsblockrec", 
+           ["block continuous", "name output", 
             "type record fileout obs_output_file_name binary", "shape", 
             "block_variable true", "in_record = false", "reader urword", 
             "optional false"],
@@ -90,7 +90,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
             "reader urword"],
            ["block continuous", "name binary", "type keyword", 
             "in_record true", "shape", "reader urword", "optional true"],
-           ["block continuous", "name continuousrecarray", 
+           ["block continuous", "name continuous", 
             "type recarray obsname obstype id id2", "shape", "reader urword", 
             "optional false"],
            ["block continuous", "name obsname", "type string", "shape", 
@@ -98,20 +98,20 @@ class ModflowUtlobs(mfpackage.MFPackage):
            ["block continuous", "name obstype", "type string", "shape", 
             "tagged false", "in_record true", "reader urword"],
            ["block continuous", "name id", "type string", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block continuous", "name id2", "type string", "shape", 
             "tagged false", "in_record true", "reader urword", 
-            "optional true"]]
+            "optional true", "numeric_index true"]]
 
-    def __init__(self, model, add_to_package_list=True, precision=None,
-                 digits=None, print_input=None, continuousrecarray=None,
-                 fname=None, pname=None, parent_file=None):
+    def __init__(self, model, loading_package=False, precision=None,
+                 digits=None, print_input=None, continuous=None, fname=None,
+                 pname=None, parent_file=None):
         super(ModflowUtlobs, self).__init__(model, "obs", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.precision = self.build_mfdata("precision",  precision)
         self.digits = self.build_mfdata("digits",  digits)
         self.print_input = self.build_mfdata("print_input",  print_input)
-        self.continuousrecarray = self.build_mfdata("continuousrecarray", 
-                                                    continuousrecarray)
+        self.continuous = self.build_mfdata("continuous",  continuous)

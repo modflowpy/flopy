@@ -22,7 +22,7 @@ class MFModel(PackageContainer):
         simulation data object
     structure : MFModelStructure
         structure of this type of model
-    model_name : string
+    modelname : string
         name of the model
     model_nam_file : string
         relative path to the model name file from model working folder
@@ -113,6 +113,13 @@ class MFModel(PackageContainer):
         proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
         self.sr = SpatialReference(xul=xul, yul=yul, rotation=rotation,
                                    proj4_str=proj4_str)
+
+        # check for extraneous kwargs
+        if len(kwargs) > 0:
+            kwargs_str = ', '.join(kwargs.keys())
+            excpt_str = 'ERROR: Extraneous kwargs "{}" provided to ' \
+                        'MFModel.'.format(kwargs_str)
+            raise mfstructure.FlopyException(excpt_str)
 
         # build model name file
         # create name file based on model type - support different model types
@@ -207,7 +214,7 @@ class MFModel(PackageContainer):
         packages_ordered = []
         package_recarray = instance.simulation_data.mfdata[(modelname, 'nam',
                                                             'packages',
-                                                            'packagerecarray')]
+                                                            'packages')]
         for item in package_recarray.get_data():
             if item[0] in priority_packages:
                 packages_ordered.insert(0, (item[0], item[1], item[2]))
@@ -329,7 +336,7 @@ class MFModel(PackageContainer):
         if model_ws and model_ws != '.' and self.simulation.name_file is not \
                 None:
             # update model name file location in simulation name file
-            models = self.simulation.name_file.modelrecarray
+            models = self.simulation.name_file.models
             models_data = models.get_data()
             for index, entry in enumerate(models_data):
                 old_model_path, old_model_file_name = os.path.split(entry[1])
@@ -348,7 +355,7 @@ class MFModel(PackageContainer):
                     self.name_file.list.set_data(os.path.join(path, list_file_name))
 
                 # update package file locations in model name file
-                packages = self.name_file.packagerecarray
+                packages = self.name_file.packages
                 packages_data = packages.get_data()
                 for index, entry in enumerate(packages_data):
                     old_package_path, old_package_name = os.path.split(entry[1])
@@ -390,7 +397,7 @@ class MFModel(PackageContainer):
         self._remove_package_from_dictionaries(package)
 
         # remove package from name file
-        package_data = self.name_file.packagerecarray.get_data()
+        package_data = self.name_file.packages.get_data()
         new_rec_array = None
         for item in package_data:
             if item[1] != package.filename:
@@ -398,7 +405,7 @@ class MFModel(PackageContainer):
                     new_rec_array = np.rec.array(item, package_data.dtype)
                 else:
                     new_rec_array = np.hstack((item, new_rec_array))
-        self.name_file.packagerecarray.set_data(new_rec_array)
+        self.name_file.packages.set_data(new_rec_array)
 
         # build list of child packages
         child_package_list = []
@@ -481,7 +488,7 @@ class MFModel(PackageContainer):
                     pkg_type = pkg_type[0:-1]
                 # Model Assumption - assuming all name files have a package
                 # rec array
-                self.name_file.packagerecarray.\
+                self.name_file.packages.\
                   update_record(['{}6'.format(pkg_type), package.filename,
                   package.package_name], 0)
         if package_struct is not None:
@@ -558,7 +565,7 @@ class MFModel(PackageContainer):
         # create package
         package_obj = self.package_factory(ftype, model_type)
         package = package_obj(self, fname=fname, pname=dict_package_name,
-                              add_to_package_list=False,
+                              loading_package=True,
                               parent_file=parent_package)
         try:
             package.load(strict)
@@ -566,7 +573,7 @@ class MFModel(PackageContainer):
             #  create ReadAsArrays package and load it instead
             package_obj = self.package_factory('{}a'.format(ftype), model_type)
             package = package_obj(self, fname=fname, pname=dict_package_name,
-                                  add_to_package_list=False,
+                                  loading_package=True,
                                   parent_file=parent_package)
             package.load(strict)
 

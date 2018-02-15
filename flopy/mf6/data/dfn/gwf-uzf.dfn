@@ -188,7 +188,6 @@ optional true
 longname
 description keyword specifying that ET in the unsaturated (UZF) and saturated zones (GWF) will be simulated. ET can be simulated in the UZF cell and not the GWF cell by emitting keywords LINEAR\_GWET and SQUARE\_GWET.
 
-
 block options
 name linear_gwet
 type keyword
@@ -265,7 +264,7 @@ description is the number of UZF cells specified.  NWAVSETS has a default value 
 # --------------------- gwf uzf packagedata ---------------------
 
 block packagedata
-name uzfrecarray
+name packagedata
 type recarray iuzno cellid landflag ivertcon surfdep vks thtr thts thti eps boundname
 shape (nuzfcells)
 reader urword
@@ -281,6 +280,7 @@ in_record true
 reader urword
 longname uzf id number for this entry
 description integer value that defines the UZF cell number associated with the specified PACKAGEDATA data on the line. IUZNO must be greater than zero and less than or equal to NUZFCELLS.  UZF information must be specified for every UZF cell or the program will terminate with an error.  The program will also terminate with an error if information for a UZF cell is specified more than once.
+numeric_index true
 
 block packagedata
 name cellid
@@ -311,6 +311,7 @@ in_record true
 reader urword
 longname vertical connection flag
 description integer value set to specify underlying UZF cell that receives water flowing to bottom of cell. If unsaturated zone flow reaches water table before the cell bottom then water is added to GWF cell instead of flowing to underlying UZF cell. A value of 0 indicates the UZF cell is not connected to an underlying UZF cell.
+numeric_index true
 
 block packagedata
 name surfdep
@@ -400,7 +401,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name uzfperiodrecarray
+name perioddata
 type recarray iuzno finf pet extdp extwc ha hroot rootact aux
 shape
 reader urword
@@ -416,6 +417,7 @@ in_record true
 reader urword
 longname UZF id number
 description integer value that defines the UZF cell number associated with the specified PERIOD data on the line.
+numeric_index true
 
 block period
 name finf

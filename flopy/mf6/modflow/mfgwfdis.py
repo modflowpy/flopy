@@ -13,7 +13,7 @@ class ModflowGwfdis(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     length_units : string
@@ -99,29 +99,29 @@ class ModflowGwfdis(mfpackage.MFPackage):
            ["block options", "name angrot", "type double precision", 
             "reader urword", "optional true"],
            ["block dimensions", "name nlay", "type integer", 
-            "reader urword", "optional false"],
+            "reader urword", "optional false", "default_value 1"],
            ["block dimensions", "name nrow", "type integer", 
-            "reader urword", "optional false"],
+            "reader urword", "optional false", "default_value 2"],
            ["block dimensions", "name ncol", "type integer", 
-            "reader urword", "optional false"],
+            "reader urword", "optional false", "default_value 2"],
            ["block griddata", "name delr", "type double precision", 
-            "shape (ncol)", "reader readarray"],
+            "shape (ncol)", "reader readarray", "default_value 1.0"],
            ["block griddata", "name delc", "type double precision", 
-            "shape (nrow)", "reader readarray"],
+            "shape (nrow)", "reader readarray", "default_value 1.0"],
            ["block griddata", "name top", "type double precision", 
-            "shape (ncol, nrow)", "reader readarray"],
+            "shape (ncol, nrow)", "reader readarray", "default_value 1.0"],
            ["block griddata", "name botm", "type double precision", 
-            "shape (ncol, nrow, nlay)", "reader readarray"],
+            "shape (ncol, nrow, nlay)", "reader readarray", 
+            "default_value 0."],
            ["block griddata", "name idomain", "type integer", 
             "shape (ncol, nrow, nlay)", "reader readarray", "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, length_units=None,
-                 nogrb=None, xorigin=None, yorigin=None, angrot=None,
-                 nlay=None, nrow=None, ncol=None, delr=None, delc=None,
-                 top=None, botm=None, idomain=None, fname=None, pname=None,
-                 parent_file=None):
+    def __init__(self, model, loading_package=False, length_units=None,
+                 nogrb=None, xorigin=None, yorigin=None, angrot=None, nlay=1,
+                 nrow=2, ncol=2, delr=1.0, delc=1.0, top=1.0, botm=0.,
+                 idomain=None, fname=None, pname=None, parent_file=None):
         super(ModflowGwfdis, self).__init__(model, "dis", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.length_units = self.build_mfdata("length_units",  length_units)

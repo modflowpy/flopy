@@ -207,7 +207,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                layer_num=None):
         storage = self._get_storage_obj()
         if storage is None:
-            self._data_storage = self._new_storage(False)
+            self._set_storage_obj(self._new_storage(False, True))
         ds_index = self._resolve_layer_index(layer_num)
 
         # move data to file
@@ -259,7 +259,8 @@ class MFArray(mfdata.MFMultiDimVar):
                 self._number_of_layers = model_grid.num_layers()
                 if self._number_of_layers is None:
                     self._number_of_layers = 1
-            self._data_storage = self._new_storage(self._number_of_layers != 1)
+            self._set_storage_obj(self._new_storage(self._number_of_layers
+                                                    != 1, True))
         storage = self._get_storage_obj()
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
@@ -299,6 +300,8 @@ class MFArray(mfdata.MFMultiDimVar):
                     arr_line[index_num].lower() == 'layered'):
                 storage.layered = True
                 layers = self._data_dimensions.get_model_grid().num_layers()
+                while storage.num_layers < layers:
+                    storage.add_layer()
             elif aux_var_index is not None:
                 # each layer stores a different aux variable
                 layers = len(package_dim.get_aux_variables()[0]) - 1
@@ -331,7 +334,8 @@ class MFArray(mfdata.MFMultiDimVar):
         return [False, None]
 
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
-        if not self.structure.data_item_structures[0].just_data or layer > 0:
+        di_struct = self.structure.data_item_structures[0]
+        if not di_struct.just_data or layer > 0:
             arr_line = \
                     mfdatautil.ArrayUtil.\
                         split_data_line(file_handle.readline())
@@ -348,7 +352,8 @@ class MFArray(mfdata.MFMultiDimVar):
             layer_storage.data_storage_type = \
                     mfdata.DataStorageType.internal_constant
             storage.store_internal([storage.convert_data(arr_line[1],
-                                                         self._data_type)],
+                                                         self._data_type,
+                                                         di_struct)],
                                    layer, const=True, multiplier=[1.0])
             # store anything else as a comment
             if len(arr_line) > 2:
@@ -379,7 +384,8 @@ class MFArray(mfdata.MFMultiDimVar):
             # load variable data from current file
             data_from_file = storage.read_data_from_file(layer, file_handle,
                                                          multiplier,
-                                                         print_format)
+                                                         print_format,
+                                                         di_struct)
             data_shaped = self._resolve_data_shape(data_from_file[0])
             storage.store_internal(data_shaped, layer, const=False,
                                    multiplier=[multiplier],
@@ -473,7 +479,7 @@ class MFArray(mfdata.MFMultiDimVar):
 
         return ''.join(file_entry_array)
 
-    def _new_storage(self, set_layers=True):
+    def _new_storage(self, set_layers=True, base_storage=False):
         if set_layers:
             return mfdata.DataStorage(self._simulation_data,
                                       self._data_dimensions,
@@ -488,6 +494,9 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def _get_storage_obj(self):
         return self._data_storage
+
+    def _set_storage_obj(self, storage):
+        self._data_storage = storage
 
     def _get_file_entry_layer(self, layer, data_indent, storage_type,
                               ext_file_action, layered_aux=False):
@@ -703,13 +712,19 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
 
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):
-        self._load_prep(first_line, file_handle, block_header,
-                        pre_data_comments)
+        self._load_prep(block_header)
         return super(MFTransientArray, self).load(first_line, file_handle,
                                                   pre_data_comments)
 
-    def _new_storage(self, set_layers=True):
-        return OrderedDict()
+    def _new_storage(self, set_layers=True, base_storage=False):
+        if base_storage:
+            return super(MFTransientArray, self)._new_storage(set_layers,
+                                                              base_storage)
+        else:
+            return OrderedDict()
+
+    def _set_storage_obj(self, storage):
+        self._data_storage[self._current_key] = storage
 
     def _get_storage_obj(self):
         if self._current_key is None or \

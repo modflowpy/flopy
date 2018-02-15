@@ -134,7 +134,7 @@ def test_pathline_plot():
         lpth = pth
 
     # load the modflow files for model map
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True,
+    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True, forgive=False,
                                    exe_name=mf2005_exe)
 
     # load modpath output files
