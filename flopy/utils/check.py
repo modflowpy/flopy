@@ -312,7 +312,6 @@ class check:
         #inds = stress_period_data[criteria][inds_col].view(int)\
         #    .reshape(stress_period_data[criteria].shape + (-1,))
 
-
         if col is not None:
             v = stress_period_data[criteria][col]
         else:

@@ -11,6 +11,7 @@ from ..utils import MfList
 from ..utils.flopy_io import line_parse
 import matplotlib.pyplot as plt
 from ..utils import SpatialReference
+from ..utils.recarray_utils import create_empty_recarray
 
 try:
     import pandas as pd
@@ -516,9 +517,7 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_reach_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nreaches, len(dtype)))
-        d[:, :] = default_value
-        d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = create_empty_recarray(nreaches, dtype, default_value=default_value)
         d['reachID'] = np.arange(1, nreaches + 1)
         return d
 
@@ -528,9 +527,8 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_segment_dtype()
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nsegments, len(dtype)))
-        d[:, :] = default_value
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = create_empty_recarray(nsegments, dtype, default_value=default_value)
+        return d
 
     @staticmethod
     def get_default_reach_dtype(structured=True):
@@ -1777,8 +1775,7 @@ class check:
         http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
         """
         txt = ''
-        return txt
-        array = array.copy()
+        array = array.view(np.recarray).copy()
         if isinstance(col1, np.ndarray):
             array = recfunctions.append_fields(array, names='tmp1', data=col1,
                                                asrecarray=True)
@@ -1811,7 +1808,7 @@ class check:
                 # currently failed_info[cols] results in a warning. Not sure
                 # how to do this properly with a recarray.
                 failed_info = recfunctions.append_fields(
-                    failed_info[cols].copy(),
+                    failed_info[cols].view(np.recarray).copy(),
                     names='diff',
                     data=diff,
                     asrecarray=True)
