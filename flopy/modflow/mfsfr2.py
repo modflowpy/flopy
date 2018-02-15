@@ -1660,6 +1660,7 @@ class ModflowSfr2(Package):
                                         asrecarray=True)
         recarray2shp(rd, geoms, f, **kwargs)
 
+
     def export_outlets(self, f, **kwargs):
         """Export point shapefile showing locations where streamflow is leaving
         the model (outset=0).
