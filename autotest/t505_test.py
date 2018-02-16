@@ -1241,7 +1241,7 @@ def test028_sfr():
     reach_per_rec = testutils.read_reach_per_rec(os.path.join(pth, 'sfr_reach_per_rec.txt'))
     # test zero based indexes
     reach_con_rec[0] = (0, -0.0)
-    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486, obs_filerecord='test1tr.sfr.obs',
+    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486, 
                                 stage_filerecord='test1tr.sfr.stage.bin',
                                 budget_filerecord='test1tr.sfr.cbc',
                                 nreaches=36, packagedata=sfr_rec,
