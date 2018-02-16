@@ -295,7 +295,7 @@ class Modflow(BaseModel):
         Write the model name file.
 
         """
-        fn_path = os.path.join(self.model_ws, self.namefile)
+        fn_path = os.path.join(self.model_ws, os.path.basename(self.namefile))
         f_nam = open(fn_path, 'w')
         f_nam.write('{}\n'.format(self.heading))
         f_nam.write('#' + str(self.sr))
@@ -490,7 +490,7 @@ class Modflow(BaseModel):
         ----------
         f : MODFLOW name file
             File to load.
-        
+
         model_ws : model workspace path
 
         load_only : (optional) filetype(s) to load (e.g. ["bas6", "lpf"])
