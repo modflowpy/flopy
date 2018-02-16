@@ -894,7 +894,7 @@ def test004_bcfss():
                                 maxbound=2,
                                 stress_period_data=wel_period)  # , obs_filerecord='bcf2ss-well.obs')
 
-    # charnge folder to save simulation
+    # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -1471,8 +1471,7 @@ def test028_sfr():
         os.path.join(pth, 'sfr_reach_per_rec.txt'))
     # test zero based indexes
     reach_con_rec[0] = (0, -0.0)
-    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486,
-                                obs_filerecord='test1tr.sfr.obs',
+    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486, 
                                 stage_filerecord='test1tr.sfr.stage.bin',
                                 budget_filerecord='test1tr.sfr.cbc',
                                 nreaches=36, packagedata=sfr_rec,

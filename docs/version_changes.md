@@ -6,7 +6,9 @@ FloPy Changes
 * Optimized loading and saving of MODFLOW 6 files
 * MODFLOW 6 identifiers are now zero based
 * Added remove_package method in MFSimulation and MFModel that removes MODFLOW 6 packages from the existing simulation/model
+* Changed some of the input argument names for MODFLOW 6 classes.  Note that this will break some existing user scripts.  For example, the stress period information was passed to the boundary package classes using the periodrecarray argument.  The argument is now called stress_period_data in order to be consistent with other Flopy functionality.
 * Flopy code for MODFLOW 6 generalized to support different model types
+* Flopy code for some MODFLOW 6 arguments now have default values in order to be consistent with other Flopy functionality
 * Added `ModflowSfr2.export_transient_variable` method to export shapefiles of segment data variables, with stress period data as attributes
 * Added support for UZF package gages
 
