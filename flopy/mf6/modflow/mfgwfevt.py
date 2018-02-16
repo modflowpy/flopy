@@ -13,7 +13,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     fixed_cell : boolean
@@ -78,7 +78,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
           extinction-depth proportion at the bottom of a segment. PETM defines
           the proportion of the maximum ET flux rate at the bottom of a
           segment.
-    periodrecarray : [cellid, surface, rate, depth, pxdp, petm, petm0, aux,
+    stress_period_data : [cellid, surface, rate, depth, pxdp, petm, petm0, aux,
       boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
@@ -130,8 +130,8 @@ class ModflowGwfevt(mfpackage.MFPackage):
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'evt', 'options', 
                                             'obs_filerecord'))
-    periodrecarray = ListTemplateGenerator(('gwf6', 'evt', 'period', 
-                                            'periodrecarray'))
+    stress_period_data = ListTemplateGenerator(('gwf6', 'evt', 'period', 
+                                                'stress_period_data'))
     package_abbr = "gwfevt"
     package_type = "evt"
     dfn_file_name = "gwf-evt.dfn"
@@ -180,7 +180,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name periodrecarray", 
+           ["block period", "name stress_period_data", 
             "type recarray cellid surface rate depth pxdp petm petm0 aux " 
             "boundname", 
             "shape (maxbound)", "reader urword"],
@@ -212,15 +212,15 @@ class ModflowGwfevt(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, fixed_cell=None,
+    def __init__(self, model, loading_package=False, fixed_cell=None,
                  auxiliary=None, auxmultname=None, boundnames=None,
                  print_input=None, print_flows=None, save_flows=None,
                  ts_filerecord=None, obs_filerecord=None,
                  surf_rate_specified=None, maxbound=None, nseg=None,
-                 periodrecarray=None, fname=None, pname=None,
+                 stress_period_data=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfevt, self).__init__(model, "evt", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.fixed_cell = self.build_mfdata("fixed_cell",  fixed_cell)
@@ -237,5 +237,5 @@ class ModflowGwfevt(mfpackage.MFPackage):
                                                      surf_rate_specified)
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
         self.nseg = self.build_mfdata("nseg",  nseg)
-        self.periodrecarray = self.build_mfdata("periodrecarray", 
-                                                periodrecarray)
+        self.stress_period_data = self.build_mfdata("stress_period_data", 
+                                                    stress_period_data)

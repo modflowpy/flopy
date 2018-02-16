@@ -3,9 +3,10 @@ Instructions for making a FloPy release
 
 ## Update master
 
-1.  Commit the changes to the `develop` branch and push to the GitHub site.
-2.  Change to the `master` branch in SourceTree.
-3.  Merge the `develop` branch into the `master` branch.
+1.  Update MODFLOW 6 dfn files and MODFLOW 6 package classes by running the `update_flopy.py` script in the [MODFLOW 6 github repo](https://github.com/MODFLOW-USGS/modflow6). Make sure you have checked out the latest MODFLOW 6 release on `MASTER` or the soon to be released `DEVELOP` branch in SourceTree prior to running the `update_flopy.py` script. 
+2.  Commit the changes to the `develop` branch and push to the GitHub site.
+3.  Change to the `master` branch in SourceTree.
+4.  Merge the `develop` branch into the `master` branch.
 
 
 ## Update the release version number

@@ -25,7 +25,7 @@ if v is None:
 
 
 def load_str(mfnam, pth):
-    m = flopy.modflow.Modflow.load(mfnam, exe_name=exe_name,
+    m = flopy.modflow.Modflow.load(mfnam, exe_name=exe_name, forgive=False,
                                    model_ws=pth, verbose=True)
     assert m.load_fail is False
 

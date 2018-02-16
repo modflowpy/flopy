@@ -13,7 +13,7 @@ def read_vertices(vert_file):
     vertrecarray = []
     for line in fd:
         fd_spl = line.strip().split()
-        vertrecarray.append((int(fd_spl[0]), float(fd_spl[1]),
+        vertrecarray.append((int(fd_spl[0]) - 1, float(fd_spl[1]),
                              float(fd_spl[2])))
     fd.close()
     return vertrecarray
@@ -24,7 +24,7 @@ def read_cell2d(cell2d_file):
     c2drecarray = []
     for line in fd:
         fd_spl = line.strip().split()
-        rec_array = [int(fd_spl[0]), float(fd_spl[1]), float(fd_spl[2])]
+        rec_array = [int(fd_spl[0]) - 1, float(fd_spl[1]), float(fd_spl[2])]
         for item in fd_spl[3:]:
             rec_array.append(int(item))
         c2drecarray.append(tuple(rec_array))
@@ -32,7 +32,7 @@ def read_cell2d(cell2d_file):
     return c2drecarray
 
 
-def read_gwfgwfrecarray(gwf_file, cellid_size=3):
+def read_exchangedata(gwf_file, cellid_size=3):
     exgrecarray = []
     fd = open(gwf_file, 'r')
     for line in fd:
@@ -121,7 +121,7 @@ def read_sfr_rec(sfr_file, cellid_size=3):
     sfrrecarray = []
     for line in fd:
         fd_spl = line.strip().split()
-        sfrrecarray.append((int(fd_spl[0]),
+        sfrrecarray.append((int(fd_spl[0]) - 1,
                             make_int_tuple(fd_spl[1:1+cellid_size]),
                             float(fd_spl[cellid_size+1]),
                             int(fd_spl[cellid_size+2]),
@@ -143,8 +143,20 @@ def read_reach_con_rec(sfr_file):
     for line in fd:
         fd_spl = line.strip().split()
         con_arr = []
-        for item in fd_spl:
-            con_arr.append(int(item))
+        for index, item in enumerate(fd_spl):
+            item_val = int(item)
+            if index == 0:
+                item_val -= 1
+            else:
+                if item_val == -1:
+                    item_val = -0.0
+                elif item_val < 0:
+                    item_val += 1
+                    item_val = float(item_val)
+                else:
+                    item_val -= 1
+                    item_val = float(item_val)
+            con_arr.append(item_val)
         sfrrecarray.append(tuple(con_arr))
     fd.close()
     return sfrrecarray
@@ -155,8 +167,8 @@ def read_reach_div_rec(sfr_file):
     sfrrecarray = []
     for line in fd:
         fd_spl = line.strip().split()
-        sfrrecarray.append((int(fd_spl[0]), int(fd_spl[1]), int(fd_spl[2]),
-                            fd_spl[3]))
+        sfrrecarray.append((int(fd_spl[0]) - 1, int(fd_spl[1]) - 1,
+                            int(fd_spl[2]) - 1, fd_spl[3]))
     fd.close()
     return sfrrecarray
 
@@ -166,9 +178,14 @@ def read_reach_per_rec(sfr_file):
     sfrrecarray = []
     for line in fd:
         fd_spl = line.strip().split()
-        per_arr = [int(fd_spl[0]), fd_spl[1]]
+        per_arr = [int(fd_spl[0]) - 1, fd_spl[1]]
+        first = True
         for item in fd_spl[2:]:
-            per_arr.append(item)
+            if fd_spl[1].lower() == 'diversion' and first:
+                per_arr.append(str(int(item) - 1))
+                first = False
+            else:
+                per_arr.append(item)
         sfrrecarray.append(tuple(per_arr))
     fd.close()
     return sfrrecarray

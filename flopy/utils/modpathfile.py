@@ -9,6 +9,7 @@ important classes that can be accessed by the user.
 
 import numpy as np
 from ..utils.flopy_io import loadtxt
+from ..utils.recarray_utils import ra_slice
 
 class PathlineFile():
     """
@@ -563,8 +564,10 @@ class EndpointFile():
         ra = self.get_alldata()
         # find the intersection of endpoints and dest_cells
         # convert dest_cells to same dtype for comparison
-        raslice = ra[['k', 'i', 'j']]
-        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
+        raslice = ra_slice(ra, ['k', 'i', 'j'])
+        dest_cells = np.array(dest_cells, dtype=[('k', int),
+                                                 ('i', int),
+                                                 ('j', int)])
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
         return epdest

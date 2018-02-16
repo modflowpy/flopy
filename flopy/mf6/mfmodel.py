@@ -22,7 +22,7 @@ class MFModel(PackageContainer):
         simulation data object
     structure : MFModelStructure
         structure of this type of model
-    model_name : string
+    modelname : string
         name of the model
     model_nam_file : string
         relative path to the model name file from model working folder
@@ -73,32 +73,36 @@ class MFModel(PackageContainer):
     --------
 
     """
-    def __init__(self, simulation, model_type='gwf', model_name='modflowtest',
-                 model_nam_file=None, version='mf6', exe_name='mf6.exe',
-                 add_to_simulation = True, structure = None,
-                 model_rel_path='.', **kwargs):
-        super(MFModel, self).__init__(simulation.simulation_data, model_name)
+    def __init__(self, simulation, model_type='gwf6', modelname='modflowtest',
+                 model_nam_file=None, version='mf6',
+                 exe_name='mf6.exe', add_to_simulation=True,
+                 structure=None, model_rel_path='.', **kwargs):
+        super(MFModel, self).__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
-        self.name = model_name
+        self.name = modelname
         self.name_file = None
+        self.version = version
+
+        if model_nam_file is None:
+            model_nam_file = '{}.nam'.format(modelname)
 
         self.set_model_relative_path(model_rel_path)
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
-                                                       model_name,
+                                                       modelname,
                                                        model_nam_file)
         else:
             self.structure = structure
         self.exe_name = exe_name
         self.dimensions = modeldimensions.ModelDimensions(self.name,
                                                           self.simulation_data)
-        self.simulation_data.model_dimensions[model_name] = self.dimensions
+        self.simulation_data.model_dimensions[modelname] = self.dimensions
         self._ftype_num_dict = {}
         self._package_paths = {}
 
         if model_nam_file is None:
-            self.model_nam_file = '{}.nam'.format(model_name)
+            self.model_nam_file = '{}.nam'.format(modelname)
         else:
             self.model_nam_file = model_nam_file
 
@@ -109,6 +113,13 @@ class MFModel(PackageContainer):
         proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
         self.sr = SpatialReference(xul=xul, yul=yul, rotation=rotation,
                                    proj4_str=proj4_str)
+
+        # check for extraneous kwargs
+        if len(kwargs) > 0:
+            kwargs_str = ', '.join(kwargs.keys())
+            excpt_str = 'ERROR: Extraneous kwargs "{}" provided to ' \
+                        'MFModel.'.format(kwargs_str)
+            raise mfstructure.FlopyException(excpt_str)
 
         # build model name file
         # create name file based on model type - support different model types
@@ -151,7 +162,7 @@ class MFModel(PackageContainer):
 
     @classmethod
     def load(cls, simulation, simulation_data, structure,
-             model_name='NewModel', model_nam_file='modflowtest.nam',
+             modelname='NewModel', model_nam_file='modflowtest.nam',
              type='gwf', version='mf6', exe_name='mf6.exe', strict=True,
              model_rel_path='.'):
         """
@@ -187,7 +198,7 @@ class MFModel(PackageContainer):
         --------
         """
 
-        instance = cls(simulation, type, model_name,
+        instance = cls(simulation, type, modelname,
                        model_nam_file=model_nam_file,
                        version=version, exe_name=exe_name,
                        add_to_simulation=False, structure=structure,
@@ -201,9 +212,9 @@ class MFModel(PackageContainer):
         priority_packages = {'dis{}'.format(vnum): 1,'disv{}'.format(vnum): 1,
                              'disu{}'.format(vnum): 1}
         packages_ordered = []
-        package_recarray = instance.simulation_data.mfdata[(model_name, 'nam',
+        package_recarray = instance.simulation_data.mfdata[(modelname, 'nam',
                                                             'packages',
-                                                            'packagerecarray')]
+                                                            'packages')]
         for item in package_recarray.get_data():
             if item[0] in priority_packages:
                 packages_ordered.insert(0, (item[0], item[1], item[2]))
@@ -220,16 +231,16 @@ class MFModel(PackageContainer):
                 if model_rel_path and model_rel_path != '.':
                     # strip off model relative path from the file path
                     filemgr = simulation.simulation_data.mfpath
-                    fname = filemgr.strip_model_relative_path(model_name,
+                    fname = filemgr.strip_model_relative_path(modelname,
                                                               fname)
                 print('loading {}...'.format(fname))
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
 
         # load referenced packages
-        if model_name in instance.simulation_data.referenced_files:
+        if modelname in instance.simulation_data.referenced_files:
             for index, ref_file in \
-              instance.simulation_data.referenced_files[model_name].items():
+              instance.simulation_data.referenced_files[modelname].items():
                 if (ref_file.file_type in structure.package_struct_objs or
                   ref_file.file_type in sim_struct.utl_struct_objs) and \
                   not ref_file.loaded:
@@ -325,7 +336,7 @@ class MFModel(PackageContainer):
         if model_ws and model_ws != '.' and self.simulation.name_file is not \
                 None:
             # update model name file location in simulation name file
-            models = self.simulation.name_file.modelrecarray
+            models = self.simulation.name_file.models
             models_data = models.get_data()
             for index, entry in enumerate(models_data):
                 old_model_path, old_model_file_name = os.path.split(entry[1])
@@ -344,7 +355,7 @@ class MFModel(PackageContainer):
                     self.name_file.list.set_data(os.path.join(path, list_file_name))
 
                 # update package file locations in model name file
-                packages = self.name_file.packagerecarray
+                packages = self.name_file.packages
                 packages_data = packages.get_data()
                 for index, entry in enumerate(packages_data):
                     old_package_path, old_package_name = os.path.split(entry[1])
@@ -386,7 +397,7 @@ class MFModel(PackageContainer):
         self._remove_package_from_dictionaries(package)
 
         # remove package from name file
-        package_data = self.name_file.packagerecarray.get_data()
+        package_data = self.name_file.packages.get_data()
         new_rec_array = None
         for item in package_data:
             if item[1] != package.filename:
@@ -394,7 +405,7 @@ class MFModel(PackageContainer):
                     new_rec_array = np.rec.array(item, package_data.dtype)
                 else:
                     new_rec_array = np.hstack((item, new_rec_array))
-        self.name_file.packagerecarray.set_data(new_rec_array)
+        self.name_file.packages.set_data(new_rec_array)
 
         # build list of child packages
         child_package_list = []
@@ -477,7 +488,7 @@ class MFModel(PackageContainer):
                     pkg_type = pkg_type[0:-1]
                 # Model Assumption - assuming all name files have a package
                 # rec array
-                self.name_file.packagerecarray.\
+                self.name_file.packages.\
                   update_record(['{}6'.format(pkg_type), package.filename,
                   package.package_name], 0)
         if package_struct is not None:
@@ -554,7 +565,7 @@ class MFModel(PackageContainer):
         # create package
         package_obj = self.package_factory(ftype, model_type)
         package = package_obj(self, fname=fname, pname=dict_package_name,
-                              add_to_package_list=False,
+                              loading_package=True,
                               parent_file=parent_package)
         try:
             package.load(strict)
@@ -562,7 +573,7 @@ class MFModel(PackageContainer):
             #  create ReadAsArrays package and load it instead
             package_obj = self.package_factory('{}a'.format(ftype), model_type)
             package = package_obj(self, fname=fname, pname=dict_package_name,
-                                  add_to_package_list=False,
+                                  loading_package=True,
                                   parent_file=parent_package)
             package.load(strict)
 

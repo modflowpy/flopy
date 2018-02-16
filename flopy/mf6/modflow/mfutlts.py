@@ -13,7 +13,7 @@ class ModflowUtlts(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     time_series_namerecord : [time_series_names]
@@ -34,7 +34,7 @@ class ModflowUtlts(mfpackage.MFPackage):
         * sfacval (double) Scale factor, which will multiply all array values
           in time series. SFAC is an optional attribute; if omitted, SFAC =
           1.0.
-    time_seriesrecarray : [ts_time, ts_array]
+    timeseries : [ts_time, ts_array]
         * ts_time (double) A numeric time relative to the start of the
           simulation, in the time unit used in the simulation. Times must be
           strictly increasing.
@@ -59,8 +59,7 @@ class ModflowUtlts(mfpackage.MFPackage):
     sfacrecord = ListTemplateGenerator(('ts', 'attributes', 'sfacrecord'))
     sfacrecord_single = ListTemplateGenerator(('ts', 'attributes', 
                                                'sfacrecord_single'))
-    time_seriesrecarray = ListTemplateGenerator(('ts', 'timeseries', 
-                                                 'time_seriesrecarray'))
+    timeseries = ListTemplateGenerator(('ts', 'timeseries', 'timeseries'))
     package_abbr = "utlts"
     package_type = "ts"
     dfn_file_name = "utl-ts.dfn"
@@ -101,7 +100,7 @@ class ModflowUtlts(mfpackage.MFPackage):
             "tagged true", "optional true"],
            ["block attributes", "name sfac", "type keyword", "shape", 
             "tagged false", "reader urword", "optional false"],
-           ["block timeseries", "name time_seriesrecarray", 
+           ["block timeseries", "name timeseries", 
             "type recarray ts_time ts_array", "shape", "reader urword", 
             "tagged true", "optional false"],
            ["block timeseries", "name ts_time", "type double precision", 
@@ -111,13 +110,13 @@ class ModflowUtlts(mfpackage.MFPackage):
             "shape time_series_names", "tagged false", "reader urword", 
             "optional false"]]
 
-    def __init__(self, model, add_to_package_list=True,
+    def __init__(self, model, loading_package=False,
                  time_series_namerecord=None, interpolation_methodrecord=None,
                  interpolation_methodrecord_single=None, sfacrecord=None,
-                 sfacrecord_single=None, time_seriesrecarray=None, fname=None,
+                 sfacrecord_single=None, timeseries=None, fname=None,
                  pname=None, parent_file=None):
         super(ModflowUtlts, self).__init__(model, "ts", fname, pname,
-                                           add_to_package_list, parent_file)        
+                                           loading_package, parent_file)        
 
         # set up variables
         self.time_series_namerecord = self.build_mfdata(
@@ -130,5 +129,4 @@ class ModflowUtlts(mfpackage.MFPackage):
         self.sfacrecord = self.build_mfdata("sfacrecord",  sfacrecord)
         self.sfacrecord_single = self.build_mfdata("sfacrecord_single", 
                                                    sfacrecord_single)
-        self.time_seriesrecarray = self.build_mfdata("time_seriesrecarray", 
-                                                     time_seriesrecarray)
+        self.timeseries = self.build_mfdata("timeseries",  timeseries)

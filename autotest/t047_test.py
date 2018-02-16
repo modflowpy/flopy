@@ -5,6 +5,7 @@ import os
 import shutil
 import numpy as np
 import flopy
+from flopy.utils.recarray_utils import recarray
 
 cpth = os.path.join('temp', 't047')
 # delete the directory if it exists
@@ -42,9 +43,7 @@ def get_namefile_entries(fpth):
                 status = status.decode()
 
         data.append([ftype, iu, filename, status])
-
-    data = np.rec.array(data, dtype=dtype)
-
+    data = recarray(data, dtype)
     return data
 
 def test_gage():
