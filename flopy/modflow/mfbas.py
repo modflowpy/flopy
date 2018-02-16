@@ -212,6 +212,10 @@ class ModflowBas(Package):
         # First line: heading
         #f_bas.write('%s\n' % self.heading)
         f_bas.write('{0:s}\n'.format(self.heading))
+
+        # be sure that the BAS6 ifrefmt flag is set to True if the model is free format
+        if self.parent.free_format:
+            self.ifrefm = True
         # Second line: format specifier
         self.options = ''
         if self.ixsec:
