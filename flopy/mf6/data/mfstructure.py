@@ -552,6 +552,16 @@ class BlockType(Enum):
     transient = 3
 
 
+class FlopyException(Exception):
+    """
+    General Flopy Exception
+    """
+
+    def __init__(self, error, location):
+        Exception.__init__(self,
+                           "FlopyException: {} ({})".format(error, location))
+
+
 class StructException(Exception):
     """
     Exception related to the package file structure
@@ -716,6 +726,11 @@ class MFDataItemStructure(object):
         self.contained_keywords = {'file_name':True}
         self.block_name = None
         self.name = None
+        self.display_name = None
+        self.name_length = None
+        self.is_aux = False
+        self.is_boundname = False
+        self.is_mname = False
         self.name_list = []
         self.python_name = None
         self.type = None
@@ -747,6 +762,11 @@ class MFDataItemStructure(object):
             if arr_line[0] == 'block':
                 self.block_name = ' '.join(arr_line[1:])
             elif arr_line[0] == 'name':
+                if self.type == DatumType.keyword:
+                    # display keyword names in upper case
+                    self.display_name = ' '.join(arr_line[1:]).upper()
+                else:
+                    self.display_name = ' '.join(arr_line[1:]).lower()
                 self.name = ' '.join(arr_line[1:]).lower()
                 self.name_list.append(self.name)
                 if len(self.name) >= 6 and self.name[0:6] == 'cellid':
@@ -757,6 +777,14 @@ class MFDataItemStructure(object):
                 # don't allow name to be a python keyword
                 if keyword.iskeyword(self.name):
                     self.python_name = '{}_'.format(self.python_name)
+                # performance optimizations
+                if self.name == 'aux':
+                    self.is_aux = True
+                if self.name == 'boundname':
+                    self.is_boundname = True
+                if self.name[0:5] == 'mname':
+                    self.is_mname = True
+                self.name_length = len(self.name)
             elif arr_line[0] == 'other_names':
                 arr_names = ' '.join(arr_line[1:]).lower().split(',')
                 for name in arr_names:
@@ -777,6 +805,10 @@ class MFDataItemStructure(object):
                 else:
                     self.data_items = [self.name]
                 self.type_obj = self._get_type()
+                if self.type == DatumType.keyword:
+                    # display keyword names in upper case
+                    if self.display_name is not None:
+                        self.display_name = self.display_name.upper()
             elif arr_line[0] == 'valid':
                 for value in arr_line[1:]:
                     self.valid_values.append(value)
@@ -1095,6 +1127,10 @@ class MFDataStructure(object):
         self.path = None
         self.optional = data_item.optional
         self.name = data_item.name
+        self.name_length = len(self.name)
+        self.is_aux = data_item.is_aux
+        self.is_boundname = data_item.is_boundname
+        self.is_mname = data_item.is_mname
         self.name_list = data_item.name_list
         self.python_name = data_item.python_name
         self.longname = data_item.longname

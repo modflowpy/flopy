@@ -548,15 +548,16 @@ class MFArray(mfdata.MFMultiDimVar):
             layer_data_string[-1] = '{}{}{}'.format(layer_data_string[-1],
                                                     indent_str,
                                                     data_lyr)
-            if line_data_count == self._simulation_data.max_columns_of_data or\
-                    (last_item and self._simulation_data.wrap_multidim_arrays):
+            if self._simulation_data.wrap_multidim_arrays and \
+                    (line_data_count == self._simulation_data.
+                        max_columns_of_data or last_item):
                 layer_data_string.append('{}'.format(data_indent))
                 line_data_count = 0
         if len(layer_data_string) > 0:
             # clean up the text at the end of the array
             layer_data_string[-1] = layer_data_string[-1].strip()
         if len(layer_data_string) == 1:
-            return '{}\n'.format(layer_data_string[0].rstrip())
+            return '{}{}\n'.format(data_indent, layer_data_string[0].rstrip())
         else:
             return '\n'.join(layer_data_string)
 
