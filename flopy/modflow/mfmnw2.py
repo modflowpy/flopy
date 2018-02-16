@@ -1414,7 +1414,7 @@ def _parse_2(f):
         # append only the returned items
         for k, v in d2di.items():
             d2d[k] += v
-        if ppflag > 0:
+        if ppflag > 0 and nnodes > 0:
             d2d['pp'] += pop_item(line, float)
 
     # dataset 2e
