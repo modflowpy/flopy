@@ -476,6 +476,7 @@ class ModflowStr(Package):
                                                                      0, iper+1)
             f_str.write(line)
             if itmp > 0:
+                tdata = np.recarray.copy(tdata)
                 # dataset 6
                 for line in tdata:
                     line['k'] += 1

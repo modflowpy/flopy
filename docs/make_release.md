@@ -28,6 +28,13 @@ Instructions for making a FloPy release
     pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
     ```
 
+
+## Update the example notebooks
+
+1.  Rerun all of the notebooks in the `examples\Notebooks` directory.
+2.  Rerun all of the notebooks in the `examples\Notebooks\groundwater_paper` directory.
+
+
 ## Finalizing the release
 
 1.  Tag the commit with the `__version__` number using SourceTree (don't forget to commit the tag).
@@ -43,21 +50,23 @@ Instructions for making a FloPy release
     conda search pypandoc
     conda search twine
     ```
-    
-    If they are not installed, install one or both using using:
+
+
+2.  If they are not installed, install one or both using using:
+
 
     ```
     conda install pypandoc
     conda install twine
     ```
  
-2.  Create the source zip file in a terminal using:
+3.  Create the source zip file in a terminal using:
 
     ```
     python setup.py sdist --format=zip
     ```
 
-3.  Upload the release to PyPi using (*make sure* `twine` *is installed using conda*):
+4.  Upload the release to PyPi using (*make sure* `twine` *is installed using conda*):
 
     ```
     twine upload dist/flopy-version.zip
@@ -71,7 +80,7 @@ Instructions for making a FloPy release
 2.  Calculate the sha256 checksum for the `*.tar.gz` using:
   
     ```
-    openssl sha256 flopy-version.tar.gz 
+    openssl sha256 flopy-version.tar.gz
     ```
 
     from a terminal.
