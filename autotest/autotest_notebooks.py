@@ -27,9 +27,9 @@ def get_Notebooks():
 
 
 def run_notebook(fn):
-    # only run notebook autotests on python 3.6
+    # only run notebook autotests on released versions of python 3.6
     pvstr = platform.python_version()
-    if '3.6.' not in pvstr:
+    if '3.6.' not in pvstr and '+' not in pvstr:
         print('skipping...{} on python {}'.format(fn, pvstr))
         return
 
