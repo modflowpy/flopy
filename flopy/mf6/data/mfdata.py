@@ -2076,7 +2076,7 @@ class MFMultiDimVar(MFData):
             else:
                 ext_format.append('1')
         if layer_storage.binary:
-            ext_format.append('BINARY')
+            ext_format.append('(BINARY)')
         if layer_storage.iprn is not None:
             ext_format.append('IPRN')
             ext_format.append(str(layer_storage.iprn))
