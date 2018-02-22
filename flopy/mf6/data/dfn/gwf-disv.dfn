@@ -97,7 +97,7 @@ description is an optional array that characterizes the existence status of a ce
 # --------------------- gwf disv vertices ---------------------
 
 block vertices
-name verticesrecarray
+name vertices
 type recarray iv xv yv
 reader urword
 optional false
@@ -113,6 +113,7 @@ reader urword
 optional false
 longname vertex number
 description is the vertex number.  Records in the VERTICES block must be listed in consecutive order from 1 to NVERT.
+numeric_index true
 
 block vertices
 name xv
@@ -138,7 +139,7 @@ description is the y-coordinate for the vertex.
 # --------------------- gwf disv cell2d ---------------------
 
 block cell2d
-name cell2drecarray
+name cell2d
 type recarray icell2d xc yc ncvert icvert
 reader urword
 optional false
@@ -153,7 +154,8 @@ tagged false
 reader urword
 optional false
 longname cell2d number
-description is the CELL2D number.  Records in the CELL2D block must be listed in consecutive order from 1 to NCPL.
+description is the CELL2D number.  Records in the CELL2D block must be listed in consecutive order from the first to the last.
+numeric_index true
 
 block cell2d
 name xc

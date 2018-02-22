@@ -170,11 +170,11 @@ def test003_gwfs_disv():
     # change some settings
     model = sim.get_model(model_name)
     chd_head_left = model.get_package('CHD_LEFT')
-    chd_left_period = chd_head_left.periodrecarray.array
+    chd_left_period = chd_head_left.stress_period_data.array
     chd_left_period[4][1] = 15.0
 
     chd_head_right = model.get_package('CHD_RIGHT')
-    chd_right_period = chd_head_right.periodrecarray
+    chd_right_period = chd_head_right.stress_period_data
     chd_right_data = chd_right_period.get_data(0)
     chd_right_data_slice = chd_right_data[3:10]
     chd_right_period.set_data(chd_right_data_slice, 0)
@@ -431,7 +431,7 @@ def test045_lake1ss_table():
 
     # change some settings
     model = sim.get_model(model_name)
-    laktbl = model.get_package('tab').laktabrecarray
+    laktbl = model.get_package('tab').table
     laktbl_data = laktbl.get_data()
     laktbl_data[-1][0] = 700.0
     laktbl.set_data(laktbl_data)
@@ -506,15 +506,17 @@ def test006_2models_mvr():
     # change some settings
     parent_model = sim.get_model(model_names[0])
     maw_pkg = parent_model.get_package('maw')
-    period_data = maw_pkg.wellperiodrecarray.get_data()
+    period_data = maw_pkg.perioddata.get_data()
     period_data[0][2] = -1.0
-    maw_pkg.wellperiodrecarray.set_data(period_data, 0)
+    maw_pkg.perioddata.set_data(period_data, 0)
+    well_rec_data = maw_pkg.packagedata.get_data()
+    assert(well_rec_data[0][0] == 0)
 
     exg_pkg = sim.get_exchange_file('simulation.exg')
-    exg_data = exg_pkg.gwfgwfrecarray.get_data()
+    exg_data = exg_pkg.exchangedata.get_data()
     for index in range(0, len(exg_data)):
         exg_data[index][6] = 500.0
-    exg_pkg.gwfgwfrecarray.set_data(exg_data)
+    exg_pkg.exchangedata.set_data(exg_data)
 
     # write simulation again
     sim.simulation_data.mfpath.set_sim_path(save_folder)
@@ -577,7 +579,7 @@ def test001e_uzf_3lay():
     # change some settings
     model = sim.get_model(model_name)
     uzf = model.get_package('uzf')
-    uzf_data = uzf.uzfrecarray
+    uzf_data = uzf.packagedata
     uzf_array = uzf_data.get_data()
     # increase initial water content
     for index in range(0, len(uzf_array)):
@@ -638,7 +640,7 @@ def test045_lake2tr():
     evt.rate.set_data([0.05], key=0)
 
     lak = model.get_package('lak')
-    lak_period = lak.lakeperiodrecarray
+    lak_period = lak.lakeperioddata
     lak_period_data = lak_period.get_data()
     lak_period_data[2][2] = '0.05'
     lak_period.set_data(lak_period_data, 0)
@@ -693,13 +695,13 @@ def test036_twrihfb():
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
 
     # change some settings
-    hydchr = sim.simulation_data.mfdata[(model_name, 'hfb', 'period', 'hfbrecarray')]
+    hydchr = sim.simulation_data.mfdata[(model_name, 'hfb', 'period', 'stress_period_data')]
     hydchr_data = hydchr.get_data()
     hydchr_data[2][2] = 0.000002
     hydchr_data[3][2] = 0.000003
     hydchr_data[4][2] = 0.0000004
     hydchr.set_data(hydchr_data, 0)
-    cond = sim.simulation_data.mfdata[(model_name, 'drn', 'period', 'periodrecarray')]
+    cond = sim.simulation_data.mfdata[(model_name, 'drn', 'period', 'stress_period_data')]
     cond_data = cond.get_data()
     for index in range(0, len(cond_data)):
         cond_data[index][2] = 2.1
@@ -783,10 +785,10 @@ def test027_timeseriestest():
 
 if __name__ == '__main__':
     test027_timeseriestest()
+    test006_2models_mvr()
     test036_twrihfb()
     test045_lake2tr()
     test001e_uzf_3lay()
-    test006_2models_mvr()
     test045_lake1ss_table()
     test001a_tharmonic()
     test003_gwfs_disv()

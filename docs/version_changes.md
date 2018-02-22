@@ -1,5 +1,31 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.9
+* Modified MODFLOW 5 OC stress_period_data=None default behaviour. If MODFLOW 5 OC stress_period_data is not provided then binary head output is saved for the last time step of each stress period.
+* added multiple component support to ``mt3dusgs SFT`` module
+* Optimized loading and saving of MODFLOW 6 files
+* MODFLOW 6 identifiers are now zero based
+* Added remove_package method in MFSimulation and MFModel that removes MODFLOW 6 packages from the existing simulation/model
+* Changed some of the input argument names for MODFLOW 6 classes.  Note that this will break some existing user scripts.  For example, the stress period information was passed to the boundary package classes using the periodrecarray argument.  The argument is now called stress_period_data in order to be consistent with other Flopy functionality.
+* Flopy code for MODFLOW 6 generalized to support different model types
+* Flopy code for some MODFLOW 6 arguments now have default values in order to be consistent with other Flopy functionality
+* Added `ModflowSfr2.export_transient_variable` method to export shapefiles of segment data variables, with stress period data as attributes
+* Added support for UZF package gages
+
+* Bug fixes:
+    * Fixed issue with default settings for MODFLOW 5 SUB package `dp` dataset.
+    * Fixed issue if an external BC list file has only one entry
+    * Some patching for recarray issues with latest ``numpy`` release (there are more of these lurking...)
+	* Fixed setting model relative path for MODFLOW 6 simulations
+	* Python 2.7 compatibility issues fixed for MODFLOW 6 simulations
+	* IMS file name conflicts now automatically resolved
+	* Fixed issue with passing in numpy ndarrays arrays as layered data
+	* Doc string formatting for MODFLOW 6 packages fixed to make doc strings easier to read
+	* UZF package: fixed issues with handling of finf, pet, extdp and extwc arrays.
+	* SFR package: fixed issue with reading stress period data where not all segments are listed for periods > 0.
+	* `SpatialReference.write_gridSpec` was not converting the model origin coordinates to model length units.
+	* shorted integer field lengths written to shapefiles to 18 characters; some readers may misinterpret longer field lengths as float dtypes.
+
 ### Version 3.2.8
 * Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
 * Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.
@@ -7,6 +33,11 @@ FloPy Changes
     * Installation: Added dfn files required by MODFLOW 6 functionality to MANIFEST.in so that they are included in the distribution.
     * SFR2 package: Fixed issue reading transient data when `ISFOPT` is 4 or 5 for the first stress period.
 
+### Version 3.2.7 - develop
+* Added SFR2 package functionarlity
+	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.  
+
+		
 ### Version 3.2.7
 * Added beta support for MODFLOW 6 See [here](./mf6.md) for more information.
 * Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.

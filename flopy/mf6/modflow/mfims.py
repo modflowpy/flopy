@@ -13,7 +13,7 @@ class ModflowIms(mfpackage.MFPackage):
     simulation : MFSimulation
         Simulation that this package is a part of. Package is automatically
         added to simulation when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     print_option : string
@@ -337,7 +337,7 @@ class ModflowIms(mfpackage.MFPackage):
            ["block linear", "name reordering_method", "type string", 
             "reader urword", "optional true"]]
 
-    def __init__(self, simulation, add_to_package_list=True, print_option=None,
+    def __init__(self, simulation, loading_package=False, print_option=None,
                  complexity=None, csv_output_filerecord=None,
                  outer_hclose=None, outer_maximum=None, under_relaxation=None,
                  under_relaxation_theta=None, under_relaxation_kappa=None,
@@ -353,7 +353,7 @@ class ModflowIms(mfpackage.MFPackage):
                  reordering_method=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowIms, self).__init__(simulation, "ims", fname, pname,
-                                         add_to_package_list, parent_file)        
+                                         loading_package, parent_file)        
 
         # set up variables
         self.print_option = self.build_mfdata("print_option",  print_option)

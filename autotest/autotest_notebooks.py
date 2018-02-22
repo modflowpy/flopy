@@ -1,5 +1,6 @@
 # Remove the temp directory and then create a fresh one
 import os
+import platform
 import shutil
 
 nbdir = os.path.join('..', 'examples', 'Notebooks')
@@ -26,6 +27,13 @@ def get_Notebooks():
 
 
 def run_notebook(fn):
+    # only run notebook autotests on released versions of python 3.6
+    pvstr = platform.python_version()
+    if '3.6.' not in pvstr and '+' not in pvstr:
+        print('skipping...{} on python {}'.format(fn, pvstr))
+        return
+
+    # run autotest on each notebook
     pth = os.path.join(nbdir, fn)
     cmd = 'jupyter ' + 'nbconvert ' + \
           '--ExecutePreprocessor.kernel_name=python ' + \
@@ -38,13 +46,18 @@ def run_notebook(fn):
 
 
 def test_notebooks():
+    # get list of notebooks to run
     files = get_Notebooks()
 
+    # run each notebook
     for fn in files:
         yield run_notebook, fn
 
 
 if __name__ == '__main__':
+    # get list of notebooks to run
     files = get_Notebooks()
+
+    # run each notebook
     for fn in files:
         run_notebook(fn)

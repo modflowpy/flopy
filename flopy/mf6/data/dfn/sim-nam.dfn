@@ -41,7 +41,7 @@ description is the name of the Temporal Discretization (TDIS) Input File.
 # --------------------- sim nam models ---------------------
 
 block models
-name modelrecarray
+name models
 type recarray mtype mfname mname
 reader urword
 optional
@@ -80,7 +80,7 @@ description is the user-assigned name of the model.  The model name cannot excee
 # --------------------- sim nam exchanges ---------------------
 
 block exchanges
-name exchangerecarray
+name exchanges
 type recarray exgtype exgfile exgmnamea exgmnameb
 reader urword
 optional
@@ -147,7 +147,7 @@ longname maximum solution group iterations
 description is the maximum number of outer iterations for this solution group.  The default value is 1.  If there is only one solution in the solution group, then MXITER must be 1.
 
 block solutiongroup
-name solutionrecarray
+name solutiongroup
 type recarray slntype slnfname slnmnames
 reader urword
 longname solution type and models in the solution

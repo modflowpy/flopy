@@ -13,7 +13,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     save_flows : boolean
@@ -67,11 +67,14 @@ class ModflowGwfsto(mfpackage.MFPackage):
            ["block options", "name storagecoefficient", "type keyword", 
             "reader urword", "optional true"],
            ["block griddata", "name iconvert", "type integer", 
-            "shape (nodes)", "valid", "reader readarray", "optional false"],
+            "shape (nodes)", "valid", "reader readarray", "optional false", 
+            "default_value 0"],
            ["block griddata", "name ss", "type double precision", 
-            "shape (nodes)", "valid", "reader readarray", "optional false"],
+            "shape (nodes)", "valid", "reader readarray", "optional false", 
+            "default_value 1.e-5"],
            ["block griddata", "name sy", "type double precision", 
-            "shape (nodes)", "valid", "reader readarray", "optional false"],
+            "shape (nodes)", "valid", "reader readarray", "optional false", 
+            "default_value 0.15"],
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
@@ -80,12 +83,12 @@ class ModflowGwfsto(mfpackage.MFPackage):
            ["block period", "name transient", "type keyword", "shape", 
             "valid", "reader urword", "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, save_flows=None,
-                 storagecoefficient=None, iconvert=None, ss=None, sy=None,
+    def __init__(self, model, loading_package=False, save_flows=None,
+                 storagecoefficient=None, iconvert=0, ss=1.e-5, sy=0.15,
                  steady_state=None, transient=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfsto, self).__init__(model, "sto", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows",  save_flows)

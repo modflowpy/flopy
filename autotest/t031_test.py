@@ -11,6 +11,7 @@ import flopy
 import numpy as np
 from flopy.utils.reference import SpatialReference
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
+from flopy.utils.recarray_utils import ra_slice
 from flopy.modpath.mpsim import StartingLocationsFile
 
 mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
@@ -21,6 +22,11 @@ if not os.path.isdir(path):
 for f in mffiles:
     shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
 
+def ra_slice(ra, cols):
+    raslice = np.column_stack([ra[c] for c in cols])
+    dtype = [(str(d[0]), d[1]) for d in ra.dtype.descr if d[0] in cols]
+    return np.array([tuple(r) for r in raslice],
+                    dtype=dtype).view(np.recarray)
 
 def test_mpsim():
     model_ws = path
@@ -107,7 +113,7 @@ def test_get_destination_data():
 
     # check that all starting locations are included in the pathline data
     # (pathline data slice not just endpoints)
-    starting_locs = well_epd[['k0', 'i0', 'j0']]
+    starting_locs = ra_slice(well_epd, ['k0', 'i0', 'j0'])
     pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(),
                              dtype=starting_locs.dtype)
     assert np.all(np.in1d(starting_locs, pathline_locs))
@@ -211,6 +217,6 @@ def test_loadtxt():
 
 
 if __name__ == '__main__':
-    # test_mpsim()
+    test_mpsim()
     test_get_destination_data()
-    # test_loadtxt()
+    test_loadtxt()

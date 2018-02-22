@@ -102,10 +102,10 @@ class SimulationTime(object):
         return self.simdata.mfdata[('tdis', 'dimensions', 'nper')].get_data()
 
     def get_sp_time_steps(self, sp_num):
-        tdisrecarray = self.simdata.mfdata[
-            ('tdis', 'perioddata', 'tdisrecarray')].get_data()
-        assert (len(tdisrecarray) > sp_num)
-        return tdisrecarray[sp_num][1]
+        perioddata = self.simdata.mfdata[
+            ('tdis', 'perioddata', 'perioddata')].get_data()
+        assert (len(perioddata) > sp_num)
+        return perioddata[sp_num][1]
 
     #def get_stress_period(self, sp_num):
 

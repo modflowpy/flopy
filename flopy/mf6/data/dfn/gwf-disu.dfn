@@ -110,6 +110,7 @@ shape (nja)
 reader readarray
 longname grid connectivity
 description is a list of cell number (n) followed by its connecting cell numbers (m) for each of the m cells connected to cell n. The number of values to provide for cell n is IAC(n).  This list is sequentially provided for the first to the last cell. The first value in the list must be cell n itself, and the remaining cells must be listed in an increasing order (sorted from lowest number to highest).  Note that the cell and its connections are only supplied for the GWF cells and their connections to the other GWF cells.  Also note that the JA list input may be divided such that every node and its connectivity list can be on a separate line for ease in readability of the file. To further ease readability of the file, the node number of the cell whose connectivity is subsequently listed, may be expressed as a negative number, the sign of which is subsequently converted to positive by the code.
+numeric_index true
 
 block connectiondata
 name ihc
@@ -147,7 +148,7 @@ description is the angle (in degrees) between the horizontal x-axis and the outw
 # --------------------- gwf disu vertices ---------------------
 
 block vertices
-name verticesrecarray
+name vertices
 type recarray iv xv yv
 reader urword
 optional false
@@ -163,6 +164,7 @@ reader urword
 optional false
 longname vertex number
 description is the vertex number.  Records in the VERTICES block must be listed in consecutive order from 1 to NVERT.
+numeric_index true
 
 block vertices
 name xv
@@ -188,7 +190,7 @@ description is the y-coordinate for the vertex.
 # --------------------- gwf disu cell2d ---------------------
 
 block cell2d
-name cell2drecarray
+name cell2d
 type recarray icell2d xc yc ncvert icvert
 reader urword
 optional false
@@ -204,6 +206,7 @@ reader urword
 optional false
 longname cell2d number
 description is the cell2d number.  Records in the CELL2D block must be listed in consecutive order from 1 to NODES.
+numeric_index true
 
 block cell2d
 name xc

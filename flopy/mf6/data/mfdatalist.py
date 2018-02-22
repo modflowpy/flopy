@@ -219,18 +219,19 @@ class MFList(mfdata.MFMultiDimVar):
                                              const_str.upper()))
         else:
             data_dim = self._data_dimensions
+            data_line = data_complete[mflist_line]
             for data_item in data_set.data_item_structures:
                 if data_item.is_aux:
                     aux_var_names = data_dim.package_dim.get_aux_variables()
                     if aux_var_names is not None:
                         for aux_var_name in aux_var_names[0]:
                             if aux_var_name.lower() != 'auxiliary':
-                                data_val = data_complete[mflist_line][index]
+                                data_val = data_line[index]
                                 text_line.append(storage.to_string(
-                                        data_val, data_item.type_obj,
+                                        data_val, data_item.type,
                                         data_item.is_cellid,
                                         data_item.possible_cellid,
-                                        data_item.ucase))
+                                        data_item))
                                 index += 1
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
@@ -241,7 +242,8 @@ class MFList(mfdata.MFMultiDimVar):
                         data_dim.package_dim.boundnames()) and \
                         (not data_item.optional or data_item.name_length < 5
                         or not data_item.is_mname or not storage.in_model):
-                    if len(data_complete[mflist_line]) <= index:
+                    data_complete_len = len(data_line)
+                    if data_complete_len <= index:
                         if data_item.optional == False:
                             except_str = 'ERROR: Not enough data provided ' \
                                          'for {}. Data for required data ' \
@@ -253,11 +255,10 @@ class MFList(mfdata.MFMultiDimVar):
                         else:
                             break
                     # resolve size of data
-                    data_val = data_complete[mflist_line][index]
-                    data_line = [data_complete[mflist_line]]
                     resolved_shape, shape_rule = data_dim.get_data_shape(
-                            data_item, self.structure, data_line,
+                            data_item, self.structure, [data_line],
                             repeating_key=self._current_key)
+                    data_val = data_line[index]
                     if data_item.is_cellid or (data_item.possible_cellid and
                             self._validate_cellid([data_val], 0)):
                         if data_item.shape is not None and \
@@ -276,55 +277,78 @@ class MFList(mfdata.MFMultiDimVar):
                             # unable to resolve data size based on shape, use
                             # the data heading names to resolve data size
                             data_size = storage.resolve_data_size(index)
-                    data_complete_len = len(data_complete[mflist_line])
                     for data_index in range(0, data_size):
                         if data_complete_len > index:
-                            data_val = data_complete[mflist_line][index]
+                            data_val = data_line[index]
                             if data_item.type == DatumType.keyword:
-                                text_line.append(data_item.name.upper())
+                                text_line.append(data_item.display_name)
                                 if self.structure.block_variable:
                                     # block variables behave differently for
                                     # now.  this needs to be resolved
                                     # more consistently at some point
                                     index += 1
-                            elif data_val is not None and (not
-                                    mfdatautil.DatumUtil.is_float(data_val) or
-                                    not math.isnan(float(data_val))):
+                            elif data_item.type == DatumType.keystring:
+                                text_line.append(data_val)
+                                index += 1
+
+                                # keystring must be at the end of the line so
+                                # everything else is part of the keystring data
+                                data_key = data_val.lower()
+                                if data_key not in data_item.keystring_dict:
+                                    keystr_struct = data_item.keystring_dict[
+                                        '{}record'.format(data_key)]
+                                else:
+                                    keystr_struct = data_item.keystring_dict[
+                                        data_key]
+                                if isinstance(keystr_struct,
+                                              mfstructure.MFDataStructure):
+                                    # data items following keystring
+                                    ks_structs = keystr_struct.\
+                                        data_item_structures[1:]
+                                else:
+                                    # key string stands alone
+                                    ks_structs = [keystr_struct]
+                                ks_struct_index = 0
+                                max_index = len(ks_structs) - 1
+                                for data_index in range(index,
+                                                        data_complete_len):
+                                    if data_line[data_index] is not None:
+                                        k_data_item = ks_structs[
+                                            ks_struct_index]
+                                        text_line.append(
+                                                storage.to_string(
+                                                data_line[data_index],
+                                                k_data_item.type,
+                                                k_data_item.is_cellid,
+                                                k_data_item.possible_cellid,
+                                                k_data_item))
+                                        if ks_struct_index < max_index:
+                                            # increment until last record
+                                            # entry then repeat last entry
+                                            ks_struct_index += 1
+                                index = data_index
+                            elif data_val is not None and (not isinstance(
+                                    data_val, float) or
+                                    not math.isnan(data_val)):
                                 if data_item.tagged and data_index == 0:
                                     # data item tagged, include data item name
                                     # as a keyword
                                     text_line.append(
                                             storage.to_string(data_val,
-                                                              'string',
+                                                              DatumType.string,
                                                               False,
-                                                              force_upper_case=
-                                                              data_item.ucase))
+                                                              data_item=
+                                                              data_item))
                                     index += 1
-                                    data_val = \
-                                            data_complete[mflist_line][index]
+                                    data_val = data_line[index]
                                 text_line.append(
                                         storage.to_string(data_val,
-                                                          data_item.type_obj,
+                                                          data_item.type,
                                                           data_item.is_cellid,
                                                           data_item.
                                                           possible_cellid,
-                                                          data_item.ucase))
+                                                          data_item))
                                 index += 1
-                            if data_item.type == DatumType.keystring:
-                                # keystring must be at the end of the line so
-                                # everything else is part of the keystring data
-                                for data_index in range(index,
-                                                        data_complete_len):
-                                    data_val = \
-                                        data_complete[mflist_line][data_index]
-                                    if data_val is not None:
-                                        text_line.append(
-                                                storage.to_string(data_val,
-                                                data_item.type_obj,
-                                                data_item.is_cellid,
-                                                data_item.possible_cellid,
-                                                data_item.ucase))
-                                index = data_index
                         elif not data_item.optional and shape_rule is None:
                             except_str = 'ERROR: Not enough data provided ' \
                                          'for {}. Data for required data ' \
@@ -405,7 +429,7 @@ class MFList(mfdata.MFMultiDimVar):
                     raise err
 
         if self.structure.type == DatumType.record or self.structure.type == \
-        DatumType.string:
+                DatumType.string:
             # records only contain a single line
             storage.append_data(data_loaded)
             self._data_dimensions.unlock()
@@ -828,8 +852,7 @@ class MFList(mfdata.MFMultiDimVar):
                         raise mfstructure.MFFileParseException(except_str)
 
                     data_converted = storge.convert_data(arr_line[index],
-                                                         data_item.type,
-                                                         data_item)
+                                                         data_item.type)
                     cellid_tuple = cellid_tuple + (int(data_converted) - 1,)
                     self._last_line_info[-1].append([index, 'integer',
                                                      cellid_size])
@@ -1021,8 +1044,7 @@ class MFTransientList(MFList, mfdata.MFTransient):
 
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):
-        self._load_prep(first_line, file_handle, block_header,
-                        pre_data_comments)
+        self._load_prep(block_header)
         return super(MFTransientList, self).load(first_line, file_handle,
                                                  pre_data_comments)
 

@@ -13,7 +13,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     auxiliary : [string]
@@ -68,7 +68,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
     maxbound : integer
         * maxbound (integer) integer value specifying the maximum number of
           drains cells that will be specified for use during any stress period.
-    periodrecarray : [cellid, elev, cond, aux, boundname]
+    stress_period_data : [cellid, elev, cond, aux, boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
@@ -112,8 +112,8 @@ class ModflowGwfdrn(mfpackage.MFPackage):
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'drn', 'options', 
                                             'obs_filerecord'))
-    periodrecarray = ListTemplateGenerator(('gwf6', 'drn', 'period', 
-                                            'periodrecarray'))
+    stress_period_data = ListTemplateGenerator(('gwf6', 'drn', 'period', 
+                                                'stress_period_data'))
     package_abbr = "gwfdrn"
     package_type = "drn"
     dfn_file_name = "gwf-drn.dfn"
@@ -158,7 +158,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name periodrecarray", 
+           ["block period", "name stress_period_data", 
             "type recarray cellid elev cond aux boundname", 
             "shape (maxbound)", "reader urword"],
            ["block period", "name cellid", "type integer", 
@@ -177,14 +177,14 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, auxiliary=None,
+    def __init__(self, model, loading_package=False, auxiliary=None,
                  auxmultname=None, boundnames=None, print_input=None,
                  print_flows=None, save_flows=None, ts_filerecord=None,
                  obs_filerecord=None, mover=None, maxbound=None,
-                 periodrecarray=None, fname=None, pname=None,
+                 stress_period_data=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfdrn, self).__init__(model, "drn", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
@@ -198,5 +198,5 @@ class ModflowGwfdrn(mfpackage.MFPackage):
                                                 obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
-        self.periodrecarray = self.build_mfdata("periodrecarray", 
-                                                periodrecarray)
+        self.stress_period_data = self.build_mfdata("stress_period_data", 
+                                                    stress_period_data)

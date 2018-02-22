@@ -22,8 +22,11 @@ def test_mflist_external():
                                      model_ws=ml.model_ws,
                                      verbose=True,
                                      forgive=False,check=False)
+
     assert np.array_equal(ml.wel[0], ml1.wel[0])
     assert np.array_equal(ml.wel[1], ml1.wel[1])
+
+    ml1.write_input()
 
 
 def test_single_mflist_entry_load():
@@ -43,6 +46,7 @@ def test_single_mflist_entry_load():
 
     mm = flopy.modflow.Modflow.load("freyberg.nam", model_ws="temp",forgive=False)
     assert mm.wel.stress_period_data
+    mm.write_input()
 
 if __name__ == '__main__':
     test_mflist_external()

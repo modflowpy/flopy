@@ -13,7 +13,7 @@ class ModflowGwfgnc(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     print_input : boolean
@@ -41,7 +41,7 @@ class ModflowGwfgnc(mfpackage.MFPackage):
         * numgnc (integer) is the number of GNC entries.
     numalphaj : integer
         * numalphaj (integer) is the number of contributing factors.
-    gncdatarecarray : [cellidn, cellidm, cellidsj, alphasj]
+    gncdata : [cellidn, cellidm, cellidsj, alphasj]
         * cellidn ((integer, ...)) is the cellid of the cell, :math:`n`, in
           which the ghost node is located. For a structured grid that uses the
           DIS input file, CELLIDN is the layer, row, and column numbers of the
@@ -82,8 +82,8 @@ class ModflowGwfgnc(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    gncdatarecarray = ListTemplateGenerator(('gwf6', 'gnc', 'gncdata', 
-                                             'gncdatarecarray'))
+    gncdata = ListTemplateGenerator(('gwf6', 'gnc', 'gncdata', 
+                                     'gncdata'))
     package_abbr = "gwfgnc"
     package_type = "gnc"
     dfn_file_name = "gwf-gnc.dfn"
@@ -98,26 +98,27 @@ class ModflowGwfgnc(mfpackage.MFPackage):
             "reader urword", "optional false"],
            ["block dimensions", "name numalphaj", "type integer", 
             "reader urword", "optional false"],
-           ["block gncdata", "name gncdatarecarray", 
+           ["block gncdata", "name gncdata", 
             "type recarray cellidn cellidm cellidsj alphasj", 
             "shape (maxbound)", "reader urword"],
            ["block gncdata", "name cellidn", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block gncdata", "name cellidm", "type integer", "shape", 
-            "tagged false", "in_record true", "reader urword"],
+            "tagged false", "in_record true", "reader urword", 
+            "numeric_index true"],
            ["block gncdata", "name cellidsj", "type integer", 
             "shape (numalphaj)", "tagged false", "in_record true", 
-            "reader urword"],
+            "reader urword", "numeric_index true"],
            ["block gncdata", "name alphasj", "type double precision", 
             "shape (numalphaj)", "tagged false", "in_record true", 
             "reader urword"]]
 
-    def __init__(self, model, add_to_package_list=True, print_input=None,
+    def __init__(self, model, loading_package=False, print_input=None,
                  print_flows=None, explicit=None, numgnc=None, numalphaj=None,
-                 gncdatarecarray=None, fname=None, pname=None,
-                 parent_file=None):
+                 gncdata=None, fname=None, pname=None, parent_file=None):
         super(ModflowGwfgnc, self).__init__(model, "gnc", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.print_input = self.build_mfdata("print_input",  print_input)
@@ -125,5 +126,4 @@ class ModflowGwfgnc(mfpackage.MFPackage):
         self.explicit = self.build_mfdata("explicit",  explicit)
         self.numgnc = self.build_mfdata("numgnc",  numgnc)
         self.numalphaj = self.build_mfdata("numalphaj",  numalphaj)
-        self.gncdatarecarray = self.build_mfdata("gncdatarecarray", 
-                                                 gncdatarecarray)
+        self.gncdata = self.build_mfdata("gncdata",  gncdata)

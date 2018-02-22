@@ -50,6 +50,7 @@ reader urword
 optional false
 longname number of layers
 description is the number of layers in the model grid.
+default_value 1
 
 block dimensions
 name nrow
@@ -58,6 +59,7 @@ reader urword
 optional false
 longname number of rows
 description is the number of rows in the model grid.
+default_value 2
 
 block dimensions
 name ncol
@@ -66,6 +68,7 @@ reader urword
 optional false
 longname number of columns
 description is the number of columns in the model grid.
+default_value 2
 
 # --------------------- gwf dis griddata ---------------------
 
@@ -76,6 +79,7 @@ shape (ncol)
 reader readarray
 longname spacing along a row
 description is the is the column spacing in the row direction.
+default_value 1.0
 
 block griddata
 name delc
@@ -84,6 +88,7 @@ shape (nrow)
 reader readarray
 longname spacing along a column
 description is the is the row spacing in the column direction.
+default_value 1.0
 
 block griddata
 name top
@@ -92,6 +97,7 @@ shape (ncol, nrow)
 reader readarray
 longname cell top elevation
 description is the top elevation for each cell in the top model layer.
+default_value 1.0
 
 block griddata
 name botm
@@ -100,6 +106,7 @@ shape (ncol, nrow, nlay)
 reader readarray
 longname cell bottom elevation
 description is the bottom elevation for each cell.
+default_value 0.
 
 block griddata
 name idomain

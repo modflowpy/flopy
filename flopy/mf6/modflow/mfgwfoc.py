@@ -13,7 +13,7 @@ class ModflowGwfoc(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     budget_filerecord : [budgetfile]
@@ -32,23 +32,23 @@ class ModflowGwfoc(mfpackage.MFPackage):
           HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
           saved.
+            all : [keyword]
+                * all (keyword) keyword to indicate save for all time steps in
+                  period.
             steps : [integer]
                 * steps (integer) save for each step specified in STEPS. This
                   keyword may be used in conjunction with other keywords to
                   print or save results for multiple time steps.
-            first : [keyword]
-                * first (keyword) keyword to indicate save for first step in
-                  period. This keyword may be used in conjunction with other
-                  keywords to print or save results for multiple time steps.
-            all : [keyword]
-                * all (keyword) keyword to indicate save for all time steps in
-                  period.
             frequency : [integer]
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
             last : [keyword]
                 * last (keyword) keyword to indicate save for last step in
+                  period. This keyword may be used in conjunction with other
+                  keywords to print or save results for multiple time steps.
+            first : [keyword]
+                * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
     printrecord : [rtype, ocsetting]
@@ -56,23 +56,23 @@ class ModflowGwfoc(mfpackage.MFPackage):
           HEAD.
         * ocsetting (keystring) specifies the steps for which the data will be
           saved.
+            all : [keyword]
+                * all (keyword) keyword to indicate save for all time steps in
+                  period.
             steps : [integer]
                 * steps (integer) save for each step specified in STEPS. This
                   keyword may be used in conjunction with other keywords to
                   print or save results for multiple time steps.
-            first : [keyword]
-                * first (keyword) keyword to indicate save for first step in
-                  period. This keyword may be used in conjunction with other
-                  keywords to print or save results for multiple time steps.
-            all : [keyword]
-                * all (keyword) keyword to indicate save for all time steps in
-                  period.
             frequency : [integer]
                 * frequency (integer) save at the specified time step
                   frequency. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
             last : [keyword]
                 * last (keyword) keyword to indicate save for last step in
+                  period. This keyword may be used in conjunction with other
+                  keywords to print or save results for multiple time steps.
+            first : [keyword]
+                * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
     fname : String
@@ -170,11 +170,11 @@ class ModflowGwfoc(mfpackage.MFPackage):
            ["block period", "name steps", "type integer", "shape (<nstp)", 
             "tagged true", "in_record true", "reader urword"]]
 
-    def __init__(self, model, add_to_package_list=True, budget_filerecord=None,
+    def __init__(self, model, loading_package=False, budget_filerecord=None,
                  head_filerecord=None, headprintrecord=None, saverecord=None,
                  printrecord=None, fname=None, pname=None, parent_file=None):
         super(ModflowGwfoc, self).__init__(model, "oc", fname, pname,
-                                           add_to_package_list, parent_file)        
+                                           loading_package, parent_file)        
 
         # set up variables
         self.budget_filerecord = self.build_mfdata("budget_filerecord", 

@@ -12,6 +12,7 @@ import sys
 import numpy as np
 
 from ..pakbase import Package
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowHyd(Package):
@@ -247,8 +248,7 @@ class ModflowHyd(Package):
     def get_empty(ncells=0):
         # get an empty recaray that correponds to dtype
         dtype = ModflowHyd.get_default_dtype()
-        d = np.zeros(ncells, dtype=dtype)
-        return d.view(np.recarray)
+        return create_empty_recarray(ncells, dtype)
 
     @staticmethod
     def get_default_dtype():

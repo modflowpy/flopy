@@ -45,6 +45,12 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + The [Henry Problem](../examples/Notebooks/flopy3_SEAWAT_henry_problem.ipynb), a simple saltwater intrusion model developed with FloPy and run using SEAWAT.
 
+##### ***Examples from [Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)***
+
++ [A basic FloPy example](../examples/groundwater_paper/Notebooks/example_1.ipynb) Notebook.
+
++ [Upper San Pedro Basin](../examples/groundwater_paper/Notebooks/uspb.ipynb) simulated model results (figure 2) and computed capture fraction (figure 5) Notebook.
+
 ##### ***SWI2 examples***
 
 + [Example 1](../examples/Notebooks/flopy3_swi2package_ex1.ipynb) of the SWI2 manual, simulating a rotating interface.

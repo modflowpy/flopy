@@ -13,7 +13,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     nrow : integer
@@ -22,10 +22,10 @@ class ModflowUtllaktab(mfpackage.MFPackage):
     ncol : integer
         * ncol (integer) integer value specifying the number of colums in the
           lake table. There must be NCOL columns of data in the TABLE block.
-          For lakes with HORIZONTAL and/or VERTICAL CTYPE connections, NROW
+          For lakes with HORIZONTAL and/or VERTICAL CTYPE connections, NCOL
           must be equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV CTYPE
-          connections, NROW must be equal to 4.
-    laktabrecarray : [stage, volume, sarea, barea]
+          connections, NCOL must be equal to 4.
+    table : [stage, volume, sarea, barea]
         * stage (double) real value that defines the stage corresponding to the
           remaining data on the line.
         * volume (double) real value that defines the lake volume corresponding
@@ -45,8 +45,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    laktabrecarray = ListTemplateGenerator(('tab', 'table', 
-                                            'laktabrecarray'))
+    table = ListTemplateGenerator(('tab', 'table', 'table'))
     package_abbr = "utltab"
     package_type = "tab"
     dfn_file_name = "utl-lak-tab.dfn"
@@ -55,7 +54,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
             "reader urword", "optional false"],
            ["block dimensions", "name ncol", "type integer", 
             "reader urword", "optional false"],
-           ["block table", "name laktabrecarray", 
+           ["block table", "name table", 
             "type recarray stage volume sarea barea", "shape (nrow)", 
             "reader urword"],
            ["block table", "name stage", "type double precision", "shape", 
@@ -68,14 +67,12 @@ class ModflowUtllaktab(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, nrow=None, ncol=None,
-                 laktabrecarray=None, fname=None, pname=None,
-                 parent_file=None):
+    def __init__(self, model, loading_package=False, nrow=None, ncol=None,
+                 table=None, fname=None, pname=None, parent_file=None):
         super(ModflowUtllaktab, self).__init__(model, "tab", fname, pname,
-                                               add_to_package_list, parent_file)        
+                                               loading_package, parent_file)        
 
         # set up variables
         self.nrow = self.build_mfdata("nrow",  nrow)
         self.ncol = self.build_mfdata("ncol",  ncol)
-        self.laktabrecarray = self.build_mfdata("laktabrecarray", 
-                                                laktabrecarray)
+        self.table = self.build_mfdata("table",  table)

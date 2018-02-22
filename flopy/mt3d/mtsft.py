@@ -282,7 +282,7 @@ class Mt3dSft(Package):
         else:
             self.dtype = self.get_default_dtype(ncomp)
 
-        if sf_stress_period_data is None:
+        if sf_stress_period_data is None or len(sf_stress_period_data) == 0:
             self.sf_stress_period_data = None
         else:
             self.sf_stress_period_data = MfList(self, model=model,

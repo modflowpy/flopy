@@ -35,7 +35,7 @@ def test_uzf_unit_numbers():
         apth = cpth
         compth = cpth
 
-    m = flopy.modflow.Modflow.load(mfnam, verbose=True, model_ws=lpth,
+    m = flopy.modflow.Modflow.load(mfnam, verbose=True, model_ws=lpth, forgive=False,
                                    exe_name=exe_name)
     assert m.load_fail is False, 'failed to load all packages'
 
@@ -150,4 +150,4 @@ def test_unitnums_load_and_write():
 
 if __name__ == '__main__':
     test_uzf_unit_numbers()
-    #test_unitnums_load_and_write()
+    test_unitnums_load_and_write()

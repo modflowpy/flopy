@@ -298,7 +298,7 @@ class ListBudget(object):
         # pad an array with zeros and times with [days, hours, minutes, seconds]
         times = np.array([0 for i in range(4-len(times))] + times)
         # convert all to seconds
-        time2sec = np.array([24 * 60 * 60, 24 * 60, 60, 1])
+        time2sec = np.array([24 * 60 * 60, 60 * 60, 60, 1])
         times_sec = np.sum(times * time2sec)
         # return in the requested units
         if units == 'seconds':

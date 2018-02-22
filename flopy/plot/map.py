@@ -1,6 +1,7 @@
 import copy
 import sys
 import numpy as np
+
 try:
     import matplotlib.pyplot as plt
     import matplotlib.colors
@@ -9,6 +10,7 @@ except:
 from . import plotutil
 from .plotutil import bc_color_dict
 from ..utils import SpatialReference
+
 
 class ModelMap(object):
     """
@@ -78,7 +80,7 @@ class ModelMap(object):
 
         # model map override spatial reference settings
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
-            rotation != 0 or length_multiplier != 1.:
+                rotation != 0 or length_multiplier != 1.:
             self.sr.length_multiplier = length_multiplier
             self.sr.set_spatialreference(xul, yul, xll, yll, rotation)
 
@@ -317,8 +319,7 @@ class ModelMap(object):
         return lc
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
-                plotAll=False,
-                **kwargs):
+                plotAll=False, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
         type from a flopy model
@@ -383,9 +384,12 @@ class ModelMap(object):
                 plotarray[k, :, :] = pa.copy()
         else:
             idx = [mflist['k'], mflist['i'], mflist['j']]
-
             plotarray[idx] = 1
+
+        # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)
+
+        # set the colormap
         if color is None:
             if ftype in bc_color_dict:
                 c = bc_color_dict[ftype]
@@ -396,7 +400,10 @@ class ModelMap(object):
         cmap = matplotlib.colors.ListedColormap(['0', c])
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+        # create normalized quadmesh
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+
         return quadmesh
 
     def plot_shapefile(self, shp, **kwargs):
@@ -781,7 +788,7 @@ class ModelMap(object):
 
         if selection_direction is not None:
             if selection_direction.lower() != 'starting' and \
-                            selection_direction.lower() != 'ending':
+                    selection_direction.lower() != 'ending':
                 errmsg = 'flopy.map.plot_endpoint selection_direction ' + \
                          'must be "ending" or "starting".'
                 raise Exception(errmsg)
@@ -857,4 +864,3 @@ class ModelMap(object):
             cb = plt.colorbar(sp, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
-

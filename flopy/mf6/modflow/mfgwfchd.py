@@ -13,7 +13,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     auxiliary : [string]
@@ -64,7 +64,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
         * maxbound (integer) integer value specifying the maximum number of
           constant-head cells that will be specified for use during any stress
           period.
-    periodrecarray : [cellid, head, aux, boundname]
+    stress_period_data : [cellid, head, aux, boundname]
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
@@ -100,8 +100,8 @@ class ModflowGwfchd(mfpackage.MFPackage):
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'chd', 'options', 
                                             'obs_filerecord'))
-    periodrecarray = ListTemplateGenerator(('gwf6', 'chd', 'period', 
-                                            'periodrecarray'))
+    stress_period_data = ListTemplateGenerator(('gwf6', 'chd', 'period', 
+                                                'stress_period_data'))
     package_abbr = "gwfchd"
     package_type = "chd"
     dfn_file_name = "gwf-chd.dfn"
@@ -144,7 +144,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
            ["block period", "name iper", "type integer", 
             "block_variable True", "in_record true", "tagged false", "shape", 
             "valid", "reader urword", "optional false"],
-           ["block period", "name periodrecarray", 
+           ["block period", "name stress_period_data", 
             "type recarray cellid head aux boundname", "shape (maxbound)", 
             "reader urword"],
            ["block period", "name cellid", "type integer", 
@@ -160,13 +160,13 @@ class ModflowGwfchd(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "optional true"]]
 
-    def __init__(self, model, add_to_package_list=True, auxiliary=None,
+    def __init__(self, model, loading_package=False, auxiliary=None,
                  auxmultname=None, boundnames=None, print_input=None,
                  print_flows=None, save_flows=None, ts_filerecord=None,
-                 obs_filerecord=None, maxbound=None, periodrecarray=None,
+                 obs_filerecord=None, maxbound=None, stress_period_data=None,
                  fname=None, pname=None, parent_file=None):
         super(ModflowGwfchd, self).__init__(model, "chd", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
@@ -179,5 +179,5 @@ class ModflowGwfchd(mfpackage.MFPackage):
         self.obs_filerecord = self.build_mfdata("obs_filerecord", 
                                                 obs_filerecord)
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
-        self.periodrecarray = self.build_mfdata("periodrecarray", 
-                                                periodrecarray)
+        self.stress_period_data = self.build_mfdata("stress_period_data", 
+                                                    stress_period_data)
