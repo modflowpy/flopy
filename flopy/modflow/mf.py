@@ -714,7 +714,8 @@ class Modflow(BaseModel):
             if item.package is not None:
                 if item.filetype in load_only and item.filetype != "DIS":
                     if not forgive:
-                        if "check" in inspect.getargspec(item.package.load):
+                        package_load_args = list(inspect.getargspec(item.package.load))[0]
+                        if "check" in package_load_args:
                             pck = item.package.load(item.filename, ml,
                                                     ext_unit_dict=ext_unit_dict,
                                                     check=False)
