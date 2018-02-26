@@ -12,7 +12,7 @@ Models and Packages
 The following is a list of the classes available to work with MODFLOW 6 models.  These classes should support all of the options available in the current version of MODFLOW 6.
 
 * MFSimulation
-* MFModel
+* ModflowGwf
 * ModflowNam
 * ModflowTdis
 * ModflowGwfgwf

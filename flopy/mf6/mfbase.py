@@ -290,41 +290,70 @@ class PackageContainer(object):
     def package_factory(package_type, model_type):
         package_abbr = '{}{}'.format(model_type, package_type)
         package_utl_abbr = 'utl{}'.format(package_type)
-        base_path, tail = os.path.split(os.path.realpath(__file__))
-        package_path = os.path.join(base_path, 'modflow')
         package_list = []
         # iterate through python files
-        package_file_paths = glob.glob(os.path.join(package_path, "*.py"))
+        package_file_paths = PackageContainer.get_package_file_paths()
         for package_file_path in package_file_paths:
-            package_file_name = os.path.basename(package_file_path)
-            module_path = os.path.splitext(package_file_name)[0]
-            module_name = '{}{}{}'.format('Modflow', module_path[2].upper(),
-                                          module_path[3:])
-            if module_name.startswith("__"):
-                continue
-
-            # import
-            module = importlib.import_module("flopy.mf6.modflow.{}".format(
-              module_path))
-
-            # iterate imported items
-            for item in dir(module):
-                value = getattr(module, item)
-                # verify this is a class
-                if not value or not inspect.isclass(value) or not \
-                  hasattr(value, 'package_abbr'):
-                    continue
-                if package_type is None:
-                    package_list.append(value)
-                else:
-                    # check package type
-                    if value.package_abbr == package_abbr or \
-                      value.package_abbr == package_utl_abbr:
-                        return value
+            module = PackageContainer.get_module(package_file_path)
+            if module is not None:
+                # iterate imported items
+                for item in dir(module):
+                    value = PackageContainer.get_module_val(module, item,
+                                                            'package_abbr')
+                    if value is not None:
+                        if package_type is None:
+                            package_list.append(value)
+                        else:
+                            # check package type
+                            if value.package_abbr == package_abbr or \
+                              value.package_abbr == package_utl_abbr:
+                                return value
         if package_type is None:
             return package_list
         else:
             return None
+
+    @staticmethod
+    def model_factory(model_type):
+        package_file_paths = PackageContainer.get_package_file_paths()
+        for package_file_path in package_file_paths:
+            module = PackageContainer.get_module(package_file_path)
+            if module is not None:
+                # iterate imported items
+                for item in dir(module):
+                    value = PackageContainer.get_module_val(module, item,
+                                                            'model_type')
+                    if value is not None and value.model_type == model_type:
+                        return value
+        return None
+
+    @staticmethod
+    def get_module_val(module, item, attrb):
+        value = getattr(module, item)
+        # verify this is a class
+        if not value or not inspect.isclass(value) or not \
+                hasattr(value, attrb):
+            return None
+        return value
+
+    @staticmethod
+    def get_module(package_file_path):
+        package_file_name = os.path.basename(package_file_path)
+        module_path = os.path.splitext(package_file_name)[0]
+        module_name = '{}{}{}'.format('Modflow', module_path[2].upper(),
+                                      module_path[3:])
+        if module_name.startswith("__"):
+            return None
+
+        # import
+        return importlib.import_module("flopy.mf6.modflow.{}".format(
+            module_path))
+
+    @staticmethod
+    def get_package_file_paths():
+        base_path, tail = os.path.split(os.path.realpath(__file__))
+        package_path = os.path.join(base_path, 'modflow')
+        return glob.glob(os.path.join(package_path, "*.py"))
 
     def _add_package(self, package, path):
         # put in packages list and update lookup dictionaries
