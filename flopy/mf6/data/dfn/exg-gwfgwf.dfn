@@ -1,0 +1,279 @@
+# --------------------- exg gwfgwf options ---------------------
+
+block options
+name auxiliary
+type string
+shape (naux)
+reader urword
+optional true
+longname keyword to specify aux variables
+description an array of auxiliary variable names.  There is no limit on the number of auxiliary variables that can be provided. Most auxiliary variables will not be used by the GWF-GWF Exchange, but they will be available for use by other parts of the program.  If an auxiliary variable with the name ``ANGLDEGX'' is found, then this information will be used as the angle (provided in degrees) between the connection face normal and the x axis.  Additional information on ``ANGLDEGX'' is provided in the description of the DISU Package.  If an auxiliary variable with the name ``CDIST'' is found, then this information will be used as the straight-line connection distance between the two cell centers.  CDIST is required if specific discharge is calculated for either of the groundwater models.
+
+block options
+name print_input
+type keyword
+reader urword
+optional true
+longname keyword to print input to list file
+description keyword to indicate that the list of exchange entries will be echoed to the listing file immediately after it is read.
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname keyword to print gwfgwf flows to list file
+description keyword to indicate that the list of exchange flow rates will be printed to the listing file for every stress period in which ``SAVE BUDGET'' is specified in Output Control.
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname keyword to save GWFGWF flows
+description keyword to indicate that cell-by-cell flow terms will be written to the budget file for each model provided that the Output Control for the models are set up with the ``BUDGET SAVE FILE'' option.
+
+block options
+name cell_averaging
+type string
+valid harmonic logarithmic amt-lmk
+reader urword
+optional true
+longname conductance weighting option
+description is a keyword and text keyword to indicate the method that will be used for calculating the conductance for horizontal cell connections.  The text value for CELL\_AVERAGING can be ``HARMONIC'', ``LOGARITHMIC'', or ``AMT-LMK'', which means ``arithmetic-mean thickness and logarithmic-mean hydraulic conductivity''. If the user does not specify a value for CELL\_AVERAGING, then the harmonic-mean method will be used.
+
+block options
+name cvoptions
+type record variablecv dewatered
+reader urword
+optional true
+longname vertical conductance options
+description none
+
+block options
+name variablecv
+in_record true
+type keyword
+reader urword
+longname keyword to activate VARIABLECV option
+description keyword to indicate that the vertical conductance will be calculated using the saturated thickness and properties of the overlying cell and the thickness and properties of the underlying cell.  If the DEWATERED keyword is also specified, then the vertical conductance is calculated using only the saturated thickness and properties of the overlying cell if the head in the underlying cell is below its top.  If these keywords are not specified, then the default condition is to calculate the vertical conductance at the start of the simulation using the initial head and the cell properties.  The vertical conductance remains constant for the entire simulation.
+
+block options
+name dewatered
+in_record true
+type keyword
+reader urword
+optional true
+longname keyword to activate DEWATERED option
+description If the DEWATERED keyword is specified, then the vertical conductance is calculated using only the saturated thickness and properties of the overlying cell if the head in the underlying cell is below its top.
+
+block options
+name newton
+type keyword
+reader urword
+optional true
+longname keyword to activate Newton-Raphson
+description keyword that activates the Newton-Raphson formulation for groundwater flow between connected, convertible groundwater cells. Cells will not dry when this option is used.
+
+block options
+name gnc_filerecord
+type record gnc6 filein gnc6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name filein
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname file keyword
+description keyword to specify that an input filename is expected next.
+
+block options
+name gnc6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname gnc6 keyword
+description keyword to specify that record corresponds to a ghost-node correction file.
+
+block options
+name gnc6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname gnc6 input filename
+description is the file name for ghost node correction input file.  Information for the ghost nodes are provided in the file provided with these keywords.  The format for specifying the ghost nodes is the same as described for the GNC Package of the GWF Model.  This includes specifying OPTIONS, DIMENSIONS, and GNCDATA blocks.  The order of the ghost nodes must follow the same order as the order of the cells in the EXCHANGEDATA block.  For the GNCDATA, noden and all of the nodej values are assumed to be located in model 1, and nodem is assumed to be in model 2.
+
+block options
+name mvr_filerecord
+type record mvr6 filein mvr6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name mvr6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to a mover file.
+
+block options
+name mvr6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname mvr6 input filename
+description is the file name of the water mover input file to apply to this exchange.  Information for the water mover are provided in the file provided with these keywords.  The format for specifying the water mover information is the same as described for the Water Mover (MVR) Package of the GWF Model, with two exceptions.  First, in the PACKAGES block, the model name must be included as a separate string before each package.  Second, the appropriate model name must be included before package name 1 and package name 2 in the BEGIN PERIOD block.  This allows providers and receivers to be located in both models listed as part of this exchange.
+
+block options
+name obs_filerecord
+type record obs6 filein obs6_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name obs6
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname obs keyword
+description keyword to specify that record corresponds to an observations file.
+
+block options
+name obs6_filename
+type string
+preserve_case true
+in_record true
+tagged false
+reader urword
+optional false
+longname obs6 input filename
+description is the file name of the observations input file for this exchange. See the ``Observation utility'' section for instructions for preparing observation input files. Table \ref{table:obstype} lists observation type(s) supported by the GWF-GWF package.
+
+
+# --------------------- exg gwfgwf dimensions ---------------------
+
+block dimensions
+name nexg
+type integer
+reader urword
+optional false
+longname number of exchanges
+description keyword and integer value specifying the number of GWF-GWF exchanges.
+
+
+# --------------------- exg gwfgwf exchangedata ---------------------
+
+block exchangedata
+name exchangedata
+type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux
+reader urword
+optional false
+longname exchange data
+description
+
+block exchangedata
+name cellidm1
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cellid of first cell
+description is the cellid of the cell in model 1 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM1 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM1 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM1 is the node number for the cell.
+numeric_index true
+
+block exchangedata
+name cellidm2
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname cellid of second cell
+description is the cellid of the cell in model 2 as specified in the simulation name file. For a structured grid that uses the DIS input file, CELLIDM2 is the layer, row, and column numbers of the cell.   For a grid that uses the DISV input file, CELLIDM2 is the layer number and CELL2D number for the two cells.  If the model uses the unstructured discretization (DISU) input file, then CELLIDM2 is the node number for the cell.
+numeric_index true
+
+block exchangedata
+name ihc
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname integer flag for connection type
+description is an integer flag indicating the direction between node n and all of its m connections. If IHC = 0 then the connection is vertical.  If IHC = 1 then the connection is horizontal. If IHC = 2 then the connection is horizontal for a vertically staggered grid.
+
+block exchangedata
+name cl1
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname connection distance
+description is the distance between the center of cell 1 and the its shared face with cell 2.
+
+block exchangedata
+name cl2
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname connection distance
+description is the distance between the center of cell 1 and the its shared face with cell 2.
+
+block exchangedata
+name hwva
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname horizontal cell width or area for vertical flow
+description is the horizontal width of the flow connection between cell 1 and cell 2 if IHC $>$ 0, or it is the area perpendicular to flow of the vertical connection between cell 1 and cell 2 if IHC = 0.
+
+block exchangedata
+name aux
+type double precision
+in_record true
+tagged false
+shape (naux)
+reader urword
+optional true
+longname auxiliary variables
+description represents the values of the auxiliary variables for each GWFGWF Exchange. The values of auxiliary variables must be present for each exchange. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.
+

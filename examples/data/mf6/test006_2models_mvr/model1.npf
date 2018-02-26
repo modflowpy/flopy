@@ -1,0 +1,12 @@
+begin options
+  save_FLOWS
+end options
+#
+BEGIN GRIDDATA
+  icelltype
+    constant 0
+  K
+    constant 1.
+  K33
+    constant 1.
+END GRIDDATA

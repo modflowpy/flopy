@@ -1,0 +1,17 @@
+begin options
+  READASARRAYS
+  FIXED_CELL
+  TAS6 FILEIN   timearrayseries.rch.tas
+  PRINT_INPUT
+  PRINT_FLOWS
+  AUXILIARY Auxarray1 RchMult
+  AUXMULTNAME RchMult
+end options
+
+begin period 1
+  RECHARGE  TimeArraySeries  RchSeries
+  Auxarray1
+    constant  2.3
+  RchMult
+    open/close  timeseriestest.mltarr  FACTOR  1.0  IPRN  0
+end period

@@ -11,6 +11,8 @@ import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import MfList, check
+from ..utils.recarray_utils import create_empty_recarray
+
 
 class ModflowRiv(Package):
     """
@@ -234,9 +236,7 @@ class ModflowRiv(Package):
         dtype = ModflowRiv.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((ncells, len(dtype)), dtype=dtype)
-        d[:, :] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
 
     @staticmethod
     def get_default_dtype(structured=True):

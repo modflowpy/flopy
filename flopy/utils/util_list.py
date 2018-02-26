@@ -284,6 +284,10 @@ class MfList(object):
                         raise Exception("MfList error: casting list " + \
                                         "to ndarray: " + str(e))
 
+                #super hack - sick of recarrays already
+                #if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
+                #    d = d.view(np.recarray)
+
                 if isinstance(d, np.recarray):
                     self.__cast_recarray(kper, d)
                 elif isinstance(d, np.ndarray):
@@ -388,35 +392,48 @@ class MfList(object):
             return None
 
         # make a dataframe of all data for all stress periods
+        names = ['k', 'i', 'j']
+        if 'MNW2' in self.package.name:
+            names += ['wellid']
+
+        # find relevant variable names
+        # may have to iterate over the first stress period
+        for per in range(self.model.nper):
+            if hasattr(self.data[per], 'dtype'):
+                varnames = list([n for n in self.data[per].dtype.names
+                                 if n not in names])
+                break
+
+        # create list of dataframes for each stress period
+        # each with index of k, i, j
         dfs = []
-        for k, v in self.data.items():
-            df = pd.DataFrame(v)
-            df['per'] = k
-            df['id'] = df.index
-            dfs.append(df)
-        df = pd.concat(dfs)
-        df['node'] = df.i * self.model.ncol + df.j
-        kij = df[['id', 'node', 'k', 'i', 'j']].copy()
-        kij.index = kij.id
-        kij = kij.groupby(kij.index).mean()  # remove duplicates
-
-        # pivot the dataframe so that stress periods
-        # are represented across columns
-        # nrow == ncells, ncol = nvariables x nper
-        columns = list(set(df.columns).difference({'k', 'i', 'j', 'per', 'node', 'id'}))
-        dfs = [kij]
-        for c in columns:
-            pv = df[['per', c, 'id']].pivot(index='id', columns='per', values=c)
-
-            if squeeze:
-                diff = pv.diff(axis=1)
-                diff[0] = 1
-                diff = diff.astype(int)
-                changed = diff.sum(axis=0) > 0
-                pv = pv.loc[:, changed]
-            pv.columns = ['{}{}'.format(c, p) for p in pv.columns]
-            dfs.append(pv)
-        return pd.concat(dfs, axis=1)
+        for per in range(self.model.nper):
+            recs = self.data[per]
+            if recs is None or recs is 0:
+                # add an empty dataframe if a stress period is
+                # set to 0 (e.g. no pumping during a predevelopment
+                # period)
+                columns = names + list(['{}{}'.format(c, per) for c in varnames])
+                dfi = pd.DataFrame(data=None, columns=columns)
+                dfi = dfi.set_index(names)
+            else:
+                dfi = pd.DataFrame.from_records(recs)
+                dfi = dfi.set_index(names)
+                dfi.columns = list(['{}{}'.format(c, per) for c in varnames])
+            dfs.append(dfi)
+        df = pd.concat(dfs, axis=1)
+        if squeeze:
+            keep = []
+            for var in varnames:
+                diffcols = list([n for n in df.columns if var in n])
+                diff = df[diffcols].diff(axis=1)
+                diff['{}0'.format(var)] = 1  # always return the first stress period
+                changed = diff.sum(axis=0) != 0
+                keep.append(df.loc[:, changed.index[changed]])
+            df = pd.concat(keep, axis=1)
+        df = df.reset_index()
+        df.insert(len(names), 'node', df.i * self.model.ncol + df.j)
+        return df
 
     def add_record(self, kper, index, values):
         # Add a record to possible already set list for a given kper
@@ -595,7 +612,7 @@ class MfList(object):
                 kper_vtype = int
 
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
-                    .format(itmp, 0, kper))
+                    .format(itmp, 0, kper+1))
 
             isExternal = False
             if self.model.array_free_format and \

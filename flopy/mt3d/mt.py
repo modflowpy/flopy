@@ -215,7 +215,7 @@ class Mt3dms(BaseModel):
     """
 
     def __init__(self, modelname='mt3dtest', namefile_ext='nam',
-                 modflowmodel=None, ftlfilename=None, ftlfree=False,
+                 modflowmodel=None, ftlfilename="mt3d_link.ftl", ftlfree=False,
                  version='mt3dms', exe_name='mt3dms.exe',
                  structured=True, listunit=None, ftlunit=None,
                  model_ws='.', external_path=None,
@@ -295,8 +295,8 @@ class Mt3dms(BaseModel):
         # the starting external data unit number
         self._next_ext_unit = 2000
         if external_path is not None:
-            assert model_ws == '.', "ERROR: external cannot be used " + \
-                                    "with model_ws"
+            #assert model_ws == '.', "ERROR: external cannot be used " + \
+            #                        "with model_ws"
 
             # external_path = os.path.join(model_ws, external_path)
             if os.path.exists(external_path):
@@ -329,6 +329,13 @@ class Mt3dms(BaseModel):
 
     def __repr__(self):
         return 'MT3DMS model'
+
+
+    @property
+    def sr(self):
+        if self.mf is not None:
+            return self.mf.sr
+        return None
 
     @property
     def nlay(self):
@@ -556,11 +563,8 @@ class Mt3dms(BaseModel):
         try:
             pck = btn.package.load(btn.filename, mt,
                                    ext_unit_dict=ext_unit_dict)
-        except:
-            if forgive:
-                return None
-            else:
-                raise Exception('BTN not found in name file.')
+        except Exception as e:
+            raise Exception('error loading BTN: {0}'.format(str(e)))
         files_succesfully_loaded.append(btn.filename)
         if mt.verbose:
             sys.stdout.write('   {:4s} package load...success\n'
@@ -595,7 +599,22 @@ class Mt3dms(BaseModel):
         for key, item in ext_unit_dict.items():
             if item.package is not None:
                 if item.filetype in load_only:
-                    try:
+                    if forgive:
+                        try:
+                            pck = item.package.load(item.filename, mt,
+                                                    ext_unit_dict=ext_unit_dict)
+                            files_succesfully_loaded.append(item.filename)
+                            if mt.verbose:
+                                sys.stdout.write(
+                                    '   {:4s} package load...success\n'
+                                        .format(pck.name[0]))
+                        except BaseException as o:
+                            if mt.verbose:
+                                sys.stdout.write(
+                                    '   {:4s} package load...failed\n   {!s}\n'
+                                        .format(item.filetype, o))
+                            files_not_loaded.append(item.filename)
+                    else:
                         pck = item.package.load(item.filename, mt,
                                                 ext_unit_dict=ext_unit_dict)
                         files_succesfully_loaded.append(item.filename)
@@ -603,12 +622,6 @@ class Mt3dms(BaseModel):
                             sys.stdout.write(
                                 '   {:4s} package load...success\n'
                                     .format(pck.name[0]))
-                    except BaseException as o:
-                        if mt.verbose:
-                            sys.stdout.write(
-                                '   {:4s} package load...failed\n   {!s}\n'
-                                    .format(item.filetype, o))
-                        files_not_loaded.append(item.filename)
                 else:
                     if mt.verbose:
                         sys.stdout.write('   {:4s} package load...skipped\n'

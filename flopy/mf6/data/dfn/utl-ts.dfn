@@ -1,0 +1,173 @@
+# --------------------- gwf ts attributes ---------------------
+
+block attributes
+name time_series_namerecord
+type record names time_series_names
+shape
+reader urword
+tagged false
+optional false
+longname
+description xxx
+
+block attributes
+name names
+other_names name
+type keyword
+shape
+reader urword
+optional false
+longname
+description xxx
+
+block attributes
+name time_series_names
+type string
+shape any1d
+tagged false
+reader urword
+optional false
+longname
+description Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package.
+
+block attributes
+name interpolation_methodrecord
+type record methods interpolation_method
+shape
+reader urword
+tagged false
+optional true
+longname
+description xxx
+
+block attributes
+name methods
+type keyword
+shape
+reader urword
+optional false
+longname
+description  xxx
+
+block attributes
+name interpolation_method
+type string
+valid stepwise linear linearend
+shape time_series_names
+tagged false
+reader urword
+optional false
+longname
+description Interpolation method, which is either STEPWISE or LINEAR.
+
+block attributes
+name interpolation_methodrecord_single
+type record method interpolation_method_single
+shape
+reader urword
+tagged false
+optional true
+longname
+description xxx
+
+block attributes
+name method
+type keyword
+shape
+reader urword
+optional false
+longname
+description  xxx
+
+block attributes
+name interpolation_method_single
+type string
+valid stepwise linear linearend
+shape
+tagged false
+reader urword
+optional false
+longname
+description Interpolation method, which is either STEPWISE or LINEAR.
+
+block attributes
+name sfacrecord
+type record sfacs sfacval
+shape
+reader urword
+tagged true
+optional true
+longname
+description xxx
+
+block attributes
+name sfacs
+type keyword
+shape
+reader urword
+optional false
+longname
+description  xxx
+
+block attributes
+name sfacval
+type double precision
+shape <time_series_name
+tagged false
+reader urword
+optional false
+longname
+description Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
+
+block attributes
+name sfacrecord_single
+type record sfac sfacval
+shape
+reader urword
+tagged true
+optional true
+longname
+description xxx
+
+block attributes
+name sfac
+type keyword
+shape
+tagged false
+reader urword
+optional false
+longname
+description  xxx
+
+# --------------------- gwf ts timeseries ---------------------
+
+block timeseries
+name timeseries
+type recarray ts_time ts_array
+shape
+reader urword
+tagged true
+optional false
+longname
+description xxx
+
+block timeseries
+name ts_time
+type double precision
+shape
+tagged false
+reader urword
+optional false
+repeating false
+longname
+description A numeric time relative to the start of the simulation, in the time unit used in the simulation. Times must be strictly increasing.
+
+block timeseries
+name ts_array
+type double precision
+shape time_series_names
+tagged false
+reader urword
+optional false
+longname
+description A 2-D array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility.

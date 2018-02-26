@@ -1,0 +1,17 @@
+begin options
+  PRINT_FLOWS
+  SAVE_FLOWS
+end options
+#
+BEGIN GRIDDATA
+    #icelltype(nodes) is 0:confined, 1:convertible, 4:upstream?
+    icelltype
+        constant 0
+    #	
+    K
+        constant 1.0  k Layer 1
+    K33
+        constant 1.0  K33 Layer 1
+    k22
+        constant 1.0
+END GRIDDATA

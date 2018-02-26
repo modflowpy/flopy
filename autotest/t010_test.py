@@ -122,4 +122,4 @@ def test_sfrloadcheck():
 if __name__ == '__main__':
     test_sfrcheck()
     for i, case in sfr_items.items():
-        test_sfrloadcheck(i, case['mfnam'], path, cpth)
+        load_check_sfr(i, case['mfnam'], path, cpth)

@@ -1,0 +1,14 @@
+#option block.  Note -- no comments allowed on aux line
+begin options
+  TS6 FILEIN  timeseries.ghb.ts
+  PRINT_INPUT
+  PRINT_FLOWS
+end options
+
+begin dimensions
+  MAXBOUND 102
+end dimensions
+
+begin period 1
+  open/close timeseries.ghb.ref
+end period

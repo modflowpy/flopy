@@ -486,6 +486,11 @@ class Mt3dBtn(Package):
                     self.laycon = Util2d(self.parent, (nlay,),
                                           np.int, flow_package.laytyp.get_value(),
                                           name='laycon', locat=self.unit_number[0])
+                flow_package = mf.get_package('UPW')
+                if flow_package is not None:
+                    self.laycon = Util2d(self.parent, (nlay,),
+                                         np.int, flow_package.laytyp.get_value(),
+                                         name='laycon', locat=self.unit_number[0])
 
         s = 'BTN warning. Laycon has not been set.  A modflow model with a '
         s += ' BCF or LPF package does not exist and laycon was not passed '

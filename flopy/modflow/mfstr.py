@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from ..utils import MfList
 from ..pakbase import Package
-
+from ..utils.recarray_utils import create_empty_recarray
 
 class ModflowStr(Package):
     """
@@ -377,12 +377,8 @@ class ModflowStr(Package):
         dtype, dtype2 = ModflowStr.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((ncells, len(dtype)), dtype=dtype)
-        d[:, :] = -1.0E+10
-        d2 = np.zeros((nss, len(dtype2)), dtype=dtype2)
-        d2[:, :] = 0
-        return (np.core.records.fromarrays(d.transpose(), dtype=dtype),
-                np.core.records.fromarrays(d2.transpose(), dtype=dtype2))
+        return (create_empty_recarray(ncells, dtype=dtype, default_value=-1.0E+10),
+                create_empty_recarray(nss, dtype=dtype, default_value=0))
 
     @staticmethod
     def get_default_dtype(structured=True):
@@ -477,9 +473,10 @@ class ModflowStr(Package):
                 else:
                     itmp = tdata.shape[0]
             line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0,
-                                                                     0, iper)
+                                                                     0, iper+1)
             f_str.write(line)
             if itmp > 0:
+                tdata = np.recarray.copy(tdata)
                 # dataset 6
                 for line in tdata:
                     line['k'] += 1

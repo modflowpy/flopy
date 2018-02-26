@@ -1,0 +1,13 @@
+# IC8 input file, prepared by MF5to6 on 3/31/2016 at 18:28:22.
+
+BEGIN Options
+END Options
+
+BEGIN GRIDDATA
+  STRT LAYERED
+    CONSTANT    115.000000        Initial head for layer 1
+    CONSTANT    115.000000        Initial head for layer 2
+    CONSTANT    115.000000        Initial head for layer 3
+    CONSTANT    115.000000        Initial head for layer 4
+    CONSTANT    115.000000        Initial head for layer 5
+END GRIDDATA

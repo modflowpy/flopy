@@ -1,4 +1,0 @@
-matplotlib<2.0
-netcdf4<1.2.8
-pyproj
-pyshp

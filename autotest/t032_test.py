@@ -1,16 +1,14 @@
 """
 Test shapefile stuff
 """
-import sys
 import os
 
-if sys.version_info[0] == 3:
-    if sys.version_info[1] < 4:
-        from imp import reload  # python < 3.4
-    else:
-        from importlib import reload
-# python2 (reload in default namespace)
-sys.path.insert(0, '..')
+# python < 3.4 (reload in default namespace)
+try:
+    from importlib import reload
+except:
+    from imp import reload
+
 import shutil
 import numpy as np
 import flopy

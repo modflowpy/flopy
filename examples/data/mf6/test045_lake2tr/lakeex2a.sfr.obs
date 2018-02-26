@@ -1,0 +1,23 @@
+begin options
+  digits 10
+  print_input
+end options
+
+begin Continuous FILEOUT lakeex2a.sfr.csv
+  L08STAGE  STAGE    8
+  L09STAGE  STAGE    9
+  L14STAGE  STAGE   14
+  L15STAGE  STAGE   15
+  FROM-MVR08 FROM-MVR  8
+  TO-MVR08   TO-MVR    8
+  OUTFLOW08  OUTFLOW   8
+  FROM-MVR09 FROM-MVR  9
+  TO-MVR09   TO-MVR    9
+  INFLOW09  INFLOW   9
+  FROM-MVR14 FROM-MVR 14
+  TO-MVR14   TO-MVR   14
+  OUTFLOW14  OUTFLOW  14
+  FROM-MVR15 FROM-MVR 15
+  TO-MVR15   TO-MVR   15
+  INFLOW15  INFLOW  15
+end Continuous

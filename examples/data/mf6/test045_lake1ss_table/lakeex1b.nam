@@ -1,0 +1,14 @@
+BEGIN Options
+END Options
+
+BEGIN PACKAGES
+  DIS6  lakeex1b.dis
+  IC6  lakeex1b.ic
+  NPF6  lakeex1b.npf
+  OC6  lakeex1b.oc
+  EVT6  lakeex1b.evt
+  RCH6  lakeex1b.rch
+  CHD6  lakeex1b.chd
+  LAK6  lakeex1b.lak
+END PACKAGES
+

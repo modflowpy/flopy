@@ -1,0 +1,13 @@
+begin options
+  digits 10
+  print_input
+end options
+
+#
+# Blocks defining continuous observations
+#
+
+begin continuous FILEOUT timeseries_well.csv
+  rate           WEL           well_1 
+end continuous
+

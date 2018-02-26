@@ -1,0 +1,12 @@
+begin options
+end options
+#
+BEGIN GRIDDATA
+  icelltype
+    constant 1
+  K
+    constant 10.
+  K33
+    constant 1.
+END GRIDDATA
+

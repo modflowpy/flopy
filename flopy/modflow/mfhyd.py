@@ -12,6 +12,7 @@ import sys
 import numpy as np
 
 from ..pakbase import Package
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowHyd(Package):
@@ -48,7 +49,7 @@ class ModflowHyd(Package):
             are to be accessed; The two options are 'I' for interpolated value or 'C'
             for cell value (intyp must be 'C' for STR and SFR Package hydrographs.
         klay : int
-            is the layer sequence number (one-based) of the array to be addressed by HYDMOD.
+            is the layer sequence number (zero-based) of the array to be addressed by HYDMOD.
         xl : float
             is the coordinate of the hydrograph point in model units of length measured
             parallel to model rows, with the origin at the lower left corner of the model grid.
@@ -226,7 +227,7 @@ class ModflowHyd(Package):
                 f.write('{} '.format(self.obsdata['pckg'][idx].decode()))
                 f.write('{} '.format(self.obsdata['arr'][idx].decode()))
                 f.write('{} '.format(self.obsdata['intyp'][idx].decode()))
-                f.write('{} '.format(self.obsdata['klay'][idx]+1))
+                f.write('{} '.format(self.obsdata['klay'][idx] + 1))
                 f.write('{} '.format(self.obsdata['xl'][idx]))
                 f.write('{} '.format(self.obsdata['yl'][idx]))
                 f.write('{} '.format(self.obsdata['hydlbl'][idx].decode()))
@@ -234,7 +235,7 @@ class ModflowHyd(Package):
                 f.write('{} '.format(self.obsdata['pckg'][idx]))
                 f.write('{} '.format(self.obsdata['arr'][idx]))
                 f.write('{} '.format(self.obsdata['intyp'][idx]))
-                f.write('{} '.format(self.obsdata['klay'][idx]+1))
+                f.write('{} '.format(self.obsdata['klay'][idx] + 1))
                 f.write('{} '.format(self.obsdata['xl'][idx]))
                 f.write('{} '.format(self.obsdata['yl'][idx]))
                 f.write('{} '.format(self.obsdata['hydlbl'][idx]))
@@ -247,8 +248,7 @@ class ModflowHyd(Package):
     def get_empty(ncells=0):
         # get an empty recaray that correponds to dtype
         dtype = ModflowHyd.get_default_dtype()
-        d = np.zeros(ncells, dtype=dtype)
-        return d.view(np.recarray)
+        return create_empty_recarray(ncells, dtype)
 
     @staticmethod
     def get_default_dtype():

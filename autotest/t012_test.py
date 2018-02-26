@@ -241,7 +241,7 @@ def test_mf2000_tob():
 
     namfile = 'p7mt.nam'
     mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True,
-                                   exe_name=mt3d_exe)
+                                   exe_name=mt3d_exe,forgive=True)
     mt.model_ws = cpth
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
@@ -320,7 +320,7 @@ def test_mfnwt_LKT():
     pth = os.path.join(pthNWT, 'lkt')
     namefile = 'lkt_mf.nam'
     mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
-                                    version='mfnwt', verbose=True,
+                                    version='mfnwt', verbose=True, forgive=False,
                                     exe_name=mfnwt_exe)
 
     assert not mf.load_fail, 'MODFLOW model did not load'
@@ -395,7 +395,7 @@ if __name__ == '__main__':
     #test_mf2000_MultiDiffusion()
     #test_mf2000_reinject()
     #test_mf2000_SState()
-    #test_mf2000_tob()
+    test_mf2000_tob()
     #test_mf2000_zeroth()
     #test_mfnwt_CrnkNic()
     test_mfnwt_LKT()

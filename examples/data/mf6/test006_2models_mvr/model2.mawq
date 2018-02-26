@@ -1,0 +1,26 @@
+#option block.  Note -- no comments allowed on auxiliary line
+begin options
+  PRINT_INPUT (echo input to listing file)
+  PRINT_FLOWS  (print the flows to the listing file)
+  BOUNDNAMES
+  #OBS6 FILEIN        flow15.maw_2.obs
+  MOVER
+end options
+
+begin dimensions
+  NMAWWELLS 1
+end dimensions
+
+BEGIN PACKAGEDATA
+# no radius bottom strt     condeqn ngwnodes name          
+   1   0.15 -10.0  10.0    SPECIFIED        1 'well 1'
+END PACKAGEDATA
+
+begin CONNECTIONDATA
+#   conn l  r  c  stop   sbot      K  rskin
+  1    1 1  5  5   10.   -10.     1.      0
+end CONNECTIONDATA
+
+begin period 1 steady-state
+  1 rate -10.
+end period

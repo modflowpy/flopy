@@ -1,0 +1,21 @@
+# Unstructured discretization file for MODFLOW-USG
+begin options
+  LENGTH_UNITS meters
+end options
+
+begin dimensions
+  nlay 1
+  nrow 9
+  ncol 9
+end dimensions
+
+BEGIN GRIDDATA
+  delr
+    constant 33.33
+  delc
+    constant 33.33
+  top
+    constant    0.
+  botm
+    constant -100.
+END GRIDDATA

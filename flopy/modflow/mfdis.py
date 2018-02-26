@@ -149,6 +149,11 @@ class ModflowDis(Package):
         self.nlay = nlay
         self.nper = nper
 
+        # initialize botm to an appropriate sized
+        if nlay > 1:
+            if isinstance(botm, float) or isinstance(botm, int):
+                botm = np.linspace(top, botm, nlay)
+
         # Set values of all parameters
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \

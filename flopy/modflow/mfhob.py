@@ -2,7 +2,7 @@ import sys
 import collections
 import numpy as np
 from ..pakbase import Package
-
+from ..utils.recarray_utils import create_empty_recarray
 
 # Create HeadObservation instance from a time series array
 
@@ -134,7 +134,7 @@ class HeadObservation(object):
         #find indices of time series data that are valid
         tmax = model.dis.get_final_totim()
         keep_idx = time_series_data[:,0] < tmax
-        times_series_data = time_series_data[keep_idx,:]
+        time_series_data = time_series_data[keep_idx,:]
 
         # set the number of observations in this time series
         shape = time_series_data.shape
@@ -183,10 +183,9 @@ class HeadObservation(object):
     def get_empty(ncells=0):
         # get an empty recaray that correponds to dtype
         dtype = HeadObservation.get_default_dtype()
-        d = np.zeros((ncells, len(dtype)), dtype=dtype)
-        d[:, :] = -1.0E+10
-        d[:]['obsname'] = ''
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
+        d['obsname'] = ''
+        return d
 
     @staticmethod
     def get_default_dtype():

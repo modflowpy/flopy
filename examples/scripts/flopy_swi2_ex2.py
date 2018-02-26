@@ -22,7 +22,7 @@ updates = {'font.family': ['Univers 57 Condensed', 'Arial'],
 plt.rcParams.update(updates)
 
 
-def run_swi():
+def run():
     workspace = 'swiex2'
     if not os.path.isdir(workspace):
         os.mkdir(workspace)
@@ -122,7 +122,7 @@ def run_swi():
                                     zeta=z, ssz=ssz, isource=isource,
                                     nsolver=1)
     oc = flopy.modflow.ModflowOc(ml,
-                                 stress_period_data={(0, 999):['save head']})
+                                 stress_period_data={(0, 999): ['save head']})
     pcg = flopy.modflow.ModflowPcg(ml)
     ml.write_input()
     # run stratified model
@@ -366,6 +366,8 @@ def run_swi():
     xsf.savefig(outfig, dpi=300)
     print('created...', outfig)
 
+    return 0
+
 
 if __name__ == '__main__':
-    run_swi()
+    success = run()

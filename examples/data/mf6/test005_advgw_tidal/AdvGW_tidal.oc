@@ -1,0 +1,14 @@
+BEGIN OPTIONS
+  BUDGET  FILEOUT  advgw_tidal.cbc
+  HEAD  FILEOUT  advgw_tidal.hds
+  HEAD  PRINT_FORMAT  COLUMNS  10  WIDTH  15  DIGITS  6  general
+END OPTIONS
+
+BEGIN PERIOD  1
+  SAVE  head  all
+  SAVE  budget  all
+  PRINT  head  first
+  PRINT  head  last
+  PRINT  budget  last
+END PERIOD  1
+

@@ -1,0 +1,71 @@
+# --------------------- sim tdis options ---------------------
+
+block options
+name time_units
+type string
+reader urword
+optional true
+longname time unit
+description is the time units of the simulation.  This is a text string that is used as a label within model output files.  Values for time\_units may be ``unknown'',  ``seconds'', ``minutes'', ``hours'', ``days'', or ``years''.  The default time unit is ``unknown''.
+
+block options
+name start_date_time
+type string
+reader urword
+optional true
+longname starting date and time
+description is the starting date and time of the simulation.  This is a text string that is used as a label within the simulation list file.  The value has no affect on the simulation.  The recommended format for the starting date and time is described at https://www.w3.org/TR/NOTE-datetime.
+
+
+# --------------------- sim tdis dimensions ---------------------
+
+block dimensions
+name nper
+type integer
+reader urword
+optional false
+longname number of stress periods
+description is the number of stress periods for the simulation.
+default_value 1
+
+# --------------------- sim tdis perioddata ---------------------
+
+block perioddata
+name perioddata
+type recarray perlen nstp tsmult
+reader urword
+optional false
+longname stress period time information
+description
+default_value ((1.0, 1, 1.0),)
+
+block perioddata
+name perlen
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname length of stress period
+description is the length of a stress period.
+
+block perioddata
+name nstp
+type integer
+in_record true
+tagged false
+reader urword
+optional false
+longname number of time steps
+description is the number of time steps in a stress period.
+
+block perioddata
+name tsmult
+type double precision
+in_record true
+tagged false
+reader urword
+optional false
+longname number of time steps
+description is the multiplier for the length of successive time steps. The length of a time step is calculated by multiplying the length of the previous time step by TSMULT. The length of the first time step, $\Delta t_1$, is related to PERLEN, NSTP, and TSMULT by the relation $\Delta t_1= perlen \frac{tsmult - 1}{tsmult^{nstp}-1}$.
+

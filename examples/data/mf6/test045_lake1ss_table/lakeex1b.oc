@@ -1,0 +1,11 @@
+BEGIN Options
+  HEAD  FILEOUT  lakeex1b.hds
+  HEAD  PRINT_FORMAT  COLUMNS  10  WIDTH  6  DIGITS  1  fixed
+END Options
+
+BEGIN PERIOD  1
+  SAVE  head  all
+  PRINT  budget  all
+  PRINT  head  all
+END PERIOD  1
+

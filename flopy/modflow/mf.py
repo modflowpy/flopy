@@ -337,6 +337,62 @@ class Modflow(BaseModel):
         f_nam.close()
         return
 
+    def set_model_units(self, iunit0=None):
+        """
+        Write the model name file.
+
+        """
+        if iunit0 is None:
+            iunit0 = 1001
+
+        # initialize starting unit number
+        self.next_unit(iunit0)
+
+        if self.version == 'mf2k':
+            # update global file unit number
+            if self.glo.unit_number[0] > 0:
+                self.glo.unit_number[0] = self.next_unit()
+
+        # update lst file unit number
+        self.lst.unit_number[0] = self.next_unit()
+
+        # update package unit numbers
+        for p in self.packagelist:
+            p.unit_number[0] = self.next_unit()
+
+        # update external unit numbers
+        for i, iu in enumerate(self.external_units):
+            if iu == 0:
+                continue
+            self.external_units[i] = self.next_unit()
+
+        # update output files unit numbers
+        oc = self.get_package('OC')
+        output_units0 = list(self.output_units)
+        for i, iu in enumerate(self.output_units):
+            if iu == 0:
+                continue
+            iu1 = self.next_unit()
+            self.output_units[i] = iu1
+            # update oc files
+            if oc is not None:
+                if oc.iuhead == iu:
+                    oc.iuhead = iu1
+                elif oc.iuddn == iu:
+                    oc.iuddn = iu1
+
+         # replace value in ipakcb
+        for p in self.packagelist:
+            try:
+                iu0 = p.ipakcb
+                if iu0 in output_units0:
+                    j = output_units0.index(iu0)
+                    p.ipakcb = self.output_units[j]
+            except:
+                pass
+
+        return
+
     def load_results(self, **kwargs):
 
         # remove model if passed as a kwarg

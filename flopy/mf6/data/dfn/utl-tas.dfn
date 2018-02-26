@@ -1,0 +1,116 @@
+# --------------------- gwf ts attributes ---------------------
+
+block attributes
+name time_series_namerecord
+type record name time_series_name
+shape
+reader urword
+tagged false
+optional false
+longname
+description xxx
+
+block attributes
+name name
+type keyword
+shape
+reader urword
+optional false
+longname
+description xxx
+
+block attributes
+name time_series_name
+type string
+shape any1d
+tagged false
+reader urword
+optional false
+longname
+description Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package.
+
+block attributes
+name interpolation_methodrecord
+type record method interpolation_method
+shape
+reader urword
+tagged false
+optional true
+longname
+description xxx
+
+block attributes
+name method
+type keyword
+shape
+reader urword
+optional false
+longname
+description  xxx
+
+block attributes
+name interpolation_method
+type string
+valid stepwise linear linearend
+shape
+tagged false
+reader urword
+optional false
+longname
+description Interpolation method, which is either STEPWISE or LINEAR.
+
+block attributes
+name sfacrecord
+type record sfac sfacval
+shape
+reader urword
+tagged true
+optional true
+longname
+description xxx
+
+block attributes
+name sfac
+type keyword
+shape
+reader urword
+optional false
+longname
+description  xxx
+
+block attributes
+name sfacval
+type double precision
+shape time_series_name
+tagged false
+reader urword
+optional false
+longname
+description Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.
+
+# --------------------- gwf ts time ---------------------
+
+block time
+name time_from_model_start
+type double precision
+block_variable True
+in_record true
+shape
+tagged false
+valid
+reader urword
+optional false
+longname
+description A numeric time relative to the start of the simulation, in the time unit used in the simulation. Times must be strictly increasing.
+
+block time
+name tas_array
+type double precision
+tagged false
+just_data true
+shape (unknown)
+reader readarray
+optional false
+repeating true
+longname
+description An array of numeric, floating-point values, or a constant value, readable by the U2DREL array-reading utility.

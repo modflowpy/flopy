@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import sys
 import copy
 import numpy as np
 from .binaryfile import CellBudgetFile
@@ -32,7 +31,8 @@ class ZoneBudget(object):
         the zone(s) passed may either be all strings (aliases), all
         integers, or mixed.
 
-    Example usage:
+    Examples
+    --------
 
     >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
     >>> zon = read_zbarray('zone_input_file')
@@ -214,7 +214,8 @@ class ZoneBudget(object):
         out : list of strings
             List of unique text names in the binary file.
 
-        Example usage:
+        Examples
+        --------
 
         >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
         >>> recnames = zb.get_record_names()
@@ -255,12 +256,14 @@ class ZoneBudget(object):
         budget_list : list of reecord arrays
             A list of the zonebudget record arrays.
 
-        Example usage:
+        Examples
+        --------
 
         >>> names = ['CONSTANT_HEAD_IN', 'RIVER_LEAKAGE_OUT']
         >>> zones = ['ZONE_1', 'ZONE_2']
         >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
         >>> bud = zb.get_budget(names=names, zones=zones)
+
         """
         if isinstance(names, str):
             names = [names]
@@ -350,12 +353,14 @@ class ZoneBudget(object):
         -------
         df : Pandas DataFrame
             Pandas DataFrame with the budget information.
+
         Examples
         --------
         >>> from flopy.utils.zonbud import ZoneBudget, read_zbarray
         >>> zon = read_zbarray('zone_input_file')
         >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
         >>> df = zb.get_dataframes()
+
         """
         try:
             import pandas as pd

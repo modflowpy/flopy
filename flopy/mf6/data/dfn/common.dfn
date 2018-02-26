@@ -1,0 +1,55 @@
+# constants from bcoptions.tex that are used to construct mf6 input variable descriptions
+
+name auxnames
+description defines an array of one or more auxiliary variable names.  There is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   The number of auxiliary variables detected on this line determines the value for naux.  Comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  Auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  The program will terminate with an error if auxiliary variables are specified on more than one line in the options block.
+
+name auxmultname
+description name of auxiliary variable to be used as multiplier of {#1}.
+
+name boundname
+description name of the {#1} cell.  BOUNDNAME is an ASCII character variable that can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the entire name must be enclosed within single quotes.
+
+name boundnames
+description keyword to indicate that boundary names may be provided with the list of {#1} cells.
+
+name print_input
+description keyword to indicate that the list of {#1} information will be written to the listing file immediately after it is read.
+
+name print_head
+description keyword to indicate that the list of {#1} {#2} will be printed to the listing file for every stress period in which ``HEAD PRINT'' is specified in Output Control.  If there is no Output Control option and PRINT\_{#3} is specified, then {#2} are printed for the last time step of each stress period.
+
+name print_flows
+description keyword to indicate that the list of {#1} flow rates will be printed to the listing file for every stress period time step in which ``BUDGET PRINT'' is specified in Output Control.  If there is no Output Control option and ``PRINT\_FLOWS'' is specified, then flow rates are printed for the last time step of each stress period.
+
+name save_flows
+description keyword to indicate that {#1} flow terms will be written to the file specified with ``BUDGET FILEOUT'' in Output Control.
+
+name timeseriesfile
+description defines a time-series file defining time series that can be used to assign time-varying values. See the ``Time-Variable Input'' section for instructions on using the time-series capability.
+
+name timearrayseriesfile
+description defines a time-array-series file defining a time-array series that can be used to assign time-varying values. See the Time-Variable Input section for instructions on using the time-array series capability.
+
+name timearrayserieslayered
+description name of a time-array-series file defining a time-array series that can be used to assign time-varying values when input is read in array form. See the Time-Variable Input section for instructions on using the time-array series capability. Valid only when the READASARRAYS option is used.
+
+name maxbound
+description integer value specifying the maximum number of {#1} cells that will be specified for use during any stress period.
+
+name obs6_filename
+description name of input file to define observations for the {#1} package. See the ``Observation utility'' section for instructions for preparing observation input files. Table \ref{table:obstype} lists observation type(s) supported by the {#1} package.
+
+name no_newton
+description keyword that deactivates the Newton-Raphson formulation for the {#1} Package.
+
+name cellid
+description is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell.
+
+name aux
+description represents the values of the auxiliary variables for each {#1}. The values of auxiliary variables must be present for each {#1}. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.  If the package supports time series and the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+name mover
+description keyword to indicate that this instance of the {#1} Package can be used with the Water Mover (MVR) Package.  When the MOVER option is specified, additional memory is allocated within the package to store the available, provided, and received water.
+
+name iper
+description integer value specifying the starting stress period number for which the data specified in the PERIOD block apply.  IPER must be less than or equal to NPER in the TDIS Package and greater than zero.  The IPER value assigned to a stress period block must be greater than the IPER value assigned for the previous PERIOD block.  The information specified in the PERIOD block will continue to apply for all subsequent stress periods, unless the program encounters another PERIOD block.

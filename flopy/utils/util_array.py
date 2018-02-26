@@ -715,7 +715,8 @@ class Util3d(object):
                                      mflay=mflay, fignum=fignum, **kwargs)
 
     def __getitem__(self, k):
-        if isinstance(k, int) or isinstance(k,np.int64):
+        if (isinstance(k, int) or
+                np.issubdtype(getattr(k, 'dtype', None), np.integer)):
             return self.util_2ds[k]
         elif len(k) == 3:
             return self.array[k[0], k[1], k[2]]
@@ -2429,9 +2430,8 @@ class Util2d(object):
     def load_bin(shape, file_in, dtype, bintype=None):
         import flopy.utils.binaryfile as bf
         nrow, ncol = shape
-        if bintype is not None:
-            if dtype not in [np.int]:
-                header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
+        if bintype is not None and not np.issubdtype(dtype, np.int):
+            header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
         else:
             header_data = None

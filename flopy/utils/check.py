@@ -206,8 +206,11 @@ class check:
                               ('desc', np.object)
                               ])
         if array is None:
-            array = np.empty((0, len(dtype)), dtype=dtype)
-        return np.core.records.fromarrays(array.transpose(), dtype=dtype)
+            return np.recarray((0), dtype=dtype)
+
+        at = array.transpose()
+        a = np.core.records.fromarrays(at, dtype=dtype)
+        return a
 
     def _txt_footer(self, headertxt, txt, testname, passed=False, warning=True):
         '''
@@ -226,12 +229,12 @@ class check:
     def _stress_period_data_valid_indices(self, stress_period_data):
         """Check that stress period data inds are valid for model grid."""
         spd_inds_valid = True
-        if 'DIS' in self.model.get_package_list() and\
+        if self.model.has_package('DIS') and \
                 {'k', 'i', 'j'}.intersection(set(stress_period_data.dtype.names)) != {'k', 'i', 'j'}:
             self._add_to_summary(type='Error',
                                 desc='\r    Stress period data missing k, i, j for structured grid.')
             spd_inds_valid = False
-        elif 'DISU' in self.model.get_package_list() and \
+        elif self.model.has_package('DISU') and \
                         'node' not in stress_period_data.dtype.names:
             self._add_to_summary(type='Error',
                                 desc='\r    Stress period data missing node number for unstructured grid.')
@@ -293,8 +296,17 @@ class check:
         values, and description of error for each row in stress_period_data where criteria=True.
         """
         inds_col = ['k', 'i', 'j'] if self.structured else ['node']
-        inds = stress_period_data[criteria][inds_col].view(int)\
-            .reshape(stress_period_data[criteria].shape + (-1,))
+        #inds = stress_period_data[criteria][inds_col]\
+        #    .reshape(stress_period_data[criteria].shape + (-1,))
+        #inds = np.atleast_2d(np.squeeze(inds.tolist()))
+        inds = stress_period_data[criteria]
+        a = inds[inds_col[0]]
+        if len(inds_col) > 1:
+            for n in inds_col[1:]:
+                a = np.concatenate((a, inds[n]))
+        inds = a.view(int)
+        inds = inds.reshape(stress_period_data[criteria].shape + (-1,))
+
         if col is not None:
             v = stress_period_data[criteria][col]
         else:
@@ -426,7 +438,8 @@ class check:
             # pad indsT with a column of zeros for k
             if indsT.shape[1] == 2:
                 indsT = np.column_stack([np.zeros(indsT.shape[0], dtype=int), indsT])
-            sa = self._get_summary_array(np.column_stack([tp, pn, indsT, v, en]))
+            sa = np.column_stack([tp, pn, indsT, v, en])
+            sa = self._get_summary_array(sa)
             self.summary_array = np.append(self.summary_array, sa).view(np.recarray)
             self.remove_passed(error_name)
         else:

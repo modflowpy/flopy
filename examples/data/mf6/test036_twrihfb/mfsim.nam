@@ -1,0 +1,20 @@
+# Simulation name file for MODFLOW-2015 prepared by Mf5to15
+
+BEGIN Options
+END Options
+
+BEGIN Timing
+  TDIS6  twrihfb2015.tdis
+END Timing
+
+BEGIN Models
+  GWF6  twrihfb2015.nam  twrihfb2015
+END Models
+
+BEGIN Exchanges
+END Exchanges
+
+BEGIN SOLUTIONGROUP 1
+  MXITER  1
+  IMS6  twrihfb2015.ims  twrihfb2015
+END SOLUTIONGROUP

@@ -1,0 +1,9 @@
+BEGIN OPTIONS
+  DIGITS  10
+  PRINT_INPUT
+END OPTIONS
+
+BEGIN CONTINUOUS  FILEOUT  head_hydrographs.csv
+  open/close AdvGW_tidal.head.cont.opncls
+END CONTINUOUS  FILEOUT  head_hydrographs.csv
+
