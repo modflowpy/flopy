@@ -1,10 +1,13 @@
 import os
-import flopy
 import platform
-from flopy.mf6.mfsimulation import MFSimulation
-from flopy.mf6.data.mfdatautil import ArrayUtil
-import flopy.utils.binaryfile as bf
+
 import numpy as np
+
+import flopy
+import flopy.utils.binaryfile as bf
+from flopy.mf6.data.mfdatautil import ArrayUtil
+from flopy.mf6.modflow.mfsimulation import MFSimulation
+
 try:
     import pymake
 except:
@@ -271,8 +274,6 @@ def test005_advgw_tidal():
     """
 
 def test006_gwf3():
-    from flopy.mf6.utils.binaryfile_utils import _reshape_binary_data
-
     # init paths
     test_ex_name = 'test006_gwf3'
     model_name = 'gwf_1'

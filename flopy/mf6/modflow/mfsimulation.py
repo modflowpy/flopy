@@ -6,16 +6,16 @@ mfsimulation module.  contains the MFSimulation class
 import errno
 import collections
 import os.path
-from ..mbase import run_model
-from .mfbase import PackageContainer, MFFileMgmt, ExtFileAction
-from .mfbase import PackageContainerType
-from .mfmodel import MFModel
-from .mfpackage import MFPackage
-from .data.mfstructure import DatumType
-from .data import mfstructure, mfdata
-from .utils import binaryfile_utils
-from .utils import mfobservation
-from .modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
+from flopy.mbase import run_model
+from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction
+from flopy.mf6.mfbase import PackageContainerType
+from flopy.mf6.mfmodel import MFModel
+from flopy.mf6.mfpackage import MFPackage
+from flopy.mf6.data.mfstructure import DatumType
+from flopy.mf6.data import mfstructure, mfdata
+from flopy.mf6.utils import binaryfile_utils
+from flopy.mf6.utils import mfobservation
+from flopy.mf6.modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
 
 
 class SimulationDict(collections.OrderedDict):
@@ -285,7 +285,7 @@ class MFSimulation(PackageContainer):
     >>> s = flopy6.mfsimulation.load('my simulation', 'simulation.nam')
 
     """
-    def __init__(self, sim_name='modflowtest', version='mf6',
+    def __init__(self, sim_name='sim', version='mf6',
                  exe_name='mf6.exe', sim_ws='.',
                  sim_tdis_file='modflow6.tdis'):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
@@ -387,14 +387,12 @@ class MFSimulation(PackageContainer):
         for item in model_recarray.get_data():
             # resolve model working folder and name file
             path, name_file = os.path.split(item[1])
-
+            model_obj = PackageContainer.model_factory(item[0][:-1].lower())
             # load model
-            instance._models[item[2]] = MFModel.load(
-                instance, instance.simulation_data,
-                instance.structure.model_struct_objs[item[0].lower()],
-                                                     item[2], name_file,
-                                                     item[0], version,
-                                                     exe_name, strict, path)
+            instance._models[item[2]] = model_obj.load(
+                instance,
+                instance.structure.model_struct_objs[item[0].lower()], item[2],
+                name_file, version, exe_name, strict, path)
 
         # load exchange packages and dependent packages
         exchange_recarray = instance.name_file.exchanges
