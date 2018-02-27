@@ -649,12 +649,16 @@ class MFSimulation(PackageContainer):
     def set_sim_path(self, path):
         self.simulation_data.mfpath.set_sim_path(path)
 
-    def run_simulation(self):
+    def run_simulation(self, silent=False, pause=False, report=False,
+                       normal_msg='normal termination',
+                       async=False, cargs=None):
         """
         Run the simulation.
         """
         return run_model(self._exe_name, self.name_file.filename,
-                         self.simulation_data.mfpath.get_sim_path())
+                         self.simulation_data.mfpath.get_sim_path(),
+                         silent=silent, pause=pause, report=report,
+                         normal_msg=normal_msg, async=async, cargs=cargs)
 
     def delete_output_files(self):
         """
