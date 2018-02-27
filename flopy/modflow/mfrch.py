@@ -187,26 +187,28 @@ class ModflowRch(Package):
         hk_package = {'UPW', 'LPF'}.intersection(set(self.parent.get_package_list()))
         if len(hk_package) > 0:
             pkg = list(hk_package)[0]
+
+            # handle quasi-3D layers
+            # (ugly, would be nice to put this else where in a general function)
+            if self.parent.dis.laycbd.sum() != 0:
+                thickness = np.empty((self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
+                                     dtype=float)
+                l = 0
+                for i, cbd in enumerate(self.parent.dis.laycbd):
+                    thickness[i, :, :] = self.parent.dis.thickness.array[l, :, :]
+                    if cbd > 0:
+                        l += 1
+                    l += 1
+                assert l == self.parent.dis.thickness.shape[0]
+            else:
+                thickness = self.parent.dis.thickness.array
+            assert thickness.shape == self.parent.get_package(pkg).hk.shape
+            Tmean = (self.parent.get_package(pkg).hk.array *
+                     thickness)[:, active].sum(axis=0).mean()
+
             for per in range(self.parent.nper):
                 Rmean = self.rech.array[per].sum(axis=0)[active].mean()
 
-                # handle quasi-3D layers
-                # (ugly, would be nice to put this else where in a general function)
-                if self.parent.dis.laycbd.sum() != 0:
-                    thickness = np.empty((self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
-                                          dtype=float)
-                    l = 0
-                    for i, cbd in enumerate(self.parent.dis.laycbd):
-                        thickness[i, :, :] = self.parent.dis.thickness.array[l, :, :]
-                        if cbd > 0:
-                            l += 1
-                        l += 1
-                    assert l == self.parent.dis.thickness.shape[0]
-                else:
-                    thickness = self.parent.dis.thickness.array
-                assert thickness.shape == self.parent.get_package(pkg).hk.shape
-                Tmean = (self.parent.get_package(pkg).hk.array *
-                         thickness)[:, active].sum(axis=0).mean()
                 if Tmean != 0.:
                     if Rmean/Tmean < RTmin:
                         chk._add_to_summary(type='Warning', value=Rmean/Tmean,

@@ -999,10 +999,15 @@ class ModflowSfr2(Package):
         self.reach_data.sort(order=['iseg', 'ireach'])
         reach_data = self.reach_data
         segment_data = self.segment_data[0]
-        ireach = []
-        for iseg in segment_data.nseg:
-            nreaches = np.sum(reach_data.iseg == iseg)
-            ireach += list(range(1, nreaches + 1))
+        #ireach = []
+        #for iseg in segment_data.nseg:
+        #    nreaches = np.sum(reach_data.iseg == iseg)
+        #    ireach += list(range(1, nreaches + 1))
+        reach_counts = dict(zip(range(len(reach_data)),
+                                np.bincount(reach_data.iseg)))
+        ireach = [list(range(1, reach_counts[s] + 1))
+                  for s in segment_data.nseg]
+        ireach = np.concatenate(ireach)
         self.reach_data['ireach'] = ireach
 
     def set_outreaches(self):

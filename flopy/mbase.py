@@ -1109,13 +1109,14 @@ class BaseModel(object):
         >>> m.check()
         """
 
-        results = {}
-        for p in self.packagelist:
-            results[p.name[0]] = p.check(f=None, verbose=False,
-                                         level=level - 1)
-
         # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)
+        results = {}
+
+        for p in self.packagelist:
+            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
+                results[p.name[0]] = p.check(f=None, verbose=False,
+                                             level=level - 1)
 
         # model level checks
         # solver check

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from numpy.lib import recfunctions
+from ..utils.recarray_utils import recarray
 
 class check:
     """
@@ -49,6 +50,10 @@ class check:
 
     bc_stage_names = {'GHB': 'bhead', # all names in lower case
                       'DRN': 'elev'}
+
+    # only check packages when level is >= to these values
+    # default is 0 (always check package)
+    package_check_levels = {'sfr': 1}
 
     property_threshold_values = {'hk': (1e-11, 1e5), # after Schwartz and Zhang, table 4.4
                                  'hani': None,
@@ -207,10 +212,10 @@ class check:
                               ])
         if array is None:
             return np.recarray((0), dtype=dtype)
-
-        at = array.transpose()
-        a = np.core.records.fromarrays(at, dtype=dtype)
-        return a
+        ra = recarray(array, dtype)
+        #at = array.transpose()
+        #a = np.core.records.fromarrays(at, dtype=dtype)
+        return ra
 
     def _txt_footer(self, headertxt, txt, testname, passed=False, warning=True):
         '''
@@ -396,7 +401,8 @@ class check:
     def print_summary(self, cols=None, delimiter=',', float_format='{:.6f}'):
         # strip description column
         sa = self.summary_array.copy()
-        sa['desc'] = [s.strip() for s in self.summary_array.desc]
+        desc = self.summary_array.desc
+        sa['desc'] = [s.strip() for s in desc]
         return _print_rec_array(sa, cols=cols, delimiter=delimiter,
                                 float_format=float_format)
 
@@ -461,20 +467,23 @@ class check:
         txt = ''
         # tweak screen output for model-level to report package for each error
         if 'MODEL' in self.prefix: # add package name for model summary output
+            packages = self.summary_array.package
+            desc = self.summary_array.desc
             self.summary_array['desc'] = \
-                ['\r    {} package: {}'.format(self.summary_array.package[i], d.strip())
-                 if self.summary_array.package[i] != 'model' else d
-                 for i, d in enumerate(self.summary_array.desc)]
+                ['\r    {} package: {}'.format(packages[i], d.strip())
+                 if packages[i] != 'model' else d
+                 for i, d in enumerate(desc)]
 
         for etype in ['Error', 'Warning']:
             a = self.summary_array[self.summary_array.type == etype]
+            desc = a.desc
             t = ''
             if len(a) > 0:
                 t += '  {} {}s:\n'.format(len(a), etype)
                 if len(a) == 1:
                     t = t.replace('s', '') #grammer
-                for e in np.unique(a.desc):
-                    n = len(a[a.desc == e])
+                for e in np.unique(desc):
+                    n = np.sum(desc == e)
                     if n > 1:
                         t += '    {} instances of {}\n'.format(n, e)
                     else:
@@ -541,10 +550,11 @@ def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
         Text string of array.
     """
     txt = ''
+    dtypes = list(array.dtype.names)
     if cols is not None:
-        cols = [c for c in array.dtype.names if c in cols]
+        cols = [c for c in dtypes if c in cols]
     else:
-        cols = list(array.dtype.names)
+        cols = dtypes
     # drop columns with no data
     if np.shape(array)[0] > 1:
         cols = [c for c in cols if array['type'].dtype.kind == 'O' or array[c].min() > -999999]
@@ -552,7 +562,8 @@ def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
     array_cols = fields_view(array, cols)
     fmts = _fmt_string_list(array_cols, float_format=float_format)
     txt += delimiter.join(cols) + '\n'
-    txt += '\n'.join([delimiter.join(fmts).format(*r) for r in array_cols.copy().tolist()])
+    array_cols = array_cols.copy().tolist()
+    txt += '\n'.join([delimiter.join(fmts).format(*r) for r in array_cols])
     return txt
 
 def fields_view(arr, fields):
