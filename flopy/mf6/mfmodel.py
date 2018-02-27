@@ -73,7 +73,7 @@ class MFModel(PackageContainer):
     --------
 
     """
-    def __init__(self, simulation, model_type='gwf6', modelname='modflowtest',
+    def __init__(self, simulation, model_type='gwf6', modelname='model',
                  model_nam_file=None, version='mf6',
                  exe_name='mf6.exe', add_to_simulation=True,
                  structure=None, model_rel_path='.', **kwargs):
@@ -161,10 +161,9 @@ class MFModel(PackageContainer):
         super(MFModel, self).__setattr__(key, value)
 
     @classmethod
-    def load(cls, simulation, simulation_data, structure,
-             modelname='NewModel', model_nam_file='modflowtest.nam',
-             type='gwf', version='mf6', exe_name='mf6.exe', strict=True,
-             model_rel_path='.'):
+    def load_base(cls, simulation, structure, modelname='NewModel',
+                  model_nam_file='modflowtest.nam', type='gwf', version='mf6',
+                  exe_name='mf6.exe', strict=True, model_rel_path='.'):
         """
         Load an existing model.
 
