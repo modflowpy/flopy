@@ -201,10 +201,15 @@ def test_zonbud_readwrite_zbarray():
 
 
 def test_dataframes():
-    zon = read_zbarray(zon_f)
-    cmd = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
-    df = cmd.get_dataframes()
-    assert len(df) > 0, 'Output DataFrames empty.'
+    try:
+        import pandas
+        zon = read_zbarray(zon_f)
+        cmd = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
+        df = cmd.get_dataframes()
+        assert len(df) > 0, 'Output DataFrames empty.'
+    except ImportError as e:
+        print('Skipping DataFrames test, pandas not installed.')
+        print(e)
     return
 
 
