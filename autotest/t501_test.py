@@ -23,8 +23,8 @@ def test_mf6():
                                                       exgmnameb='gwf2')
     assert isinstance(gwfgwf, flopy.mf6.modflow.mfgwfgwf.ModflowGwfgwf)
 
-    gwf = flopy.mf6.MFModel(sim, model_type='gwf6')
-    assert isinstance(gwf, flopy.mf6.MFModel)
+    gwf = flopy.mf6.ModflowGwf(sim)
+    assert isinstance(gwf, flopy.mf6.ModflowGwf)
 
     ims = flopy.mf6.modflow.mfims.ModflowIms(sim)
     assert isinstance(ims, flopy.mf6.modflow.mfims.ModflowIms)
@@ -101,12 +101,17 @@ def test_mf6():
 
     # Verify files were written
     assert os.path.isfile(os.path.join(out_dir, 'mfsim.nam'))
-    exts = ['gwfgwf', 'ims', 'nam', 'dis', 'disu', 'disv', 'npf', 'ic',
+    exts_model = ['nam', 'dis', 'disu', 'disv', 'npf', 'ic',
             'sto', 'hfb', 'gnc', 'chd', 'wel', 'drn', 'riv', 'ghb', 'rch',
             'rcha', 'evt', 'evta', 'maw', 'sfr', 'lak', 'mvr']
-    for ext in exts:
-        fname = os.path.join(out_dir, 'modflowtest.{}'.format(ext))
+    exts_sim = ['gwfgwf', 'ims', 'tdis']
+    for ext in exts_model:
+        fname = os.path.join(out_dir, 'model.{}'.format(ext))
         assert os.path.isfile(fname), fname + ' not found'
+    for ext in exts_sim:
+        fname = os.path.join(out_dir, 'sim.{}'.format(ext))
+        assert os.path.isfile(fname), fname + ' not found'
+
 
     return
 
