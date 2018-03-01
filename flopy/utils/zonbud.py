@@ -1371,8 +1371,12 @@ class ZoneBudget(object):
 
     def _clean_budget_names(self, names):
         newnames = []
+        mbnames = ['TOTAL_IN', 'TOTAL_OUT',
+                   'IN-OUT', 'PERCENT_DISCREPANCY']
         for name in names:
-            if not name.startswith('FROM_') and not name.startswith('TO_'):
+            if name in mbnames:
+                newnames.append(name)
+            elif not name.startswith('FROM_') and not name.startswith('TO_'):
                 newname_in = 'FROM_' + name.upper()
                 newname_out = 'TO_' + name.upper()
                 if newname_in in self._budget['name']:
