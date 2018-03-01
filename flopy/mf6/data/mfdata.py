@@ -837,7 +837,7 @@ class DataStorage(object):
             else:
                 self.layer_storage[0].data_storage_type = \
                         DataStorageType.internal_array
-                if isinstance(data, np.recarray):
+                if data is None or isinstance(data, np.recarray):
                     self.layer_storage[0]._internal_data = data
                 else:
                     if autofill and data is not None:
@@ -862,19 +862,23 @@ class DataStorage(object):
                                 data[data_index] = \
                                         (data_item_structs[0].name.lower(),) \
                                         + data[data_index]
-                    self.build_type_list(data=data, key=key)
-                    if autofill and data is not None:
-                        # resolve any fields with data types that do not agree
-                        # with the expected type list
-                        self._resolve_multitype_fields(data)
-                    if isinstance(data, list):
-                        # data needs to be stored as tuples within a list.
-                        # if this is not the case try to fix it
-                        self._tupleize_data(data)
-                        # add placeholders to data so it agrees with expected
-                        # dimensions of recarray
-                        self._add_placeholders(data)
-                    self.set_data(np.rec.array(data, self._recarray_type_list))
+                    if data is None:
+                        self.set_data(None)
+                    else:
+                        self.build_type_list(data=data, key=key)
+                        if autofill and data is not None:
+                            # resolve any fields with data types that do not
+                            # agree with the expected type list
+                            self._resolve_multitype_fields(data)
+                        if isinstance(data, list):
+                            # data needs to be stored as tuples within a list.
+                            # if this is not the case try to fix it
+                            self._tupleize_data(data)
+                            # add placeholders to data so it agrees with
+                            # expected dimensions of recarray
+                            self._add_placeholders(data)
+                        self.set_data(np.rec.array(data,
+                                                   self._recarray_type_list))
         elif self.data_structure_type == DataStructureType.scalar:
             self.layer_storage[0]._internal_data = data
         else:

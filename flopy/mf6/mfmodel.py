@@ -445,6 +445,14 @@ class MFModel(PackageContainer):
         else:
             path = (self.name, package.package_type)
 
+        if add_to_package_list and path in self._package_paths and not \
+                set_package_name and package.package_name in \
+                self.package_name_dict:
+            # package of this type with this name already exists, replace it
+            print('WARNING: Package with name {} already exists. '
+                  'Replacing existing package.'.format(package.package_name))
+            self.remove_package(self.package_name_dict[package.package_name])
+
         # make sure path is unique
         if path in self._package_paths:
             path_iter = mfdatautil.PathIter(path)
