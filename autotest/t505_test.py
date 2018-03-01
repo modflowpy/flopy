@@ -97,9 +97,25 @@ def np001():
                        sim_ws=pth,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
+    tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
+                               perioddata=[(2.0, 1, 1.0)])
+    # specifying the tdis package twice should remove the old tdis package
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
                                perioddata=tdis_rc)
-    ims_package = ModflowIms(sim, print_option='ALL', complexity='SIMPLE',
+    # first ims file to be replaced
+    ims_package = ModflowIms(sim, pname='my_ims_file', fname='old_name.ims',
+                             print_option='ALL', complexity='SIMPLE',
+                             outer_hclose=0.00001,
+                             outer_maximum=10, under_relaxation='NONE',
+                             inner_maximum=10,
+                             inner_hclose=0.001, linear_acceleration='CG',
+                             preconditioner_levels=2,
+                             preconditioner_drop_tolerance=0.00001,
+                             number_orthogonalizations=5)
+    # replace with real ims file
+    ims_package = ModflowIms(sim, pname='my_ims_file',
+                             fname='{}.ims'.format(test_ex_name),
+                             print_option='ALL', complexity='SIMPLE',
                              outer_hclose=0.00001,
                              outer_maximum=50, under_relaxation='NONE',
                              inner_maximum=30,
@@ -111,6 +127,14 @@ def np001():
     model = ModflowGwf(sim, modelname=model_name,
                        model_nam_file='{}.nam'.format(model_name))
 
+    dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1,
+                                          nrow=1, ncol=1, delr=100.0,
+                                          delc=100.0,
+                                          top=60.0, botm=50.0,
+                                          fname='{}.dis'.format(model_name),
+                                          pname='mydispkg')
+    # specifying dis package twice with the same name should automatically
+    # remove the old dis package
     dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1,
                                           nrow=1, ncol=10, delr=500.0,
                                           delc=500.0,
@@ -1540,8 +1564,8 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
-    test028_sfr()
     np001()
+    test028_sfr()
     test005_advgw_tidal()
     test006_2models_gnc()
     test050_circle_island()

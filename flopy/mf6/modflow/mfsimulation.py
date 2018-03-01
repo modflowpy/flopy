@@ -538,25 +538,43 @@ class MFSimulation(PackageContainer):
         if isinstance(model_list, str):
             model_list = [model_list]
 
-        solution_group_num = None
         in_simulation = False
+        pkg_with_same_name = None
         for index, file in self._ims_files.items():
             if file is ims_file:
                 in_simulation = True
+            if file.package_name == ims_file.package_name and \
+                    file != ims_file:
+                pkg_with_same_name = file
+                print('WARNING: ims package with name {} already exists. '
+                      'New ims package will replace old package'
+                      '.'.format(file.package_name))
+                self._remove_package(self._ims_files[file.filename])
+                del self._ims_files[file.filename]
+        # register ims package
+        if not in_simulation:
+            self._add_package(ims_file, self._get_package_path(ims_file))
         # do not allow an ims package to be registered twice with the
         # same simulation
         if not in_simulation:
-            # created unique file/package name
-            file_num = len(self._ims_files) - 1
-            ims_file.package_name = 'ims_{}'.format(file_num)
+            # create unique file/package name
+            if ims_file.package_name is None:
+                file_num = len(self._ims_files) - 1
+                ims_file.package_name = 'ims_{}'.format(file_num)
             if ims_file.filename in self._ims_files:
                 ims_file.filename = MFFileMgmt.unique_file_name(
                     ims_file.filename, self._ims_files)
             # add ims package to simulation
             self._ims_files[ims_file.filename] = ims_file
 
-        # only allow an ims package to be registerd to one solution group
-        if not self._is_in_solution_group(ims_file.filename, 1) \
+        # If ims file is being replaced, replace ims filename in solution group
+        if pkg_with_same_name is not None and \
+                self._is_in_solution_group(pkg_with_same_name.filename, 1):
+            # change existing solution group to reflect new ims file
+            self._replace_ims_in_solution_group(pkg_with_same_name.filename,
+                                                1, ims_file.filename)
+        # only allow an ims package to be registered to one solution group
+        elif not self._is_in_solution_group(ims_file.filename, 1) \
                 and model_list is not None:
             # add solution group to the simulation name file
             solution_recarray = self.name_file.solutiongroup
@@ -855,12 +873,38 @@ class MFSimulation(PackageContainer):
         --------
         """
         package.container_type = [PackageContainerType.simulation]
-        if package.parent_file is not None:
-            path = (package.parent_file.path) + (package.package_type,)
-        else:
-            path = (package.package_type,)
+        path = self._get_package_path(package)
         if add_to_package_list and package.package_type.lower != 'nam':
-            self._add_package(package, path)
+            pname = None
+            if package.package_name is not None:
+                pname = package.package_name.lower()
+            if package.package_type.lower() == 'tdis' and self._tdis_file is \
+                    not None and self._tdis_file in self.packages:
+                # tdis package already exists. there can be only one tdis
+                # package.  remove existing tdis package
+                print('WARNING: tdis package already exists. Replacing '
+                      'existing tdis package.')
+                self._remove_package(self._tdis_file)
+            elif package.package_type.lower() == 'gnc' and \
+                    package.filename in self._ghost_node_files and \
+                    self._ghost_node_files[package.filename] in self.packages:
+                # gnc package with same file name already exists.  remove old
+                # gnc package
+                print('WARNING: gnc package with name {} already exists. '
+                      'Replacing existing gnc package'
+                      '.'.format(pname))
+                self._remove_package(self._ghost_node_files[package.filename])
+                del self._ghost_node_files[package.filename]
+            elif package.package_type.lower() != 'ims' and pname in \
+                    self.package_name_dict:
+                print('WARNING: Package with name {} already exists.  '
+                      'Replacing existing package'
+                      '.'.format(package.package_name.lower()))
+                self._remove_package(self.package_name_dict[pname])
+            if package.package_type.lower() != 'ims':
+                # all but ims packages get added here.  ims packages are
+                # added during ims package registration
+                self._add_package(package, path)
         if package.package_type.lower() == 'nam':
             return path, self.structure.name_file_struct_obj
         elif package.package_type.lower() == 'tdis':
@@ -1011,6 +1055,21 @@ class MFSimulation(PackageContainer):
         # each model has an imsfile
 
         return True
+
+    def _get_package_path(self, package):
+        if package.parent_file is not None:
+            return (package.parent_file.path) + (package.package_type,)
+        else:
+            return (package.package_type,)
+
+    def _replace_ims_in_solution_group(self, item, index, new_item):
+        solution_recarray = self.name_file.solutiongroup
+        for solution_group_num in solution_recarray.get_active_key_list():
+            rec_array = solution_recarray.get_data(solution_group_num[0])
+            if rec_array is not None:
+                for rec_item in rec_array:
+                    if rec_item[index] == item:
+                        rec_item[index] = new_item
 
     def _is_in_solution_group(self, item, index):
         solution_recarray = self.name_file.solutiongroup

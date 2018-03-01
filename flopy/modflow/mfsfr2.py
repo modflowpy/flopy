@@ -2720,8 +2720,8 @@ def _parse_1c(line, reachinput, transroute):
         irtflg = int(_pop_item(line))
         if irtflg > 0:
             numtim = int(line.pop(0))
-            weight = int(line.pop(0))
-            flwtol = int(line.pop(0))
+            weight = float(line.pop(0))
+            flwtol = float(line.pop(0))
 
     # auxillary variables (MODFLOW-LGR)
     option = [line[i] for i in np.arange(1, len(line)) if
