@@ -268,7 +268,6 @@ def test_mbase_sr():
     assert ml1.sr == ml.sr
     assert ml1.start_datetime == ml.start_datetime
 
-
 def test_free_format_flag():
     import flopy
     Lx = 100.
@@ -399,6 +398,17 @@ def test_sr():
     ms1.sr = sr
     assert ms1.sr == ms.sr
 
+def test_geogcs_epsg_setting():
+    # test setting a geographic (lat/lon) coordinate reference
+    # (also tests sr.crs parsing of geographic crs info)
+    delr = np.ones(10)
+    delc = np.ones(10)
+    sr = flopy.utils.SpatialReference(delr=delr,
+                                      delc=delc,
+                                      )
+    sr.epsg = 4326 # WGS 84
+    assert sr.crs.crs['proj'] == 'longlat'
+    assert sr.crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
 
 def test_sr_scaling():
     nlay, nrow, ncol = 1, 10, 5
@@ -881,6 +891,7 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_sr_with_Map()
+    test_geogcs_epsg_setting()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
@@ -893,7 +904,7 @@ if __name__ == '__main__':
     # export_netcdf(namfile)
     #test_freyberg_export()
     #test_export_array()
-    test_write_shapefile()
+    #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     pass
