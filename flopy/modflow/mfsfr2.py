@@ -1388,7 +1388,7 @@ class ModflowSfr2(Package):
                                                               self.nsfrsets))
         if self.nstrm < 0 or self.transroute:
             f_sfr.write('{:.0f} '.format(self.irtflag))
-            if self.irtflag < 0:
+            if self.irtflag > 0:
                 f_sfr.write('{:.0f} {:.8f} {:.8f} '.format(self.numtim,
                                                            self.weight,
                                                            self.flwtol))
@@ -2715,8 +2715,8 @@ def _parse_1c(line, reachinput, transroute):
         irtflg = int(_pop_item(line))
         if irtflg > 0:
             numtim = int(line.pop(0))
-            weight = int(line.pop(0))
-            flwtol = int(line.pop(0))
+            weight = float(line.pop(0))
+            flwtol = float(line.pop(0))
 
     # auxillary variables (MODFLOW-LGR)
     option = [line[i] for i in np.arange(1, len(line)) if
