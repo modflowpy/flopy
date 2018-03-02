@@ -31,6 +31,12 @@ spth = os.path.join('temp', 't007', 'shapefile')
 if not os.path.isdir(spth):
     os.makedirs(spth)
 
+def remove_shp(shpname):
+    os.remove(shpname)
+    for ext in ['prj', 'shx', 'dbf']:
+        fname = shpname.replace('shp', ext)
+        if os.path.exists(fname):
+            os.remove(fname)
 
 def export_netcdf(namfile):
     if namfile in skip:
@@ -104,6 +110,7 @@ def export_shapefile(namfile):
     return
 
 def test_freyberg_export():
+    from flopy.utils.reference import SpatialReference
     namfile = 'freyberg.nam'
     model_ws = '../examples/data/freyberg_multilayer_transient/'
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
@@ -112,8 +119,48 @@ def test_freyberg_export():
                                               'WEL',
                                               'DRN',
                                               'UPW'])
-    m.drn.stress_period_data.export(os.path.join(spth, namfile[:-4]+'.shp'), sparse=True)
-    j=2
+    # test export without instantiating an sr
+    outshp = os.path.join(spth, namfile[:-4] + '_drn_sparse.shp')
+    m.drn.stress_period_data.export(outshp, sparse=True)
+    assert os.path.exists(outshp)
+    remove_shp(outshp)
+    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                            epsg=5070)
+    # test export with an sr, regardless of whether or not wkt was found
+    m.drn.stress_period_data.export(outshp, sparse=True)
+    assert os.path.exists(outshp)
+    remove_shp(outshp)
+    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                            epsg=3070)
+    # if wkt text was fetched from spatialreference.org
+    if m.sr.wkt is not None:
+        # test default package export
+        outshp = os.path.join(spth, namfile[:-4]+'_dis.shp')
+        m.dis.export(outshp)
+        prjfile = outshp.replace('.shp', '.prj')
+        with open(prjfile) as src:
+            prjtxt = src.read()
+        assert prjtxt == m.sr.wkt
+        remove_shp(outshp)
+
+        # test default package export to higher level dir
+        outshp = os.path.join('..', namfile[:-4] + '_dis.shp')
+        m.dis.export(outshp)
+        prjfile = outshp.replace('.shp', '.prj')
+        with open(prjfile) as src:
+            prjtxt = src.read()
+        assert prjtxt == m.sr.wkt
+        remove_shp(outshp)
+
+        # test sparse package export
+        outshp = os.path.join(spth, namfile[:-4]+'_drn_sparse.shp')
+        m.drn.stress_period_data.export(outshp,
+                                        sparse=True)
+        prjfile = outshp.replace('.shp', '.prj')
+        with open(prjfile) as src:
+            prjtxt = src.read()
+        assert prjtxt == m.sr.wkt
+        remove_shp(outshp)
 
 def test_export_output():
     import os
