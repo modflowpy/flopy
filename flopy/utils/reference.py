@@ -2026,13 +2026,21 @@ def get_spatialreference(epsg, text='esriwkt'):
 
     """
     from flopy.utils.flopy_io import get_url_text
-    url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
-    result = get_url_text(url,
-                          error_msg='No internet connection or epsg code {} '
-                                    'not found on spatialreference.org.'.format(
-                              epsg))
+
+    epsg_categories = ['epsg', 'esri']
+    error_msg = 'No internet connection or epsg code {} '
+    'not found on spatialreference.org.'.format(epsg)
+    for cat in epsg_categories:
+        url = "http://spatialreference.org/ref/{2}/{0}/{1}/".format(epsg,
+                                                                    text,
+                                                                    cat)
+        result = get_url_text(url)
+        if result is not None:
+            break
     if result is not None:
         return result.replace("\n", "")
+    elif result is None and text != 'epsg':
+        print(error_msg)
     elif text == 'epsg':  # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
 

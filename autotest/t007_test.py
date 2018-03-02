@@ -398,7 +398,7 @@ def test_sr():
     ms1.sr = sr
     assert ms1.sr == ms.sr
 
-def test_geogcs_epsg_setting():
+def test_epsgs():
     # test setting a geographic (lat/lon) coordinate reference
     # (also tests sr.crs parsing of geographic crs info)
     delr = np.ones(10)
@@ -406,7 +406,10 @@ def test_geogcs_epsg_setting():
     sr = flopy.utils.SpatialReference(delr=delr,
                                       delc=delc,
                                       )
-    sr.epsg = 4326 # WGS 84
+    sr.epsg = 102733
+    assert sr.epsg == 102733
+
+    sr.epsg = 4326  # WGS 84
     assert sr.crs.crs['proj'] == 'longlat'
     assert sr.crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
 
@@ -891,7 +894,7 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_sr_with_Map()
-    test_geogcs_epsg_setting()
+    test_epsgs()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
