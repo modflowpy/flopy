@@ -206,20 +206,29 @@ class ModflowRch(Package):
             Tmean = (self.parent.get_package(pkg).hk.array *
                      thickness)[:, active].sum(axis=0).mean()
 
-            for per in range(self.parent.nper):
-                Rmean = self.rech.array[per].sum(axis=0)[active].mean()
+            # get mean value of recharge array for each stress period
+            period_means = self.rech.array.mean(axis=(1, 2, 3))
 
-                if Tmean != 0.:
-                    if Rmean/Tmean < RTmin:
-                        chk._add_to_summary(type='Warning', value=Rmean/Tmean,
-                                             desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
-                        chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
-                    elif Rmean/Tmean > RTmax:
-                        chk._add_to_summary(type='Warning', value=Rmean/Tmean,
-                                             desc='\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax))
-                        chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
-                    else:
-                        chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+            if Tmean != 0:
+                R_T = period_means/Tmean
+                lessthan = np.where(R_T < RTmin)[0]
+                greaterthan = np.where(R_T > RTmax)[0]
+
+                if len(lessthan) > 0:
+                    txt = '\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin)
+                    txt += ' for {} stress periods'.format(len(lessthan))
+                    chk._add_to_summary(type='Warning', value=R_T.min(),
+                                         desc=txt)
+                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+
+                if len(greaterthan) > 0:
+                    txt = '\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax)
+                    txt += ' for {} stress periods'.format(len(greaterthan))
+                    chk._add_to_summary(type='Warning', value=R_T.max(),
+                                         desc=txt)
+                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                elif len(lessthan) == 0 and len(greaterthan) == 0:
+                    chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
 
         # check for NRCHOP values != 3
         if self.nrchop != 3:

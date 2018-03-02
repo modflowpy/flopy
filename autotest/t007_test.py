@@ -113,6 +113,7 @@ def test_freyberg_export():
                                               'DRN',
                                               'UPW'])
     m.drn.stress_period_data.export(os.path.join(spth, namfile[:-4]+'.shp'), sparse=True)
+    j=2
 
 def test_export_output():
     import os
@@ -894,7 +895,7 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_sr_with_Map()
-    test_epsgs()
+    #test_epsgs()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
@@ -905,7 +906,7 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-    #test_freyberg_export()
+    test_freyberg_export()
     #test_export_array()
     #test_write_shapefile()
     #test_wkt_parse()
