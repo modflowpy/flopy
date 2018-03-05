@@ -137,6 +137,8 @@ def test_zonbud_get_record_names():
     zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 0))
     recnames = zb.get_record_names()
     assert len(recnames) > 0, 'No record names returned.'
+    recnames = zb.get_record_names(stripped=True)
+    assert len(recnames) > 0, 'No record names returned.'
     return
 
 
@@ -213,6 +215,21 @@ def test_dataframes():
     return
 
 
+def test_get_budget():
+    zon = read_zbarray(zon_f)
+    aliases = {1: 'Trey', 2: 'Mike', 4: 'Wilson', 0: 'Carini'}
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 0), aliases=aliases)
+    zb.get_budget(names='FROM_CONSTANT_HEAD', zones=1)
+    zb.get_budget(names=['FROM_CONSTANT_HEAD'], zones=[1, 2])
+    zb.get_budget(net=True)
+    return
+
+
+def test_get_model_shape():
+    ZoneBudget(cbc_f, read_zbarray(zon_f), kstpkper=(0, 0), verbose=True).get_model_shape()
+    return
+
+
 if __name__ == '__main__':
     # test_comare2mflist_mlt()
     test_compare2zonebudget()
@@ -223,3 +240,5 @@ if __name__ == '__main__':
     test_zonbud_readwrite_zbarray()
     test_zonbud_get_record_names()
     test_dataframes()
+    test_get_budget()
+    test_get_model_shape()

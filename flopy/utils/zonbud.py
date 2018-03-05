@@ -287,7 +287,7 @@ class ZoneBudget(object):
         if zones is not None:
             for idx, z in enumerate(zones):
                 if isinstance(z, int):
-                    zones[idx] = 'ZONE_{}'.format(z)
+                    zones[idx] = self._zonenamedict[z]
             select_fields = ['totim', 'time_step', 'stress_period',
                              'name'] + zones
         if names is not None:
