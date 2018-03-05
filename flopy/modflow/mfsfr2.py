@@ -336,8 +336,8 @@ class ModflowSfr2(Package):
         self.nsfrsets = nsfrsets  # max number trailing waves sets
 
         # if nstrm < 0 (MF-2005 only)
-        self.irtflag = irtflg  # switch for transient streamflow routing (> 0 = kinematic wave)
-        # if irtflag > 0
+        self.irtflg = irtflg  # switch for transient streamflow routing (> 0 = kinematic wave)
+        # if irtflg > 0
         self.numtim = numtim  # number of subtimesteps used for routing
         self.weight = weight  # time weighting factor used to calculate the change in channel storage
         self.flwtol = flwtol  # streamflow tolerance for convergence of the kinematic wave equation
@@ -999,10 +999,15 @@ class ModflowSfr2(Package):
         self.reach_data.sort(order=['iseg', 'ireach'])
         reach_data = self.reach_data
         segment_data = self.segment_data[0]
-        ireach = []
-        for iseg in segment_data.nseg:
-            nreaches = np.sum(reach_data.iseg == iseg)
-            ireach += list(range(1, nreaches + 1))
+        #ireach = []
+        #for iseg in segment_data.nseg:
+        #    nreaches = np.sum(reach_data.iseg == iseg)
+        #    ireach += list(range(1, nreaches + 1))
+        reach_counts = dict(zip(range(len(reach_data)),
+                                np.bincount(reach_data.iseg)))
+        ireach = [list(range(1, reach_counts[s] + 1))
+                  for s in segment_data.nseg]
+        ireach = np.concatenate(ireach)
         self.reach_data['ireach'] = ireach
 
     def set_outreaches(self):
@@ -1387,8 +1392,8 @@ class ModflowSfr2(Package):
                                                               self.isuzn,
                                                               self.nsfrsets))
         if self.nstrm < 0 or self.transroute:
-            f_sfr.write('{:.0f} '.format(self.irtflag))
-            if self.irtflag > 0:
+            f_sfr.write('{:.0f} '.format(self.irtflg))
+            if self.irtflg > 0:
                 f_sfr.write('{:.0f} {:.8f} {:.8f} '.format(self.numtim,
                                                            self.weight,
                                                            self.flwtol))

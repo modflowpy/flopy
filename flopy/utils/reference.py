@@ -146,6 +146,7 @@ class SpatialReference(object):
         if epsg is not None:
             self._proj4_str = getproj4(self._epsg)
         self.prj = prj
+        self._wkt = None
         self.crs = crs(prj=prj, epsg=epsg)
 
         self.supported_units = ["feet", "meters"]
@@ -1816,24 +1817,26 @@ class crs(object):
     @property
     def crs(self):
         """Dict mapping crs attibutes to proj4 parameters"""
-        # projection
-        if 'mercator' in self.projcs.lower():
-            if 'transvers' in self.projcs.lower() or \
-                            'tm' in self.projcs.lower():
-                proj = 'tmerc'
-            else:
-                proj = 'merc'
-        elif 'utm' in self.projcs.lower() and \
-                        'zone' in self.projcs.lower():
-            proj = 'utm'
-        elif 'stateplane' in self.projcs.lower():
-            proj = 'lcc'
-        elif 'lambert' and 'conformal' and 'conic' in self.projcs.lower():
-            proj = 'lcc'
-        elif 'albers' in self.projcs.lower():
-            proj = 'aea'
-        else:
-            proj = None
+        proj = None
+        if self.projcs is not None:
+            # projection
+            if 'mercator' in self.projcs.lower():
+                if 'transvers' in self.projcs.lower() or \
+                                'tm' in self.projcs.lower():
+                    proj = 'tmerc'
+                else:
+                    proj = 'merc'
+            elif 'utm' in self.projcs.lower() and \
+                            'zone' in self.projcs.lower():
+                proj = 'utm'
+            elif 'stateplane' in self.projcs.lower():
+                proj = 'lcc'
+            elif 'lambert' and 'conformal' and 'conic' in self.projcs.lower():
+                proj = 'lcc'
+            elif 'albers' in self.projcs.lower():
+                proj = 'aea'
+        elif self.projcs is None and self.geogcs is not None:
+            proj = 'longlat'
 
         # datum
         if 'NAD' in self.datum.lower() or \
@@ -1876,8 +1879,9 @@ class crs(object):
     @property
     def grid_mapping_attribs(self):
         """Map parameters for CF Grid Mappings
-        http://cfconventions.org/cf-conventions/v1.6.0
-        /cf-conventions.html#appendix-grid-mappings"""
+        http://http://cfconventions.org/cf-conventions/cf-conventions.html,
+        Appendix F: Grid Mappings
+        """
         if self.wktstr is not None:
             sp = [p for p in [self.standard_parallel_1,
                               self.standard_parallel_2]
@@ -1887,6 +1891,7 @@ class crs(object):
             names = {'aea': 'albers_conical_equal_area',
                      'aeqd': 'azimuthal_equidistant',
                      'laea': 'lambert_azimuthal_equal_area',
+                     'longlat': 'latitude_longitude',
                      'lcc': 'lambert_conformal_conic',
                      'merc': 'mercator',
                      'tmerc': 'transverse_mercator',
@@ -1911,7 +1916,7 @@ class crs(object):
 
         self.projcs = self._gettxt('PROJCS["', '"')
         self.utm_zone = None
-        if 'utm' in self.projcs.lower():
+        if self.projcs is not None and 'utm' in self.projcs.lower():
             self.utm_zone = self.projcs[-3:].lower().strip('n').strip('s')
         self.geogcs = self._gettxt('GEOGCS["', '"')
         self.datum = self._gettxt('DATUM["', '"')
@@ -2021,13 +2026,24 @@ def get_spatialreference(epsg, text='esriwkt'):
 
     """
     from flopy.utils.flopy_io import get_url_text
-    url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
-    result = get_url_text(url,
-                          error_msg='No internet connection or epsg code {} '
-                                    'not found on spatialreference.org.'.format(
-                              epsg))
+
+    epsg_categories = ['epsg', 'esri']
+    for cat in epsg_categories:
+        url = "http://spatialreference.org/ref/{2}/{0}/{1}/".format(epsg,
+                                                                    text,
+                                                                    cat)
+        result = get_url_text(url)
+        if result is not None:
+            break
     if result is not None:
         return result.replace("\n", "")
+    elif result is None and text != 'epsg':
+        for cat in epsg_categories:
+            error_msg = 'No internet connection or epsg code {0} ' \
+                'not found at http://spatialreference.org/ref/{2}/{0}/{1}'.format(epsg,
+                                                                                  text,
+                                                                                  cat)
+            print(error_msg)
     elif text == 'epsg':  # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
 

@@ -31,6 +31,12 @@ spth = os.path.join('temp', 't007', 'shapefile')
 if not os.path.isdir(spth):
     os.makedirs(spth)
 
+def remove_shp(shpname):
+    os.remove(shpname)
+    for ext in ['prj', 'shx', 'dbf']:
+        fname = shpname.replace('shp', ext)
+        if os.path.exists(fname):
+            os.remove(fname)
 
 def export_netcdf(namfile):
     if namfile in skip:
@@ -104,6 +110,7 @@ def export_shapefile(namfile):
     return
 
 def test_freyberg_export():
+    from flopy.utils.reference import SpatialReference
     namfile = 'freyberg.nam'
     model_ws = '../examples/data/freyberg_multilayer_transient/'
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
@@ -112,7 +119,48 @@ def test_freyberg_export():
                                               'WEL',
                                               'DRN',
                                               'UPW'])
-    m.drn.stress_period_data.export(os.path.join(spth, namfile[:-4]+'.shp'), sparse=True)
+    # test export without instantiating an sr
+    outshp = os.path.join(spth, namfile[:-4] + '_drn_sparse.shp')
+    m.drn.stress_period_data.export(outshp, sparse=True)
+    assert os.path.exists(outshp)
+    remove_shp(outshp)
+    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                            epsg=5070)
+    # test export with an sr, regardless of whether or not wkt was found
+    m.drn.stress_period_data.export(outshp, sparse=True)
+    assert os.path.exists(outshp)
+    remove_shp(outshp)
+    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
+                            epsg=3070)
+    # if wkt text was fetched from spatialreference.org
+    if m.sr.wkt is not None:
+        # test default package export
+        outshp = os.path.join(spth, namfile[:-4]+'_dis.shp')
+        m.dis.export(outshp)
+        prjfile = outshp.replace('.shp', '.prj')
+        with open(prjfile) as src:
+            prjtxt = src.read()
+        assert prjtxt == m.sr.wkt
+        remove_shp(outshp)
+
+        # test default package export to higher level dir
+        outshp = os.path.join('..', namfile[:-4] + '_dis.shp')
+        m.dis.export(outshp)
+        prjfile = outshp.replace('.shp', '.prj')
+        with open(prjfile) as src:
+            prjtxt = src.read()
+        assert prjtxt == m.sr.wkt
+        remove_shp(outshp)
+
+        # test sparse package export
+        outshp = os.path.join(spth, namfile[:-4]+'_drn_sparse.shp')
+        m.drn.stress_period_data.export(outshp,
+                                        sparse=True)
+        prjfile = outshp.replace('.shp', '.prj')
+        with open(prjfile) as src:
+            prjtxt = src.read()
+        assert prjtxt == m.sr.wkt
+        remove_shp(outshp)
 
 def test_export_output():
     import os
@@ -268,7 +316,6 @@ def test_mbase_sr():
     assert ml1.sr == ml.sr
     assert ml1.start_datetime == ml.start_datetime
 
-
 def test_free_format_flag():
     import flopy
     Lx = 100.
@@ -399,6 +446,20 @@ def test_sr():
     ms1.sr = sr
     assert ms1.sr == ms.sr
 
+def test_epsgs():
+    # test setting a geographic (lat/lon) coordinate reference
+    # (also tests sr.crs parsing of geographic crs info)
+    delr = np.ones(10)
+    delc = np.ones(10)
+    sr = flopy.utils.SpatialReference(delr=delr,
+                                      delc=delc,
+                                      )
+    sr.epsg = 102733
+    assert sr.epsg == 102733
+
+    sr.epsg = 4326  # WGS 84
+    assert sr.crs.crs['proj'] == 'longlat'
+    assert sr.crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
 
 def test_sr_scaling():
     nlay, nrow, ncol = 1, 10, 5
@@ -881,6 +942,7 @@ if __name__ == '__main__':
     #test_mbase_sr()
     #test_rotation()
     #test_sr_with_Map()
+    #test_epsgs()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
@@ -891,9 +953,9 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-    #test_freyberg_export()
+    test_freyberg_export()
     #test_export_array()
-    test_write_shapefile()
+    #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     pass

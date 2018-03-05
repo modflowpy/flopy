@@ -18,6 +18,7 @@ def ra_slice(ra, cols):
 def recarray(array, dtype):
     # handle sequences of lists
     # (recarrays must be constructed from tuples)
+    array = np.atleast_2d(array)
     if not isinstance(array[0], tuple):
         array = list(map(tuple, array))
     return np.array(array, dtype=dtype).view(np.recarray)
