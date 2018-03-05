@@ -327,12 +327,12 @@ class Mt3dDsp(Package):
         else:
             dmcoef = Util2d.load(f, model, (nlay, 1), np.float32,
                                'dmcoef1', ext_unit_dict, array_format="mt3d")
-            if model.mcomp > 1:
-                for icomp in range(2, model.mcomp + 1):
-                    name = "dmcoef" + str(icomp + 1)
-                    u2d = Util2d.load(f, model, (nlay, 1), np.float32, name,
-                                ext_unit_dict, array_format="mt3d")
-                    kwargs[name] = u2d
+            # if model.mcomp > 1:
+            #     for icomp in range(2, model.mcomp + 1):
+            #         name = "dmcoef" + str(icomp + 1)
+            #         u2d = Util2d.load(f, model, (nlay, 1), np.float32, name,
+            #                     ext_unit_dict, array_format="mt3d")
+            #         kwargs[name] = u2d
 
         # set package unit number
         unitnumber = None
