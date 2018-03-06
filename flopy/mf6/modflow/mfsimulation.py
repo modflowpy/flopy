@@ -256,7 +256,7 @@ class MFSimulation(PackageContainer):
     set_sim_path : (path : string)
         set the file path to the root simulation folder and updates all model
         file paths
-    get_model : (model_name : string, name_file : string, model_type : string)
+    get_model : (model_name : string)
               : [MFModel]
         returns the models in the simulation with a given model name, name file
         name, or model type
@@ -332,6 +332,29 @@ class MFSimulation(PackageContainer):
         #  tdis files
         self.valid = False
         self.verbose = False
+
+    def __getattr__(self, item):
+        """
+        __getattr__ - used to allow for getting models and packages as if
+        they are attributes
+
+        Parameters
+        ----------
+        item : str
+            model or package name
+
+
+        Returns
+        -------
+        md : Model or package object
+            Model or package object of type :class:flopy6.mfmodel or
+            :class:flopy6.mfpackage
+
+        """
+        if item in self._models:
+            return self.get_model(item)
+        else:
+            return self.get_package(item)
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
@@ -705,7 +728,7 @@ class MFSimulation(PackageContainer):
 
         self._remove_package(package)
 
-    def get_model(self, model_name='', name_file='', model_type=''):
+    def get_model(self, model_name=''):
         """
         Load an existing model.
 
@@ -713,10 +736,6 @@ class MFSimulation(PackageContainer):
         ----------
         model_name : string
             name of model to get
-        name_file : string
-            name file of model to get
-        model_type : string
-            type of model to get
 
         Returns
         -------

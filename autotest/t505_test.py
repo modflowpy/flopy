@@ -126,6 +126,11 @@ def np001():
 
     model = ModflowGwf(sim, modelname=model_name,
                        model_nam_file='{}.nam'.format(model_name))
+    # test getting model using attribute
+    model = sim.np001_mod
+    assert(model is not None and model.name == 'np001_mod')
+    tdis = sim.tdis
+    assert(tdis is not None and tdis.package_type == 'tdis')
 
     dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1,
                                           nrow=1, ncol=1, delr=100.0,
@@ -194,7 +199,13 @@ def np001():
     assert isinstance(pkg, ModflowTdis)
     pkg = model.get_package('mydispkg')
     assert isinstance(pkg,
-                      flopy.mf6.ModflowGwfdis) and pkg.package_name == 'mydispkg'
+                      flopy.mf6.ModflowGwfdis) and \
+                      pkg.package_name == 'mydispkg'
+    pkg = model.mydispkg
+    assert isinstance(pkg,
+                      flopy.mf6.ModflowGwfdis) and \
+                      pkg.package_name == 'mydispkg'
+
 
     # verify external file contents
     array_util = ArrayUtil()
@@ -1564,10 +1575,10 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
+    test006_2models_gnc()
     np001()
     test028_sfr()
     test005_advgw_tidal()
-    test006_2models_gnc()
     test050_circle_island()
     test006_gwf3_disv()
     test035_fhb()
