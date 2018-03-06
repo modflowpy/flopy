@@ -4,6 +4,7 @@ import sys
 import textwrap
 import os
 import numpy as np
+import warnings
 import copy
 from numpy.lib import recfunctions
 from ..pakbase import Package
@@ -382,10 +383,18 @@ class ModflowSfr2(Package):
                     #inds = (segment_data[i]['nseg'] -1).astype(int)
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
-        if len(self.segment_data[0]) == 1 or \
-                                np.diff(self.segment_data[
-                                            0].nseg).max() != 0 and np.diff(
-                    self.segment_data[0].outseg).max() != 0:
+        if np.diff(self.reach_data.iseg).max() != 0 and \
+                np.diff(self.segment_data[0].nseg).max() != 0 \
+                and np.diff(self.segment_data[0].outseg).max() != 0:
+            if len(self.segment_data[0]) == 1:
+                self.segment_data[0]['nseg'] = 1
+                self.reach_data['iseg'] = 1
+
+            consistent_seg_numbers = len(set(self.reach_data.iseg).difference(
+                set(self.segment_data[0].nseg))) == 0
+            if not consistent_seg_numbers:
+                warnings.warn("Inconsistent segment numbers of reach_data and segment_data")
+
             # first convert any not_a_segment_values to 0
             for v in self.not_a_segment_values:
                 self.segment_data[0].outseg[
@@ -1003,10 +1012,11 @@ class ModflowSfr2(Package):
         #for iseg in segment_data.nseg:
         #    nreaches = np.sum(reach_data.iseg == iseg)
         #    ireach += list(range(1, nreaches + 1))
-        reach_counts = dict(zip(range(len(reach_data)),
-                                np.bincount(reach_data.iseg)))
+        reach_counts = np.bincount(reach_data.iseg)[1:]
+        reach_counts = dict(zip(range(1, len(reach_counts) +1),
+                                reach_counts))
         ireach = [list(range(1, reach_counts[s] + 1))
-                  for s in segment_data.nseg]
+                   for s in segment_data.nseg]
         ireach = np.concatenate(ireach)
         self.reach_data['ireach'] = ireach
 
