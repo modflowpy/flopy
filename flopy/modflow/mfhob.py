@@ -4,6 +4,7 @@ import numpy as np
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 
+
 # Create HeadObservation instance from a time series array
 
 class HeadObservation(object):
@@ -131,10 +132,10 @@ class HeadObservation(object):
         # if iend < time_series_data.shape[0]:
         #     time_series_data = time_series_data[0:iend]
 
-        #find indices of time series data that are valid
+        # find indices of time series data that are valid
         tmax = model.dis.get_final_totim()
-        keep_idx = time_series_data[:,0] < tmax
-        time_series_data = time_series_data[keep_idx,:]
+        keep_idx = time_series_data[:, 0] <= tmax
+        time_series_data = time_series_data[keep_idx, :]
 
         # set the number of observations in this time series
         shape = time_series_data.shape
@@ -490,7 +491,7 @@ class ModflowHob(Package):
         # mobs = int(t[1])
         # maxm = int(t[2])
         iuhobsv = int(t[3])
-        #if iuhobsv > 0:
+        # if iuhobsv > 0:
         #    model.add_pop_key_list(iuhobsv)
         hobdry = float(t[4])
 
@@ -526,9 +527,17 @@ class ModflowHob(Package):
                 line = f.readline()
                 t = line.strip().split()
                 mlay = collections.OrderedDict()
-                for j in range(0, abs(layer), 2):
+                for j in range(0, abs(layer) * 2, 2):
                     k = int(t[j]) - 1
-                    mlay[k] = float(t[j + 1])
+                    # catch case where the same layer is specified more than
+                    # once. In this case add previous value to the current value
+                    keys = list(mlay.keys())
+                    v = 0.
+                    if k in keys:
+                        v = mlay[k]
+                    mlay[k] = float(t[j + 1]) + v
+                # reset layer
+                layer = -len(list(mlay.keys()))
 
             # read datasets 5 & 6. Index loop variable
             if irefsp0 > 0:

@@ -271,7 +271,7 @@ def test_export_array():
                 #assert np.abs(val - rot_cellsize) < 1e-6
                 break
     rotate = False
-    rasterio = False
+    rasterio = None
     if rotate:
         rotated = rotate(m.dis.top.array, m.sr.rotation, cval=nodata)
 
@@ -281,12 +281,13 @@ def test_export_array():
     try:
         # test GeoTIFF export
         import rasterio
-        m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array, nodata=nodata)
-        with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
-            arr = src.read(1)
     except:
         pass
-    if rasterio:
+    if rasterio is not None:
+        m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array,
+                          nodata=nodata)
+        with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
+            arr = src.read(1)
         assert src.shape == (m.nrow, m.ncol)
         assert np.abs(src.bounds[0] - m.sr.bounds[0]) < 1e-6
         assert np.abs(src.bounds[1] - m.sr.bounds[1]) < 1e-6
@@ -953,8 +954,8 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
-    test_freyberg_export()
-    #test_export_array()
+    # test_freyberg_export()
+    test_export_array()
     #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()

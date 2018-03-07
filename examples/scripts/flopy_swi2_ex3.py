@@ -145,7 +145,7 @@ def run():
     fwid, fhgt = 7.00, 4.50
     flft, frgt, fbot, ftop = 0.125, 0.95, 0.125, 0.925
 
-    colormap = plt.cm.spectral  # winter
+    colormap = plt.cm.plasma  # winter
     cc = []
     icolor = 11
     cr = np.linspace(0.0, 0.9, icolor)

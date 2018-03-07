@@ -182,7 +182,7 @@ class Mt3dSft(Package):
 
     """
 
-    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=None,
+    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=0,
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
                  nobssf=0, obs_sf=None, sf_stress_period_data=None,

@@ -1083,11 +1083,22 @@ class SpatialReference(object):
             a = a.copy()
             if a.dtype.name == 'int64':
                 a = a.astype('int32')
+                dtype = rasterio.int32
+            elif a.dtype.name == 'int32':
+                dtype = rasterio.int32
+            elif a.dtype.name == 'float64':
+                dtype = rasterio.float64
+            elif a.dtype.name == 'float32':
+                dtype = rasterio.float32
+            else:
+                msg = 'ERROR: invalid dtype "{}"'.format(a.dtype.name)
+                raise TypeError(msg)
+
             meta = {'count': 1,
                     'width': a.shape[1],
                     'height': a.shape[0],
                     'nodata': nodata,
-                    'dtype': a.dtype,
+                    'dtype': dtype,
                     'driver': 'GTiff',
                     'crs': self.proj4_str,
                     'transform': trans

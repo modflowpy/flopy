@@ -136,6 +136,7 @@ class BaseModel(object):
         # external option stuff
         self.array_free_format = True
         self.free_format_input = True
+        self.parameter_load = False
         self.array_format = None
         self.external_fnames = []
         self.external_units = []
@@ -994,6 +995,14 @@ class BaseModel(object):
             # run check prior to writing input
             self.check(f='{}.chk'.format(self.name), verbose=self.verbose,
                        level=1)
+
+        # reset the model to free_format if parameter substitution was
+        # performed on a model load
+        if self.parameter_load and not self.free_format_input:
+            if self.verbose:
+                print('\nReseting free_format_input to True to ' +
+                      'preserve the precision of the parameter data.')
+            self.free_format_input = True
 
         if self.verbose:
             print('\nWriting packages:')

@@ -250,6 +250,7 @@ class ModflowParBc(object):
                 except:
                     pv = np.float(pdict['parval'])
             for [mltarr, zonarr, izones] in inst_data:
+                model.parameter_load = True
                 # print mltarr, zonarr, izones
                 if mltarr.lower() == 'none':
                     mult = np.ones(shape, dtype=dtype)
