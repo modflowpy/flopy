@@ -261,6 +261,7 @@ def np002():
 
     pth = os.path.join('..', 'examples', 'data', 'mf6', 'create_tests',
                        test_ex_name)
+    pth_for_mf = os.path.join('..', '..', '..', pth)
     run_folder = os.path.join(cpth, test_ex_name)
     if not os.path.isdir(run_folder):
         os.makedirs(run_folder)
@@ -288,9 +289,20 @@ def np002():
                              number_orthogonalizations=2)
     sim.register_ims_package(ims_package, [model.name])
 
+    # get rid of top_data.txt so that a later test does not automatically pass
+    top_data_file = os.path.join(run_folder, 'top_data.txt')
+    if os.path.isfile(top_data_file):
+        os.remove(top_data_file)
+    # test loading data to be stored in a file and loading data from a file
+    # using the "dictionary" input format
+    top = {'filename': 'top_data.txt', 'factor': 1.0,
+           'data': [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
+                    100.0, 100.0]}
+    botm_file = os.path.join(pth_for_mf, 'botm.txt')
+    botm = {'filename': botm_file, 'factor': 1.0}
     dis_package = ModflowGwfdis(model, length_units='FEET', nlay=1, nrow=1,
                                 ncol=10, delr=500.0, delc=500.0,
-                                top=100.0, botm=50.0,
+                                top=top, botm=botm,
                                 fname='{}.dis'.format(model_name))
     ic_vals = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
                100.0]
@@ -329,6 +341,8 @@ def np002():
 
     # write simulation to new location
     sim.write_simulation()
+
+    assert(os.path.isfile(top_data_file))
 
     if run:
         # run simulation
@@ -1582,13 +1596,13 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
-    test006_2models_gnc()
     np001()
-    test028_sfr()
-    test005_advgw_tidal()
-    test050_circle_island()
-    test006_gwf3_disv()
-    test035_fhb()
-    test004_bcfss()
     np002()
+    test004_bcfss()
+    test005_advgw_tidal()
+    test006_2models_gnc()
+    test006_gwf3_disv()
     test021_twri()
+    test028_sfr()
+    test035_fhb()
+    test050_circle_island()

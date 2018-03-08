@@ -45,8 +45,8 @@ class MFList(mfdata.MFMultiDimVar):
             1) ndarray - ndarray containing the datalist
             2) [(line_one), (line_two), ...] - list where each like of the
                datalist is a tuple within the list
-            3) {'filename':filename, factor=fct, iprn=print_code} - dictionary
-               defining the external file containing the datalist.
+            3) {'filename':filename, factor=fct, iprn=print_code, data=data}
+               - dictionary defining the external file containing the datalist.
         If the data is transient, a dictionary can be used to specify each
         stress period where the dictionary key is <stress period> - 1 and
         the dictionary value is the datalist data defined above:

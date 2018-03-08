@@ -55,8 +55,8 @@ class MFArray(mfdata.MFMultiDimVar):
         1) ndarray - numpy ndarray containing all of the data
         2) [data] - python list containing all of the data
         3) val - a single constant value to be used for all of the data
-        4) {'filename':filename, 'factor':fct, 'iprn':print} - dictionary
-        defining external file information
+        4) {'filename':filename, 'factor':fct, 'iprn':print, 'data':data} -
+        dictionary defining external file information
         5) {'data':data, 'factor':fct, 'iprn':print) - dictionary defining
         internal information. Data that is layered can also be set by defining
         a list with a length equal to the number of layers in the model.

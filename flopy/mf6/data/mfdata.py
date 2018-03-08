@@ -755,11 +755,12 @@ class DataStorage(object):
 
         # look for internal and open/close data
         if isinstance(data, dict):
-            if isinstance(data['data'], int) or \
-                    isinstance(data['data'], float) or \
-                    isinstance(data['data'], str):
-                # data should always in in a list/array
-                data['data'] = [data['data']]
+            if 'data' in data:
+                if isinstance(data['data'], int) or \
+                        isinstance(data['data'], float) or \
+                        isinstance(data['data'], str):
+                    # data should always in in a list/array
+                    data['data'] = [data['data']]
 
             if 'filename' in data:
                 self.process_open_close_line(data, layer)
@@ -1179,6 +1180,7 @@ class DataStorage(object):
         print_format = None
         binary = False
         data_file = None
+        data = None
 
         data_dim = self.data_dimensions
         if isinstance(arr_line, list):
@@ -1200,6 +1202,10 @@ class DataStorage(object):
                     elif arr_line[index].lower() == 'iprn' and \
                             index + 1 < len(arr_line):
                         print_format = arr_line[index+1]
+                        index += 2
+                    elif arr_line[index].lower() == 'data' and \
+                            index + 1 < len(arr_line):
+                        data = arr_line[index+1]
                         index += 2
                     elif arr_line[index].lower() == 'binary':
                         binary = True
@@ -1226,6 +1232,8 @@ class DataStorage(object):
                     print_format = value
                 if key.lower() == 'binary':
                     binary = bool(value)
+                if key.lower() == 'data':
+                    data = value
             if 'filename' in arr_line:
                 data_file = arr_line['filename']
 
@@ -1239,7 +1247,7 @@ class DataStorage(object):
                 raise MFDataException(except_str)
             # store external info
             self.store_external(data_file, layer, [multiplier], print_format,
-                                binary=binary)
+                                binary=binary, data=data)
 
             #  add to active list of external files
             model_name = data_dim.package_dim.model_dim[0].model_name
