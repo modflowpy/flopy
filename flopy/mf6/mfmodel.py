@@ -56,8 +56,10 @@ class MFModel(PackageContainer):
         a class method that loads a model from files
     write
         writes the simulation to files
-    remove_package : (package : MFPackage)
-        removes package from the model
+    remove_package : (package_name : string)
+        removes package from the model.  package_name can be the
+        package's name, type, or package object to be removed from
+        the model
     set_model_relative_path : (path : string)
         sets the file path to the model folder and updates all model file paths
     is_valid : () : boolean
@@ -371,14 +373,15 @@ class MFModel(PackageContainer):
             del self._package_paths[package.path]
         self._remove_package(package)
 
-    def remove_package(self, package):
+    def remove_package(self, package_name):
         """
         removes a package and all child packages from the model
 
         Parameters
         ----------
-        package : MFPackage
-            package to be removed from the model
+        package_name : str
+            package name, package type, or package object to be removed from
+            the model
 
         Returns
         -------
@@ -386,35 +389,42 @@ class MFModel(PackageContainer):
         Examples
         --------
         """
-        if package._model_or_sim.name != self.name:
-            except_text = 'ERROR: Package can not be removed from model {} ' \
-                          'since it is ' \
-                          'not part of '
-            print(except_text)
-            raise mfstructure.FlopyException(except_text)
+        if isinstance(package_name, MFPackage):
+            packages = [package_name]
+        else:
+            packages = self.get_package(package_name)
+            if not isinstance(packages, list):
+                packages = [packages]
+        for package in packages:
+            if package._model_or_sim.name != self.name:
+                except_text = 'ERROR: Package can not be removed from model {} ' \
+                              'since it is ' \
+                              'not part of '
+                print(except_text)
+                raise mfstructure.FlopyException(except_text)
 
-        self._remove_package_from_dictionaries(package)
+            self._remove_package_from_dictionaries(package)
 
-        # remove package from name file
-        package_data = self.name_file.packages.get_data()
-        new_rec_array = None
-        for item in package_data:
-            if item[1] != package.filename:
-                if new_rec_array is None:
-                    new_rec_array = np.rec.array(item, package_data.dtype)
-                else:
-                    new_rec_array = np.hstack((item, new_rec_array))
-        self.name_file.packages.set_data(new_rec_array)
+            # remove package from name file
+            package_data = self.name_file.packages.get_data()
+            new_rec_array = None
+            for item in package_data:
+                if item[1] != package.filename:
+                    if new_rec_array is None:
+                        new_rec_array = np.rec.array(item, package_data.dtype)
+                    else:
+                        new_rec_array = np.hstack((item, new_rec_array))
+            self.name_file.packages.set_data(new_rec_array)
 
-        # build list of child packages
-        child_package_list = []
-        for pkg in self.packages:
-            if pkg.parent_file is not None and pkg.parent_file.path == \
-                    package.path:
-                child_package_list.append(pkg)
-        # remove child packages
-        for child_package in child_package_list:
-            self._remove_package_from_dictionaries(child_package)
+            # build list of child packages
+            child_package_list = []
+            for pkg in self.packages:
+                if pkg.parent_file is not None and pkg.parent_file.path == \
+                        package.path:
+                    child_package_list.append(pkg)
+            # remove child packages
+            for child_package in child_package_list:
+                self._remove_package_from_dictionaries(child_package)
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):

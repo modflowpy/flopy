@@ -148,14 +148,21 @@ def np001():
                                           pname='mydispkg')
     ic_package = flopy.mf6.ModflowGwfic(model, strt='initial_heads.txt',
                                         fname='{}.ic'.format(model_name))
-    npf_package = ModflowGwfnpf(model, save_flows=True,
+    npf_package = ModflowGwfnpf(model, pname='npf_1', save_flows=True,
                                 alternative_cell_averaging='logarithmic',
                                 icelltype=1, k=5.0)
 
-    # remove package test
+    # remove package test using .remove_package(name)
     assert (model.get_package(npf_package.package_name) is not None)
-    model.remove_package(npf_package)
+    model.remove_package(npf_package.package_name)
     assert (model.get_package(npf_package.package_name) is None)
+    # remove package test using .remove()
+    npf_package = ModflowGwfnpf(model, pname='npf_1', save_flows=True,
+                                alternative_cell_averaging='logarithmic',
+                                icelltype=1, k=5.0)
+    npf_package.remove()
+    assert (model.get_package(npf_package.package_name) is None)
+
     npf_package = ModflowGwfnpf(model, save_flows=True,
                                 alternative_cell_averaging='logarithmic',
                                 icelltype=1, k=5.0)
@@ -481,7 +488,7 @@ def test005_advgw_tidal():
     # test tdis package deletion
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
                                perioddata=[(2.0, 2, 1.0)])
-    sim.remove_package(tdis_package)
+    sim.remove_package(tdis_package.package_type)
 
     tdis_rc = [(1.0, 1, 1.0), (10.0, 120, 1.0), (10.0, 120, 1.0),
                (10.0, 120, 1.0)]
@@ -586,7 +593,7 @@ def test005_advgw_tidal():
                                    interpolation_methodrecord=[
                                        ('stepwise', 'stepwise', 'stepwise')])
     # test removing package with child packages
-    model.remove_package(wel_package)
+    wel_package.remove()
     wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
                                 auxiliary=[('var1', 'var2', 'var3')],
                                 maxbound=5,
@@ -1272,7 +1279,7 @@ def test006_2models_gnc():
     gnc_package = ModflowGwfgnc(sim, print_input=True, print_flows=True,
                                 numgnc=26, numalphaj=1,
                                 gncdata=new_gncrecarray)
-    sim.remove_package(gnc_package)
+    sim.remove_package(gnc_package.package_type)
 
     gnc_package = ModflowGwfgnc(sim, print_input=True, print_flows=True,
                                 numgnc=36, numalphaj=1,
@@ -1287,7 +1294,7 @@ def test006_2models_gnc():
                                 nexg=26, exchangedata=newexgrecarray,
                                 exgtype='gwf6-gwf6', exgmnamea=model_name_1,
                                 exgmnameb=model_name_2)
-    sim.remove_package(exg_package)
+    sim.remove_package(exg_package.package_type)
 
     exg_package = ModflowGwfgwf(sim, print_input=True, print_flows=True,
                                 save_flows=True, auxiliary='testaux',
@@ -1528,7 +1535,7 @@ def test028_sfr():
     assert (sfr_package.connectiondata.get_data()[2][1] == 1.0)
 
     # undo zero based test and move on
-    model.remove_package(sfr_package)
+    model.remove_package(sfr_package.package_type)
     reach_con_rec = testutils.read_reach_con_rec(
         os.path.join(pth, 'sfr_reach_con_rec.txt'))
     sfr_package = ModflowGwfsfr(model, unit_conversion=1.486,

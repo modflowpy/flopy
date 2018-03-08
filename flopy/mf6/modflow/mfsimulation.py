@@ -262,14 +262,16 @@ class MFSimulation(PackageContainer):
         name, or model type
     add_model : (model : MFModel, sln_group : integer)
         add model to the simulation
-    remove_mode : (model_name : string)
+    remove_model : (model_name : string)
         remove model from the simulation
     get_package : (type : string)
         returns a simulation package based on package type
     add_package : (package : MFPackage)
         adds a simulation package to the simulation
-    remove_package : (type : string)
-        removes package from the simulation
+    remove_package : (package_name : string)
+        removes package from the simulation.  package_name can be the
+        package's name, type, or package object to be removed from
+        the model
     is_valid : () : boolean
         checks the validity of the solution and all of its models and packages
 
@@ -711,22 +713,29 @@ class MFSimulation(PackageContainer):
             if os.path.isfile(path):
                 os.remove(path)
 
-    def remove_package(self, package):
-        if self._tdis_file is not None and \
-                package.path == self._tdis_file.path:
-            self._tdis_file = None
-        if package.filename in self._exchange_files:
-            del self._exchange_files[package.filename]
-        if package.filename in self._ims_files:
-            del self._ims_files[package.filename]
-        if package.filename in self._ghost_node_files:
-            del self._ghost_node_files[package.filename]
-        if package.filename in self._mover_files:
-            del self._mover_files[package.filename]
-        if package.filename in self._other_files :
-            del self._other_files[package.filename]
+    def remove_package(self, package_name):
+        if isinstance(package_name, MFPackage):
+            packages = [package_name]
+        else:
+            packages = self.get_package(package_name)
+            if not isinstance(packages, list):
+                packages = [packages]
+        for package in packages:
+            if self._tdis_file is not None and \
+                    package.path == self._tdis_file.path:
+                self._tdis_file = None
+            if package.filename in self._exchange_files:
+                del self._exchange_files[package.filename]
+            if package.filename in self._ims_files:
+                del self._ims_files[package.filename]
+            if package.filename in self._ghost_node_files:
+                del self._ghost_node_files[package.filename]
+            if package.filename in self._mover_files:
+                del self._mover_files[package.filename]
+            if package.filename in self._other_files :
+                del self._other_files[package.filename]
 
-        self._remove_package(package)
+            self._remove_package(package)
 
     def get_model(self, model_name=''):
         """

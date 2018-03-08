@@ -366,6 +366,10 @@ class DataStorage(object):
         times the data element repeats.
     convert_data(data, type) : type
         converts data "data" to type "type" and returns the converted data
+    flatten()
+        converts layered data to a non-layered data
+    make_layered()
+        converts non-layered data to layered data
 
     See Also
     --------

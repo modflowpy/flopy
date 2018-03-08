@@ -862,6 +862,8 @@ class MFPackage(PackageContainer):
         Writes the package to a file
     get_file_path : string
         Returns the package file's path
+    remove
+        Removes package from the simulation/model it is currently a part of
 
     See Also
     --------
@@ -1011,6 +1013,9 @@ class MFPackage(PackageContainer):
                                               size_def.structure.path[:-1],
                                               new_size,
                                               dataset.structure.name))
+
+    def remove(self):
+        self._model_or_sim.remove_package(self)
 
     def build_mfdata(self, var_name, data=None):
         if self.loading_package:

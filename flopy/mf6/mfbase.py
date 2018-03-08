@@ -427,12 +427,13 @@ class PackageContainer(object):
 
         # search for partial package name
         for pp in self.packages:
-            # get first package of the type requested
-            package_name = pp.package_name.lower()
-            if len(package_name) > len(name):
-                package_name = package_name[0:len(name)]
-            if package_name.lower() == name.lower():
-                return pp
+            if pp.package_name is not None:
+                # get first package of the type requested
+                package_name = pp.package_name.lower()
+                if len(package_name) > len(name):
+                    package_name = package_name[0:len(name)]
+                if package_name.lower() == name.lower():
+                    return pp
 
         return None
 
