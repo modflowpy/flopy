@@ -748,7 +748,8 @@ class DataStorage(object):
         # look for a single constant value
         data_type = self.data_dimensions.structure.\
             get_datum_type(return_enum_type=True)
-        if len(data) == 1 and self._is_type(data[0], data_type):
+        if not isinstance(data, dict) and len(data) == 1 and \
+                self._is_type(data[0], data_type):
             # store data as const
             self.store_internal(data, layer, True, multiplier, key=key)
             return True
@@ -1249,9 +1250,9 @@ class DataStorage(object):
             self.store_external(data_file, layer, [multiplier], print_format,
                                 binary=binary, data=data)
 
-            #  add to active list of external files
-            model_name = data_dim.package_dim.model_dim[0].model_name
-            self._simulation_data.mfpath.add_ext_file(data_file, model_name)
+        #  add to active list of external files
+        model_name = data_dim.package_dim.model_dim[0].model_name
+        self._simulation_data.mfpath.add_ext_file(data_file, model_name)
 
         return multiplier, print_format, binary
 

@@ -330,9 +330,9 @@ class MFModel(PackageContainer):
         """
         # update path in the file manager
         file_mgr = self.simulation_data.mfpath
+        file_mgr.set_last_accessed_model_path()
         path = file_mgr.string_to_file_path(model_ws)
         file_mgr.model_relative_path[self.name] = path
-        file_mgr.set_last_accessed_path()
 
         if model_ws and model_ws != '.' and self.simulation.name_file is not \
                 None:

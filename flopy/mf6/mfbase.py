@@ -69,16 +69,23 @@ class MFFileMgmt(object):
             for key, mffile_path in self.existing_file_dict.items():
                 for model_name in mffile_path.model_name:
                     if model_name in self._last_loaded_model_relative_path:
-                        if os.path.isfile(self.resolve_path(mffile_path,
-                                                            model_name,
-                                                            True)) and \
+                        # resolve previous simulation path.  if mf6 changes
+                        # so that paths are relative to the model folder, then
+                        # this call should have "model_name" instead of "None"
+                        path_old = self.resolve_path(mffile_path, None,
+                                                     True)
+                        if os.path.isfile(path_old) and \
                           (not mffile_path.isabs() or not copy_relative_only):
-                            if not os.path.exists(
-                              self.resolve_path(mffile_path, model_name)):
-                                copyfile(self.resolve_path(mffile_path,
-                                                           model_name, True),
-                                         self.resolve_path(mffile_path,
-                                                           model_name))
+                            # change "None" to "model_name" as above if mf6
+                            # supports model relative paths
+                            path_new = self.resolve_path(mffile_path,
+                                                         None)
+                            if not os.path.exists(path_new):
+                                new_folders, new_leaf = os.path.split(path_new)
+                                if not os.path.exists(new_folders):
+                                    os.makedirs(new_folders)
+                                copyfile(path_old,
+                                         path_new)
                                 num_files_copied += 1
         print('INFORMATION: {} external files copied'.format(num_files_copied))
 
@@ -142,9 +149,9 @@ class MFFileMgmt(object):
 
     @staticmethod
     def string_to_file_path(fp_string):
-        file_delimitiers = ['/','\\']
+        file_delimiters = ['/','\\']
         new_string = fp_string
-        for delimiter in file_delimitiers:
+        for delimiter in file_delimiters:
             arr_string = new_string.split(delimiter)
             if len(arr_string) > 1:
                 if os.path.isabs(fp_string):
@@ -159,6 +166,9 @@ class MFFileMgmt(object):
 
     def set_last_accessed_path(self):
         self._last_loaded_sim_path = self._sim_path
+        self.set_last_accessed_model_path()
+
+    def set_last_accessed_model_path(self):
         for key, item in self.model_relative_path.items():
             self._last_loaded_model_relative_path[key] = copy.deepcopy(item)
 

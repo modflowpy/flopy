@@ -73,7 +73,7 @@ def np001():
 
     # model tests
     test_sim = MFSimulation(sim_name=test_ex_name, version='mf6',
-                            exe_name=exe_name, sim_ws=pth,
+                            exe_name=exe_name, sim_ws=run_folder,
                             sim_tdis_file='{}.tdis'.format(test_ex_name))
     kwargs = {}
     kwargs['bad_kwarg'] = 20
@@ -272,7 +272,7 @@ def np002():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
+                       sim_ws=run_folder,
                        sim_tdis_file='{}.tdis'.format(test_ex_name))
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
@@ -335,9 +335,6 @@ def np002():
                                 maxbound=2,
                                 stress_period_data=[((0, 0, 3), 0.02),
                                                     ((0, 0, 6), 0.1)])
-
-    # make folder to save simulation
-    sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
     sim.write_simulation()
