@@ -290,7 +290,7 @@ class Mt3dSft(Package):
         else:
             self.sf_stress_period_data = MfList(self, model=model,
                                                 data=sf_stress_period_data)
-
+            self.sf_stress_period_data.list_free_format = True
         self.parent.add_package(self)
         return
 
