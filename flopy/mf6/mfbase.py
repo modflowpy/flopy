@@ -67,26 +67,26 @@ class MFFileMgmt(object):
         num_files_copied = 0
         if self._last_loaded_sim_path is not None:
             for key, mffile_path in self.existing_file_dict.items():
-                for model_name in mffile_path.model_name:
-                    if model_name in self._last_loaded_model_relative_path:
-                        # resolve previous simulation path.  if mf6 changes
-                        # so that paths are relative to the model folder, then
-                        # this call should have "model_name" instead of "None"
-                        path_old = self.resolve_path(mffile_path, None,
-                                                     True)
-                        if os.path.isfile(path_old) and \
-                          (not mffile_path.isabs() or not copy_relative_only):
-                            # change "None" to "model_name" as above if mf6
-                            # supports model relative paths
-                            path_new = self.resolve_path(mffile_path,
-                                                         None)
-                            if not os.path.exists(path_new):
-                                new_folders, new_leaf = os.path.split(path_new)
-                                if not os.path.exists(new_folders):
-                                    os.makedirs(new_folders)
-                                copyfile(path_old,
-                                         path_new)
-                                num_files_copied += 1
+#                for model_name in mffile_path.model_name:
+#                    if model_name in self._last_loaded_model_relative_path:
+                # resolve previous simulation path.  if mf6 changes
+                # so that paths are relative to the model folder, then
+                # this call should have "model_name" instead of "None"
+                path_old = self.resolve_path(mffile_path, None,
+                                             True)
+                if os.path.isfile(path_old) and \
+                  (not mffile_path.isabs() or not copy_relative_only):
+                    # change "None" to "model_name" as above if mf6
+                    # supports model relative paths
+                    path_new = self.resolve_path(mffile_path,
+                                                 None)
+                    if not os.path.exists(path_new):
+                        new_folders, new_leaf = os.path.split(path_new)
+                        if not os.path.exists(new_folders):
+                            os.makedirs(new_folders)
+                        copyfile(path_old,
+                                 path_new)
+                        num_files_copied += 1
         print('INFORMATION: {} external files copied'.format(num_files_copied))
 
     def get_updated_path(self, external_file_path, model_name,
