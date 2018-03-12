@@ -53,8 +53,21 @@ class MtListBudget(object):
         return
 
 
-    def parse(self, forgive=True):
+    def parse(self, forgive=True, diff=True, start_datetime=None,
+              time_unit='d'):
         """main entry point for parsing the list file.
+
+        Parameters
+        ----------
+        forgive : bool
+            flag to raise exceptions when fail-to-read occurs. Default is True
+        diff : bool
+            flag to return dataframes with 'in minus out' columns.  Default is True
+        start_datetime : str
+            str that can be parsed by pandas.to_datetime.  Example: '1-1-1970'.
+            Default is None.
+        time_unit : str
+            str to pass to pandas.to_timedelta.  Default is 'd' (days)
 
         Returns
         -------
@@ -108,6 +121,23 @@ class MtListBudget(object):
         for i,lst in self.gw_data.items():
             self.gw_data[i] = lst[:min_len]
         df_gw = pd.DataFrame(self.gw_data)
+        df_gw.loc[:,"totim"] = df_gw.pop("totim_1")
+
+        # if cumulative:
+        #     keep = [c for c in df_gw.columns if "_flx" not in c]
+        #     df_gw = df_gw.loc[:,keep]
+        # else:
+        #     keep = [c for c in df_gw.columns if "_cum" not in c]
+        #     df_gw = df_gw.loc[:, keep]
+
+        if diff:
+            df_gw = self._diff(df_gw)
+
+        if start_datetime is not None:
+            dts = pd.to_datetime(start_datetime) + pd.to_timedelta(df_gw.totim,unit=time_unit)
+            df_gw.index = dts
+        else:
+            df_gw.index = df_gw.totim_1
 
         if len(self.sw_data) > 0:
             # trim the lists so that they are all the same lenght
@@ -118,9 +148,56 @@ class MtListBudget(object):
             for i, lst in self.sw_data.items():
                 self.sw_data[i] = lst[:min_len]
             df_sw = pd.DataFrame(self.sw_data)
-            df_sw.loc[:,"totim"] = df_gw.totim_1.iloc[:min_len]
+            df_sw.loc[:,"totim"] = df_gw.totim.iloc[:min_len]
+
+            # if cumulative:
+            #     keep = [c for c in df_sw.columns if "_flx" not in c]
+            #     df_sw = df_sw.loc[:, keep]
+            # else:
+            #     keep = [c for c in df_sw.columns if "_cum" not in c]
+            #     df_sw = df_sw.loc[:, keep]
+
+            if diff:
+                df_sw = self._diff(df_sw)
+            if start_datetime is not None:
+                dts = pd.to_datetime(start_datetime) + pd.to_timedelta(df_sw.totim, unit=time_unit)
+                df_sw.index = dts
+            else:
+                df_sw.index = df_sw.totim
             return df_gw,df_sw
         return df_gw
+
+
+    def _diff(self,df):
+        out_cols = [c for c in df.columns if "_out" in c]
+        in_cols = [c for c in df.columns if "_in" in c]
+        out_base = set([c.replace("_out",'') for c in out_cols])
+        in_base = [c.replace("_in",'') for c in in_cols]
+        in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
+        out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
+
+        print(out_cols,in_cols)
+        print(len(out_cols),len(in_cols))
+        in_base = set(in_base)
+        out_base = set(out_base)
+        out_base.update(in_base)
+        out_base = list(out_base)
+        out_base.sort()
+        print(out_base)
+        new = {"totim":df.totim}
+        for col in out_base:
+            if col in out_dict:
+                odata = df.loc[:,out_dict[col]]
+            else:
+                odata = 0.0
+            if col in in_dict:
+                idata = df.loc[:,in_dict[col]]
+            else:
+                idata = 0.0
+            new[col] = idata - odata
+
+        return pd.DataFrame(new)
+
 
     def _readline(self,f):
         line = f.readline().lower()
@@ -177,7 +254,7 @@ class MtListBudget(object):
                                 format(self.lcount,str(e)))
             item += "_{0}".format(comp)
             for lab, val in zip(["_in","_out"],[ival,oval]):
-                iitem = item + lab
+                iitem = item + lab + "_cum"
                 if iitem not in self.gw_data.keys():
                     self.gw_data[iitem] = []
                 self.gw_data[iitem].append(val)
