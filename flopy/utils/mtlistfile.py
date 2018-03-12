@@ -145,6 +145,7 @@ class MtListBudget(object):
             min_len = 1e+10
             for i, lst in self.sw_data.items():
                 min_len = min(min_len, len(lst))
+            min_len = min(min_len,df_gw.shape[0])
             for i, lst in self.sw_data.items():
                 self.sw_data[i] = lst[:min_len]
             df_sw = pd.DataFrame(self.sw_data)
@@ -174,15 +175,11 @@ class MtListBudget(object):
         in_base = [c.replace("_in",'') for c in in_cols]
         in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
         out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
-
-        print(out_cols,in_cols)
-        print(len(out_cols),len(in_cols))
         in_base = set(in_base)
         out_base = set(out_base)
         out_base.update(in_base)
         out_base = list(out_base)
         out_base.sort()
-        print(out_base)
         new = {"totim":df.totim}
         for col in out_base:
             if col in out_dict:
