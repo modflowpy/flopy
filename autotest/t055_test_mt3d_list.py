@@ -13,10 +13,6 @@ def test_mtlist():
     mt = flopy.utils.MtListBudget(os.path.join(mt_dir,"mcomp.list"))
     df_gw,df_sw = mt.parse(forgive=False, start_datetime="1-1-1970")
 
-    import matplotlib.pyplot as plt
-    df_sw.plot()
-    plt.show()
-
     mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
     mt = flopy.utils.MtListBudget(os.path.join(mt_dir, "mcomp_fail1.list"))
     df_gw, df_sw = mt.parse(forgive=True,start_datetime="1-1-1970")
