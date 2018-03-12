@@ -138,7 +138,7 @@ class MtListBudget(object):
             df_gw.index = dts
         else:
             df_gw.index = df_gw.totim_1
-
+        df_sw = None
         if len(self.sw_data) > 0:
             # trim the lists so that they are all the same lenght
             # in case of a read fail
@@ -148,7 +148,7 @@ class MtListBudget(object):
             for i, lst in self.sw_data.items():
                 self.sw_data[i] = lst[:min_len]
             df_sw = pd.DataFrame(self.sw_data)
-            df_sw.loc[:,"totim"] = df_gw.totim.iloc[:min_len]
+            df_sw.loc[:,"totim"] = df_gw.totim.iloc[:min_len].values
 
             # if cumulative:
             #     keep = [c for c in df_sw.columns if "_flx" not in c]
@@ -164,8 +164,7 @@ class MtListBudget(object):
                 df_sw.index = dts
             else:
                 df_sw.index = df_sw.totim
-            return df_gw,df_sw
-        return df_gw
+        return df_gw,df_sw
 
 
     def _diff(self,df):
