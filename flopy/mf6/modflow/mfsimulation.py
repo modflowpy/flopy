@@ -316,6 +316,7 @@ class MFSimulation(PackageContainer):
 
         self._exg_file_num = {}
         self._gnc_file_num = 0
+        self._mvr_file_num = 0
 
         self.simulation_data.mfpath.set_last_accessed_path()
 
@@ -519,13 +520,14 @@ class MFSimulation(PackageContainer):
                 else:
                     package_abbr = 'GWF'
                 # build package name and package
-                mvr_name = '{}-MVR_{}'.format(package_abbr, self._gnc_file_num)
+                mvr_name = '{}-MVR_{}'.format(package_abbr, self._mvr_file_num)
                 mover_file = mfgwfmvr.ModflowGwfmvr(self, fname=fname,
                                                     pname=mvr_name,
                                                     parent_file=parent_package,
                                                     loading_package=True)
                 mover_file.load(strict)
                 self._mover_files[fname] = mover_file
+                self._mvr_file_num += 1
         else:
             # create package
             package_obj = self.package_factory(ftype, '')
@@ -824,7 +826,7 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
-        if filename in self._mover_files:
+        if filename in self._ghost_node_files:
             return self._ghost_node_files[filename]
         else:
             excpt_str = 'ERROR: GNC file "{}" can not be ' \
