@@ -124,6 +124,7 @@ class MtListBudget(object):
         df_gw = pd.DataFrame(self.gw_data)
         df_gw.loc[:, "totim"] = df_gw.pop("totim_1")
 
+
         # if cumulative:
         #     keep = [c for c in df_gw.columns if "_flx" not in c]
         #     df_gw = df_gw.loc[:,keep]
@@ -164,10 +165,14 @@ class MtListBudget(object):
                 df_sw = self._diff(df_sw)
             if start_datetime is not None:
                 dts = pd.to_datetime(start_datetime) + pd.to_timedelta(
-                    df_sw.totim, unit=time_unit)
+                    df_sw.pop("totim"), unit=time_unit)
                 df_sw.index = dts
             else:
-                df_sw.index = df_sw.totim
+                df_sw.index = df_sw.pop("totim")
+
+        for col in df_gw.columns:
+            if "totim" in col:
+                df_gw.pop(col)
         return df_gw, df_sw
 
     def _diff(self, df):
@@ -264,7 +269,7 @@ class MtListBudget(object):
 
     def _parse_gw_line(self, line):
         raw = line.lower().split(':')
-        item = raw[0].strip().replace(' ', '')
+        item = raw[0].strip().replace(' ', '_')
         ival = float(raw[1].split()[0])
         oval = float(raw[1].split()[1])
         return item, ival, oval
@@ -336,9 +341,9 @@ class MtListBudget(object):
     def _parse_sw_line(self, line):
         # print(line)
         raw = line.strip().split('=')
-        citem = raw[0].strip().replace(" ", "")
+        citem = raw[0].strip().replace(" ", "_")
         cval = float(raw[1].split()[0])
-        fitem = raw[1].split()[-1].replace(" ", "")
+        fitem = raw[1].split()[-1].replace(" ", "_")
         fval = float(raw[2])
         # assert citem == fitem,"{0}, {1}".format(citem,fitem)
         return citem, cval, fval
