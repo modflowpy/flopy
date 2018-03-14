@@ -926,6 +926,16 @@ class MFSimulation(PackageContainer):
                       '.'.format(pname))
                 self._remove_package(self._ghost_node_files[package.filename])
                 del self._ghost_node_files[package.filename]
+            elif package.package_type.lower() == 'mvr' and \
+                     package.filename in self._mover_files and \
+                     self._mover_files[package.filename] in self.packages:
+                # mvr package with same file name already exists.  remove old
+                # mvr package
+                print('WARNING: mvr package with name {} already exists. '
+                      'Replacing existing mvr package'
+                      '.'.format(pname))
+                self._remove_package(self._mover_files[package.filename])
+                del self._mover_files[package.filename]
             elif package.package_type.lower() != 'ims' and pname in \
                     self.package_name_dict:
                 print('WARNING: Package with name {} already exists.  '
@@ -956,6 +966,15 @@ class MFSimulation(PackageContainer):
                                                         self._ghost_node_files)
                 package.filename = file_name
                 self._ghost_node_files[file_name] = package
+        elif package.package_type.lower() == 'mvr':
+            if package.filename not in self._mover_files:
+                self._mover_files[package.filename] = package
+            else:
+                # auto generate a unique file name and register it
+                file_name = MFFileMgmt.unique_file_name(package.filename,
+                                                        self._mover_files)
+                package.filename = file_name
+                self._mover_files[file_name] = package
         elif package.package_type.lower() == 'ims':
             # default behavior is to register the ims package with the first
             # unregistered model

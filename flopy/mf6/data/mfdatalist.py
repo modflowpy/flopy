@@ -909,6 +909,9 @@ class MFList(mfdata.MFMultiDimVar):
         return False, False
 
     def _validate_cellid(self, arr_line, data_index):
+        if not self.structure.model_data:
+            # not model data so this is not a cell id
+            return False
         if arr_line is None:
             return False
         model_grid = self._data_dimensions.get_model_grid()
