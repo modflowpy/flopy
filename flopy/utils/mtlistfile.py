@@ -11,8 +11,6 @@ import numpy as np
 
 from ..utils.utils_def import totim_to_datetime
 
-import pandas as pd
-
 class MtListBudget(object):
     """
     MT3D mass budget reader
@@ -169,6 +167,11 @@ class MtListBudget(object):
 
 
     def _diff(self,df):
+        try:
+            import pandas as pd
+        except:
+            print("must use pandas")
+            return
         out_cols = [c for c in df.columns if "_out" in c]
         in_cols = [c for c in df.columns if "_in" in c]
         out_base = set([c.replace("_out",'') for c in out_cols])
