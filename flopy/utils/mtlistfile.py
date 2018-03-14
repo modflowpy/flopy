@@ -140,7 +140,7 @@ class MtListBudget(object):
                                                                    unit=time_unit)
             df_gw.index = dts
         else:
-            df_gw.index = df_gw.totim_1
+            df_gw.index = df_gw.totim
         df_sw = None
         if len(self.sw_data) > 0:
             # trim the lists so that they are all the same lenght
