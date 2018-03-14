@@ -183,7 +183,7 @@ class MtListBudget(object):
             return
         out_cols = [c for c in df.columns if "_out" in c]
         in_cols = [c for c in df.columns if "_in" in c]
-        out_base = set([c.replace("_out", '') for c in out_cols])
+        out_base =[c.replace("_out", '') for c in out_cols]
         in_base = [c.replace("_in", '') for c in in_cols]
         in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
         out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
@@ -192,7 +192,7 @@ class MtListBudget(object):
         out_base.update(in_base)
         out_base = list(out_base)
         out_base.sort()
-        new = {"totim": df.totim}
+        new = {"totim":df.totim}
         for col in out_base:
             if col in out_dict:
                 odata = df.loc[:, out_dict[col]]
@@ -204,7 +204,7 @@ class MtListBudget(object):
                 idata = 0.0
             new[col] = idata - odata
 
-        return pd.DataFrame(new)
+        return pd.DataFrame(new,index=df.index)
 
     def _readline(self, f):
         line = f.readline().lower()
@@ -271,7 +271,7 @@ class MtListBudget(object):
         raw = line.lower().split(':')
         item = raw[0].strip().replace(' ', '_')
         ival = float(raw[1].split()[0])
-        oval = float(raw[1].split()[1])
+        oval = -1.0 * float(raw[1].split()[1])
         return item, ival, oval
 
     def _parse_sw(self, f, line):
