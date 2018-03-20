@@ -1,8 +1,9 @@
+import sys, inspect
 import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from ..data import mfstructure, mfdatautil, mfdata
-from ..mfbase import ExtFileAction
+from ..mfbase import ExtFileAction, MFDataException, MFFileParseException
 from ..utils.mfenums import DiscretizationType
 
 
@@ -180,13 +181,19 @@ class MFArray(mfdata.MFMultiDimVar):
         if layered_data is True and self.structure.layered is False:
             if self._data_dimensions.get_model_grid().grid_type() == \
                     DiscretizationType.DISU:
-                except_str = 'Layered option not available for unstructured ' \
+                comment = 'Layered option not available for unstructured ' \
                              'grid. {}'.format(self._path)
             else:
-                except_str = 'Data "{}" does not support layered option. ' \
+                comment = 'Data "{}" does not support layered option. ' \
                              '{}'.format(self._data_name, self._path)
-            print(except_str)
-            raise mfstructure.MFDataException(except_str)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.structure.get_model(),
+                                  self.structure.get_package(),
+                                  self._path,
+                                  'setting layered data', self.structure.name,
+                                  inspect.stack()[0][3], type_, value_,
+                                  traceback_, comment,
+                                  self._simulation_data.debug)
         self._get_storage_obj().layered = layered_data
 
     def make_layered(self):
@@ -195,13 +202,20 @@ class MFArray(mfdata.MFMultiDimVar):
         else:
             if self._data_dimensions.get_model_grid().grid_type() == \
                     DiscretizationType.DISU:
-                except_str = 'Layered option not available for unstructured ' \
+                comment = 'Layered option not available for unstructured ' \
                              'grid. {}'.format(self._path)
             else:
-                except_str = 'Data "{}" does not support layered option. ' \
+                comment = 'Data "{}" does not support layered option. ' \
                              '{}'.format(self._data_name, self._path)
-            print(except_str)
-            raise mfstructure.MFDataException(except_str)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.structure.get_model(),
+                                  self.structure.get_package(),
+                                  self._path,
+                                  'converting data to layered',
+                                  self.structure.name,
+                                  inspect.stack()[0][3], type_, value_,
+                                  traceback_, comment,
+                                  self._simulation_data.debug)
 
     def store_as_external_file(self, external_file_path, multiplier=[1.0],
                                layer_num=None):
@@ -285,7 +299,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                  'followed by a valid TAS variable. ' \
                                  '{}'.format(self._path)
                     print(except_str)
-                    raise mfstructure.MFFileParseException(except_str)
+                    raise MFFileParseException(except_str)
 
         if not self.structure.data_item_structures[0].just_data:
             # verify keyword
@@ -347,7 +361,7 @@ class MFArray(mfdata.MFMultiDimVar):
                              'is not followed by a number. ' \
                              '{}'.format(self._data_name, self._path)
                 print(except_str)
-                raise mfstructure.MFFileParseException(except_str)
+                raise MFFileParseException(except_str)
             # store data
             layer_storage.data_storage_type = \
                     mfdata.DataStorageType.internal_constant
@@ -368,7 +382,7 @@ class MFArray(mfdata.MFMultiDimVar):
                              'that is not followed by a multiplier. ' \
                              '{}'.format(self.structure.name, self._path)
                 print(except_str)
-                raise mfstructure.MFFileParseException(except_str)
+                raise MFFileParseException(except_str)
             multiplier, print_format, flags_found = \
                     storage.process_internal_line(arr_line)
 
@@ -400,7 +414,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                                      data_from_file[1],
                                                      self._path)
                 print(except_str)
-                raise mfstructure.MFFileParseException(except_str)
+                raise MFFileParseException(except_str)
         elif arr_line[0].upper() == 'OPEN/CLOSE':
             storage.process_open_close_line(arr_line, layer)
 
@@ -449,11 +463,17 @@ class MFArray(mfdata.MFMultiDimVar):
             else:
                 # set layer range
                 if layer >= self._number_of_layers - 1:
-                    except_str = 'Layer {} for variable "{}" does not exist.' \
-                                 ' {}'.format(layer, self._data_name,
-                                              self._path)
-                    print(except_str)
-                    raise mfstructure.MFDataException(except_str)
+                    comment = 'Layer {} for variable "{}" does not exist' \
+                              '.'.format(layer, self._data_name)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(self.structure.get_model(),
+                                          self.structure.get_package(),
+                                          self._path,
+                                          'getting file entry',
+                                          self.structure.name,
+                                          inspect.stack()[0][3], type_, value_,
+                                          traceback_, comment,
+                                          self._simulation_data.debug)
 
                 layer_min = layer
                 layer_max = layer + 1
@@ -589,11 +609,19 @@ class MFArray(mfdata.MFMultiDimVar):
                 if allow_multiple_layers:
                     layer_index = storage.get_active_layer_indices()
                 else:
-                    except_str = 'Data "{}" is layered but no ' \
-                                 'layer_num was specified. ' \
-                                 '{}'.format(self._data_name, self._path)
-                    print(except_str)
-                    raise mfstructure.MFDataException(except_str)
+                    comment = 'Data "{}" is layered but no ' \
+                                 'layer_num was specified' \
+                                 '.'.format(self._data_name)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(self.structure.get_model(),
+                                          self.structure.get_package(),
+                                          self._path,
+                                          'resolving layer index',
+                                          self.structure.name,
+                                          inspect.stack()[0][3], type_, value_,
+                                          traceback_, comment,
+                                          self._simulation_data.debug)
+
             else:
                 layer_index = [layer_num]
         else:

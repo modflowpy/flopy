@@ -1,14 +1,15 @@
 from operator import itemgetter
 from copy import deepcopy
-import numpy as np
+import sys
+import inspect
 from shutil import copyfile
 from collections import OrderedDict
 from enum import Enum
 import struct
-from ..data.mfstructure import MFDataException, MFFileParseException, \
-                               MFInvalidTransientBlockHeaderException, \
-                               MFDataFileException, MFDataItemStructure, \
-                               DatumType
+import numpy as np
+from ..mfbase import MFDataException, MFDataFileException, \
+                     MFInvalidTransientBlockHeaderException
+from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
                               ConstIter, ArrayIndexIter
 from ..coordinates.modeldimensions import DataDimensions
@@ -426,16 +427,28 @@ class DataStorage(object):
     def make_layered(self):
         if not self.layered:
             if self.data_structure_type != DataStructureType.ndarray:
-                except_str = 'Data structure type "{}" does not support ' \
-                             'layered data.'.format(self.data_structure_type)
-                print(except_str)
-                raise MFDataException(except_str)
+                message = 'Data structure type "{}" does not support ' \
+                          'layered data.'.format(self.data_structure_type)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path, 'making data layered',
+                    self.data_dimensions.structure.name, inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
             if self.layer_storage[0].data_storage_type == \
                     DataStorageType.external_file:
-                except_str = 'Converting external file data into layered ' \
-                             'data currently not support.'
-                print(except_str)
-                raise MFDataException(except_str)
+                message = 'Converting external file data into layered ' \
+                          'data currently not support.'
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path, 'making data layered',
+                    self.data_dimensions.structure.name, inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
 
             previous_storage = self.layer_storage[0]
             data = previous_storage.get_data()
@@ -691,13 +704,18 @@ class DataStorage(object):
                         self._set_array(aux_var_data, layer, multiplier, key,
                                         autofill)
                 else:
-                    except_str = 'Unable to set data for aux variable.  ' \
-                                 'Expected {} aux variables ' \
-                                 'but got {}. {}'.format(len(aux_var_names[0]),
-                                                         len(data),
-                                                         struct.path)
-                    print(except_str)
-                    raise MFDataException(except_str)
+                    message = 'Unable to set data for aux variable. ' \
+                              'Expected {} aux variables but got ' \
+                              '{}.'.format(len(aux_var_names[0]),
+                                           len(data))
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'setting aux variables', data_dim.structure.name,
+                        inspect.stack()[0][3], type_, value_, traceback_,
+                        message, self._simulation_data.debug)
             else:
                 self._set_array(data, layer, multiplier, key, autofill)
 
@@ -718,6 +736,7 @@ class DataStorage(object):
         if not self._set_array_layer(data, layer, multiplier, key):
             # check for possibility of multi-layered data
             success = False
+            layer_num = 0
             if layer is None and self.data_structure_type == \
                     DataStructureType.ndarray and len(data) == self.num_layers:
                 self.layered = True
@@ -733,13 +752,18 @@ class DataStorage(object):
                                                                 multiplier,
                                                                 key)
             if not success:
-                except_str = 'Unable to set data for variable "{}" layer ' \
-                             '{}.  Enable verbose mode for more information.' \
-                             '{} '.format(self.data_dimensions.structure.name,
-                                          layer,
-                                          self.data_dimensions.structure.path)
-                print(except_str)
-                raise MFDataException(except_str)
+                message = 'Unable to set data "{}" layer {}.  Data is not ' \
+                          'in a valid format' \
+                          '.'.format(self.data_dimensions.structure.name,
+                                     layer_num)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path, 'setting array data',
+                    self.data_dimensions.structure.name, inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
         elif layer is None:
             self.layered = False
             self.num_layers = 1
@@ -883,8 +907,25 @@ class DataStorage(object):
                             # add placeholders to data so it agrees with
                             # expected dimensions of recarray
                             self._add_placeholders(data)
-                        self.set_data(np.rec.array(data,
-                                                   self._recarray_type_list))
+                        try:
+                            new_data = np.rec.array(data,
+                                                    self._recarray_type_list)
+                        except:
+                            message = 'An error occurred when storing data ' \
+                                      '"{}" in a recarray.'.format(
+                                          self.data_dimensions.structure.name)
+                            type_, value_, traceback_ = sys.exc_info()
+                            raise MFDataException(
+                                self.data_dimensions.structure.get_model(),
+                                self.data_dimensions.structure.get_package(),
+                                self.data_dimensions.structure.path,
+                                'setting array data',
+                                self.data_dimensions.structure.name,
+                                inspect.stack()[0][3], type_, value_,
+                                traceback_, message,
+                                self._simulation_data.debug)
+                        self.set_data(new_data)
+
         elif self.data_structure_type == DataStructureType.scalar:
             self.layer_storage[0]._internal_data = data
         else:
@@ -897,8 +938,24 @@ class DataStorage(object):
             else:
                 self.layer_storage[layer].data_storage_type = \
                         DataStorageType.internal_array
-                self.layer_storage[layer]._internal_data = \
+                try:
+                    self.layer_storage[layer]._internal_data = \
                         np.reshape(data, dimensions)
+                except:
+                    message = 'An error occurred when reshaping data ' \
+                              '"{}" to store.  Expected data ' \
+                              'dimensions: ' \
+                              '{}'.format(self.data_dimensions.structure.name,
+                                          dimensions)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'setting array data', self.data_dimensions.
+                        structure.name, inspect.stack()[0][3], type_,
+                        value_, traceback_, message,
+                        self._simulation_data.debug)
             self.layer_storage[layer].factor = multiplier
             self.layer_storage[layer].iprn = print_format
 
@@ -936,9 +993,23 @@ class DataStorage(object):
                 data_dim = self.data_dimensions
                 data_type = data_dim.structure.data_item_structures[0].type
                 model_name = data_dim.package_dim.model_dim[0].model_name
-                fd = open(self._simulation_data.mfpath.resolve_path(file_path,
-                                                                    model_name)
-                          , 'w')
+                fp = self._simulation_data.mfpath.resolve_path(file_path,
+                                                               model_name)
+                try:
+                    fd = open(fp, 'w')
+                except:
+                    message = 'Unable to open file {}.  Make sure the file ' \
+                              'is not locked and the folder exists' \
+                              '.'.format(fp)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'opening external file for writing',
+                        data_dim.structure.name, inspect.stack()[0][3], type_,
+                        value_, traceback_, message,
+                        self._simulation_data.debug)
                 for data_item in MultiListIter(data, True):
                     if data_item[2] and current_size > 0:
                         # new list/dimension, add appropriate formatting to
@@ -948,13 +1019,20 @@ class DataStorage(object):
                                                          data_type)))
                     current_size += 1
                 if current_size != data_size:
-                    except_str = 'Not enough data for "{}" provided for file' \
-                                 ' {}.  Expected {} but only received ' \
-                                 '{}.'.format(data_dim.structure.path, fd.name,
+                    message = 'Not enough data for "{}" provided for file' \
+                              ' {}.  Expected data size is {}, actual data ' \
+                              'size is' \
+                              '{}.'.format(data_dim.structure.path, fd.name,
                                               data_size, current_size)
-                    print(except_str)
+                    type_, value_, traceback_ = sys.exc_info()
                     fd.close()
-                    raise MFDataException(except_str)
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'storing external data', data_dim.structure.name,
+                        inspect.stack()[0][3], type_, value_, traceback_,
+                        message, self._simulation_data.debug)
                 fd.close()
             elif self._simulation_data.verify_external_data and \
                     do_not_verify is None:
@@ -1028,9 +1106,23 @@ class DataStorage(object):
         if fd is None:
             close_file = True
             model_dim = self.data_dimensions.package_dim.model_dim[0]
-            fd = open(self._simulation_data.mfpath.resolve_path(
-                    self.layer_storage[layer].fname, model_dim.model_name),
-                    'r')
+            read_file = self._simulation_data.mfpath.resolve_path(
+                        self.layer_storage[layer].fname, model_dim.model_name)
+            try:
+                fd = open(read_file, 'r')
+            except:
+                message = 'Unable to open file {}.  Make sure the file ' \
+                          'is not locked and the folder exists' \
+                          '.'.format(read_file)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'opening external file for writing',
+                    self.data_dimensions.structure.name, inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
         line = ' '
         ArrayUtil.reset_delimiter_used()
         while line != '':
@@ -1051,15 +1143,22 @@ class DataStorage(object):
             if current_size == data_size:
                 break
         if current_size != data_size:
-            except_str = 'Not enough data in file {} for data "{}".  ' \
-                         'Expected {} but only found ' \
+            message = 'Not enough data in file {} for data "{}".  ' \
+                      'Expected data size {} but only found ' \
                          '{}.'.format(fd.name,
-                                      self.data_dimensions.structure.path,
+                                      self.data_dimensions.structure.name,
                                       data_size, current_size)
-            print(except_str)
+            type_, value_, traceback_ = sys.exc_info()
             if close_file:
                 fd.close()
-            raise MFDataException(except_str)
+            raise MFDataException(self.data_dimensions.structure.get_model(),
+                                  self.data_dimensions.structure.get_package(),
+                                  self.data_dimensions.structure.path,
+                                  'reading data file',
+                                  self.data_dimensions.structure.name,
+                                  inspect.stack()[0][3], type_, value_,
+                                  traceback_, message,
+                                  self._simulation_data.debug)
 
         if close_file:
             fd.close()
@@ -1136,12 +1235,20 @@ class DataStorage(object):
         print_format = None
         if isinstance(arr_line, list):
             if len(arr_line) < 2:
-                except_str = 'ERROR: Data array "{}" contains a INTERNAL ' \
-                             'that is not followed by a multiplier. ' \
-                             '{}'.format(self.data_dimensions.structure.name,
-                                         self.data_dimensions.structure.path)
-                print(except_str)
-                raise MFFileParseException(except_str)
+                message = 'Data array "{}" contains an INTERNAL ' \
+                          'that is not followed by a multiplier in line ' \
+                          '"{}".'.format(self.data_dimensions.structure.name,
+                                         ' '.join(arr_line))
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'processing internal data header',
+                    self.data_dimensions.structure.name,
+                    inspect.stack()[0][3], type_, value_,
+                    traceback_, message,
+                    self._simulation_data.debug)
 
             index = 1
             while index < len(arr_line):
@@ -1186,19 +1293,39 @@ class DataStorage(object):
         data_dim = self.data_dimensions
         if isinstance(arr_line, list):
             if len(arr_line) < 2 and store:
-                except_str = 'ERROR: Data array "{}" contains a OPEN/CLOSE ' \
-                             'that is not followed by a file. ' \
-                             '{}'.format(data_dim.structure.name,
-                                         data_dim.structure.path)
-                print(except_str)
-                raise MFFileParseException(except_str)
-
+                message = 'Data array "{}" contains a OPEN/CLOSE ' \
+                          'that is not followed by a file. ' \
+                           '{}'.format(data_dim.structure.name,
+                                       data_dim.structure.path)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'processing open/close line', data_dim.structure.name,
+                    inspect.stack()[0][3], type_, value_, traceback_, message,
+                    self._simulation_data.debug)
             while index < len(arr_line):
                 if isinstance(arr_line[index], str):
                     if arr_line[index].lower() == 'factor' and \
                             index + 1 < len(arr_line):
-                        multiplier = self.convert_data(arr_line[index+1],
-                                                       self._data_type)
+                        try:
+                            multiplier = self.convert_data(arr_line[index+1],
+                                                           self._data_type)
+                        except:
+                            message = 'Data array {} contains an OPEN/CLOSE ' \
+                                      'with an invalid multiplier following ' \
+                                      'the "factor" keyword.' \
+                                       '.'.format(data_dim.structure.name)
+                            type_, value_, traceback_ = sys.exc_info()
+                            raise MFDataException(
+                                self.data_dimensions.structure.get_model(),
+                                self.data_dimensions.structure.get_package(),
+                                self.data_dimensions.structure.path,
+                                'processing open/close line',
+                                data_dim.structure.name, inspect.stack()[0][3],
+                                type_, value_, traceback_, message,
+                                self._simulation_data.debug)
                         index += 2
                     elif arr_line[index].lower() == 'iprn' and \
                             index + 1 < len(arr_line):
@@ -1228,7 +1355,22 @@ class DataStorage(object):
         elif isinstance(arr_line, dict):
             for key, value in arr_line.items():
                 if key.lower() == 'factor':
-                    multiplier = self.convert_data(value, self._data_type)
+                    try:
+                        multiplier = self.convert_data(value, self._data_type)
+                    except:
+                        message = 'Data array {} contains an OPEN/CLOSE ' \
+                                  'with an invalid multiplier following the ' \
+                                  '"factor" keyword.' \
+                                   '.'.format(data_dim.structure.name)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(
+                            self.data_dimensions.structure.get_model(),
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.path,
+                            'processing open/close line',
+                            data_dim.structure.name, inspect.stack()[0][3],
+                            type_, value_, traceback_, message,
+                            self._simulation_data.debug)
                 if key.lower() == 'iprn':
                     print_format = value
                 if key.lower() == 'binary':
@@ -1238,14 +1380,21 @@ class DataStorage(object):
             if 'filename' in arr_line:
                 data_file = arr_line['filename']
 
+        if data_file is None:
+            message = 'Data array {} contains an OPEN/CLOSE without a ' \
+                      'fname (file name) specified' \
+                      '.'.format(data_dim.structure.name)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.data_dimensions.structure.get_model(),
+                                  self.data_dimensions.structure.get_package(),
+                                  self.data_dimensions.structure.path,
+                                  'processing open/close line',
+                                  data_dim.structure.name,
+                                  inspect.stack()[0][3], type_, value_,
+                                  traceback_, message,
+                                  self._simulation_data.debug)
+
         if store:
-            if data_file is None:
-                except_str = 'Unable to set data for variable "{}".  ' \
-                             'No data file specified. ' \
-                             '{}'.format(data_dim.structure.name,
-                                         data_dim.structure.path)
-                print(except_str)
-                raise MFDataException(except_str)
             # store external info
             self.store_external(data_file, layer, [multiplier], print_format,
                                 binary=binary, data=data)
@@ -1425,14 +1574,31 @@ class DataStorage(object):
             for index in array_index_iter:
                 data_line += (index,)
                 if current_col == dimensions[1] - 1:
-                    if data_array is None:
-                        data_array = np.rec.array(data_line,
-                                                  self._recarray_type_list)
-                    else:
-                        rec_array = np.rec.array(data_line,
-                                                 self._recarray_type_list)
-                        data_array = np.hstack((data_array,
-                                                rec_array))
+                    try:
+                        if data_array is None:
+                            data_array = np.rec.array(data_line,
+                                                      self._recarray_type_list)
+                        else:
+                            rec_array = np.rec.array(data_line,
+                                                     self._recarray_type_list)
+                            data_array = np.hstack((data_array,
+                                                    rec_array))
+                    except:
+                        message = 'An error occurred when storing data ' \
+                                  '"{}" in a recarray. Data line being ' \
+                                  'stored: {}'.format(
+                            self.data_dimensions.structure.name,
+                            data_line)
+
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(
+                            self.data_dimensions.structure.get_model(),
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.path,
+                            'processing open/close line',
+                            dimensions.structure.name, inspect.stack()[0][3],
+                            type_, value_, traceback_, message,
+                            self._simulation_data.debug)
                     current_col = 0
                     data_line = ()
                 data_array[index] = data_iter.next()
@@ -1649,40 +1815,66 @@ class DataStorage(object):
                     val += 1
                 else:
                     val -= 1
-                return float(val)
+                try:
+                    return float(val)
+                except (ValueError, TypeError):
+                    message = 'Data "{}" with value "{}" can ' \
+                              'not be converted to float' \
+                               '.'.format(self.data_dimensions.structure.name,
+                                          data)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path, 'converting data',
+                        self.data_dimensions.structure.name,
+                        inspect.stack()[0][3], type_, value_, traceback_,
+                        message, self._simulation_data.debug)
             else:
                 try:
                     if isinstance(data, str):
                         # fix any scientific formatting that python can't handle
                         data = data.replace('d', 'e')
                     return float(data)
-                except ValueError:
+                except (ValueError, TypeError):
                     try:
                         return float(ArrayUtil.clean_numeric(data))
-                    except ValueError:
-                        except_str = 'Variable "{}" with value "{}" can ' \
-                                     'not be converted to float. ' \
-                                     '{}'.format(self.data_dimensions.structure.name,
-                                                 data,
-                                                 self.data_dimensions.structure.path)
-                        print(except_str)
-                        raise MFDataException(except_str)
+                    except (ValueError, TypeError):
+                        message = 'Data "{}" with value "{}" can ' \
+                                  'not be converted to float' \
+                                   '.'.format(self.data_dimensions.structure.
+                                              name,
+                                              data)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(
+                            self.data_dimensions.structure.get_model(),
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.path,
+                            'converting data',
+                            self.data_dimensions.structure.name,
+                            inspect.stack()[0][3], type_, value_,
+                            traceback_, message, self._simulation_data.debug)
         elif type == DatumType.integer:
             if data_item is not None and data_item.numeric_index:
                 return int(ArrayUtil.clean_numeric(data)) - 1
             try:
                 return int(data)
-            except ValueError:
+            except (ValueError, TypeError):
                 try:
                     return int(ArrayUtil.clean_numeric(data))
-                except ValueError:
-                    except_str = 'Variable "{}" with value "{}" can ' \
-                                 'not be converted to int. ' \
-                                 '{}'.format(self.data_dimensions.structure.name,
-                                             data,
-                                             self.data_dimensions.structure.path)
-                    print(except_str)
-                    raise MFDataException(except_str)
+                except (ValueError, TypeError):
+                    message = 'Data "{}" with value "{}" can not be ' \
+                              'converted to int' \
+                              '.'.format(self.data_dimensions.structure.name,
+                                         data)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path, 'converting data',
+                        self.data_dimensions.structure.name,
+                        inspect.stack()[0][3], type_, value_, traceback_,
+                        message, self._simulation_data.debug)
         elif type == DatumType.string and data is not None:
             if data_item is None or not data_item.preserve_case:
                 # keep strings lower case
@@ -1992,15 +2184,21 @@ class MFData(object):
                 if aux_var_names is not None:
                     aux_text = ' or auxiliary variables ' \
                                '{}'.format(aux_var_names[0])
-                except_str = 'Error reading variable "{}".  Expected ' \
+                message = 'Error reading variable "{}".  Expected ' \
                              'variable keyword "{}"{} not found ' \
                              'at line "{}". {}'.format(self._data_name,
                                                        self._keyword,
                                                        aux_text,
                                                        ' '.join(arr_line),
                                                        self._path)
-                print(except_str)
-                raise MFFileParseException(except_str)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self.structure.path, 'loading keyword',
+                    self.structure.name, inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
             return (index_num + 1, aux_var_index)
         return (index_num, aux_var_index)
 
