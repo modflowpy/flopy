@@ -4,13 +4,14 @@ mfstructure module.  Contains classes related to package structure
 
 """
 import os
+import traceback
 import ast
 import keyword
 from enum import Enum
 from textwrap import TextWrapper
 from collections import OrderedDict
 import numpy as np
-from ..mfbase import PackageContainer
+from ..mfbase import PackageContainer, StructException
 
 
 class DfnType(Enum):
@@ -550,91 +551,6 @@ class BlockType(Enum):
     single = 1
     multiple = 2
     transient = 3
-
-
-class FlopyException(Exception):
-    """
-    General Flopy Exception
-    """
-
-    def __init__(self, error, location=''):
-        Exception.__init__(self,
-                           "FlopyException: {} ({})".format(error, location))
-
-
-class StructException(Exception):
-    """
-    Exception related to the package file structure
-    """
-
-    def __init__(self, error, location):
-        Exception.__init__(self,
-                           "StructException: {} ({})".format(error, location))
-
-
-class MFDataFileException(Exception):
-    """
-    Exception related to parsing MODFLOW data files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFDataFileException: {}".format(error))
-
-
-class MFFileParseException(Exception):
-    """
-    Exception related to parsing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileParseException: {}".format(error))
-
-
-class MFInvalidTransientBlockHeaderException(MFFileParseException):
-    """
-    Exception related to parsing a transient block header
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self,
-                           "MFInvalidTransientBlockHeaderException: {}".format(
-                               error))
-
-
-class MFFileWriteException(Exception):
-    """
-    Exception related to the writing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileWriteException: {}".format(error))
-
-
-class MFDataException(Exception):
-    """
-    Exception related to MODFLOW input/output data
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFDataException: {}".format(error))
-
-
-class MFFileExistsException(Exception):
-    """
-    MODFLOW input file requested does not exist
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileExistsException: {}".format(error))
-
-
-class ReadAsArraysException(Exception):
-    """
-    Attempted to load ReadAsArrays package as non-ReadAsArraysPackage
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
 
 
 class MFDataItemStructure(object):
@@ -1510,6 +1426,21 @@ class MFDataStructure(object):
             if data_item.type != DatumType.keyword:
                 return index
         return None
+
+    def get_model(self):
+        if self.model_data:
+            if len(self.path) >= 1:
+                return self.path[0]
+        return None
+
+    def get_package(self):
+        if self.model_data:
+            if len(self.path) >= 2:
+                return self.path[1]
+        else:
+            if len(self.path) >= 1:
+                return self.path[0]
+        return ''
 
 
 class MFBlockStructure(object):
